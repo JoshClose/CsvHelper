@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper", "CsvHelper\CsvHelper.csproj", "{968A4E7C-B1E9-457E-B1F9-A774E68926C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.Tests", "CsvHelper.Tests\CsvHelper.Tests.csproj", "{964E643E-8057-4980-B29D-CC7B653A4A65}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6445B2A3-9E05-4ABF-AE2E-C875773B277A}"
+	ProjectSection(SolutionItems) = preProject
+		CsvHelper.vsmdi = CsvHelper.vsmdi
+		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = CsvHelper.vsmdi
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{968A4E7C-B1E9-457E-B1F9-A774E68926C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{968A4E7C-B1E9-457E-B1F9-A774E68926C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{968A4E7C-B1E9-457E-B1F9-A774E68926C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{968A4E7C-B1E9-457E-B1F9-A774E68926C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{964E643E-8057-4980-B29D-CC7B653A4A65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{964E643E-8057-4980-B29D-CC7B653A4A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{964E643E-8057-4980-B29D-CC7B653A4A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{964E643E-8057-4980-B29D-CC7B653A4A65}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
