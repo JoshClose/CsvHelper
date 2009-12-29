@@ -1,4 +1,9 @@
-﻿using System;
+﻿#region License
+// Copyright 2009 Josh Close
+// This file is a part of CsvHelper and is licensed under the MS-PL
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+#endregion
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,7 +15,52 @@ namespace CsvHelper.Tests
 	public class CsvReaderTests
 	{
 		[TestMethod]
-		public void GetFieldByIndexTest()
+		[ExpectedException( typeof( InvalidOperationException ) )]
+		public void HasHeaderRecordNotReadExceptionTest()
+		{
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+
+			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.GetField<int>( 0 );
+		}
+
+		[TestMethod]
+		public void HasHeaderRecordTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new List<string> { "One", "Two" };
+			var data2 = new List<string> { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			// Check to see if the header record and first record are set properly.
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( 0 ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( 1 ) );
+		}
+
+		[TestMethod]
+		public void GetTypeTest()
 		{
 			var data = new List<string>
 			{
@@ -27,7 +77,7 @@ namespace CsvHelper.Tests
 			var parserMock = mockFactory.Create<ICsvParser>();
 			parserMock.Setup( m => m.Read() ).Returns( data );
 
-			var reader = new CsvReader( parserMock.Object, new StreamReader( new MemoryStream() ) );
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt16( data[0] ), reader.GetField<short>( 0 ) );
@@ -64,9 +114,62 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void GetFieldByIndexTest()
+		{
+			var data = new List<string> { "1", "2" };
+
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( data );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Read();
+
+			Assert.AreEqual( 1, reader.GetField<int>( 0 ) );
+			Assert.AreEqual( 2, reader.GetField<int>( 1 ) );
+		}
+
+		[TestMethod]
 		public void GetFieldByNameTest()
 		{
-			throw new NotImplementedException();
+			var isHeaderRecord = true;
+			var data1 = new List<string> { "One", "Two" };
+			var data2 = new List<string> { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
+		}
+
+		[TestMethod]
+		[ExpectedException( typeof( InvalidOperationException ) )]
+		public void GetFieldByNameNoHeaderExceptionTest()
+		{
+			var data = new List<string> { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () => data );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Read();
+
+			Assert.AreEqual( Convert.ToInt32( data[0] ), reader.GetField<int>( "One" ) );
 		}
 	}
 }

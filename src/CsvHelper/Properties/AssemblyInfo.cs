@@ -1,4 +1,9 @@
-﻿using System.Reflection;
+﻿#region License
+// Copyright 2009 Josh Close
+// This file is a part of CsvHelper and is licensed under the MS-PL
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+#endregion
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -6,11 +11,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle( "CsvHelper" )]
-[assembly: AssemblyDescription( "" )]
+[assembly: AssemblyDescription( "Library to help reading and writing CSV files." )]
 [assembly: AssemblyConfiguration( "" )]
-[assembly: AssemblyCompany( "Microsoft" )]
+[assembly: AssemblyCompany( "" )]
 [assembly: AssemblyProduct( "CsvHelper" )]
-[assembly: AssemblyCopyright( "Copyright © Microsoft 2009" )]
+[assembly: AssemblyCopyright( "Copyright © Josh Close 2009" )]
 [assembly: AssemblyTrademark( "" )]
 [assembly: AssemblyCulture( "" )]
 
@@ -31,6 +36,6 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion( "1.0.0.0" )]
-[assembly: AssemblyFileVersion( "1.0.0.0" )]
+[assembly: AssemblyVersion( "0.1.*" )]
+[assembly: AssemblyFileVersion( "0.1.*" )]
+[assembly: AssemblyKeyFile( @"..\CsvHelper.snk" )]

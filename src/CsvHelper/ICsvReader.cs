@@ -1,10 +1,25 @@
-﻿using System;
+﻿#region License
+// Copyright 2009 Josh Close
+// This file is a part of CsvHelper and is licensed under the MS-PL
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+#endregion
+using System;
 using System.Collections.Generic;
 
 namespace CsvHelper
 {
 	public interface ICsvReader : IDisposable
 	{
+		/// <summary>
+		/// Gets the field headers.
+		/// </summary>
+		IList<string> FieldHeaders { get; }
+
+		/// <summary>
+		/// A <see cref="bool" /> value indicating if the CSV file has a header record.
+		/// </summary>
+		bool HasHeaderRecord { get; set; }
+
 		/// <summary>
 		/// Advances the reader to the next record.
 		/// </summary>
@@ -32,6 +47,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <returns>The record converted to type T.</returns>
-		List<T> GetRecord<T>();
+		T GetRecord<T>();
+
+		/// <summary>
+		/// Gets all the records in the CSV file and
+		/// converts each to type T.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <returns>An <see cref="IList{T}" /> of records.</returns>
+		IList<T> GetRecords<T>();
 	}
 }
