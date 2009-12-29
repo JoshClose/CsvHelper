@@ -12,6 +12,9 @@
     <AssemblyName>CsvHelper</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -45,8 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvFieldAttribute.cs" />
     <Compile Include="CsvParser.cs" />
     <Compile Include="CsvReader.cs" />
+    <Compile Include="CsvReaderFactory.cs" />
     <Compile Include="CsvRecord.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="ICsvParser.cs" />
