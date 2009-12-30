@@ -80,7 +80,7 @@ namespace CsvHelper
 			CheckHasBeenRead();
 
 			var converter = TypeDescriptor.GetConverter( typeof( T ) );
-			return (T)converter.ConvertFrom( currentRecord[index] );
+			return (T)GetField( index, converter );
 		}
 
 		/// <summary>
@@ -94,17 +94,12 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			if( !HasHeaderRecord )
-			{
-				throw new InvalidOperationException( "There is no header record to determine the index by a name." );
-			}
-
-			var index = headerRecord.IndexOf( name );
-			return GetField<T>( index );
+			var converter = TypeDescriptor.GetConverter( typeof( T ) );
+			return (T)GetField( name, converter );
 		}
 
 		/// <summary>
-		/// Gets the record converted into type T.
+		/// Gets the current record converted into type T.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <returns>The record converted to type T.</returns>
@@ -113,21 +108,63 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			throw new NotImplementedException();
+			var record = Activator.CreateInstance<T>();
+
+			var properties = TypeDescriptor.GetProperties( typeof( T ) );
+			foreach( PropertyDescriptor property in properties )
+			{
+				object field;
+				var converter = TypeConverterFactory.CreateConverter( property );
+
+				var csvFieldAttribute = (CsvFieldAttribute)property.Attributes[typeof( CsvFieldAttribute )];
+				if( csvFieldAttribute != null )
+				{
+					// Get the field using info from CsvFieldAttribute.
+					if( csvFieldAttribute.Ignore )
+					{
+						continue;
+					}
+					field = !string.IsNullOrEmpty( csvFieldAttribute.FieldName )
+					        	? GetField( csvFieldAttribute.FieldName, converter )
+					        	: GetField( csvFieldAttribute.FieldIndex, converter );
+				}
+				else
+				{
+					// Get the field using the name of the property.
+					var index = GetFieldIndex( property.Name );
+					if( index == -1 )
+					{
+						// Default property population shouldn't throw an
+						// exception if the field name is not found.
+						continue;
+					}
+					field = GetField( property.Name, converter );
+				}
+
+				property.SetValue( record, field );
+			}
+
+			return record;
 		}
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
-		/// converts each to type T.
+		/// converts each to type T. The Read method
+		/// should not be used when using this.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
 		public IList<T> GetRecords<T>()
 		{
 			CheckDisposed();
-			CheckHasBeenRead();
 
-			throw new NotImplementedException();
+			var records = new List<T>();
+			while( Read() )
+			{
+				records.Add( GetRecord<T>() );
+			}
+
+			return records;
 		}
 
 		/// <summary>
@@ -157,7 +194,7 @@ namespace CsvHelper
 			}
 		}
 
-		private void CheckDisposed()
+		protected void CheckDisposed()
 		{
 			if( disposed )
 			{
@@ -165,12 +202,33 @@ namespace CsvHelper
 			}
 		}
 
-		private void CheckHasBeenRead()
+		protected void CheckHasBeenRead()
 		{
 			if( !hasBeenRead )
 			{
 				throw new InvalidOperationException( "You must call read on the reader before accessing its data." );
 			}
+		}
+
+		protected object GetField( int index, TypeConverter converter )
+		{
+			return converter.ConvertFrom( currentRecord[index] );
+		}
+
+		protected object GetField( string name, TypeConverter converter )
+		{
+			var index = GetFieldIndex( name );
+			return GetField( index, converter );
+		}
+
+		protected int GetFieldIndex( string name )
+		{
+			if( !HasHeaderRecord )
+			{
+				throw new InvalidOperationException( "There is no header record to determine the index by name." );
+			}
+
+			return headerRecord.IndexOf( name );
 		}
 	}
 }

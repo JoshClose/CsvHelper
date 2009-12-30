@@ -4,6 +4,8 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 #endregion
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -40,6 +42,97 @@ namespace CsvHelper.Tests
 			var data = reader.ReadToEnd();
 
 			Assert.AreEqual( "one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,1,1,1,1," + guid + "\r\n", data );
+		}
+
+		[TestMethod]
+		public void WriteRecordTest()
+		{
+			var record = new TestRecord
+			{
+				IntColumn = 1,
+				StringColumn = "string column",
+				IgnoredColumn = "ignored column",
+				FirstColumn = "first column",
+			};
+
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			var csv = new CsvWriter( writer );
+
+			csv.WriteRecord( record );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+			expected += "first column,1,string column,test\r\n";
+
+			Assert.AreEqual( expected, csvFile );
+		}
+
+		[TestMethod]
+		public void WriteRecordsTest()
+		{
+			var records = new List<TestRecord>
+			{
+				new TestRecord
+				{
+					IntColumn = 1,
+					StringColumn = "string column",
+					IgnoredColumn = "ignored column",
+					FirstColumn = "first column",
+				},
+				new TestRecord
+				{
+					IntColumn = 2,
+					StringColumn = "string column 2",
+					IgnoredColumn = "ignored column 2",
+					FirstColumn = "first column 2",
+				},
+			};
+
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			var csv = new CsvWriter( writer );
+
+			csv.WriteRecords( records );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+			expected += "first column,1,string column,test\r\n";
+			expected += "first column 2,2,string column 2,test\r\n";
+
+			Assert.AreEqual( expected, csvFile );
+		}
+
+		[TypeConverter( "type name" )]
+		private class TestRecord
+		{
+			[CsvField( FieldIndex = 1, FieldName = "Int Column" )]
+			[TypeConverter( typeof( Int32Converter ) )]
+			public int IntColumn { get; set; }
+
+			[TypeConverter( "String" )]
+			public string StringColumn { get; set; }
+
+			[CsvField( Ignore = true )]
+			public string IgnoredColumn { get; set; }
+
+			[CsvField( FieldIndex = 0 )]
+			public string FirstColumn { get; set; }
+
+			[TypeConverter( typeof( TestTypeConverter ) )]
+			public string TypeConvertedColumn { get; set; }
+		}
+
+		private class TestTypeConverter : TypeConverter
+		{
+			public override object ConvertTo( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType )
+			{
+				return "test";
+			}
 		}
 	}
 }

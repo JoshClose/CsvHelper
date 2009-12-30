@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 
 namespace CsvHelper
 {
@@ -16,6 +17,7 @@ namespace CsvHelper
 		private char delimiter = ',';
 		private readonly List<string> currentRecord = new List<string>();
 		private StreamWriter writer;
+		private bool hasHeaderBeenWritten;
 
 		/// <summary>
 		/// Gets or sets the delimiter used to
@@ -26,6 +28,12 @@ namespace CsvHelper
 			get { return delimiter; }
 			set { delimiter = value; }
 		}
+
+		/// <summary>
+		/// Gets are sets a value indicating if the
+		/// CSV file has a header record.
+		/// </summary>
+		public bool HasHeaderRecord { get; set; }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
@@ -71,7 +79,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var fieldString = converter.ConvertToString( field );
+			var fieldString = (string)converter.ConvertTo( field, typeof( string ) );
 			if( fieldString.Contains( "\"" ) )
 			{
 				// All quotes must be doubled.
@@ -95,7 +103,7 @@ namespace CsvHelper
 		/// and starts a new record. This is used
 		/// when manually writing records with <see cref="ICsvWriter.WriteField{T}"/>
 		/// </summary>
-		public void NextRecord()
+		public virtual void NextRecord()
 		{
 			CheckDisposed();
 
@@ -110,11 +118,29 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
-		public void WriteRecord<T>( T record )
+		public virtual void WriteRecord<T>( T record )
 		{
 			CheckDisposed();
 
-			throw new NotImplementedException();
+			var properties = SortProperties( TypeDescriptor.GetProperties( typeof( T ) ).Cast<PropertyDescriptor>() );
+
+			if( !hasHeaderBeenWritten )
+			{
+				WriteHeader( properties );
+			}
+
+			foreach( var property in properties )
+			{
+				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
+				if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
+				{
+					continue;
+				}
+				var converter = TypeConverterFactory.CreateConverter( property );
+				var value = property.GetValue( record );
+				WriteField( value, converter );
+			}
+			NextRecord();
 		}
 
 		/// <summary>
@@ -122,11 +148,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		public void WriteRecords<T>( IList<T> records )
+		public void WriteRecords<T>( IEnumerable<T> records )
 		{
 			CheckDisposed();
 
-			throw new NotImplementedException();
+			foreach( var record in records )
+			{
+				WriteRecord( record );
+			}
 		}
 
 		/// <summary>
@@ -156,12 +185,36 @@ namespace CsvHelper
 			}
 		}
 
-		private void CheckDisposed()
+		protected void CheckDisposed()
 		{
 			if( disposed )
 			{
 				throw new ObjectDisposedException( GetType().ToString() );
 			}
+		}
+		
+		protected static IList<PropertyDescriptor> SortProperties( IEnumerable<PropertyDescriptor> properties )
+		{
+			return properties.OrderBy( pd => (CsvFieldAttribute)pd.Attributes[typeof( CsvFieldAttribute )], new CsvFieldAttributeComparer( false ) ).ToList();
+		}
+
+		protected virtual void WriteHeader( IEnumerable<PropertyDescriptor> properties )
+		{
+			foreach( var property in properties )
+			{
+				var fieldName = property.Name;
+				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
+				if( csvFieldAttribute != null && !string.IsNullOrEmpty( csvFieldAttribute.FieldName ) )
+				{
+					fieldName = csvFieldAttribute.FieldName;
+				}
+				if( csvFieldAttribute == null || !csvFieldAttribute.Ignore )
+				{
+					WriteField( fieldName );
+				}
+			}
+			NextRecord();
+			hasHeaderBeenWritten = true;
 		}
 	}
 }

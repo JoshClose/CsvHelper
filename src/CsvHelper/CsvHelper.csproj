@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvFieldAttribute.cs" />
+    <Compile Include="CsvFieldAttributeComparer.cs" />
     <Compile Include="CsvParser.cs" />
     <Compile Include="CsvReader.cs" />
     <Compile Include="CsvReaderFactory.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="ICsvReader.cs" />
     <Compile Include="ICsvWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeConverterFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

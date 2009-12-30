@@ -51,7 +51,8 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
-		/// converts each to type T.
+		/// converts each to type T. The Read method
+		/// should not be used when using this.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
