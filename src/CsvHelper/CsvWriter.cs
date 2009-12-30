@@ -55,6 +55,22 @@ namespace CsvHelper
 			CheckDisposed();
 
 			var converter = TypeDescriptor.GetConverter( typeof( T ) );
+			WriteField( field, converter );
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <param name="field">The field to write.</param>
+		/// <param name="converter">The converter used to convert the field into a string.</param>
+		public void WriteField<T>( T field, TypeConverter converter )
+		{
+			CheckDisposed();
+
 			var fieldString = converter.ConvertToString( field );
 			if( fieldString.Contains( "\"" ) )
 			{
@@ -64,7 +80,7 @@ namespace CsvHelper
 			if( fieldString.StartsWith( " " ) ||
 				fieldString.EndsWith( " " ) ||
 				fieldString.Contains( "\"" ) ||
-				fieldString.Contains( delimiter.ToString() ) || 
+				fieldString.Contains( delimiter.ToString() ) ||
 				fieldString.Contains( "\n" ) )
 			{
 				// Surround the field in double quotes.
