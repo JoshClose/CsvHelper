@@ -17,6 +17,12 @@ namespace CsvHelper
 		char Delimiter { get; set; }
 
 		/// <summary>
+		/// Gets are sets a value indicating if the
+		/// CSV file has a header record.
+		/// </summary>
+		bool HasHeaderRecord { get; set; }
+
+		/// <summary>
 		/// Writes the field to the CSV file.
 		/// When all fields are written for a record,
 		/// <see cref="NextRecord()" /> must be called
@@ -45,6 +51,6 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		void WriteRecords<T>( IList<T> records );
+		void WriteRecords<T>( IEnumerable<T> records );
 	}
 }

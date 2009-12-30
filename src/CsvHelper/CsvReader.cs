@@ -157,7 +157,7 @@ namespace CsvHelper
 			}
 		}
 
-		private void CheckDisposed()
+		protected void CheckDisposed()
 		{
 			if( disposed )
 			{
@@ -165,7 +165,7 @@ namespace CsvHelper
 			}
 		}
 
-		private void CheckHasBeenRead()
+		protected void CheckHasBeenRead()
 		{
 			if( !hasBeenRead )
 			{
