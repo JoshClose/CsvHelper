@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009 Josh Close
+// Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 #endregion
@@ -13,7 +13,6 @@ namespace CsvHelper
 	{
 		private bool disposed;
 		private bool hasBeenRead;
-		private IList<string> previousRecord;
 		private IList<string> currentRecord;
 		private IList<string> headerRecord;
 		private ICsvParser parser;
@@ -21,12 +20,12 @@ namespace CsvHelper
 		/// <summary>
 		/// A <see cref="bool" /> value indicating if the CSV file has a header record.
 		/// </summary>
-		public bool HasHeaderRecord { get; set; }
+		public virtual bool HasHeaderRecord { get; set; }
 
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
-		public IList<string> FieldHeaders
+		public virtual IList<string> FieldHeaders
 		{
 			get
 			{
@@ -50,20 +49,18 @@ namespace CsvHelper
 		/// Advances the reader to the next record.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
-		public bool Read()
+		public virtual bool Read()
 		{
 			CheckDisposed();
 
-			hasBeenRead = true;
-
-			previousRecord = currentRecord;
+			if( HasHeaderRecord && currentRecord == null )
+			{
+				headerRecord = parser.Read();
+			}
 
 			currentRecord = parser.Read();
-			if( previousRecord == null && currentRecord != null && HasHeaderRecord )
-			{
-				headerRecord = currentRecord;
-				currentRecord = parser.Read();
-			}
+
+			hasBeenRead = true;
 
 			return currentRecord != null;
 		}
@@ -74,13 +71,13 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="index">The index of the field.</param>
 		/// <returns>The field converted to type T.</returns>
-		public T GetField<T>( int index )
+		public virtual T GetField<T>( int index )
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
 
 			var converter = TypeDescriptor.GetConverter( typeof( T ) );
-			return (T)GetField( index, converter );
+			return GetField<T>( index, converter );
 		}
 
 		/// <summary>
@@ -89,12 +86,44 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The field converted to type T.</returns>
-		public T GetField<T>( string name )
+		public virtual T GetField<T>( string name )
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
 
 			var converter = TypeDescriptor.GetConverter( typeof( T ) );
+			return GetField<T>( name, converter );
+		}
+
+		/// <summary>
+		/// Gets the field converted to type T at index using
+		/// the given <see cref="TypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="converter">The converter used to convert the field to type T.</param>
+		/// <returns>The field converted to type T.</returns>
+		public virtual T GetField<T>( int index, TypeConverter converter )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			return (T)GetField( index, converter );
+		}
+
+		/// <summary>
+		/// Gets the field converted to type T at name using
+		/// the given <see cref="TypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The converter used to convert the field to type T.</param>
+		/// <returns>The field converted to type T.</returns>
+		public virtual T GetField<T>( string name, TypeConverter converter )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			return (T)GetField( name, converter );
 		}
 
@@ -103,7 +132,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <returns>The record converted to type T.</returns>
-		public T GetRecord<T>()
+		public virtual T GetRecord<T>()
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
@@ -154,7 +183,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		public IList<T> GetRecords<T>()
+		public virtual IList<T> GetRecords<T>()
 		{
 			CheckDisposed();
 
@@ -171,7 +200,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Dispose( true );
 			GC.SuppressFinalize( this );
@@ -194,7 +223,7 @@ namespace CsvHelper
 			}
 		}
 
-		protected void CheckDisposed()
+		protected virtual void CheckDisposed()
 		{
 			if( disposed )
 			{
@@ -202,7 +231,7 @@ namespace CsvHelper
 			}
 		}
 
-		protected void CheckHasBeenRead()
+		protected virtual void CheckHasBeenRead()
 		{
 			if( !hasBeenRead )
 			{
@@ -210,18 +239,18 @@ namespace CsvHelper
 			}
 		}
 
-		protected object GetField( int index, TypeConverter converter )
+		protected virtual object GetField( int index, TypeConverter converter )
 		{
 			return converter.ConvertFrom( currentRecord[index] );
 		}
 
-		protected object GetField( string name, TypeConverter converter )
+		protected virtual object GetField( string name, TypeConverter converter )
 		{
 			var index = GetFieldIndex( name );
 			return GetField( index, converter );
 		}
 
-		protected int GetFieldIndex( string name )
+		protected virtual int GetFieldIndex( string name )
 		{
 			if( !HasHeaderRecord )
 			{

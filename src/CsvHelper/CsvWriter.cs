@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009 Josh Close
+// Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 #endregion
@@ -23,7 +23,7 @@ namespace CsvHelper
 		/// Gets or sets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
-		public char Delimiter
+		public virtual char Delimiter
 		{
 			get { return delimiter; }
 			set { delimiter = value; }
@@ -33,7 +33,7 @@ namespace CsvHelper
 		/// Gets are sets a value indicating if the
 		/// CSV file has a header record.
 		/// </summary>
-		public bool HasHeaderRecord { get; set; }
+		public virtual bool HasHeaderRecord { get; set; }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
@@ -58,7 +58,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
-		public void WriteField<T>( T field )
+		public virtual void WriteField<T>( T field )
 		{
 			CheckDisposed();
 
@@ -75,7 +75,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
 		/// <param name="converter">The converter used to convert the field into a string.</param>
-		public void WriteField<T>( T field, TypeConverter converter )
+		public virtual void WriteField<T>( T field, TypeConverter converter )
 		{
 			CheckDisposed();
 
@@ -101,7 +101,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Ends writing of the current record
 		/// and starts a new record. This is used
-		/// when manually writing records with <see cref="ICsvWriter.WriteField{T}"/>
+		/// when manually writing records with <see cref="ICsvWriter.WriteField{T}" />
 		/// </summary>
 		public virtual void NextRecord()
 		{
@@ -124,7 +124,7 @@ namespace CsvHelper
 
 			var properties = SortProperties( TypeDescriptor.GetProperties( typeof( T ) ).Cast<PropertyDescriptor>() );
 
-			if( !hasHeaderBeenWritten )
+			if( HasHeaderRecord && !hasHeaderBeenWritten )
 			{
 				WriteHeader( properties );
 			}
@@ -148,7 +148,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		public void WriteRecords<T>( IEnumerable<T> records )
+		public virtual void WriteRecords<T>( IEnumerable<T> records )
 		{
 			CheckDisposed();
 
@@ -162,7 +162,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Dispose( true );
 			GC.SuppressFinalize( this );
@@ -185,7 +185,7 @@ namespace CsvHelper
 			}
 		}
 
-		protected void CheckDisposed()
+		protected virtual void CheckDisposed()
 		{
 			if( disposed )
 			{
@@ -193,11 +193,6 @@ namespace CsvHelper
 			}
 		}
 		
-		protected static IList<PropertyDescriptor> SortProperties( IEnumerable<PropertyDescriptor> properties )
-		{
-			return properties.OrderBy( pd => (CsvFieldAttribute)pd.Attributes[typeof( CsvFieldAttribute )], new CsvFieldAttributeComparer( false ) ).ToList();
-		}
-
 		protected virtual void WriteHeader( IEnumerable<PropertyDescriptor> properties )
 		{
 			foreach( var property in properties )
@@ -215,6 +210,11 @@ namespace CsvHelper
 			}
 			NextRecord();
 			hasHeaderBeenWritten = true;
+		}
+
+		protected virtual IList<PropertyDescriptor> SortProperties( IEnumerable<PropertyDescriptor> properties )
+		{
+			return properties.OrderBy( pd => (CsvFieldAttribute)pd.Attributes[typeof( CsvFieldAttribute )], new CsvFieldAttributeComparer( false ) ).ToList();
 		}
 	}
 }

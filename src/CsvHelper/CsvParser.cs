@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009 Josh Close
+// Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 #endregion
@@ -51,7 +51,7 @@ namespace CsvHelper
 			CheckDisposed();
 
 			var token = new StringBuilder();
-			var quoteCount = 0;
+			var inQuotes = false;
 			List<string> record = null;
 			while( true )
 			{
@@ -65,24 +65,18 @@ namespace CsvHelper
 
 				if( c == '"' )
 				{
-					quoteCount++;
+					inQuotes = !inQuotes;
 				}
 
-				if( c == delimiter && quoteCount % 2 == 0 )
+				if( c == delimiter && !inQuotes )
 				{
-					if( record == null )
-					{
-						record = new List<string>();
-					}
-
 					// Add this field to the current record.
 					AddField( ref record, token.ToString() );
 
 					// Reset field values.
 					token = new StringBuilder();
-					quoteCount = 0;
 				}
-				else if( c == '\n' && quoteCount % 2 == 0 )
+				else if( c == '\n' && !inQuotes )
 				{
 					if( record == null && token.ToString().Trim().Length == 0 )
 					{

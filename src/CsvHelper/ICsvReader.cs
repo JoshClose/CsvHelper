@@ -1,10 +1,11 @@
 ﻿#region License
-// Copyright 2009 Josh Close
+// Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 #endregion
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace CsvHelper
 {
@@ -41,6 +42,26 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The field converted to type T.</returns>
 		T GetField<T>( string name );
+
+		/// <summary>
+		/// Gets the field converted to type T at index using
+		/// the given <see cref="TypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="converter">The converter used to convert the field to type T.</param>
+		/// <returns>The field converted to type T.</returns>
+		T GetField<T>( int index, TypeConverter converter );
+
+		/// <summary>
+		/// Gets the field converted to type T at name using
+		/// the given <see cref="TypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The converter used to convert the field to type T.</param>
+		/// <returns>The field converted to type T.</returns>
+		T GetField<T>( string name, TypeConverter converter );
 
 		/// <summary>
 		/// Gets the record converted into type T.

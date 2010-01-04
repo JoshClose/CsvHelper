@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009 Josh Close
+// Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 #endregion
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer );
+			var csv = new CsvWriter( writer ){ HasHeaderRecord = true };
 
 			csv.WriteRecord( record );
 
@@ -93,7 +93,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer );
+			var csv = new CsvWriter( writer ){ HasHeaderRecord = true };
 
 			csv.WriteRecords( records );
 
@@ -105,6 +105,21 @@ namespace CsvHelper.Tests
 			expected += "first column 2,2,string column 2,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
+		}
+
+		[TestMethod]
+		public void WriteRecordNoHeaderTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			var csv = new CsvWriter( writer );
+			csv.WriteRecord( new TestRecord() );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+
+			Assert.AreEqual( ",0,,test\r\n", csvFile );
 		}
 
 		[TypeConverter( "type name" )]
