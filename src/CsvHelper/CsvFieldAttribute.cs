@@ -8,6 +8,10 @@ using System.Diagnostics;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Used to set behavior of a field when
+	/// reading a writing a CSV file.
+	/// </summary>
 	[DebuggerDisplay( "FieldIndex = {FieldIndex}, FieldName = {FieldName}, Ignore = {Ignore}" )]
 	[AttributeUsage( AttributeTargets.Property )]
 	public class CsvFieldAttribute : Attribute

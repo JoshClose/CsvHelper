@@ -9,6 +9,9 @@ using System.ComponentModel;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Reads data that was parsed from <see cref="ICsvParser" />.
+	/// </summary>
 	public class CsvReader : ICsvReader
 	{
 		private bool disposed;

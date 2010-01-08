@@ -6,30 +6,22 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Parses a CSV file.
+	/// </summary>
 	public class CsvParser : ICsvParser
 	{
 		private bool disposed;
-		private char delimiter = ',';
+		private readonly char delimiter;
 		private StreamReader reader;
-
-		/// <summary>
-		/// Creates a new parser using the given <see cref="StreamReader" />.
-		/// </summary>
-		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
-		public CsvParser( StreamReader reader )
-		{
-			this.reader = reader;
-		}
-
-		/// <summary>
-		/// Creates a new parser using the given file.
-		/// </summary>
-		/// <param name="filePath">Path to the CSV file.</param>
-		public CsvParser( string filePath ) : this( new StreamReader( filePath ) ){}
+		private readonly char[] readerBuffer;
+		private int readerBufferPosition;
+		private int charsRead;
+		private readonly int bufferSize;
+		private string[] record;
 
 		/// <summary>
 		/// Gets or sets the delimiter used to
@@ -38,7 +30,43 @@ namespace CsvHelper
 		public char Delimiter
 		{
 			get { return delimiter; }
-			set { delimiter = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the size of the buffer
+		/// used when reading the stream and
+		/// creating the fields.
+		/// </summary>
+		public int BufferSize
+		{
+			get { return bufferSize; }
+		}
+
+		/// <summary>
+		/// Gets or sets the field count.
+		/// </summary>
+		public int FieldCount { get; private set; }
+
+		/// <summary>
+		/// Creates a new parser using the given <see cref="StreamReader" />.
+		/// </summary>
+		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
+		public CsvParser( StreamReader reader ) : this( reader, new CsvParserOptions()){}
+
+		/// <summary>
+		/// Creates a new parser using the given <see cref="StreamReader" />
+		/// and <see cref="CsvParserOptions" />.
+		/// </summary>
+		/// <param name="reader">The <see cref="StreamReader" /> with teh CSV file data.</param>
+		/// <param name="options">The <see cref="CsvParserOptions" /> used for parsing the CSV file.</param>
+		public CsvParser( StreamReader reader, CsvParserOptions options )
+		{
+			this.reader = reader;
+			bufferSize = options.BufferSize;
+			delimiter = options.Delimiter;
+			FieldCount = options.FieldCount;
+            
+			readerBuffer = new char[bufferSize];
 		}
 
 		/// <summary>
@@ -46,60 +74,128 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>A <see cref="List{String}" /> of fields for the record read.
 		/// If there are no more records, null is returned.</returns>
-		public IList<string> Read()
+		public string[] Read()
 		{
 			CheckDisposed();
 
-			var token = new StringBuilder();
+			string field = null;
+			var fieldStartPosition = readerBufferPosition;
 			var inQuotes = false;
-			List<string> record = null;
+			var hasQuotes = false;
+			var recordPosition = 0;
+			var c = '\0';
+			record = new string[FieldCount];
+
 			while( true )
 			{
-				var c = reader.Read();
+				var cPrev = c;
 
-				if( c == -1 )
+				if( readerBufferPosition == charsRead )
 				{
-					// The end of the stream has been reached.
-					return null;
-				}
-
-				if( c == '"' )
-				{
-					inQuotes = !inQuotes;
-				}
-
-				if( c == delimiter && !inQuotes )
-				{
-					// Add this field to the current record.
-					AddField( ref record, token.ToString() );
-
-					// Reset field values.
-					token = new StringBuilder();
-				}
-				else if( c == '\n' && !inQuotes )
-				{
-					if( record == null && token.ToString().Trim().Length == 0 )
+					if( fieldStartPosition != readerBufferPosition )
 					{
-						// Skip the record if there are no fields.
+						// The buffer ran out. Take the current
+						// text and add it to the field.
+						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+					}
+
+					charsRead = reader.Read( readerBuffer, 0, readerBuffer.Length );
+					if( charsRead == 0 )
+					{
+						// The end of the stream has been reached.
+						return null;
+					}
+					readerBufferPosition = 0;
+					fieldStartPosition = 0;
+				}
+
+				c = readerBuffer[readerBufferPosition];
+				readerBufferPosition++;
+
+				if( !inQuotes && c == delimiter )
+				{
+					// If we hit the delimiter, we are
+					// done reading the field and can
+					// add it to the record.
+					field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					AddFieldToRecord( ref recordPosition, field, hasQuotes );
+					fieldStartPosition = readerBufferPosition;
+
+					field = null;
+					hasQuotes = false;
+				}
+				else if( !inQuotes && c == '\n' )
+				{
+					if( recordPosition == 0 && field == null )
+					{
+						// We have hit a blank. Ignore it.
+						fieldStartPosition = readerBufferPosition;
 						continue;
 					}
-					AddField( ref record, token.ToString() );
+
+					// If we hit the end of the record, add 
+					// the current field and return the record.
+					field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else
+				else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' ) 
+					&& ( hasQuotes || fieldStartPosition == readerBufferPosition - 1 ) )
 				{
-					token.Append( (char)c );
+					// Trim whitespace off the front always.
+					// Trim whitespace off the back only
+					// if this is a quoted field.
+					fieldStartPosition++;
+				}
+				else if( c == '"' )
+				{
+					hasQuotes = true;
+					inQuotes = !inQuotes;
+
+					if( fieldStartPosition != readerBufferPosition - 1 )
+					{
+						// Grab all the field chars before the
+						// quote if there are any.
+						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+						fieldStartPosition = readerBufferPosition;
+					}
+					if( cPrev != '"' )
+					{
+						// Set the new field start position to
+						// the char after the quote.
+						fieldStartPosition = readerBufferPosition;
+					}
 				}
 			}
 
 			return record;
 		}
 
+		protected virtual void AddFieldToRecord( ref int recordPosition, string field, bool hasQuotes )
+		{
+			if( record.Length < recordPosition + 1 )
+			{
+				// Resize record if it's too small.
+				Array.Resize( ref record, recordPosition + 1 );
+				FieldCount = record.Length;
+			}
+
+			if( !hasQuotes )
+			{
+				// If this isn't a quoted field, trim
+				// the whitespace at the end.
+				field = field.TrimEnd( ' ', '\t', '\r' );
+			}
+
+			record[recordPosition] = field;
+			recordPosition++;
+		}
+
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Dispose( true );
 			GC.SuppressFinalize( this );
@@ -122,36 +218,12 @@ namespace CsvHelper
 			}
 		}
 
-		private void CheckDisposed()
+		protected virtual void CheckDisposed()
 		{
 			if( disposed )
 			{
 				throw new ObjectDisposedException( GetType().ToString() );
 			}
-		}
-
-		private static void AddField( ref List<string> record, string token )
-		{
-			if( record == null )
-			{
-				record = new List<string>();
-			}
-
-			// CSV fields don't have leading/trailing 
-			// whitespace so we trim it before adding.
-			token = token.Trim();
-
-			// If this is a quoted field, remove the quotes.
-			if( token.StartsWith( "\"" ) && token.EndsWith( "\"" ) )
-			{
-				token = token.Substring( 1, token.Length - 2 );
-			}
-
-			// Quotes are doubled so we need to remove a set.
-			token = token.Replace( "\"\"", "\"" );
-
-			// Add the field to the record.
-			record.Add( token );
 		}
 	}
 }

@@ -7,10 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Used to write CSV files.
+	/// </summary>
 	public class CsvWriter : ICsvWriter
 	{
 		private bool disposed;
@@ -122,14 +124,14 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var properties = SortProperties( TypeDescriptor.GetProperties( typeof( T ) ).Cast<PropertyDescriptor>() );
+			var properties = SortProperties( TypeDescriptor.GetProperties( typeof( T ) ) );
 
 			if( HasHeaderRecord && !hasHeaderBeenWritten )
 			{
 				WriteHeader( properties );
 			}
 
-			foreach( var property in properties )
+			foreach( PropertyDescriptor property in properties )
 			{
 				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
 				if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
@@ -193,9 +195,9 @@ namespace CsvHelper
 			}
 		}
 		
-		protected virtual void WriteHeader( IEnumerable<PropertyDescriptor> properties )
+		protected virtual void WriteHeader( PropertyDescriptorCollection properties )
 		{
-			foreach( var property in properties )
+			foreach( PropertyDescriptor property in properties )
 			{
 				var fieldName = property.Name;
 				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
@@ -212,9 +214,9 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
-		protected virtual IList<PropertyDescriptor> SortProperties( IEnumerable<PropertyDescriptor> properties )
+		protected virtual PropertyDescriptorCollection SortProperties( PropertyDescriptorCollection properties )
 		{
-			return properties.OrderBy( pd => (CsvFieldAttribute)pd.Attributes[typeof( CsvFieldAttribute )], new CsvFieldAttributeComparer( false ) ).ToList();
+			return properties.Sort( new CsvPropertyDescriptorComparer( false ) );
 		}
 	}
 }

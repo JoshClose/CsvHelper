@@ -8,18 +8,32 @@ using System.Collections.Generic;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Defines methods used the parse a CSV file.
+	/// </summary>
 	public interface ICsvParser : IDisposable
 	{
 		/// <summary>
-		/// Gets or sets the delimiter used to
+		/// Gets the size of the buffer
+		/// used when reading the stream.
+		/// </summary>
+		int BufferSize { get; }
+
+		/// <summary>
+		/// Gets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
-		char Delimiter { get; set; }
+		char Delimiter { get; }
+
+		/// <summary>
+		/// Gets the field count.
+		/// </summary>
+		int FieldCount { get; }
 
 		/// <summary>
 		/// Reads a record from the CSV file.
 		/// </summary>
 		/// <returns>A <see cref="List{String}" /> of fields for the record read.</returns>
-		IList<string> Read();
+		string[] Read();
 	}
 }

@@ -8,8 +8,19 @@ using System.ComponentModel;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Factory for creating a <see cref="TypeConverter" />
+	/// using the <see cref="TypeConverterAttribute" />.
+	/// </summary>
 	public static class TypeConverterFactory
 	{
+		/// <summary>
+		/// Creates a <see cref="TypeConverter" /> from the given <see cref="PropertyDescriptor" />.
+		/// If a <see cref="TypeConverterAttribute" /> exists, the specified <see cref="TypeConverter" />
+		/// will be used. Otherwise the default converter is used.
+		/// </summary>
+		/// <param name="property">The <see cref="PropertyDescriptor" /> used to create the <see cref="TypeConverter" />.</param>
+		/// <returns></returns>
 		public static TypeConverter CreateConverter( PropertyDescriptor property )
 		{
 			var typeConverterAttribute = property.Attributes[typeof( TypeConverterAttribute )] as TypeConverterAttribute;

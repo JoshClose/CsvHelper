@@ -8,6 +8,9 @@ using System.Collections.Generic;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Defines methods used to write to a CSV file.
+	/// </summary>
 	public interface ICsvWriter : IDisposable
 	{
 		/// <summary>

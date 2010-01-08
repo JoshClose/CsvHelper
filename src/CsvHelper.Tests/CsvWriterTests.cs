@@ -64,8 +64,8 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
+			expected += "first column,1,test,string column\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -100,9 +100,9 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
-			expected += "first column 2,2,string column 2,test\r\n";
+			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
+			expected += "first column,1,test,string column\r\n";
+			expected += "first column 2,2,test,string column 2\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -119,7 +119,7 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			Assert.AreEqual( ",0,,test\r\n", csvFile );
+			Assert.AreEqual( ",0,test,\r\n", csvFile );
 		}
 
 		[TypeConverter( "type name" )]

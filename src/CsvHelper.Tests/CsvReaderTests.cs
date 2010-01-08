@@ -34,8 +34,8 @@ namespace CsvHelper.Tests
 		public void HasHeaderRecordTest()
 		{
 			var isHeaderRecord = true;
-			var data1 = new List<string> { "One", "Two" };
-			var data2 = new List<string> { "1", "2" };
+			var data1 = new [] { "One", "Two" };
+			var data2 = new [] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
 			parserMock.Setup( m => m.Read() ).Returns( () =>
@@ -64,16 +64,16 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void GetTypeTest()
 		{
-			var data = new List<string>
-			{
-				"1",
-				"blah",
-				DateTime.Now.ToString(),
+			var data = new []
+            {
+                "1",
+                "blah",
+                DateTime.Now.ToString(),
                 "true",
                 "c",
                 "",
-				Guid.NewGuid().ToString(),
-			};
+                Guid.NewGuid().ToString(),
+            };
 
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
@@ -118,7 +118,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void GetFieldByIndexTest()
 		{
-			var data = new List<string> { "1", "2" };
+			var data = new [] { "1", "2" };
 
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
@@ -135,8 +135,8 @@ namespace CsvHelper.Tests
 		public void GetFieldByNameTest()
 		{
 			var isHeaderRecord = true;
-			var data1 = new List<string> { "One", "Two" };
-			var data2 = new List<string> { "1", "2" };
+			var data1 = new [] { "One", "Two" };
+			var data2 = new [] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
 			parserMock.Setup( m => m.Read() ).Returns( () =>
@@ -163,7 +163,7 @@ namespace CsvHelper.Tests
 		[ExpectedException( typeof( InvalidOperationException ) )]
 		public void GetFieldByNameNoHeaderExceptionTest()
 		{
-			var data = new List<string> { "1", "2" };
+			var data = new [] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
 			parserMock.Setup( m => m.Read() ).Returns( () => data );
@@ -177,16 +177,16 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void GetRecordTest()
 		{
-			var headerData = new List<string>
-			{
-				"IntColumn",
-				"String Column",
-			};
-			var recordData = new List<string>
-			{
-				"1",
-				"string column",
-			};
+			var headerData = new []
+            {
+                "IntColumn",
+                "String Column",
+            };
+			var recordData = new []
+            {
+                "1",
+                "string column",
+            };
 			var isHeaderRecord = true;
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
@@ -213,16 +213,16 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void GetRecordsTest()
 		{
-			var headerData = new List<string>
-			{
-				"IntColumn",
-				"String Column",
-			};
-			var recordData = new List<string>
-			{
-				"1",
-				"string column",
-			};
+			var headerData = new []
+            {
+                "IntColumn",
+                "String Column",
+            };
+			var recordData = new []
+            {
+                "1",
+                "string column",
+            };
 			var count = -1;
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();

@@ -40,8 +40,10 @@ namespace CsvHelper.Tests
 			var writer = new StreamWriter( stream );
 			writer.WriteLine( "one,two,three" );
 			writer.WriteLine( "four,five,six" );
+			writer.WriteLine( ",," );
 			writer.WriteLine( "" );
 			writer.WriteLine( "" );
+			writer.WriteLine( "seven,eight,nine" );
 			writer.Flush();
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
@@ -54,7 +56,7 @@ namespace CsvHelper.Tests
 				count++;
 			}
 
-			Assert.AreEqual( 2, count );
+			Assert.AreEqual( 4, count );
 		}
 
 		[TestMethod]
@@ -95,7 +97,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader );
+			var parser = new CsvParser( reader, new CsvParserOptions{ BufferSize = 2000 } );
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -122,7 +124,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader );
+			var parser = new CsvParser( reader, new CsvParserOptions{ BufferSize = 2 } );
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );

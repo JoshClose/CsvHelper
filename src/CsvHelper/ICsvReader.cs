@@ -9,6 +9,10 @@ using System.ComponentModel;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Defines methods used to read parsed data
+	/// from a CSV file.
+	/// </summary>
 	public interface ICsvReader : IDisposable
 	{
 		/// <summary>
