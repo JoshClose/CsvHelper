@@ -32,6 +32,34 @@ namespace CsvHelper
 		bool Read();
 
 		/// <summary>
+		/// Gets the raw field at index.
+		/// </summary>
+		/// <param name="index">The index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		string this[int index] { get; }
+
+		/// <summary>
+		/// Gets the raw string field at name.
+		/// </summary>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		string this[string name] { get; }
+
+		/// <summary>
+		/// Gets the raw field at index.
+		/// </summary>
+		/// <param name="index">The index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		string GetField( int index );
+
+		/// <summary>
+		/// Gets the raw field at name.
+		/// </summary>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		string GetField( string name );
+
+		/// <summary>
 		/// Gets the field converted to type T at index.
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>

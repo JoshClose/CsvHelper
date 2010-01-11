@@ -19,6 +19,10 @@ namespace CsvHelper
 		private IList<string> currentRecord;
 		private IList<string> headerRecord;
 		private ICsvParser parser;
+		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
+		private readonly Dictionary<PropertyDescriptor, TypeConverter> typeConverters = new Dictionary<PropertyDescriptor, TypeConverter>();
+		private readonly Dictionary<Type, PropertyDescriptorCollection> typeProperties =
+			new Dictionary<Type, PropertyDescriptorCollection>();
 
 		/// <summary>
 		/// A <see cref="bool" /> value indicating if the CSV file has a header record.
@@ -59,6 +63,7 @@ namespace CsvHelper
 			if( HasHeaderRecord && currentRecord == null )
 			{
 				headerRecord = parser.Read();
+				ParseNamedIndexes();
 			}
 
 			currentRecord = parser.Read();
@@ -66,6 +71,53 @@ namespace CsvHelper
 			hasBeenRead = true;
 
 			return currentRecord != null;
+		}
+
+		/// <summary>
+		/// Gets the raw string field at index.
+		/// </summary>
+		/// <param name="index">The index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		public virtual string this[int index]
+		{
+			get
+			{
+				return GetField( index );
+			}
+		}
+
+		/// <summary>
+		/// Gets the raw string field at the named index.
+		/// </summary>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		public virtual string this[string name]
+		{
+			get
+			{
+				return GetField( name );
+			}
+		}
+
+		/// <summary>
+		/// Gets the raw string field at index.
+		/// </summary>
+		/// <param name="index">The index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		public virtual string GetField( int index )
+		{
+			return currentRecord[index];
+		}
+
+		/// <summary>
+		/// Gets the raw string field at the named index.
+		/// </summary>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The raw string field.</returns>
+		public virtual string GetField( string name )
+		{
+			var index = GetFieldIndex( name );
+			return GetField( index );
 		}
 
 		/// <summary>
@@ -142,35 +194,39 @@ namespace CsvHelper
 
 			var record = Activator.CreateInstance<T>();
 
-			var properties = TypeDescriptor.GetProperties( typeof( T ) );
+			var properties = GetProperties( typeof( T ) );
 			foreach( PropertyDescriptor property in properties )
 			{
 				object field;
-				var converter = TypeConverterFactory.CreateConverter( property );
+				var converter = GetTypeConverter( property );
 
-				var csvFieldAttribute = (CsvFieldAttribute)property.Attributes[typeof( CsvFieldAttribute )];
+				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
 				if( csvFieldAttribute != null )
 				{
-					// Get the field using info from CsvFieldAttribute.
 					if( csvFieldAttribute.Ignore )
 					{
+						// The property is set to be ignored,
+						// so skip over it.
 						continue;
 					}
+
+					// Get the field using info from CsvFieldAttribute.
 					field = !string.IsNullOrEmpty( csvFieldAttribute.FieldName )
-					        	? GetField( csvFieldAttribute.FieldName, converter )
-					        	: GetField( csvFieldAttribute.FieldIndex, converter );
+								? GetField( csvFieldAttribute.FieldName, converter )
+								: GetField( csvFieldAttribute.FieldIndex, converter );
 				}
 				else
 				{
-					// Get the field using the name of the property.
-					var index = GetFieldIndex( property.Name );
-					if( index == -1 )
+					if( !namedIndexes.ContainsKey( property.Name ) )
 					{
 						// Default property population shouldn't throw an
 						// exception if the field name is not found.
 						continue;
 					}
+
+					// Get the field using the name of the property.
 					field = GetField( property.Name, converter );
+
 				}
 
 				property.SetValue( record, field );
@@ -260,7 +316,38 @@ namespace CsvHelper
 				throw new InvalidOperationException( "There is no header record to determine the index by name." );
 			}
 
-			return headerRecord.IndexOf( name );
+			return namedIndexes[name];
+		}
+
+		protected virtual void ParseNamedIndexes()
+		{
+			for( var i = 0; i < headerRecord.Count; i++ )
+			{
+				var name = headerRecord[i];
+				if( namedIndexes.ContainsKey( name ) )
+				{
+					throw new InvalidOperationException( "The field header names must be unique." );
+				}
+				namedIndexes[name] = i;
+			}
+		}
+
+		protected virtual TypeConverter GetTypeConverter( PropertyDescriptor property )
+		{
+			if( !typeConverters.ContainsKey( property ) )
+			{
+				typeConverters[property] = TypeConverterFactory.CreateConverter( property );
+			}
+			return typeConverters[property];
+		}
+
+		protected virtual PropertyDescriptorCollection GetProperties( Type type )
+		{
+			if( !typeProperties.ContainsKey( type ) )
+			{
+				typeProperties[type] = TypeDescriptor.GetProperties( type );
+			}
+			return typeProperties[type];
 		}
 	}
 }
