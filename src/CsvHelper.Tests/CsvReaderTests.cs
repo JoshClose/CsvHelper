@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -181,11 +182,13 @@ namespace CsvHelper.Tests
             {
                 "IntColumn",
                 "String Column",
+                "GuidColumn",
             };
 			var recordData = new []
             {
                 "1",
                 "string column",
+				Guid.NewGuid().ToString(),
             };
 			var isHeaderRecord = true;
 			var mockFactory = new MockFactory( MockBehavior.Default );
@@ -208,6 +211,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( recordData[1], record.StringColumn );
 			Assert.AreEqual( "test", record.TypeConvertedColumn );
 			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.FirstColumn );
+			Assert.AreEqual( new Guid( recordData[2] ), record.GuidColumn );
 		}
 
 		[TestMethod]
@@ -217,15 +221,12 @@ namespace CsvHelper.Tests
             {
                 "IntColumn",
                 "String Column",
-            };
-			var recordData = new []
-            {
-                "1",
-                "string column",
+                "GuidColumn",
             };
 			var count = -1;
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
+			var guid = Guid.NewGuid();
 			csvParserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				count++;
@@ -237,7 +238,7 @@ namespace CsvHelper.Tests
 				{
 					return null;
 				}
-				return recordData;
+				return new[] { count.ToString(), "string column " + count, guid.ToString() };
 			} );
 
 			var csv = new CsvReader( csvParserMock.Object ) { HasHeaderRecord = true };
@@ -245,22 +246,27 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 2, records.Count );
 
-			foreach( var record in records )
+			for( var i = 1; i <= records.Count; i++ )
 			{
-				Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
-				Assert.AreEqual( recordData[1], record.StringColumn );
+				var record = records[i - 1];
+				Assert.AreEqual( i , record.IntColumn );
+				Assert.AreEqual( "string column " + i, record.StringColumn );
 				Assert.AreEqual( "test", record.TypeConvertedColumn );
-				Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.FirstColumn );
+				Assert.AreEqual( i, record.FirstColumn );
+				Assert.AreEqual( guid, record.GuidColumn );
 			}
 		}
 
+		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
 		private class TestRecord
 		{
+			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
 
 			[CsvField( FieldName = "String Column" )]
 			public string StringColumn { get; set; }
 
+			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
 			[CsvField( FieldIndex = 1 )]
@@ -269,6 +275,8 @@ namespace CsvHelper.Tests
 
 			[CsvField( FieldIndex = 0 )]
 			public int FirstColumn { get; set; }
+
+			public Guid GuidColumn { get; set; }
 		}
 
 		private class TestTypeConverter : TypeConverter

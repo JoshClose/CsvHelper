@@ -5,14 +5,14 @@
 #endregion
 using System;
 using System.Collections;
-using System.ComponentModel;
+using System.Reflection;
 
 namespace CsvHelper
 {
 	/// <summary>
 	/// Used to compare properties by <see cref="CsvFieldAttribute" />.
 	/// </summary>
-	public class CsvPropertyDescriptorComparer : IComparer
+	public class CsvPropertyInfoComparer : IComparer
 	{
 		private readonly bool useFieldName;
 
@@ -20,7 +20,7 @@ namespace CsvHelper
 		/// Creates a new instance of CsvFieldAttributeComparer.
 		/// </summary>
 		/// <param name="useFieldName">True to compare by <see cref="CsvFieldAttribute.FieldName" />, otherwise compares by <see cref="CsvFieldAttribute.FieldIndex" />.</param>
-		public CsvPropertyDescriptorComparer( bool useFieldName )
+		public CsvPropertyInfoComparer( bool useFieldName )
 		{
 			this.useFieldName = useFieldName;
 		}
@@ -46,8 +46,8 @@ namespace CsvHelper
 		///                 </exception><filterpriority>2</filterpriority>
 		public int Compare( object x, object y )
 		{
-			var xProperty = x as PropertyDescriptor;
-			var yProperty = y as PropertyDescriptor;
+			var xProperty = x as PropertyInfo;
+			var yProperty = y as PropertyInfo;
 
 			if( xProperty == null )
 			{
@@ -58,8 +58,8 @@ namespace CsvHelper
 				throw new ArgumentNullException( "y" );
 			}
 
-			var xAttribute = xProperty.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
-			var yAttribute = yProperty.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
+			var xAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( xProperty, false );
+			var yAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( yProperty, false );
 
 			if( xAttribute == null && yAttribute == null )
 			{

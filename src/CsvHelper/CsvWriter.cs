@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Reflection;
 
 namespace CsvHelper
 {
@@ -50,7 +51,7 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given file path.
 		/// </summary>
 		/// <param name="filePath">The file path used to write the CSV file.</param>
-		public CsvWriter( string filePath ) : this( new StreamWriter( filePath ) ){}
+		public CsvWriter( string filePath ) : this( new StreamWriter( filePath ) ) { }
 
 		/// <summary>
 		/// Writes the field to the CSV file.
@@ -124,23 +125,38 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var properties = SortProperties( TypeDescriptor.GetProperties( typeof( T ) ) );
+			var properties = typeof( T ).GetProperties();
+			SortProperties( properties );
 
 			if( HasHeaderRecord && !hasHeaderBeenWritten )
 			{
 				WriteHeader( properties );
 			}
 
-			foreach( PropertyDescriptor property in properties )
+			foreach( var property in properties )
 			{
-				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
+				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
 				if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
 				{
 					continue;
 				}
-				var converter = TypeConverterFactory.CreateConverter( property );
-				var value = property.GetValue( record );
-				WriteField( value, converter );
+
+				TypeConverter typeConverter = null;
+				var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
+				if( typeConverterAttribute != null )
+				{
+					var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName );
+					if( typeConverterType != null )
+					{
+						typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
+					}
+				}
+				if( typeConverter == null )
+				{
+					typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+				}
+				var value = property.GetValue( record, null );
+				WriteField( value, typeConverter );
 			}
 			NextRecord();
 		}
@@ -194,13 +210,13 @@ namespace CsvHelper
 				throw new ObjectDisposedException( GetType().ToString() );
 			}
 		}
-		
-		protected virtual void WriteHeader( PropertyDescriptorCollection properties )
+
+		protected virtual void WriteHeader( PropertyInfo[] properties )
 		{
-			foreach( PropertyDescriptor property in properties )
+			foreach( var property in properties )
 			{
 				var fieldName = property.Name;
-				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
+				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
 				if( csvFieldAttribute != null && !string.IsNullOrEmpty( csvFieldAttribute.FieldName ) )
 				{
 					fieldName = csvFieldAttribute.FieldName;
@@ -214,9 +230,9 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
-		protected virtual PropertyDescriptorCollection SortProperties( PropertyDescriptorCollection properties )
+		protected virtual void SortProperties( PropertyInfo[] properties )
 		{
-			return properties.Sort( new CsvPropertyDescriptorComparer( false ) );
+			Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
 		}
 	}
 }

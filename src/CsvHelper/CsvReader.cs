@@ -6,6 +6,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CsvHelper
 {
@@ -16,13 +18,16 @@ namespace CsvHelper
 	{
 		private bool disposed;
 		private bool hasBeenRead;
-		private IList<string> currentRecord;
-		private IList<string> headerRecord;
+		private string[] currentRecord;
+		private string[] headerRecord;
 		private ICsvParser parser;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
-		private readonly Dictionary<PropertyDescriptor, TypeConverter> typeConverters = new Dictionary<PropertyDescriptor, TypeConverter>();
-		private readonly Dictionary<Type, PropertyDescriptorCollection> typeProperties =
-			new Dictionary<Type, PropertyDescriptorCollection>();
+		private readonly Dictionary<string, TypeConverter> typeConverters = new Dictionary<string, TypeConverter>();
+		private readonly Dictionary<Type, PropertyInfo[]> typeProperties = new Dictionary<Type, PropertyInfo[]>();
+		private readonly Dictionary<string, Setter> propertySetters = new Dictionary<string, Setter>();
+		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
+
+		protected delegate void Setter( object target, object value );
 
 		/// <summary>
 		/// A <see cref="bool" /> value indicating if the CSV file has a header record.
@@ -32,7 +37,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
-		public virtual IList<string> FieldHeaders
+		public virtual string[] FieldHeaders
 		{
 			get
 			{
@@ -192,47 +197,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var record = Activator.CreateInstance<T>();
-
-			var properties = GetProperties( typeof( T ) );
-			foreach( PropertyDescriptor property in properties )
-			{
-				object field;
-				var converter = GetTypeConverter( property );
-
-				var csvFieldAttribute = property.Attributes[typeof( CsvFieldAttribute )] as CsvFieldAttribute;
-				if( csvFieldAttribute != null )
-				{
-					if( csvFieldAttribute.Ignore )
-					{
-						// The property is set to be ignored,
-						// so skip over it.
-						continue;
-					}
-
-					// Get the field using info from CsvFieldAttribute.
-					field = !string.IsNullOrEmpty( csvFieldAttribute.FieldName )
-								? GetField( csvFieldAttribute.FieldName, converter )
-								: GetField( csvFieldAttribute.FieldIndex, converter );
-				}
-				else
-				{
-					if( !namedIndexes.ContainsKey( property.Name ) )
-					{
-						// Default property population shouldn't throw an
-						// exception if the field name is not found.
-						continue;
-					}
-
-					// Get the field using the name of the property.
-					field = GetField( property.Name, converter );
-
-				}
-
-				property.SetValue( record, field );
-			}
-
-			return record;
+			return GetRecordFunc<T>()( this );
 		}
 
 		/// <summary>
@@ -247,9 +212,11 @@ namespace CsvHelper
 			CheckDisposed();
 
 			var records = new List<T>();
+
 			while( Read() )
 			{
-				records.Add( GetRecord<T>() );
+				var record = GetRecordFunc<T>()( this );
+				records.Add( record );
 			}
 
 			return records;
@@ -321,7 +288,7 @@ namespace CsvHelper
 
 		protected virtual void ParseNamedIndexes()
 		{
-			for( var i = 0; i < headerRecord.Count; i++ )
+			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];
 				if( namedIndexes.ContainsKey( name ) )
@@ -332,22 +299,96 @@ namespace CsvHelper
 			}
 		}
 
-		protected virtual TypeConverter GetTypeConverter( PropertyDescriptor property )
+		protected virtual Func<CsvReader, T> GetRecordFunc<T>()
 		{
-			if( !typeConverters.ContainsKey( property ) )
+			var type = typeof( T );
+			if( !recordFuncs.ContainsKey( type ) )
 			{
-				typeConverters[property] = TypeConverterFactory.CreateConverter( property );
-			}
-			return typeConverters[property];
-		}
+				var bindings = new List<MemberBinding>();
+				var recordType = typeof( T );
+				var readerParameter = Expression.Parameter( GetType(), "reader" );
+				foreach( var property in recordType.GetProperties() )
+				{
+					Expression fieldExpression;
+					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
+					if( csvFieldAttribute != null )
+					{
+						if( csvFieldAttribute.Ignore )
+						{
+							// Skip the ignored properties.
+							continue;
+						}
 
-		protected virtual PropertyDescriptorCollection GetProperties( Type type )
-		{
-			if( !typeProperties.ContainsKey( type ) )
-			{
-				typeProperties[type] = TypeDescriptor.GetProperties( type );
+						if( !String.IsNullOrEmpty( csvFieldAttribute.FieldName ) )
+						{
+							// Get the field using the field name.
+							var method = GetType().GetProperty( "Item", new[] { typeof( string ) } ).GetGetMethod();
+							fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( csvFieldAttribute.FieldName, typeof( string ) ) );
+						}
+						else
+						{
+							// Get the field using the field index.
+							var method = GetType().GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
+							fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( csvFieldAttribute.FieldIndex, typeof( int ) ) );
+						}
+					}
+					else
+					{
+						// Get the field using the property name.
+						var method = GetType().GetProperty( "Item", new[] { typeof( string ) } ).GetGetMethod();
+						fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( property.Name, typeof( string ) ) );
+					}
+
+					TypeConverter typeConverter = null;
+					var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
+					if( typeConverterAttribute != null )
+					{
+						var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName, false );
+						if( typeConverterType != null )
+						{
+							typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
+						}
+					}
+
+					if( typeConverter != null )
+					{
+						// Use the TypeConverter from the attribute to convert the type.
+						var typeConverterExpression = Expression.Constant( typeConverter );
+						fieldExpression = Expression.Call( typeConverterExpression, "ConvertFrom", null, fieldExpression );
+						fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );
+					}
+					else if( property.PropertyType != typeof( string ) )
+					{
+						var parseMethod = property.PropertyType.GetMethod( "Parse", new[] { typeof( string ) } );
+						if( parseMethod != null )
+						{
+							// Use the types Parse method.
+							fieldExpression = Expression.Call( null, parseMethod, fieldExpression );
+						}
+						else if( property.PropertyType == typeof( Guid ) )
+						{
+							var constructor = typeof( Guid ).GetConstructor( new[] { typeof( string ) } );
+							fieldExpression = Expression.New( constructor, fieldExpression );
+						}
+						else
+						{
+							// Use the default TypeConverter for the properties type.
+							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+							var typeConverterExpression = Expression.Constant( typeConverter );
+							fieldExpression = Expression.Call( typeConverterExpression, "ConvertFrom", null, fieldExpression );
+							fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );
+						}
+					}
+
+					bindings.Add( Expression.Bind( property, fieldExpression ) );
+				}
+
+				var body = Expression.MemberInit( Expression.New( recordType ), bindings );
+				var func = Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile();
+				recordFuncs[type] = func;
 			}
-			return typeProperties[type];
+
+			return (Func<CsvReader, T>)recordFuncs[type];
 		}
 	}
 }

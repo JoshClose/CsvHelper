@@ -18,7 +18,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
-		IList<string> FieldHeaders { get; }
+		string[] FieldHeaders { get; }
 
 		/// <summary>
 		/// A <see cref="bool" /> value indicating if the CSV file has a header record.
