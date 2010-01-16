@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace CsvHelper
@@ -21,6 +22,8 @@ namespace CsvHelper
 		private readonly List<string> currentRecord = new List<string>();
 		private StreamWriter writer;
 		private bool hasHeaderBeenWritten;
+		private readonly Dictionary<Type, PropertyInfo[]> typeProperties = new Dictionary<Type, PropertyInfo[]>();
+		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 
 		/// <summary>
 		/// Gets or sets the delimiter used to
@@ -59,14 +62,58 @@ namespace CsvHelper
 		/// <see cref="ICsvWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
+		/// <param name="field">The field to write.</param>
+		public virtual void WriteField( string field )
+		{
+			if( !string.IsNullOrEmpty( field ) )
+			{
+				var hasQuote = false;
+				if( field.Contains( "\"" ) )
+				{
+					// All quotes must be doubled.
+					field = field.Replace( "\"", "\"\"" );
+					hasQuote = true;
+				}
+				if( hasQuote ||
+					field[0] == ' ' ||
+					field[field.Length - 1] == ' ' ||
+					field.Contains( delimiter.ToString() ) ||
+					field.Contains( "\n" ) )
+				{
+					// Surround the field in double quotes.
+					field = string.Format( "\"{0}\"", field );
+				}
+			}
+
+			currentRecord.Add( field );
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField<T>( T field )
 		{
 			CheckDisposed();
 
-			var converter = TypeDescriptor.GetConverter( typeof( T ) );
-			WriteField( field, converter );
+			var type = typeof( T );
+			if( type == typeof( string ) )
+			{
+				WriteField( field as string );
+			}
+			else if( type.IsValueType )
+			{
+				WriteField( field.ToString() );
+			}
+			else
+			{
+				var converter = TypeDescriptor.GetConverter( typeof( T ) );
+				WriteField( field, converter );
+			}
 		}
 
 		/// <summary>
@@ -82,23 +129,8 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var fieldString = (string)converter.ConvertTo( field, typeof( string ) );
-			if( fieldString.Contains( "\"" ) )
-			{
-				// All quotes must be doubled.
-				fieldString = fieldString.Replace( "\"", "\"\"" );
-			}
-			if( fieldString.StartsWith( " " ) ||
-				fieldString.EndsWith( " " ) ||
-				fieldString.Contains( "\"" ) ||
-				fieldString.Contains( delimiter.ToString() ) ||
-				fieldString.Contains( "\n" ) )
-			{
-				// Surround the field in double quotes.
-				fieldString = string.Format( "\"{0}\"", fieldString );
-			}
-
-			currentRecord.Add( fieldString );
+			var fieldString = converter.ConvertToString( field );
+			WriteField( fieldString );
 		}
 
 		/// <summary>
@@ -125,39 +157,13 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var properties = typeof( T ).GetProperties();
-			SortProperties( properties );
-
 			if( HasHeaderRecord && !hasHeaderBeenWritten )
 			{
-				WriteHeader( properties );
+				WriteHeader( GetProperties<T>() );
 			}
 
-			foreach( var property in properties )
-			{
-				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-				if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
-				{
-					continue;
-				}
+			GetAction<T>()( this, record );
 
-				TypeConverter typeConverter = null;
-				var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
-				if( typeConverterAttribute != null )
-				{
-					var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName );
-					if( typeConverterType != null )
-					{
-						typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
-					}
-				}
-				if( typeConverter == null )
-				{
-					typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
-				}
-				var value = property.GetValue( record, null );
-				WriteField( value, typeConverter );
-			}
 			NextRecord();
 		}
 
@@ -170,9 +176,15 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
+			if( HasHeaderRecord && !hasHeaderBeenWritten )
+			{
+				WriteHeader( GetProperties<T>() );
+			}
+
 			foreach( var record in records )
 			{
-				WriteRecord( record );
+				GetAction<T>()( this, record );
+				NextRecord();
 			}
 		}
 
@@ -230,9 +242,86 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
-		protected virtual void SortProperties( PropertyInfo[] properties )
+		protected virtual PropertyInfo[] GetProperties<T>()
 		{
-			Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
+			var type = typeof( T );
+			if( !typeProperties.ContainsKey( type ) )
+			{
+				var properties = type.GetProperties();
+				Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
+				typeProperties[type] = properties;
+			}
+			return typeProperties[type];
+		}
+
+		protected virtual Action<CsvWriter, T> GetAction<T>()
+		{
+			var type = typeof( T );
+
+			if( !typeActions.ContainsKey( type ) )
+			{
+				var properties = GetProperties<T>();
+
+				Action<CsvWriter, T> func = null;
+				var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
+				var recordParameter = Expression.Parameter( typeof( T ), "record" );
+				foreach( var property in properties )
+				{
+					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
+					if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
+					{
+						// Skip this property.
+						continue;
+					}
+
+					TypeConverter typeConverter = null;
+					var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
+					if( typeConverterAttribute != null )
+					{
+						var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName );
+						if( typeConverterType != null )
+						{
+							typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
+						}
+					}
+
+					Expression fieldExpression = Expression.Property( recordParameter, property );
+					if( typeConverter != null )
+					{
+						// Convert the property value to a string using the
+						// TypeConverter specified in the TypeConverterAttribute.
+						var typeConverterExpression = Expression.Constant( typeConverter );
+						var method = typeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
+						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+					}
+					else if( property.PropertyType != typeof( string ) )
+					{
+						if( property.PropertyType.IsValueType )
+						{
+							// Convert the property value to a string using ToString.
+							fieldExpression = Expression.Call( fieldExpression, "ToString", null, null );
+						}
+						else
+						{
+							// Convert the property value to a string using
+							// the default TypeConverter for the properties type.
+							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+							var method = typeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
+							var typeConverterExpression = Expression.Constant( typeConverter );
+							fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+							fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+						}
+					}
+
+					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
+					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
+				}
+
+				typeActions[type] = func;
+			}
+
+			return  (Action<CsvWriter, T>)typeActions[type];
 		}
 	}
 }

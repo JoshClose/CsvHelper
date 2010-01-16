@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace CsvHelper
 {
@@ -22,9 +21,6 @@ namespace CsvHelper
 		private string[] headerRecord;
 		private ICsvParser parser;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
-		private readonly Dictionary<string, TypeConverter> typeConverters = new Dictionary<string, TypeConverter>();
-		private readonly Dictionary<Type, PropertyInfo[]> typeProperties = new Dictionary<Type, PropertyInfo[]>();
-		private readonly Dictionary<string, Setter> propertySetters = new Dictionary<string, Setter>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
 
 		protected delegate void Setter( object target, object value );

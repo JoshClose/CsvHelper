@@ -31,6 +31,15 @@ namespace CsvHelper
 		/// <see cref="NextRecord()" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
+		/// <param name="field">The field to write.</param>
+		void WriteField( string field );
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="NextRecord()" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
 		void WriteField<T>( T field );
