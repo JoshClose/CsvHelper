@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -248,7 +249,17 @@ namespace CsvHelper
 			if( !typeProperties.ContainsKey( type ) )
 			{
 				var properties = type.GetProperties();
-				Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
+				var shouldSort = properties.Any( property =>
+				{
+					// Only sort if there is at least one attribute
+					// that has the field index specified.
+					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
+					return csvFieldAttribute != null && csvFieldAttribute.FieldIndex >= 0;
+				} );
+				if( shouldSort )
+				{
+					Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
+				}
 				typeProperties[type] = properties;
 			}
 			return typeProperties[type];

@@ -61,6 +61,7 @@ namespace CsvHelper
 			var xAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( xProperty, false );
 			var yAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( yProperty, false );
 
+			// Push properties without the attribute to the bottom.
 			if( xAttribute == null && yAttribute == null )
 			{
 				return 0;
@@ -72,6 +73,23 @@ namespace CsvHelper
 			if( yAttribute == null )
 			{
 				return -1;
+			}
+
+			if( !useFieldName )
+			{
+				// Treat non-set field indexes like nulls.
+				if( xAttribute.FieldIndex == -1 && yAttribute.FieldIndex == -1 )
+				{
+					return 0;
+				}
+				if( xAttribute.FieldIndex == -1 )
+				{
+					return 1;
+				}
+				if( yAttribute.FieldIndex == -1 )
+				{
+					return -1;
+				}
 			}
 
 			return useFieldName ? xAttribute.FieldName.CompareTo( yAttribute.FieldName ) : xAttribute.FieldIndex.CompareTo( yAttribute.FieldIndex );
