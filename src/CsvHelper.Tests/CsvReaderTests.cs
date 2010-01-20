@@ -161,6 +161,34 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		[ExpectedException( typeof( MissingFieldException ) )]
+		public void GetMissingFieldByNameTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			reader.GetField<string>( "blah" );
+		}
+
+		[TestMethod]
 		[ExpectedException( typeof( InvalidOperationException ) )]
 		public void GetFieldByNameNoHeaderExceptionTest()
 		{

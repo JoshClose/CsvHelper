@@ -279,6 +279,11 @@ namespace CsvHelper
 				throw new InvalidOperationException( "There is no header record to determine the index by name." );
 			}
 
+			if( !namedIndexes.ContainsKey( name ) )
+			{
+				throw new MissingFieldException( string.Format( "Field '{0}' does not exist in the CSV file.", name ) );
+			}
+
 			return namedIndexes[name];
 		}
 

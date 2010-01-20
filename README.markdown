@@ -1,4 +1,4 @@
-CsvHelper is a library for reading and writing CSV files.
+CsvHelper is a library for reading and writing CSV files. CsvHelper follows the CSV format specified here: http://www.creativyst.com/Doc/Articles/CSV/CSV01.htm
 
 **Reading:**
 
