@@ -161,7 +161,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException( typeof( MissingFieldException ) )]
+		[ExpectedException( typeof( IndexOutOfRangeException ) )]
 		public void GetMissingFieldByNameTest()
 		{
 			var isHeaderRecord = true;
@@ -180,6 +180,34 @@ namespace CsvHelper.Tests
 			} );
 
 			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			reader.GetField<string>( "blah" );
+		}
+
+		[TestMethod]
+		[ExpectedException( typeof( MissingFieldException ) )]
+		public void GetMissingFieldByNameStrictTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } )
 			{
 				HasHeaderRecord = true,
 			};
@@ -285,6 +313,126 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void TryGetFieldInvalidTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			string field;
+			var got = reader.TryGetField( -1, out field );
+			Assert.IsFalse( got );
+			Assert.IsNull( field );
+		}
+
+		[TestMethod]
+		public void TryGetFieldInvalidStrictTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			string field;
+			var got = reader.TryGetField( -1, out field );
+			Assert.IsFalse( got );
+			Assert.IsNull( field );
+		}
+
+		[TestMethod]
+		public void TryGetFieldTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			int field;
+			var got = reader.TryGetField( 0, out field );
+			Assert.IsTrue( got );
+			Assert.AreEqual( 1, field );
+		}
+
+		[TestMethod]
+		public void TryGetFieldStrictTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } )
+			{
+				HasHeaderRecord = true,
+			};
+			reader.Read();
+
+			int field;
+			var got = reader.TryGetField( "One", out field );
+			Assert.IsTrue( got );
+			Assert.AreEqual( 1, field );
+		}
+
 		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
 		private class TestRecord
 		{
@@ -305,6 +453,8 @@ namespace CsvHelper.Tests
 			public int FirstColumn { get; set; }
 
 			public Guid GuidColumn { get; set; }
+
+			public int NoMatchingFields { get; set; }
 		}
 
 		private class TestTypeConverter : TypeConverter

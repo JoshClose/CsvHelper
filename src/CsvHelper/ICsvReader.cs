@@ -21,7 +21,7 @@ namespace CsvHelper
 		string[] FieldHeaders { get; }
 
 		/// <summary>
-		/// A <see cref="bool" /> value indicating if the CSV file has a header record.
+		/// A value indicating if the CSV file has a header record.
 		/// </summary>
 		bool HasHeaderRecord { get; set; }
 
@@ -35,79 +35,135 @@ namespace CsvHelper
 		/// Gets the raw field at index.
 		/// </summary>
 		/// <param name="index">The index of the field.</param>
-		/// <returns>The raw string field.</returns>
+		/// <returns>The raw field.</returns>
 		string this[int index] { get; }
 
 		/// <summary>
 		/// Gets the raw string field at name.
 		/// </summary>
 		/// <param name="name">The named index of the field.</param>
-		/// <returns>The raw string field.</returns>
+		/// <returns>The raw field.</returns>
 		string this[string name] { get; }
 
 		/// <summary>
 		/// Gets the raw field at index.
 		/// </summary>
 		/// <param name="index">The index of the field.</param>
-		/// <returns>The raw string field.</returns>
+		/// <returns>The raw field.</returns>
 		string GetField( int index );
 
 		/// <summary>
 		/// Gets the raw field at name.
 		/// </summary>
 		/// <param name="name">The named index of the field.</param>
-		/// <returns>The raw string field.</returns>
+		/// <returns>The raw field.</returns>
 		string GetField( string name );
 
 		/// <summary>
-		/// Gets the field converted to type T at index.
+		/// Gets the field converted to <see cref="Type"/> T at index.
 		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 		/// <param name="index">The index of the field.</param>
-		/// <returns>The field converted to type T.</returns>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
 		T GetField<T>( int index );
 
 		/// <summary>
-		/// Gets the field converted to type T at name.
+		/// Gets the field converted to <see cref="Type"/> T at name.
 		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 		/// <param name="name">The named index of the field.</param>
-		/// <returns>The field converted to type T.</returns>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
 		T GetField<T>( string name );
 
 		/// <summary>
-		/// Gets the field converted to type T at index using
+		/// Gets the field converted to <see cref="Type"/> T at index using
 		/// the given <see cref="TypeConverter" />.
 		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 		/// <param name="index">The index of the field.</param>
-		/// <param name="converter">The converter used to convert the field to type T.</param>
-		/// <returns>The field converted to type T.</returns>
+		/// <param name="converter">The <see cref="TypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
 		T GetField<T>( int index, TypeConverter converter );
 
 		/// <summary>
-		/// Gets the field converted to type T at name using
+		/// Gets the field converted to <see cref="Type"/> T at name using
 		/// the given <see cref="TypeConverter" />.
 		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 		/// <param name="name">The named index of the field.</param>
-		/// <param name="converter">The converter used to convert the field to type T.</param>
-		/// <returns>The field converted to type T.</returns>
+		/// <param name="converter">The <see cref="TypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
 		T GetField<T>( string name, TypeConverter converter );
 
 		/// <summary>
-		/// Gets the record converted into type T.
+		/// Gets the raw field at index.
 		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		/// <returns>The record converted to type T.</returns>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="field">The raw field.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( int index, out string field );
+
+		/// <summary>
+		/// Gets the raw field at name.
+		/// </summary>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="field">The raw field.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( string name, out string field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at index.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="field">The field converted to type T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T>( int index, out T field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at name.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T>( string name, out T field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at index
+		/// using the specified <see cref="TypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="converter">The <see cref="TypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T>( int index, TypeConverter converter, out T field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at name
+		/// using the specified <see cref="TypeConverter"/>.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The <see cref="TypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T>( string name, TypeConverter converter, out T field );
+
+		/// <summary>
+		/// Gets the record converted into <see cref="Type"/> T.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
+		/// <returns>The record converted to <see cref="Type"/> T.</returns>
 		T GetRecord<T>();
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
-		/// converts each to type T. The Read method
+		/// converts each to <see cref="Type"/> T. The Read method
 		/// should not be used when using this.
 		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
 		IList<T> GetRecords<T>();
 	}

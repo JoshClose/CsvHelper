@@ -53,6 +53,7 @@
     <Compile Include="CsvPropertyInfoComparer.cs" />
     <Compile Include="CsvReader.cs" />
     <Compile Include="CsvReaderFactory.cs" />
+    <Compile Include="CsvReaderOptions.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="ICsvParser.cs" />
     <Compile Include="ICsvReader.cs" />

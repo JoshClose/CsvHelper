@@ -22,5 +22,17 @@ namespace CsvHelper
 			var parser = new CsvParser( reader );
 			return new CsvReader( parser );
 		}
+
+		/// <summary>
+		/// Creates an <see cref="ICsvReader" /> using the given <see cref="StreamReader" />.
+		/// </summary>
+		/// <param name="reader"><see cref="StreamReader" /> containing the CSV file.</param>
+		/// <param name="options"><see cref="CsvReaderOptions" /> used to read the parsed records.</param>
+		/// <returns>A new <see cref="ICsvReader" />.</returns>
+		public static ICsvReader Create( StreamReader reader, CsvReaderOptions options )
+		{
+			var parser = new CsvParser( reader );
+			return new CsvReader( parser, options );
+		}
 	}
 }

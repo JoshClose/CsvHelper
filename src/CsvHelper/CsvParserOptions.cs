@@ -8,7 +8,7 @@ using System;
 namespace CsvHelper
 {
 	/// <summary>
-	/// Options for the CSV parser.
+	/// Options for the <see cref="CsvParser" />.
 	/// </summary>
 	public class CsvParserOptions
 	{
