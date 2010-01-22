@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -302,7 +303,7 @@ namespace CsvHelper
 						// Convert the property value to a string using the
 						// TypeConverter specified in the TypeConverterAttribute.
 						var typeConverterExpression = Expression.Constant( typeConverter );
-						var method = typeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
+						var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
 						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 					}
@@ -311,19 +312,23 @@ namespace CsvHelper
 						if( property.PropertyType.IsValueType )
 						{
 							// Convert the property value to a string using ToString.
-							fieldExpression = Expression.Call( fieldExpression, "ToString", null, null );
+							var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
+							fieldExpression = Expression.Call( fieldExpression, "ToString", null, formatProvider );
 						}
 						else
 						{
 							// Convert the property value to a string using
 							// the default TypeConverter for the properties type.
 							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
-							var method = typeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
+							var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
 							var typeConverterExpression = Expression.Constant( typeConverter );
 							fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 							fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 						}
 					}
+
+					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 
 					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
 					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();

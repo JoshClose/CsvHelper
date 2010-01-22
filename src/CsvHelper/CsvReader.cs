@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -514,23 +515,24 @@ namespace CsvHelper
 					{
 						// Use the TypeConverter from the attribute to convert the type.
 						var typeConverterExpression = Expression.Constant( typeConverter );
-						fieldExpression = Expression.Call( typeConverterExpression, "ConvertFrom", null, fieldExpression );
+						fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
 						fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );
 					}
 					else if( property.PropertyType != typeof( string ) )
 					{
-						var parseMethod = property.PropertyType.GetMethod( "Parse", new[] { typeof( string ) } );
+						var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
+						var parseMethod = property.PropertyType.GetMethod( "Parse", new[] { typeof( string ), typeof( IFormatProvider ) } );
 						if( parseMethod != null )
 						{
 							// Use the types Parse method.
-							fieldExpression = Expression.Call( null, parseMethod, fieldExpression );
+							fieldExpression = Expression.Call( null, parseMethod, fieldExpression, formatProvider );
 						}
 						else
 						{
 							// Use the default TypeConverter for the properties type.
 							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
 							var typeConverterExpression = Expression.Constant( typeConverter );
-							fieldExpression = Expression.Call( typeConverterExpression, "ConvertFrom", null, fieldExpression );
+							fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
 							fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );
 						}
 					}

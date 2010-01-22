@@ -122,6 +122,36 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( ",0,test,\r\n", csvFile );
 		}
 
+		[TestMethod]
+		public void WriteRecordWithNullRecord()
+		{
+			var record = new TestRecord
+			{
+				IntColumn = 1,
+				StringColumn = "string column",
+				IgnoredColumn = "ignored column",
+				FirstColumn = "first column",
+			};
+
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			var csv = new CsvWriter( writer ) { HasHeaderRecord = true };
+
+			csv.WriteRecord( record );
+			csv.WriteRecord( (TestRecord)null );
+			csv.WriteRecord( record );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
+			expected += "first column,1,test,string column\r\n";
+			expected += ",,,\r\n";
+			expected += "first column,1,test,string column\r\n";
+
+			Assert.AreEqual( expected, csvFile );
+		}
+
 		[TypeConverter( "type name" )]
 		private class TestRecord
 		{
