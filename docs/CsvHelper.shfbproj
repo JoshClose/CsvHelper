@@ -15,11 +15,13 @@
     <Name>Documentation</Name>
     <!-- SHFB properties -->
     <OutputPath>.\Help\</OutputPath>
-    <HtmlHelpName>Documentation</HtmlHelpName>
+    <HtmlHelpName>CsvHelper_0.7.0</HtmlHelpName>
     <IndentHtml>False</IndentHtml>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\src\CsvHelper\CsvHelper.csproj" xmlns="" />
     </DocumentationSources>
+    <HelpFileFormat>HtmlHelp1, MSHelpViewer, Website</HelpFileFormat>
+    <HelpTitle>CSV Helper Class Library</HelpTitle>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in
        order for Visual Studio to perform the build.  The others are optional
