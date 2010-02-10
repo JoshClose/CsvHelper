@@ -12,9 +12,8 @@
     <AssemblyName>CsvHelper</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
     <TargetFrameworkSubset>
     </TargetFrameworkSubset>
@@ -52,9 +51,9 @@
     <Compile Include="CsvParserOptions.cs" />
     <Compile Include="CsvPropertyInfoComparer.cs" />
     <Compile Include="CsvReader.cs" />
-    <Compile Include="CsvReaderFactory.cs" />
     <Compile Include="CsvReaderOptions.cs" />
     <Compile Include="CsvWriter.cs" />
+    <Compile Include="CsvWriterOptions.cs" />
     <Compile Include="ICsvParser.cs" />
     <Compile Include="ICsvReader.cs" />
     <Compile Include="ICsvWriter.cs" />
@@ -63,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="CsvHelper.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

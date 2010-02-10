@@ -2,6 +2,7 @@
 // Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
 #endregion
 using System;
 using System.Collections.Generic;
@@ -15,32 +16,24 @@ namespace CsvHelper
 	public class CsvParser : ICsvParser
 	{
 		private bool disposed;
-		private readonly char delimiter;
 		private StreamReader reader;
 		private readonly char[] readerBuffer;
 		private int readerBufferPosition;
 		private int charsRead;
-		private readonly int bufferSize;
 		private string[] record;
 
 		/// <summary>
 		/// Gets or sets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
-		public char Delimiter
-		{
-			get { return delimiter; }
-		}
+		public char Delimiter { get; private set; }
 
 		/// <summary>
 		/// Gets or sets the size of the buffer
 		/// used when reading the stream and
 		/// creating the fields.
 		/// </summary>
-		public int BufferSize
-		{
-			get { return bufferSize; }
-		}
+		public int BufferSize { get; private set; }
 
 		/// <summary>
 		/// Gets or sets the field count.
@@ -62,11 +55,11 @@ namespace CsvHelper
 		public CsvParser( StreamReader reader, CsvParserOptions options )
 		{
 			this.reader = reader;
-			bufferSize = options.BufferSize;
-			delimiter = options.Delimiter;
+			BufferSize = options.BufferSize;
+			Delimiter = options.Delimiter;
 			FieldCount = options.FieldCount;
             
-			readerBuffer = new char[bufferSize];
+			readerBuffer = new char[BufferSize];
 		}
 
 		/// <summary>
@@ -112,7 +105,7 @@ namespace CsvHelper
 				c = readerBuffer[readerBufferPosition];
 				readerBufferPosition++;
 
-				if( !inQuotes && c == delimiter )
+				if( !inQuotes && c == Delimiter )
 				{
 					// If we hit the delimiter, we are
 					// done reading the field and can
@@ -171,6 +164,12 @@ namespace CsvHelper
 			return record;
 		}
 
+		/// <summary>
+		/// Adds the field to the current record.
+		/// </summary>
+		/// <param name="recordPosition">The record position to add the field to.</param>
+		/// <param name="field">The field to add.</param>
+		/// <param name="hasQuotes">True if the field is quoted, otherwise false.</param>
 		protected virtual void AddFieldToRecord( ref int recordPosition, string field, bool hasQuotes )
 		{
 			if( record.Length < recordPosition + 1 )
@@ -201,6 +200,10 @@ namespace CsvHelper
 			GC.SuppressFinalize( this );
 		}
 
+		/// <summary>
+		/// Checks if the instance has been disposed of.
+		/// </summary>
+		/// <exception cref="ObjectDisposedException" />
 		protected virtual void Dispose( bool disposing )
 		{
 			if( !disposed )
@@ -218,6 +221,10 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Checks if the reader has been read yet.
+		/// </summary>
+		/// <exception cref="InvalidOperationException" />
 		protected virtual void CheckDisposed()
 		{
 			if( disposed )

@@ -2,6 +2,7 @@
 // Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
 #endregion
 using System;
 using System.Collections.Generic;
@@ -23,10 +24,7 @@ namespace CsvHelper.Tests
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
 
-			var reader = new CsvReader( parserMock.Object )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object );
 
 			reader.GetField<int>( 0 );
 		}
@@ -49,10 +47,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
 			// Check to see if the header record and first record are set properly.
@@ -150,10 +145,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
@@ -179,10 +171,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
 			reader.GetField<string>( "blah" );
@@ -207,10 +196,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } );
 			reader.Read();
 
 			reader.GetField<string>( "blah" );
@@ -225,7 +211,7 @@ namespace CsvHelper.Tests
 			var parserMock = mockFactory.Create<ICsvParser>();
 			parserMock.Setup( m => m.Read() ).Returns( () => data );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions{ HasHeaderRecord = false } );
 			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data[0] ), reader.GetField<int>( "One" ) );
@@ -259,7 +245,7 @@ namespace CsvHelper.Tests
 				return recordData;
 			} );
 
-			var csv = new CsvReader( csvParserMock.Object ) { HasHeaderRecord = true };
+			var csv = new CsvReader( csvParserMock.Object );
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
 
@@ -297,7 +283,7 @@ namespace CsvHelper.Tests
 				return new[] { count.ToString(), "string column " + count, guid.ToString() };
 			} );
 
-			var csv = new CsvReader( csvParserMock.Object ) { HasHeaderRecord = true };
+			var csv = new CsvReader( csvParserMock.Object );
 			var records = csv.GetRecords<TestRecord>();
 
 			Assert.AreEqual( 2, records.Count );
@@ -331,10 +317,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
 			string field;
@@ -361,10 +344,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } );
 			reader.Read();
 
 			string field;
@@ -391,10 +371,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
 			int field;
@@ -421,10 +398,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } )
-			{
-				HasHeaderRecord = true,
-			};
+			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } );
 			reader.Read();
 
 			int field;

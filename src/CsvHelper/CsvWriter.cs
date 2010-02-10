@@ -2,6 +2,7 @@
 // Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
 #endregion
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,6 @@ namespace CsvHelper
 	public class CsvWriter : ICsvWriter
 	{
 		private bool disposed;
-		private char delimiter = ',';
 		private readonly List<string> currentRecord = new List<string>();
 		private StreamWriter writer;
 		private bool hasHeaderBeenWritten;
@@ -31,11 +31,7 @@ namespace CsvHelper
 		/// Gets or sets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
-		public virtual char Delimiter
-		{
-			get { return delimiter; }
-			set { delimiter = value; }
-		}
+		public virtual char Delimiter { get; private set; }
 
 		/// <summary>
 		/// Gets are sets a value indicating if the
@@ -47,16 +43,19 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		public CsvWriter( StreamWriter writer )
-		{
-			this.writer = writer;
-		}
+		public CsvWriter( StreamWriter writer ) : this( writer, new CsvWriterOptions() ) { }
 
 		/// <summary>
-		/// Creates a new CSV writer using the given file path.
+		/// Creates a new CSV writer using the given <see cref="StreamWriter"/>
+		/// and <see cref="CsvWriterOptions"/>.
 		/// </summary>
-		/// <param name="filePath">The file path used to write the CSV file.</param>
-		public CsvWriter( string filePath ) : this( new StreamWriter( filePath ) ) { }
+		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
+		/// <param name="options">The <see cref="CsvWriterOptions"/> used to write the CSV file.</param>
+		public CsvWriter( StreamWriter writer, CsvWriterOptions options )
+		{
+			this.writer = writer;
+			Delimiter = options.Delimiter;
+		}
 
 		/// <summary>
 		/// Writes the field to the CSV file.
@@ -79,7 +78,7 @@ namespace CsvHelper
 				if( hasQuote ||
 					field[0] == ' ' ||
 					field[field.Length - 1] == ' ' ||
-					field.Contains( delimiter.ToString() ) ||
+					field.Contains( Delimiter.ToString() ) ||
 					field.Contains( "\n" ) )
 				{
 					// Surround the field in double quotes.
@@ -144,7 +143,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var record = string.Join( delimiter.ToString(), currentRecord.ToArray() );
+			var record = string.Join( Delimiter.ToString(), currentRecord.ToArray() );
 			writer.WriteLine( record );
 			writer.Flush();
 			currentRecord.Clear();
@@ -200,6 +199,10 @@ namespace CsvHelper
 			GC.SuppressFinalize( this );
 		}
 
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
 			if( !disposed )
@@ -217,6 +220,10 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Checks if the instance has been disposed of.
+		/// </summary>
+		/// <exception cref="ObjectDisposedException" />
 		protected virtual void CheckDisposed()
 		{
 			if( disposed )
@@ -225,6 +232,10 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Writes the header record from the given properties.
+		/// </summary>
+		/// <param name="properties">The properties to write the header record from.</param>
 		protected virtual void WriteHeader( PropertyInfo[] properties )
 		{
 			foreach( var property in properties )
@@ -244,6 +255,11 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
+		/// <summary>
+		/// Gets the properties for the given <see cref="Type"/>.
+		/// </summary>
+		/// <typeparam name="T">The type to get the properties for.</typeparam>
+		/// <returns>The properties for the given <see cref="Type"/>/</returns>
 		protected virtual PropertyInfo[] GetProperties<T>()
 		{
 			var type = typeof( T );
@@ -266,6 +282,12 @@ namespace CsvHelper
 			return typeProperties[type];
 		}
 
+		/// <summary>
+		/// Gets the action delegate used to write the custom
+		/// class object to the writer.
+		/// </summary>
+		/// <typeparam name="T">The type of the custom class being written.</typeparam>
+		/// <returns>The action delegate.</returns>
 		protected virtual Action<CsvWriter, T> GetAction<T>()
 		{
 			var type = typeof( T );

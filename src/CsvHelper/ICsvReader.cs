@@ -2,10 +2,12 @@
 // Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
 #endregion
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace CsvHelper
 {
@@ -23,7 +25,18 @@ namespace CsvHelper
 		/// <summary>
 		/// A value indicating if the CSV file has a header record.
 		/// </summary>
-		bool HasHeaderRecord { get; set; }
+		bool HasHeaderRecord { get; }
+
+		/// <summary>
+		/// Gets the binding flags used to populate
+		/// custom class objects.
+		/// </summary>
+		BindingFlags PropertyBindingFlags { get; }
+
+		/// <summary>
+		/// Gets a value indicating if strict reading is enabled.
+		/// </summary>
+		bool Strict { get; }
 
 		/// <summary>
 		/// Advances the reader to the next record.

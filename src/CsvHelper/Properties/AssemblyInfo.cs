@@ -2,6 +2,7 @@
 // Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
 #endregion
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -36,5 +37,4 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion( "0.7.0.*" )]
-[assembly: AssemblyKeyFile( @"..\CsvHelper.snk" )]
+[assembly: AssemblyVersion( "0.8.0.*" )]

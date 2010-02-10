@@ -2,11 +2,13 @@
 // Copyright 2009-2010 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
 #endregion
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -22,7 +24,6 @@ namespace CsvHelper
 		private string[] currentRecord;
 		private string[] headerRecord;
 		private ICsvParser parser;
-		private readonly bool strict;
 		private readonly BindingFlags propertyBindingFlags;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
@@ -30,7 +31,7 @@ namespace CsvHelper
 		/// <summary>
 		/// A value indicating if the CSV file has a header record.
 		/// </summary>
-		public virtual bool HasHeaderRecord { get; set; }
+		public virtual bool HasHeaderRecord { get; private set; }
 
 		/// <summary>
 		/// Gets the field headers.
@@ -47,6 +48,24 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Gets a value indicating if strict reading is enabled.
+		/// </summary>
+		public virtual bool Strict { get; private set; }
+
+		/// <summary>
+		/// Gets the binding flags used to populate
+		/// custom class objects.
+		/// </summary>
+		public virtual BindingFlags PropertyBindingFlags { get; private set; }
+
+		/// <summary>
+		/// Creates a new CSV reader using <see cref="CsvParser"/> as
+		/// the default parser.
+		/// </summary>
+		/// <param name="reader"></param>
+		public CsvReader( StreamReader reader ) : this( new CsvParser( reader ) ){}
+
+		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
@@ -60,8 +79,9 @@ namespace CsvHelper
 		public CsvReader( ICsvParser parser, CsvReaderOptions options )
 		{
 			this.parser = parser;
-			strict = options.Strict;
+			Strict = options.Strict;
 			propertyBindingFlags = options.PropertyBindingFlags;
+			HasHeaderRecord = options.HasHeaderRecord;
 		}
 
 		/// <summary>
@@ -367,6 +387,10 @@ namespace CsvHelper
 			GC.SuppressFinalize( this );
 		}
 
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
 			if( !disposed )
@@ -384,6 +408,10 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Checks if the instance has been disposed of.
+		/// </summary>
+		/// <exception cref="ObjectDisposedException" />
 		protected virtual void CheckDisposed()
 		{
 			if( disposed )
@@ -392,6 +420,10 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Checks if the reader has been read yet.
+		/// </summary>
+		/// <exception cref="InvalidOperationException" />
 		protected virtual void CheckHasBeenRead()
 		{
 			if( !hasBeenRead )
@@ -400,11 +432,25 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="TypeConverter"/>.
+		/// </summary>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="converter">The <see cref="TypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		protected virtual object GetField( int index, TypeConverter converter )
 		{
 			return converter.ConvertFrom( currentRecord[index] );
 		}
-
+        
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="TypeConverter"/>.
+		/// </summary>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The <see cref="TypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		protected virtual object GetField( string name, TypeConverter converter )
 		{
 			var index = GetFieldIndex( name );
@@ -426,7 +472,7 @@ namespace CsvHelper
 
 			if( !namedIndexes.ContainsKey( name ) )
 			{
-				if( strict )
+				if( Strict )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
@@ -438,6 +484,9 @@ namespace CsvHelper
 			return namedIndexes[name];
 		}
 
+		/// <summary>
+		/// Parses the named indexes from the header record.
+		/// </summary>
 		protected virtual void ParseNamedIndexes()
 		{
 			for( var i = 0; i < headerRecord.Length; i++ )
@@ -451,6 +500,13 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Gets the function delegate used to populate
+		/// a custom class object with data from the reader.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of object that is created
+		/// and populated.</typeparam>
+		/// <returns>The function delegate.</returns>
 		protected virtual Func<CsvReader, T> GetRecordFunc<T>()
 		{
 			var type = typeof( T );
