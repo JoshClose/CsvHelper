@@ -24,7 +24,6 @@ namespace CsvHelper
 		private string[] currentRecord;
 		private string[] headerRecord;
 		private ICsvParser parser;
-		private readonly BindingFlags propertyBindingFlags;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
 
@@ -80,7 +79,7 @@ namespace CsvHelper
 		{
 			this.parser = parser;
 			Strict = options.Strict;
-			propertyBindingFlags = options.PropertyBindingFlags;
+			PropertyBindingFlags = options.PropertyBindingFlags;
 			HasHeaderRecord = options.HasHeaderRecord;
 		}
 
@@ -149,6 +148,10 @@ namespace CsvHelper
 		public virtual string GetField( string name )
 		{
 			var index = GetFieldIndex( name );
+			if( index < 0 )
+			{
+				return null;
+			}
 			return GetField( index );
 		}
 
@@ -515,7 +518,7 @@ namespace CsvHelper
 				var bindings = new List<MemberBinding>();
 				var recordType = typeof( T );
 				var readerParameter = Expression.Parameter( GetType(), "reader" );
-				foreach( var property in recordType.GetProperties( propertyBindingFlags ) )
+				foreach( var property in recordType.GetProperties( PropertyBindingFlags ) )
 				{
 					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
 					int index;
@@ -567,7 +570,7 @@ namespace CsvHelper
 						}
 					}
 
-					if( typeConverter != null )
+					if( typeConverter != null && typeConverter.CanConvertFrom( typeof( string ) ) )
 					{
 						// Use the TypeConverter from the attribute to convert the type.
 						var typeConverterExpression = Expression.Constant( typeConverter );
@@ -587,6 +590,11 @@ namespace CsvHelper
 						{
 							// Use the default TypeConverter for the properties type.
 							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+							if( !typeConverter.CanConvertFrom( typeof( string ) ) )
+							{
+								continue;
+							}
+							// Only convert if the convertable is capable.
 							var typeConverterExpression = Expression.Constant( typeConverter );
 							fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
 							fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );

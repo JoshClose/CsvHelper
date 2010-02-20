@@ -15,7 +15,7 @@
     <Name>Documentation</Name>
     <!-- SHFB properties -->
     <OutputPath>.\Help\</OutputPath>
-    <HtmlHelpName>CsvHelper_0.7.0</HtmlHelpName>
+    <HtmlHelpName>CsvHelper_0.8.1</HtmlHelpName>
     <IndentHtml>False</IndentHtml>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\src\CsvHelper.sln" />
@@ -48,14 +48,41 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="Media\" />
+    <Folder Include="Content\Writing\" />
+    <Folder Include="Content\Reading\" />
     <Folder Include="Content\" />
   </ItemGroup>
   <ItemGroup>
     <ContentLayout Include="ContentLayout.content" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Writing\WritingRecords.aml" />
+    <None Include="Content\Writing\WritingFields.aml" />
+    <None Include="Content\Writing\WritingRawFields.aml" />
+    <None Include="Content\Writing\CreatingTheWriter.aml" />
+    <None Include="Content\Reading\ReadingRecords.aml" />
+    <None Include="Content\Reading\ReadingFields.aml" />
+    <None Include="Content\Reading\ReadingRawFields.aml" />
+    <None Include="Content\Reading\CreatingTheReader.aml" />
+    <None Include="Content\Reading\TestData.aml" />
     <None Include="Content\License.aml" />
     <None Include="Content\Welcome.aml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Media\RawFieldsByIndexOutput.png">
+      <ImageId>RawFieldsByIndexOutput</ImageId>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Media\RawFieldsByFieldNameOutput.png">
+      <ImageId>RawFieldsByFieldNameOuput</ImageId>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Media\ReadFieldsByIndexOutput.png">
+      <ImageId>ReadFieldsByIndexOutput</ImageId>
+    </Image>
   </ItemGroup>
   <!-- Import the SHFB build targets -->
   <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />

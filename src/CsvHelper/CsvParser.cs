@@ -93,13 +93,14 @@ namespace CsvHelper
 					}
 
 					charsRead = reader.Read( readerBuffer, 0, readerBuffer.Length );
+					readerBufferPosition = 0;
+					fieldStartPosition = 0;
+
 					if( charsRead == 0 )
 					{
 						// The end of the stream has been reached.
 						return null;
 					}
-					readerBufferPosition = 0;
-					fieldStartPosition = 0;
 				}
 
 				c = readerBuffer[readerBufferPosition];

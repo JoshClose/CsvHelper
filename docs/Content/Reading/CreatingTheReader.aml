@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="8d6ecf39-978b-4fbc-8236-7c5ef09f7eef" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+    	<para>
+	    	There are several ways to create a reader:
+	    	
+			<list class="bullet">
+			  <listItem><link xlink:href="#Example1">CsvReader( ICsvParser parser, CsvReaderOptions options )</link></listItem>
+			  <listItem><link xlink:href="#Example2">CsvReader( ICsvParser parser )</link></listItem>
+			  <listItem><link xlink:href="#Example3">CsvReader( StreamReader reader )</link></listItem>
+			</list>
+      </para>
+    </introduction>
+    
+    <section address="Example1">
+      <title>CsvReader( ICsvParser parser, CsvReaderOptions options )</title>
+      <content>
+        <!-- Uncomment this to create a sub-section outline
+        <autoOutline /> -->
+		<para>
+			Create a reader passing in the <codeEntityReference>T:CsvHelper.ICsvParser</codeEntityReference>
+			to use for parsing and the <codeEntityReference>T:CsvHelper.CsvReaderOptions</codeEntityReference>
+			to use when reading. We will use a default parser and options here.
+			We will create the StreamReader using the data from our GetDataStream method.
+			
+			<code language="C#">
+				<![CDATA[
+var streamReader = new StreamReader( GetDataStream( true, false ) );
+var parser = new CsvParser( streamReader );
+var options = new CsvReaderOptions();
+var reader = new CsvReader( parser, options );
+				]]>
+			</code>
+		</para>
+      </content>
+    </section>
+    
+    <section address="Example2">
+      <title>CsvReader( ICsvParser parser )</title>
+      <content>
+		<para>
+			Create a reader passing in the <codeEntityReference>T:CsvHelper.ICsvParser</codeEntityReference>
+			to use for parsing. This will automatically use the default
+			<codeEntityReference>T:CsvHelper.CsvReaderOptions</codeEntityReference>.
+
+			<code language="C#">
+				<![CDATA[
+var streamReader = new StreamReader( GetDataStream( true, false ) );
+var parser = new CsvParser( streamReader );
+var reader = new CsvReader( parser );
+				]]>
+			</code>
+		</para>
+      </content>
+    </section>
+    
+    <section address="Example3">
+      <title>CsvReader( StreamReader reader )</title>
+      <content>
+		<para>
+			Create a reader passing the StreamReader that contains the CSV
+			data. This will automatically use the default
+			<codeEntityReference>T:CsvHelper.ICsvParser</codeEntityReference> and
+			<codeEntityReference>T:CsvHelper.CsvReaderOptions</codeEntityReference>.
+			
+			<code language="C#">
+				<![CDATA[
+var streamReader = new StreamReader( GetDataStream( true, false ) );
+var reader = new CsvReader( streamReader );
+				]]>
+			</code>
+		</para>
+      </content>
+    </section>
+    
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

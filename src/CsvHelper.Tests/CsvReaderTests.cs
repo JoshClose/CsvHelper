@@ -407,6 +407,50 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 1, field );
 		}
 
+		[TestMethod]
+		public void GetRecordNoAttributesTest()
+		{
+			var headerData = new[]
+            {
+                "IntColumn",
+                "StringColumn",
+                "GuidColumn",
+                "CustomTypeColumn",
+            };
+			var recordData = new[]
+            {
+                "1",
+                "string column",
+				Guid.NewGuid().ToString(),
+				"blah",
+            };
+			var isHeaderRecord = true;
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return headerData;
+				}
+				return recordData;
+			} );
+
+			var csv = new CsvReader( csvParserMock.Object );
+			csv.Read();
+			var record = csv.GetRecord<TestRecordNoAttributes>();
+
+			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
+			Assert.AreEqual( recordData[1], record.StringColumn );
+			Assert.AreEqual( default( string ), record.IgnoredColumn );
+			Assert.AreEqual( default( string ), record.TypeConvertedColumn );
+			Assert.AreEqual( default( int ),record.FirstColumn );
+			Assert.AreEqual( new Guid( recordData[2] ), record.GuidColumn );
+			Assert.AreEqual( default( int ), record.NoMatchingFields );
+			Assert.AreEqual( default( TestRecord ), record.CustomTypeColumn );
+		}
+
 		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
 		private class TestRecord
 		{
@@ -431,11 +475,35 @@ namespace CsvHelper.Tests
 			public int NoMatchingFields { get; set; }
 		}
 
+		private class TestRecordNoAttributes
+		{
+			public int IntColumn { get; set; }
+
+			public string StringColumn { get; set; }
+
+			public string IgnoredColumn { get; set; }
+
+			public string TypeConvertedColumn { get; set; }
+
+			public int FirstColumn { get; set; }
+
+			public Guid GuidColumn { get; set; }
+
+			public int NoMatchingFields { get; set; }
+
+			public TestRecord CustomTypeColumn { get; set; }
+		}
+
 		private class TestTypeConverter : TypeConverter
 		{
 			public override object ConvertFrom( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value )
 			{
 				return "test";
+			}
+
+			public override bool CanConvertFrom( ITypeDescriptorContext context, Type sourceType )
+			{
+				return sourceType == typeof( string );
 			}
 		}
 	}

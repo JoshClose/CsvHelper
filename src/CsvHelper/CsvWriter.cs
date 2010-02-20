@@ -37,7 +37,13 @@ namespace CsvHelper
 		/// Gets are sets a value indicating if the
 		/// CSV file has a header record.
 		/// </summary>
-		public virtual bool HasHeaderRecord { get; set; }
+		public virtual bool HasHeaderRecord { get; private set; }
+
+		/// <summary>
+		/// Gets the binding flags used to get the properties
+		/// from the the custom class object.
+		/// </summary>
+		public virtual BindingFlags PropertyBindingFlags { get; private set; }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
@@ -55,6 +61,8 @@ namespace CsvHelper
 		{
 			this.writer = writer;
 			Delimiter = options.Delimiter;
+			HasHeaderRecord = options.HasHeaderRecord;
+			PropertyBindingFlags = options.PropertyBindingFlags;
 		}
 
 		/// <summary>
@@ -265,7 +273,7 @@ namespace CsvHelper
 			var type = typeof( T );
 			if( !typeProperties.ContainsKey( type ) )
 			{
-				var properties = type.GetProperties();
+				var properties = type.GetProperties( PropertyBindingFlags );
 				var shouldSort = properties.Any( property =>
 				{
 					// Only sort if there is at least one attribute
@@ -320,7 +328,7 @@ namespace CsvHelper
 					}
 
 					Expression fieldExpression = Expression.Property( recordParameter, property );
-					if( typeConverter != null )
+					if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
 					{
 						// Convert the property value to a string using the
 						// TypeConverter specified in the TypeConverterAttribute.
@@ -335,13 +343,27 @@ namespace CsvHelper
 						{
 							// Convert the property value to a string using ToString.
 							var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
-							fieldExpression = Expression.Call( fieldExpression, "ToString", null, formatProvider );
+							var method = property.PropertyType.GetMethod( "ToString", new Type[] { property.PropertyType, typeof( IFormatProvider ) } );
+							if( method != null )
+							{
+								// If the type has a ToString method that accepts an IFormatProvider, use that.
+								fieldExpression = Expression.Call( method, fieldExpression, formatProvider );
+							}
+							else
+							{
+								// Use the default ToString method.
+								fieldExpression = Expression.Call( fieldExpression, "ToString", null, null );
+							}
 						}
 						else
 						{
 							// Convert the property value to a string using
 							// the default TypeConverter for the properties type.
 							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+							if( !typeConverter.CanConvertTo( typeof( string ) ) )
+							{
+								continue;
+							}
 							var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
 							var typeConverterExpression = Expression.Constant( typeConverter );
 							fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );

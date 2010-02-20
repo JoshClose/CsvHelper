@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.markdown = ..\README.markdown
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.Example", "CsvHelper.Example\CsvHelper.Example.csproj", "{A7E0B5A0-BCF6-4FDA-A5C0-51C5C0D9DD19}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = CsvHelper.vsmdi
@@ -29,6 +31,10 @@ Global
 		{964E643E-8057-4980-B29D-CC7B653A4A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{964E643E-8057-4980-B29D-CC7B653A4A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{964E643E-8057-4980-B29D-CC7B653A4A65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7E0B5A0-BCF6-4FDA-A5C0-51C5C0D9DD19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7E0B5A0-BCF6-4FDA-A5C0-51C5C0D9DD19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7E0B5A0-BCF6-4FDA-A5C0-51C5C0D9DD19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7E0B5A0-BCF6-4FDA-A5C0-51C5C0D9DD19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

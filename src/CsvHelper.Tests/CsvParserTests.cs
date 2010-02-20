@@ -138,5 +138,24 @@ namespace CsvHelper.Tests
 			record = parser.Read();
 			Assert.IsNull( record );
 		}
+
+		[TestMethod]
+		public void CallingReadMultipleTimesAfterDoneReadingTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "one,two,three" );
+			writer.WriteLine( "four,five,six" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+
+			var parser = new CsvParser( reader );
+
+			parser.Read();
+			parser.Read();
+			parser.Read();
+			parser.Read();
+		}
 	}
 }

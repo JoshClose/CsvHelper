@@ -6,6 +6,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace CsvHelper
 {
@@ -25,6 +26,12 @@ namespace CsvHelper
 		/// CSV file has a header record.
 		/// </summary>
 		bool HasHeaderRecord { get; }
+
+		/// <summary>
+		/// Gets the binding flags used to get the properties
+		/// from the the custom class object.
+		/// </summary>
+		BindingFlags PropertyBindingFlags { get; }
 
 		/// <summary>
 		/// Writes the field to the CSV file.

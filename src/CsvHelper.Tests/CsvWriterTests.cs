@@ -58,7 +58,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer ) { HasHeaderRecord = true };
+			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
 
 			csv.WriteRecord( record );
 
@@ -94,7 +94,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer ) { HasHeaderRecord = true };
+			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
 
 			csv.WriteRecords( records );
 
@@ -113,7 +113,7 @@ namespace CsvHelper.Tests
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer );
+			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = false } );
 			csv.WriteRecord( new TestRecord() );
 
 			stream.Position = 0;
@@ -136,7 +136,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer ) { HasHeaderRecord = true };
+			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
 
 			csv.WriteRecord( record );
 			csv.WriteRecord( (TestRecord)null );

@@ -22,7 +22,7 @@
     <!-- Add one or more top-level section elements.  These are collapsible.
          If using <autoOutline />, add an address attribute to identify it
          and specify a title so that it can be jumped to with a hyperlink. -->
-    <section address="Section1">
+    <section address="Features">
       <title>Features</title>
       <content>
         <!-- Uncomment this to create a sub-section outline
@@ -38,22 +38,24 @@
         	</list>
         </para>
       </content>
-      <!-- If a section contains a sections element, its content creates
-           sub-sections.  These are not collapsible.
-      <sections>
-          <section address="SubSection1">
-              <title>Sub-section 1</title>
-              <content>
-                  <para>Sub-section content.</para>
-              </content>
-          </section>
-          <section address="SubSection2">
-              <title>Sub-section 2</title>
-              <content>
-                  <para>Sub-section content.</para>
-              </content>
-          </section>
-      </sections> -->
+    </section>
+    
+    <section address="Download">
+    	<title>Download</title>
+    	<content>
+    		<para>
+    			<externalLink>
+    				<linkText>Latest Stable Release</linkText>
+    				<linkUri>http://github.com/JoshClose/CsvHelper/downloads</linkUri>
+    			</externalLink>
+    		</para>
+    		<para>
+    			<externalLink>
+    				<linkText>Source</linkText>
+    				<linkUri>http://github.com/JoshClose/CsvHelper</linkUri>
+    			</externalLink>
+    		</para>
+    	</content>
     </section>
     
     <relatedTopics>

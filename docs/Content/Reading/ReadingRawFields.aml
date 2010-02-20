@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="0642122c-f92d-4fad-9ca5-9677580441a4" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+      	Reading raw fields will give you the raw string value of the record's
+      	field at it's integer position or field column name position.
+      	      	
+      	<list class="bullet">
+      		<listItem><link xlink:href="#Reading by Index">Reading by Index</link></listItem>
+      		<listItem><link xlink:href="#Reading by Field Name">Reading by Field Name</link></listItem>
+      	</list>
+      </para>
+    </introduction>
+    
+    <section address="Reading by Index">
+      <title>Reading by Index</title>
+      <content>
+        <para>
+        	When reading by index, you just need to specify the 0 based integer
+        	index of the field position in the CSV file. 
+        	
+        	<alert>
+        		If the field does not exist, an IndexOutOfRangeException is thrown.
+        	</alert>
+        
+        	<code language="C#">
+        		<![CDATA[
+var columnSeparator = ":";
+using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true ) ) ) )
+{
+	while( reader.Read() )
+	{
+		Console.Write( reader.GetField( 0 ) + columnSeparator );
+		Console.Write( reader.GetField( 1 ) + columnSeparator );
+		Console.Write( reader.GetField( 2 ) + columnSeparator );
+		Console.WriteLine( reader.GetField( 3 ) );
+	}
+}
+        		]]>
+        	</code>
+        </para>
+      </content>
+    </section>
+    
+    <section address="Reading by Index Output">
+    	<title>Output</title>
+    	<content>
+    		<para>
+				<mediaLink>
+					<caption>Raw Fields by Index Output</caption>
+					<image xlink:href="RawFieldsByIndexOutput"/>
+				</mediaLink>
+    		</para>
+    	</content>
+    </section>
+
+	<section address="Reading by Field Name">
+		<title>Reading by Field Name</title>
+		<content>
+			<para>
+				When reading by field name, you specify the name of the field of
+				the header record.
+				
+		      	<alert>
+		      		Header record reading is turned on be default. This means the first
+		      		record in the CSV file is read as the header, which determines the
+		      		field names.
+		      	</alert>
+		      	
+		      	<alert>
+		      		If strict reading is turned on (off by default), a
+		      		MissingFieldException is thrown if the field name is not found.
+		      		Otherwise, <codeInline>null</codeInline> is returned.
+		      	</alert>
+			
+				<code language="C#">
+					<![CDATA[
+var columnSeparator = ":";
+using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true ) ) ) )
+{
+	while( reader.Read() )
+	{
+		Console.Write( reader.GetField( "String Column" ) + columnSeparator );
+		Console.Write( reader.GetField( "Int Column" ) + columnSeparator );
+		Console.Write( reader.GetField( "Guid Column" ) + columnSeparator );
+		Console.Write( reader.GetField( "Does Not Exist Column" ) + columnSeparator );
+		Console.WriteLine( reader.GetField( "Custom Type Column" ) );
+	}
+}
+					]]>
+				</code>
+			</para>
+		</content>
+	</section>
+	
+	<section address="Reading by Field Name Output">
+		<title>Output</title>
+		<content>
+			<para>
+				<mediaLink>
+					<caption>Raw Fields by Field Name Output</caption>
+					<image xlink:href="RawFieldsByFieldNameOuput"/>
+				</mediaLink>
+			</para>
+		</content>
+	</section>
+    
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>
