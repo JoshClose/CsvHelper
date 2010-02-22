@@ -157,5 +157,59 @@ namespace CsvHelper.Tests
 			parser.Read();
 			parser.Read();
 		}
+
+		[TestMethod]
+		public void ParseEmptyTest()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				var record = parser.Read();
+				Assert.IsNull( record );
+			}
+		}
+
+		[TestMethod]
+		public void ParseInvalidRecordWithNoCrlf()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.Write( "one,two,three" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+
+				Assert.IsNull( record );
+			}
+		}
+
+		[TestMethod]
+		public void Parse2RecordsLastInvalidWithNoCrlf()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.WriteLine( "one,two,three" );
+				streamWriter.Write( "three,four,five" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "three", record[2] );
+
+				record = parser.Read();
+				Assert.IsNull( record );
+			}
+		}
 	}
 }
