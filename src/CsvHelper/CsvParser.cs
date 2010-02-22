@@ -99,6 +99,13 @@ namespace CsvHelper
 					if( charsRead == 0 )
 					{
 						// The end of the stream has been reached.
+
+						if( !string.IsNullOrEmpty( field ) )
+						{
+							AddFieldToRecord( ref recordPosition, field, hasQuotes );
+							return record;
+						}
+
 						return null;
 					}
 				}

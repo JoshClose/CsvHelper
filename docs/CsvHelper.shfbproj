@@ -15,7 +15,7 @@
     <Name>Documentation</Name>
     <!-- SHFB properties -->
     <OutputPath>.\Help\</OutputPath>
-    <HtmlHelpName>CsvHelper_0.8.1</HtmlHelpName>
+    <HtmlHelpName>CsvHelper_0.9</HtmlHelpName>
     <IndentHtml>False</IndentHtml>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\src\CsvHelper.sln" />
@@ -57,6 +57,7 @@
     <ContentLayout Include="ContentLayout.content" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Download.aml" />
     <None Include="Content\Writing\WritingRecords.aml" />
     <None Include="Content\Writing\WritingFields.aml" />
     <None Include="Content\Writing\WritingRawFields.aml" />

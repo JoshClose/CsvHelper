@@ -85,6 +85,9 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Advances the reader to the next record.
+		/// If HasHeaderRecord is true (true by default), the first record of
+		/// the CSV file will be automatically read in as the header record
+		/// and the second record will be returned.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
 		public virtual bool Read()

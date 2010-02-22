@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="172a8c83-51aa-4357-a835-a826ba73c4a1" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+      </para>
+    </introduction>
+
+    <section address="Downloads">
+      <title>Downloads</title>
+      <content>
+		<list class="bullet">
+		  <listItem>
+			<externalLink>
+			<linkText>Releases and Documentation</linkText>
+			<linkUri>http://github.com/JoshClose/CsvHelper/downloads</linkUri>
+			<linkTarget>_blank</linkTarget>
+			</externalLink>
+		  </listItem>
+		  
+		  <listItem>
+			<externalLink>
+			<linkText>Source</linkText>
+			<linkUri>http://github.com/JoshClose/CsvHelper</linkUri>
+			<linkTarget>_blank</linkTarget>
+			</externalLink>
+		  </listItem>
+		</list>		
+      </content>
+    </section>
+
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>
