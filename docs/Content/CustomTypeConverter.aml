@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="7396d13f-e1a2-4ecd-9efc-008623709bc9" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+      	If you want to read or write a field using different output other than
+      	what the default <codeEntityReference>T:System.ComponentModel.TypeConverter</codeEntityReference> 
+      	for that type uses, you can create your own custom
+      	<codeEntityReference>T:System.ComponentModel.TypeConverter</codeEntityReference>.
+      </para>
+    </introduction>
+
+    <section address="Custom Type Converter">
+    	<title>Custom Type Converter</title>
+    	<content>
+    		<para>
+    			<alert>
+    				For the type converter to work properly, you must override
+    				the CanConvertFrom method for reading, and CanConvertTo
+    				method for writing.
+    			</alert>
+    			
+    			<code language="C#">
+    				<![CDATA[
+public class CustomTypeTypeConverter : TypeConverter
+{
+	public override bool CanConvertFrom( ITypeDescriptorContext context, Type sourceType )
+	{
+		return sourceType == typeof( string );
+	}
+
+	public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType )
+	{
+		return destinationType == typeof( string );
+	}
+
+	public override object ConvertFrom( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value )
+	{
+		var values = ( (string)value ).Split( '|' );
+
+		var obj = new CustomType
+		{
+			First = int.Parse( values[0] ),
+			Second = int.Parse( values[1] ),
+			Third = int.Parse( values[2] ),
+		};
+		return obj;
+	}
+
+	public override object ConvertTo( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType )
+	{
+		var obj = (CustomType)value;
+		return string.Format( "{0}|{1}|{2}", obj.First, obj.Second, obj.Third );
+	}
+}
+    				]]>
+    			</code>
+    		</para>
+    	</content>
+	</section>
+
+    <relatedTopics>
+		<codeEntityReference>T:System.ComponentModel.TypeConverter</codeEntityReference>
+	</relatedTopics>
+  </developerConceptualDocument>
+</topic>

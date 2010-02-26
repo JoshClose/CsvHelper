@@ -29,7 +29,8 @@ namespace CsvHelper
 
 		/// <summary>
 		/// When reading, is used to get the field at
-		/// the given index. When writing, the fields
+		/// the given index. If a FieldName is specified,
+		/// that will be used instead. When writing, the fields
 		/// will be written in the order of the field
 		/// indexes.
 		/// </summary>

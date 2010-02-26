@@ -171,7 +171,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void Parse1RecordWithNoCrlf()
+		public void Parse1RecordWithNoCrlfTest()
 		{
 			using( var memoryStream = new MemoryStream() )
 			using( var streamReader = new StreamReader( memoryStream ) )
@@ -192,7 +192,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void Parse2RecordsLastWithNoCrlf()
+		public void Parse2RecordsLastWithNoCrlfTest()
 		{
 			using( var memoryStream = new MemoryStream() )
 			using( var streamReader = new StreamReader( memoryStream ) )
@@ -211,6 +211,69 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "four", record[0] );
 				Assert.AreEqual( "five", record[1] );
 				Assert.AreEqual( "six", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ParseFirstFieldIsEmptyQuotedTest()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.WriteLine( "\"\",\"two\",\"three\"" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "three", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ParseLastFieldIsEmptyQuotedTest()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.WriteLine( "\"one\",\"two\",\"\"" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ParseQuoteOnlyQuotedFieldTest()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.WriteLine( "\"\"\"\",\"two\",\"three\"" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "\"", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "three", record[2] );
 			}
 		}
 	}

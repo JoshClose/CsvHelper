@@ -15,7 +15,7 @@
     <Name>Documentation</Name>
     <!-- SHFB properties -->
     <OutputPath>.\Help\</OutputPath>
-    <HtmlHelpName>CsvHelper_0.9</HtmlHelpName>
+    <HtmlHelpName>CsvHelper_0.9.1</HtmlHelpName>
     <IndentHtml>False</IndentHtml>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\src\CsvHelper.sln" />
@@ -57,6 +57,7 @@
     <ContentLayout Include="ContentLayout.content" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\CustomTypeConverter.aml" />
     <None Include="Content\Download.aml" />
     <None Include="Content\Writing\WritingRecords.aml" />
     <None Include="Content\Writing\WritingFields.aml" />
@@ -66,7 +67,7 @@
     <None Include="Content\Reading\ReadingFields.aml" />
     <None Include="Content\Reading\ReadingRawFields.aml" />
     <None Include="Content\Reading\CreatingTheReader.aml" />
-    <None Include="Content\Reading\TestData.aml" />
+    <None Include="Content\CodeSamples.aml" />
     <None Include="Content\License.aml" />
     <None Include="Content\Welcome.aml" />
   </ItemGroup>
@@ -83,6 +84,16 @@
   <ItemGroup>
     <Image Include="Media\ReadFieldsByIndexOutput.png">
       <ImageId>ReadFieldsByIndexOutput</ImageId>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Media\DefaultRecordReadingOutput.png">
+      <ImageId>DefaultRecordReadingOutput</ImageId>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Media\CustomRecordReadingOutput.png">
+      <ImageId>CustomRecordReadingOutput</ImageId>
     </Image>
   </ItemGroup>
   <!-- Import the SHFB build targets -->

@@ -1,0 +1,150 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="f83c2dce-6a4b-4752-a9c8-e549c4101d39" revisionNumber="1">
+  <developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <para>
+      	These code samples are used within the reading and writing examples.
+      </para>
+    </introduction>
+    
+    <section address="Custom Class">
+    	<title>Custom Class</title>
+    	<content>
+    		This is a custom class we will use to read/write records to/from the
+    		database.
+    		
+    		<alert>
+    			<codeInline>ToString</codeInline> is overridden so we can easily
+    			see a text representation of the class.
+    		</alert>
+    		
+    		<code language="C#">
+    			<![CDATA[
+public class CustomObject
+{
+	public CustomType CustomTypeColumn { get; set; }
+	public Guid GuidColumn { get; set; }
+	public int IntColumn { get; set; }
+	public string StringColumn { get; set; }
+
+	public override string ToString()
+	{
+		var serializer = new JavaScriptSerializer();
+		return serializer.Serialize( this );
+	}
+}
+    			]]>
+    		</code>
+    	</content>
+    </section>
+    
+    <section address="Custom Class with Attributes">
+    	<title>Custom Class with Attributes</title>
+    	<content>
+    		<para>
+	    		This is the same class as <link xlink:href="#Custom Class">Custom Class</link>
+	    		except attributes have been added to the properties that change the
+	    		default behavior of the reader and writer.
+    		</para>
+    		
+    		<para>
+    			Adding <codeInline>FieldIndex</codeInline> will cause the reader
+    			to use the CSV field at that position for the property. When writing,
+    			the <codeInline>FieldIndex</codeInline> determines the position
+    			that the CSV fields are written in.
+    		</para>
+    		
+    		<para>
+    			Adding <codeInline>FieldName</codeInline> will cause the reader
+    			to use the CSV field at the position with the same header name.
+    			When writing, the <codeInline>FieldName</codeInline> is used as
+    			the header name.
+    		</para>
+    	
+    		<code language="C#">
+    			<![CDATA[
+public class CustomObjectWithAttributes
+{
+	[TypeConverter( typeof( CustomTypeTypeConverter ) )]
+	[CsvHelper.CsvField( FieldName = "Custom Type Column", FieldIndex = 3 )]
+	public CustomType CustomTypeColumn { get; set; }
+
+	[CsvHelper.CsvField( FieldName = "Guid Column", FieldIndex = 2 )]
+	public Guid GuidColumn { get; set; }
+
+	[CsvHelper.CsvField( FieldName = "Int Column", FieldIndex = 1 )]
+	public int IntColumn { get; set; }
+
+	[CsvHelper.CsvField( FieldName = "String Column", FieldIndex = 0 )]
+	public string StringColumn { get; set; }
+
+	[CsvHelper.CsvField( Ignore = true )]
+	public string IgnoredColumn { get; set; }
+
+	public override string ToString()
+	{
+		var serializer = new JavaScriptSerializer();
+		return serializer.Serialize( this );
+	}
+}
+    			]]>
+    		</code>
+    	</content>
+    </section>
+    
+    <section address="Custom Type">
+    	<title></title>
+    	<content>
+    	</content>
+    </section>
+    
+    <section address="CSV Data">
+    	<title>CSV Data</title>
+    	<content>
+			This method returns a Stream with CSV data in it. The 
+			<codeInline>hasHeader</codeInline> parameter will tell the method 
+			whether or not to create a header record when creating the CSV file.
+			The <codeInline>hasSpacesInHeaderNames</codeInline> parameter will 
+			tell the method whether or not to put spaces between the words of 
+			the header field names. This will allow us to test both auto-reading,
+			and reading by specific column names. This data is used throughout
+			the rest of the reader examples.
+    	</content>
+    </section>
+
+    <section address="CSV Data Example">
+      <title>Example</title>
+      <content>
+        <para>
+    		<code language="C#">
+    			<![CDATA[
+public static MemoryStream GetDataStream( bool hasHeader, bool hasSpacesInHeaderNames )
+{
+	var stream = new MemoryStream();
+	var writer = new StreamWriter( stream );
+
+	if( hasHeader )
+	{
+		var header = hasSpacesInHeaderNames
+		             	? "String Column,Int Column,Guid Column,Custom Type Column"
+		             	: "StringColumn,IntColumn,GuidColumn,CustomTypeColumn";
+		writer.WriteLine( header );
+	}
+	writer.WriteLine( "one,1,{0},1|2|3", Guid.NewGuid() );
+	writer.WriteLine( "two,2,{0},4|5|6", Guid.NewGuid() );
+	writer.WriteLine( "\"this, has a comma\",2,{0},7|8|9", Guid.NewGuid() );
+	writer.WriteLine( "\"this has \"\"'s\",4,{0},10|11|12", Guid.NewGuid() );
+	writer.Flush();
+	stream.Position = 0;
+
+	return stream;
+}
+    			]]>
+    		</code>
+        </para>
+      </content>
+    </section>
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

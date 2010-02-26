@@ -160,7 +160,7 @@ namespace CsvHelper
 						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						fieldStartPosition = readerBufferPosition;
 					}
-					if( cPrev != '"' )
+					if( cPrev != '"' || !inQuotes )
 					{
 						// Set the new field start position to
 						// the char after the quote.

@@ -22,9 +22,9 @@ namespace CsvHelper.Example
 		{
 			//ReadRawFieldsByIndex();
 			//ReadRawFieldsByName();
-			ReadFieldsByIndex();
+			//ReadFieldsByIndex();
 			//ReadRecordsNoAttributes();
-			//ReadRecordsWithAttributes();
+			ReadRecordsWithAttributes();
 			//ReadAllRecords();
 
 			//WriteRawFields();
@@ -36,7 +36,7 @@ namespace CsvHelper.Example
 			Console.ReadKey();
 		}
 
-		private static void ReadRawFieldsByIndex()
+		public static void ReadRawFieldsByIndex()
 		{
 			Console.WriteLine( "Raw fields by index:" );
 
@@ -53,7 +53,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void ReadRawFieldsByName()
+		public static void ReadRawFieldsByName()
 		{
 			Console.WriteLine( "Raw fields by name:" );
 
@@ -71,7 +71,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void ReadFieldsByIndex()
+		public static void ReadFieldsByIndex()
 		{
 			Console.WriteLine( "Fields by index:" );
 
@@ -82,7 +82,7 @@ namespace CsvHelper.Example
 				while( reader.Read() )
 				{
 					Console.Write( reader.GetField<string>( 0 ) + columnSeparator );
-					Console.Write( reader.GetField<int>( 1 ) + columnSeparator );
+					Console.Write( reader.GetField<int>( "Int Column" ) + columnSeparator );
 					Console.Write( reader.GetField<Guid>( 2 ) + columnSeparator );
 					Console.WriteLine( reader.GetField<CustomType>( 3, customTypeTypeConverter ) );
 				}
@@ -90,7 +90,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void ReadRecordsNoAttributes()
+		public static void ReadRecordsNoAttributes()
 		{
 			Console.WriteLine( "Records no attributes:" );
 
@@ -104,7 +104,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void ReadRecordsWithAttributes()
+		public static void ReadRecordsWithAttributes()
 		{
 			Console.WriteLine( "Records with attributes:" );
 
@@ -118,7 +118,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void ReadAllRecords()
+		public static void ReadAllRecords()
 		{
 			Console.WriteLine( "All records:" );
 
@@ -133,7 +133,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void WriteRawFields()
+		public static void WriteRawFields()
 		{
 			Console.WriteLine( "Write raw fields" );
 
@@ -161,7 +161,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void WriteFields()
+		public static void WriteFields()
 		{
 			Console.WriteLine( "Write fields" );
 
@@ -189,7 +189,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void WriteRecordsNoAttributes()
+		public static void WriteRecordsNoAttributes()
 		{
 			Console.WriteLine( "Write records no attributes:" );
 
@@ -238,7 +238,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void WriteRecordsWithAttributes()
+		public static void WriteRecordsWithAttributes()
 		{
 			Console.WriteLine( "Write records with attributes:" );
 
@@ -287,7 +287,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static void WriteAllRecords()
+		public static void WriteAllRecords()
 		{
 			Console.WriteLine( "Write all records with attributes:" );
 
@@ -333,7 +333,7 @@ namespace CsvHelper.Example
 			Console.WriteLine();
 		}
 
-		private static MemoryStream GetDataStream( bool hasHeader, bool hasSpacesInHeaderNames )
+		public static MemoryStream GetDataStream( bool hasHeader, bool hasSpacesInHeaderNames )
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -355,7 +355,7 @@ namespace CsvHelper.Example
 			return stream;
 		}
 
-		private class CustomType
+		public class CustomType
 		{
 			public int First { get; set; }
 			public int Second { get; set; }
@@ -400,7 +400,7 @@ namespace CsvHelper.Example
 			}
 		}
 
-		private class CustomObject
+		public class CustomObject
 		{
 			public CustomType CustomTypeColumn { get; set; }
 			public Guid GuidColumn { get; set; }
@@ -414,7 +414,7 @@ namespace CsvHelper.Example
 			}
 		}
 
-		private class CustomObjectWithAttributes
+		public class CustomObjectWithAttributes
 		{
 			[TypeConverter( typeof( CustomTypeTypeConverter ) )]
 			[CsvHelper.CsvField( FieldName = "Custom Type Column", FieldIndex = 3 )]

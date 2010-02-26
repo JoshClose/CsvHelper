@@ -4,63 +4,11 @@
     <introduction>
       <para>
       	Reading fields will give you back the field converted into the specified
-      	type using the default TypeConverter for that type, or the specified
-      	TypeConverter. You can read by the field's integer position or the
-      	column name position.
+      	type using the default <codeEntityReference>T:System.ComponentModel.TypeConverter</codeEntityReference>
+      	for that type, or the specified <codeEntityReference>T:System.ComponentModel.TypeConverter</codeEntityReference>.
+      	You can read by the field's integer position or the column name position.
       </para>
     </introduction>
-    
-    <section address="Custom Type Converter">
-    	<title>Custom Type Converter</title>
-    	<content>
-    		<para>
-    			If you want to get a field using a custom type, you will more than
-    			likely need to create a custom type converter to convert the
-    			string into your type.
-    			
-    			<alert>
-    				To read, you need to override the CanConvertFrom and
-    				ConvertFrom methods of the TypeConverter.
-    			</alert>
-    			
-    			<code language="C#">
-    				<![CDATA[
-public class CustomTypeTypeConverter : TypeConverter
-{
-	public override bool CanConvertFrom( ITypeDescriptorContext context, Type sourceType )
-	{
-		return sourceType == typeof( string );
-	}
-
-	public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType )
-	{
-		return destinationType == typeof( string );
-	}
-
-	public override object ConvertFrom( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value )
-	{
-		var values = ( (string)value ).Split( '|' );
-
-		var obj = new CustomType
-		{
-			First = int.Parse( values[0] ),
-			Second = int.Parse( values[1] ),
-			Third = int.Parse( values[2] ),
-		};
-		return obj;
-	}
-
-	public override object ConvertTo( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType )
-	{
-		var obj = (CustomType)value;
-		return string.Format( "{0}|{1}|{2}", obj.First, obj.Second, obj.Third );
-	}
-}
-    				]]>
-    			</code>
-    		</para>
-    	</content>
-	</section>
     
     <section address="Reading Fields">
     	<title>Reading Fields</title>
@@ -71,7 +19,8 @@ public class CustomTypeTypeConverter : TypeConverter
     			
     			<alert>
     				If you run into a field that can't be auto-converted, you can 
-    				specify a TypeConverter to use.
+    				specify a <link xlink:href="7396d13f-e1a2-4ecd-9efc-008623709bc9"/>
+    				to use.
     			</alert>
     			
     			<code language="C#">
@@ -83,7 +32,7 @@ using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true )
 	while( reader.Read() )
 	{
 		Console.Write( reader.GetField<string>( 0 ) + columnSeparator );
-		Console.Write( reader.GetField<int>( 1 ) + columnSeparator );
+		Console.Write( reader.GetField<int>( "Int Column" ) + columnSeparator );
 		Console.Write( reader.GetField<Guid>( 2 ) + columnSeparator );
 		Console.WriteLine( reader.GetField<CustomType>( 3, customTypeTypeConverter ) );
 	}
@@ -104,6 +53,7 @@ using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true )
     </section>
     
     <relatedTopics>
-    </relatedTopics>
+		<link xlink:href="7396d13f-e1a2-4ecd-9efc-008623709bc9"/>
+	</relatedTopics>
   </developerConceptualDocument>
 </topic>
