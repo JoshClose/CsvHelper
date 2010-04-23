@@ -26,19 +26,25 @@ namespace CsvHelper
 		/// Gets or sets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
-		public char Delimiter { get; private set; }
+		public virtual char Delimiter { get; private set; }
 
 		/// <summary>
 		/// Gets or sets the size of the buffer
 		/// used when reading the stream and
 		/// creating the fields.
 		/// </summary>
-		public int BufferSize { get; private set; }
+		public virtual int BufferSize { get; private set; }
 
 		/// <summary>
 		/// Gets or sets the field count.
 		/// </summary>
-		public int FieldCount { get; private set; }
+		public virtual int FieldCount { get; private set; }
+
+		/// <summary>
+		/// Gets the character used to denote
+		/// a line ending.
+		/// </summary>
+		public virtual char LineEnding { get; private set; }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
@@ -58,6 +64,7 @@ namespace CsvHelper
 			BufferSize = options.BufferSize;
 			Delimiter = options.Delimiter;
 			FieldCount = options.FieldCount;
+			LineEnding = options.LineEnding;
             
 			readerBuffer = new char[BufferSize];
 		}
@@ -67,7 +74,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>A <see cref="List{String}" /> of fields for the record read.
 		/// If there are no more records, null is returned.</returns>
-		public string[] Read()
+		public virtual string[] Read()
 		{
 			CheckDisposed();
 
@@ -125,7 +132,7 @@ namespace CsvHelper
 					field = null;
 					hasQuotes = false;
 				}
-				else if( !inQuotes && c == '\n' )
+				else if( !inQuotes && c == LineEnding )
 				{
 					if( recordPosition == 0 && field == null )
 					{
@@ -140,7 +147,7 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' ) 
+				else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == LineEnding ) 
 					&& ( hasQuotes || fieldStartPosition == readerBufferPosition - 1 ) )
 				{
 					// Trim whitespace off the front always.
