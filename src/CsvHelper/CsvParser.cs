@@ -41,12 +41,6 @@ namespace CsvHelper
 		public virtual int FieldCount { get; private set; }
 
 		/// <summary>
-		/// Gets the character used to denote
-		/// a line ending.
-		/// </summary>
-		public virtual char LineEnding { get; private set; }
-
-		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
@@ -64,7 +58,6 @@ namespace CsvHelper
 			BufferSize = options.BufferSize;
 			Delimiter = options.Delimiter;
 			FieldCount = options.FieldCount;
-			LineEnding = options.LineEnding;
             
 			readerBuffer = new char[BufferSize];
 		}
@@ -132,9 +125,9 @@ namespace CsvHelper
 					field = null;
 					hasQuotes = false;
 				}
-				else if( !inQuotes && c == LineEnding )
+				else if( !inQuotes && ( c == '\r' || c == '\n' ) )
 				{
-					if( recordPosition == 0 && field == null )
+					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' )
 					{
 						// We have hit a blank. Ignore it.
 						fieldStartPosition = readerBufferPosition;
@@ -147,7 +140,7 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == LineEnding ) 
+				else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' || c == '\n' ) 
 					&& ( hasQuotes || fieldStartPosition == readerBufferPosition - 1 ) )
 				{
 					// Trim whitespace off the front always.

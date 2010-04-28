@@ -15,7 +15,6 @@ namespace CsvHelper
 	{
 		private int bufferSize = 2048;
 		private char delimiter = ',';
-		private char lineEnding = '\n';
 
 		/// <summary>
 		/// The buffer size to use when
@@ -49,17 +48,6 @@ namespace CsvHelper
 				}
 				delimiter = value;
 			}
-		}
-
-		/// <summary>
-		/// The character used to denote the end of a line.
-		/// Default is \n.
-		/// </summary>
-		/// <value>The line ending.</value>
-		public char LineEnding
-		{
-			get { return lineEnding; }
-			set { lineEnding = value; }
 		}
 	}
 }

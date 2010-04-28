@@ -32,12 +32,6 @@ namespace CsvHelper
 		int FieldCount { get; }
 
 		/// <summary>
-		/// Gets the character used to denote
-		/// a line ending.
-		/// </summary>
-		char LineEnding { get; }
-
-		/// <summary>
 		/// Reads a record from the CSV file.
 		/// </summary>
 		/// <returns>A <see cref="List{String}" /> of fields for the record read.</returns>

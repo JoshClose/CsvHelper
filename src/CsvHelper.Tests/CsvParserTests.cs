@@ -98,7 +98,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions{ BufferSize = 2000 } );
+			var parser = new CsvParser( reader, new CsvParserOptions { BufferSize = 2000 } );
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -125,7 +125,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions{ BufferSize = 2 } );
+			var parser = new CsvParser( reader, new CsvParserOptions { BufferSize = 2 } );
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -274,6 +274,105 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "\"", record[0] );
 				Assert.AreEqual( "two", record[1] );
 				Assert.AreEqual( "three", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ParseRecordsWithOnlyOneField()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.WriteLine( "row one" );
+				streamWriter.WriteLine( "row two" );
+				streamWriter.WriteLine( "row three" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 1, record.Length );
+				Assert.AreEqual( "row one", record[0] );
+
+				record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 1, record.Length );
+				Assert.AreEqual( "row two", record[0] );
+
+				record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 1, record.Length );
+				Assert.AreEqual( "row three", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void ParseRecordWhereOnlyCarriageReturnLineEndingIsUsed()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.Write( "one,two\r" );
+				streamWriter.Write( "three,four\r" );
+				streamWriter.Write( "five,six\r" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 2, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+
+				record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 2, record.Length );
+				Assert.AreEqual( "three", record[0] );
+				Assert.AreEqual( "four", record[1] );
+
+				record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 2, record.Length );
+				Assert.AreEqual( "five", record[0] );
+				Assert.AreEqual( "six", record[1] );
+			}
+		}
+
+		[TestMethod]
+		public void ParseRecordWhereOnlyLineFeedLineEndingIsUsed()
+		{
+			using( var memoryStream = new MemoryStream() )
+			using( var streamReader = new StreamReader( memoryStream ) )
+			using( var streamWriter = new StreamWriter( memoryStream ) )
+			using( var parser = new CsvParser( streamReader ) )
+			{
+				streamWriter.Write( "one,two\n" );
+				streamWriter.Write( "three,four\n" );
+				streamWriter.Write( "five,six\n" );
+				streamWriter.Flush();
+				memoryStream.Position = 0;
+
+				var record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 2, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+
+				record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 2, record.Length );
+				Assert.AreEqual( "three", record[0] );
+				Assert.AreEqual( "four", record[1] );
+
+				record = parser.Read();
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 2, record.Length );
+				Assert.AreEqual( "five", record[0] );
+				Assert.AreEqual( "six", record[1] );
 			}
 		}
 	}
