@@ -80,7 +80,6 @@
     <Compile Include="ReflectionHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="CsvHelper.snk" />
   </ItemGroup>
   <ItemGroup>

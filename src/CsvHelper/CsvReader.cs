@@ -28,7 +28,7 @@ namespace CsvHelper
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
 
 		/// <summary>
-		/// A value indicating if the CSV file has a header record.
+		/// Gets a value indicating if the CSV file has a header record.
 		/// </summary>
 		public virtual bool HasHeaderRecord { get; private set; }
 

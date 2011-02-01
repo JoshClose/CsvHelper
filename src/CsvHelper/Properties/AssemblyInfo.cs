@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009-2010 Josh Close
+// Copyright 2009-2011 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration( "" )]
 [assembly: AssemblyCompany( "" )]
 [assembly: AssemblyProduct( "CsvHelper" )]
-[assembly: AssemblyCopyright( "Copyright © Josh Close 2009-2010" )]
+[assembly: AssemblyCopyright( "Copyright © Josh Close 2009-2011" )]
 [assembly: AssemblyTrademark( "" )]
 [assembly: AssemblyCulture( "" )]
 
@@ -37,4 +37,4 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion( "0.10.0.*" )]
+[assembly: AssemblyVersion( "0.12.0.*" )]
