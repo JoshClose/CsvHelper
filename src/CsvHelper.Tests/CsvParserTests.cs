@@ -375,5 +375,43 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "six", record[1] );
 			}
 		}
+
+		[TestMethod]
+		public void ParseCommentedOutLineWithCommentsOn()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "one,two,three" );
+			writer.WriteLine( "#four,five,six" );
+			writer.WriteLine( "seven,eight,nine" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+
+			var parser = new CsvParser( reader, new CsvParserOptions { AllowComments = true } );
+
+			parser.Read();
+			var record = parser.Read();
+			Assert.AreEqual( "seven", record[0] );
+		}
+
+		[TestMethod]
+		public void ParseCommentedOutLineWithCommentsOff()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "one,two,three" );
+			writer.WriteLine( "#four,five,six" );
+			writer.WriteLine( "seven,eight,nine" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+
+			var parser = new CsvParser( reader, new CsvParserOptions { AllowComments = false } );
+
+			parser.Read();
+			var record = parser.Read();
+			Assert.AreEqual( "#four", record[0] );
+		}
 	}
 }

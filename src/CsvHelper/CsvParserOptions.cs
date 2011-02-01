@@ -49,5 +49,12 @@ namespace CsvHelper
 				delimiter = value;
 			}
 		}
+
+		/// <summary>
+		/// True to allow '#' at the beginning of
+		/// a line to denote a line that is commented 
+		/// out. Otherwise, false.
+		/// </summary>
+		public bool AllowComments { get; set; }
 	}
 }

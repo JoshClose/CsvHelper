@@ -23,22 +23,30 @@ namespace CsvHelper
 		private string[] record;
 
 		/// <summary>
-		/// Gets or sets the delimiter used to
+		/// Gets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
 		public virtual char Delimiter { get; private set; }
 
 		/// <summary>
-		/// Gets or sets the size of the buffer
+		/// Gets the size of the buffer
 		/// used when reading the stream and
 		/// creating the fields.
 		/// </summary>
 		public virtual int BufferSize { get; private set; }
 
 		/// <summary>
-		/// Gets or sets the field count.
+		/// Gets the field count.
 		/// </summary>
 		public virtual int FieldCount { get; private set; }
+
+		/// <summary>
+		/// Gets a value indicating if '#'
+		/// can be used at the beginning of
+		/// a line to denote a line that is
+		/// commented out.
+		/// </summary>
+		public virtual bool AllowComments { get; private set; }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
@@ -58,8 +66,9 @@ namespace CsvHelper
 			BufferSize = options.BufferSize;
 			Delimiter = options.Delimiter;
 			FieldCount = options.FieldCount;
+			AllowComments = options.AllowComments;
             
-			readerBuffer = new char[BufferSize];
+			readerBuffer = new char[options.BufferSize];
 		}
 
 		/// <summary>
@@ -75,6 +84,7 @@ namespace CsvHelper
 			var fieldStartPosition = readerBufferPosition;
 			var inQuotes = false;
 			var hasQuotes = false;
+			var inComment = false;
 			var recordPosition = 0;
 			var c = '\0';
 			record = new string[FieldCount];
@@ -113,6 +123,12 @@ namespace CsvHelper
 				c = readerBuffer[readerBufferPosition];
 				readerBufferPosition++;
 
+				if( inComment && c != '\r' && c != '\n' )
+				{
+					// We are on a commented line.
+					// Ignore the character.
+					continue;
+				}
 				if( !inQuotes && c == Delimiter )
 				{
 					// If we hit the delimiter, we are
@@ -127,10 +143,11 @@ namespace CsvHelper
 				}
 				else if( !inQuotes && ( c == '\r' || c == '\n' ) )
 				{
-					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' )
+					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' || inComment )
 					{
 						// We have hit a blank line. Ignore it.
 						fieldStartPosition = readerBufferPosition;
+						inComment = false;
 						continue;
 					}
 
@@ -158,6 +175,10 @@ namespace CsvHelper
 						// the char after the quote.
 						fieldStartPosition = readerBufferPosition;
 					}
+				}
+				else if( AllowComments && c == '#' && ( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' ) )
+				{
+					inComment = true;
 				}
 			}
 
