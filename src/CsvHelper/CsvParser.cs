@@ -129,7 +129,7 @@ namespace CsvHelper
 				{
 					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' )
 					{
-						// We have hit a blank. Ignore it.
+						// We have hit a blank line. Ignore it.
 						fieldStartPosition = readerBufferPosition;
 						continue;
 					}
@@ -140,14 +140,14 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' || c == '\n' ) 
-					&& ( hasQuotes || fieldStartPosition == readerBufferPosition - 1 ) )
-				{
-					// Trim whitespace off the front always.
-					// Trim whitespace off the back only
-					// if this is a quoted field.
-					fieldStartPosition++;
-				}
+				//else if( !inQuotes && ( c == ' ' || c == '\t' || c == '\r' || c == '\n' ) 
+				//    && ( hasQuotes || fieldStartPosition == readerBufferPosition - 1 ) )
+				//{
+				//    // Trim whitespace off the front always.
+				//    // Trim whitespace off the back only
+				//    // if this is a quoted field.
+				//    fieldStartPosition++;
+				//}
 				else if( c == '"' )
 				{
 					hasQuotes = true;
@@ -187,12 +187,12 @@ namespace CsvHelper
 				FieldCount = record.Length;
 			}
 
-			if( !hasQuotes )
-			{
-				// If this isn't a quoted field, trim
-				// the whitespace at the end.
-				field = field.TrimEnd( ' ', '\t', '\r' );
-			}
+			//if( !hasQuotes )
+			//{
+			//    // If this isn't a quoted field, trim
+			//    // the whitespace at the end.
+			//    field = field.TrimEnd( ' ', '\t', '\r' );
+			//}
 
 			record[recordPosition] = field;
 			recordPosition++;

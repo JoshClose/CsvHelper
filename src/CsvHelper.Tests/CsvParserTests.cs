@@ -128,12 +128,12 @@ namespace CsvHelper.Tests
 			var parser = new CsvParser( reader, new CsvParserOptions { BufferSize = 2 } );
 
 			var record = parser.Read();
-			Assert.AreEqual( "one", record[0] );
-			Assert.AreEqual( "two three", record[1] );
-			Assert.AreEqual( "four", record[2] );
+			Assert.AreEqual( " one ", record[0] );
+			Assert.AreEqual( " two three ", record[1] );
+			Assert.AreEqual( " four ", record[2] );
 
 			record = parser.Read();
-			Assert.AreEqual( " five \" six \" seven ", record[0] );
+			Assert.AreEqual( "  five \" six \" seven  ", record[0] );
 
 			record = parser.Read();
 			Assert.IsNull( record );
