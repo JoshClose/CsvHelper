@@ -62,7 +62,7 @@ namespace CsvHelper
 		/// the default parser.
 		/// </summary>
 		/// <param name="reader"></param>
-		public CsvReader( StreamReader reader ) : this( new CsvParser( reader ) ){}
+		public CsvReader( TextReader reader ) : this( new CsvParser( reader ) ){}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.

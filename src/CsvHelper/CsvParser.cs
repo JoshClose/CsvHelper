@@ -16,7 +16,7 @@ namespace CsvHelper
 	public class CsvParser : ICsvParser
 	{
 		private bool disposed;
-		private StreamReader reader;
+		private TextReader reader;
 		private readonly char[] readerBuffer;
 		private int readerBufferPosition;
 		private int charsRead;
@@ -52,7 +52,7 @@ namespace CsvHelper
 		/// Creates a new parser using the given <see cref="StreamReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
-		public CsvParser( StreamReader reader ) : this( reader, new CsvParserOptions()){}
+		public CsvParser( TextReader reader ) : this( reader, new CsvParserOptions()){}
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />
@@ -60,7 +60,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader" /> with teh CSV file data.</param>
 		/// <param name="options">The <see cref="CsvParserOptions" /> used for parsing the CSV file.</param>
-		public CsvParser( StreamReader reader, CsvParserOptions options )
+		public CsvParser( TextReader reader, CsvParserOptions options )
 		{
 			this.reader = reader;
 			BufferSize = options.BufferSize;
