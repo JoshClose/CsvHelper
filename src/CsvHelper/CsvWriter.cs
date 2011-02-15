@@ -22,7 +22,7 @@ namespace CsvHelper
 	{
 		private bool disposed;
 		private readonly List<string> currentRecord = new List<string>();
-		private StreamWriter writer;
+		private TextWriter writer;
 		private bool hasHeaderBeenWritten;
 		private readonly Dictionary<Type, PropertyInfo[]> typeProperties = new Dictionary<Type, PropertyInfo[]>();
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
@@ -49,7 +49,7 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		public CsvWriter( StreamWriter writer ) : this( writer, new CsvWriterOptions() ) { }
+		public CsvWriter( TextWriter writer ) : this( writer, new CsvWriterOptions() ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter"/>
@@ -57,7 +57,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="options">The <see cref="CsvWriterOptions"/> used to write the CSV file.</param>
-		public CsvWriter( StreamWriter writer, CsvWriterOptions options )
+		public CsvWriter( TextWriter writer, CsvWriterOptions options )
 		{
 			this.writer = writer;
 			Delimiter = options.Delimiter;
