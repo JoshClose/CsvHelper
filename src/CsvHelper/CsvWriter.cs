@@ -316,22 +316,14 @@ namespace CsvHelper
 						continue;
 					}
 
-					TypeConverter typeConverter = null;
-					var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
-					if( typeConverterAttribute != null )
-					{
-						var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName );
-						if( typeConverterType != null )
-						{
-							typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
-						}
-					}
+					var typeConverter = FindTypeConverterForProperty(property);
 
-					Expression fieldExpression = Expression.Property( recordParameter, property );
+				    Expression fieldExpression = Expression.Property( recordParameter, property );
 					if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
-					{
+					{                        
 						// Convert the property value to a string using the
-						// TypeConverter specified in the TypeConverterAttribute.
+						// TypeConverter specified in the TypeConverterAttribute.                        
+                        //typeConverter.ConvertToInvariantString()
 						var typeConverterExpression = Expression.Constant( typeConverter );
 						var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
 						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
@@ -343,11 +335,13 @@ namespace CsvHelper
 						{
 							// Convert the property value to a string using ToString.
 							var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
-							var method = property.PropertyType.GetMethod( "ToString", new Type[] { property.PropertyType, typeof( IFormatProvider ) } );
+							//var method = property.PropertyType.GetMethod( "ToString", new Type[] { property.PropertyType, typeof( IFormatProvider ) } );
+                            var method = property.PropertyType.GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
 							if( method != null )
 							{
 								// If the type has a ToString method that accepts an IFormatProvider, use that.
-								fieldExpression = Expression.Call( method, fieldExpression, formatProvider );
+								//fieldExpression = Expression.Call( method, fieldExpression, formatProvider );
+                                fieldExpression = Expression.Call(fieldExpression, method, formatProvider);
 							}
 							else
 							{
@@ -383,5 +377,20 @@ namespace CsvHelper
 
 			return  (Action<CsvWriter, T>)typeActions[type];
 		}
+
+	    private static TypeConverter FindTypeConverterForProperty(PropertyInfo property)
+	    {
+	        TypeConverter typeConverter = null;
+	        var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
+	        if( typeConverterAttribute != null )
+	        {
+	            var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName );
+	            if( typeConverterType != null )
+	            {
+	                typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
+	            }
+	        }
+	        return typeConverter;
+	    }
 	}
 }
