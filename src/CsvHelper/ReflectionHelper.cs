@@ -12,7 +12,7 @@ namespace CsvHelper
 	/// <summary>
 	/// Common reflection tasks.
 	/// </summary>
-	public static class ReflectionHelper
+	static class ReflectionHelper
 	{
 		/// <summary>
 		/// Gets the first attribute of type T on property.

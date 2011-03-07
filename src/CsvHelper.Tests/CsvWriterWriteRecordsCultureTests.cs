@@ -26,7 +26,7 @@ namespace CsvHelper.Tests
         }        
 
 		[TestMethod]        
-		public void WriteRecordsTest()
+		public void WriteRecordsWithSomeCultureSpecificValuesTest()
 		{            
 			var records = new List<TestRecordWithDecimal>
             {

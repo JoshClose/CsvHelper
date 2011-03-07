@@ -19,12 +19,12 @@ namespace CsvHelper
 	/// Used to write CSV files.
 	/// </summary>
 	public class CsvWriter : ICsvWriter
-	{
+	{        
 		private bool disposed;
 		private readonly List<string> currentRecord = new List<string>();
 		private TextWriter writer;
 		private bool hasHeaderBeenWritten;
-		private readonly Dictionary<Type, PropertyInfo[]> typeProperties = new Dictionary<Type, PropertyInfo[]>();
+        private readonly Dictionary<Type, CsvPropertyInfo[]> typeProperties = new Dictionary<Type, CsvPropertyInfo[]>();
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 
 		/// <summary>
@@ -168,7 +168,7 @@ namespace CsvHelper
 
 			if( HasHeaderRecord && !hasHeaderBeenWritten )
 			{
-				WriteHeader( GetProperties<T>() );
+				WriteHeader( GetApplicableProperties<T>() );
 			}
 
 			GetAction<T>()( this, record );
@@ -187,7 +187,7 @@ namespace CsvHelper
 
 			if( HasHeaderRecord && !hasHeaderBeenWritten )
 			{
-				WriteHeader( GetProperties<T>() );
+				WriteHeader( GetApplicableProperties<T>() );
 			}
 
 			foreach( var record in records )
@@ -244,19 +244,13 @@ namespace CsvHelper
 		/// Writes the header record from the given properties.
 		/// </summary>
 		/// <param name="properties">The properties to write the header record from.</param>
-		protected virtual void WriteHeader( PropertyInfo[] properties )
+        protected virtual void WriteHeader(CsvPropertyInfo[] properties)
 		{
 			foreach( var property in properties )
 			{
-				var fieldName = property.Name;
-				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-				if( csvFieldAttribute != null && !string.IsNullOrEmpty( csvFieldAttribute.FieldName ) )
+                if (!property.Ignore)
 				{
-					fieldName = csvFieldAttribute.FieldName;
-				}
-				if( csvFieldAttribute == null || !csvFieldAttribute.Ignore )
-				{
-					WriteField( fieldName );
+                    WriteField(property.Name);
 				}
 			}
 			NextRecord();
@@ -268,24 +262,27 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type to get the properties for.</typeparam>
 		/// <returns>The properties for the given <see cref="Type"/>/</returns>
-		protected virtual PropertyInfo[] GetProperties<T>()
+		private CsvPropertyInfo[] GetApplicableProperties<T>()
 		{
 			var type = typeof( T );
 			if( !typeProperties.ContainsKey( type ) )
 			{
-				var properties = type.GetProperties( PropertyBindingFlags );
-				var shouldSort = properties.Any( property =>
-				{
-					// Only sort if there is at least one attribute
-					// that has the field index specified.
-					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-					return csvFieldAttribute != null && csvFieldAttribute.FieldIndex >= 0;
-				} );
+			    var propertiesInfo = type
+			        .GetProperties(PropertyBindingFlags)
+                    .Select(p => new CsvPropertyInfo(p))
+			        .Where(i => !i.Ignore)                 			        
+			        .ToArray();
+
+                // Only sort if there is at least one attribute
+                // that has the field index specified.			
+				var shouldSort = propertiesInfo.Any(i => i.HasFieldIndex);
+			    
 				if( shouldSort )
 				{
-					Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
+                    Array.Sort(propertiesInfo, new CsvPropertyInfoComparer(false));                    
 				}
-				typeProperties[type] = properties;
+				
+                typeProperties[type] = propertiesInfo;   
 			}
 			return typeProperties[type];
 		}
@@ -302,23 +299,23 @@ namespace CsvHelper
 
 			if( !typeActions.ContainsKey( type ) )
 			{
-				var properties = GetProperties<T>();
+				var properties = GetApplicableProperties<T>();
+
+                if (properties.Length == 0)
+                {
+                    throw new CsvHelperException("Type " + type.Name + " does not have properties to write to CSV files.");
+                }
 
 				Action<CsvWriter, T> func = null;
 				var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( typeof( T ), "record" );
-				foreach( var property in properties )
-				{
-					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-					if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
-					{
-						// Skip this property.
-						continue;
-					}
+				foreach( var info in properties )
+				{                   
+				    var property = info.Property;
+				    var propertyType = property.PropertyType;
+                    var typeConverter = info.FindTypeConverter();
 
-					var typeConverter = FindTypeConverterForProperty(property);
-
-				    Expression fieldExpression = Expression.Property( recordParameter, property );
+                    Expression fieldExpression = Expression.Property(recordParameter, property);
 					if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
 					{                        
 						// Convert the property value to a string using the
@@ -329,14 +326,14 @@ namespace CsvHelper
 						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 					}
-					else if( property.PropertyType != typeof( string ) )
+                    else if (propertyType != typeof(string))
 					{
-						if( property.PropertyType.IsValueType )
+                        if (propertyType.IsValueType)
 						{
 							// Convert the property value to a string using ToString.
 							var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
 							//var method = property.PropertyType.GetMethod( "ToString", new Type[] { property.PropertyType, typeof( IFormatProvider ) } );
-                            var method = property.PropertyType.GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
+                            var method = propertyType.GetMethod("ToString", new Type[] { typeof(IFormatProvider) });
 							if( method != null )
 							{
 								// If the type has a ToString method that accepts an IFormatProvider, use that.
@@ -353,7 +350,7 @@ namespace CsvHelper
 						{
 							// Convert the property value to a string using
 							// the default TypeConverter for the properties type.
-							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+                            typeConverter = TypeDescriptor.GetConverter(propertyType);
 							if( !typeConverter.CanConvertTo( typeof( string ) ) )
 							{
 								continue;
@@ -371,26 +368,13 @@ namespace CsvHelper
 					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
 					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
 				}
-
-				typeActions[type] = func;
+                
+                // If func is null we will store just empty writer
+                typeActions[type] = func ?? ((w, rec) => { });                
 			}
 
 			return  (Action<CsvWriter, T>)typeActions[type];
 		}
 
-	    private static TypeConverter FindTypeConverterForProperty(PropertyInfo property)
-	    {
-	        TypeConverter typeConverter = null;
-	        var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
-	        if( typeConverterAttribute != null )
-	        {
-	            var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName );
-	            if( typeConverterType != null )
-	            {
-	                typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
-	            }
-	        }
-	        return typeConverter;
-	    }
-	}
+    }
 }
