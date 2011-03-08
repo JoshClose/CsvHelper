@@ -1,10 +1,11 @@
 ﻿#region License
-// Copyright 2009-2010 Josh Close
+// Copyright 2009-2011 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 #endregion
 using System;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace CsvHelper
@@ -30,6 +31,26 @@ namespace CsvHelper
 				attribute = attributes[0] as T;
 			}
 			return attribute;
+		}
+
+		/// <summary>
+		/// Gets the <see cref="TypeConverter"/> for the <see cref="PropertyInfo"/>.
+		/// </summary>
+		/// <param name="property">The property to get the <see cref="TypeConverter"/> from.</param>
+		/// <returns>The <see cref="TypeConverter"/> </returns>
+		public static TypeConverter GetTypeConverter( PropertyInfo property )
+		{
+			TypeConverter typeConverter = null;
+			var typeConverterAttribute = GetAttribute<TypeConverterAttribute>( property, false );
+			if( typeConverterAttribute != null )
+			{
+				var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName, false );
+				if( typeConverterType != null )
+				{
+					typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
+				}
+			}
+			return typeConverter;
 		}
 	}
 }

@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009-2010 Josh Close
+// Copyright 2009-2011 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
@@ -561,17 +561,7 @@ namespace CsvHelper
 					var method = GetType().GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
 					Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
 
-					// Get the custom type converter if specified.
-					TypeConverter typeConverter = null;
-					var typeConverterAttribute = ReflectionHelper.GetAttribute<TypeConverterAttribute>( property, false );
-					if( typeConverterAttribute != null )
-					{
-						var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName, false );
-						if( typeConverterType != null )
-						{
-							typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
-						}
-					}
+					var typeConverter = ReflectionHelper.GetTypeConverter( property );
 
 					if( typeConverter != null && typeConverter.CanConvertFrom( typeof( string ) ) )
 					{
