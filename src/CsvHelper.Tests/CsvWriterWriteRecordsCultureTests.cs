@@ -1,5 +1,5 @@
 ﻿#region License
-// Copyright 2009-2010 Josh Close
+// Copyright 2009-2011 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
@@ -14,20 +14,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class CsvWriterWriteRecordsCultureTests
+	public class CsvWriterWriteRecordsCultureTests
 	{
-	    private static readonly CultureInfo SystemCurrentCulture = Thread.CurrentThread.CurrentCulture;
+		private static readonly CultureInfo systemCurrentCulture = Thread.CurrentThread.CurrentCulture;
 
-        [ClassInitialize]
-        public static void InitCurrentCulture(TestContext context)
-        {            
-            // Lets setup some culture with different decimal point.
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("uk-UA");
-        }        
+		[ClassInitialize]
+		public static void InitCurrentCulture( TestContext context )
+		{
+			// Lets setup some culture with different decimal point.
+			Thread.CurrentThread.CurrentCulture = new CultureInfo( "uk-UA" );
+		}
 
-		[TestMethod]        
+		[TestMethod]
 		public void WriteRecordsWithSomeCultureSpecificValuesTest()
-		{            
+		{
 			var records = new List<TestRecordWithDecimal>
             {
                 new TestRecordWithDecimal
@@ -36,33 +36,31 @@ namespace CsvHelper.Tests
                     DateTimeColumn = new DateTime(2010, 11, 11)
                 }                
             };
-			
+
 			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
+			var csv = new CsvWriter( writer, new CsvWriterOptions { HasHeaderRecord = true } );
 
 			csv.WriteRecords( records );
 
-		    var csvFile = writer.ToString();
+			var csvFile = writer.ToString();
 
-            var expected = "DecimalColumn,DateTimeColumn\r\n";
-            expected += "12.0,11/11/2010 00:00:00\r\n";
+			var expected = "DecimalColumn,DateTimeColumn\r\n";
+			expected += "12.0,11/11/2010 00:00:00\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
-				
+
 		private class TestRecordWithDecimal
 		{
-            [CsvField(FieldName = "DecimalColumn")]
 			public decimal DecimalColumn { get; set; }
 
-            [CsvField(FieldName = "DateTimeColumn")]
-            public DateTime DateTimeColumn { get; set; }			
+			public DateTime DateTimeColumn { get; set; }
 		}
 
-        [ClassCleanup]
-        public static void ResetCurrentCulture()
-        {
-            Thread.CurrentThread.CurrentCulture = SystemCurrentCulture;
-        }
+		[ClassCleanup]
+		public static void ResetCurrentCulture()
+		{
+			Thread.CurrentThread.CurrentCulture = systemCurrentCulture;
+		}
 	}
 }
