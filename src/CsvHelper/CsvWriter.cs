@@ -313,9 +313,7 @@ namespace CsvHelper
 				{                   
 				    var property = info.Property;
 				    var propertyType = property.PropertyType;
-                    var typeConverter = info.FindTypeConverter();
-
-					var typeConverter = ReflectionHelper.GetTypeConverter( property );
+                    var typeConverter = info.FindTypeConverter();					
 
 					Expression fieldExpression = Expression.Property( recordParameter, property );
 					if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
