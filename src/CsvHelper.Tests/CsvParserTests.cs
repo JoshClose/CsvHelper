@@ -92,8 +92,8 @@ namespace CsvHelper.Tests
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			writer.WriteLine( "one,\"two\",three" );
-            writer.WriteLine("four,\"\"\"f\"ive\"\"\",six");
+            writer.WriteLine("one,\"two\",th\"ree");
+            writer.WriteLine("four,\"\"\"five\"\"\",six");
 			writer.Flush();
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
@@ -103,11 +103,11 @@ namespace CsvHelper.Tests
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
 			Assert.AreEqual( "two", record[1] );
-			Assert.AreEqual( "three", record[2] );
+            Assert.AreEqual("th\"ree", record[2]);
 
 			record = parser.Read();
 			Assert.AreEqual( "four", record[0] );
-            Assert.AreEqual("\"f\"ive\"", record[1]);
+            Assert.AreEqual("\"five\"", record[1]);
 			Assert.AreEqual( "six", record[2] );
 
 			record = parser.Read();
