@@ -92,7 +92,7 @@ namespace CsvHelper.Tests
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-            writer.WriteLine("one,\"two\",th\"ree");
+            writer.WriteLine("one,\"two\",three");
             writer.WriteLine("four,\"\"\"five\"\"\",six");
 			writer.Flush();
 			stream.Position = 0;
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
 			Assert.AreEqual( "two", record[1] );
-            Assert.AreEqual("th\"ree", record[2]);
+            Assert.AreEqual("three", record[2]);
 
 			record = parser.Read();
 			Assert.AreEqual( "four", record[0] );
@@ -113,6 +113,16 @@ namespace CsvHelper.Tests
 			record = parser.Read();
 			Assert.IsNull( record );
 		}
+
+        [TestMethod]
+        public void ReadFieldWithQuotesInsideValueTest()
+        {            
+            var reader = new StringReader("th\"ree\r\n");
+            var parser = new CsvParser(reader, new CsvParserOptions { BufferSize = 2000 });
+
+            var record = parser.Read(); 
+            Assert.AreEqual("th\"ree", record[0]);            
+        }
 
 		[TestMethod]
 		public void ReadSpacesTest()

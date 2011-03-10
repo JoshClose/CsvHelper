@@ -82,8 +82,9 @@ namespace CsvHelper
 
 			string field = null;
 			var fieldStartPosition = readerBufferPosition;
-			var inQuotes = false;
-			var hasQuotes = false;
+            var fieldValueInQuotes = false;
+            var fieldValueHasQuotes = false;
+		    var fieldPossibleEndInQuotes = false;
 			var inComment = false;
 			var recordPosition = 0;
 			var c = '\0';
@@ -112,7 +113,7 @@ namespace CsvHelper
 
 						if( !string.IsNullOrEmpty( field ) )
 						{
-							AddFieldToRecord( ref recordPosition, field, hasQuotes );
+							AddFieldToRecord( ref recordPosition, field, fieldValueHasQuotes );
 							return record;
 						}
 
@@ -129,19 +130,21 @@ namespace CsvHelper
 					// Ignore the character.
 					continue;
 				}
-				if( !inQuotes && c == Delimiter )
+                if ((!fieldValueInQuotes || fieldPossibleEndInQuotes) && c == Delimiter)
 				{
 					// If we hit the delimiter, we are
 					// done reading the field and can
 					// add it to the record.
 					field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-					AddFieldToRecord( ref recordPosition, field, hasQuotes );
+					AddFieldToRecord( ref recordPosition, field, fieldValueHasQuotes );
 					fieldStartPosition = readerBufferPosition;
 
 					field = null;
-					hasQuotes = false;
+					fieldValueHasQuotes = false;
+                    fieldPossibleEndInQuotes = false;
+                    fieldValueInQuotes = false;
 				}
-				else if( !inQuotes && ( c == '\r' || c == '\n' ) )
+                else if ((!fieldValueInQuotes || fieldPossibleEndInQuotes) && (c == '\r' || c == '\n'))
 				{
 					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' || inComment )
 					{
@@ -154,27 +157,46 @@ namespace CsvHelper
 					// If we hit the end of the record, add 
 					// the current field and return the record.
 					field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-					AddFieldToRecord( ref recordPosition, field, hasQuotes );
+					AddFieldToRecord( ref recordPosition, field, fieldValueHasQuotes );
 					break;
 				}
 				else if( c == '"' )
 				{
-					hasQuotes = true;
-					inQuotes = !inQuotes;
+                    //fieldValueHasQuotes = true;
+                    //fieldValueInQuotes = !fieldValueInQuotes;
 
-					if( fieldStartPosition != readerBufferPosition - 1 )
-					{
-						// Grab all the field chars before the
-						// quote if there are any.
-						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-						fieldStartPosition = readerBufferPosition;
-					}
-					if( cPrev != '"' || !inQuotes )
-					{
-						// Set the new field start position to
-						// the char after the quote.
-						fieldStartPosition = readerBufferPosition;
-					}
+                    //if( fieldStartPosition != readerBufferPosition - 1 )
+                    //{
+                    //    // Grab all the field chars before the
+                    //    // quote if there are any.
+                    //    field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+                    //    fieldStartPosition = readerBufferPosition;
+                    //}
+                    //if( cPrev != '"' || !fieldValueInQuotes )
+                    //{
+                    //    // Set the new field start position to
+                    //    // the char after the quote.
+                    //    fieldStartPosition = readerBufferPosition;
+                    //}
+
+                    if (fieldStartPosition == readerBufferPosition - 1)
+                    {
+                        // We hited start of the quoted field
+                        fieldValueHasQuotes = true;
+                        fieldValueInQuotes = true;
+                    }
+                    else if (fieldValueInQuotes && fieldStartPosition != readerBufferPosition - 1)
+                    {
+                        // We hited possible end of the quoted field
+                        fieldPossibleEndInQuotes = true;
+                    }
+                    else if (fieldValueInQuotes
+                        && fieldStartPosition != readerBufferPosition - 1
+                        && cPrev == '"')
+                    {
+                        // False alarm, that was  doube quotas
+                        fieldPossibleEndInQuotes = false;
+                    }
 				}
 				else if( AllowComments && c == '#' && ( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' ) )
 				{
@@ -199,6 +221,13 @@ namespace CsvHelper
 				Array.Resize( ref record, recordPosition + 1 );
 				FieldCount = record.Length;
 			}
+
+            if (hasQuotes && field.Length > 1)
+            {
+                field = field
+                    .Substring(1, field.Length - 2)
+                    .Replace("\"\"", "\"");
+            }
 
 			record[recordPosition] = field;
 			recordPosition++;
