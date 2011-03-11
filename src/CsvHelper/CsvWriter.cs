@@ -28,13 +28,18 @@ namespace CsvHelper
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 
 		/// <summary>
-		/// Gets or sets the delimiter used to
+		/// Gets the delimiter used to
 		/// separate the fields of the CSV records.
 		/// </summary>
 		public virtual char Delimiter { get; private set; }
 
 		/// <summary>
-		/// Gets are sets a value indicating if the
+		/// Gets the quote used to quote fields.
+		/// </summary>
+		public virtual char Quote { get; private set; }
+
+		/// <summary>
+		/// Gets a value indicating if the
 		/// CSV file has a header record.
 		/// </summary>
 		public virtual bool HasHeaderRecord { get; private set; }
@@ -61,6 +66,7 @@ namespace CsvHelper
 		{
 			this.writer = writer;
 			Delimiter = options.Delimiter;
+			Quote = options.Quote;
 			HasHeaderRecord = options.HasHeaderRecord;
 			PropertyBindingFlags = options.PropertyBindingFlags;
 		}
@@ -77,20 +83,21 @@ namespace CsvHelper
 			if( !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
-				if( field.Contains( "\"" ) )
+				if( field.Contains( Quote ) )
 				{
 					// All quotes must be doubled.
-					field = field.Replace( "\"", "\"\"" );
+					field = field.Replace( Quote.ToString(), string.Format( "{0}{0}", Quote ) );
 					hasQuote = true;
 				}
 				if( hasQuote ||
 					field[0] == ' ' ||
 					field[field.Length - 1] == ' ' ||
 					field.Contains( Delimiter.ToString() ) ||
-					field.Contains( "\n" ) )
+					field.Contains( "\n" ) ||
+					field.Contains( "\r" ) )
 				{
-					// Surround the field in double quotes.
-					field = string.Format( "\"{0}\"", field );
+					// Surround the field in quotes.
+					field = string.Format( "{0}{1}{0}", Quote, field );
 				}
 			}
 

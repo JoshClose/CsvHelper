@@ -429,12 +429,12 @@ namespace CsvHelper
 		/// <summary>
 		/// Checks if the reader has been read yet.
 		/// </summary>
-		/// <exception cref="InvalidOperationException" />
+		/// <exception cref="CsvReaderException" />
 		protected virtual void CheckHasBeenRead()
 		{
 			if( !hasBeenRead )
 			{
-				throw new InvalidOperationException( "You must call read on the reader before accessing its data." );
+				throw new CsvReaderException( "You must call read on the reader before accessing its data." );
 			}
 		}
 
@@ -468,12 +468,13 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="name">The name of the field to get the index for.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
-		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
+		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
+		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
 		protected virtual int GetFieldIndex( string name )
 		{
 			if( !HasHeaderRecord )
 			{
-				throw new InvalidOperationException( "There is no header record to determine the index by name." );
+				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
 
 			if( !namedIndexes.ContainsKey( name ) )
@@ -482,7 +483,7 @@ namespace CsvHelper
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
-					throw new MissingFieldException( string.Format( "Field '{0}' does not exist in the CSV file.", name ) );
+					throw new CsvMissingFieldException( string.Format( "Field '{0}' does not exist in the CSV file.", name ) );
 				}
 				return -1;
 			}
@@ -500,7 +501,7 @@ namespace CsvHelper
 				var name = headerRecord[i];
 				if( namedIndexes.ContainsKey( name ) )
 				{
-					throw new InvalidOperationException( "The field header names must be unique." );
+					throw new CsvReaderException( "The field header names must be unique." );
 				}
 				namedIndexes[name] = i;
 			}

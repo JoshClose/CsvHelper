@@ -15,9 +15,10 @@ namespace CsvHelper
 	{
 		private int bufferSize = 2048;
 		private char delimiter = ',';
+		private char quote = '"';
 
 		/// <summary>
-		/// The buffer size to use when
+		/// Gets or sets the buffer size to use when
 		/// reading the stream.
 		/// </summary>
 		public int BufferSize
@@ -27,14 +28,14 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// The number of fields the CSV file has.
+		/// Gets or sets the number of fields the CSV file has.
 		/// If this is known ahead of time, set
 		/// to make parsing more efficient.
 		/// </summary>
 		public int FieldCount { get; set; }
 
 		/// <summary>
-		/// The delimiter used to separate fields
+		/// Gets or sets the delimiter used to separate fields
 		/// of the CSV records.
 		/// </summary>
 		public char Delimiter
@@ -44,9 +45,49 @@ namespace CsvHelper
 			{
 				if( value == '\n' )
 				{
-					throw new Exception( "Newline is not a valid delimiter." );
+					throw new CsvHelperException( "Newline is not a valid delimiter." );
+				}
+				if ( value == '\r' )
+				{
+					throw new CsvHelperException( "Carriage return is not a valid delimiter." );
+				}
+				if( value == '\0' )
+				{
+					throw new CsvHelperException( "Null is not a valid delimiter." );
+				}
+				if( value == quote )
+				{
+					throw new CsvHelperException( "You can not use the quote as a delimiter." );
 				}
 				delimiter = value;
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets the quote used to quote fields.
+		/// </summary>
+		public char Quote
+		{
+			get { return quote; }
+			set
+			{
+				if( value == '\n' )
+				{
+					throw new CsvHelperException( "Newline is not a valid quote." );
+				}
+				if( value == '\r' )
+				{
+					throw new CsvHelperException( "Carriage return is not a valid quote." );
+				}
+				if( value == '\0' )
+				{
+					throw new CsvHelperException( "Null is not a valid quote." );
+				}
+				if( value == delimiter )
+				{
+					throw new CsvHelperException( "You can not use the delimiter as a quote." );
+				}
+				quote = value;
 			}
 		}
 

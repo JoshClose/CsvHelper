@@ -29,6 +29,11 @@ namespace CsvHelper
 		public virtual char Delimiter { get; private set; }
 
 		/// <summary>
+		/// Gets the quote used to quote fields.
+		/// </summary>
+		public virtual char Quote { get; private set; }
+
+		/// <summary>
 		/// Gets the size of the buffer
 		/// used when reading the stream and
 		/// creating the fields.
@@ -65,6 +70,7 @@ namespace CsvHelper
 			this.reader = reader;
 			BufferSize = options.BufferSize;
 			Delimiter = options.Delimiter;
+			Quote = options.Quote;
 			FieldCount = options.FieldCount;
 			AllowComments = options.AllowComments;
             
@@ -157,7 +163,7 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else if( c == '"' )
+				else if( c == Quote )
 				{
 					hasQuotes = true;
 					inQuotes = !inQuotes;
@@ -169,7 +175,7 @@ namespace CsvHelper
 						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						fieldStartPosition = readerBufferPosition;
 					}
-					if( cPrev != '"' || !inQuotes )
+					if( cPrev != Quote || !inQuotes )
 					{
 						// Set the new field start position to
 						// the char after the quote.
@@ -238,7 +244,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Checks if the reader has been read yet.
 		/// </summary>
-		/// <exception cref="InvalidOperationException" />
+		/// <exception cref="ObjectDisposedException" />
 		protected virtual void CheckDisposed()
 		{
 			if( disposed )

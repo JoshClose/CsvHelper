@@ -14,6 +14,7 @@ namespace CsvHelper
 	public class CsvWriterOptions
 	{
 		private char delimiter = ',';
+		private char quote = '"';
 		private bool hasHeaderRecord = true;
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
@@ -25,6 +26,15 @@ namespace CsvHelper
 		{
 			get { return delimiter; }
 			set { delimiter = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the quote used to quote fields.
+		/// </summary>
+		public char Quote
+		{
+			get { return quote; }
+			set { quote = value; }
 		}
 
 		/// <summary>
