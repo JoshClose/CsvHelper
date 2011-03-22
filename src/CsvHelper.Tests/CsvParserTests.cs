@@ -423,5 +423,41 @@ namespace CsvHelper.Tests
 			var record = parser.Read();
 			Assert.AreEqual( "#four", record[0] );
 		}
+
+		[TestMethod]
+		public void ParseUsingDifferentDelimiter()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "one\ttwo\tthree" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+
+			var parser = new CsvParser( reader, new CsvParserOptions { Delimiter = '\t' } );
+
+			var record = parser.Read();
+			Assert.AreEqual( "one", record[0] );
+			Assert.AreEqual( "two", record[1] );
+			Assert.AreEqual( "three", record[2] );
+		}
+
+		[TestMethod]
+		public void ParseUsingDifferentQuote()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "'one','two','three'" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+
+			var parser = new CsvParser( reader, new CsvParserOptions { Quote = '\'' } );
+
+			var record = parser.Read();
+			Assert.AreEqual( "one", record[0] );
+			Assert.AreEqual( "two", record[1] );
+			Assert.AreEqual( "three", record[2] );
+		}
 	}
 }
