@@ -21,6 +21,8 @@ namespace CsvHelper
 		private int readerBufferPosition;
 		private int charsRead;
 		private string[] record;
+		private int currentLine;
+		private int currentCharacter;
 
 		/// <summary>
 		/// Gets the delimiter used to
@@ -86,6 +88,80 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
+			try
+			{
+				return ReadLine();
+			}
+			catch( Exception ex)
+			{
+				throw new CsvParserException( string.Format( "A parsing error occurred. Line: {0} Character: {1}", currentLine, currentCharacter ), ex );
+			}
+		}
+
+		/// <summary>
+		/// Adds the field to the current record.
+		/// </summary>
+		/// <param name="recordPosition">The record position to add the field to.</param>
+		/// <param name="field">The field to add.</param>
+		/// <param name="hasQuotes">True if the field is quoted, otherwise false.</param>
+		protected virtual void AddFieldToRecord( ref int recordPosition, string field, bool hasQuotes )
+		{
+			if( record.Length < recordPosition + 1 )
+			{
+				// Resize record if it's too small.
+				Array.Resize( ref record, recordPosition + 1 );
+				FieldCount = record.Length;
+			}
+
+			record[recordPosition] = field;
+			recordPosition++;
+		}
+
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <filterpriority>2</filterpriority>
+		public virtual void Dispose()
+		{
+			Dispose( true );
+			GC.SuppressFinalize( this );
+		}
+
+		/// <summary>
+		/// Checks if the instance has been disposed of.
+		/// </summary>
+		/// <exception cref="ObjectDisposedException" />
+		protected virtual void Dispose( bool disposing )
+		{
+			if( !disposed )
+			{
+				if( disposing )
+				{
+					if( reader != null )
+					{
+						reader.Dispose();
+					}
+				}
+
+				disposed = true;
+				reader = null;
+			}
+		}
+
+		/// <summary>
+		/// Checks if the reader has been read yet.
+		/// </summary>
+		/// <exception cref="ObjectDisposedException" />
+		protected virtual void CheckDisposed()
+		{
+			if( disposed )
+			{
+				throw new ObjectDisposedException( GetType().ToString() );
+			}
+		}
+
+		private string[] ReadLine()
+		{
 			string field = null;
 			var fieldStartPosition = readerBufferPosition;
 			var inQuotes = false;
@@ -94,10 +170,13 @@ namespace CsvHelper
 			var recordPosition = 0;
 			var c = '\0';
 			record = new string[FieldCount];
+			currentLine++;
+			currentCharacter = 0;
 
 			while( true )
 			{
 				var cPrev = c;
+				currentCharacter++;
 
 				if( readerBufferPosition == charsRead )
 				{
@@ -189,68 +268,6 @@ namespace CsvHelper
 			}
 
 			return record;
-		}
-
-		/// <summary>
-		/// Adds the field to the current record.
-		/// </summary>
-		/// <param name="recordPosition">The record position to add the field to.</param>
-		/// <param name="field">The field to add.</param>
-		/// <param name="hasQuotes">True if the field is quoted, otherwise false.</param>
-		protected virtual void AddFieldToRecord( ref int recordPosition, string field, bool hasQuotes )
-		{
-			if( record.Length < recordPosition + 1 )
-			{
-				// Resize record if it's too small.
-				Array.Resize( ref record, recordPosition + 1 );
-				FieldCount = record.Length;
-			}
-
-			record[recordPosition] = field;
-			recordPosition++;
-		}
-
-		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		/// <filterpriority>2</filterpriority>
-		public virtual void Dispose()
-		{
-			Dispose( true );
-			GC.SuppressFinalize( this );
-		}
-
-		/// <summary>
-		/// Checks if the instance has been disposed of.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException" />
-		protected virtual void Dispose( bool disposing )
-		{
-			if( !disposed )
-			{
-				if( disposing )
-				{
-					if( reader != null )
-					{
-						reader.Dispose();
-					}
-				}
-
-				disposed = true;
-				reader = null;
-			}
-		}
-
-		/// <summary>
-		/// Checks if the reader has been read yet.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException" />
-		protected virtual void CheckDisposed()
-		{
-			if( disposed )
-			{
-				throw new ObjectDisposedException( GetType().ToString() );
-			}
 		}
 	}
 }
