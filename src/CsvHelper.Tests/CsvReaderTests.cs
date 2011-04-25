@@ -18,7 +18,7 @@ namespace CsvHelper.Tests
 	public class CsvReaderTests
 	{
 		[TestMethod]
-		[ExpectedException( typeof( InvalidOperationException ) )]
+		[ExpectedException( typeof( CsvReaderException ) )]
 		public void HasHeaderRecordNotReadExceptionTest()
 		{
 			var mockFactory = new MockFactory( MockBehavior.Default );
@@ -178,7 +178,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException( typeof( MissingFieldException ) )]
+		[ExpectedException( typeof( CsvMissingFieldException ) )]
 		public void GetMissingFieldByNameStrictTest()
 		{
 			var isHeaderRecord = true;
@@ -203,7 +203,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException( typeof( InvalidOperationException ) )]
+		[ExpectedException( typeof( CsvReaderException ) )]
 		public void GetFieldByNameNoHeaderExceptionTest()
 		{
 			var data = new [] { "1", "2" };
