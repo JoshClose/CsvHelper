@@ -449,5 +449,27 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "two", record[1] );
 			Assert.AreEqual( "three", record[2] );
 		}
+
+		[TestMethod]
+		public void ReadFinalRecordWithNoEndOfLineTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter(stream);
+			writer.WriteLine("one,two,three,");
+			writer.Write("four,five,six,");
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader(stream);
+
+			var parser = new CsvParser(reader);
+
+			var count = 0;
+			while (parser.Read() != null)
+			{
+				count++;
+			}
+
+			Assert.AreEqual(2, count);
+		}
 	}
 }
