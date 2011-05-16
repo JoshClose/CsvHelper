@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace CsvHelper
 {
@@ -196,7 +195,7 @@ namespace CsvHelper
 					{
 						// The end of the stream has been reached.
 
-						if( record.Any( v => !string.IsNullOrEmpty( v ) ) )
+						if( c != '\r' && c != '\n' && c != '\0' )
 						{
 							AddFieldToRecord( ref recordPosition, field, hasQuotes );
 							return record;
