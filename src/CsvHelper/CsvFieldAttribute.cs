@@ -41,9 +41,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// When reading, not used. When writing,
-		/// ignores the property and doesn't
-		/// write it to the CSV file.
+		/// Ignore the property when reading and writing.
 		/// </summary>
 		public bool Ignore { get; set; }
 	}

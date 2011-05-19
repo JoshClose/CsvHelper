@@ -584,7 +584,7 @@ namespace CsvHelper
 						{
 							// Use the default TypeConverter for the properties type.
 							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
-							if( !typeConverter.CanConvertFrom( typeof( string ) ) )
+							if( typeConverter == null || !typeConverter.CanConvertFrom( typeof( string ) ) )
 							{
 								continue;
 							}

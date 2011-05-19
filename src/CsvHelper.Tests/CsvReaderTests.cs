@@ -451,6 +451,51 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( default( TestRecord ), record.CustomTypeColumn );
 		}
 
+		[TestMethod]
+		public void GetRecordEmptyValuesNullableTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+
+			writer.WriteLine( "StringColumn,IntColumn,GuidColumn" );
+			writer.WriteLine( "one,1,11111111-1111-1111-1111-111111111111" );
+			writer.WriteLine( ",," );
+			writer.WriteLine( "three,3,33333333-3333-3333-3333-333333333333" );
+			writer.Flush();
+			stream.Position = 0;
+
+			var reader = new StreamReader( stream );
+			var csvReader = new CsvReader( reader );
+
+			csvReader.Read();
+			var record = csvReader.GetRecord<TestNullable>();
+			Assert.IsNotNull( record );
+			Assert.AreEqual( "one", record.StringColumn );
+			Assert.AreEqual( 1, record.IntColumn );
+			Assert.AreEqual( new Guid( "11111111-1111-1111-1111-111111111111" ), record.GuidColumn );
+
+			csvReader.Read();
+			record = csvReader.GetRecord<TestNullable>();
+			Assert.IsNotNull( record );
+			Assert.AreEqual( string.Empty, record.StringColumn );
+			Assert.AreEqual( null, record.IntColumn );
+			Assert.AreEqual( null, record.GuidColumn );
+
+			csvReader.Read();
+			record = csvReader.GetRecord<TestNullable>();
+			Assert.IsNotNull( record );
+			Assert.AreEqual( "three", record.StringColumn );
+			Assert.AreEqual( 3, record.IntColumn );
+			Assert.AreEqual( new Guid( "33333333-3333-3333-3333-333333333333" ), record.GuidColumn );
+		}
+
+		private class TestNullable
+		{
+			public int? IntColumn { get; set; }
+			public string StringColumn { get; set; }
+			public Guid? GuidColumn { get; set; }
+		}
+
 		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
 		private class TestRecord
 		{
