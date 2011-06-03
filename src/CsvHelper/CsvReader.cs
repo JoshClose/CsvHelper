@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
@@ -26,6 +27,7 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
+		private readonly CsvConfiguration configuration = new CsvConfiguration();
 
 		/// <summary>
 		/// Gets a value indicating if the CSV file has a header record.
@@ -56,6 +58,12 @@ namespace CsvHelper
 		/// custom class objects.
 		/// </summary>
 		public virtual BindingFlags PropertyBindingFlags { get; private set; }
+
+		/// <summary>
+		/// Gets the configuration used to populate
+		/// custom class objects.
+		/// </summary>
+		public virtual CsvConfiguration Configuration { get { return configuration; } }
 
 		/// <summary>
 		/// Creates a new CSV reader using <see cref="CsvParser"/> as

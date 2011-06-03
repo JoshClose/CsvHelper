@@ -5,6 +5,7 @@
 // http://csvhelper.com
 #endregion
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace CsvHelper
@@ -18,6 +19,7 @@ namespace CsvHelper
 	public class CsvFieldAttribute : Attribute
 	{
 		private int fieldIndex = -1;
+		private Type typeConverter;
 
 		/// <summary>
 		/// When reading, is used to get the field

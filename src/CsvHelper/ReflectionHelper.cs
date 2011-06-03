@@ -5,7 +5,10 @@
 // http://csvhelper.com
 #endregion
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace CsvHelper
@@ -51,6 +54,35 @@ namespace CsvHelper
 				}
 			}
 			return typeConverter;
+		}
+
+		public static PropertyInfo GetProperty<TModel>( Expression<Func<TModel, object>> expression )
+		{
+			return (PropertyInfo)GetMemberExpression( expression ).Member;
+		}
+
+		private static MemberExpression GetMemberExpression<TModel, T>( Expression<Func<TModel, T>> expression )
+		{
+			// This method was taken from FluentNHibernate.Utils.ReflectionHelper.cs and modified.
+			// http://fluentnhibernate.org/
+
+			MemberExpression memberExpression = null;
+			if( expression.Body.NodeType == ExpressionType.Convert )
+			{
+				var body = (UnaryExpression)expression.Body;
+				memberExpression = body.Operand as MemberExpression;
+			}
+			else if( expression.Body.NodeType == ExpressionType.MemberAccess )
+			{
+				memberExpression = expression.Body as MemberExpression;
+			}
+
+			if( memberExpression == null )
+			{
+				throw new ArgumentException( "Not a member access", "expression" );
+			}
+
+			return memberExpression;
 		}
 	}
 }
