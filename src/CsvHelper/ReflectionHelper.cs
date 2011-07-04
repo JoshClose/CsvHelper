@@ -41,7 +41,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="property">The property to get the <see cref="TypeConverter"/> from.</param>
 		/// <returns>The <see cref="TypeConverter"/> </returns>
-		public static TypeConverter GetTypeConverter( PropertyInfo property )
+		public static TypeConverter GetTypeConverterFromAttribute( PropertyInfo property )
 		{
 			TypeConverter typeConverter = null;
 			var typeConverterAttribute = GetAttribute<TypeConverterAttribute>( property, false );

@@ -9,14 +9,14 @@ namespace CsvHelper.Configuration
 	/// Maps class properties to CSV fields.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of class to map.</typeparam>
-	public abstract class CsvClassMap<T>
+	public abstract class CsvClassMap<T> where T : class
 	{
-		private readonly List<CsvPropertyMap> properties = new List<CsvPropertyMap>();
+		private readonly CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
 
 		/// <summary>
 		/// The class property mappings.
 		/// </summary>
-		public ReadOnlyCollection<CsvPropertyMap> Properties { get { return properties.AsReadOnly(); } }
+		public CsvPropertyMapCollection Properties { get { return properties; } }
 
 		/// <summary>
 		/// Maps a property to a CSV field.

@@ -6,6 +6,7 @@
 #endregion
 using System;
 using System.Collections.Generic;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
@@ -15,16 +16,9 @@ namespace CsvHelper
 	public interface ICsvParser : IDisposable
 	{
 		/// <summary>
-		/// Gets the size of the buffer
-		/// used when reading the stream.
+		/// Gets or sets the configuration.
 		/// </summary>
-		int BufferSize { get; }
-
-		/// <summary>
-		/// Gets the delimiter used to
-		/// separate the fields of the CSV records.
-		/// </summary>
-		char Delimiter { get; }
+		CsvConfiguration Configuration { get; set; }
 
 		/// <summary>
 		/// Gets the field count.

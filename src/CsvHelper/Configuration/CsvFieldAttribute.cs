@@ -5,7 +5,6 @@
 // http://csvhelper.com
 #endregion
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 
 namespace CsvHelper
@@ -14,12 +13,11 @@ namespace CsvHelper
 	/// Used to set behavior of a field when
 	/// reading a writing a CSV file.
 	/// </summary>
-	[DebuggerDisplay( "FieldIndex = {FieldIndex}, FieldName = {FieldName}, Ignore = {Ignore}" )]
+	[DebuggerDisplay( "Index = {Index}, Name = {Name}, Ignore = {Ignore}" )]
 	[AttributeUsage( AttributeTargets.Property, AllowMultiple = false )]
 	public class CsvFieldAttribute : Attribute
 	{
-		private int fieldIndex = -1;
-		private Type typeConverter;
+		private int index = -1;
 
 		/// <summary>
 		/// When reading, is used to get the field
@@ -27,19 +25,19 @@ namespace CsvHelper
 		/// header specified. When writing, sets
 		/// the name of the field in the header record.
 		/// </summary>
-		public string FieldName { get; set; }
+		public string Name { get; set; }
 
 		/// <summary>
 		/// When reading, is used to get the field at
-		/// the given index. If a FieldName is specified,
+		/// the given index. If a Name is specified,
 		/// that will be used instead. When writing, the fields
 		/// will be written in the order of the field
 		/// indexes.
 		/// </summary>
-		public int FieldIndex
+		public int Index
 		{
-			get { return fieldIndex; }
-			set { fieldIndex = value; }
+			get { return index; }
+			set { index = value; }
 		}
 
 		/// <summary>

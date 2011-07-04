@@ -98,7 +98,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions { BufferSize = 2000 } );
+			var parser = new CsvParser( reader ) { Configuration = { BufferSize = 2000 } };
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -125,7 +125,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions { BufferSize = 2 } );
+			var parser = new CsvParser( reader ) { Configuration = { BufferSize = 2 } };
 
 			var record = parser.Read();
 			Assert.AreEqual( " one ", record[0] );
@@ -388,7 +388,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions { AllowComments = true } );
+			var parser = new CsvParser( reader ) { Configuration = { AllowComments = true } };
 
 			parser.Read();
 			var record = parser.Read();
@@ -407,7 +407,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions { AllowComments = false } );
+			var parser = new CsvParser( reader ) { Configuration = { AllowComments = false } };
 
 			parser.Read();
 			var record = parser.Read();
@@ -424,7 +424,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions { Delimiter = '\t' } );
+			var parser = new CsvParser( reader ) { Configuration = { Delimiter = '\t' } };
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -442,7 +442,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader, new CsvParserOptions { Quote = '\'' } );
+			var parser = new CsvParser( reader ) { Configuration = { Quote = '\'' } };
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );

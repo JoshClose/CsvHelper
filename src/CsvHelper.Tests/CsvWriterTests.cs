@@ -58,15 +58,15 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
+			var csv = new CsvWriter( writer );
 
 			csv.WriteRecord( record );
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
-			expected += "first column,1,test,string column\r\n";
+			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+			expected += "first column,1,string column,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -94,16 +94,16 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
+			var csv = new CsvWriter( writer );
 
 			csv.WriteRecords( records );
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
-			expected += "first column,1,test,string column\r\n";
-			expected += "first column 2,2,test,string column 2\r\n";
+			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+			expected += "first column,1,string column,test\r\n";
+			expected += "first column 2,2,string column 2,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -113,14 +113,14 @@ namespace CsvHelper.Tests
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = false } );
+			var csv = new CsvWriter( writer ) { Configuration = { HasHeaderRecord = false } };
 			csv.WriteRecord( new TestRecord() );
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			Assert.AreEqual( ",0,test,\r\n", csvFile );
+			Assert.AreEqual( ",0,,test\r\n", csvFile );
 		}
 
 		[TestMethod]
@@ -136,7 +136,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			var csv = new CsvWriter( writer, new CsvWriterOptions{ HasHeaderRecord = true } );
+			var csv = new CsvWriter( writer );
 
 			csv.WriteRecord( record );
 			csv.WriteRecord( (TestRecord)null );
@@ -145,10 +145,10 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
-			expected += "first column,1,test,string column\r\n";
+			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+			expected += "first column,1,string column,test\r\n";
 			expected += ",,,\r\n";
-			expected += "first column,1,test,string column\r\n";
+			expected += "first column,1,string column,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -156,7 +156,7 @@ namespace CsvHelper.Tests
 		[TypeConverter( "type name" )]
 		private class TestRecord
 		{
-			[CsvField( FieldIndex = 1, FieldName = "Int Column" )]
+			[CsvField( Index = 1, Name = "Int Column" )]
 			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
 
@@ -166,7 +166,7 @@ namespace CsvHelper.Tests
 			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
-			[CsvField( FieldIndex = 0 )]
+			[CsvField( Index = 0 )]
 			public string FirstColumn { get; set; }
 
 			[TypeConverter( typeof( TestTypeConverter ) )]

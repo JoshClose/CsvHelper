@@ -7,10 +7,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
-using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper
@@ -27,12 +25,16 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
-		private readonly CsvConfiguration configuration = new CsvConfiguration();
+		private CsvConfiguration configuration;
 
 		/// <summary>
-		/// Gets a value indicating if the CSV file has a header record.
+		/// Gets or sets the configuration.
 		/// </summary>
-		public virtual bool HasHeaderRecord { get; private set; }
+		public virtual CsvConfiguration Configuration
+		{
+			get { return configuration; }
+			set { configuration = value; }
+		}
 
 		/// <summary>
 		/// Gets the field headers.
@@ -49,23 +51,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets a value indicating if strict reading is enabled.
-		/// </summary>
-		public virtual bool Strict { get; private set; }
-
-		/// <summary>
-		/// Gets the binding flags used to populate
-		/// custom class objects.
-		/// </summary>
-		public virtual BindingFlags PropertyBindingFlags { get; private set; }
-
-		/// <summary>
-		/// Gets the configuration used to populate
-		/// custom class objects.
-		/// </summary>
-		public virtual CsvConfiguration Configuration { get { return configuration; } }
-
-		/// <summary>
 		/// Creates a new CSV reader using <see cref="CsvParser"/> as
 		/// the default parser.
 		/// </summary>
@@ -76,19 +61,17 @@ namespace CsvHelper
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		public CsvReader( ICsvParser parser ) : this( parser, new CsvReaderOptions() ){}
+		public CsvReader( ICsvParser parser ) : this( parser, new CsvConfiguration() ){}
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="ICsvParser" /> and <see cref="CsvReaderOptions" />.
+		/// Creates a new CSV reader using the given <see cref="ICsvParser"/> and <see cref="CsvConfiguration"/>.
 		/// </summary>
-		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		/// <param name="options">The <see cref="CsvReaderOptions" /> used to read the parsed CSV file.</param>
-		public CsvReader( ICsvParser parser, CsvReaderOptions options )
+		/// <param name="parser">The <see cref="ICsvParser"/> used to parse the CSV file.</param>
+		/// <param name="configuration">The <see cref="CsvConfiguration"/>.</param>
+		public CsvReader( ICsvParser parser, CsvConfiguration configuration )
 		{
 			this.parser = parser;
-			Strict = options.Strict;
-			PropertyBindingFlags = options.PropertyBindingFlags;
-			HasHeaderRecord = options.HasHeaderRecord;
+			this.configuration = configuration;
 		}
 
 		/// <summary>
@@ -102,7 +85,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( HasHeaderRecord && currentRecord == null )
+			if( configuration.HasHeaderRecord && currentRecord == null )
 			{
 				headerRecord = parser.Read();
 				ParseNamedIndexes();
@@ -361,12 +344,12 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>The record converted to <see cref="Type"/> T.</returns>
-		public virtual T GetRecord<T>()
+		public virtual T GetRecord<T>() where T : class
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			return GetRecordFunc<T>()( this );
+			return GetReadRecordFunc<T>()( this );
 		}
 
 		/// <summary>
@@ -376,7 +359,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		public virtual IList<T> GetRecords<T>()
+		public virtual IList<T> GetRecords<T>() where T : class
 		{
 			CheckDisposed();
 
@@ -384,11 +367,23 @@ namespace CsvHelper
 
 			while( Read() )
 			{
-				var record = GetRecordFunc<T>()( this );
+				var record = GetReadRecordFunc<T>()( this );
 				records.Add( record );
 			}
 
 			return records;
+		}
+
+		/// <summary>
+		/// Invalidates the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ICsvReader.InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// record cache.
+		/// </summary>
+		public virtual void InvalidateRecordCache<T>() where T : class
+		{
+			recordFuncs.Remove( typeof( T ) );
 		}
 
 		/// <summary>
@@ -480,14 +475,14 @@ namespace CsvHelper
 		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
 		protected virtual int GetFieldIndex( string name )
 		{
-			if( !HasHeaderRecord )
+			if (!configuration.HasHeaderRecord)
 			{
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
 
 			if( !namedIndexes.ContainsKey( name ) )
 			{
-				if( Strict )
+				if( configuration.Strict )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
@@ -522,7 +517,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="Type"/> of object that is created
 		/// and populated.</typeparam>
 		/// <returns>The function delegate.</returns>
-		protected virtual Func<CsvReader, T> GetRecordFunc<T>()
+		protected virtual Func<CsvReader, T> GetReadRecordFunc<T>() where T : class
 		{
 			var type = typeof( T );
 			if( !recordFuncs.ContainsKey( type ) )
@@ -530,80 +525,44 @@ namespace CsvHelper
 				var bindings = new List<MemberBinding>();
 				var recordType = typeof( T );
 				var readerParameter = Expression.Parameter( GetType(), "reader" );
-				foreach( var property in recordType.GetProperties( PropertyBindingFlags ) )
-				{
-					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-					int index;
-					if( csvFieldAttribute != null )
-					{
-						if( csvFieldAttribute.Ignore )
-						{
-							// Skip the ignored properties.
-							continue;
-						}
 
-						if( !String.IsNullOrEmpty( csvFieldAttribute.FieldName ) )
-						{
-							index = GetFieldIndex( csvFieldAttribute.FieldName );
-							if( index < 0 )
-							{
-								// Skip if the index was not found.
-								continue;
-							}
-						}
-						else
-						{
-							index = csvFieldAttribute.FieldIndex;
-						}
-					}
-					else
+				// If there is no property mappings yet, use attribute mappings.
+				if( configuration.Properties.Count == 0 )
+				{
+					configuration.AttributeMapping<T>();
+				}
+
+				foreach( var propertyMap in configuration.Properties )
+				{
+					if( propertyMap.IgnoreValue )
 					{
-						index = GetFieldIndex( property.Name );
-						if( index < 0 )
-						{
-							// Skip if the index was not found.
-							continue;
-						}
+						// Skip ignored properties.
+						continue;
+					}
+
+					if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertFrom( typeof( string ) ) )
+					{
+						// Skip if the type isn't convertible.
+						continue;
+					}
+
+					var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NameValue ) : propertyMap.IndexValue;
+					if( index == -1 )
+					{
+						// Skip if the index was not found.
+						continue;
 					}
 
 					// Get the field using the field index.
 					var method = GetType().GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
 					Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
 
-					var typeConverter = ReflectionHelper.GetTypeConverter( property );
+					// Convert the field.
+					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
+					fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
+					fieldExpression = Expression.Convert( fieldExpression, propertyMap.PropertyValue.PropertyType );
 
-					if( typeConverter != null && typeConverter.CanConvertFrom( typeof( string ) ) )
-					{
-						// Use the TypeConverter from the attribute to convert the type.
-						var typeConverterExpression = Expression.Constant( typeConverter );
-						fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
-						fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );
-					}
-					else if( property.PropertyType != typeof( string ) )
-					{
-						var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
-						var parseMethod = property.PropertyType.GetMethod( "Parse", new[] { typeof( string ), typeof( IFormatProvider ) } );
-						if( parseMethod != null )
-						{
-							// Use the types Parse method.
-							fieldExpression = Expression.Call( null, parseMethod, fieldExpression, formatProvider );
-						}
-						else
-						{
-							// Use the default TypeConverter for the properties type.
-							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
-							if( typeConverter == null || !typeConverter.CanConvertFrom( typeof( string ) ) )
-							{
-								continue;
-							}
-							// Only convert if the convertable is capable.
-							var typeConverterExpression = Expression.Constant( typeConverter );
-							fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
-							fieldExpression = Expression.Convert( fieldExpression, property.PropertyType );
-						}
-					}
-
-					bindings.Add( Expression.Bind( property, fieldExpression ) );
+					bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
 				}
 
 				var body = Expression.MemberInit( Expression.New( recordType ), bindings );

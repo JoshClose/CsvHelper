@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
@@ -16,22 +17,9 @@ namespace CsvHelper
 	public interface ICsvWriter : IDisposable
 	{
 		/// <summary>
-		/// Gets or sets the delimiter used to
-		/// separate the fields of the CSV records.
+		/// Gets or sets the configuration.
 		/// </summary>
-		char Delimiter { get; }
-
-		/// <summary>
-		/// Gets are sets a value indicating if the
-		/// CSV file has a header record.
-		/// </summary>
-		bool HasHeaderRecord { get; }
-
-		/// <summary>
-		/// Gets the binding flags used to get the properties
-		/// from the the custom class object.
-		/// </summary>
-		BindingFlags PropertyBindingFlags { get; }
+		CsvConfiguration Configuration { get; set; }
 
 		/// <summary>
 		/// Writes the field to the CSV file.
@@ -64,13 +52,22 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
-		void WriteRecord<T>( T record );
+		void WriteRecord<T>( T record ) where T : class;
 
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		void WriteRecords<T>( IEnumerable<T> records );
+		void WriteRecords<T>( IEnumerable<T> records ) where T : class;
+
+		/// <summary>
+		/// Invalidates the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// record cache.
+		/// </summary>
+		void InvalidateRecordCache<T>() where T : class;
 	}
 }

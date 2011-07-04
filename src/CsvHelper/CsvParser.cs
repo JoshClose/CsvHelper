@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
@@ -23,60 +24,37 @@ namespace CsvHelper
 		private string[] record;
 		private int currentLine;
 		private int currentCharacter;
+		private CsvConfiguration configuration = new CsvConfiguration();
 
 		/// <summary>
-		/// Gets the delimiter used to
-		/// separate the fields of the CSV records.
+		/// Gets or sets the configuration.
 		/// </summary>
-		public virtual char Delimiter { get; private set; }
+		public virtual CsvConfiguration Configuration
+		{
+			get { return configuration; }
+			set { configuration = value; }
+		}
 
-		/// <summary>
-		/// Gets the quote used to quote fields.
-		/// </summary>
-		public virtual char Quote { get; private set; }
-
-		/// <summary>
-		/// Gets the size of the buffer
-		/// used when reading the stream and
-		/// creating the fields.
-		/// </summary>
-		public virtual int BufferSize { get; private set; }
-
-		/// <summary>
-		/// Gets the field count.
-		/// </summary>
-		public virtual int FieldCount { get; private set; }
-
-		/// <summary>
-		/// Gets a value indicating if '#'
-		/// can be used at the beginning of
-		/// a line to denote a line that is
-		/// commented out.
-		/// </summary>
-		public virtual bool AllowComments { get; private set; }
+		public int FieldCount { get; protected set; }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
-		public CsvParser( TextReader reader ) : this( reader, new CsvParserOptions()){}
+		public CsvParser( TextReader reader ) : this( reader, new CsvConfiguration() ){}
 
 		/// <summary>
-		/// Creates a new parser using the given <see cref="StreamReader" />
-		/// and <see cref="CsvParserOptions" />.
+		/// Creates a new parser using the given <see cref="StreamReader"/>
+		/// and <see cref="CsvConfiguration"/>.
 		/// </summary>
-		/// <param name="reader">The <see cref="StreamReader" /> with teh CSV file data.</param>
-		/// <param name="options">The <see cref="CsvParserOptions" /> used for parsing the CSV file.</param>
-		public CsvParser( TextReader reader, CsvParserOptions options )
+		/// <param name="reader">The <see cref="StreamReader"/> with teh CSV file data.</param>
+		/// <param name="configuration">The configuration.</param>
+		public CsvParser( TextReader reader, CsvConfiguration configuration )
 		{
 			this.reader = reader;
-			BufferSize = options.BufferSize;
-			Delimiter = options.Delimiter;
-			Quote = options.Quote;
-			FieldCount = options.FieldCount;
-			AllowComments = options.AllowComments;
+			this.configuration = configuration;
             
-			readerBuffer = new char[options.BufferSize];
+			readerBuffer = new char[configuration.BufferSize];
 		}
 
 		/// <summary>
@@ -160,7 +138,7 @@ namespace CsvHelper
 			}
 		}
 
-		private string[] ReadLine()
+		protected string[] ReadLine()
 		{
 			string field = null;
 			var fieldStartPosition = readerBufferPosition;
@@ -214,7 +192,7 @@ namespace CsvHelper
 					// Ignore the character.
 					continue;
 				}
-				if( !inQuotes && c == Delimiter )
+				if( !inQuotes && c == configuration.Delimiter )
 				{
 					// If we hit the delimiter, we are
 					// done reading the field and can
@@ -242,7 +220,7 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else if( c == Quote )
+				else if (c == configuration.Quote)
 				{
 					hasQuotes = true;
 					inQuotes = !inQuotes;
@@ -254,14 +232,14 @@ namespace CsvHelper
 						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						fieldStartPosition = readerBufferPosition;
 					}
-					if( cPrev != Quote || !inQuotes )
+					if (cPrev != configuration.Quote || !inQuotes)
 					{
 						// Set the new field start position to
 						// the char after the quote.
 						fieldStartPosition = readerBufferPosition;
 					}
 				}
-				else if( AllowComments && c == '#' && ( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' ) )
+				else if (configuration.AllowComments && c == '#' && (cPrev == '\0' || cPrev == '\r' || cPrev == '\n'))
 				{
 					inComment = true;
 				}

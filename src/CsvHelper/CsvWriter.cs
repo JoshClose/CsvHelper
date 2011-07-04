@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
@@ -24,51 +25,34 @@ namespace CsvHelper
 		private readonly List<string> currentRecord = new List<string>();
 		private TextWriter writer;
 		private bool hasHeaderBeenWritten;
-		private readonly Dictionary<Type, PropertyInfo[]> typeProperties = new Dictionary<Type, PropertyInfo[]>();
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
+		private CsvConfiguration configuration;
 
 		/// <summary>
-		/// Gets the delimiter used to
-		/// separate the fields of the CSV records.
+		/// Gets or sets the configuration.
 		/// </summary>
-		public virtual char Delimiter { get; private set; }
-
-		/// <summary>
-		/// Gets the quote used to quote fields.
-		/// </summary>
-		public virtual char Quote { get; private set; }
-
-		/// <summary>
-		/// Gets a value indicating if the
-		/// CSV file has a header record.
-		/// </summary>
-		public virtual bool HasHeaderRecord { get; private set; }
-
-		/// <summary>
-		/// Gets the binding flags used to get the properties
-		/// from the the custom class object.
-		/// </summary>
-		public virtual BindingFlags PropertyBindingFlags { get; private set; }
+		public virtual CsvConfiguration Configuration
+		{
+			get { return configuration; }
+			set { configuration = value; }
+		}
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		public CsvWriter( TextWriter writer ) : this( writer, new CsvWriterOptions() ) { }
+		public CsvWriter( TextWriter writer ) : this( writer, new CsvConfiguration() ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter"/>
-		/// and <see cref="CsvWriterOptions"/>.
+		/// and <see cref="CsvConfiguration"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
-		/// <param name="options">The <see cref="CsvWriterOptions"/> used to write the CSV file.</param>
-		public CsvWriter( TextWriter writer, CsvWriterOptions options )
+		/// <param name="configuration">The configuration.</param>
+		public CsvWriter( TextWriter writer, CsvConfiguration configuration )
 		{
 			this.writer = writer;
-			Delimiter = options.Delimiter;
-			Quote = options.Quote;
-			HasHeaderRecord = options.HasHeaderRecord;
-			PropertyBindingFlags = options.PropertyBindingFlags;
+			this.configuration = configuration;
 		}
 
 		/// <summary>
@@ -78,26 +62,26 @@ namespace CsvHelper
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
-		public virtual void WriteField( string field )
+		public virtual void WriteField(string field)
 		{
 			if( !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
-				if( field.Contains( Quote ) )
+				if( field.Contains( configuration.Quote ) )
 				{
 					// All quotes must be doubled.
-					field = field.Replace( Quote.ToString(), string.Format( "{0}{0}", Quote ) );
+					field = field.Replace( configuration.Quote.ToString(), string.Format( "{0}{0}", configuration.Quote ) );
 					hasQuote = true;
 				}
 				if( hasQuote ||
-					field[0] == ' ' ||
-					field[field.Length - 1] == ' ' ||
-					field.Contains( Delimiter.ToString() ) ||
-					field.Contains( "\n" ) ||
-					field.Contains( "\r" ) )
+				    field[0] == ' ' ||
+				    field[field.Length - 1] == ' ' ||
+				    field.Contains( configuration.Delimiter.ToString() ) ||
+				    field.Contains( "\n" ) ||
+				    field.Contains( "\r" ) )
 				{
 					// Surround the field in quotes.
-					field = string.Format( "{0}{1}{0}", Quote, field );
+					field = string.Format( "{0}{1}{0}", configuration.Quote, field );
 				}
 			}
 
@@ -158,7 +142,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var record = string.Join( Delimiter.ToString(), currentRecord.ToArray() );
+			var record = string.Join(configuration.Delimiter.ToString(), currentRecord.ToArray());
 			writer.WriteLine( record );
 			writer.Flush();
 			currentRecord.Clear();
@@ -169,16 +153,16 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
-		public virtual void WriteRecord<T>( T record )
+		public virtual void WriteRecord<T>( T record ) where T : class
 		{
 			CheckDisposed();
 
-			if( HasHeaderRecord && !hasHeaderBeenWritten )
+			if (configuration.HasHeaderRecord && !hasHeaderBeenWritten)
 			{
-				WriteHeader( GetProperties<T>() );
+				WriteHeader<T>();
 			}
 
-			GetAction<T>()( this, record );
+			GetWriteRecordAction<T>()( this, record );
 
 			NextRecord();
 		}
@@ -188,20 +172,32 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords<T>( IEnumerable<T> records )
+		public virtual void WriteRecords<T>( IEnumerable<T> records ) where T : class
 		{
 			CheckDisposed();
 
-			if( HasHeaderRecord && !hasHeaderBeenWritten )
+			if (configuration.HasHeaderRecord && !hasHeaderBeenWritten)
 			{
-				WriteHeader( GetProperties<T>() );
+				WriteHeader<T>();
 			}
 
 			foreach( var record in records )
 			{
-				GetAction<T>()( this, record );
+				GetWriteRecordAction<T>()( this, record );
 				NextRecord();
 			}
+		}
+
+		/// <summary>
+		/// Invalidates the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ICsvWriter.InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// record cache.
+		/// </summary>
+		public void InvalidateRecordCache<T>() where T : class
+		{
+			typeActions.Remove( typeof( T ) );
 		}
 
 		/// <summary>
@@ -251,50 +247,22 @@ namespace CsvHelper
 		/// Writes the header record from the given properties.
 		/// </summary>
 		/// <param name="properties">The properties to write the header record from.</param>
-		protected virtual void WriteHeader( PropertyInfo[] properties )
+		protected virtual void WriteHeader<T>() where T : class
 		{
-			foreach( var property in properties )
+			if( configuration.Properties.Count == 0 )
 			{
-				var fieldName = property.Name;
-				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-				if( csvFieldAttribute != null && !string.IsNullOrEmpty( csvFieldAttribute.FieldName ) )
+				configuration.AttributeMapping<T>();
+			}
+
+			foreach( var property in configuration.Properties )
+			{
+				if( !property.IgnoreValue )
 				{
-					fieldName = csvFieldAttribute.FieldName;
-				}
-				if( csvFieldAttribute == null || !csvFieldAttribute.Ignore )
-				{
-					WriteField( fieldName );
+					WriteField( property.NameValue );
 				}
 			}
 			NextRecord();
 			hasHeaderBeenWritten = true;
-		}
-
-		/// <summary>
-		/// Gets the properties for the given <see cref="Type"/>.
-		/// </summary>
-		/// <typeparam name="T">The type to get the properties for.</typeparam>
-		/// <returns>The properties for the given <see cref="Type"/>/</returns>
-		protected virtual PropertyInfo[] GetProperties<T>()
-		{
-			var type = typeof( T );
-			if( !typeProperties.ContainsKey( type ) )
-			{
-				var properties = type.GetProperties( PropertyBindingFlags );
-				var shouldSort = properties.Any( property =>
-				{
-					// Only sort if there is at least one attribute
-					// that has the field index specified.
-					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-					return csvFieldAttribute != null && csvFieldAttribute.FieldIndex >= 0;
-				} );
-				if( shouldSort )
-				{
-					Array.Sort( properties, new CsvPropertyInfoComparer( false ) );
-				}
-				typeProperties[type] = properties;
-			}
-			return typeProperties[type];
 		}
 
 		/// <summary>
@@ -303,62 +271,42 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<CsvWriter, T> GetAction<T>()
+		protected virtual Action<CsvWriter, T> GetWriteRecordAction<T>() where T : class
 		{
 			var type = typeof( T );
 
 			if( !typeActions.ContainsKey( type ) )
 			{
-				var properties = GetProperties<T>();
+				//var properties = GetProperties<T>();
 
 				Action<CsvWriter, T> func = null;
 				var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( typeof( T ), "record" );
-				foreach( var property in properties )
+
+				if( configuration.Properties.Count == 0 )
 				{
-					var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-					if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
+					configuration.AttributeMapping<T>();
+				}
+
+				foreach( var propertyMap in configuration.Properties )
+				{
+					if( propertyMap.IgnoreValue )
 					{
-						// Skip this property.
+						// Skip ignored properties.
 						continue;
 					}
 
-					var typeConverter = ReflectionHelper.GetTypeConverter( property );
+					if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) )
+					{
+						// Skip if the type isn't convertible.
+						continue;
+					}
 
-					Expression fieldExpression = Expression.Property( recordParameter, property );
-					if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
-					{
-						// Convert the property value to a string using the
-						// TypeConverter specified in the TypeConverterAttribute.                        
-						var typeConverterExpression = Expression.Constant( typeConverter );
-						var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
-						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
-					}
-					else if( property.PropertyType != typeof( string ) )
-					{
-						if( property.PropertyType.IsValueType )
-						{
-							// Convert the property value to a string using ToString.
-							var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
-							var method = property.PropertyType.GetMethod( "ToString", new[] { typeof( IFormatProvider ) } );
-							fieldExpression = method != null ? Expression.Call( fieldExpression, method, formatProvider ) : Expression.Call( fieldExpression, "ToString", null, null );
-						}
-						else
-						{
-							// Convert the property value to a string using
-							// the default TypeConverter for the properties type.
-							typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
-							if( !typeConverter.CanConvertTo( typeof( string ) ) )
-							{
-								continue;
-							}
-							var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
-							var typeConverterExpression = Expression.Constant( typeConverter );
-							fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-							fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
-						}
-					}
+					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
+					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
+					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 
 					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
@@ -366,6 +314,59 @@ namespace CsvHelper
 					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
 					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
 				}
+
+				//foreach( var property in properties )
+				//{
+				//    var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
+				//    if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
+				//    {
+				//        // Skip this property.
+				//        continue;
+				//    }
+
+				//    var typeConverter = ReflectionHelper.GetTypeConverterFromAttribute( property );
+
+				//    Expression fieldExpression = Expression.Property( recordParameter, property );
+				//    if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
+				//    {
+				//        // Convert the property value to a string using the
+				//        // TypeConverter specified in the TypeConverterAttribute.                        
+				//        var typeConverterExpression = Expression.Constant( typeConverter );
+				//        var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
+				//        fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+				//        fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+				//    }
+				//    else if( property.PropertyType != typeof( string ) )
+				//    {
+				//        if( property.PropertyType.IsValueType )
+				//        {
+				//            // Convert the property value to a string using ToString.
+				//            var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
+				//            var method = property.PropertyType.GetMethod( "ToString", new[] { typeof( IFormatProvider ) } );
+				//            fieldExpression = method != null ? Expression.Call( fieldExpression, method, formatProvider ) : Expression.Call( fieldExpression, "ToString", null, null );
+				//        }
+				//        else
+				//        {
+				//            // Convert the property value to a string using
+				//            // the default TypeConverter for the properties type.
+				//            typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+				//            if( !typeConverter.CanConvertTo( typeof( string ) ) )
+				//            {
+				//                continue;
+				//            }
+				//            var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
+				//            var typeConverterExpression = Expression.Constant( typeConverter );
+				//            fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+				//            fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+				//        }
+				//    }
+
+				//    var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+				//    fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+
+				//    var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
+				//    func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
+				//}
 
 				typeActions[type] = func;
 			}

@@ -417,19 +417,19 @@ namespace CsvHelper.Example
 		public class CustomObjectWithAttributes
 		{
 			[TypeConverter( typeof( CustomTypeTypeConverter ) )]
-			[CsvHelper.CsvField( FieldName = "Custom Type Column", FieldIndex = 3 )]
+			[CsvField( Name = "Custom Type Column", Index = 3 )]
 			public CustomType CustomTypeColumn { get; set; }
 
-			[CsvHelper.CsvField( FieldName = "Guid Column", FieldIndex = 2 )]
+			[CsvField( Name = "Guid Column", Index = 2 )]
 			public Guid GuidColumn { get; set; }
 
-			[CsvHelper.CsvField( FieldName = "Int Column", FieldIndex = 1 )]
+			[CsvField( Name = "Int Column", Index = 1 )]
 			public int IntColumn { get; set; }
 
-			[CsvHelper.CsvField( FieldName = "String Column", FieldIndex = 0 )]
+			[CsvField( Name = "String Column", Index = 0 )]
 			public string StringColumn { get; set; }
 
-			[CsvHelper.CsvField( Ignore = true )]
+			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
 			public override string ToString()

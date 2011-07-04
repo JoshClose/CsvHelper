@@ -38,14 +38,14 @@ namespace CsvHelper.Tests
             };
 
 			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvWriterOptions { HasHeaderRecord = true } );
+			var csv = new CsvWriter( writer );
 
 			csv.WriteRecords( records );
 
 			var csvFile = writer.ToString();
 
 			var expected = "DecimalColumn,DateTimeColumn\r\n";
-			expected += "12.0,11/11/2010 00:00:00\r\n";
+			expected += "12.0,2010-11-11\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}

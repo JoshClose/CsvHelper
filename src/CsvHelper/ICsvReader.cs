@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
@@ -18,25 +19,14 @@ namespace CsvHelper
 	public interface ICsvReader : IDisposable
 	{
 		/// <summary>
+		/// Gets or sets the configuration.
+		/// </summary>
+		CsvConfiguration Configuration { get; set; }
+
+		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
 		string[] FieldHeaders { get; }
-
-		/// <summary>
-		/// A value indicating if the CSV file has a header record.
-		/// </summary>
-		bool HasHeaderRecord { get; }
-
-		/// <summary>
-		/// Gets the binding flags used to populate
-		/// custom class objects.
-		/// </summary>
-		BindingFlags PropertyBindingFlags { get; }
-
-		/// <summary>
-		/// Gets a value indicating if strict reading is enabled.
-		/// </summary>
-		bool Strict { get; }
 
 		/// <summary>
 		/// Advances the reader to the next record.
@@ -169,7 +159,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>The record converted to <see cref="Type"/> T.</returns>
-		T GetRecord<T>();
+		T GetRecord<T>() where T : class;
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
@@ -178,6 +168,15 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		IList<T> GetRecords<T>();
+		IList<T> GetRecords<T>() where T : class;
+
+		/// <summary>
+		/// Invalidates the record cache for the given type. After <see cref="GetRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// record cache.
+		/// </summary>
+		void InvalidateRecordCache<T>() where T : class;
 	}
 }

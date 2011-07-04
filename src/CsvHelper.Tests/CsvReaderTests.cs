@@ -196,7 +196,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } );
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { Strict = true } };
 			reader.Read();
 
 			reader.GetField<string>( "blah" );
@@ -211,7 +211,7 @@ namespace CsvHelper.Tests
 			var parserMock = mockFactory.Create<ICsvParser>();
 			parserMock.Setup( m => m.Read() ).Returns( () => data );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions{ HasHeaderRecord = false } );
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { HasHeaderRecord = false } };
 			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data[0] ), reader.GetField<int>( "One" ) );
@@ -344,7 +344,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } );
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { Strict = true } };
 			reader.Read();
 
 			string field;
@@ -398,7 +398,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object, new CsvReaderOptions { Strict = true } );
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { Strict = true } };
 			reader.Read();
 
 			int field;
@@ -502,17 +502,17 @@ namespace CsvHelper.Tests
 			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
 
-			[CsvField( FieldName = "String Column" )]
+			[CsvField( Name = "String Column" )]
 			public string StringColumn { get; set; }
 
 			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
-			[CsvField( FieldIndex = 1 )]
+			[CsvField( Index = 1 )]
 			[TypeConverter( typeof( TestTypeConverter ) )]
 			public string TypeConvertedColumn { get; set; }
 
-			[CsvField( FieldIndex = 0 )]
+			[CsvField( Index = 0 )]
 			public int FirstColumn { get; set; }
 
 			public Guid GuidColumn { get; set; }
