@@ -17,6 +17,12 @@ namespace CsvHelper
 	/// </summary>
 	public interface ICsvReader : IDisposable
 	{
+
+        /// <summary>
+        /// Gets the NamesIndexes 
+        /// </summary>
+	    Dictionary<string, int> NamedIndexes { get; }
+
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
