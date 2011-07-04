@@ -32,6 +32,14 @@ namespace CsvHelper
 		/// </summary>
 		public virtual bool HasHeaderRecord { get; private set; }
 
+        /// <summary>
+        /// Gets the NamesIndexes 
+        /// </summary>
+        public virtual Dictionary<string, int> NamedIndexes
+        {
+            get { return namedIndexes; }
+        }
+
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
