@@ -54,6 +54,14 @@ namespace CsvHelper.Configuration
 			typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
 		}
 
+        /// <summary>
+        /// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
+        /// </summary>
+        public CsvPropertyMap(PropertyInfo property, int index) : this(property)
+        {
+            this.index = index;
+        }
+
 		/// <summary>
 		/// When reading, is used to get the field
 		/// at the index of the name if there was a
