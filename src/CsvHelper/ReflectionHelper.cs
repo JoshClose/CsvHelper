@@ -5,9 +5,7 @@
 // http://csvhelper.com
 #endregion
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -56,6 +54,12 @@ namespace CsvHelper
 			return typeConverter;
 		}
 
+		/// <summary>
+		/// Gets the property from the expression.
+		/// </summary>
+		/// <typeparam name="TModel">The type of the model.</typeparam>
+		/// <param name="expression">The expression.</param>
+		/// <returns>The <see cref="PropertyInfo"/> for the expression.</returns>
 		public static PropertyInfo GetProperty<TModel>( Expression<Func<TModel, object>> expression )
 		{
 			return (PropertyInfo)GetMemberExpression( expression ).Member;

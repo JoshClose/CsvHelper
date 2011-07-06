@@ -359,19 +359,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		public virtual IList<T> GetRecords<T>() where T : class
+		public virtual IEnumerable<T> GetRecords<T>() where T : class
 		{
 			CheckDisposed();
 
-			var records = new List<T>();
-
 			while( Read() )
 			{
-				var record = GetReadRecordFunc<T>()( this );
-				records.Add( record );
+				yield return GetReadRecordFunc<T>()( this );
 			}
-
-			return records;
 		}
 
 		/// <summary>
