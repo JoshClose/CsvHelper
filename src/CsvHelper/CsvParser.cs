@@ -239,7 +239,7 @@ namespace CsvHelper
 						fieldStartPosition = readerBufferPosition;
 					}
 				}
-				else if (configuration.AllowComments && c == '#' && (cPrev == '\0' || cPrev == '\r' || cPrev == '\n'))
+				else if (configuration.AllowComments && c == configuration.Comment && (cPrev == '\0' || cPrev == '\r' || cPrev == '\n'))
 				{
 					inComment = true;
 				}
