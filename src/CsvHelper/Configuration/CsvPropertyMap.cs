@@ -63,7 +63,9 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// When reading, is used to get the field
 		/// at the index of the name if there was a
-		/// header specified. When writing, sets
+		/// header specified. If there is an index
+		/// specified, that will take precedence over
+		/// the name. When writing, sets
 		/// the name of the field in the header record.
 		/// </summary>
 		/// <param name="name">The name of the CSV field.</param>
@@ -75,8 +77,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// When reading, is used to get the field at
-		/// the given index. If a Name is specified,
-		/// that will be used instead. When writing, the fields
+		/// the given index. When writing, the fields
 		/// will be written in the order of the field
 		/// indexes.
 		/// </summary>
