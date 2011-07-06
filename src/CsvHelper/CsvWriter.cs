@@ -7,11 +7,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper
@@ -246,7 +244,6 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the header record from the given properties.
 		/// </summary>
-		/// <param name="properties">The properties to write the header record from.</param>
 		protected virtual void WriteHeader<T>() where T : class
 		{
 			if( configuration.Properties.Count == 0 )

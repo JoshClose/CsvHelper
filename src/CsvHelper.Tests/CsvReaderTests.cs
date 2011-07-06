@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -284,7 +286,7 @@ namespace CsvHelper.Tests
 			} );
 
 			var csv = new CsvReader( csvParserMock.Object );
-			var records = csv.GetRecords<TestRecord>();
+			var records = csv.GetRecords<TestRecord>().ToList();
 
 			Assert.AreEqual( 2, records.Count );
 

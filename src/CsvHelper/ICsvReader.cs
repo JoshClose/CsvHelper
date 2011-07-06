@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper
@@ -168,7 +167,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		IList<T> GetRecords<T>() where T : class;
+		IEnumerable<T> GetRecords<T>() where T : class;
 
 		/// <summary>
 		/// Invalidates the record cache for the given type. After <see cref="GetRecord{T}"/> is called the

@@ -7,7 +7,7 @@
 using System;
 using System.Diagnostics;
 
-namespace CsvHelper
+namespace CsvHelper.Configuration
 {
 	/// <summary>
 	/// Used to set behavior of a field when
