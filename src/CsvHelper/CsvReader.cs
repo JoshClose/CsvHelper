@@ -107,6 +107,9 @@ namespace CsvHelper
 		{
 			get
 			{
+				CheckDisposed();
+				CheckHasBeenRead();
+
 				return GetField( index );
 			}
 		}
@@ -120,6 +123,9 @@ namespace CsvHelper
 		{
 			get
 			{
+				CheckDisposed();
+				CheckHasBeenRead();
+
 				return GetField( name );
 			}
 		}
@@ -131,6 +137,9 @@ namespace CsvHelper
 		/// <returns>The raw field.</returns>
 		public virtual string GetField( int index )
 		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			return currentRecord[index];
 		}
 
@@ -141,6 +150,9 @@ namespace CsvHelper
 		/// <returns>The raw field.</returns>
 		public virtual string GetField( string name )
 		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			var index = GetFieldIndex( name );
 			if( index < 0 )
 			{
@@ -212,46 +224,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the raw field at index.
-		/// </summary>
-		/// <param name="index">The index of the field.</param>
-		/// <param name="field">The raw field.</param>
-		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( int index, out string field )
-		{
-			try
-			{
-				field = GetField( index );
-			}
-			catch
-			{
-				field = default( string );
-				return false;
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// Gets the raw field at name.
-		/// </summary>
-		/// <param name="name">The named index of the field.</param>
-		/// <param name="field">The raw field.</param>
-		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( string name, out string field )
-		{
-			try
-			{
-				field = GetField( name );
-			}
-			catch
-			{
-				field = default( string );
-				return false;
-			}
-			return true;
-		}
-
-		/// <summary>
 		/// Gets the field converted to <see cref="Type"/> T at index.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
@@ -260,16 +232,11 @@ namespace CsvHelper
 		/// <returns>A value indicating if the get was successful.</returns>
 		public virtual bool TryGetField<T>( int index, out T field )
 		{
-			try
-			{
-				field = GetField<T>( index );
-			}
-			catch
-			{
-				field = default( T );
-				return false;
-			}
-			return true;
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var converter = TypeDescriptor.GetConverter( typeof( T ) );
+			return TryGetField( index, converter, out field );
 		}
 
 		/// <summary>
@@ -281,16 +248,11 @@ namespace CsvHelper
 		/// <returns>A value indicating if the get was successful.</returns>
 		public virtual bool TryGetField<T>( string name, out T field )
 		{
-			try
-			{
-				field = GetField<T>( name );
-			}
-			catch
-			{
-				field = default( T );
-				return false;
-			}
-			return true;
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var converter = TypeDescriptor.GetConverter( typeof( T ) );
+			return TryGetField( name, converter, out field );
 		}
 
 		/// <summary>
@@ -304,15 +266,17 @@ namespace CsvHelper
 		/// <returns>A value indicating if the get was successful.</returns>
 		public virtual bool TryGetField<T>( int index, TypeConverter converter, out T field )
 		{
-			try
-			{
-				field = GetField<T>( index, converter );
-			}
-			catch
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var rawField = currentRecord[index];
+			if(!converter.IsValid( rawField ))
 			{
 				field = default( T );
 				return false;
 			}
+
+			field = (T)GetField( index, converter );
 			return true;
 		}
 
@@ -327,16 +291,16 @@ namespace CsvHelper
 		/// <returns>A value indicating if the get was successful.</returns>
 		public virtual bool TryGetField<T>( string name, TypeConverter converter, out T field )
 		{
-			try
-			{
-				field = GetField<T>( name, converter );
-			}
-			catch
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var index = GetFieldIndex( name );
+			if( index == -1 )
 			{
 				field = default( T );
 				return false;
 			}
-			return true;
+			return TryGetField( index, converter, out field );
 		}
 
 		/// <summary>
@@ -445,7 +409,7 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		protected virtual object GetField( int index, TypeConverter converter )
 		{
-			return converter.ConvertFrom( currentRecord[index] );
+			return converter.ConvertFromInvariantString( currentRecord[index] );
 		}
         
 		/// <summary>

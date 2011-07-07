@@ -302,7 +302,61 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void TryGetFieldInvalidTest()
+		public void TryGetFieldInvalidIndexTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "one", "two" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Read();
+
+			int field;
+			var got = reader.TryGetField( 0, out field );
+			Assert.IsFalse( got );
+			Assert.AreEqual( default( int ), field );
+		}
+
+		[TestMethod]
+		public void TryGetFieldInvalidNameTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "one", "two" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Read();
+
+			int field;
+			var got = reader.TryGetField( "One", out field );
+			Assert.IsFalse( got );
+			Assert.AreEqual( default( int ), field );
+		}
+
+		[TestMethod]
+		public void TryGetFieldInvalidConverterIndexTest()
 		{
 			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
@@ -322,14 +376,14 @@ namespace CsvHelper.Tests
 			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
-			string field;
-			var got = reader.TryGetField( -1, out field );
+			int field;
+			var got = reader.TryGetField( 0, new GuidConverter(), out field );
 			Assert.IsFalse( got );
-			Assert.IsNull( field );
+			Assert.AreEqual( default( int ), field );
 		}
 
 		[TestMethod]
-		public void TryGetFieldInvalidStrictTest()
+		public void TryGetFieldInvalidConverterNameTest()
 		{
 			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
@@ -346,13 +400,13 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { Strict = true } };
+			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 
-			string field;
-			var got = reader.TryGetField( -1, out field );
+			int field;
+			var got = reader.TryGetField( "One", new GuidConverter(), out field );
 			Assert.IsFalse( got );
-			Assert.IsNull( field );
+			Assert.AreEqual( default( int ), field );
 		}
 
 		[TestMethod]

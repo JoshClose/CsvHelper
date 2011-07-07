@@ -98,22 +98,6 @@ namespace CsvHelper
 		T GetField<T>( string name, TypeConverter converter );
 
 		/// <summary>
-		/// Gets the raw field at index.
-		/// </summary>
-		/// <param name="index">The index of the field.</param>
-		/// <param name="field">The raw field.</param>
-		/// <returns>A value indicating if the get was successful.</returns>
-		bool TryGetField( int index, out string field );
-
-		/// <summary>
-		/// Gets the raw field at name.
-		/// </summary>
-		/// <param name="name">The named index of the field.</param>
-		/// <param name="field">The raw field.</param>
-		/// <returns>A value indicating if the get was successful.</returns>
-		bool TryGetField( string name, out string field );
-
-		/// <summary>
 		/// Gets the field converted to <see cref="Type"/> T at index.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
