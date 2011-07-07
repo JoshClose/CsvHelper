@@ -414,24 +414,24 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "#four", record[0] );
 		}
 
-        [TestMethod]
-        public void ParseCommentedOutLineWithDifferentCommentCommentsOn()
-        {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream);
-            writer.WriteLine("one,two,three");
-            writer.WriteLine("*four,five,six");
-            writer.WriteLine("seven,eight,nine");
-            writer.Flush();
-            stream.Position = 0;
-            var reader = new StreamReader(stream);
+		[TestMethod]
+		public void ParseCommentedOutLineWithDifferentCommentCommentsOn()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "one,two,three" );
+			writer.WriteLine( "*four,five,six" );
+			writer.WriteLine( "seven,eight,nine" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
 
-            var parser = new CsvParser(reader) { Configuration = { AllowComments = true, Comment = '*'} };
+			var parser = new CsvParser( reader ) { Configuration = { AllowComments = true, Comment = '*' } };
 
-            parser.Read();
-            var record = parser.Read();
-            Assert.AreEqual("seven", record[0]);
-        }
+			parser.Read();
+			var record = parser.Read();
+			Assert.AreEqual( "seven", record[0] );
+		}
 
 		[TestMethod]
 		public void ParseUsingDifferentDelimiter()
@@ -473,22 +473,22 @@ namespace CsvHelper.Tests
 		public void ReadFinalRecordWithNoEndOfLineTest()
 		{
 			var stream = new MemoryStream();
-			var writer = new StreamWriter(stream);
-			writer.WriteLine("one,two,three,");
-			writer.Write("four,five,six,");
+			var writer = new StreamWriter( stream );
+			writer.WriteLine( "one,two,three," );
+			writer.Write( "four,five,six," );
 			writer.Flush();
 			stream.Position = 0;
-			var reader = new StreamReader(stream);
+			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser(reader);
+			var parser = new CsvParser( reader );
 
 			var count = 0;
-			while (parser.Read() != null)
+			while( parser.Read() != null )
 			{
 				count++;
 			}
 
-			Assert.AreEqual(2, count);
+			Assert.AreEqual( 2, count );
 		}
 	}
 }
