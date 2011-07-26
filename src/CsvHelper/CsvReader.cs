@@ -409,7 +409,7 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		protected virtual object GetField( int index, TypeConverter converter )
 		{
-			return converter.ConvertFromInvariantString( currentRecord[index] );
+			return converter.ConvertFromString( currentRecord[index] );
 		}
         
 		/// <summary>
@@ -518,7 +518,7 @@ namespace CsvHelper
 
 					// Convert the field.
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromInvariantString", null, fieldExpression );
+					fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression );
 					fieldExpression = Expression.Convert( fieldExpression, propertyMap.PropertyValue.PropertyType );
 
 					bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );

@@ -179,7 +179,29 @@ namespace CsvHelper.Configuration
 		public void ClassMapping<TMap, TClass>() where TMap : CsvClassMap<TClass> where TClass : class
 		{
 			var mapping = Activator.CreateInstance<TMap>() as CsvClassMap<TClass>;
-			properties = mapping.Properties;
+			ClassMapping(mapping);
+		}
+
+		/// <summary>
+		/// Use a <see cref="CsvClassMap{T}"/> to configure mappings.
+		/// When using a class map, no properties are mapped by default.
+		/// Only properties specified in the mapping are used.
+		/// </summary>
+		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
+		public void ClassMapping<TMap>() where TMap : CsvClassMap
+		{
+			var mapping = Activator.CreateInstance<TMap>();
+			ClassMapping(mapping);
+		}
+
+		/// <summary>
+		/// Use a <see cref="CsvClassMap"/> instance to configure mappings.
+		/// When using a class map, no properties are mapped by default.
+		/// Only properties specified in the mapping are used.
+		/// </summary>
+		public void ClassMapping(CsvClassMap classMap)
+		{
+			properties = classMap.Properties;
 		}
 
 		/// <summary>

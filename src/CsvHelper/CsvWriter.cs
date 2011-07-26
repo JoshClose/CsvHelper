@@ -301,7 +301,7 @@ namespace CsvHelper
 
 					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 

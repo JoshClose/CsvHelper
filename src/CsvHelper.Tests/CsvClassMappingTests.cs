@@ -1,8 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -11,15 +8,6 @@ namespace CsvHelper.Tests
 	[TestClass]
 	public class CsvClassMappingTests
 	{
-		[TestMethod]
-		public void Test()
-		{
-			var config = new CsvConfiguration();
-			config.ClassMapping<TestMappingDefaultClass, TestClass>();
-
-			var map = new TestMappingDefaultClass();
-		}
-
 		[TestMethod]
 		public void MapTest()
 		{
@@ -64,6 +52,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 1, map.Properties[2].IndexValue );
 		}
 
+		[TestMethod]
 		public void MapIgnoreTest()
 		{
 			var map = new TestMappingIngoreClass();
