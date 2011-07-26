@@ -68,7 +68,7 @@
     <Compile Include="CsvClassMappingTests.cs" />
     <Compile Include="CsvConfigurationTests.cs" />
     <Compile Include="CsvFieldAttributeMappingTests.cs" />
-    <Compile Include="CsvWriterWriteRecordsCultureTests.cs" />
+    <Compile Include="LocalCultureTests.cs" />
     <Compile Include="CsvParserTests.cs" />
     <Compile Include="CsvReaderTests.cs" />
     <Compile Include="CsvWriterTests.cs" />
