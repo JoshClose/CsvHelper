@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvClassMappingTests.cs" />
+    <Compile Include="CsvConfigurationTests.cs" />
     <Compile Include="CsvFieldAttributeMappingTests.cs" />
     <Compile Include="CsvWriterWriteRecordsCultureTests.cs" />
     <Compile Include="CsvParserTests.cs" />

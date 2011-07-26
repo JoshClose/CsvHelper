@@ -9,19 +9,25 @@ using System.Linq.Expressions;
 
 namespace CsvHelper.Configuration
 {
-	/// <summary>
+	///<summary>
 	/// Maps class properties to CSV fields.
-	/// </summary>
-	/// <typeparam name="T">The <see cref="Type"/> of class to map.</typeparam>
-	public abstract class CsvClassMap<T> where T : class
+	///</summary>
+	public abstract class CsvClassMap
 	{
-		private readonly CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
+		protected readonly CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
 
 		/// <summary>
 		/// The class property mappings.
 		/// </summary>
 		public CsvPropertyMapCollection Properties { get { return properties; } }
+	}
 
+	/// <summary>
+	/// Maps class properties to CSV fields.
+	/// </summary>
+	/// <typeparam name="T">The <see cref="Type"/> of class to map.</typeparam>
+	public abstract class CsvClassMap<T> : CsvClassMap where T : class
+	{
 		/// <summary>
 		/// Maps a property to a CSV field.
 		/// </summary>
