@@ -39,7 +39,7 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		public CsvWriter( TextWriter writer ) : this( writer, new CsvConfiguration() ) { }
+		public CsvWriter( TextWriter writer ) : this( writer, new CsvConfiguration() ) {}
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="StreamWriter"/>
@@ -60,7 +60,7 @@ namespace CsvHelper
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
-		public virtual void WriteField(string field)
+		public virtual void WriteField( string field )
 		{
 			if( !string.IsNullOrEmpty( field ) )
 			{
@@ -127,7 +127,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var fieldString = converter.ConvertToString( field );
+			var fieldString = Configuration.UseInvariantCulture ? converter.ConvertToInvariantString( field ) : converter.ConvertToString( field );
 			WriteField( fieldString );
 		}
 
@@ -140,7 +140,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var record = string.Join(configuration.Delimiter.ToString(), currentRecord.ToArray());
+			var record = string.Join( configuration.Delimiter.ToString(), currentRecord.ToArray() );
 			writer.WriteLine( record );
 			writer.Flush();
 			currentRecord.Clear();
@@ -155,7 +155,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if (configuration.HasHeaderRecord && !hasHeaderBeenWritten)
+			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
 			{
 				WriteHeader<T>();
 			}
@@ -174,7 +174,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if (configuration.HasHeaderRecord && !hasHeaderBeenWritten)
+			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
 			{
 				WriteHeader<T>();
 			}
@@ -274,8 +274,6 @@ namespace CsvHelper
 
 			if( !typeActions.ContainsKey( type ) )
 			{
-				//var properties = GetProperties<T>();
-
 				Action<CsvWriter, T> func = null;
 				var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( typeof( T ), "record" );
@@ -301,7 +299,8 @@ namespace CsvHelper
 
 					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
+					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 
@@ -311,59 +310,6 @@ namespace CsvHelper
 					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
 					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
 				}
-
-				//foreach( var property in properties )
-				//{
-				//    var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, false );
-				//    if( csvFieldAttribute != null && csvFieldAttribute.Ignore )
-				//    {
-				//        // Skip this property.
-				//        continue;
-				//    }
-
-				//    var typeConverter = ReflectionHelper.GetTypeConverterFromAttribute( property );
-
-				//    Expression fieldExpression = Expression.Property( recordParameter, property );
-				//    if( typeConverter != null && typeConverter.CanConvertTo( typeof( string ) ) )
-				//    {
-				//        // Convert the property value to a string using the
-				//        // TypeConverter specified in the TypeConverterAttribute.                        
-				//        var typeConverterExpression = Expression.Constant( typeConverter );
-				//        var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
-				//        fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				//        fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
-				//    }
-				//    else if( property.PropertyType != typeof( string ) )
-				//    {
-				//        if( property.PropertyType.IsValueType )
-				//        {
-				//            // Convert the property value to a string using ToString.
-				//            var formatProvider = Expression.Constant( CultureInfo.InvariantCulture, typeof( IFormatProvider ) );
-				//            var method = property.PropertyType.GetMethod( "ToString", new[] { typeof( IFormatProvider ) } );
-				//            fieldExpression = method != null ? Expression.Call( fieldExpression, method, formatProvider ) : Expression.Call( fieldExpression, "ToString", null, null );
-				//        }
-				//        else
-				//        {
-				//            // Convert the property value to a string using
-				//            // the default TypeConverter for the properties type.
-				//            typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
-				//            if( !typeConverter.CanConvertTo( typeof( string ) ) )
-				//            {
-				//                continue;
-				//            }
-				//            var method = typeConverter.GetType().GetMethod( "ConvertToInvariantString", new[] { typeof( object ) } );
-				//            var typeConverterExpression = Expression.Constant( typeConverter );
-				//            fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				//            fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
-				//        }
-				//    }
-
-				//    var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-				//    fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
-
-				//    var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-				//    func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
-				//}
 
 				typeActions[type] = func;
 			}

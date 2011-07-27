@@ -55,13 +55,13 @@ namespace CsvHelper
 		/// the default parser.
 		/// </summary>
 		/// <param name="reader"></param>
-		public CsvReader( TextReader reader ) : this( new CsvParser( reader ) ){}
+		public CsvReader( TextReader reader ) : this( new CsvParser( reader ) ) {}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		public CsvReader( ICsvParser parser ) : this( parser, new CsvConfiguration() ){}
+		public CsvReader( ICsvParser parser ) : this( parser, new CsvConfiguration() ) {}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser"/> and <see cref="CsvConfiguration"/>.
@@ -103,7 +103,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="index">The index of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string this[int index]
+		public virtual string this[ int index ]
 		{
 			get
 			{
@@ -119,7 +119,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string this[string name]
+		public virtual string this[ string name ]
 		{
 			get
 			{
@@ -270,7 +270,7 @@ namespace CsvHelper
 			CheckHasBeenRead();
 
 			var rawField = currentRecord[index];
-			if(!converter.IsValid( rawField ))
+			if( !converter.IsValid( rawField ) )
 			{
 				field = default( T );
 				return false;
@@ -409,9 +409,11 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		protected virtual object GetField( int index, TypeConverter converter )
 		{
-			return converter.ConvertFromString( currentRecord[index] );
+			return Configuration.UseInvariantCulture
+			       	? converter.ConvertFromInvariantString( currentRecord[index] )
+			       	: converter.ConvertFromString( currentRecord[index] );
 		}
-        
+
 		/// <summary>
 		/// Gets the field converted to <see cref="Object"/> using
 		/// the specified <see cref="TypeConverter"/>.
@@ -434,7 +436,7 @@ namespace CsvHelper
 		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
 		protected virtual int GetFieldIndex( string name )
 		{
-			if (!configuration.HasHeaderRecord)
+			if( !configuration.HasHeaderRecord )
 			{
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
@@ -518,7 +520,8 @@ namespace CsvHelper
 
 					// Convert the field.
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					fieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression );
+					var convertMethod = Configuration.UseInvariantCulture ? "ConvertFromInvariantString" : "ConvertFromString";
+					fieldExpression = Expression.Call( typeConverterExpression, convertMethod, null, fieldExpression );
 					fieldExpression = Expression.Convert( fieldExpression, propertyMap.PropertyValue.PropertyType );
 
 					bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );

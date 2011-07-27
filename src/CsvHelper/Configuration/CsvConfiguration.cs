@@ -5,6 +5,7 @@
 // http://csvhelper.com
 #endregion
 using System;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -22,11 +23,15 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private char comment = '#';
 		private int bufferSize = 2048;
+		private bool useInvariantCulture;
 
 		/// <summary>
 		/// Gets the property mappings.
 		/// </summary>
-		public CsvPropertyMapCollection Properties { get { return properties; } }
+		public CsvPropertyMapCollection Properties
+		{
+			get { return properties; }
+		}
 
 		/// <summary>
 		/// Gets or sets the property binding flags.
@@ -46,7 +51,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public bool HasHeaderRecord
 		{
-			get { return hasHeaderRecord; } 
+			get { return hasHeaderRecord; }
 			set { hasHeaderRecord = value; }
 		}
 
@@ -67,21 +72,21 @@ namespace CsvHelper.Configuration
 			get { return delimiter; }
 			set
 			{
-				if (value == '\n')
+				if( value == '\n' )
 				{
-					throw new CsvHelperException("Newline is not a valid delimiter.");
+					throw new CsvHelperException( "Newline is not a valid delimiter." );
 				}
-				if (value == '\r')
+				if( value == '\r' )
 				{
-					throw new CsvHelperException("Carriage return is not a valid delimiter.");
+					throw new CsvHelperException( "Carriage return is not a valid delimiter." );
 				}
-				if (value == '\0')
+				if( value == '\0' )
 				{
-					throw new CsvHelperException("Null is not a valid delimiter.");
+					throw new CsvHelperException( "Null is not a valid delimiter." );
 				}
-				if (value == quote)
+				if( value == quote )
 				{
-					throw new CsvHelperException("You can not use the quote as a delimiter.");
+					throw new CsvHelperException( "You can not use the quote as a delimiter." );
 				}
 				delimiter = value;
 			}
@@ -96,21 +101,21 @@ namespace CsvHelper.Configuration
 			get { return quote; }
 			set
 			{
-				if (value == '\n')
+				if( value == '\n' )
 				{
-					throw new CsvHelperException("Newline is not a valid quote.");
+					throw new CsvHelperException( "Newline is not a valid quote." );
 				}
-				if (value == '\r')
+				if( value == '\r' )
 				{
-					throw new CsvHelperException("Carriage return is not a valid quote.");
+					throw new CsvHelperException( "Carriage return is not a valid quote." );
 				}
-				if (value == '\0')
+				if( value == '\0' )
 				{
-					throw new CsvHelperException("Null is not a valid quote.");
+					throw new CsvHelperException( "Null is not a valid quote." );
 				}
-				if (value == delimiter)
+				if( value == delimiter )
 				{
-					throw new CsvHelperException("You can not use the delimiter as a quote.");
+					throw new CsvHelperException( "You can not use the delimiter as a quote." );
 				}
 				quote = value;
 			}
@@ -142,6 +147,13 @@ namespace CsvHelper.Configuration
 			get { return bufferSize; }
 			set { bufferSize = value; }
 		}
+
+		/// <summary>
+		/// Gets or sets a value indicating if InvariantCulture
+		/// should be used when reading and writing. True to
+		/// use InvariantCulture, false to use CurrentCulture.
+		/// </summary>
+		public bool UseInvariantCulture { get; set; }
 
 		/// <summary>
 		/// Gets or sets the number of fields the CSV file has.
@@ -176,10 +188,12 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 		/// <typeparam name="TClass">The type of custom class that is being mapped.</typeparam>
-		public void ClassMapping<TMap, TClass>() where TMap : CsvClassMap<TClass> where TClass : class
+		public void ClassMapping<TMap, TClass>()
+			where TMap : CsvClassMap<TClass>
+			where TClass : class
 		{
 			var mapping = Activator.CreateInstance<TMap>() as CsvClassMap<TClass>;
-			ClassMapping(mapping);
+			ClassMapping( mapping );
 		}
 
 		/// <summary>
@@ -191,7 +205,7 @@ namespace CsvHelper.Configuration
 		public void ClassMapping<TMap>() where TMap : CsvClassMap
 		{
 			var mapping = Activator.CreateInstance<TMap>();
-			ClassMapping(mapping);
+			ClassMapping( mapping );
 		}
 
 		/// <summary>
@@ -199,7 +213,7 @@ namespace CsvHelper.Configuration
 		/// When using a class map, no properties are mapped by default.
 		/// Only properties specified in the mapping are used.
 		/// </summary>
-		public void ClassMapping(CsvClassMap classMap)
+		public void ClassMapping( CsvClassMap classMap )
 		{
 			properties = classMap.Properties;
 		}

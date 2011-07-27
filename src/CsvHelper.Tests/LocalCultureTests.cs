@@ -24,64 +24,64 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReadRecordsTest()
 		{
-			RunTestInSpecificCulture(ReadRecordsTest_Body, "uk-UA");
+			RunTestInSpecificCulture( ReadRecordsTestBody, "uk-UA" );
 		}
 
-		private static void ReadRecordsTest_Body()
+		private static void ReadRecordsTestBody()
 		{
-			const string source = "DecimalColumn;DateTimeColumn\r\n" + 
+			const string source = "DecimalColumn;DateTimeColumn\r\n" +
 			                      "12,0;11.11.2010\r\n";
 
-			var configuration = new CsvConfiguration 
+			var configuration = new CsvConfiguration
 			{
-				Delimiter = ';', 
+				Delimiter = ';',
 			};
-			var reader = new CsvReader(new CsvParser(new StringReader(source), configuration), configuration);
+			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ), configuration );
 
 			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
 
-			Assert.AreEqual(1, records.Count());
+			Assert.AreEqual( 1, records.Count() );
 			var record = records.First();
-			Assert.AreEqual(12.0m, record.DecimalColumn);
-			Assert.AreEqual(new DateTime(2010, 11, 11), record.DateTimeColumn);
+			Assert.AreEqual( 12.0m, record.DecimalColumn );
+			Assert.AreEqual( new DateTime( 2010, 11, 11 ), record.DateTimeColumn );
 		}
 
 		[TestMethod]
 		public void WriteRecordsTest()
 		{
-			RunTestInSpecificCulture(WriteRecordsTest_Body, "uk-UA");
+			RunTestInSpecificCulture( WriteRecordsTestBody, "uk-UA" );
 		}
 
-		private static void WriteRecordsTest_Body()
+		private static void WriteRecordsTestBody()
 		{
 			var records = new List<TestRecordWithDecimal>
 			{
 				new TestRecordWithDecimal
-				{                    
+				{
 					DecimalColumn = 12.0m,
-					DateTimeColumn = new DateTime(2010, 11, 11)
-				}                
+					DateTimeColumn = new DateTime( 2010, 11, 11 )
+				}
 			};
 
 			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvConfiguration {Delimiter = ';'});
+			var csv = new CsvWriter( writer, new CsvConfiguration { Delimiter = ';' } );
 
 			csv.WriteRecords( records );
 
 			var csvFile = writer.ToString();
 
-			const string expected = "DecimalColumn;DateTimeColumn\r\n" + 
+			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
 			                        "12,0;11.11.2010\r\n";
 
-			Assert.AreEqual(expected, csvFile);
+			Assert.AreEqual( expected, csvFile );
 		}
 
-		private static void RunTestInSpecificCulture(Action action, string cultureName)
+		private static void RunTestInSpecificCulture( Action action, string cultureName )
 		{
 			var originalCulture = Thread.CurrentThread.CurrentCulture;
 			try
 			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo(cultureName);
+				Thread.CurrentThread.CurrentCulture = new CultureInfo( cultureName );
 				action();
 			}
 			finally

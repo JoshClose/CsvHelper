@@ -65,6 +65,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CsvClassMap`1.cs" />
     <Compile Include="Configuration\CsvFieldAttribute.cs" />
     <Compile Include="Configuration\CsvClassMap.cs" />
     <Compile Include="Configuration\CsvPropertyMap.cs" />

@@ -1,4 +1,10 @@
-﻿using CsvHelper.Configuration;
+﻿#region License
+// Copyright 2009-2011 Josh Close
+// This file is a part of CsvHelper and is licensed under the MS-PL
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
+#endregion
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests
@@ -7,33 +13,32 @@ namespace CsvHelper.Tests
 	public class CsvConfigurationTests
 	{
 		[TestMethod]
-		public void Adding_Mappings_with_generic_method_1()
+		public void AddingMappingsWithGenericMethod1()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings, TestClass>();
-			
-			Assert.AreEqual(2, config.Properties.Count);
+
+			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
 		[TestMethod]
-		public void Adding_Mappings_with_generic_method_2()
+		public void AddingMappingsWithGenericMethod2()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings>();
 
-			Assert.AreEqual(2, config.Properties.Count);
+			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
 		[TestMethod]
-		public void Adding_Mappings_from_class_map_instance()
+		public void AddingMappingsFromClassMapInstance()
 		{
 			var config = new CsvConfiguration();
-			config.ClassMapping(new TestClassMappings());
+			config.ClassMapping( new TestClassMappings() );
 
-			Assert.AreEqual(2, config.Properties.Count);
+			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
-		
 		private class TestClass
 		{
 			public string StringColumn { get; set; }
@@ -44,8 +49,8 @@ namespace CsvHelper.Tests
 		{
 			public TestClassMappings()
 			{
-				Map(c => c.StringColumn);
-				Map(c => c.IntColumn);
+				Map( c => c.StringColumn );
+				Map( c => c.IntColumn );
 			}
 		}
 	}
