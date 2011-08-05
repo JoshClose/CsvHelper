@@ -55,13 +55,13 @@ namespace CsvHelper
 		/// the default parser.
 		/// </summary>
 		/// <param name="reader"></param>
-		public CsvReader( TextReader reader ) : this( new CsvParser( reader ) ) {}
+		public CsvReader( TextReader reader ) : this( new CsvParser( reader ) , null) {}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		public CsvReader( ICsvParser parser ) : this( parser, new CsvConfiguration() ) {}
+		public CsvReader( ICsvParser parser ) : this( parser, null ) {}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser"/> and <see cref="CsvConfiguration"/>.
@@ -71,7 +71,8 @@ namespace CsvHelper
 		public CsvReader( ICsvParser parser, CsvConfiguration configuration )
 		{
 			this.parser = parser;
-			this.configuration = configuration;
+			this.configuration = configuration ?? parser.Configuration;
+			this.parser.Configuration = this.configuration;
 		}
 
 		/// <summary>
