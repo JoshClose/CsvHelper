@@ -47,8 +47,17 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvWriter( TextWriter writer, CsvConfiguration configuration )
+		internal CsvWriter( TextWriter writer, CsvConfiguration configuration )
 		{
+			if( writer == null )
+			{
+				throw new ArgumentNullException( "writer" );
+			}
+			if( configuration == null )
+			{
+				throw new ArgumentNullException( "configuration" );
+			}
+
 			this.writer = writer;
 			this.configuration = configuration;
 		}

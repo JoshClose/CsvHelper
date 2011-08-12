@@ -4,6 +4,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 #endregion
+using System.IO;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -12,6 +13,37 @@ namespace CsvHelper.Tests
 	[TestClass]
 	public class CsvConfigurationTests
 	{
+		[TestMethod]
+		public void EnsureConfigurationIsSameTest()
+		{
+			using( var stream = new MemoryStream() )
+			{
+				var helper = new CsvHelper( stream );
+
+				Assert.AreSame( helper.Configuration, helper.Reader.Configuration );
+				Assert.AreSame( helper.Configuration, helper.Reader.Parser.Configuration );
+				Assert.AreSame( helper.Configuration, helper.Writer.Configuration );
+			}
+		}
+
+		[TestMethod]
+		public void EnsureReaderAndParserConfigIsSameTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			{
+				var csvReader = new CsvReader( reader );
+
+				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
+
+				var config = new CsvConfiguration();
+				var parser = new CsvParser( reader, config );
+				csvReader = new CsvReader( parser );
+
+				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
+			}
+		}
+
 		[TestMethod]
 		public void AddingMappingsWithGenericMethod1()
 		{

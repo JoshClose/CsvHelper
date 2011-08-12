@@ -18,7 +18,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
-		CsvConfiguration Configuration { get; set; }
+		CsvConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the field count.

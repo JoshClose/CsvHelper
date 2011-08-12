@@ -36,7 +36,7 @@ namespace CsvHelper.Tests
 			{
 				Delimiter = ';',
 			};
-			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ), configuration );
+			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ) );
 
 			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
 

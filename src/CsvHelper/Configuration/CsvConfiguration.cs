@@ -23,7 +23,6 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private char comment = '#';
 		private int bufferSize = 2048;
-		private bool useInvariantCulture;
 
 		/// <summary>
 		/// Gets the property mappings.

@@ -25,7 +25,7 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
-		private CsvConfiguration configuration;
+		private readonly CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets or sets the configuration.
@@ -33,7 +33,14 @@ namespace CsvHelper
 		public virtual CsvConfiguration Configuration
 		{
 			get { return configuration; }
-			set { configuration = value; }
+		}
+
+		/// <summary>
+		/// Gets the parser.
+		/// </summary>
+		public virtual ICsvParser Parser
+		{
+			get { return parser; }
 		}
 
 		/// <summary>
@@ -51,27 +58,38 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates a new CSV reader using <see cref="CsvParser"/> as
-		/// the default parser.
+		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
+		/// <see cref="CsvParser"/> as the default parser.
 		/// </summary>
 		/// <param name="reader"></param>
-		public CsvReader( TextReader reader ) : this( new CsvParser( reader ) ) {}
+		public CsvReader( TextReader reader )
+		{
+			if( reader == null )
+			{
+				throw new ArgumentNullException( "reader" );
+			}
+
+			configuration = new CsvConfiguration();
+			parser = new CsvParser( reader, configuration );
+		}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		public CsvReader( ICsvParser parser ) : this( parser, new CsvConfiguration() ) {}
-
-		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="ICsvParser"/> and <see cref="CsvConfiguration"/>.
-		/// </summary>
-		/// <param name="parser">The <see cref="ICsvParser"/> used to parse the CSV file.</param>
-		/// <param name="configuration">The <see cref="CsvConfiguration"/>.</param>
-		public CsvReader( ICsvParser parser, CsvConfiguration configuration )
+		public CsvReader( ICsvParser parser )
 		{
+			if( parser == null )
+			{
+				throw new ArgumentNullException( "parser" );
+			}
+			if( parser.Configuration == null )
+			{
+				throw new ArgumentException( "The given parser has no configuration." );
+			}
+
 			this.parser = parser;
-			this.configuration = configuration;
+			configuration = parser.Configuration;
 		}
 
 		/// <summary>

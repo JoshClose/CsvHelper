@@ -24,7 +24,7 @@ namespace CsvHelper
 		private string[] record;
 		private int currentLine;
 		private int currentCharacter;
-		private CsvConfiguration configuration = new CsvConfiguration();
+		private readonly CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets or sets the configuration.
@@ -32,7 +32,6 @@ namespace CsvHelper
 		public virtual CsvConfiguration Configuration
 		{
 			get { return configuration; }
-			set { configuration = value; }
 		}
 
 		public int FieldCount { get; protected set; }
@@ -41,7 +40,7 @@ namespace CsvHelper
 		/// Creates a new parser using the given <see cref="StreamReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
-		public CsvParser( TextReader reader ) : this( reader, new CsvConfiguration() ){}
+		public CsvParser( TextReader reader ) : this( reader, new CsvConfiguration() ) {}
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader"/>
@@ -49,8 +48,17 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader"/> with teh CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser( TextReader reader, CsvConfiguration configuration )
+		internal CsvParser( TextReader reader, CsvConfiguration configuration )
 		{
+			if( reader == null )
+			{
+				throw new ArgumentNullException( "reader" );
+			}
+			if( configuration == null )
+			{
+				throw new ArgumentNullException( "configuration" );
+			}
+
 			this.reader = reader;
 			this.configuration = configuration;
             

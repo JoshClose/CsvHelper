@@ -25,7 +25,7 @@ namespace CsvHelper.Tests
 		{
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
-
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			var reader = new CsvReader( parserMock.Object );
 
 			reader.GetField<int>( 0 );
@@ -39,6 +39,7 @@ namespace CsvHelper.Tests
 			var data2 = new [] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -75,6 +76,7 @@ namespace CsvHelper.Tests
 
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( data );
 
 			var reader = new CsvReader( parserMock.Object );
@@ -120,6 +122,7 @@ namespace CsvHelper.Tests
 
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( data );
 
 			var reader = new CsvReader( parserMock.Object );
@@ -137,6 +140,7 @@ namespace CsvHelper.Tests
 			var data2 = new [] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -163,6 +167,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -188,6 +193,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -211,6 +217,7 @@ namespace CsvHelper.Tests
 			var data = new [] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () => data );
 
 			var reader = new CsvReader( parserMock.Object ) { Configuration = { HasHeaderRecord = false } };
@@ -237,6 +244,7 @@ namespace CsvHelper.Tests
 			var isHeaderRecord = true;
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			csvParserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -270,6 +278,7 @@ namespace CsvHelper.Tests
 			var count = -1;
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			var guid = Guid.NewGuid();
 			csvParserMock.Setup( m => m.Read() ).Returns( () =>
 			{
@@ -309,6 +318,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "one", "two" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -336,6 +346,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "one", "two" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -363,6 +374,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -390,6 +402,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -417,6 +430,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -444,6 +458,7 @@ namespace CsvHelper.Tests
 			var data2 = new[] { "1", "2" };
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			parserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -483,6 +498,7 @@ namespace CsvHelper.Tests
 			var isHeaderRecord = true;
 			var mockFactory = new MockFactory( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			csvParserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )

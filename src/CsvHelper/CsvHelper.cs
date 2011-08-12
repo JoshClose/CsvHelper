@@ -36,26 +36,10 @@ namespace CsvHelper
 		/// using defaults.
 		/// </summary>
 		/// <param name="stream">The <see cref="Stream"/> attached to a CSV file.</param>
-		public CsvHelper( Stream stream ) : this( new CsvReader( new StreamReader( stream ) ), new CsvWriter( new StreamWriter( stream ) ) )
+		public CsvHelper( Stream stream )
 		{
-			Reader = new CsvReader(new CsvParser(new StreamReader(stream)), configuration);
+			Reader = new CsvReader( new CsvParser( new StreamReader( stream ), configuration ) );
 			Writer = new CsvWriter( new StreamWriter( stream ), configuration );
-		}
-
-		/// <summary>
-		/// Creates a new instance of <see cref="CsvHelper"/>
-		/// using the given <see cref="ICsvReader"/> and <see cref="ICsvWriter"/>.
-		/// The <see cref="CsvConfiguration"/> on both the <see cref="ICsvReader"/> and <see cref="ICsvWriter"/>
-		/// are set to <see cref="CsvHelper"/>'s <see cref="CsvConfiguration"/>.
-		/// </summary>
-		/// <param name="reader">The <see cref="ICsvReader"/> attached to a CSV file.</param>
-		/// <param name="writer">The <see cref="ICsvWriter"/> attached to a CSV file.</param>
-		public CsvHelper( ICsvReader reader, ICsvWriter writer )
-		{
-			Reader = reader;
-			Reader.Configuration = configuration;
-			Writer = writer;
-			Writer.Configuration = configuration;
 		}
 	}
 }
