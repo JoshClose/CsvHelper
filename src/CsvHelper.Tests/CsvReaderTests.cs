@@ -561,6 +561,68 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( new Guid( "33333333-3333-3333-3333-333333333333" ), record.GuidColumn );
 		}
 
+        [TestMethod]
+        [ExpectedException(typeof(CsvReaderException))]
+        public void HasHeaderRecordWithDuplicateFieldsTest()
+        {
+            var isHeaderRecord = true;
+            var data1 = new[] { "One", "Two", "Two" };
+            var data2 = new[] { "1", "2", "3" };
+            var mockFactory = new MockFactory(MockBehavior.Default);
+            var parserMock = mockFactory.Create<ICsvParser>();
+            parserMock.Setup(m => m.Configuration).Returns(new CsvConfiguration() { HasHeaderRecord = true });
+            parserMock.Setup(m => m.Read()).Returns(() =>
+            {
+                if (isHeaderRecord)
+                {
+                    isHeaderRecord = false;
+                    return data1;
+                }
+                return data2;
+            });
+
+            var reader = new CsvReader(parserMock.Object);
+            reader.Read();
+
+            // Check to see if the header record and first record are set properly.
+            Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>("One"));
+            Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>("Two"));
+            Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>(0));
+            Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>(1));
+        }
+
+        [TestMethod]
+        public void HasHeaderRecordWithIgnoredDuplicateFieldsTest()
+        {
+            var isHeaderRecord = true;
+            var data1 = new[] { "One", "Two", "Two", "Three" };
+            var data2 = new[] { "1", "2", "3", "4" };
+            var mockFactory = new MockFactory(MockBehavior.Default);
+            var parserMock = mockFactory.Create<ICsvParser>();
+            parserMock.Setup(m => m.Configuration).Returns(new CsvConfiguration() { HasHeaderRecord = true, IgnoreDuplicateHeaderFields = true });
+            parserMock.Setup(m => m.Read()).Returns(() =>
+            {
+                if (isHeaderRecord)
+                {
+                    isHeaderRecord = false;
+                    return data1;
+                }
+                return data2;
+            });
+
+            var reader = new CsvReader(parserMock.Object);
+            reader.Read();
+
+            // Check to see if the header record and first record are set properly.
+            Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>("One"));
+            Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>("Two"));
+            Assert.AreEqual(Convert.ToInt32(data2[3]), reader.GetField<int>("Three"));
+            Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>(0));
+            Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>(1));
+            Assert.AreEqual(Convert.ToInt32(data2[2]), reader.GetField<int>(2));
+            Assert.AreEqual(Convert.ToInt32(data2[3]), reader.GetField<int>(3));
+        }
+
 		private class TestNullable
 		{
 			public int? IntColumn { get; set; }

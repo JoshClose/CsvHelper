@@ -481,11 +481,24 @@ namespace CsvHelper
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];
-				if( namedIndexes.ContainsKey( name ) )
-				{
-					throw new CsvReaderException( "The field header names must be unique." );
-				}
-				namedIndexes[name] = i;
+
+                if ( configuration.IgnoreDuplicateHeaderFields )
+                {
+                    if( !namedIndexes.ContainsKey( name ) )
+                    {
+                        namedIndexes[name] = i;
+                    }
+                }
+                else
+                {
+                    if (namedIndexes.ContainsKey(name))
+                    {
+                        throw new CsvReaderException("The field header names must be unique.");
+                    }
+                    namedIndexes[name] = i;
+                }
+				
+				
 			}
 		}
 
