@@ -25,7 +25,7 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private readonly Dictionary<string, int> namedIndexes = new Dictionary<string, int>();
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
-		private readonly CsvConfiguration configuration;
+		private CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets or sets the configuration.
@@ -33,6 +33,7 @@ namespace CsvHelper
 		public virtual CsvConfiguration Configuration
 		{
 			get { return configuration; }
+            set { configuration = value; }
 		}
 
 		/// <summary>
