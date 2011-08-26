@@ -181,10 +181,15 @@ namespace CsvHelper
 					{
 						// The end of the stream has been reached.
 
-						if( c != '\r' && c != '\n' && c != '\0' )
+						if( c != '\r' && c != '\n' && c != '\0' && c != configuration.Delimiter )
 						{
 							AddFieldToRecord( ref recordPosition, field, hasQuotes );
 							return record;
+						}
+                        else if (c == configuration.Delimiter)
+						{
+						    AddFieldToRecord( ref recordPosition, "", hasQuotes );
+						    return record;
 						}
 
 						return null;

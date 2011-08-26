@@ -623,6 +623,29 @@ namespace CsvHelper.Tests
             Assert.AreEqual(Convert.ToInt32(data2[3]), reader.GetField<int>(3));
         }
 
+        [TestMethod]
+        public void GetRecordFinalValueInRowAsNullTest()
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+
+            writer.WriteLine("Column1,Column2,Column3");
+            writer.WriteLine("one,two,three");
+            writer.Write("one,two,");
+            writer.Flush();
+            stream.Position = 0;
+
+            var reader = new StreamReader(stream);
+            var csvReader = new CsvReader(reader);
+
+            csvReader.Read();
+            Assert.AreEqual("three", csvReader["Column3"]);
+            
+            csvReader.Read();
+            Assert.AreEqual("", csvReader["Column3"]);
+
+        }
+
 		private class TestNullable
 		{
 			public int? IntColumn { get; set; }
