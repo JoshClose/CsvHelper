@@ -5,6 +5,7 @@
 // http://csvhelper.com
 #endregion
 using System.IO;
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests

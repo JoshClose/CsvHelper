@@ -23,6 +23,7 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private char comment = '#';
 		private int bufferSize = 2048;
+	    private bool ignoreDuplicateHeaderFields = false;
 
 		/// <summary>
 		/// Gets the property mappings.
@@ -53,6 +54,17 @@ namespace CsvHelper.Configuration
 			get { return hasHeaderRecord; }
 			set { hasHeaderRecord = value; }
 		}
+
+        /// <summary>
+        /// Gets or sets a value indicating if the
+        /// CSV file has a header record.
+        /// Default is true.
+        /// </summary>
+        public bool IgnoreDuplicateHeaderFields
+        {
+            get { return ignoreDuplicateHeaderFields; }
+            set { ignoreDuplicateHeaderFields = value; }
+        }
 
 		/// <summary>
 		/// Gets or sets a value indicating if strict reading is enabled.
