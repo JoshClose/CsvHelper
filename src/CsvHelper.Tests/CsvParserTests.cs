@@ -482,13 +482,15 @@ namespace CsvHelper.Tests
 
 			var parser = new CsvParser( reader );
 
-			var count = 0;
-			while( parser.Read() != null )
-			{
-				count++;
-			}
+			var record = parser.Read();
 
-			Assert.AreEqual( 2, count );
+			Assert.IsNotNull( record );
+			Assert.AreEqual( "", record[3] );
+
+			record = parser.Read();
+
+			Assert.IsNotNull( record );
+			Assert.AreEqual( "", record[3] );
 		}
 	}
 }

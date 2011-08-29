@@ -183,6 +183,10 @@ namespace CsvHelper
 
 						if( c != '\r' && c != '\n' && c != '\0' )
 						{
+							if( c == configuration.Delimiter )
+							{
+								field = "";
+							}
 							AddFieldToRecord( ref recordPosition, field, hasQuotes );
 							return record;
 						}
