@@ -57,7 +57,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets a value indicating if strict reading is enabled.
 		/// True to enable strict reading, otherwise false.
-		/// Strict reading will cause a <see cref="MissingFieldException" />
+		/// Strict reading will cause a <see cref="CsvMissingFieldException" />
 		/// to be thrown if a named index is not found.
 		/// </summary>
 		public bool Strict { get; set; }
