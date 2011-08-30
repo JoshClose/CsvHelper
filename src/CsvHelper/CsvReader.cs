@@ -483,7 +483,11 @@ namespace CsvHelper
 				var name = headerRecord[i];
 				if( namedIndexes.ContainsKey( name ) )
 				{
-					throw new CsvReaderException( "The field header names must be unique." );
+					if( configuration.Strict )
+					{
+						throw new CsvDuplicateHeaderFieldNameException( name );
+					}
+					continue;
 				}
 				namedIndexes[name] = i;
 			}

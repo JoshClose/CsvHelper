@@ -227,6 +227,21 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		[ExpectedException( typeof( CsvDuplicateHeaderFieldNameException ) )]
+		public void GetRecordWithDuplicateHeaderFields()
+		{
+			var data = new[] { "Field1", "Field1" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( () => data );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Configuration.Strict = true;
+			reader.Read();
+		}
+
+		[TestMethod]
 		public void GetRecordTest()
 		{
 			var headerData = new []
