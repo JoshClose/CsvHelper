@@ -179,6 +179,7 @@ namespace CsvHelper.Tests
 			} );
 
 			var reader = new CsvReader( parserMock.Object );
+			reader.Configuration.IsStrictMode = false;
 			reader.Read();
 
 			reader.GetField<string>( "blah" );
@@ -204,7 +205,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { Strict = true } };
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
 			reader.Read();
 
 			reader.GetField<string>( "blah" );
@@ -237,7 +238,7 @@ namespace CsvHelper.Tests
 			parserMock.Setup( m => m.Read() ).Returns( () => data );
 
 			var reader = new CsvReader( parserMock.Object );
-			reader.Configuration.Strict = true;
+			reader.Configuration.IsStrictMode = true;
 			reader.Read();
 		}
 
@@ -271,6 +272,7 @@ namespace CsvHelper.Tests
 			} );
 
 			var csv = new CsvReader( csvParserMock.Object );
+			csv.Configuration.IsStrictMode = false;
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
 
@@ -310,6 +312,7 @@ namespace CsvHelper.Tests
 			} );
 
 			var csv = new CsvReader( csvParserMock.Object );
+			csv.Configuration.IsStrictMode = false;
 			var records = csv.GetRecords<TestRecord>().ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -484,7 +487,7 @@ namespace CsvHelper.Tests
 				return data2;
 			} );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { Strict = true } };
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
 			reader.Read();
 
 			int field;
@@ -525,6 +528,7 @@ namespace CsvHelper.Tests
 			} );
 
 			var csv = new CsvReader( csvParserMock.Object );
+			csv.Configuration.IsStrictMode = false;
 			csv.Read();
 			var record = csv.GetRecord<TestRecordNoAttributes>();
 

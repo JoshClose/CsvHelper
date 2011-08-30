@@ -461,7 +461,7 @@ namespace CsvHelper
 
 			if( !namedIndexes.ContainsKey( name ) )
 			{
-				if( configuration.Strict )
+				if( configuration.IsStrictMode )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
@@ -483,7 +483,7 @@ namespace CsvHelper
 				var name = headerRecord[i];
 				if( namedIndexes.ContainsKey( name ) )
 				{
-					if( configuration.Strict )
+					if( configuration.IsStrictMode )
 					{
 						throw new CsvDuplicateHeaderFieldNameException( name );
 					}

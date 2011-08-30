@@ -19,6 +19,7 @@ namespace CsvHelper.Configuration
 		private CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 		private bool hasHeaderRecord = true;
+		private bool isStrictMode = true;
 		private char delimiter = ',';
 		private char quote = '"';
 		private char comment = '#';
@@ -60,7 +61,11 @@ namespace CsvHelper.Configuration
 		/// Strict reading will cause a <see cref="CsvMissingFieldException" />
 		/// to be thrown if a named index is not found.
 		/// </summary>
-		public bool Strict { get; set; }
+		public bool IsStrictMode
+		{
+			get { return isStrictMode; }
+			set { isStrictMode = value; }
+		}
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
