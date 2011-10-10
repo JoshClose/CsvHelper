@@ -114,10 +114,10 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Checks if the instance has been disposed of.
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
-		/// <exception cref="ObjectDisposedException" />
-		protected virtual void Dispose( bool disposing )
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
+		protected virtual void Dispose(bool disposing)
 		{
 			if( !disposed )
 			{
@@ -135,7 +135,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Checks if the reader has been read yet.
+		/// Checks if the instance has been disposed of.
 		/// </summary>
 		/// <exception cref="ObjectDisposedException" />
 		protected virtual void CheckDisposed()
