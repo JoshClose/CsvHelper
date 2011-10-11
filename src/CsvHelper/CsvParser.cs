@@ -61,7 +61,7 @@ namespace CsvHelper
 
 			this.reader = reader;
 			this.configuration = configuration;
-            
+
 			readerBuffer = new char[configuration.BufferSize];
 		}
 
@@ -78,7 +78,7 @@ namespace CsvHelper
 			{
 				return ReadLine();
 			}
-			catch( Exception ex)
+			catch( Exception ex )
 			{
 				throw new CsvParserException( string.Format( "A parsing error occurred. Line: {0} Character: {1}", currentLine, currentCharacter ), ex );
 			}
@@ -117,7 +117,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
-		protected virtual void Dispose(bool disposing)
+		protected virtual void Dispose( bool disposing )
 		{
 			if( !disposed )
 			{
@@ -232,7 +232,7 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
-				else if (c == configuration.Quote)
+				else if( c == configuration.Quote )
 				{
 					hasQuotes = true;
 					inQuotes = !inQuotes;
@@ -244,14 +244,14 @@ namespace CsvHelper
 						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						fieldStartPosition = readerBufferPosition;
 					}
-					if (cPrev != configuration.Quote || !inQuotes)
+					if( cPrev != configuration.Quote || !inQuotes )
 					{
 						// Set the new field start position to
 						// the char after the quote.
 						fieldStartPosition = readerBufferPosition;
 					}
 				}
-				else if (configuration.AllowComments && c == configuration.Comment && (cPrev == '\0' || cPrev == '\r' || cPrev == '\n'))
+				else if( configuration.AllowComments && c == configuration.Comment && ( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' ) )
 				{
 					inComment = true;
 				}
