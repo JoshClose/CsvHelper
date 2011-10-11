@@ -33,6 +33,11 @@ namespace CsvHelper
 		string[] FieldHeaders { get; }
 
 		/// <summary>
+		/// Get the current record;
+		/// </summary>
+		string[] CurrentRecord { get; }
+
+		/// <summary>
 		/// Advances the reader to the next record.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>

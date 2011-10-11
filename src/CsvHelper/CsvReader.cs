@@ -58,6 +58,20 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Get the current record;
+		/// </summary>
+		public virtual string[] CurrentRecord
+		{
+			get
+			{
+				CheckDisposed();
+				CheckHasBeenRead();
+
+				return currentRecord;
+			}
+		}
+
+		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
 		/// <see cref="CsvParser"/> as the default parser.
 		/// </summary>
@@ -121,7 +135,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="index">The index of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string this[ int index ]
+		public virtual string this[int index]
 		{
 			get
 			{
@@ -137,7 +151,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string this[ string name ]
+		public virtual string this[string name]
 		{
 			get
 			{
