@@ -23,7 +23,7 @@ This is one way of reading a CSV file:
         }
     }
     
-More examples can be found in the src/CsvHelper.Example project.
+More examples can be found in the src/CsvHelper.Example project or in the Wiki.
 
 License
 =======
