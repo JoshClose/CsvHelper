@@ -497,6 +497,30 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void TryGetFieldEmptyDate()
+		{
+			// DateTimeConverter.IsValid() doesn't work correctly
+			// so we need to test and make sure that the conversion
+			// fails for an emptry string for a date.
+			var data = new[] { " " };
+
+			var mockFactory = new MockFactory( MockBehavior.Default );
+
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( data );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Read();
+
+			DateTime field;
+			var got = reader.TryGetField( 0, out field );
+
+			Assert.IsFalse( got );
+			Assert.AreEqual( DateTime.MinValue, field );
+		}
+
+		[TestMethod]
 		public void GetRecordNoAttributesTest()
 		{
 			var headerData = new[]
