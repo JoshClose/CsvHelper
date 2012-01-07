@@ -301,15 +301,31 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var rawField = currentRecord[index];
-			if( !converter.IsValid( rawField ) )
+			// DateTimeConverter.ConvertFrom will successfully convert
+			// a white space string to a DateTime.MinValue instead of
+			// returning null, so we need to handle this special case.
+			if( converter is DateTimeConverter )
+			{
+				if( currentRecord[index].IsNullOrWhiteSpace() )
+				{
+					field = default( T );
+					return false;
+				}
+			}
+
+			// TypeConverter.IsValid() just wraps a
+ 			// ConvertFrom() call in a try/catch, so lets not
+			// do it twice and just do it ourselves.
+			try
+			{
+				field = (T)GetField( index, converter );
+				return true;
+			}
+			catch
 			{
 				field = default( T );
 				return false;
 			}
-
-			field = (T)GetField( index, converter );
-			return true;
 		}
 
 		/// <summary>

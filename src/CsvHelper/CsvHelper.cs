@@ -17,6 +17,8 @@ namespace CsvHelper
 	{
 		private readonly CsvConfiguration configuration = new CsvConfiguration();
 		private bool disposed;
+		private ICsvReader reader;
+		private ICsvWriter writer;
 
 		/// <summary>
 		/// The configuration used for reading and writing CSV files.
@@ -29,12 +31,32 @@ namespace CsvHelper
 		/// <summary>
 		/// Reads data from a CSV file.
 		/// </summary>
-		public ICsvReader Reader { get; protected set; }
+		public ICsvReader Reader
+		{
+			get
+			{
+				if( reader == null )
+				{
+					throw new CsvReaderException( "The stream used to create this instance of CsvHelper is not readable." );
+				}
+				return reader;
+			}
+		}
 
 		/// <summary>
 		/// Writes data to a CSV file.
 		/// </summary>
-		public ICsvWriter Writer { get; protected set; }
+		public ICsvWriter Writer
+		{
+			get
+			{
+				if( writer == null )
+				{
+					throw new CsvWriterException( "The Stream used to create this instance of CsvHelper is not writable." );
+				}
+				return writer;
+			}
+		}
 
 		/// <summary>
 		/// Creates a new instance of <see cref="CsvHelper"/>
@@ -43,8 +65,14 @@ namespace CsvHelper
 		/// <param name="stream">The <see cref="Stream"/> attached to a CSV file.</param>
 		public CsvHelper( Stream stream )
 		{
-			Reader = new CsvReader( new CsvParser( new StreamReader( stream ), configuration ) );
-			Writer = new CsvWriter( new StreamWriter( stream ), configuration );
+			if( stream.CanRead )
+			{
+				reader = new CsvReader( new CsvParser( new StreamReader( stream ), configuration ) );
+			}
+			if( stream.CanWrite )
+			{
+				writer = new CsvWriter( new StreamWriter( stream ), configuration );
+			}
 		}
 
 		/// <summary>
@@ -72,8 +100,8 @@ namespace CsvHelper
 				}
 
 				disposed = true;
-				Reader = null;
-				Writer = null;
+				reader = null;
+				writer = null;
 			}
 		}
 

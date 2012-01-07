@@ -136,7 +136,9 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var fieldString = Configuration.UseInvariantCulture ? converter.ConvertToInvariantString( field ) : converter.ConvertToString( field );
+			var fieldString = Configuration.UseInvariantCulture
+			                  	? converter.ConvertToInvariantString( field )
+			                  	: converter.ConvertToString( field );
 			WriteField( fieldString );
 		}
 
