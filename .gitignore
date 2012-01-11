@@ -3,6 +3,7 @@
 *.suo
 *.dbmdl
 *.schemaview
+*.DotSettings*
 *[Bb]in/
 *[Oo]bj/
 *[Dd]ebug/

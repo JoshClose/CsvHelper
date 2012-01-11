@@ -91,18 +91,20 @@ namespace CsvHelper
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
-			if( !disposed )
+			if( disposed )
 			{
-				if( disposing )
-				{
-					Reader.Dispose();
-					Writer.Dispose();
-				}
-
-				disposed = true;
-				reader = null;
-				writer = null;
+				return;
 			}
+
+			if( disposing )
+			{
+				using( reader ) {}
+				using( writer ) {}
+			}
+
+			disposed = true;
+			reader = null;
+			writer = null;
 		}
 
 		/// <summary>
