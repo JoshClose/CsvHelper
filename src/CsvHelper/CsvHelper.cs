@@ -1,9 +1,7 @@
-﻿#region License
-// Copyright 2009-2011 Josh Close
+﻿// Copyright 2009-2012 Josh Close
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
-#endregion
 using System;
 using System.IO;
 using CsvHelper.Configuration;
@@ -91,18 +89,20 @@ namespace CsvHelper
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
-			if( !disposed )
+			if( disposed )
 			{
-				if( disposing )
-				{
-					Reader.Dispose();
-					Writer.Dispose();
-				}
-
-				disposed = true;
-				reader = null;
-				writer = null;
+				return;
 			}
+
+			if( disposing )
+			{
+				using( reader ) {}
+				using( writer ) {}
+			}
+
+			disposed = true;
+			reader = null;
+			writer = null;
 		}
 
 		/// <summary>

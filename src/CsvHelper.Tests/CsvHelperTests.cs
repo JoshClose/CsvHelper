@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace CsvHelper.Tests
 {
@@ -46,11 +43,33 @@ namespace CsvHelper.Tests
 			catch( CsvReaderException ) {}
 		}
 
+		[TestMethod]
+		public void DisposeWhenUsingReadOnlyStream()
+		{
+			var data = Encoding.Default.GetBytes( "one,two,three" );
+			var memoryStream = new MemoryStream( data, false );
+
+			using( var csvHelper = new CsvHelper( memoryStream ) )
+			{
+				csvHelper.Reader.Read();
+			}
+		}
+
+		[TestMethod]
+		public void DisposeWhenUsingWriteOnlyStream()
+		{
+			var writeOnlyStream = new WriteOnlyStream();
+
+			using( var csvHelper = new CsvHelper( writeOnlyStream ) )
+			{
+				csvHelper.Writer.WriteField( "test" );
+			}
+		}
+
 		private class WriteOnlyStream : Stream
 		{
 			public override void Flush()
 			{
-				throw new NotImplementedException();
 			}
 
 			public override long Seek( long offset, SeekOrigin origin )
@@ -96,6 +115,10 @@ namespace CsvHelper.Tests
 			{
 				get { throw new NotImplementedException(); }
 				set { throw new NotImplementedException(); }
+			}
+
+			protected override void Dispose( bool disposing )
+			{
 			}
 		}
 	}
