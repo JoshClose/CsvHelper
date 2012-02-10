@@ -159,6 +159,32 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void GetFieldByNameAndIndexTest()
+		{
+			var isHeaderRecord = true;
+			var data1 = new[] { "One", "One" };
+			var data2 = new[] { "1", "2" };
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var parserMock = mockFactory.Create<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return data1;
+				}
+				return data2;
+			} );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Read();
+
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One", 0 ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "One", 1 ) );
+		}
+
+		[TestMethod]
 		[ExpectedException( typeof( IndexOutOfRangeException ) )]
 		public void GetMissingFieldByNameTest()
 		{
@@ -228,7 +254,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException( typeof( CsvDuplicateHeaderFieldNameException ) )]
 		public void GetRecordWithDuplicateHeaderFields()
 		{
 			var data = new[] { "Field1", "Field1" };
@@ -325,6 +350,49 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "test", record.TypeConvertedColumn );
 				Assert.AreEqual( i, record.FirstColumn );
 				Assert.AreEqual( guid, record.GuidColumn );
+			}
+		}
+
+		[TestMethod]
+		public void GetRecordsWithDuplicateHeaderNames()
+		{
+			var headerData = new[]
+            {
+                "Column",
+                "Column",
+                "Column"
+            };
+
+			var count = -1;
+			var mockFactory = new MockFactory( MockBehavior.Default );
+			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			csvParserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				count++;
+				if( count == 0 )
+				{
+					return headerData;
+				}
+				if( count > 2 )
+				{
+					return null;
+				}
+				return new[] { "one", "two", "three" };
+			} );
+
+			var csv = new CsvReader( csvParserMock.Object );
+			csv.Configuration.IsStrictMode = true;
+			var records = csv.GetRecords<TestRecordDuplicateHeaderNames>().ToList();
+
+			Assert.AreEqual( 2, records.Count );
+
+			for( var i = 1; i <= records.Count; i++ )
+			{
+				var record = records[i - 1];
+				Assert.AreEqual( "one", record.Column1 );
+				Assert.AreEqual( "two", record.Column2 );
+				Assert.AreEqual( "three", record.Column3 );
 			}
 		}
 
@@ -652,6 +720,18 @@ namespace CsvHelper.Tests
 			public int NoMatchingFields { get; set; }
 
 			public TestRecord CustomTypeColumn { get; set; }
+		}
+
+		private class TestRecordDuplicateHeaderNames
+		{
+			[CsvField( Name = "Column", Index = 0 )]
+			public string Column1 { get; set; }
+
+			[CsvField( Name = "Column", Index = 1 )]
+			public string Column2 { get; set; }
+
+			[CsvField( Name = "Column", Index = 2 )]
+			public string Column3 { get; set; }
 		}
 
 		private class TestTypeConverter : TypeConverter

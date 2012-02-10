@@ -27,8 +27,9 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// When reading, is used to get the field at
-		/// the given index. If a Name is specified,
-		/// that will be used instead. When writing, the fields
+		/// the given index. If a Name is specified, Index is 
+		/// used to get the instance of the named index when 
+		/// multiple headers are the same. When writing, the fields
 		/// will be written in the order of the field
 		/// indexes.
 		/// </summary>
