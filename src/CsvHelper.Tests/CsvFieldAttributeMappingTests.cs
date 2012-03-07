@@ -6,74 +6,67 @@
 #endregion
 using System;
 using System.ComponentModel;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	/// <summary>
-	/// Summary description for CsvFieldAttributeMappingTests
-	/// </summary>
-	[TestClass]
 	public class CsvFieldAttributeMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void FieldAttributeNameTest()
 		{
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.Equal( 4, config.Properties.Count );
 
-			Assert.AreEqual( "Guid Column", config.Properties[0].NameValue );
-			Assert.AreEqual( "Int Column", config.Properties[1].NameValue );
-			Assert.AreEqual( "String Column", config.Properties[2].NameValue );
-			Assert.AreEqual( "NotUsedColumn", config.Properties[3].NameValue );
+			Assert.Equal( "Guid Column", config.Properties[0].NameValue );
+			Assert.Equal( "Int Column", config.Properties[1].NameValue );
+			Assert.Equal( "String Column", config.Properties[2].NameValue );
+			Assert.Equal( "NotUsedColumn", config.Properties[3].NameValue );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FieldAttributeIndexTest()
 		{
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.Equal( 4, config.Properties.Count );
 
-			Assert.AreEqual( 1, config.Properties[0].IndexValue );
-			Assert.AreEqual( 2, config.Properties[1].IndexValue );
-			Assert.AreEqual( 3, config.Properties[2].IndexValue );
-			Assert.AreEqual( -1, config.Properties[3].IndexValue );
+			Assert.Equal( 1, config.Properties[0].IndexValue );
+			Assert.Equal( 2, config.Properties[1].IndexValue );
+			Assert.Equal( 3, config.Properties[2].IndexValue );
+			Assert.Equal( -1, config.Properties[3].IndexValue );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FieldAttributeTypeConverterTest()
 		{
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.Equal( 4, config.Properties.Count );
 
-			Assert.IsInstanceOfType( config.Properties[0].TypeConverterValue, typeof( StringConverter ) );
-			Assert.IsInstanceOfType( config.Properties[1].TypeConverterValue, typeof( Int32Converter ) );
-			Assert.IsInstanceOfType( config.Properties[2].TypeConverterValue, typeof( Int16Converter ) );
-			Assert.IsInstanceOfType( config.Properties[3].TypeConverterValue, typeof( StringConverter ) );
+			Assert.IsType<StringConverter>( config.Properties[0].TypeConverterValue );
+			Assert.IsType<Int32Converter>( config.Properties[1].TypeConverterValue );
+			Assert.IsType<Int16Converter>( config.Properties[2].TypeConverterValue );
+			Assert.IsType<StringConverter>( config.Properties[3].TypeConverterValue );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FieldAttributeIgnoreTest()
 		{
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.Equal( 4, config.Properties.Count );
 
-			Assert.IsFalse( config.Properties[0].IgnoreValue );
-			Assert.IsTrue( config.Properties[1].IgnoreValue );
-			Assert.IsFalse( config.Properties[2].IgnoreValue );
-			Assert.IsFalse( config.Properties[3].IgnoreValue );
+			Assert.False( config.Properties[0].IgnoreValue );
+			Assert.True( config.Properties[1].IgnoreValue );
+			Assert.False( config.Properties[2].IgnoreValue );
+			Assert.False( config.Properties[3].IgnoreValue );
 		}
 
 		private class TestClass

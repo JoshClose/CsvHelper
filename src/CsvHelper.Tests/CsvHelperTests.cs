@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
 	public class CsvHelperTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReadUsingReadOnlyStreamTest()
 		{
 			var data = Encoding.Default.GetBytes( "one,two,three" );
@@ -17,17 +16,10 @@ namespace CsvHelper.Tests
 			var csvHelper = new CsvHelper( memoryStream );
 			csvHelper.Reader.Read();
 
-			try
-			{
-				csvHelper.Writer.WriteField( "test" );
-				Assert.Fail( "Accessing the writer did not throw an exception." );
-			}
-			catch( CsvWriterException )
-			{
-			}
+			Assert.Throws<CsvWriterException>(() => csvHelper.Writer.WriteField("test"));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteUsingWriteOnlyStreamTest()
 		{
 			var writeOnlyStream = new WriteOnlyStream();
@@ -35,15 +27,10 @@ namespace CsvHelper.Tests
 			var csvHelper = new CsvHelper( writeOnlyStream );
 			csvHelper.Writer.WriteField( "test" );
 
-			try
-			{
-				csvHelper.Reader.Read();
-				Assert.Fail( "Accessing the reader did not throw and exception." );
-			}
-			catch( CsvReaderException ) {}
+			Assert.Throws<CsvReaderException>(() => csvHelper.Reader.Read());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DisposeWhenUsingReadOnlyStream()
 		{
 			var data = Encoding.Default.GetBytes( "one,two,three" );
@@ -55,7 +42,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DisposeWhenUsingWriteOnlyStream()
 		{
 			var writeOnlyStream = new WriteOnlyStream();

@@ -6,27 +6,26 @@
 #endregion
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
 	public class CsvConfigurationTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EnsureConfigurationIsSameTest()
 		{
 			using( var stream = new MemoryStream() )
 			{
 				var helper = new CsvHelper( stream );
 
-				Assert.AreSame( helper.Configuration, helper.Reader.Configuration );
-				Assert.AreSame( helper.Configuration, helper.Reader.Parser.Configuration );
-				Assert.AreSame( helper.Configuration, helper.Writer.Configuration );
+				Assert.Same( helper.Configuration, helper.Reader.Configuration );
+				Assert.Same( helper.Configuration, helper.Reader.Parser.Configuration );
+				Assert.Same( helper.Configuration, helper.Writer.Configuration );
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EnsureReaderAndParserConfigIsSameTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -34,41 +33,41 @@ namespace CsvHelper.Tests
 			{
 				var csvReader = new CsvReader( reader );
 
-				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
+				Assert.Same( csvReader.Configuration, csvReader.Parser.Configuration );
 
 				var config = new CsvConfiguration();
 				var parser = new CsvParser( reader, config );
 				csvReader = new CsvReader( parser );
 
-				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
+				Assert.Same( csvReader.Configuration, csvReader.Parser.Configuration );
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithGenericMethod1()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings, TestClass>();
 
-			Assert.AreEqual( 2, config.Properties.Count );
+			Assert.Equal( 2, config.Properties.Count );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithGenericMethod2()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings>();
 
-			Assert.AreEqual( 2, config.Properties.Count );
+			Assert.Equal( 2, config.Properties.Count );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsFromClassMapInstance()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping( new TestClassMappings() );
 
-			Assert.AreEqual( 2, config.Properties.Count );
+			Assert.Equal( 2, config.Properties.Count );
 		}
 
 		private class TestClass

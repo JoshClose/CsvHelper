@@ -9,14 +9,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
 	public class CsvWriterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteFieldTest()
 		{
 			var stream = new MemoryStream();
@@ -43,10 +42,10 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var data = reader.ReadToEnd();
 
-			Assert.AreEqual( "one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,1,1,1,1," + guid + "\r\n", data );
+			Assert.Equal( "one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,1,1,1,1," + guid + "\r\n", data );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordTest()
 		{
 			var record = new TestRecord
@@ -69,10 +68,10 @@ namespace CsvHelper.Tests
 			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
 			expected += "first column,1,string column,test\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+			Assert.Equal( expected, csvFile );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsTest()
 		{
 			var records = new List<TestRecord>
@@ -106,10 +105,10 @@ namespace CsvHelper.Tests
 			expected += "first column,1,string column,test\r\n";
 			expected += "first column 2,2,string column 2,test\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+			Assert.Equal( expected, csvFile );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordNoHeaderTest()
 		{
 			var stream = new MemoryStream();
@@ -121,10 +120,10 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			Assert.AreEqual( ",0,,test\r\n", csvFile );
+			Assert.Equal( ",0,,test\r\n", csvFile );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordWithNullRecord()
 		{
 			var record = new TestRecord
@@ -151,7 +150,7 @@ namespace CsvHelper.Tests
 			expected += ",,,\r\n";
 			expected += "first column,1,string column,test\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+			Assert.Equal( expected, csvFile );
 		}
 
 		[TypeConverter( "type name" )]
