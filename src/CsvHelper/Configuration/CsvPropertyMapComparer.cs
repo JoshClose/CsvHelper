@@ -46,7 +46,7 @@ namespace CsvHelper.Configuration
 		///                     -or- 
 		///                 <paramref name="x"/> and <paramref name="y"/> are of different types and neither one can handle comparisons with the other. 
 		///                 </exception><filterpriority>2</filterpriority>
-		public int Compare( object x, object y )
+		public virtual int Compare( object x, object y )
 		{
 			var xProperty = x as CsvPropertyMap;
 			var yProperty = y as CsvPropertyMap;
@@ -69,7 +69,7 @@ namespace CsvHelper.Configuration
 		/// <param name="x">The first object to compare.
 		///                 </param><param name="y">The second object to compare.
 		///                 </param>
-		public int Compare( CsvPropertyMap x, CsvPropertyMap y )
+		public virtual int Compare( CsvPropertyMap x, CsvPropertyMap y )
 		{
 			if( x == null )
 			{

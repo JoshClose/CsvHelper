@@ -202,7 +202,7 @@ namespace CsvHelper
 		/// changes, <see cref="ICsvWriter.InvalidateRecordCache{T}"/> needs to be called to updated the
 		/// record cache.
 		/// </summary>
-		public void InvalidateRecordCache<T>() where T : class
+		public virtual void InvalidateRecordCache<T>() where T : class
 		{
 			typeActions.Remove( typeof( T ) );
 		}
@@ -260,7 +260,14 @@ namespace CsvHelper
 				configuration.AttributeMapping<T>();
 			}
 
-			foreach( var property in configuration.Properties )
+			var properties = new CsvPropertyMapCollection();
+			properties.AddRange( configuration.Properties );
+			foreach( var reference in configuration.References )
+			{
+				properties.AddRange( reference.ReferenceProperties );
+			}
+
+			foreach( var property in properties )
 			{
 				if( !property.IgnoreValue )
 				{
@@ -292,7 +299,20 @@ namespace CsvHelper
 					configuration.AttributeMapping<T>();
 				}
 
-				foreach( var propertyMap in configuration.Properties )
+				// Get a list of all the properties so they will
+				// be sorted properly.
+				var properties = new CsvPropertyMapCollection();
+				properties.AddRange( configuration.Properties );
+				foreach( var reference in configuration.References )
+				{
+					properties.AddRange( reference.ReferenceProperties );
+				}
+
+				// A list of expressions that will go inside
+				// the lambda code block.
+				var expressions = new List<Expression>();
+
+				foreach( var propertyMap in properties )
 				{
 					if( propertyMap.IgnoreValue )
 					{
@@ -306,19 +326,38 @@ namespace CsvHelper
 						continue;
 					}
 
-					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
+					// So we don't have to access a modified closure.
+					var propertyMapCopy = propertyMap;
+
+					// Get the reference this property is a part of.
+					var reference = ( from r in configuration.References
+									  from p in r.ReferenceProperties
+									  where p == propertyMapCopy
+									  select r ).SingleOrDefault();
+
+					// Get the current object. Either the param passed in
+					// or a reference property object.
+					var currentRecordObject =
+						reference == null
+							? (Expression)recordParameter
+							: Expression.Property( recordParameter, reference.Property );
+
+					Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.PropertyValue );
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
 					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
 					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 
-					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+					var areEqualExpression = Expression.Equal( currentRecordObject, Expression.Constant( null ) );
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 
-					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
+					var writeFieldMethodCall = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
+					expressions.Add( writeFieldMethodCall );
 				}
+
+				var body = Expression.Block( expressions );
+				func = Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
 
 				typeActions[type] = func;
 			}

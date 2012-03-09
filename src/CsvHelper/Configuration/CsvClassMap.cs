@@ -3,6 +3,8 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 
+using System.Collections.Generic;
+
 namespace CsvHelper.Configuration
 {
 	///<summary>
@@ -10,11 +12,23 @@ namespace CsvHelper.Configuration
 	///</summary>
 	public abstract class CsvClassMap
 	{
-		private readonly CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
+		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
+		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
 
 		/// <summary>
 		/// The class property mappings.
 		/// </summary>
-		public CsvPropertyMapCollection Properties { get { return properties; } }
+		public virtual CsvPropertyMapCollection PropertyMaps
+		{
+			get { return propertyMaps; }
+		}
+
+		/// <summary>
+		/// The class property reference mappings.
+		/// </summary>
+		public virtual List<CsvPropertyReferenceMap> ReferenceMaps
+		{
+			get { return referenceMaps; }
+		}
 	}
 }

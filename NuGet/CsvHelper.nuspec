@@ -2,13 +2,20 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
     <authors>Josh Close</authors>
-    <licenseUrl>http://www.opensource.org/licenses/ms-pl.html</licenseUrl>
-    <projectUrl>http://www.csvhelper.com</projectUrl>
+    <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
+    <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
 	<iconUrl>https://github.com/JoshClose/CsvHelper/raw/develop/logo/Comma-Small.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</description>
-    <tags>csv comma separated value delimited</tags>
+    <tags>csv csvhelper comma separated value delimited</tags>
+    <releaseNotes>
+- Added support for mapping of reference objects.
+- Allow CsvConfiguration to be passed into the constructors of the reader/writer/parser.
+- Breaking changes:
+  - Requires .NET 4 Client Profile now.
+  - The CsvHelper class has been removed. The CsvReader and CsvWriter classes should be used directly instead.
+	</releaseNotes>
   </metadata>
 </package>

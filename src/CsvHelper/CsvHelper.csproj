@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CsvHelper</RootNamespace>
     <AssemblyName>CsvHelper</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
@@ -73,6 +73,8 @@
     <Compile Include="Configuration\CsvFieldAttribute.cs" />
     <Compile Include="Configuration\CsvClassMap.cs" />
     <Compile Include="Configuration\CsvPropertyMap.cs" />
+    <Compile Include="Configuration\CsvPropertyReferenceMap.cs" />
+    <Compile Include="Configuration\CsvPropertyReferenceMap`1.cs" />
     <Compile Include="CsvDuplicateHeaderFieldNameException.cs" />
     <Compile Include="CsvHelper.cs" />
     <Compile Include="CsvHelperException.cs" />

@@ -65,11 +65,38 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
+			expected += "first column,1,test,string column\r\n";
 
 			Assert.Equal( expected, csvFile );
 		}
+
+		[Fact]
+		public void WriteRecordNoIndexesTest()
+		{
+			var record = new TestRecordNoIndexes
+			{
+				IntColumn = 1,
+				StringColumn = "string column",
+				IgnoredColumn = "ignored column",
+				FirstColumn = "first column",
+			};
+
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			var csv = new CsvWriter( writer );
+
+			csv.WriteRecord( record );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+			var expected = "Int Column,StringColumn,FirstColumn,TypeConvertedColumn\r\n";
+			expected += "1,string column,first column,test\r\n";
+
+			Assert.Equal( expected, csvFile );
+		}
+
 
 		[Fact]
 		public void WriteRecordsTest()
@@ -101,9 +128,9 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
-			expected += "first column 2,2,string column 2,test\r\n";
+			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
+			expected += "first column,1,test,string column\r\n";
+			expected += "first column 2,2,test,string column 2\r\n";
 
 			Assert.Equal( expected, csvFile );
 		}
@@ -120,7 +147,7 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			Assert.Equal( ",0,,test\r\n", csvFile );
+			Assert.Equal( ",0,test,\r\n", csvFile );
 		}
 
 		[Fact]
@@ -145,12 +172,53 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = "FirstColumn,Int Column,TypeConvertedColumn,StringColumn\r\n";
+			expected += "first column,1,test,string column\r\n";
 			expected += ",,,\r\n";
-			expected += "first column,1,string column,test\r\n";
+			expected += "first column,1,test,string column\r\n";
 
 			Assert.Equal( expected, csvFile );
+		}
+
+		[Fact]
+		public void WriteRecordWithReferences()
+		{
+			var record = new Person
+			{
+				FirstName = "First Name",
+				LastName = "Last Name",
+				HomeAddress = new Address
+				{
+					Street = "Home Street",
+					City = "Home City",
+					State = "Home State",
+					Zip = "Home Zip",
+				},
+				WorkAddress = new Address
+				{
+					Street = "Work Street",
+					City = "Work City",
+					State = "Work State",
+					Zip = "Work Zip",
+				}
+			};
+
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			var csv = new CsvWriter( writer );
+			csv.Configuration.ClassMapping<PersonMap>();
+
+			csv.WriteRecord( record );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+
+			var expected = "FirstName,LastName,HomeStreet,HomeCity,HomeState,HomeZip,WorkStreet,WorkCity,WorkState,WorkZip\r\n" +
+			               "First Name,Last Name,Home Street,Home City,Home State,Home Zip,Work Street,Work City,Work State,Work Zip\r\n";
+
+			Assert.Equal( expected, csvFile );
+
 		}
 
 		[TypeConverter( "type name" )]
@@ -173,6 +241,25 @@ namespace CsvHelper.Tests
 			public string TypeConvertedColumn { get; set; }
 		}
 
+		private class TestRecordNoIndexes
+		{
+			[CsvField( Name = "Int Column" )]
+			[TypeConverter( typeof( Int32Converter ) )]
+			public int IntColumn { get; set; }
+
+			[TypeConverter( "String" )]
+			public string StringColumn { get; set; }
+
+			[CsvField( Ignore = true )]
+			public string IgnoredColumn { get; set; }
+
+			[CsvField]
+			public string FirstColumn { get; set; }
+
+			[TypeConverter( typeof( TestTypeConverter ) )]
+			public string TypeConvertedColumn { get; set; }
+		}
+
 		private class TestTypeConverter : TypeConverter
 		{
 			public override object ConvertTo( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType )
@@ -180,5 +267,61 @@ namespace CsvHelper.Tests
 				return "test";
 			}
 		}
+
+		private class Person
+		{
+			public string FirstName { get; set; }
+
+			public string LastName { get; set; }
+
+			public Address HomeAddress { get; set; }
+
+			public Address WorkAddress { get; set; }
+		}
+
+		private class Address
+		{
+			public string Street { get; set; }
+
+			public string City { get; set; }
+
+			public string State { get; set; }
+
+			public string Zip { get; set; }
+		}
+
+		private sealed class PersonMap : CsvClassMap<Person>
+		{
+			public PersonMap()
+			{
+				Map( m => m.FirstName );
+				Map( m => m.LastName );
+				References<HomeAddressMap>( m => m.HomeAddress );
+				References<WorkAddressMap>( m => m.WorkAddress );
+			}
+		}
+
+		private sealed class HomeAddressMap : CsvClassMap<Address>
+		{
+			public HomeAddressMap()
+			{
+				Map( m => m.Street ).Name( "HomeStreet" );
+				Map( m => m.City ).Name( "HomeCity" );
+				Map( m => m.State ).Name( "HomeState" );
+				Map( m => m.Zip ).Name( "HomeZip" );
+			}
+		}
+
+		private sealed class WorkAddressMap : CsvClassMap<Address>
+		{
+			public WorkAddressMap()
+			{
+				Map( m => m.Street ).Name( "WorkStreet" );
+				Map( m => m.City ).Name( "WorkCity" );
+				Map( m => m.State ).Name( "WorkState" );
+				Map( m => m.Zip ).Name( "WorkZip" );
+			}
+		}
+
 	}
 }

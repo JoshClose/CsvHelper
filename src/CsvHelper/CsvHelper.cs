@@ -21,7 +21,7 @@ namespace CsvHelper
 		/// <summary>
 		/// The configuration used for reading and writing CSV files.
 		/// </summary>
-		public CsvConfiguration Configuration
+		public virtual CsvConfiguration Configuration
 		{
 			get { return configuration; }
 		}
@@ -29,7 +29,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Reads data from a CSV file.
 		/// </summary>
-		public ICsvReader Reader
+		public virtual ICsvReader Reader
 		{
 			get
 			{
@@ -44,7 +44,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes data to a CSV file.
 		/// </summary>
-		public ICsvWriter Writer
+		public virtual ICsvWriter Writer
 		{
 			get
 			{

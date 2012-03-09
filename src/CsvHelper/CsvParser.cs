@@ -32,7 +32,10 @@ namespace CsvHelper
 			get { return configuration; }
 		}
 
-		public int FieldCount { get; protected set; }
+		/// <summary>
+		/// Gets the field count.
+		/// </summary>
+		public virtual int FieldCount { get; protected set; }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
@@ -144,7 +147,11 @@ namespace CsvHelper
 			}
 		}
 
-		protected string[] ReadLine()
+		/// <summary>
+		/// Reads the line.
+		/// </summary>
+		/// <returns></returns>
+		protected virtual string[] ReadLine()
 		{
 			string field = null;
 			var fieldStartPosition = readerBufferPosition;

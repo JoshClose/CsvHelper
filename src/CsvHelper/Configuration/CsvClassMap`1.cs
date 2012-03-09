@@ -17,12 +17,41 @@ namespace CsvHelper.Configuration
 		/// Maps a property to a CSV field.
 		/// </summary>
 		/// <param name="expression">The property to map.</param>
-		protected CsvPropertyMap Map( Expression<Func<T, object>> expression )
+		/// <returns>The property mapping.</returns>
+		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 			var propertyMap = new CsvPropertyMap( property );
-			Properties.Add( propertyMap );
+			this.PropertyMaps.Add( propertyMap );
 			return propertyMap;
+		}
+
+		/// <summary>
+		/// Referenceses the specified expression.
+		/// </summary>
+		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
+		/// <param name="expression">The expression.</param>
+		/// <returns>The reference mapping for the property.</returns>
+		protected virtual CsvPropertyReferenceMap<TClassMap> References<TClassMap>( Expression<Func<T, object>> expression ) where TClassMap : CsvClassMap
+		{
+			var property = ReflectionHelper.GetProperty( expression );
+			var reference = new CsvPropertyReferenceMap<TClassMap>( property );
+			ReferenceMaps.Add( reference );
+			return reference;
+		}
+
+		/// <summary>
+		/// Referenceses the specified type.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <param name="expression">The expression.</param>
+		/// <returns>The reference mapping for the property</returns>
+		protected virtual CsvPropertyReferenceMap References( Type type, Expression<Func<T, object>> expression )
+		{
+			var property = ReflectionHelper.GetProperty( expression );
+			var reference = new CsvPropertyReferenceMap( type, property );
+			ReferenceMaps.Add( reference );
+			return reference;
 		}
 	}
 }

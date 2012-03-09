@@ -18,19 +18,19 @@ namespace CsvHelper.Tests
 		{
 			var map = new TestMappingDefaultClass();
 
-			Assert.Equal( 3, map.Properties.Count );
+			Assert.Equal( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( "GuidColumn", map.Properties[0].NameValue );
-			Assert.Equal( -1, map.Properties[0].IndexValue );
-			Assert.Equal( typeof( GuidConverter ), map.Properties[0].TypeConverterValue.GetType() );
+			Assert.Equal( "GuidColumn", map.PropertyMaps[0].NameValue );
+			Assert.Equal( -1, map.PropertyMaps[0].IndexValue );
+			Assert.Equal( typeof( GuidConverter ), map.PropertyMaps[0].TypeConverterValue.GetType() );
 
-			Assert.Equal( "IntColumn", map.Properties[1].NameValue );
-			Assert.Equal( -1, map.Properties[1].IndexValue );
-			Assert.Equal( typeof( Int32Converter ), map.Properties[1].TypeConverterValue.GetType() );
+			Assert.Equal( "IntColumn", map.PropertyMaps[1].NameValue );
+			Assert.Equal( -1, map.PropertyMaps[1].IndexValue );
+			Assert.Equal( typeof( Int32Converter ), map.PropertyMaps[1].TypeConverterValue.GetType() );
 
-			Assert.Equal( "StringColumn", map.Properties[2].NameValue );
-			Assert.Equal( -1, map.Properties[2].IndexValue );
-			Assert.Equal( typeof( StringConverter ), map.Properties[2].TypeConverterValue.GetType() );
+			Assert.Equal( "StringColumn", map.PropertyMaps[2].NameValue );
+			Assert.Equal( -1, map.PropertyMaps[2].IndexValue );
+			Assert.Equal( typeof( StringConverter ), map.PropertyMaps[2].TypeConverterValue.GetType() );
 		}
 
 		[Fact]
@@ -38,11 +38,11 @@ namespace CsvHelper.Tests
 		{
 			var map = new TestMappingNameClass();
 
-			Assert.Equal( 3, map.Properties.Count );
+			Assert.Equal( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( "Guid Column", map.Properties[0].NameValue );
-			Assert.Equal( "Int Column", map.Properties[1].NameValue );
-			Assert.Equal( "String Column", map.Properties[2].NameValue );
+			Assert.Equal( "Guid Column", map.PropertyMaps[0].NameValue );
+			Assert.Equal( "Int Column", map.PropertyMaps[1].NameValue );
+			Assert.Equal( "String Column", map.PropertyMaps[2].NameValue );
 		}
 
 		[Fact]
@@ -50,11 +50,11 @@ namespace CsvHelper.Tests
 		{
 			var map = new TestMappingIndexClass();
 
-			Assert.Equal( 3, map.Properties.Count );
+			Assert.Equal( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( 3, map.Properties[0].IndexValue );
-			Assert.Equal( 2, map.Properties[1].IndexValue );
-			Assert.Equal( 1, map.Properties[2].IndexValue );
+			Assert.Equal( 3, map.PropertyMaps[0].IndexValue );
+			Assert.Equal( 2, map.PropertyMaps[1].IndexValue );
+			Assert.Equal( 1, map.PropertyMaps[2].IndexValue );
 		}
 
 		[Fact]
@@ -62,11 +62,11 @@ namespace CsvHelper.Tests
 		{
 			var map = new TestMappingIngoreClass();
 
-			Assert.Equal( 3, map.Properties.Count );
+			Assert.Equal( 3, map.PropertyMaps.Count );
 
-			Assert.True( map.Properties[0].IgnoreValue );
-			Assert.False( map.Properties[1].IgnoreValue );
-			Assert.True( map.Properties[2].IgnoreValue );
+			Assert.True( map.PropertyMaps[0].IgnoreValue );
+			Assert.False( map.PropertyMaps[1].IgnoreValue );
+			Assert.True( map.PropertyMaps[2].IgnoreValue );
 		}
 
 		[Fact]
@@ -74,11 +74,11 @@ namespace CsvHelper.Tests
 		{
 			var map = new TestMappingTypeConverterClass();
 
-			Assert.Equal( 3, map.Properties.Count );
+			Assert.Equal( 3, map.PropertyMaps.Count );
 
-			Assert.IsType<Int16Converter>( map.Properties[0].TypeConverterValue );
-			Assert.IsType<StringConverter>( map.Properties[1].TypeConverterValue );
-			Assert.IsType<Int64Converter>( map.Properties[2].TypeConverterValue );
+			Assert.IsType<Int16Converter>( map.PropertyMaps[0].TypeConverterValue );
+			Assert.IsType<StringConverter>( map.PropertyMaps[1].TypeConverterValue );
+			Assert.IsType<Int64Converter>( map.PropertyMaps[2].TypeConverterValue );
 		}
 
 		private class TestClass

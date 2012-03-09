@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -30,6 +31,19 @@ namespace CsvHelper
 				attribute = attributes[0] as T;
 			}
 			return attribute;
+		}
+
+		/// <summary>
+		/// Gets the attributes of type T on property.
+		/// </summary>
+		/// <typeparam name="T">Type of attribute to get.</typeparam>
+		/// <param name="property">The <see cref="PropertyInfo" /> to get the attribute from.</param>
+		/// <param name="inherit">True to search inheritance tree, otherwise false.</param>
+		/// <returns>The attributes of type T.</returns>
+		public static T[] GetAttributes<T>( PropertyInfo property, bool inherit ) where T : Attribute
+		{
+			var attributes = property.GetCustomAttributes( typeof( T ), inherit );
+			return attributes.Cast<T>().ToArray();
 		}
 
 		/// <summary>
@@ -63,6 +77,13 @@ namespace CsvHelper
 			return (PropertyInfo)GetMemberExpression( expression ).Member;
 		}
 
+		/// <summary>
+		/// Gets the member expression.
+		/// </summary>
+		/// <typeparam name="TModel">The type of the model.</typeparam>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="expression">The expression.</param>
+		/// <returns></returns>
 		private static MemberExpression GetMemberExpression<TModel, T>( Expression<Func<TModel, T>> expression )
 		{
 			// This method was taken from FluentNHibernate.Utils.ReflectionHelper.cs and modified.

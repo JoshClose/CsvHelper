@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CsvHelper.Configuration
 {
@@ -14,73 +15,188 @@ namespace CsvHelper.Configuration
 	{
 		private readonly List<CsvPropertyMap> list = new List<CsvPropertyMap>();
 
-		public IEnumerator<CsvPropertyMap> GetEnumerator()
+		/// <summary>
+		/// Returns an enumerator that iterates through the collection.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.
+		/// </returns>
+		/// <filterpriority>1</filterpriority>
+		public virtual IEnumerator<CsvPropertyMap> GetEnumerator()
 		{
 			return list.GetEnumerator();
 		}
 
+		/// <summary>
+		/// Returns an enumerator that iterates through a collection.
+		/// </summary>
+		/// <returns>
+		/// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
+		/// </returns>
+		/// <filterpriority>2</filterpriority>
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
 
-		public void Add( CsvPropertyMap item )
+		/// <summary>
+		/// Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </summary>
+		/// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+		///                 </exception>
+		public virtual void Add( CsvPropertyMap item )
 		{
 			list.Add( item );
 
 			// Always keep the list sorted.
-			if( item.IndexValue > -1 )
+			if( list.Any( i => item.IndexValue > -1 ) )
 			{
 				list.Sort( new CsvPropertyMapComparer( false ) );
 			}
 		}
 
-		public void Clear()
+		/// <summary>
+		/// Adds a range of items to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </summary>
+		/// <param name="collection">The collection to add.</param>
+		public virtual void AddRange( ICollection<CsvPropertyMap> collection )
+		{
+			list.AddRange( collection );
+			if( list.Any( c => c.IndexValue > -1 ) )
+			{
+				list.Sort( new CsvPropertyMapComparer( false ) );
+			}
+		}
+
+		/// <summary>
+		/// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </summary>
+		/// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only. 
+		///                 </exception>
+		public virtual void Clear()
 		{
 			list.Clear();
 		}
 
-		public bool Contains( CsvPropertyMap item )
+		/// <summary>
+		/// Determines whether the <see cref="T:System.Collections.Generic.ICollection`1"/> contains a specific value.
+		/// </summary>
+		/// <returns>
+		/// true if <paramref name="item"/> is found in the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false.
+		/// </returns>
+		/// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		///                 </param>
+		public virtual bool Contains( CsvPropertyMap item )
 		{
 			return list.Contains( item );
 		}
 
-		public void CopyTo( CsvPropertyMap[] array, int arrayIndex )
+		/// <summary>
+		/// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
+		/// </summary>
+		/// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.
+		///                 </param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.
+		///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.
+		///                 </exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.
+		///                 </exception><exception cref="T:System.ArgumentException"><paramref name="array"/> is multidimensional.
+		///                     -or-
+		///                 <paramref name="arrayIndex"/> is equal to or greater than the length of <paramref name="array"/>.
+		///                     -or-
+		///                     The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
+		///                     -or-
+		///                     Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
+		///                 </exception>
+		public virtual void CopyTo( CsvPropertyMap[] array, int arrayIndex )
 		{
 			list.CopyTo( array, arrayIndex );
 		}
 
-		public bool Remove( CsvPropertyMap item )
+		/// <summary>
+		/// Removes the first occurrence of a specific object from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </summary>
+		/// <returns>
+		/// true if <paramref name="item"/> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1"/>; otherwise, false. This method also returns false if <paramref name="item"/> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </returns>
+		/// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+		///                 </exception>
+		public virtual bool Remove( CsvPropertyMap item )
 		{
 			return list.Remove( item );
 		}
 
-		public int Count
+		/// <summary>
+		/// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </summary>
+		/// <returns>
+		/// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </returns>
+		public virtual int Count
 		{
 			get { return list.Count; }
 		}
 
-		public bool IsReadOnly
+		/// <summary>
+		/// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+		/// </summary>
+		/// <returns>
+		/// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
+		/// </returns>
+		public virtual bool IsReadOnly
 		{
 			get { return false; }
 		}
 
-		public int IndexOf( CsvPropertyMap item )
+		/// <summary>
+		/// Determines the index of a specific item in the <see cref="T:System.Collections.Generic.IList`1"/>.
+		/// </summary>
+		/// <returns>
+		/// The index of <paramref name="item"/> if found in the list; otherwise, -1.
+		/// </returns>
+		/// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1"/>.
+		///                 </param>
+		public virtual int IndexOf( CsvPropertyMap item )
 		{
 			return list.IndexOf( item );
 		}
 
-		public void Insert( int index, CsvPropertyMap item )
+		/// <summary>
+		/// Inserts an item to the <see cref="T:System.Collections.Generic.IList`1"/> at the specified index.
+		/// </summary>
+		/// <param name="index">The zero-based index at which <paramref name="item"/> should be inserted.
+		///                 </param><param name="item">The object to insert into the <see cref="T:System.Collections.Generic.IList`1"/>.
+		///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
+		///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
+		///                 </exception>
+		public virtual void Insert( int index, CsvPropertyMap item )
 		{
 			list.Insert( index, item );
 		}
 
-		public void RemoveAt( int index )
+		/// <summary>
+		/// Removes the <see cref="T:System.Collections.Generic.IList`1"/> item at the specified index.
+		/// </summary>
+		/// <param name="index">The zero-based index of the item to remove.
+		///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
+		///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
+		///                 </exception>
+		public virtual void RemoveAt( int index )
 		{
 			list.RemoveAt( index );
 		}
 
-		public CsvPropertyMap this[ int index ]
+		/// <summary>
+		/// Gets or sets the element at the specified index.
+		/// </summary>
+		/// <returns>
+		/// The element at the specified index.
+		/// </returns>
+		/// <param name="index">The zero-based index of the element to get or set.
+		///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
+		///                 </exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
+		///                 </exception>
+		public virtual CsvPropertyMap this[int index]
 		{
 			get { return list[index]; }
 			set { list[index] = value; }

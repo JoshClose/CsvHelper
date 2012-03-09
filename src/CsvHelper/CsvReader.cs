@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq.Expressions;
+using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper
@@ -661,11 +662,10 @@ namespace CsvHelper
 		/// <returns>The function delegate.</returns>
 		protected virtual Func<CsvReader, T> GetReadRecordFunc<T>() where T : class
 		{
-			var type = typeof( T );
-			if( !recordFuncs.ContainsKey( type ) )
+			var recordType = typeof( T );
+			if( !recordFuncs.ContainsKey( recordType ) )
 			{
 				var bindings = new List<MemberBinding>();
-				var recordType = typeof( T );
 				var readerParameter = Expression.Parameter( GetType(), "reader" );
 
 				// If there is no property mappings yet, use attribute mappings.
@@ -674,46 +674,103 @@ namespace CsvHelper
 					configuration.AttributeMapping<T>();
 				}
 
-				foreach( var propertyMap in configuration.Properties )
+				AddPropertyBindings( readerParameter, configuration.Properties, bindings );
+
+				foreach( var referenceMap in configuration.References )
 				{
-					if( propertyMap.IgnoreValue )
-					{
-						// Skip ignored properties.
-						continue;
-					}
-
-					if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertFrom( typeof( string ) ) )
-					{
-						// Skip if the type isn't convertible.
-						continue;
-					}
-
-					var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NameValue ) : propertyMap.IndexValue;
-					if( index == -1 )
-					{
-						// Skip if the index was not found.
-						continue;
-					}
-
-					// Get the field using the field index.
-					var method = GetType().GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
-					Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
-
-					// Convert the field.
-					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var convertMethod = Configuration.UseInvariantCulture ? "ConvertFromInvariantString" : "ConvertFromString";
-					fieldExpression = Expression.Call( typeConverterExpression, convertMethod, null, fieldExpression );
-					fieldExpression = Expression.Convert( fieldExpression, propertyMap.PropertyValue.PropertyType );
-
-					bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
+					var referenceReaderParameter = Expression.Parameter( GetType(), "reader2" );
+					var referenceBindings = new List<MemberBinding>();
+					AddPropertyBindings( referenceReaderParameter, referenceMap.ReferenceProperties, referenceBindings );
+					var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
+					var referenceFunc = Expression.Lambda( referenceBody, referenceReaderParameter );
+					var referenceCompiled = referenceFunc.Compile();
+					var referenceCompiledMethod = referenceCompiled.GetType().GetMethod( "Invoke" );
+					Expression referenceObjectExpression = Expression.Call( Expression.Constant( referenceCompiled ), referenceCompiledMethod, Expression.Constant( this ) );
+					bindings.Add( Expression.Bind( referenceMap.Property, referenceObjectExpression ) );
 				}
+
+				// This is the expression that is built:
+				//
+				// Func<CsvReader, T> func = reader => 
+				// {
+				//	foreach( var propertyMap in configuration.Properties )
+				//	{
+				//		string field = reader[index];
+				//		object converted = TypeConverter.ConvertFromString( field );
+				//		T convertedAsType = converted as T;
+				//		property.Property = convertedAsType;
+				//	}
+				//	
+				//	foreach( var referenceMap in configuration.References )
+				//	{
+				//		Func<CsvReader, referenceMap.Property.PropertyType> func2 = reader2 =>
+				//		{
+				//			foreach( var property in referenceMap.ReferenceProperties )
+				//			{
+				//				string field = reader[index];
+				//				object converted = TypeConverter.ConvertFromString( field );
+				//				T convertedAsType = converted as T;
+				//				property.Property = convertedAsType;
+				//			}
+				//		};
+				//		reference.Property = func2( (CsvReader)this );
+				//	}
+				// };
+				//
+				// The func can then be called:
+				//
+				// func( CsvReader reader );
+				//
 
 				var body = Expression.MemberInit( Expression.New( recordType ), bindings );
 				var func = Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile();
-				recordFuncs[type] = func;
+				recordFuncs[recordType] = func;
 			}
 
-			return (Func<CsvReader, T>)recordFuncs[type];
+			return (Func<CsvReader, T>)recordFuncs[recordType];
+		}
+
+		/// <summary>
+		/// Adds a <see cref="MemberBinding"/> for each property for it's field.
+		/// </summary>
+		/// <param name="readerParameter">The reader parameter.</param>
+		/// <param name="properties">The properties.</param>
+		/// <param name="bindings">The bindings.</param>
+		protected virtual void AddPropertyBindings( ParameterExpression readerParameter, CsvPropertyMapCollection properties, List<MemberBinding> bindings )
+		{
+			foreach( var propertyMap in properties )
+			{
+				if( propertyMap.IgnoreValue )
+				{
+					// Skip ignored properties.
+					continue;
+				}
+
+				if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertFrom( typeof( string ) ) )
+				{
+					// Skip if the type isn't convertible.
+					continue;
+				}
+
+				var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NameValue ) : propertyMap.IndexValue;
+				if( index == -1 )
+				{
+					// Skip if the index was not found.
+					continue;
+				}
+
+				// Get the field using the field index.
+				var method = GetType().GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
+				Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
+
+				// Convert the field.
+				var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
+				var convertMethod = Configuration.UseInvariantCulture ? "ConvertFromInvariantString" : "ConvertFromString";
+				fieldExpression = Expression.Call( typeConverterExpression, convertMethod, null, fieldExpression );
+				fieldExpression = Expression.Convert( fieldExpression, propertyMap.PropertyValue.PropertyType );
+
+				bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
+			}
 		}
 	}
 }

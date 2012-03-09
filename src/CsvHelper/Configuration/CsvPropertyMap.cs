@@ -24,27 +24,27 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the property value.
 		/// </summary>
-		public PropertyInfo PropertyValue { get { return property; } }
+		public virtual PropertyInfo PropertyValue { get { return property; } }
 
 		/// <summary>
 		/// Gets the name value.
 		/// </summary>
-		public string NameValue { get { return name; } }
+		public virtual string NameValue { get { return name; } }
 
 		/// <summary>
 		/// Gets the index value.
 		/// </summary>
-		public int IndexValue { get { return index; } }
+		public virtual int IndexValue { get { return index; } }
 
 		/// <summary>
 		/// Gets the type converter value.
 		/// </summary>
-		public TypeConverter TypeConverterValue { get { return typeConverter; } }
+		public virtual TypeConverter TypeConverterValue { get { return typeConverter; } }
 
 		/// <summary>
 		/// Gets a value indicating whether the field should be ignored.
 		/// </summary>
-		public bool IgnoreValue { get { return ignore; } }
+		public virtual bool IgnoreValue { get { return ignore; } }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
@@ -67,7 +67,7 @@ namespace CsvHelper.Configuration
 		/// the name of the field in the header record.
 		/// </summary>
 		/// <param name="name">The name of the CSV field.</param>
-		public CsvPropertyMap Name( string name )
+		public virtual CsvPropertyMap Name( string name )
 		{
 			this.name = name;
 			return this;
@@ -82,7 +82,7 @@ namespace CsvHelper.Configuration
 		/// indexes.
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
-		public CsvPropertyMap Index( int index )
+		public virtual CsvPropertyMap Index( int index )
 		{
 			this.index = index;
 			return this;
@@ -91,7 +91,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Ignore the property when reading and writing.
 		/// </summary>
-		public CsvPropertyMap Ignore()
+		public virtual CsvPropertyMap Ignore()
 		{
 			ignore = true;
 			return this;
@@ -101,7 +101,7 @@ namespace CsvHelper.Configuration
 		/// Ignore the property when reading and writing.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
-		public CsvPropertyMap Ignore( bool ignore )
+		public virtual CsvPropertyMap Ignore( bool ignore )
 		{
 			this.ignore = ignore;
 			return this;
@@ -112,7 +112,7 @@ namespace CsvHelper.Configuration
 		/// when converting the property to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		public CsvPropertyMap TypeConverter( TypeConverter typeConverter )
+		public virtual CsvPropertyMap TypeConverter( TypeConverter typeConverter )
 		{
 			this.typeConverter = typeConverter;
 			return this;
@@ -124,7 +124,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
-		public CsvPropertyMap TypeConverter<T>() where T : TypeConverter
+		public virtual CsvPropertyMap TypeConverter<T>() where T : TypeConverter
 		{
 			TypeConverter( Activator.CreateInstance<T>() );
 			return this;
