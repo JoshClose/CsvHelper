@@ -16,7 +16,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
-		CsvConfiguration Configuration { get; set; }
+		CsvConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Writes the field to the CSV file.

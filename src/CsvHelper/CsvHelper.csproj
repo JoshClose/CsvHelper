@@ -70,13 +70,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\CsvClassMap`1.cs" />
+    <Compile Include="Configuration\CsvConfigurationException.cs" />
     <Compile Include="Configuration\CsvFieldAttribute.cs" />
     <Compile Include="Configuration\CsvClassMap.cs" />
     <Compile Include="Configuration\CsvPropertyMap.cs" />
     <Compile Include="Configuration\CsvPropertyReferenceMap.cs" />
     <Compile Include="Configuration\CsvPropertyReferenceMap`1.cs" />
     <Compile Include="CsvDuplicateHeaderFieldNameException.cs" />
-    <Compile Include="CsvHelper.cs" />
     <Compile Include="CsvHelperException.cs" />
     <Compile Include="CsvMissingFieldException.cs" />
     <Compile Include="CsvParser.cs" />

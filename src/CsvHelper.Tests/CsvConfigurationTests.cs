@@ -13,19 +13,6 @@ namespace CsvHelper.Tests
 	public class CsvConfigurationTests
 	{
 		[Fact]
-		public void EnsureConfigurationIsSameTest()
-		{
-			using( var stream = new MemoryStream() )
-			{
-				var helper = new CsvHelper( stream );
-
-				Assert.Same( helper.Configuration, helper.Reader.Configuration );
-				Assert.Same( helper.Configuration, helper.Reader.Parser.Configuration );
-				Assert.Same( helper.Configuration, helper.Writer.Configuration );
-			}
-		}
-
-		[Fact]
 		public void EnsureReaderAndParserConfigIsSameTest()
 		{
 			using( var stream = new MemoryStream() )

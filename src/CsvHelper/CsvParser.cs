@@ -25,7 +25,7 @@ namespace CsvHelper
 		private readonly CsvConfiguration configuration;
 
 		/// <summary>
-		/// Gets or sets the configuration.
+		/// Gets the configuration.
 		/// </summary>
 		public virtual CsvConfiguration Configuration
 		{
@@ -49,7 +49,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader"/> with teh CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		internal CsvParser( TextReader reader, CsvConfiguration configuration )
+		public CsvParser( TextReader reader, CsvConfiguration configuration )
 		{
 			if( reader == null )
 			{

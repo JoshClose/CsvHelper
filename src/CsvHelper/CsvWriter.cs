@@ -22,15 +22,14 @@ namespace CsvHelper
 		private TextWriter writer;
 		private bool hasHeaderBeenWritten;
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
-		private CsvConfiguration configuration;
+		private readonly CsvConfiguration configuration;
 
 		/// <summary>
-		/// Gets or sets the configuration.
+		/// Gets the configuration.
 		/// </summary>
 		public virtual CsvConfiguration Configuration
 		{
 			get { return configuration; }
-			set { configuration = value; }
 		}
 
 		/// <summary>
@@ -45,7 +44,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
-		internal CsvWriter( TextWriter writer, CsvConfiguration configuration )
+		public CsvWriter( TextWriter writer, CsvConfiguration configuration )
 		{
 			if( writer == null )
 			{

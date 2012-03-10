@@ -27,7 +27,7 @@ namespace CsvHelper
 		private readonly CsvConfiguration configuration;
 
 		/// <summary>
-		/// Gets or sets the configuration.
+		/// Gets the configuration.
 		/// </summary>
 		public virtual CsvConfiguration Configuration
 		{
@@ -74,7 +74,7 @@ namespace CsvHelper
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
 		/// <see cref="CsvParser"/> as the default parser.
 		/// </summary>
-		/// <param name="reader"></param>
+		/// <param name="reader">The reader.</param>
 		public CsvReader( TextReader reader )
 		{
 			if( reader == null )
@@ -84,6 +84,27 @@ namespace CsvHelper
 
 			configuration = new CsvConfiguration();
 			parser = new CsvParser( reader, configuration );
+		}
+
+		/// <summary>
+		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
+		/// <see cref="CsvConfiguration"/> and <see cref="CsvParser"/> as the default parser.
+		/// </summary>
+		/// <param name="reader">The reader.</param>
+		/// <param name="configuration">The configuration.</param>
+		public CsvReader( TextReader reader, CsvConfiguration configuration )
+		{
+			if( reader == null )
+			{
+				throw new ArgumentNullException( "reader" );
+			}
+			if( configuration == null )
+			{
+				throw new ArgumentNullException( "configuration" );
+			}
+
+			parser = new CsvParser( reader, configuration );
+			this.configuration = configuration;
 		}
 
 		/// <summary>
@@ -98,7 +119,7 @@ namespace CsvHelper
 			}
 			if( parser.Configuration == null )
 			{
-				throw new ArgumentException( "The given parser has no configuration." );
+				throw new CsvConfigurationException( "The given parser has no configuration." );
 			}
 
 			this.parser = parser;
@@ -689,6 +710,10 @@ namespace CsvHelper
 					bindings.Add( Expression.Bind( referenceMap.Property, referenceObjectExpression ) );
 				}
 
+				var body = Expression.MemberInit( Expression.New( recordType ), bindings );
+				var func = Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile();
+				recordFuncs[recordType] = func;
+
 				// This is the expression that is built:
 				//
 				// Func<CsvReader, T> func = reader => 
@@ -721,10 +746,6 @@ namespace CsvHelper
 				//
 				// func( CsvReader reader );
 				//
-
-				var body = Expression.MemberInit( Expression.New( recordType ), bindings );
-				var func = Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile();
-				recordFuncs[recordType] = func;
 			}
 
 			return (Func<CsvReader, T>)recordFuncs[recordType];
