@@ -10,22 +10,14 @@ To install CsvHelper, run the following command in the Package Manager Console
 
     PM> Install-Package CsvHelper
 
-Example
+Documentation
 =======
 
-This is one way of reading a CSV file:
-
-    using( var reader = new CsvReader( new StreamReader( "file.csv" ) ) )
-    {
-        while( reader.Read() )
-        {
-            Console.Write( reader.GetField( 0 ));            
-        }
-    }
-    
-More examples can be found in the src/CsvHelper.Example project or in the Wiki.
+http://github.com/JoshClose/CsvHelper/wiki
 
 License
 =======
 
 Microsoft Public License (Ms-PL)
+
+http://www.opensource.org/licenses/MS-PL
