@@ -24,6 +24,7 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private char comment = '#';
 		private int bufferSize = 2048;
+		private bool isCaseSensitive = true;
 
 		/// <summary>
 		/// Gets the property mappings.
@@ -73,6 +74,17 @@ namespace CsvHelper.Configuration
 		{
 			get { return isStrictMode; }
 			set { isStrictMode = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets a value indicating whether matching header
+		/// column names is case sensitive. True for case sensitive
+		/// matching, otherwise false.
+		/// </summary>
+		public virtual bool IsCaseSensitive
+		{
+			get { return isCaseSensitive; }
+			set { isCaseSensitive = value; }
 		}
 
 		/// <summary>

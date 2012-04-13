@@ -641,6 +641,11 @@ namespace CsvHelper
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
 
+			if( !Configuration.IsCaseSensitive )
+			{
+				name = name.ToLower();
+			}
+
 			if( !namedIndexes.ContainsKey( name ) )
 			{
 				if( configuration.IsStrictMode )
@@ -663,6 +668,10 @@ namespace CsvHelper
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];
+				if( !Configuration.IsCaseSensitive )
+				{
+					name = name.ToLower();
+				}
 				if( namedIndexes.ContainsKey( name ) )
 				{
 					namedIndexes[name].Add( i );

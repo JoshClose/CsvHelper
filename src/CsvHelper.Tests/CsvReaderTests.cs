@@ -666,6 +666,28 @@ namespace CsvHelper.Tests
 			Assert.Equal( new Guid( "33333333-3333-3333-3333-333333333333" ), record.GuidColumn );
 		}
 
+		[Fact]
+		public void CaseInsensitiveHeaderMatching()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "One,Two,Three" );
+				writer.WriteLine( "1,2,3" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.IsCaseSensitive = false;
+				csv.Read();
+
+				Assert.Equal( "1", csv.GetField( "one" ) );
+				Assert.Equal( "2", csv.GetField( "TWO" ) );
+				Assert.Equal( "3", csv.GetField( "ThreE" ) );
+			}
+		}
+
 		private class TestNullable
 		{
 			public int? IntColumn { get; set; }
