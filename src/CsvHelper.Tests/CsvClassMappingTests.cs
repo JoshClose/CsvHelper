@@ -38,11 +38,12 @@ namespace CsvHelper.Tests
 		{
 			var map = new TestMappingNameClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.Equal( 4, map.PropertyMaps.Count );
 
 			Assert.Equal( "Guid Column", map.PropertyMaps[0].NameValue );
 			Assert.Equal( "Int Column", map.PropertyMaps[1].NameValue );
 			Assert.Equal( "String Column", map.PropertyMaps[2].NameValue );
+            Assert.Equal("String Alt Column,StringAltColumn", map.PropertyMaps[3].NameValue);
 		}
 
 		[Fact]
@@ -87,6 +88,7 @@ namespace CsvHelper.Tests
 			public int IntColumn { get; set; }
 			public Guid GuidColumn { get; set; }
 			public string NotUsedColumn { get; set; }
+            public string AltStringColumn { get; set; }
 		}
 
 		private sealed class TestMappingDefaultClass : CsvClassMap<TestClass>
@@ -106,6 +108,7 @@ namespace CsvHelper.Tests
 				Map( m => m.GuidColumn ).Name( "Guid Column" );
 				Map( m => m.IntColumn ).Name( "Int Column" );
 				Map( m => m.StringColumn ).Name( "String Column" );
+                Map(m => m.AltStringColumn).Name("String Alt Column,StringAltColumn");
 			}
 		}
 
