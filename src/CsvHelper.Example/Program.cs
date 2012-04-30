@@ -107,7 +107,7 @@ namespace CsvHelper.Example
 		{
 			Console.WriteLine( "Records with attributes:" );
 
-			using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true ) ) ) )
+            using (var reader = new CsvReader(new StreamReader(GetDataStream(true, true)), new CsvConfiguration { UseAlternativeNames = true}))
 			{
 				while( reader.Read() )
 				{
@@ -340,14 +340,14 @@ namespace CsvHelper.Example
 			if( hasHeader )
 			{
 				var header = hasSpacesInHeaderNames
-				             	? "String Column,Int Column,Guid Column,Custom Type Column"
-				             	: "StringColumn,IntColumn,GuidColumn,CustomTypeColumn";
+                                ? "String Column,Int Column,Guid Column,Custom Type Column,Alt Column"
+                                : "StringColumn,IntColumn,GuidColumn,CustomTypeColumn,AltColumn";
 				writer.WriteLine( header );
 			}
-			writer.WriteLine( "one,1,{0},1|2|3", Guid.NewGuid() );
-			writer.WriteLine( "two,2,{0},4|5|6", Guid.NewGuid() );
-			writer.WriteLine( "\"this, has a comma\",2,{0},7|8|9", Guid.NewGuid() );
-			writer.WriteLine( "\"this has \"\"'s\",4,{0},10|11|12", Guid.NewGuid() );
+			writer.WriteLine( "one,1,{0},1|2|3,alt", Guid.NewGuid() );
+			writer.WriteLine( "two,2,{0},4|5|6,alt", Guid.NewGuid() );
+			writer.WriteLine( "\"this, has a comma\",2,{0},7|8|9,alt", Guid.NewGuid() );
+			writer.WriteLine( "\"this has \"\"'s\",4,{0},10|11|12,alt", Guid.NewGuid() );
 			writer.Flush();
 			stream.Position = 0;
 
@@ -430,6 +430,9 @@ namespace CsvHelper.Example
 
 			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
+
+            [CsvField(Name = "AltColumn,Alt Column")]
+			public string AltNamesColumn { get; set; }
 
 			public override string ToString()
 			{

@@ -25,8 +25,9 @@ namespace CsvHelper.Configuration
 		private char comment = '#';
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
+        private string _alternativeNameDelimiter = ",";
 
-		/// <summary>
+	    /// <summary>
 		/// Gets the property mappings.
 		/// </summary>
 		public virtual CsvPropertyMapCollection Properties
@@ -186,7 +187,27 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual int FieldCount { get; set; }
 
-		/// <summary>
+        /// <summary>
+        /// Gets or sets a value indicating if use alternative names
+        /// for named columns in caption record
+        /// <example>'LastName' or 'Last Name'</example>
+        /// </summary>
+	    public virtual bool UseAlternativeNames { get; set; }
+
+        /// <summary>
+        /// Gets or sets delimiter used to split alternative names in CsvFieldAttribute.Name.
+        /// </summary>
+	    public virtual string AlternativeNameDelimiter
+	    {
+	        get {
+	            return _alternativeNameDelimiter;
+	        }
+	        set {
+	            _alternativeNameDelimiter = value;
+	        }
+	    }
+
+	    /// <summary>
 		/// Maps a property of a class to a CSV field.
 		/// </summary>
 		/// <param name="expression">The property to map.</param>

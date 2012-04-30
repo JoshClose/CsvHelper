@@ -269,17 +269,19 @@ namespace CsvHelper.Tests
                 "IntColumn",
                 "String Column",
                 "GuidColumn",
+                "Alt Name",
             };
 			var recordData = new []
             {
                 "1",
                 "string column",
 				Guid.NewGuid().ToString(),
+				"alt",
             };
 			var isHeaderRecord = true;
 			var mockFactory = new MockRepository( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+            csvParserMock.Setup(m => m.Configuration).Returns(new CsvConfiguration {UseAlternativeNames = true});
 			csvParserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -300,6 +302,8 @@ namespace CsvHelper.Tests
 			Assert.Equal( "test", record.TypeConvertedColumn );
 			Assert.Equal( Convert.ToInt32( recordData[0] ), record.FirstColumn );
 			Assert.Equal( new Guid( recordData[2] ), record.GuidColumn );
+			Assert.Equal( "alt", record.AltName );
+			Assert.Equal( null, record.NoAltName );
 		}
 
 		[Fact]
@@ -717,6 +721,12 @@ namespace CsvHelper.Tests
 			public Guid GuidColumn { get; set; }
 
 			public int NoMatchingFields { get; set; }
+
+            [CsvField(Name = "AltName,Alt Name")]
+			public string AltName { get; set; }
+            
+            [CsvField(Name = "NoAltName,No Alt Name")]
+			public string NoAltName { get; set; }
 		}
 
 		private class TestRecordNoAttributes

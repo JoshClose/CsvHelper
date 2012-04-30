@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq.Expressions;
-using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper
@@ -634,33 +633,69 @@ namespace CsvHelper
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
-		protected virtual int GetFieldIndex( string name, int index = 0 )
+        protected virtual int GetFieldIndex(string name, int index = 0)
 		{
-			if( !configuration.HasHeaderRecord )
-			{
-				throw new CsvReaderException( "There is no header record to determine the index by name." );
-			}
+		    if (!Configuration.HasHeaderRecord)
+		        throw new CsvReaderException("There is no header record to determine the index by name.");
 
-			if( !Configuration.IsCaseSensitive )
-			{
-				name = name.ToLower();
-			}
+		    if (!Configuration.IsCaseSensitive)
+		    {
+		        name = name.ToLower();
+		    }
 
-			if( !namedIndexes.ContainsKey( name ) )
-			{
-				if( configuration.IsStrictMode )
-				{
-					// If we're in strict reading mode and the
-					// named index isn't found, throw an exception.
-					throw new CsvMissingFieldException( string.Format( "Field '{0}' does not exist in the CSV file.", name ) );
-				}
-				return -1;
-			}
+		    var alternativeNameDelimiter = Configuration.AlternativeNameDelimiter;
+		    //use alternative names
+		    if (Configuration.UseAlternativeNames && name.IndexOf(alternativeNameDelimiter, StringComparison.Ordinal) >= 0)
+		    {
+		        string[] names = name.Split(new[] {alternativeNameDelimiter}, StringSplitOptions.RemoveEmptyEntries);
+		        if (names.Length > 1)
+		        {
+                    //alternative names check
+		            foreach (string altName in names)
+		            {
+		                int fieldIndex;
+                        if ((fieldIndex = GetFieldIndexInternal(altName, index, false)) >= 0)
+		                {
+		                    return fieldIndex;
+		                }
+		            }
+                    //return -1 or throw exception
+		            return CheckStrictMode(name, Configuration.IsStrictMode);
+		        }
+		    }
 
-			return namedIndexes[name][index];
+		    return GetFieldIndexInternal(name, index, configuration.IsStrictMode);
 		}
 
-		/// <summary>
+        /// <summary>
+        /// INternally get field index from named indexes
+        /// </summary>
+        /// <param name="name">The name of the field to get the index for.</param>
+        /// <param name="index">The index of the field if there are multiple fields with the same name.</param>
+        /// <param name="isStrictMode">Configuration parameter that determine throw or not exception in case of missing field index</param>
+        /// <returns>The index of the field if found, otherwise -1.</returns>
+	    private int GetFieldIndexInternal(string name, int index, bool isStrictMode)
+	    {
+	        if (!namedIndexes.ContainsKey(name))
+	        {
+	            return CheckStrictMode(name, isStrictMode);
+	        }
+
+	        return namedIndexes[name][index];
+	    }
+
+	    private static int CheckStrictMode(string name, bool isStrictMode)
+	    {
+	        if (isStrictMode)
+	        {
+	            // If we're in strict reading mode and the
+	            // named index isn't found, throw an exception.
+	            throw new CsvMissingFieldException(string.Format("Field '{0}' does not exist in the CSV file.", name));
+	        }
+	        return -1;
+	    }
+
+	    /// <summary>
 		/// Parses the named indexes from the header record.
 		/// </summary>
 		protected virtual void ParseNamedIndexes()
@@ -696,7 +731,8 @@ namespace CsvHelper
 			if( !recordFuncs.ContainsKey( recordType ) )
 			{
 				var bindings = new List<MemberBinding>();
-				var readerParameter = Expression.Parameter( GetType(), "reader" );
+                //CsvReader parameter for using as base class if inhereted
+				var readerParameter = Expression.Parameter( typeof(CsvReader), "reader" );
 
 				// If there is no property mappings yet, use attribute mappings.
 				if( configuration.Properties.Count == 0 )
@@ -802,5 +838,13 @@ namespace CsvHelper
 				bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
 			}
 		}
+
+        /// <summary>
+        /// Return parsed named indexes for inhereted classes
+        /// </summary>
+	    protected Dictionary<string, List<int>> NamedIndexes
+	    {
+	        get { return namedIndexes; }
+	    }
 	}
 }
