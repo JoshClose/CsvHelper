@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a property to a CSV field.
 	/// </summary>
-	[DebuggerDisplay( "Name = {NameValue}, Index = {IndexValue}, Ignore = {IgnoreValue}, Property = {PropertyValue}, TypeConverter = {TypeConverterValue}" )]
+    [DebuggerDisplay("Name = {NameValue}, Index = {IndexValue}, Ignore = {IgnoreValue}, Property = {PropertyValue}, TypeConverter = {TypeConverterValue}, AlternativeNames = {AlternativeNamesValue}")]
 	public class CsvPropertyMap
 	{
 		private readonly PropertyInfo property;
@@ -20,8 +20,10 @@ namespace CsvHelper.Configuration
 		private int index = -1;
 		private TypeConverter typeConverter;
 		private bool ignore;
+	    private string[] alternativeNames;
 
-		/// <summary>
+	    
+	    /// <summary>
 		/// Gets the property value.
 		/// </summary>
 		public virtual PropertyInfo PropertyValue { get { return property; } }
@@ -45,6 +47,14 @@ namespace CsvHelper.Configuration
 		/// Gets a value indicating whether the field should be ignored.
 		/// </summary>
 		public virtual bool IgnoreValue { get { return ignore; } }
+
+        /// <summary>
+        /// Gets a value of alternative names for column
+        /// </summary>
+        public string[] AlternativeNamesValue
+        {
+            get { return alternativeNames; }
+        }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
@@ -129,5 +139,15 @@ namespace CsvHelper.Configuration
 			TypeConverter( Activator.CreateInstance<T>() );
 			return this;
 		}
+
+        /// <summary>
+        /// Specify alternative names for column used in reading.
+        /// </summary>
+        /// <param name="alternativeNames">Array of alternative names for CSV column.</param>
+	    public virtual CsvPropertyMap AlternativeNames(params string[] alternativeNames)
+	    {
+	        this.alternativeNames = alternativeNames;
+	        return this;
+	    }
 	}
 }

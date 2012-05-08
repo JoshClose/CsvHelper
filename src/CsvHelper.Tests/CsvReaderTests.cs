@@ -269,17 +269,19 @@ namespace CsvHelper.Tests
                 "IntColumn",
                 "String Column",
                 "GuidColumn",
+                "Alt Name",
             };
 			var recordData = new []
             {
                 "1",
                 "string column",
 				Guid.NewGuid().ToString(),
+				"alt",
             };
 			var isHeaderRecord = true;
 			var mockFactory = new MockRepository( MockBehavior.Default );
 			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+            csvParserMock.Setup(m => m.Configuration).Returns(new CsvConfiguration());
 			csvParserMock.Setup( m => m.Read() ).Returns( () =>
 			{
 				if( isHeaderRecord )
@@ -300,6 +302,8 @@ namespace CsvHelper.Tests
 			Assert.Equal( "test", record.TypeConvertedColumn );
 			Assert.Equal( Convert.ToInt32( recordData[0] ), record.FirstColumn );
 			Assert.Equal( new Guid( recordData[2] ), record.GuidColumn );
+			Assert.Equal( "alt", record.AltName );
+			Assert.Equal( null, record.NoAltName );
 		}
 
 		[Fact]
@@ -683,10 +687,36 @@ namespace CsvHelper.Tests
 				csv.Read();
 
 				Assert.Equal( "1", csv.GetField( "one" ) );
-				Assert.Equal( "2", csv.GetField( "TWO" ) );
+				Assert.Equal( "2", csv.GetField( "TwO" ) );
 				Assert.Equal( "3", csv.GetField( "ThreE" ) );
 			}
 		}
+
+        [Fact]
+        public void CaseInsensitiveAltNamesHeaderMatching()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var csv = new CsvReader(reader))
+            {
+                writer.WriteLine("One,Two,Three");
+                writer.WriteLine("1,2,3");
+                writer.Flush();
+                stream.Position = 0;
+
+                csv.Configuration.IsCaseSensitive = false;
+                csv.Configuration.IsStrictMode = true;
+                csv.Configuration.ClassMapping<TestNullableMap>();
+
+                csv.Read();
+                var record = csv.GetRecord<TestNullable>();
+
+                Assert.NotNull(record);
+                Assert.Equal("1", record.StringColumn);
+                Assert.Equal(2, record.IntColumn);
+            }
+        }
 
 		private class TestNullable
 		{
@@ -695,31 +725,39 @@ namespace CsvHelper.Tests
 			public Guid? GuidColumn { get; set; }
 		}
 
-		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
-		private class TestRecord
-		{
-			[TypeConverter( typeof( Int32Converter ) )]
-			public int IntColumn { get; set; }
+	    [DebuggerDisplay(
+	        "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}"
+	        )]
+	    private class TestRecord
+	    {
+	        [TypeConverter(typeof (Int32Converter))]
+	        public int IntColumn { get; set; }
 
-			[CsvField( Name = "String Column" )]
-			public string StringColumn { get; set; }
+	        [CsvField(Name = "String Column")]
+	        public string StringColumn { get; set; }
 
-			[CsvField( Ignore = true )]
-			public string IgnoredColumn { get; set; }
+	        [CsvField(Ignore = true)]
+	        public string IgnoredColumn { get; set; }
 
-			[CsvField( Index = 1 )]
-			[TypeConverter( typeof( TestTypeConverter ) )]
-			public string TypeConvertedColumn { get; set; }
+	        [CsvField(Index = 1)]
+	        [TypeConverter(typeof (TestTypeConverter))]
+	        public string TypeConvertedColumn { get; set; }
 
-			[CsvField( Index = 0 )]
-			public int FirstColumn { get; set; }
+	        [CsvField(Index = 0)]
+	        public int FirstColumn { get; set; }
 
-			public Guid GuidColumn { get; set; }
+	        public Guid GuidColumn { get; set; }
 
-			public int NoMatchingFields { get; set; }
-		}
+	        public int NoMatchingFields { get; set; }
 
-		private class TestRecordNoAttributes
+	        [CsvField(Name = "AltName", AlternativeNames = new[] {"Alt Name Column", "Alt Name"})]
+	        public string AltName { get; set; }
+
+	        [CsvField(Name = "NoAltName")]
+	        public string NoAltName { get; set; }
+	    }
+
+	    private class TestRecordNoAttributes
 		{
 			public int IntColumn { get; set; }
 
@@ -762,5 +800,14 @@ namespace CsvHelper.Tests
 				return sourceType == typeof( string );
 			}
 		}
+
+	    private sealed class TestNullableMap : CsvClassMap<TestNullable>
+	    {
+	        public TestNullableMap()
+	        {
+	            Map(_ => _.StringColumn).Name("one").AlternativeNames("One");
+	            Map(_ => _.IntColumn).Name("2").AlternativeNames("tWo");
+	        }
+	    }
 	}
 }
