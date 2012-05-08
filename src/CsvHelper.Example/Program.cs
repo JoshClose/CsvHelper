@@ -107,7 +107,7 @@ namespace CsvHelper.Example
 		{
 			Console.WriteLine( "Records with attributes:" );
 
-            using (var reader = new CsvReader(new StreamReader(GetDataStream(true, true)), new CsvConfiguration { UseAlternativeNames = true}))
+            using (var reader = new CsvReader(new StreamReader(GetDataStream(true, true)), new CsvConfiguration()))
 			{
 				while( reader.Read() )
 				{
@@ -431,7 +431,7 @@ namespace CsvHelper.Example
 			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
-            [CsvField(Name = "AltColumn,Alt Column")]
+            [CsvField(Name = "AltColumn", AlternativeNames = new[] { "Alt Column" })]
 			public string AltNamesColumn { get; set; }
 
 			public override string ToString()

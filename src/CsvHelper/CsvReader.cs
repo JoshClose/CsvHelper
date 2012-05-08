@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using CsvHelper.Configuration;
 
@@ -625,49 +626,51 @@ namespace CsvHelper
 			return GetField( fieldIndex, converter );
 		}
 
-		/// <summary>
-		/// Gets the index of the field at name if found.
-		/// </summary>
-		/// <param name="name">The name of the field to get the index for.</param>
-		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
-		/// <returns>The index of the field if found, otherwise -1.</returns>
-		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
-		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
-        protected virtual int GetFieldIndex(string name, int index = 0)
-		{
-		    if (!Configuration.HasHeaderRecord)
-		        throw new CsvReaderException("There is no header record to determine the index by name.");
+	    /// <summary>
+	    /// Gets the index of the field at name if found.
+	    /// </summary>
+	    /// <param name="name">The name of the field to get the index for.</param>
+	    /// <param name="index">The index of the field if there are multiple fields with the same name.</param>
+	    /// <param name="alternativeNames">Array of alternative names for column.</param>
+	    /// <returns>The index of the field if found, otherwise -1.</returns>
+	    /// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
+	    /// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
+        protected virtual int GetFieldIndex(string name, int index = 0, string[] alternativeNames = null)
+	    {
+	        if (!Configuration.HasHeaderRecord)
+	            throw new CsvReaderException("There is no header record to determine the index by name.");
 
-		    if (!Configuration.IsCaseSensitive)
-		    {
-		        name = name.ToLower();
-		    }
+	        if (!Configuration.IsCaseSensitive)
+	        {
+	            name = name.ToLower();
+	        }
 
-		    var alternativeNameDelimiter = Configuration.AlternativeNameDelimiter;
-		    //use alternative names
-		    if (Configuration.UseAlternativeNames && name.IndexOf(alternativeNameDelimiter, StringComparison.Ordinal) >= 0)
-		    {
-		        string[] names = name.Split(new[] {alternativeNameDelimiter}, StringSplitOptions.RemoveEmptyEntries);
-		        if (names.Length > 1)
-		        {
-                    //alternative names check
-		            foreach (string altName in names)
-		            {
-		                int fieldIndex;
-                        if ((fieldIndex = GetFieldIndexInternal(altName, index, false)) >= 0)
-		                {
-		                    return fieldIndex;
-		                }
-		            }
-                    //return -1 or throw exception
-		            return CheckStrictMode(name, Configuration.IsStrictMode);
-		        }
-		    }
+	        //use alternative names
+	        if (alternativeNames != null)
+	        {
+	            var names = Enumerable.Repeat(name, 1).Concat(alternativeNames).ToList();
+	            if (names.Count > 1)
+	            {
+	                //alternative names check
+	                for (var ind = 0; ind < names.Count; ind++)
+	                {
+	                    var altName = !Configuration.IsCaseSensitive ? names[ind].ToLower() : names[ind];
 
-		    return GetFieldIndexInternal(name, index, configuration.IsStrictMode);
-		}
+	                    int fieldIndex;
+	                    if ((fieldIndex = GetFieldIndexInternal(altName, index, false)) >= 0)
+	                    {
+	                        return fieldIndex;
+	                    }
+	                }
+	                //return -1 or throw exception
+	                return CheckStrictMode(name, Configuration.IsStrictMode);
+	            }
+	        }
 
-        /// <summary>
+	        return GetFieldIndexInternal(name, index, configuration.IsStrictMode);
+	    }
+
+	    /// <summary>
         /// INternally get field index from named indexes
         /// </summary>
         /// <param name="name">The name of the field to get the index for.</param>
@@ -818,7 +821,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NameValue ) : propertyMap.IndexValue;
+                var index = propertyMap.IndexValue < 0 ? GetFieldIndex(propertyMap.NameValue, 0, propertyMap.AlternativeNamesValue) : propertyMap.IndexValue;
 				if( index == -1 )
 				{
 					// Skip if the index was not found.

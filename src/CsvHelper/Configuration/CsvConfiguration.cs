@@ -25,7 +25,6 @@ namespace CsvHelper.Configuration
 		private char comment = '#';
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
-        private string _alternativeNameDelimiter = ",";
 
 	    /// <summary>
 		/// Gets the property mappings.
@@ -187,41 +186,21 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual int FieldCount { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating if use alternative names
-        /// for named columns in caption record
-        /// <example>'LastName' or 'Last Name'</example>
-        /// </summary>
-	    public virtual bool UseAlternativeNames { get; set; }
-
-        /// <summary>
-        /// Gets or sets delimiter used to split alternative names in CsvFieldAttribute.Name.
-        /// </summary>
-	    public virtual string AlternativeNameDelimiter
-	    {
-	        get {
-	            return _alternativeNameDelimiter;
-	        }
-	        set {
-	            _alternativeNameDelimiter = value;
-	        }
-	    }
-
 	    /// <summary>
 		/// Maps a property of a class to a CSV field.
 		/// </summary>
 		/// <param name="expression">The property to map.</param>
-		public virtual CsvPropertyMap PropertyMap<T>( Expression<Func<T, object>> expression )
+		public virtual CsvPropertyMap GetPropertyMap<T>( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-			return PropertyMap( property );
+			return GetPropertyMap( property );
 		}
 
 		/// <summary>
 		/// Maps a property of a class to a CSV field.
 		/// </summary>
 		/// <param name="property">The property to map.</param>
-		public virtual CsvPropertyMap PropertyMap( PropertyInfo property )
+		public virtual CsvPropertyMap GetPropertyMap( PropertyInfo property )
 		{
 			return new CsvPropertyMap( property );
 		}
@@ -231,7 +210,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="expression">The expression.</param>
 		/// <returns></returns>
-		public virtual CsvPropertyReferenceMap ReferenceMap<T>( Expression<Func<T, object>> expression )
+		public virtual CsvPropertyReferenceMap GetReferenceMap<T>( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 			return new CsvPropertyReferenceMap( property );
@@ -242,7 +221,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="property">The property.</param>
 		/// <returns></returns>
-		public virtual CsvPropertyReferenceMap ReferenceMap( PropertyInfo property )
+		public virtual CsvPropertyReferenceMap GetReferenceMap( PropertyInfo property )
 		{
 			return new CsvPropertyReferenceMap( property );
 		}
@@ -303,9 +282,10 @@ namespace CsvHelper.Configuration
 					CsvPropertyMap map;
 					if( csvFieldAttribute != null )
 					{
-						map = PropertyMap( property )
+						map = GetPropertyMap( property )
 							.Ignore( csvFieldAttribute.Ignore )
-							.Index( csvFieldAttribute.Index );
+                            .Index(csvFieldAttribute.Index)
+                            .AlternativeNames(csvFieldAttribute.AlternativeNames);
 						if( csvFieldAttribute.Name != null )
 						{
 							map.Name( csvFieldAttribute.Name );
@@ -314,7 +294,7 @@ namespace CsvHelper.Configuration
 					else
 					{
 						// Use defaults.
-						map = PropertyMap( property );
+						map = GetPropertyMap( property );
 					}
 					var typeConverter = ReflectionHelper.GetTypeConverterFromAttribute( property );
 					if( typeConverter != null )
@@ -326,7 +306,7 @@ namespace CsvHelper.Configuration
 				else
 				{
 					// This is a reference mapping.
-					var refMap = ReferenceMap( property );
+					var refMap = GetReferenceMap( property );
 					references.Add( refMap );
 					var refProps = property.PropertyType.GetProperties( PropertyBindingFlags );
 					foreach( var refProp in refProps )
@@ -336,7 +316,7 @@ namespace CsvHelper.Configuration
 						CsvPropertyMap map;
 						if( refCsvFieldAttribute != null )
 						{
-							map = PropertyMap( refProp )
+							map = GetPropertyMap( refProp )
 								.Ignore( refCsvFieldAttribute.Ignore )
 								.Index( refCsvFieldAttribute.Index );
 							if( refCsvFieldAttribute.Name != null )
@@ -347,7 +327,7 @@ namespace CsvHelper.Configuration
 						else
 						{
 							// Use defaults.
-							map = PropertyMap( refProp );
+							map = GetPropertyMap( refProp );
 						}
 						var typeConverter = ReflectionHelper.GetTypeConverterFromAttribute( refProp );
 						if( typeConverter != null )

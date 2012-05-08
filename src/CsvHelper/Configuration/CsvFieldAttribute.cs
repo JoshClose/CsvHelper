@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration
 	/// Used to set behavior of a field when
 	/// reading a writing a CSV file.
 	/// </summary>
-	[DebuggerDisplay( "Index = {Index}, Name = {Name}, Ignore = {Ignore}, ReferenceKey = {ReferenceKey}" )]
+    [DebuggerDisplay("Index = {Index}, Name = {Name}, Ignore = {Ignore}, ReferenceKey = {ReferenceKey}, AlternativeNames = {AlternativeNames}")]
 	[AttributeUsage( AttributeTargets.Property, AllowMultiple = true )]
 	public class CsvFieldAttribute : Attribute
 	{
@@ -51,5 +51,11 @@ namespace CsvHelper.Configuration
 		/// The key.
 		/// </value>
 		public virtual string ReferenceKey { get; set; }
+
+        /// <summary>
+        /// When reading, is used as alternative names to get the field
+        /// at the index of the name if there was a header specified.
+        /// </summary>
+	    public virtual string[] AlternativeNames { get; set; }
 	}
 }
