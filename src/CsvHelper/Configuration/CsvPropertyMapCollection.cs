@@ -50,7 +50,7 @@ namespace CsvHelper.Configuration
 			list.Add( item );
 
 			// Always keep the list sorted.
-			if( list.Any( i => item.IndexValue > -1 ) )
+			if( list.Any( i => i.IndexValue > -1 ) )
 			{
 				list.Sort( new CsvPropertyMapComparer( false ) );
 			}

@@ -210,6 +210,7 @@ namespace CsvHelper
 		/// <returns>A value indicating if the get was successful.</returns>
 		bool TryGetField<T>( string name, int index, TypeConverter converter, out T field );
 
+#if !NET_2_0
 		/// <summary>
 		/// Gets the record converted into <see cref="Type"/> T.
 		/// </summary>
@@ -234,5 +235,6 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		void InvalidateRecordCache<T>() where T : class;
+#endif
 	}
 }

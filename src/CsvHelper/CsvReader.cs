@@ -6,9 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+#if !NET_2_0
 using System.Linq.Expressions;
-using System.Reflection;
+#endif
 using CsvHelper.Configuration;
+#if NET_2_0
+using CsvHelper.MissingFrom20;
+#endif
 
 namespace CsvHelper
 {
@@ -23,7 +27,9 @@ namespace CsvHelper
 		private string[] headerRecord;
 		private ICsvParser parser;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
+#if !NET_2_0
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
+#endif
 		private readonly CsvConfiguration configuration;
 
 		/// <summary>
@@ -419,7 +425,11 @@ namespace CsvHelper
 			// returning null, so we need to handle this special case.
 			if( converter is DateTimeConverter )
 			{
+#if NET_2_0
+				if( StringHelper.IsNullOrWhiteSpace( currentRecord[index] ) )
+#else
 				if( currentRecord[index].IsNullOrWhiteSpace() )
+#endif
 				{
 					field = default( T );
 					return false;
@@ -488,6 +498,7 @@ namespace CsvHelper
 			return TryGetField( index, converter, out field );
 		}
 
+#if !NET_2_0
 		/// <summary>
 		/// Gets the record converted into <see cref="Type"/> T.
 		/// </summary>
@@ -529,6 +540,7 @@ namespace CsvHelper
 		{
 			recordFuncs.Remove( typeof( T ) );
 		}
+#endif
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -683,6 +695,7 @@ namespace CsvHelper
 			}
 		}
 
+#if !NET_2_0
 		/// <summary>
 		/// Gets the function delegate used to populate
 		/// a custom class object with data from the reader.
@@ -802,5 +815,6 @@ namespace CsvHelper
 				bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
 			}
 		}
+#endif
 	}
 }

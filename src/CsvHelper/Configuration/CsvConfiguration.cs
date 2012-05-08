@@ -4,8 +4,10 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
+#if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
+#endif
 using System.Reflection;
 
 namespace CsvHelper.Configuration
@@ -15,8 +17,10 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvConfiguration
 	{
+#if !NET_2_0
 		private CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
 		private List<CsvPropertyReferenceMap> references = new List<CsvPropertyReferenceMap>();
+#endif
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 		private bool hasHeaderRecord = true;
 		private bool isStrictMode = true;
@@ -26,6 +30,7 @@ namespace CsvHelper.Configuration
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
 
+#if !NET_2_0
 		/// <summary>
 		/// Gets the property mappings.
 		/// </summary>
@@ -41,6 +46,7 @@ namespace CsvHelper.Configuration
 		{
 			get { return references; }
 		}
+#endif
 
 		/// <summary>
 		/// Gets or sets the property binding flags.
@@ -186,6 +192,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual int FieldCount { get; set; }
 
+#if !NET_2_0
 		/// <summary>
 		/// Maps a property of a class to a CSV field.
 		/// </summary>
@@ -197,15 +204,6 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Maps a property of a class to a CSV field.
-		/// </summary>
-		/// <param name="property">The property to map.</param>
-		public virtual CsvPropertyMap PropertyMap( PropertyInfo property )
-		{
-			return new CsvPropertyMap( property );
-		}
-
-		/// <summary>
 		/// Maps a property of a class to another mapped class.
 		/// </summary>
 		/// <param name="expression">The expression.</param>
@@ -214,6 +212,15 @@ namespace CsvHelper.Configuration
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 			return new CsvPropertyReferenceMap( property );
+		}
+
+		/// <summary>
+		/// Maps a property of a class to a CSV field.
+		/// </summary>
+		/// <param name="property">The property to map.</param>
+		public virtual CsvPropertyMap PropertyMap(PropertyInfo property)
+		{
+			return new CsvPropertyMap(property);
 		}
 
 		/// <summary>
@@ -338,5 +345,6 @@ namespace CsvHelper.Configuration
 				}
 			}
 		}
+#endif
 	}
 }

@@ -44,6 +44,7 @@ namespace CsvHelper
 		/// </summary>
 		void NextRecord();
 
+#if !NET_2_0
 		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
@@ -66,5 +67,6 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		void InvalidateRecordCache<T>() where T : class;
+#endif
 	}
 }

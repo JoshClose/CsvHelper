@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{99E8D9F5-A055-437A-A306-C6E9FBE19E6D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CsvHelper</RootNamespace>
+    <AssemblyName>CsvHelper</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NET_2_0</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CsvHelper\Configuration\CsvConfiguration.cs">
+      <Link>Configuration\CsvConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
+      <Link>Configuration\CsvConfigurationException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvDuplicateHeaderFieldNameException.cs">
+      <Link>CsvDuplicateHeaderFieldNameException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvHelperException.cs">
+      <Link>CsvHelperException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvMissingFieldException.cs">
+      <Link>CsvMissingFieldException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvParser.cs">
+      <Link>CsvParser.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvParserException.cs">
+      <Link>CsvParserException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvReader.cs">
+      <Link>CsvReader.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvReaderException.cs">
+      <Link>CsvReaderException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvWriter.cs">
+      <Link>CsvWriter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvWriterException.cs">
+      <Link>CsvWriterException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvParser.cs">
+      <Link>ICsvParser.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvReader.cs">
+      <Link>ICsvReader.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvWriter.cs">
+      <Link>ICsvWriter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="MissingFrom20\EnumerableHelper.cs" />
+    <Compile Include="MissingFrom20\StringHelper.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

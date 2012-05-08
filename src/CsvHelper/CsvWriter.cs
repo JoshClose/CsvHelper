@@ -6,9 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+#if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
+#endif
 using CsvHelper.Configuration;
+#if NET_2_0
+using CsvHelper.MissingFrom20;
+#endif
 
 namespace CsvHelper
 {
@@ -20,8 +25,10 @@ namespace CsvHelper
 		private bool disposed;
 		private readonly List<string> currentRecord = new List<string>();
 		private TextWriter writer;
+#if !NET_2_0
 		private bool hasHeaderBeenWritten;
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
+#endif
 		private readonly CsvConfiguration configuration;
 
 		/// <summary>
@@ -71,7 +78,11 @@ namespace CsvHelper
 			if( !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
+#if NET_2_0
+				if( EnumerableHelper.Contains( field, configuration.Quote ) )
+#else
 				if( field.Contains( configuration.Quote ) )
+#endif
 				{
 					// All quotes must be doubled.
 					field = field.Replace( configuration.Quote.ToString(), string.Format( "{0}{0}", configuration.Quote ) );
@@ -154,6 +165,7 @@ namespace CsvHelper
 			currentRecord.Clear();
 		}
 
+#if !NET_2_0
 		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
@@ -205,6 +217,7 @@ namespace CsvHelper
 		{
 			typeActions.Remove( typeof( T ) );
 		}
+#endif
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -249,6 +262,7 @@ namespace CsvHelper
 			}
 		}
 
+#if !NET_2_0
 		/// <summary>
 		/// Writes the header record from the given properties.
 		/// </summary>
@@ -276,7 +290,64 @@ namespace CsvHelper
 			NextRecord();
 			hasHeaderBeenWritten = true;
 		}
+#endif
 
+#if NET_3_5
+		/// <summary>
+		/// Gets the action delegate used to write the custom
+		/// class object to the writer.
+		/// </summary>
+		/// <typeparam name="T">The type of the custom class being written.</typeparam>
+		/// <returns>The action delegate.</returns>
+		protected virtual Action<CsvWriter, T> GetWriteRecordAction<T>() where T : class
+		{
+			var type = typeof(T);
+
+			if (!typeActions.ContainsKey(type))
+			{
+				Action<CsvWriter, T> func = null;
+				var writerParameter = Expression.Parameter(typeof(CsvWriter), "writer");
+				var recordParameter = Expression.Parameter(typeof(T), "record");
+
+				if (configuration.Properties.Count == 0)
+				{
+					configuration.AttributeMapping<T>();
+				}
+
+				foreach (var propertyMap in configuration.Properties)
+				{
+					if (propertyMap.IgnoreValue)
+					{
+						// Skip ignored properties.
+						continue;
+					}
+
+					if (propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo(typeof(string)))
+					{
+						// Skip if the type isn't convertible.
+						continue;
+					}
+
+					Expression fieldExpression = Expression.Property(recordParameter, propertyMap.PropertyValue);
+					var typeConverterExpression = Expression.Constant(propertyMap.TypeConverterValue);
+					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod(convertMethod, new[] { typeof(object) });
+					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
+					fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression);
+
+					var areEqualExpression = Expression.Equal(recordParameter, Expression.Constant(null));
+					fieldExpression = Expression.Condition(areEqualExpression, Expression.Constant(string.Empty), fieldExpression);
+
+					var body = Expression.Call(writerParameter, "WriteField", new[] { typeof(string) }, fieldExpression);
+					func += Expression.Lambda<Action<CsvWriter, T>>(body, writerParameter, recordParameter).Compile();
+				}
+
+				typeActions[type] = func;
+			}
+
+			return (Action<CsvWriter, T>)typeActions[type];
+		}
+#elif !NET_2_0
 		/// <summary>
 		/// Gets the action delegate used to write the custom
 		/// class object to the writer.
@@ -363,5 +434,6 @@ namespace CsvHelper
 
 			return (Action<CsvWriter, T>)typeActions[type];
 		}
+#endif
 	}
 }

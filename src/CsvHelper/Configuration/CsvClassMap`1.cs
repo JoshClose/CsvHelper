@@ -3,7 +3,9 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+#if !NET_2_0
 using System.Linq.Expressions;
+#endif
 
 namespace CsvHelper.Configuration
 {
@@ -27,7 +29,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Referenceses the specified expression.
+		/// Maps a property to another class map.
 		/// </summary>
 		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
 		/// <param name="expression">The expression.</param>
@@ -41,7 +43,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Referenceses the specified type.
+		/// Maps a property to another class map.
 		/// </summary>
 		/// <param name="type">The type.</param>
 		/// <param name="expression">The expression.</param>
