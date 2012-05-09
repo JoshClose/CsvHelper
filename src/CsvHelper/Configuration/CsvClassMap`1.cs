@@ -3,9 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
-#if !NET_2_0
 using System.Linq.Expressions;
-#endif
 
 namespace CsvHelper.Configuration
 {

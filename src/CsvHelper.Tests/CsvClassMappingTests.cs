@@ -52,8 +52,8 @@ namespace CsvHelper.Tests
 
 			Assert.Equal( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( 3, map.PropertyMaps[0].IndexValue );
-			Assert.Equal( 2, map.PropertyMaps[1].IndexValue );
+			Assert.Equal( 2, map.PropertyMaps[0].IndexValue );
+			Assert.Equal( 3, map.PropertyMaps[1].IndexValue );
 			Assert.Equal( 1, map.PropertyMaps[2].IndexValue );
 		}
 
