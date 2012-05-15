@@ -303,6 +303,49 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void NonGenericGetRecordTest()
+		{
+			var headerData = new []
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
+			var recordData = new []
+			{
+				"1",
+				"string column",
+				Guid.NewGuid().ToString(),
+			};
+			var isHeaderRecord = true;
+			var mockFactory = new MockRepository( MockBehavior.Default );
+			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			csvParserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				if( isHeaderRecord )
+				{
+					isHeaderRecord = false;
+					return headerData;
+				}
+				return recordData;
+			});
+
+			var csv = new CsvReader( csvParserMock.Object );
+			csv.Configuration.IsStrictMode = false;
+			csv.Read();
+			var type = typeof( TestRecord );
+			var record = csv.GetRecord( type ) as TestRecord;
+
+			Assert.NotNull( record );
+			Assert.Equal( Convert.ToInt32( recordData[0] ), record.IntColumn );
+			Assert.Equal( recordData[1], record.StringColumn );
+			Assert.Equal( "test", record.TypeConvertedColumn );
+			Assert.Equal( Convert.ToInt32( recordData[0] ), record.FirstColumn );
+			Assert.Equal( new Guid( recordData[2] ), record.GuidColumn );
+		}
+
+		[Fact]
 		public void GetRecordsTest()
 		{
 			var headerData = new []
@@ -339,6 +382,54 @@ namespace CsvHelper.Tests
 			for( var i = 1; i <= records.Count; i++ )
 			{
 				var record = records[i - 1];
+				Assert.Equal( i , record.IntColumn );
+				Assert.Equal( "string column " + i, record.StringColumn );
+				Assert.Equal( "test", record.TypeConvertedColumn );
+				Assert.Equal( i, record.FirstColumn );
+				Assert.Equal( guid, record.GuidColumn );
+			}
+		}
+
+		[Fact]
+		public void NonGenericGetRecordsTest()
+		{
+			var headerData = new []
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
+			var count = -1;
+			var mockFactory = new MockRepository( MockBehavior.Default );
+			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			var guid = Guid.NewGuid();
+			csvParserMock.Setup( m => m.Read() ).Returns( () =>
+			{
+				count++;
+				if( count == 0 )
+				{
+					return headerData;
+				}
+				if( count > 2 )
+				{
+					return null;
+				}
+				return new[] { count.ToString(), "string column " + count, guid.ToString() };
+			} );
+
+			var csv = new CsvReader( csvParserMock.Object );
+			csv.Configuration.IsStrictMode = false;
+
+			var type = typeof( TestRecord );
+			var records = csv.GetRecords( type ).ToList();
+
+			Assert.Equal( 2, records.Count );
+
+			for( var i = 1; i <= records.Count; i++ )
+			{
+				var record = records[i - 1] as TestRecord;
+				Assert.NotNull( record );
 				Assert.Equal( i , record.IntColumn );
 				Assert.Equal( "string column " + i, record.StringColumn );
 				Assert.Equal( "test", record.TypeConvertedColumn );
