@@ -218,6 +218,13 @@ namespace CsvHelper
 		T GetRecord<T>() where T : class;
 
 		/// <summary>
+		/// Gets the record converted into <see cref="Type"/> T.
+		/// </summary>
+		/// <param name="type">The expected <see cref="Type"/> of the record.</param>
+		/// <returns>The record converted to <see cref="Type"/> T.</returns>
+		object GetRecord( Type type );
+
+		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
 		/// should not be used when using this.
@@ -225,6 +232,13 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
 		IEnumerable<T> GetRecords<T>() where T : class;
+
+		/// <summary>
+		/// Gets the record converted into <see cref="Type"/> T.
+		/// </summary>
+		/// <param name="type">The expected <see cref="Type"/> of the record.</param>
+		/// <returns>The record converted to <see cref="Type"/> T.</returns>
+		IEnumerable<object> GetRecords( Type type );
 
 		/// <summary>
 		/// Invalidates the record cache for the given type. After <see cref="GetRecord{T}"/> is called the

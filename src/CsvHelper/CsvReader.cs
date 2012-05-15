@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.Configuration;
@@ -495,10 +496,21 @@ namespace CsvHelper
 		/// <returns>The record converted to <see cref="Type"/> T.</returns>
 		public virtual T GetRecord<T>() where T : class
 		{
+			var type = typeof( T );
+			return (T)GetRecord( type );
+		}
+
+		/// <summary>
+		/// Gets the record.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <returns>The record converted to <see cref="Type"/> T.</returns>
+		public virtual object GetRecord( Type type )
+		{
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			return GetReadRecordFunc<T>()( this );
+			return GetReadRecordFunc( type )( this );
 		}
 
 		/// <summary>
@@ -510,11 +522,23 @@ namespace CsvHelper
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
 		public virtual IEnumerable<T> GetRecords<T>() where T : class
 		{
+			var type = typeof( T );
+			return GetRecords( type ).Cast<T>();
+		}
+		
+		/// <summary>
+		/// Gets all the records in the CSV file. The Read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <returns>An <see cref="IList{T}" /> of records.</returns>
+		public virtual IEnumerable<object> GetRecords( Type type )
+		{
 			CheckDisposed();
 
 			while( Read() )
 			{
-				yield return GetReadRecordFunc<T>()( this );
+				yield return GetReadRecordFunc( type )( this );
 			}
 		}
 
@@ -693,6 +717,20 @@ namespace CsvHelper
 		protected virtual Func<CsvReader, T> GetReadRecordFunc<T>() where T : class
 		{
 			var recordType = typeof( T );
+			var func = GetReadRecordFunc( recordType );
+
+			return (Func<CsvReader, T>)func;
+		}
+
+		/// <summary>
+		/// Gets the function delegate used to populate
+		/// a custom class object with data from the reader.
+		/// </summary>
+		/// <param name="recordType">The <see cref="Type"/> of object that is created
+		/// and populated.</param>
+		/// <returns>The function delegate.</returns>
+		protected virtual Func<CsvReader, object> GetReadRecordFunc( Type recordType )
+		{
 			if( !recordFuncs.ContainsKey( recordType ) )
 			{
 				var bindings = new List<MemberBinding>();
@@ -701,7 +739,7 @@ namespace CsvHelper
 				// If there is no property mappings yet, use attribute mappings.
 				if( configuration.Properties.Count == 0 )
 				{
-					configuration.AttributeMapping<T>();
+					configuration.AttributeMapping( recordType );
 				}
 
 				AddPropertyBindings( readerParameter, configuration.Properties, bindings );
@@ -720,7 +758,8 @@ namespace CsvHelper
 				}
 
 				var body = Expression.MemberInit( Expression.New( recordType ), bindings );
-				var func = Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile();
+				var boxed = Expression.Convert( body, typeof(object) );
+				var func = Expression.Lambda<Func<CsvReader, object>>( boxed, readerParameter ).Compile();
 				recordFuncs[recordType] = func;
 
 				// This is the expression that is built:
@@ -757,7 +796,7 @@ namespace CsvHelper
 				//
 			}
 
-			return (Func<CsvReader, T>)recordFuncs[recordType];
+			return (Func<CsvReader, object>)recordFuncs[recordType];
 		}
 
 		/// <summary>
