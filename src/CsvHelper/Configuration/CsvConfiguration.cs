@@ -272,7 +272,19 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="TClass">The type of custom class that contains the attributes.</typeparam>
 		public virtual void AttributeMapping<TClass>() where TClass : class
 		{
-			var props = typeof( TClass ).GetProperties( PropertyBindingFlags );
+			var type = typeof( TClass );
+			AttributeMapping( type );
+		}
+
+		/// <summary>
+		/// Use <see cref="CsvFieldAttribute"/>s to configure mappings.
+		/// All properties are mapped by default and attribute mapping 
+		/// will change the default property behavior.
+		/// </summary>
+		/// <param name="type">The type of custom class that contains the attributes.</param>
+		public virtual void AttributeMapping( Type type )
+		{
+			var props = type.GetProperties( PropertyBindingFlags );
 			foreach( var property in props )
 			{
 				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, true );
