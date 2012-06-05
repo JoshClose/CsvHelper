@@ -346,6 +346,49 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void NonGenericGetRecordCanBeCalledOnSubclassesOfCsvReader()
+		{
+			var headerData = new[]
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
+			var recordData = new[]
+			{
+				"1",
+				"string column",
+				Guid.NewGuid().ToString(),
+			};
+			var isHeaderRecord = true;
+			var mockFactory = new MockRepository(MockBehavior.Default);
+			var csvParserMock = mockFactory.Create<ICsvParser>();
+			csvParserMock.Setup(m => m.Configuration).Returns(new CsvConfiguration());
+			csvParserMock.Setup(m => m.Read()).Returns(() =>
+			{
+				if (isHeaderRecord)
+				{
+					isHeaderRecord = false;
+					return headerData;
+				}
+				return recordData;
+			});
+
+			var csv = new CsvReaderSubclass(csvParserMock.Object);
+			csv.Configuration.IsStrictMode = false;
+			csv.Read();
+			var type = typeof(TestRecord);
+			var record = csv.GetRecord(type) as TestRecord;
+
+			Assert.NotNull(record);
+			Assert.Equal(Convert.ToInt32(recordData[0]), record.IntColumn);
+			Assert.Equal(recordData[1], record.StringColumn);
+			Assert.Equal("test", record.TypeConvertedColumn);
+			Assert.Equal(Convert.ToInt32(recordData[0]), record.FirstColumn);
+			Assert.Equal(new Guid(recordData[2]), record.GuidColumn);
+		}
+
+		[Fact]
 		public void GetRecordsTest()
 		{
 			var headerData = new []
@@ -777,6 +820,12 @@ namespace CsvHelper.Tests
 				Assert.Equal( "2", csv.GetField( "TWO" ) );
 				Assert.Equal( "3", csv.GetField( "ThreE" ) );
 			}
+		}
+
+		private class CsvReaderSubclass : CsvReader
+		{
+			public CsvReaderSubclass(ICsvParser parser) 
+				: base(parser) { }
 		}
 
 		private class TestNullable
