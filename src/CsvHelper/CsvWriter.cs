@@ -161,7 +161,6 @@ namespace CsvHelper
 
 			var record = string.Join( configuration.Delimiter.ToString(), currentRecord.ToArray() );
 			writer.WriteLine( record );
-			writer.Flush();
 			currentRecord.Clear();
 		}
 

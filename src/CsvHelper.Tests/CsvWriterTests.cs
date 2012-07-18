@@ -19,7 +19,7 @@ namespace CsvHelper.Tests
 		public void WriteFieldTest()
 		{
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+            var writer = new StreamWriter(stream) { AutoFlush = true };
 
 			var csv = new CsvWriter( writer );
 
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 
 			csv.WriteRecord( record );
@@ -83,7 +83,7 @@ namespace CsvHelper.Tests
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+            var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 
 			csv.WriteRecord( record );
@@ -120,7 +120,7 @@ namespace CsvHelper.Tests
             };
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+            var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 
 			csv.WriteRecords( records );
@@ -139,7 +139,7 @@ namespace CsvHelper.Tests
 		public void WriteRecordNoHeaderTest()
 		{
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+            var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer ) { Configuration = { HasHeaderRecord = false } };
 			csv.WriteRecord( new TestRecord() );
 
@@ -162,7 +162,7 @@ namespace CsvHelper.Tests
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+            var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 
 			csv.WriteRecord( record );
@@ -204,7 +204,7 @@ namespace CsvHelper.Tests
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
+            var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 			csv.Configuration.ClassMapping<PersonMap>();
 
