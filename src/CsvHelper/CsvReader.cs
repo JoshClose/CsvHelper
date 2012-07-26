@@ -539,6 +539,7 @@ namespace CsvHelper
 		public virtual void InvalidateRecordCache<T>() where T : class
 		{
 			recordFuncs.Remove( typeof( T ) );
+			configuration.Properties.Clear();
 		}
 #endif
 

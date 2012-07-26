@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
 using CsvHelper.Configuration;
 using Xunit;
 
@@ -97,7 +98,6 @@ namespace CsvHelper.Tests
 			Assert.Equal( expected, csvFile );
 		}
 
-
 		[Fact]
 		public void WriteRecordsTest()
 		{
@@ -151,7 +151,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void WriteRecordWithNullRecord()
+		public void WriteRecordWithNullRecordTest()
 		{
 			var record = new TestRecord
 			{
@@ -181,7 +181,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void WriteRecordWithReferences()
+		public void WriteRecordWithReferencesTest()
 		{
 			var record = new Person
 			{
@@ -219,6 +219,40 @@ namespace CsvHelper.Tests
 
 			Assert.Equal( expected, csvFile );
 
+		}
+
+		[Fact]
+		public void InvalidateRecordsCacheTest()
+		{
+			var people = new List<Person>
+			{
+				new Person { FirstName = "first name" }
+			};
+			var addresses = new List<Address>
+			{
+				new Address { City = "city" }
+			};
+
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csvWriter = new CsvWriter( writer ) )
+			{
+				csvWriter.WriteRecords( people );
+				csvWriter.InvalidateRecordCache<Person>();
+				csvWriter.WriteRecords( addresses );
+
+				writer.Flush();
+				stream.Position = 0;
+
+				var csvText = reader.ReadToEnd();
+
+				var expectedText = "FirstName,LastName,HomeAddress,WorkAddress\r\n";
+				expectedText += "first name,,,\r\n";
+				expectedText += ",city,,\r\n";
+
+				Assert.Equal( expectedText, csvText );
+			}
 		}
 
 		[TypeConverter( "type name" )]

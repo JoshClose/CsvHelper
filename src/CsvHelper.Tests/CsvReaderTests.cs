@@ -5,6 +5,7 @@
 // http://csvhelper.com
 #endregion
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -667,7 +668,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void CaseInsensitiveHeaderMatching()
+		public void CaseInsensitiveHeaderMatchingTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var writer = new StreamWriter( stream ) )
@@ -686,6 +687,25 @@ namespace CsvHelper.Tests
 				Assert.Equal( "2", csv.GetField( "TWO" ) );
 				Assert.Equal( "3", csv.GetField( "ThreE" ) );
 			}
+		}
+
+		[Fact]
+		public void InvalidateRecordsCacheTest()
+		{
+			var csvParserMock = new Mock<ICsvParser>();
+			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			var csvReader = new CsvReader( csvParserMock.Object );
+			csvReader.Configuration.AttributeMapping<TestRecord>();
+
+			Assert.True( csvReader.Configuration.Properties.Count > 0 );
+
+			csvReader.InvalidateRecordCache<TestRecord>();
+
+			Assert.Equal( 0, csvReader.Configuration.Properties.Count );
+
+			csvReader.Configuration.AttributeMapping<TestRecordNoAttributes>();
+
+			Assert.True( csvReader.Configuration.Properties.Count > 0 );
 		}
 
 		private class TestNullable
