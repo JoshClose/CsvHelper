@@ -219,6 +219,13 @@ namespace CsvHelper
 		T GetRecord<T>() where T : class;
 
 		/// <summary>
+		/// Gets the record.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <returns>The record.</returns>
+		object GetRecord( Type type );
+
+		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
 		/// should not be used when using this.
@@ -228,6 +235,15 @@ namespace CsvHelper
 		IEnumerable<T> GetRecords<T>() where T : class;
 
 		/// <summary>
+		/// Gets all the records in the CSV file and
+		/// converts each to <see cref="Type"/> T. The Read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <returns>An <see cref="IList{Object}" /> of records.</returns>
+		IEnumerable<object> GetRecords( Type type );
+
+		/// <summary>
 		/// Invalidates the record cache for the given type. After <see cref="GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
@@ -235,6 +251,16 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		void InvalidateRecordCache<T>() where T : class;
+
+		/// <summary>
+		/// Invalidates the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ICsvReader.InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// record cache.
+		/// </summary>
+		/// <param name="type">The type to invalidate.</param>
+		void InvalidateRecordCache( Type type );
 #endif
 	}
 }

@@ -513,6 +513,19 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Gets the record.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <returns>The record.</returns>
+		public virtual object GetRecord( Type type )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			return GetReadRecordFunc( type )( this );
+		}
+
+		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
 		/// should not be used when using this.
@@ -522,10 +535,31 @@ namespace CsvHelper
 		public virtual IEnumerable<T> GetRecords<T>() where T : class
 		{
 			CheckDisposed();
+			// Don't need to check if it's been read
+			// since we're doing the reading ourselves.
 
 			while( Read() )
 			{
 				yield return GetReadRecordFunc<T>()( this );
+			}
+		}
+
+		/// <summary>
+		/// Gets all the records in the CSV file and
+		/// converts each to <see cref="Type"/> T. The Read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <returns>An <see cref="IList{Object}" /> of records.</returns>
+		public virtual IEnumerable<object> GetRecords( Type type )
+		{
+			CheckDisposed();
+			// Don't need to check if it's been read
+			// since we're doing the reading ourselves.
+
+			while( Read() )
+			{
+				yield return GetReadRecordFunc( type )( this );
 			}
 		}
 
@@ -540,6 +574,19 @@ namespace CsvHelper
 		{
 			recordFuncs.Remove( typeof( T ) );
 			configuration.Properties.Clear();
+		}
+
+		/// <summary>
+		/// Invalidates the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ICsvReader.InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// record cache.
+		/// </summary>
+		/// <param name="type">The type to invalidate.</param>
+		public virtual void InvalidateRecordCache( Type type )
+		{
+			recordFuncs.Remove( type );
 		}
 #endif
 
@@ -707,71 +754,101 @@ namespace CsvHelper
 		protected virtual Func<CsvReader, T> GetReadRecordFunc<T>() where T : class
 		{
 			var recordType = typeof( T );
-			if( !recordFuncs.ContainsKey( recordType ) )
-			{
-				var bindings = new List<MemberBinding>();
-				var readerParameter = Expression.Parameter( GetType(), "reader" );
-
-				// If there is no property mappings yet, use attribute mappings.
-				if( configuration.Properties.Count == 0 )
-				{
-					configuration.AttributeMapping<T>();
-				}
-
-				AddPropertyBindings( readerParameter, configuration.Properties, bindings );
-
-				foreach( var referenceMap in configuration.References )
-				{
-					var referenceReaderParameter = Expression.Parameter( GetType(), "reader2" );
-					var referenceBindings = new List<MemberBinding>();
-					AddPropertyBindings( referenceReaderParameter, referenceMap.ReferenceProperties, referenceBindings );
-					var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
-					var referenceFunc = Expression.Lambda( referenceBody, referenceReaderParameter );
-					var referenceCompiled = referenceFunc.Compile();
-					var referenceCompiledMethod = referenceCompiled.GetType().GetMethod( "Invoke" );
-					Expression referenceObjectExpression = Expression.Call( Expression.Constant( referenceCompiled ), referenceCompiledMethod, Expression.Constant( this ) );
-					bindings.Add( Expression.Bind( referenceMap.Property, referenceObjectExpression ) );
-				}
-
-				var body = Expression.MemberInit( Expression.New( recordType ), bindings );
-				var func = Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile();
-				recordFuncs[recordType] = func;
-
-				// This is the expression that is built:
-				//
-				// Func<CsvReader, T> func = reader => 
-				// {
-				//	foreach( var propertyMap in configuration.Properties )
-				//	{
-				//		string field = reader[index];
-				//		object converted = TypeConverter.ConvertFromString( field );
-				//		T convertedAsType = converted as T;
-				//		property.Property = convertedAsType;
-				//	}
-				//	
-				//	foreach( var referenceMap in configuration.References )
-				//	{
-				//		Func<CsvReader, referenceMap.Property.PropertyType> func2 = reader2 =>
-				//		{
-				//			foreach( var property in referenceMap.ReferenceProperties )
-				//			{
-				//				string field = reader[index];
-				//				object converted = TypeConverter.ConvertFromString( field );
-				//				T convertedAsType = converted as T;
-				//				property.Property = convertedAsType;
-				//			}
-				//		};
-				//		reference.Property = func2( (CsvReader)this );
-				//	}
-				// };
-				//
-				// The func can then be called:
-				//
-				// func( CsvReader reader );
-				//
-			}
+			CreateReadRecordFunc( recordType, ( body, readerParameter ) => Expression.Lambda<Func<CsvReader, T>>( body, readerParameter ).Compile() );
 
 			return (Func<CsvReader, T>)recordFuncs[recordType];
+		}
+
+		/// <summary>
+		/// Gets the function delegate used to populate
+		/// a custom class object with data from the reader.
+		/// </summary>
+		/// <param name="recordType">The <see cref="Type"/> of object that is created
+		/// and populated.</param>
+		/// <returns>The function delegate.</returns>
+		protected virtual Func<CsvReader, object> GetReadRecordFunc( Type recordType )
+		{
+			CreateReadRecordFunc( recordType, ( body, readerParameter ) => Expression.Lambda<Func<CsvReader, object>>( body, readerParameter ).Compile() );
+
+			return (Func<CsvReader, object>)recordFuncs[recordType];
+		}
+
+		/// <summary>
+		/// Creates the read record func for the given type if it
+		/// doesn't already exist.
+		/// </summary>
+		/// <param name="recordType">Type of the record.</param>
+		/// <param name="expressionCompiler">The expression compiler.</param>
+		protected virtual void CreateReadRecordFunc( Type recordType, Func<Expression, ParameterExpression, Delegate> expressionCompiler )
+		{
+			if( recordFuncs.ContainsKey( recordType ) )
+			{
+				return;
+			}
+
+			var bindings = new List<MemberBinding>();
+			var readerParameter = Expression.Parameter( GetType(), "reader" );
+
+			// If there is no property mappings yet, use attribute mappings.
+			if( configuration.Properties.Count == 0 )
+			{
+				configuration.AttributeMapping( recordType );
+			}
+
+			AddPropertyBindings( readerParameter, configuration.Properties, bindings );
+
+			foreach( var referenceMap in configuration.References )
+			{
+				var referenceReaderParameter = Expression.Parameter( GetType(), "reader2" );
+				var referenceBindings = new List<MemberBinding>();
+				AddPropertyBindings( referenceReaderParameter, referenceMap.ReferenceProperties, referenceBindings );
+				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
+				var referenceFunc = Expression.Lambda( referenceBody, referenceReaderParameter );
+				var referenceCompiled = referenceFunc.Compile();
+				var referenceCompiledMethod = referenceCompiled.GetType().GetMethod( "Invoke" );
+				Expression referenceObjectExpression = Expression.Call( Expression.Constant( referenceCompiled ), referenceCompiledMethod, Expression.Constant( this ) );
+				bindings.Add( Expression.Bind( referenceMap.Property, referenceObjectExpression ) );
+			}
+
+			var body = Expression.MemberInit( Expression.New( recordType ), bindings );
+			var func = expressionCompiler( body, readerParameter );
+			recordFuncs[recordType] = func;
+
+			#region This is the expression that is built:
+
+			//
+			// Func<CsvReader, T> func = reader => 
+			// {
+			//	foreach( var propertyMap in configuration.Properties )
+			//	{
+			//		string field = reader[index];
+			//		object converted = TypeConverter.ConvertFromString( field );
+			//		T convertedAsType = converted as T;
+			//		property.Property = convertedAsType;
+			//	}
+			//	
+			//	foreach( var referenceMap in configuration.References )
+			//	{
+			//		Func<CsvReader, referenceMap.Property.PropertyType> func2 = reader2 =>
+			//		{
+			//			foreach( var property in referenceMap.ReferenceProperties )
+			//			{
+			//				string field = reader[index];
+			//				object converted = TypeConverter.ConvertFromString( field );
+			//				T convertedAsType = converted as T;
+			//				property.Property = convertedAsType;
+			//			}
+			//		};
+			//		reference.Property = func2( (CsvReader)this );
+			//	}
+			// };
+			//
+			// The func can then be called:
+			//
+			// func( CsvReader reader );
+			//
+
+			#endregion
 		}
 
 		/// <summary>
