@@ -70,7 +70,14 @@ namespace CsvHelper.Configuration
 
 			// Set some defaults.
 			name = property.Name;
-			typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+			if( property.PropertyType == typeof( bool ) || property.PropertyType == typeof( bool? ) )
+			{
+				typeConverter = new BooleanTypeConverter();
+			}
+			else
+			{
+				typeConverter = TypeDescriptor.GetConverter( property.PropertyType );
+			}
 		}
 
 		/// <summary>

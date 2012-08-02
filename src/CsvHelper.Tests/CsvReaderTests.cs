@@ -812,7 +812,57 @@ namespace CsvHelper.Tests
 			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
 
 			var record = records[0];
+			Assert.Equal( -1, record.IntColumn );
+			Assert.Equal( null, record.StringColumn );
+
 			record = records[1];
+			Assert.Equal( 2, record.IntColumn );
+			Assert.Equal( "two", record.StringColumn );
+		}
+
+		[Fact]
+		public void BooleanTypeConverterTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+
+			writer.WriteLine( "BoolColumn,BoolNullableColumn,StringColumn" );
+			writer.WriteLine( "true,true,1" );
+			writer.WriteLine( "True,True,2" );
+			writer.WriteLine( "1,1,3" );
+			writer.WriteLine( "false,false,4" );
+			writer.WriteLine( "False,False,5" );
+			writer.WriteLine( "0,0,6" );
+
+			writer.Flush();
+			stream.Position = 0;
+
+			var reader = new StreamReader( stream );
+			var csvReader = new CsvReader( reader );
+
+			var records = csvReader.GetRecords<TestBoolean>().ToList();
+
+			Assert.True( records[0].BoolColumn );
+			Assert.True( records[0].BoolNullableColumn);
+			Assert.True( records[1].BoolColumn);
+			Assert.True( records[1].BoolNullableColumn );
+			Assert.True( records[2].BoolColumn );
+			Assert.True( records[2].BoolNullableColumn );
+			Assert.False( records[3].BoolColumn );
+			Assert.False( records[3].BoolNullableColumn);
+			Assert.False( records[4].BoolColumn );
+			Assert.False( records[4].BoolNullableColumn );
+			Assert.False( records[5].BoolColumn );
+			Assert.False( records[5].BoolNullableColumn );
+		}
+
+		private class TestBoolean
+		{
+			public bool BoolColumn { get; set; }
+
+			public bool BoolNullableColumn { get; set; }
+
+			public string StringColumn { get; set; }
 		}
 
 		private class TestDefaultValues

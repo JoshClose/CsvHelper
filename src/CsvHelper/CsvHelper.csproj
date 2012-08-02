@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\BooleanTypeConverter.cs" />
     <Compile Include="Configuration\CsvClassMap`1.cs" />
     <Compile Include="Configuration\CsvConfigurationException.cs" />
     <Compile Include="Configuration\CsvFieldAttribute.cs" />

@@ -45,6 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CsvHelper\Configuration\BooleanTypeConverter.cs">
+      <Link>Configuration\BooleanTypeConverter.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>
