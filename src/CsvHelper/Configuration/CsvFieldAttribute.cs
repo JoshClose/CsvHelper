@@ -16,6 +16,8 @@ namespace CsvHelper.Configuration
 	public class CsvFieldAttribute : Attribute
 	{
 		private int index = -1;
+		private object defaultValue;
+		private bool defaultIsSet;
 
 		/// <summary>
 		/// When reading, is used to get the field
@@ -43,6 +45,30 @@ namespace CsvHelper.Configuration
 		/// Ignore the property when reading and writing.
 		/// </summary>
 		public virtual bool Ignore { get; set; }
+
+		/// <summary>
+		/// Gets or sets the default value used if the CSV field is empty.
+		/// </summary>
+		/// <value>
+		/// The default value.
+		/// </value>
+		public virtual object Default
+		{
+			get { return defaultValue; }
+			set
+			{
+				defaultValue = value;
+				defaultIsSet = true;
+			}
+		}
+
+		/// <summary>
+		/// Gets a value indicating whether [default is set].
+		/// </summary>
+		/// <value>
+		///   <c>true</c> if [default is set]; otherwise, <c>false</c>.
+		/// </value>
+		internal bool DefaultIsSet { get { return defaultIsSet; } }
 
 		/// <summary>
 		/// Gets or sets the key used for reference mapping.

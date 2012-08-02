@@ -307,6 +307,10 @@ namespace CsvHelper.Configuration
 						{
 							map.Name( csvFieldAttribute.Name );
 						}
+						if( csvFieldAttribute.DefaultIsSet )
+						{
+							map.Default( csvFieldAttribute.Default );
+						}
 					}
 					else
 					{

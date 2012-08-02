@@ -887,8 +887,23 @@ namespace CsvHelper
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
 				var convertMethod = Configuration.UseInvariantCulture ? "ConvertFromInvariantString" : "ConvertFromString";
-				fieldExpression = Expression.Call( typeConverterExpression, convertMethod, null, fieldExpression );
-				fieldExpression = Expression.Convert( fieldExpression, propertyMap.PropertyValue.PropertyType );
+
+				// Create type converter expression.
+				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, convertMethod, null, fieldExpression );
+				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.PropertyValue.PropertyType );
+
+				if( propertyMap.IsDefaultValueSet )
+				{
+					// Create default value expression.
+					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.DefaultValue ), propertyMap.PropertyValue.PropertyType );
+
+					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( fieldExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
+					fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
+				}
+				else
+				{
+					fieldExpression = typeConverterFieldExpression;
+				}
 
 				bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
 			}

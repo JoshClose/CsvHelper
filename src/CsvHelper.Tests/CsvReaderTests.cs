@@ -794,10 +794,42 @@ namespace CsvHelper.Tests
 			Assert.True( csvReader.Configuration.Properties.Count > 0 );
 		}
 
+		[Fact]
+		public void DefaultValueTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+
+			writer.WriteLine( "IntColumn,StringColumn" );
+			writer.WriteLine( "," );
+			writer.WriteLine( "2,two" );
+			writer.Flush();
+			stream.Position = 0;
+
+			var reader = new StreamReader( stream );
+			var csvReader = new CsvReader( reader );
+
+			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
+
+			var record = records[0];
+			record = records[1];
+		}
+
+		private class TestDefaultValues
+		{
+			[CsvField( Default = -1 )]
+			public int IntColumn { get; set; }
+
+			[CsvField( Default = null )]
+			public string StringColumn { get; set; }
+		}
+
 		private class TestNullable
 		{
 			public int? IntColumn { get; set; }
+
 			public string StringColumn { get; set; }
+
 			public Guid? GuidColumn { get; set; }
 		}
 

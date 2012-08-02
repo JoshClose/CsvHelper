@@ -20,6 +20,8 @@ namespace CsvHelper.Configuration
 		private int index = -1;
 		private TypeConverter typeConverter;
 		private bool ignore;
+		private object defaultValue;
+		private bool isDefaultValueSet;
 
 		/// <summary>
 		/// Gets the property value.
@@ -45,6 +47,19 @@ namespace CsvHelper.Configuration
 		/// Gets a value indicating whether the field should be ignored.
 		/// </summary>
 		public virtual bool IgnoreValue { get { return ignore; } }
+
+		/// <summary>
+		/// Gets the default value used when a CSV field is empty.
+		/// </summary>
+		public virtual object DefaultValue { get { return defaultValue; } }
+
+		/// <summary>
+		/// Gets a value indicating whether this instance is default value set.
+		/// </summary>
+		/// <value>
+		/// 	<c>true</c> if this instance is default value set; otherwise, <c>false</c>.
+		/// </value>
+		public virtual bool IsDefaultValueSet { get { return isDefaultValueSet; } }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
@@ -104,6 +119,18 @@ namespace CsvHelper.Configuration
 		public virtual CsvPropertyMap Ignore( bool ignore )
 		{
 			this.ignore = ignore;
+			return this;
+		}
+
+		/// <summary>
+		/// The default value that will be used when reading when
+		/// the CSV field is empty.
+		/// </summary>
+		/// <param name="defaultValue">The default value.</param>
+		public virtual CsvPropertyMap Default( object defaultValue )
+		{
+			this.defaultValue = defaultValue;
+			isDefaultValueSet = true;
 			return this;
 		}
 
