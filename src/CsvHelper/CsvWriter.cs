@@ -362,14 +362,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<CsvWriter, T> GetWriteRecordAction<T>() where T : class
+		protected virtual Action<ICsvWriter, T> GetWriteRecordAction<T>() where T : class
 		{
 			var type = typeof( T );
 
 			if( !typeActions.ContainsKey( type ) )
 			{
-				Action<CsvWriter, T> func = null;
-				var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
+				Action<ICsvWriter, T> func = null;
+				var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( typeof( T ), "record" );
 
 				if( configuration.Properties.Count == 0 )
@@ -402,13 +402,13 @@ namespace CsvHelper
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 
 					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-					func += Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
+					func += Expression.Lambda<Action<ICsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
 				}
 
 				typeActions[type] = func;
 			}
 
-			return (Action<CsvWriter, T>)typeActions[type];
+			return (Action<ICsvWriter, T>)typeActions[type];
 		}
 
 		/// <summary>
@@ -422,7 +422,7 @@ namespace CsvHelper
 			if( !typeActions.ContainsKey( type ) )
 			{
 				var delegates = new List<Delegate>();
-				var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
+				var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( type, "record" );
 
 				if( configuration.Properties.Count == 0 )
@@ -455,7 +455,7 @@ namespace CsvHelper
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 
 					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-					var actionType = typeof( Action<,> ).MakeGenericType( typeof( CsvWriter ), type );
+					var actionType = typeof( Action<,> ).MakeGenericType( typeof( ICsvWriter ), type );
 					delegates.Add( Expression.Lambda( actionType, body, writerParameter, recordParameter ).Compile() );
 				}
 
@@ -471,19 +471,19 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<CsvWriter, T> GetWriteRecordAction<T>() where T : class
+		protected virtual Action<ICsvWriter, T> GetWriteRecordAction<T>() where T : class
 		{
 			var type = typeof( T );
-			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<CsvWriter, T>>( body, writerParameter, recordParameter ).Compile() );
+			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<ICsvWriter, T>>( body, writerParameter, recordParameter ).Compile() );
 
-			return (Action<CsvWriter, T>)typeActions[type];
+			return (Action<ICsvWriter, T>)typeActions[type];
 		}
 
-		protected virtual Action<CsvWriter, object> GetWriteRecordAction( Type type )
+		protected virtual Action<ICsvWriter, object> GetWriteRecordAction( Type type )
 		{
-			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<CsvWriter, object>>( body, writerParameter, recordParameter ).Compile() );
+			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<ICsvWriter, object>>( body, writerParameter, recordParameter ).Compile() );
 
-			return (Action<CsvWriter, object>)typeActions[type];
+			return (Action<ICsvWriter, object>)typeActions[type];
 		}
 
 		protected virtual void CreateWriteRecordAction( Type type, Func<Expression, ParameterExpression, ParameterExpression, Delegate> expressionCompiler )
@@ -493,7 +493,7 @@ namespace CsvHelper
 				return;
 			}
 
-			var writerParameter = Expression.Parameter( typeof( CsvWriter ), "writer" );
+			var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 			var recordParameter = Expression.Parameter( type, "record" );
 
 			if( configuration.Properties.Count == 0 )
