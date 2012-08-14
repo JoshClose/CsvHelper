@@ -478,6 +478,17 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void GetRecordEmptyFileWithHeaderOnTest()
+		{
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( (string[])null );
+
+			var csvReader = new CsvReader( parserMock.Object );
+			Assert.Throws<CsvReaderException>( () => csvReader.Read() );
+		}
+
+		[Fact]
 		public void TryGetFieldInvalidIndexTest()
 		{
 			var isHeaderRecord = true;

@@ -725,6 +725,11 @@ namespace CsvHelper
 		/// </summary>
 		protected virtual void ParseNamedIndexes()
 		{
+			if( headerRecord == null )
+			{
+				throw new CsvReaderException( "No header record was found." );
+			}
+
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];

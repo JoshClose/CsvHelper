@@ -171,6 +171,57 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void ParseCrOnlyTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\r" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var record = parser.Read();
+				Assert.Null( record );
+			}
+		}
+
+		[Fact]
+		public void ParseLfOnlyTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var parser = new CsvParser(reader))
+			{
+				writer.Write("\n");
+				writer.Flush();
+				stream.Position = 0;
+
+				var record = parser.Read();
+				Assert.Null(record);
+			}
+		}
+
+		[Fact]
+		public void ParseCrLnOnlyTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var parser = new CsvParser(reader))
+			{
+				writer.Write("\r\n");
+				writer.Flush();
+				stream.Position = 0;
+
+				var record = parser.Read();
+				Assert.Null(record);
+			}
+		}
+
+		[Fact]
 		public void Parse1RecordWithNoCrlfTest()
 		{
 			using( var memoryStream = new MemoryStream() )
