@@ -28,5 +28,13 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>A <see cref="List{String}" /> of fields for the record read.</returns>
 		string[] Read();
+
+		/// <summary>
+		/// Gets the character position.
+		/// </summary>
+		/// <value>
+		/// The character position.
+		/// </value>
+		long Position { get; }
 	}
 }

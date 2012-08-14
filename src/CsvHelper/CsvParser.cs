@@ -38,6 +38,14 @@ namespace CsvHelper
 		public virtual int FieldCount { get; protected set; }
 
 		/// <summary>
+		/// Gets the character position.
+		/// </summary>
+		/// <value>
+		/// The character position.
+		/// </value>
+		public virtual long Position { get; protected set; }
+
+		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
@@ -202,6 +210,7 @@ namespace CsvHelper
 
 				c = readerBuffer[readerBufferPosition];
 				readerBufferPosition++;
+				this.Position++;
 
 				if( inComment && c != '\r' && c != '\n' )
 				{

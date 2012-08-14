@@ -5,6 +5,7 @@
 // http://csvhelper.com
 #endregion
 using System.IO;
+using System.Text;
 using Xunit;
 
 namespace CsvHelper.Tests
@@ -490,6 +491,134 @@ namespace CsvHelper.Tests
 
 			Assert.NotNull( record );
 			Assert.Equal( "", record[3] );
+		}
+
+		[Fact]
+		public void CharReadTotalTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.AllowComments = true;
+
+				// This is a breakdown of the char counts.
+				// Read() will read up to the first line end char
+				// and any more on the line will get read with the next read.
+
+				// [I][d][,][N][a][m][e][\r][\n]
+				//  1  2  3  4  5  6  7   8   9
+				// [1][,][o][n][e][\r][\n]
+				// 10 11 12 13 14  15  16
+				// [,][\r][\n]
+				// 17  18  19
+				// [\r][\n]
+				//  20  21
+				// [#][ ][c][o][m][m][e][n][t][s][\r][\n]
+				// 22 23 24 25 26 27 28 29 30 31  32  33
+				// [2][,][t][w][o][\r][\n]
+				// 34 35 36 37 38  39  40
+				// [3][,]["][t][h][r][e][e][,][ ][f][o][u][r]["][\r][\n]
+				// 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55  56  57
+				
+				writer.WriteLine( "Id,Name" );
+				writer.WriteLine( "1,one" );
+				writer.WriteLine( "," );
+				writer.WriteLine( "" );
+				writer.WriteLine( "# comments" );
+				writer.WriteLine( "2,two" );
+				writer.WriteLine( "3,\"three, four\"" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Equal( 8, parser.Position );
+
+				parser.Read();
+				Assert.Equal( 15, parser.Position );
+
+				parser.Read();
+				Assert.Equal( 18, parser.Position );
+
+				parser.Read();
+				Assert.Equal( 39, parser.Position );
+
+				parser.Read();
+				Assert.Equal( 56, parser.Position );
+
+				parser.Read();
+				Assert.Equal( 57, parser.Position );
+			}
+		}
+
+		[Fact]
+		public void StreamSeekingTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.AllowComments = true;
+
+				// This is a breakdown of the char counts.
+				// Read() will read up to the first line end char
+				// and any more on the line will get read with the next read.
+
+				// [I][d][,][N][a][m][e][\r][\n]
+				//  1  2  3  4  5  6  7   8   9
+				// [1][,][o][n][e][\r][\n]
+				// 10 11 12 13 14  15  16
+				// [,][\r][\n]
+				// 17  18  19
+				// [\r][\n]
+				//  20  21
+				// [#][ ][c][o][m][m][e][n][t][s][\r][\n]
+				// 22 23 24 25 26 27 28 29 30 31  32  33
+				// [2][,][t][w][o][\r][\n]
+				// 34 35 36 37 38  39  40
+				// [3][,]["][t][h][r][e][e][,][ ][f][o][u][r]["][\r][\n]
+				// 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55  56  57
+
+				writer.WriteLine( "Id,Name" );
+				writer.WriteLine( "1,one" );
+				writer.WriteLine( "," );
+				writer.WriteLine( "" );
+				writer.WriteLine( "# comments" );
+				writer.WriteLine( "2,two" );
+				writer.WriteLine( "3,\"three, four\"" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var record = parser.Read();
+				Assert.Equal( "Id", record[0] );
+				Assert.Equal( "Name", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.Position, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "1", record[0] );
+				Assert.Equal( "one", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.Position, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "", record[0] );
+				Assert.Equal( "", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.Position, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "2", record[0] );
+				Assert.Equal( "two", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.Position, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "3", record[0] );
+				Assert.Equal( "three, four", record[1] );
+			}
 		}
 	}
 }

@@ -96,6 +96,11 @@ namespace CsvHelper.Tests
 			{
 				throw new NotImplementedException();
 			}
+
+			public long Position
+			{
+				get { throw new NotImplementedException(); }
+			}
 		}
 	}
 }
