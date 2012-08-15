@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.6.0</version>
+    <version>1.7.0</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -12,16 +12,12 @@
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
 Features:
--Created non-generic overloads for reading, writing, and attribute mapping.
--Added ability to set a default value when reading.
--Added custom boolean type converter that is used by default for reading boolean values that will convert "1" and "0" also.
+-Parser keeps a total char count.
+-Added configuration option to quote all fields when writing.
 
 Bug Fixes:
--Invalidate cache clears properties now also.
--CsvWriter does not flush after each write.
-
-Notes:
--Since the writer is not flushing automatically anymore, it will need to be flushed manually. The writer should flush on it's own when the iternal buffer is full or when dispose is called. If you want it to flush after every call, you can use StreamWriter.AutoFlush = true.
+-Fixed subclassing issue caused by the reader and writer not using their interfaces.
+-Fixed issue when reading and file contains only a newline.
 	</releaseNotes>
   </metadata>
 </package>
