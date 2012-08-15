@@ -255,6 +255,38 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[Fact]
+		public void WriteRecordsAllFieldsQuotedTest()
+		{
+			var record = new TestRecord
+			{
+				IntColumn = 1,
+				StringColumn = "string column",
+				IgnoredColumn = "ignored column",
+				FirstColumn = "first column",
+			};
+
+			string csv;
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csvWriter = new CsvWriter( writer ) )
+			{
+				csvWriter.Configuration.QuoteAllFields = true;
+				csvWriter.WriteRecord( record );
+
+				writer.Flush();
+				stream.Position = 0;
+
+				csv = reader.ReadToEnd();
+			}
+
+			var expected = "\"FirstColumn\",\"Int Column\",\"StringColumn\",\"TypeConvertedColumn\"\r\n";
+			expected += "\"first column\",\"1\",\"string column\",\"test\"\r\n";
+
+			Assert.Equal( expected, csv );
+		}
+
 		[TypeConverter( "type name" )]
 		private class TestRecord
 		{

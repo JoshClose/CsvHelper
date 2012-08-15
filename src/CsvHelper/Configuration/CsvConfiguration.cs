@@ -192,6 +192,15 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual int FieldCount { get; set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether all fields are quoted when writing,
+		/// or just ones that have to be.
+		/// </summary>
+		/// <value>
+		///   <c>true</c> if all fields should be quoted; otherwise, <c>false</c>.
+		/// </value>
+		public virtual bool QuoteAllFields { get; set; }
+
 #if !NET_2_0
 		/// <summary>
 		/// Maps a property of a class to a CSV field.

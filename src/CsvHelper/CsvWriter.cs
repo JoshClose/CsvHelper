@@ -76,7 +76,11 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField( string field )
 		{
-			if( !string.IsNullOrEmpty( field ) )
+			if( configuration.QuoteAllFields )
+			{
+				field = string.Format( "{0}{1}{0}", configuration.Quote, field ?? string.Empty );
+			}
+			else if( !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
 #if NET_2_0
