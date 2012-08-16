@@ -54,7 +54,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvReaderMappingTests.cs" />
     <Compile Include="CsvReaderSubClassingTests.cs" />
+    <Compile Include="CsvWriterMappingTests.cs" />
     <Compile Include="CsvWriterSubClassingTests.cs" />
     <Compile Include="CustomTypeConverterTests.cs" />
     <Compile Include="CsvClassMappingTests.cs" />

@@ -81,6 +81,30 @@ namespace CsvHelper.Tests
 			Assert.IsType<Int64Converter>( map.PropertyMaps[2].TypeConverterValue );
 		}
 
+		[Fact]
+		public void MapMultipleNamesTest()
+		{
+			var map = new TestMappingMultipleNamesClass();
+
+			Assert.Equal( 3, map.PropertyMaps.Count );
+
+			Assert.Equal( 3, map.PropertyMaps[0].NamesValue.Length );
+			Assert.Equal( 3, map.PropertyMaps[1].NamesValue.Length );
+			Assert.Equal( 3, map.PropertyMaps[2].NamesValue.Length );
+
+			Assert.Equal("guid1", map.PropertyMaps[0].NamesValue[0]);
+			Assert.Equal("guid2", map.PropertyMaps[0].NamesValue[1]);
+			Assert.Equal("guid3", map.PropertyMaps[0].NamesValue[2]);
+
+			Assert.Equal("int1", map.PropertyMaps[1].NamesValue[0]);
+			Assert.Equal("int2", map.PropertyMaps[1].NamesValue[1]);
+			Assert.Equal("int3", map.PropertyMaps[1].NamesValue[2]);
+
+			Assert.Equal("string1", map.PropertyMaps[2].NamesValue[0]);
+			Assert.Equal("string2", map.PropertyMaps[2].NamesValue[1]);
+			Assert.Equal("string3", map.PropertyMaps[2].NamesValue[2]);
+		}
+
 		private class TestClass
 		{
 			public string StringColumn { get; set; }
@@ -136,6 +160,16 @@ namespace CsvHelper.Tests
 				Map( m => m.GuidColumn ).TypeConverter<Int16Converter>();
 				Map( m => m.IntColumn ).TypeConverter<StringConverter>();
 				Map( m => m.StringColumn ).TypeConverter( new Int64Converter() );
+			}
+		}
+
+		private sealed class TestMappingMultipleNamesClass : CsvClassMap<TestClass>
+		{
+			public TestMappingMultipleNamesClass()
+			{
+				Map( m => m.GuidColumn ).Name( "guid1", "guid2", "guid3" );
+				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
+				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
 			}
 		}
 	}

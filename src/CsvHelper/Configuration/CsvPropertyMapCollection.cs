@@ -48,12 +48,7 @@ namespace CsvHelper.Configuration
 		public virtual void Add( CsvPropertyMap item )
 		{
 			list.Add( item );
-
-			// Always keep the list sorted.
-			if( list.Any( i => i.IndexValue > -1 ) )
-			{
-				list.Sort( new CsvPropertyMapComparer( false ) );
-			}
+			Sort();
 		}
 
 		/// <summary>
@@ -63,10 +58,7 @@ namespace CsvHelper.Configuration
 		public virtual void AddRange( ICollection<CsvPropertyMap> collection )
 		{
 			list.AddRange( collection );
-			if( list.Any( c => c.IndexValue > -1 ) )
-			{
-				list.Sort( new CsvPropertyMapComparer( false ) );
-			}
+			Sort();
 		}
 
 		/// <summary>
@@ -200,6 +192,17 @@ namespace CsvHelper.Configuration
 		{
 			get { return list[index]; }
 			set { list[index] = value; }
+		}
+
+		/// <summary>
+		/// Sorts the list using <see cref="CsvPropertyMapComparer"/>.
+		/// </summary>
+		private void Sort()
+		{
+			if( list.Any( c => c.IndexValue > -1 ) )
+			{
+				list.Sort( new CsvPropertyMapComparer( false ) );
+			}
 		}
 	}
 }

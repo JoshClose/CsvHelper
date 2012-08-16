@@ -3,8 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 namespace CsvHelper.Configuration
@@ -16,7 +18,7 @@ namespace CsvHelper.Configuration
 	public class CsvPropertyMap
 	{
 		private readonly PropertyInfo property;
-		private string name;
+		private readonly List<string> names = new List<string>();
 		private int index = -1;
 		private TypeConverter typeConverter;
 		private bool ignore;
@@ -29,9 +31,14 @@ namespace CsvHelper.Configuration
 		public virtual PropertyInfo PropertyValue { get { return property; } }
 
 		/// <summary>
-		/// Gets the name value.
+		/// Gets the name value. In the case of multiple, just grabs the first.
 		/// </summary>
-		public virtual string NameValue { get { return name; } }
+		public virtual string NameValue { get { return names.FirstOrDefault(); } }
+
+		/// <summary>
+		/// Gets all the name values.
+		/// </summary>
+		public virtual string[] NamesValue { get { return names.ToArray(); } }
 
 		/// <summary>
 		/// Gets the index value.
@@ -69,7 +76,7 @@ namespace CsvHelper.Configuration
 			this.property = property;
 
 			// Set some defaults.
-			name = property.Name;
+			names.Add( property.Name );
 			if( property.PropertyType == typeof( bool ) || property.PropertyType == typeof( bool? ) )
 			{
 				typeConverter = new BooleanTypeConverter();
@@ -83,15 +90,19 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// When reading, is used to get the field
 		/// at the index of the name if there was a
-		/// header specified. If there is an index
+		/// header specified. It will look for the
+		/// first name match in the order listed.
+		/// If there is an index
 		/// specified, that will take precedence over
 		/// the name. When writing, sets
 		/// the name of the field in the header record.
+		/// The first name will be used.
 		/// </summary>
-		/// <param name="name">The name of the CSV field.</param>
-		public virtual CsvPropertyMap Name( string name )
+		/// <param name="names">The possible names of the CSV field.</param>
+		public virtual CsvPropertyMap Name( params string[] names )
 		{
-			this.name = name;
+			this.names.Clear();
+			this.names.AddRange( names );
 			return this;
 		}
 
