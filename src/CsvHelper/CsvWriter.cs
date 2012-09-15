@@ -6,11 +6,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
 #endif
+using System.Text;
 using CsvHelper.Configuration;
 #if NET_2_0
 using CsvHelper.MissingFrom20;
@@ -68,7 +70,8 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Writes the field to the CSV file.
+		/// Writes the field to the CSV file. The field
+		/// may get quotes added to it.
 		/// When all fields are written for a record,
 		/// <see cref="ICsvWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
@@ -76,9 +79,10 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField( string field )
 		{
+			var shouldQuote = false;
 			if( configuration.QuoteAllFields )
 			{
-				field = string.Format( "{0}{1}{0}", configuration.Quote, field ?? string.Empty );
+				shouldQuote = true;
 			}
 			else if( !string.IsNullOrEmpty( field ) )
 			{
@@ -90,7 +94,7 @@ namespace CsvHelper
 #endif
 				{
 					// All quotes must be doubled.
-					field = field.Replace( configuration.Quote.ToString(), string.Format( "{0}{0}", configuration.Quote ) );
+					field = field.Replace( configuration.Quote.ToString(), string.Concat( configuration.Quote, configuration.Quote ) );
 					hasQuote = true;
 				}
 				if( hasQuote ||
@@ -100,9 +104,35 @@ namespace CsvHelper
 				    field.Contains( "\n" ) ||
 				    field.Contains( "\r" ) )
 				{
-					// Surround the field in quotes.
-					field = string.Format( "{0}{1}{0}", configuration.Quote, field );
+					shouldQuote = true;
 				}
+			}
+
+			WriteField( field, shouldQuote );
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file. This will
+		/// ignore any need to quote and ignore the
+		/// <see cref="CsvConfiguration.QuoteAllFields"/>
+		/// and just quote based on the shouldQuote
+		/// parameter.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="field">The field to write.</param>
+		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
+		public virtual void WriteField( string field, bool shouldQuote )
+		{
+			if( shouldQuote )
+			{
+				field = field ?? string.Empty;
+				field = new StringBuilder( field.Length + 2 )
+					.Append( configuration.Quote )
+					.Append( field )
+					.Append( configuration.Quote )
+					.ToString();
 			}
 
 			currentRecord.Add( field );
