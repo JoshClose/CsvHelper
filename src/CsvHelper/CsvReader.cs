@@ -763,6 +763,24 @@ namespace CsvHelper
 		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
 		protected virtual int GetFieldIndex( string name, int index = 0 )
 		{
+			return GetFieldIndex( new[] { name }, index );
+		}
+
+		/// <summary>
+		/// Gets the index of the field at name if found.
+		/// </summary>
+		/// <param name="names">The possible names of the field to get the index for.</param>
+		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
+		/// <returns>The index of the field if found, otherwise -1.</returns>
+		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
+		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
+		protected virtual int GetFieldIndex( string[] names, int index = 0 )
+		{
+			if( names == null )
+			{
+				throw new ArgumentNullException( "names" );
+			}
+
 			if( !configuration.HasHeaderRecord )
 			{
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
@@ -770,16 +788,56 @@ namespace CsvHelper
 
 			if( !Configuration.IsCaseSensitive )
 			{
-				name = name.ToLower();
+				for( var i = 0; i < names.Length; i++ )
+				{
+					names[i] = names[i].ToLower();
+				}
 			}
 
-			if( !namedIndexes.ContainsKey( name ) )
+			StringComparison comparison;
+			if( Configuration.UseInvariantCulture && !Configuration.IsCaseSensitive )
+			{
+				comparison = StringComparison.InvariantCultureIgnoreCase;
+			}
+			else if( Configuration.UseInvariantCulture && Configuration.IsCaseSensitive )
+			{
+				comparison = StringComparison.InvariantCulture;
+			}
+			else if( !Configuration.UseInvariantCulture && !Configuration.IsCaseSensitive )
+			{
+				comparison = StringComparison.CurrentCultureIgnoreCase;
+			}
+			else
+			{
+				comparison = StringComparison.CurrentCulture;
+			}
+#if !NET_2_0
+			var name =
+				( from i in namedIndexes
+				  from n in names
+				  where string.Equals( i.Key, n, comparison )
+				  select i.Key ).SingleOrDefault();
+#else
+			string name = null;
+			foreach( var pair in namedIndexes )
+			{
+				foreach( var n in names )
+				{
+					if( string.Equals( pair.Key, n, comparison ) )
+					{
+						name = pair.Key;
+					}
+				}
+			}
+#endif
+			if( name == null )
 			{
 				if( configuration.IsStrictMode )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
-					throw new CsvMissingFieldException( string.Format( "Field '{0}' does not exist in the CSV file.", name ) );
+					var namesJoined = string.Format( "'{0}'", string.Join( "', '", names ) );
+					throw new CsvMissingFieldException( string.Format( "Fields {0} do not exist in the CSV file.", namesJoined ) );
 				}
 				return -1;
 			}
@@ -976,7 +1034,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NameValue ) : propertyMap.IndexValue;
+				var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NamesValue ) : propertyMap.IndexValue;
 				if( index == -1 )
 				{
 					// Skip if the index was not found.

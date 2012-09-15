@@ -22,10 +22,25 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// When reading, is used to get the field
 		/// at the index of the name if there was a
-		/// header specified. When writing, sets
+		/// header specified. If there is an index
+		/// specified, that will take precedence over
+		/// the name. When writing, sets
 		/// the name of the field in the header record.
 		/// </summary>
 		public virtual string Name { get; set; }
+
+		/// <summary>
+		/// When reading, is used to get the field
+		/// at the index of the name if there was a
+		/// header specified. It will look for the
+		/// first name match in the order listed.
+		/// If there is an index
+		/// specified, that will take precedence over
+		/// the name. When writing, sets
+		/// the name of the field in the header record.
+		/// The first name will be used.
+		/// </summary>
+		public virtual string[] Names { get; set; }
 
 		/// <summary>
 		/// When reading, is used to get the field at

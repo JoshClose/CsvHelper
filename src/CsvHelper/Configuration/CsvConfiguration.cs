@@ -316,6 +316,10 @@ namespace CsvHelper.Configuration
 						{
 							map.Name( csvFieldAttribute.Name );
 						}
+						else if( csvFieldAttribute.Names != null && csvFieldAttribute.Names.Length > 0 )
+						{
+							map.Name( csvFieldAttribute.Names );
+						}
 						if( csvFieldAttribute.DefaultIsSet )
 						{
 							map.Default( csvFieldAttribute.Default );
@@ -352,6 +356,10 @@ namespace CsvHelper.Configuration
 							if( refCsvFieldAttribute.Name != null )
 							{
 								map.Name( refCsvFieldAttribute.Name );
+							}
+							else if( refCsvFieldAttribute.Names != null && refCsvFieldAttribute.Names.Length > 0 )
+							{
+								map.Name( refCsvFieldAttribute.Names );
 							}
 						}
 						else

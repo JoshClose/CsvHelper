@@ -69,6 +69,20 @@ namespace CsvHelper.Tests
 			Assert.False( config.Properties[3].IgnoreValue );
 		}
 
+		[Fact]
+		public void FieldAttributeMultipleNamesTest()
+		{
+			var config = new CsvConfiguration();
+			config.AttributeMapping<TestMultipleNamesClass>();
+
+			Assert.Equal( 2, config.Properties.Count );
+			Assert.Equal( 2, config.Properties[0].NamesValue.Length );
+			Assert.Equal( "Id1", config.Properties[0].NamesValue[0] );
+			Assert.Equal( "Id2", config.Properties[0].NamesValue[1] );
+			Assert.Equal( "Name1", config.Properties[1].NamesValue[0] );
+			Assert.Equal( "Name2", config.Properties[1].NamesValue[1] );
+		}
+
 		private class TestClass
 		{
 			[TypeConverter( typeof( Int16Converter ) )]
@@ -83,6 +97,15 @@ namespace CsvHelper.Tests
 			public Guid GuidColumn { get; set; }
 
 			public string NotUsedColumn { get; set; }
+		}
+
+		private class TestMultipleNamesClass
+		{
+			[CsvField( Names = new [] { "Id1", "Id2" } )]
+			public int Id { get; set; }
+
+			[CsvField( Names = new [] { "Name1", "Name2" } )]
+			public string Name { get; set; }
 		}
 	}
 }
