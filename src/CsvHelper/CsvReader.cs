@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Text;
+using CsvHelper.Configuration;
 #if !NET_2_0
+using System.Linq;
 using System.Linq.Expressions;
 #endif
-using CsvHelper.Configuration;
 #if NET_2_0
 using CsvHelper.MissingFrom20;
 #endif
@@ -26,6 +28,8 @@ namespace CsvHelper
 		private string[] currentRecord;
 		private string[] headerRecord;
 		private ICsvParser parser;
+		private int currentIndex = -1;
+		private string currentName;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 #if !NET_2_0
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
@@ -151,6 +155,8 @@ namespace CsvHelper
 
 			currentRecord = parser.Read();
 
+			currentIndex = -1;
+
 			hasBeenRead = true;
 
 			return currentRecord != null;
@@ -214,6 +220,11 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
+
+			// Set the current index being used so we
+			// have more information if an error occurs
+			// when reading records.
+			currentIndex = index;
 
 			return currentRecord[index];
 		}
@@ -509,7 +520,21 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			return GetReadRecordFunc<T>()( this );
+			T record;
+			try
+			{
+				record = GetReadRecordFunc<T>()( this );
+			}
+			catch( CsvReaderException )
+			{
+				// We threw the exception, so let it go.
+				throw;
+			}
+			catch( Exception ex )
+			{
+				throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ) );
+			}
+			return record;
 		}
 
 		/// <summary>
@@ -522,7 +547,21 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			return GetReadRecordFunc( type )( this );
+			object record;
+			try
+			{
+				record = GetReadRecordFunc( type )( this );
+			}
+			catch( CsvReaderException )
+			{
+				// We threw the exception, so let it go.
+				throw;
+			}
+			catch( Exception ex )
+			{
+				throw new CsvReaderException( GetExceptionMessage( type, ex ) );
+			}
+			return record;
 		}
 
 		/// <summary>
@@ -540,7 +579,21 @@ namespace CsvHelper
 
 			while( Read() )
 			{
-				yield return GetReadRecordFunc<T>()( this );
+				T record;
+				try
+				{
+					record = GetReadRecordFunc<T>()( this );
+				}
+				catch( CsvReaderException )
+				{
+					// We threw the exception, so let it go.
+					throw;
+				}
+				catch( Exception ex )
+				{
+					throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ) );
+				}
+				yield return record;
 			}
 		}
 
@@ -559,7 +612,21 @@ namespace CsvHelper
 
 			while( Read() )
 			{
-				yield return GetReadRecordFunc( type )( this );
+				object record;
+				try
+				{
+					record = GetReadRecordFunc( type )( this );
+				}
+				catch( CsvReaderException )
+				{
+					// We threw the exception, so let it go.
+					throw;
+				}
+				catch( Exception ex )
+				{
+					throw new CsvReaderException( GetExceptionMessage( type, ex ) );
+				}
+				yield return record;
 			}
 		}
 
@@ -643,6 +710,51 @@ namespace CsvHelper
 			{
 				throw new CsvReaderException( "You must call read on the reader before accessing its data." );
 			}
+		}
+
+		/// <summary>
+		/// Gets a new exception message adding more detailed information.
+		/// </summary>
+		/// <param name="type">The type of record.</param>
+		/// <param name="ex">The original exception.</param>
+		/// <returns>The new exception message.</returns>
+		protected virtual string GetExceptionMessage( Type type, Exception ex )
+		{
+			var error = new StringBuilder();
+			error.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
+			error.AppendFormat( "Row: '{0}' (1-based)", parser.Row ).AppendLine();
+			error.AppendFormat( "Field Index: '{0}' (0-based)", currentIndex ).AppendLine();
+			if( configuration.HasHeaderRecord )
+			{
+#if !NET_2_0
+				var name = ( from pair in namedIndexes
+				             from index in pair.Value
+				             where index == currentIndex
+				             select pair.Key ).SingleOrDefault();
+#endif
+#if NET_2_0
+				string name = null;
+				foreach( var pair in namedIndexes )
+				{
+					foreach( var index in pair.Value )
+					{
+						if( index == currentIndex )
+						{
+							name = pair.Key;
+						}
+					}
+				}
+#endif
+				if( name != null )
+				{
+					error.AppendFormat( "Field Name: '{0}'", name ).AppendLine();
+				}
+			}
+			error.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
+			error.AppendLine();
+			error.AppendLine( ex.ToString() );
+
+			return error.ToString();
 		}
 
 		/// <summary>
@@ -737,6 +849,7 @@ namespace CsvHelper
 				{
 					name = name.ToLower();
 				}
+
 				if( namedIndexes.ContainsKey( name ) )
 				{
 					namedIndexes[name].Add( i );

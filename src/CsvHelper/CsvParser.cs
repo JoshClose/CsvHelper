@@ -20,9 +20,11 @@ namespace CsvHelper
 		private int readerBufferPosition;
 		private int charsRead;
 		private string[] record;
-		private int currentLine;
+		private int currentRow;
 		private int currentCharacter;
 		private readonly CsvConfiguration configuration;
+		private char cPrev = '\0';
+		private char c = '\0';
 
 		/// <summary>
 		/// Gets the configuration.
@@ -38,12 +40,14 @@ namespace CsvHelper
 		public virtual int FieldCount { get; protected set; }
 
 		/// <summary>
-		/// Gets the character position.
+		/// Gets the character position that the parser is currently on.
 		/// </summary>
-		/// <value>
-		/// The character position.
-		/// </value>
 		public virtual long Position { get; protected set; }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// </summary>
+		public virtual int Row { get { return currentRow; } }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="StreamReader" />.
@@ -89,7 +93,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw new CsvParserException( string.Format( "A parsing error occurred. Line: {0} Character: {1}", currentLine, currentCharacter ), ex );
+				throw new CsvParserException( string.Format( "A parsing error occurred. Line: {0} Character: {1}", currentRow, currentCharacter ), ex );
 			}
 		}
 
@@ -167,18 +171,18 @@ namespace CsvHelper
 			var hasQuotes = false;
 			var inComment = false;
 			var recordPosition = 0;
-			var c = '\0';
 			record = new string[FieldCount];
-			currentLine++;
+			currentRow++;
 			currentCharacter = 0;
 
 			while( true )
 			{
-				var cPrev = c;
 				currentCharacter++;
 
 				if( readerBufferPosition == charsRead )
 				{
+					// We need to read more of the stream.
+
 					if( fieldStartPosition != readerBufferPosition )
 					{
 						// The buffer ran out. Take the current
@@ -208,9 +212,13 @@ namespace CsvHelper
 					}
 				}
 
+				if( c != '\0' )
+				{
+					cPrev = c;
+				}
 				c = readerBuffer[readerBufferPosition];
 				readerBufferPosition++;
-				this.Position++;
+				Position++;
 
 				if( inComment && c != '\r' && c != '\n' )
 				{
@@ -232,11 +240,19 @@ namespace CsvHelper
 				}
 				else if( !inQuotes && ( c == '\r' || c == '\n' ) )
 				{
+					if( cPrev == '\r' && c == '\n' )
+					{
+						// We are still on the same line.
+						fieldStartPosition = readerBufferPosition;
+						continue;
+					}
+
 					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' || inComment )
 					{
 						// We have hit a blank line. Ignore it.
 						fieldStartPosition = readerBufferPosition;
 						inComment = false;
+						currentRow++;
 						continue;
 					}
 

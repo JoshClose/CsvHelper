@@ -101,6 +101,11 @@ namespace CsvHelper.Tests
 			{
 				get { throw new NotImplementedException(); }
 			}
+
+			public int Row
+			{
+				get { throw new NotImplementedException(); }
+			}
 		}
 	}
 }

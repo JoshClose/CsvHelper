@@ -24,17 +24,19 @@ namespace CsvHelper
 		int FieldCount { get; }
 
 		/// <summary>
+		/// Gets the character position that the parser is currently on.
+		/// </summary>
+		long Position { get; }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// </summary>
+		int Row { get; }
+
+		/// <summary>
 		/// Reads a record from the CSV file.
 		/// </summary>
 		/// <returns>A <see cref="List{String}" /> of fields for the record read.</returns>
 		string[] Read();
-
-		/// <summary>
-		/// Gets the character position.
-		/// </summary>
-		/// <value>
-		/// The character position.
-		/// </value>
-		long Position { get; }
 	}
 }

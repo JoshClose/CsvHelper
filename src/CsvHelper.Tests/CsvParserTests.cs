@@ -671,5 +671,78 @@ namespace CsvHelper.Tests
 				Assert.Equal( "three, four", record[1] );
 			}
 		}
+
+		[Fact]
+		public void RowTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "1,2\r\n" );
+				writer.Write( "3,4\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var rowCount = 0;
+				while( parser.Read() != null )
+				{
+					rowCount++;
+					Assert.Equal( rowCount, parser.Row );
+				}
+			}
+		}
+
+		[Fact]
+		public void RowBlankLinesTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "1,2\r\n" );
+				writer.Write( "\r\n" );
+				writer.Write( "3,4\r\n" );
+				writer.Write( "\r\n" );
+				writer.Write( "5,6\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var rowCount = 1;
+				while( parser.Read() != null )
+				{
+					Assert.Equal( rowCount, parser.Row );
+					rowCount += 2;
+				}
+			}
+		}
+
+		[Fact]
+		public void RowCommentLinesTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "1,2\r\n" );
+				writer.Write( "# comment 1\r\n" );
+				writer.Write( "3,4\r\n" );
+				writer.Write( "# comment 2\r\n" );
+				writer.Write( "5,6\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.AllowComments = true;
+				var rowCount = 1;
+				while( parser.Read() != null )
+				{
+					Assert.Equal( rowCount, parser.Row );
+					rowCount += 2;
+				}
+			}
+		}
 	}
 }
