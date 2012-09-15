@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.7.0</version>
+    <version>1.8.0</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -12,12 +12,11 @@
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
 Features:
--Parser keeps a total char count.
--Added configuration option to quote all fields when writing.
+-Better error messages from reader when reading records. Shows type, row, column index, column name, and column value.
+-Alternative header names. You can specify multiple header names to match.
+-Writer has explicit shouldQuote overload that ignores the normal processing.
 
 Bug Fixes:
--Fixed subclassing issue caused by the reader and writer not using their interfaces.
--Fixed issue when reading and file contains only a newline.
 	</releaseNotes>
   </metadata>
 </package>
