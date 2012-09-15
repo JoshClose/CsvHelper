@@ -713,51 +713,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets a new exception message adding more detailed information.
-		/// </summary>
-		/// <param name="type">The type of record.</param>
-		/// <param name="ex">The original exception.</param>
-		/// <returns>The new exception message.</returns>
-		protected virtual string GetExceptionMessage( Type type, Exception ex )
-		{
-			var error = new StringBuilder();
-			error.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
-			error.AppendFormat( "Row: '{0}' (1-based)", parser.Row ).AppendLine();
-			error.AppendFormat( "Field Index: '{0}' (0-based)", currentIndex ).AppendLine();
-			if( configuration.HasHeaderRecord )
-			{
-#if !NET_2_0
-				var name = ( from pair in namedIndexes
-				             from index in pair.Value
-				             where index == currentIndex
-				             select pair.Key ).SingleOrDefault();
-#endif
-#if NET_2_0
-				string name = null;
-				foreach( var pair in namedIndexes )
-				{
-					foreach( var index in pair.Value )
-					{
-						if( index == currentIndex )
-						{
-							name = pair.Key;
-						}
-					}
-				}
-#endif
-				if( name != null )
-				{
-					error.AppendFormat( "Field Name: '{0}'", name ).AppendLine();
-				}
-			}
-			error.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
-			error.AppendLine();
-			error.AppendLine( ex.ToString() );
-
-			return error.ToString();
-		}
-
-		/// <summary>
 		/// Gets the field converted to <see cref="Object"/> using
 		/// the specified <see cref="TypeConverter"/>.
 		/// </summary>
@@ -862,6 +817,36 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
+		/// <summary>
+		/// Gets a new exception message adding more detailed information.
+		/// </summary>
+		/// <param name="type">The type of record.</param>
+		/// <param name="ex">The original exception.</param>
+		/// <returns>The new exception message.</returns>
+		protected virtual string GetExceptionMessage( Type type, Exception ex )
+		{
+			var error = new StringBuilder();
+			error.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
+			error.AppendFormat( "Row: '{0}' (1-based)", parser.Row ).AppendLine();
+			error.AppendFormat( "Field Index: '{0}' (0-based)", currentIndex ).AppendLine();
+			if( configuration.HasHeaderRecord )
+			{
+				var name = ( from pair in namedIndexes
+							 from index in pair.Value
+							 where index == currentIndex
+							 select pair.Key ).SingleOrDefault();
+				if( name != null )
+				{
+					error.AppendFormat( "Field Name: '{0}'", name ).AppendLine();
+				}
+			}
+			error.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
+			error.AppendLine();
+			error.AppendLine( ex.ToString() );
+
+			return error.ToString();
+		}
+
 		/// <summary>
 		/// Gets the function delegate used to populate
 		/// a custom class object with data from the reader.
