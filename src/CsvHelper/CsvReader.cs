@@ -532,7 +532,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ) );
+				throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ), ex );
 			}
 			return record;
 		}
@@ -559,7 +559,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw new CsvReaderException( GetExceptionMessage( type, ex ) );
+				throw new CsvReaderException( GetExceptionMessage( type, ex ), ex );
 			}
 			return record;
 		}
@@ -591,7 +591,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ) );
+					throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ), ex );
 				}
 				yield return record;
 			}
@@ -624,7 +624,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					throw new CsvReaderException( GetExceptionMessage( type, ex ) );
+					throw new CsvReaderException( GetExceptionMessage( type, ex ), ex );
 				}
 				yield return record;
 			}
@@ -881,7 +881,7 @@ namespace CsvHelper
 		/// <param name="type">The type of record.</param>
 		/// <param name="ex">The original exception.</param>
 		/// <returns>The new exception message.</returns>
-		protected virtual string GetExceptionMessage( Type type, Exception ex )
+		protected virtual string GetExceptionMessage(Type type, Exception ex)
 		{
 			var error = new StringBuilder();
 			error.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
@@ -890,15 +890,18 @@ namespace CsvHelper
 			if( configuration.HasHeaderRecord )
 			{
 				var name = ( from pair in namedIndexes
-							 from index in pair.Value
-							 where index == currentIndex
-							 select pair.Key ).SingleOrDefault();
+				             from index in pair.Value
+				             where index == currentIndex
+				             select pair.Key ).SingleOrDefault();
 				if( name != null )
 				{
 					error.AppendFormat( "Field Name: '{0}'", name ).AppendLine();
 				}
 			}
-			error.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
+			if( currentIndex < currentRecord.Length )
+			{
+				error.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
+			}
 			error.AppendLine();
 			error.AppendLine( ex.ToString() );
 

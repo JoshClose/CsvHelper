@@ -160,6 +160,30 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[Fact]
+		public void Test()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var csvReader = new CsvReader( reader ) )
+			{
+				writer.WriteLine("1,9/24/2012");
+				writer.Flush();
+				stream.Position = 0;
+
+				try
+				{
+					csvReader.Configuration.HasHeaderRecord = false;
+					var records = csvReader.GetRecords<Test3>().ToList();
+				}
+				catch( CsvReaderException ex )
+				{
+					// Should throw this exception.
+				}
+			}
+		}
+
 		private class Test1
 		{
 			[CsvField( Index = 0 )]
@@ -174,6 +198,18 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 
 			public int IntColumn { get; set; }
+		}
+
+		private class Test3
+		{
+			[CsvField(Index = 0)]
+			public int Id { get; set; }
+
+			[CsvField(Index = 1)]
+			public DateTime CreationDate { get; set; }
+
+			[CsvField(Index = 2)]
+			public string Description { get; set; }
 		}
 	}
 }
