@@ -42,7 +42,12 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the character position that the parser is currently on.
 		/// </summary>
-		public virtual long Position { get; protected set; }
+		public virtual long CharPosition { get; protected set; }
+
+		/// <summary>
+		/// Gets the byte position that the parser is currently on.
+		/// </summary>
+		public virtual long BytePosition { get; protected set; }
 
 		/// <summary>
 		/// Gets the row of the CSV file that the parser is currently on.
@@ -160,6 +165,24 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Appends the current buffer data to the field.
+		/// </summary>
+		/// <param name="field">The field to append the current buffer to.</param>
+		/// <param name="fieldStartPosition">The start position in the buffer that the .</param>
+		/// <param name="length">The length.</param>
+		protected virtual void AppendField( ref string field, int fieldStartPosition, int length )
+		{
+			if( configuration.CountBytes )
+			{
+				// Get the full string.
+				var s = new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+				BytePosition += configuration.Encoding.GetByteCount( s );
+			}
+
+			field += new string( readerBuffer, fieldStartPosition, length );
+		}
+
+		/// <summary>
 		/// Reads the line.
 		/// </summary>
 		/// <returns></returns>
@@ -187,7 +210,7 @@ namespace CsvHelper
 					{
 						// The buffer ran out. Take the current
 						// text and add it to the field.
-						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					}
 
 					charsRead = reader.Read( readerBuffer, 0, readerBuffer.Length );
@@ -204,7 +227,9 @@ namespace CsvHelper
 							{
 								field = "";
 							}
+
 							AddFieldToRecord( ref recordPosition, field, hasQuotes );
+
 							return record;
 						}
 
@@ -218,12 +243,18 @@ namespace CsvHelper
 				}
 				c = readerBuffer[readerBufferPosition];
 				readerBufferPosition++;
-				Position++;
+				CharPosition++;
 
 				if( inComment && c != '\r' && c != '\n' )
 				{
 					// We are on a commented line.
 					// Ignore the character.
+
+					if( configuration.CountBytes )
+					{
+						BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
+					}
+
 					continue;
 				}
 				if( !inQuotes && c == configuration.Delimiter )
@@ -231,7 +262,7 @@ namespace CsvHelper
 					// If we hit the delimiter, we are
 					// done reading the field and can
 					// add it to the record.
-					field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					fieldStartPosition = readerBufferPosition;
 
@@ -243,6 +274,12 @@ namespace CsvHelper
 					if( cPrev == '\r' && c == '\n' )
 					{
 						// We are still on the same line.
+
+						if( configuration.CountBytes )
+						{
+							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
+						}
+
 						fieldStartPosition = readerBufferPosition;
 						continue;
 					}
@@ -250,6 +287,12 @@ namespace CsvHelper
 					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' || inComment )
 					{
 						// We have hit a blank line. Ignore it.
+
+						if( configuration.CountBytes )
+						{
+							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
+						}
+
 						fieldStartPosition = readerBufferPosition;
 						inComment = false;
 						currentRow++;
@@ -258,7 +301,7 @@ namespace CsvHelper
 
 					// If we hit the end of the record, add 
 					// the current field and return the record.
-					field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 					AddFieldToRecord( ref recordPosition, field, hasQuotes );
 					break;
 				}
@@ -271,13 +314,19 @@ namespace CsvHelper
 					{
 						// Grab all the field chars before the
 						// quote if there are any.
-						field += new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						fieldStartPosition = readerBufferPosition;
 					}
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
 						// Set the new field start position to
 						// the char after the quote.
+
+						if( configuration.CountBytes )
+						{
+							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
+						}
+
 						fieldStartPosition = readerBufferPosition;
 					}
 				}

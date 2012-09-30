@@ -19,11 +19,11 @@ namespace CsvHelper.Example
 
 		static void Main( string[] args )
 		{
-			//ReadRawFieldsByIndex();
+			ReadRawFieldsByIndex();
 			//ReadRawFieldsByName();
 			//ReadFieldsByIndex();
 			//ReadRecordsNoAttributes();
-			ReadRecordsWithAttributes();
+			//ReadRecordsWithAttributes();
 			//ReadAllRecords();
 
 			//WriteRawFields();

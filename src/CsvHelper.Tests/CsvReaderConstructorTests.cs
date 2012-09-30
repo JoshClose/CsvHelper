@@ -97,10 +97,12 @@ namespace CsvHelper.Tests
 				throw new NotImplementedException();
 			}
 
-			public long Position
+			public long CharPosition
 			{
 				get { throw new NotImplementedException(); }
 			}
+
+			public long BytePosition { get; private set; }
 
 			public int Row
 			{

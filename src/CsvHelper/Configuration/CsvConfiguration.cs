@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 #endif
 using System.Reflection;
+using System.Text;
 
 namespace CsvHelper.Configuration
 {
@@ -29,6 +30,7 @@ namespace CsvHelper.Configuration
 		private char comment = '#';
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
+		private Encoding encoding = Encoding.Default;
 
 #if !NET_2_0
 		/// <summary>
@@ -200,6 +202,23 @@ namespace CsvHelper.Configuration
 		///   <c>true</c> if all fields should be quoted; otherwise, <c>false</c>.
 		/// </value>
 		public virtual bool QuoteAllFields { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether the number of bytes should
+		/// be counted while parsing. Default is false. This will slow down parsing
+		/// because it needs to get the byte count of every char for the given encoding.
+		/// The <see cref="Encoding"/> needs to be set correctly for this to be accurate.
+		/// </summary>
+		public virtual bool CountBytes { get; set; }
+
+		/// <summary>
+		/// Gets or sets the encoding used when counting bytes.
+		/// </summary>
+		public virtual Encoding Encoding
+		{
+			get { return encoding; }
+			set { encoding = value; }
+		}
 
 #if !NET_2_0
 		/// <summary>

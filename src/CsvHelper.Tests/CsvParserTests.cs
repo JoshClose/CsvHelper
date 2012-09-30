@@ -584,27 +584,27 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.Equal( 8, parser.Position );
+				Assert.Equal( 8, parser.CharPosition );
 
 				parser.Read();
-				Assert.Equal( 15, parser.Position );
+				Assert.Equal( 15, parser.CharPosition );
 
 				parser.Read();
-				Assert.Equal( 18, parser.Position );
+				Assert.Equal( 18, parser.CharPosition );
 
 				parser.Read();
-				Assert.Equal( 39, parser.Position );
+				Assert.Equal( 39, parser.CharPosition );
 
 				parser.Read();
-				Assert.Equal( 56, parser.Position );
+				Assert.Equal( 56, parser.CharPosition );
 
 				parser.Read();
-				Assert.Equal( 57, parser.Position );
+				Assert.Equal( 57, parser.CharPosition );
 			}
 		}
 
 		[Fact]
-		public void StreamSeekingTest()
+		public void StreamSeekingUsingCharPositionTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var writer = new StreamWriter( stream ) )
@@ -647,25 +647,25 @@ namespace CsvHelper.Tests
 				Assert.Equal( "Name", record[1] );
 
 				stream.Position = 0;
-				stream.Seek( parser.Position, SeekOrigin.Begin );
+				stream.Seek( parser.CharPosition, SeekOrigin.Begin );
 				record = parser.Read();
 				Assert.Equal( "1", record[0] );
 				Assert.Equal( "one", record[1] );
 
 				stream.Position = 0;
-				stream.Seek( parser.Position, SeekOrigin.Begin );
+				stream.Seek( parser.CharPosition, SeekOrigin.Begin );
 				record = parser.Read();
 				Assert.Equal( "", record[0] );
 				Assert.Equal( "", record[1] );
 
 				stream.Position = 0;
-				stream.Seek( parser.Position, SeekOrigin.Begin );
+				stream.Seek( parser.CharPosition, SeekOrigin.Begin );
 				record = parser.Read();
 				Assert.Equal( "2", record[0] );
 				Assert.Equal( "two", record[1] );
 
 				stream.Position = 0;
-				stream.Seek( parser.Position, SeekOrigin.Begin );
+				stream.Seek( parser.CharPosition, SeekOrigin.Begin );
 				record = parser.Read();
 				Assert.Equal( "3", record[0] );
 				Assert.Equal( "three, four", record[1] );
@@ -742,6 +742,135 @@ namespace CsvHelper.Tests
 					Assert.Equal( rowCount, parser.Row );
 					rowCount += 2;
 				}
+			}
+		}
+
+		[Fact]
+		public void ByteCountTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.CountBytes = true;
+				writer.Write( "1,2\r\n" );
+				writer.Write( "3,4\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Equal( 4, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 9, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 10, parser.BytePosition );
+			}
+		}
+
+		[Fact]
+		public void ByteCountUsingCharWithMoreThanSingleByteTest()
+		{
+			var encoding = Encoding.Unicode;
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream, encoding ) )
+			using( var reader = new StreamReader( stream, encoding ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				//崔钟铉
+				parser.Configuration.CountBytes = true;
+				parser.Configuration.Encoding = encoding;
+				writer.Write( "1,崔\r\n" );
+				writer.Write( "3,钟\r\n" );
+				writer.Write( "5,铉\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Equal( 8, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 18, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 28, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 30, parser.BytePosition );
+			}
+		}
+
+		[Fact]
+		public void StreamSeekingUsingByteCountTest()
+		{
+			var encoding = Encoding.Unicode;
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream, encoding ) )
+			using( var reader = new StreamReader( stream, encoding ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.CountBytes = true;
+				parser.Configuration.Encoding = encoding;
+				parser.Configuration.AllowComments = true;
+
+				// This is a breakdown of the char counts.
+				// Read() will read up to the first line end char
+				// and any more on the line will get read with the next read.
+
+				// [I][d][,][N][a][m][e][\r][\n]
+				//  1  2  3  4  5  6  7   8   9
+				// [1][,][o][n][e][\r][\n]
+				// 10 11 12 13 14  15  16
+				// [,][\r][\n]
+				// 17  18  19
+				// [\r][\n]
+				//  20  21
+				// [#][ ][c][o][m][m][e][n][t][s][\r][\n]
+				// 22 23 24 25 26 27 28 29 30 31  32  33
+				// [2][,][t][w][o][\r][\n]
+				// 34 35 36 37 38  39  40
+				// [3][,]["][t][h][r][e][e][,][ ][f][o][u][r]["][\r][\n]
+				// 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55  56  57
+
+				writer.WriteLine( "Id,Name" );
+				writer.WriteLine( "1,one" );
+				writer.WriteLine( "," );
+				writer.WriteLine( "" );
+				writer.WriteLine( "# comments" );
+				writer.WriteLine( "2,two" );
+				writer.WriteLine( "3,\"three, four\"" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var record = parser.Read();
+				Assert.Equal( "Id", record[0] );
+				Assert.Equal( "Name", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.BytePosition, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "1", record[0] );
+				Assert.Equal( "one", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.BytePosition, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "", record[0] );
+				Assert.Equal( "", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.BytePosition, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "2", record[0] );
+				Assert.Equal( "two", record[1] );
+
+				stream.Position = 0;
+				stream.Seek( parser.BytePosition, SeekOrigin.Begin );
+				record = parser.Read();
+				Assert.Equal( "3", record[0] );
+				Assert.Equal( "three, four", record[1] );
 			}
 		}
 	}

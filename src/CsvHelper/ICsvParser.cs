@@ -26,7 +26,12 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the character position that the parser is currently on.
 		/// </summary>
-		long Position { get; }
+		long CharPosition { get; }
+
+		/// <summary>
+		/// Gets the byte position that the parser is currently on.
+		/// </summary>
+		long BytePosition { get; }
 
 		/// <summary>
 		/// Gets the row of the CSV file that the parser is currently on.
