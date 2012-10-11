@@ -13,7 +13,7 @@ namespace CsvHelper.Tests
 	public class CsvParserTests
 	{
 		[Fact]
-		public void ReadNewRecordTest()
+		public void ParseNewRecordTest()
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -35,7 +35,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void ReadEmptyRowsTest()
+		public void ParseEmptyRowsTest()
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -61,7 +61,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void ReadTest()
+		public void ParseTest()
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -88,7 +88,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void ReadFieldQuotesTest()
+		public void ParseFieldQuotesTest()
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -115,7 +115,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void ReadSpacesTest()
+		public void ParseSpacesTest()
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -521,7 +521,7 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
-		public void ReadFinalRecordWithNoEndOfLineTest()
+		public void ParseFinalRecordWithNoEndOfLineTest()
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
@@ -542,6 +542,32 @@ namespace CsvHelper.Tests
 
 			Assert.NotNull( record );
 			Assert.Equal( "", record[3] );
+
+			record = parser.Read();
+
+			Assert.Null( record );
+		}
+
+		[Fact]
+		public void ParseLastLineHasNoCrLf()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream );
+			writer.Write( "a" );
+			writer.Flush();
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+
+			var parser = new CsvParser( reader );
+
+			var record = parser.Read();
+
+			Assert.NotNull( record );
+			Assert.Equal( "a", record[0] );
+
+			record = parser.Read();
+
+			Assert.Null( record );
 		}
 
 		[Fact]

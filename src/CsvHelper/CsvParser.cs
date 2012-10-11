@@ -225,9 +225,13 @@ namespace CsvHelper
 						{
 							if( c == configuration.Delimiter )
 							{
+								// Handle an empty field at the end of the row.
 								field = "";
 							}
 
+							// Make sure the next time through that we don't end up here again.
+							c = '\0';
+							
 							AddFieldToRecord( ref recordPosition, field, hasQuotes );
 
 							return record;
