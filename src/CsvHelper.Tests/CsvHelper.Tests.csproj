@@ -57,6 +57,7 @@
     <Compile Include="CsvReaderErrorMessageTests.cs" />
     <Compile Include="CsvReaderMappingTests.cs" />
     <Compile Include="CsvReaderSubClassingTests.cs" />
+    <Compile Include="CsvWriterFormatTests.cs" />
     <Compile Include="CsvWriterMappingTests.cs" />
     <Compile Include="CsvWriterSubClassingTests.cs" />
     <Compile Include="CustomTypeConverterTests.cs" />
