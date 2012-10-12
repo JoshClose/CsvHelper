@@ -556,7 +556,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) )
+				if( string.IsNullOrEmpty(propertyMap.FormatValue) && (propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo(typeof(string))) )
 				{
 					// Skip if the type isn't convertible.
 					continue;
@@ -579,11 +579,26 @@ namespace CsvHelper
 						: Expression.Property( recordParameter, reference.Property );
 
 				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.PropertyValue );
-				var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-				var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
-				var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
-				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+				
+				// use string.Format(string, object) instead of type converter
+				if (!string.IsNullOrEmpty(propertyMap.FormatValue))
+				{
+					var formatExpression = Expression.Constant(propertyMap.FormatValue);
+					var method = typeof(string).GetMethod("Format", new[] { typeof(string), typeof(object) });
+					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
+
+					fieldExpression = Expression.Call(method, formatExpression, fieldExpression);
+				}
+				else
+				{
+					var typeConverterExpression = Expression.Constant(propertyMap.TypeConverterValue);
+					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod(convertMethod, new[] { typeof(object) });
+
+					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
+
+					fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression);
+				}
 
 				var areEqualExpression = Expression.Equal( currentRecordObject, Expression.Constant( null ) );
 				fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );

@@ -24,6 +24,7 @@ namespace CsvHelper.Configuration
 		private bool ignore;
 		private object defaultValue;
 		private bool isDefaultValueSet;
+		private string formatValue;
 
 		/// <summary>
 		/// Gets the property value.
@@ -67,6 +68,14 @@ namespace CsvHelper.Configuration
 		/// 	<c>true</c> if this instance is default value set; otherwise, <c>false</c>.
 		/// </value>
 		public virtual bool IsDefaultValueSet { get { return isDefaultValueSet; } }
+
+		/// <summary>
+		/// Gets the format string used when converting the value to string.
+		/// </summary>
+		/// <value>
+		/// A composite format string.
+		/// </value>
+		public virtual string FormatValue { get { return formatValue; } }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
@@ -174,5 +183,16 @@ namespace CsvHelper.Configuration
 			TypeConverter( Activator.CreateInstance<T>() );
 			return this;
 		}
+
+		/// <summary>
+		/// Sets the format string used when converting the value to string.
+		/// </summary>
+		/// <param name="format">The format string.</param>
+		public virtual CsvPropertyMap Format(string format)
+		{
+			this.formatValue = format;
+			return this;
+		}
+
 	}
 }

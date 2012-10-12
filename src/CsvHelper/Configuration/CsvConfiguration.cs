@@ -330,7 +330,8 @@ namespace CsvHelper.Configuration
 					{
 						map = PropertyMap( property )
 							.Ignore( csvFieldAttribute.Ignore )
-							.Index( csvFieldAttribute.Index );
+							.Index( csvFieldAttribute.Index )
+							.Format( csvFieldAttribute.Format );
 						if( csvFieldAttribute.Name != null )
 						{
 							map.Name( csvFieldAttribute.Name );
