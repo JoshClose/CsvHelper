@@ -35,6 +35,7 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
+				// "one","two","three"
 				writer.WriteLine( "\"one\",\"two\",\"three\"" );
 				writer.Flush();
 				stream.Position = 0;
@@ -57,6 +58,7 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
+				// one,"two",three
 				writer.WriteLine( "one,\"two\",three" );
 				writer.Flush();
 				stream.Position = 0;
@@ -79,6 +81,7 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
+				// one,"two" ,three
 				writer.WriteLine( "one,\"two\" ,three" );
 				writer.Flush();
 				stream.Position = 0;

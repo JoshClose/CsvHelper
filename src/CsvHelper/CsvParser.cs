@@ -182,9 +182,9 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Reads the line.
+		/// Reads the next line.
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>The line separated into fields.</returns>
 		protected virtual string[] ReadLine()
 		{
 			string field = null;
@@ -244,16 +244,10 @@ namespace CsvHelper
 				{
 					cPrev = c;
 				}
+
 				c = readerBuffer[readerBufferPosition];
 				readerBufferPosition++;
 				CharPosition++;
-
-				// one,"two 2",three
-				// one,"two "" 2",three
-				// [one],"[two "]"[ 2]",[three]
-				// one,"two " 2,three
-				// one,two " 2",three
-				// one,"two " 2"2,three
 
 				if( c == configuration.Quote )
 				{
@@ -280,6 +274,7 @@ namespace CsvHelper
 						// quote if there are any.
 						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 					}
+
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
 						// Set the new field start position to
@@ -321,11 +316,8 @@ namespace CsvHelper
 					{
 						BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
 					}
-
-					continue;
 				}
-
-				if( c == configuration.Delimiter )
+				else if( c == configuration.Delimiter )
 				{
 					// If we hit the delimiter, we are
 					// done reading the field and can
