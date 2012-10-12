@@ -107,8 +107,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="recordPosition">The record position to add the field to.</param>
 		/// <param name="field">The field to add.</param>
-		/// <param name="hasQuotes">True if the field is quoted, otherwise false.</param>
-		protected virtual void AddFieldToRecord( ref int recordPosition, string field, bool hasQuotes )
+		protected virtual void AddFieldToRecord( ref int recordPosition, string field )
 		{
 			if( record.Length < recordPosition + 1 )
 			{
@@ -191,7 +190,7 @@ namespace CsvHelper
 			string field = null;
 			var fieldStartPosition = readerBufferPosition;
 			var inQuotes = false;
-			var hasQuotes = false;
+			var fieldIsEscaped = false;
 			var inComment = false;
 			var recordPosition = 0;
 			record = new string[FieldCount];
@@ -232,7 +231,7 @@ namespace CsvHelper
 							// Make sure the next time through that we don't end up here again.
 							c = '\0';
 							
-							AddFieldToRecord( ref recordPosition, field, hasQuotes );
+							AddFieldToRecord( ref recordPosition, field );
 
 							return record;
 						}
@@ -249,6 +248,70 @@ namespace CsvHelper
 				readerBufferPosition++;
 				CharPosition++;
 
+				// one,"two 2",three
+				// one,"two "" 2",three
+				// [one],"[two "]"[ 2]",[three]
+				// one,"two " 2,three
+				// one,two " 2",three
+				// one,"two " 2"2,three
+
+				if( c == configuration.Quote )
+				{
+					if( !fieldIsEscaped && ( cPrev == configuration.Delimiter || cPrev == '\r' || cPrev == '\n' || cPrev == '\0' ) )
+					{
+						// The field is escaped only if the first char of
+						// the field is a quote.
+						fieldIsEscaped = true;
+					}
+
+					if( !fieldIsEscaped )
+					{
+						// If the field isn't escaped, the quote
+						// is like any other char and we should
+						// just ignore it.
+						continue;
+					}
+
+					inQuotes = !inQuotes;
+
+					if( fieldStartPosition != readerBufferPosition - 1 )
+					{
+						// Grab all the field chars before the
+						// quote if there are any.
+						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					}
+					if( cPrev != configuration.Quote || !inQuotes )
+					{
+						// Set the new field start position to
+						// the char after the quote.
+
+						if( configuration.CountBytes )
+						{
+							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
+						}
+
+						fieldStartPosition = readerBufferPosition;
+					}
+
+					continue;
+				}
+
+
+				if( fieldIsEscaped && inQuotes )
+				{
+					// While inside an escaped field,
+					// all chars are ignored.
+					continue;
+				}
+
+				if( cPrev == configuration.Quote )
+				{
+					// If we're not in quotes and the
+					// previous char was a quote, the
+					// field is no longer escaped.
+					fieldIsEscaped = false;
+				}
+
 				if( inComment && c != '\r' && c != '\n' )
 				{
 					// We are on a commented line.
@@ -261,19 +324,19 @@ namespace CsvHelper
 
 					continue;
 				}
-				if( !inQuotes && c == configuration.Delimiter )
+
+				if( c == configuration.Delimiter )
 				{
 					// If we hit the delimiter, we are
 					// done reading the field and can
 					// add it to the record.
 					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-					AddFieldToRecord( ref recordPosition, field, hasQuotes );
+					AddFieldToRecord( ref recordPosition, field );
 					fieldStartPosition = readerBufferPosition;
 
 					field = null;
-					hasQuotes = false;
 				}
-				else if( !inQuotes && ( c == '\r' || c == '\n' ) )
+				else if( c == '\r' || c == '\n' )
 				{
 					if( cPrev == '\r' && c == '\n' )
 					{
@@ -306,33 +369,8 @@ namespace CsvHelper
 					// If we hit the end of the record, add 
 					// the current field and return the record.
 					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-					AddFieldToRecord( ref recordPosition, field, hasQuotes );
+					AddFieldToRecord( ref recordPosition, field );
 					break;
-				}
-				else if( c == configuration.Quote )
-				{
-					hasQuotes = true;
-					inQuotes = !inQuotes;
-
-					if( fieldStartPosition != readerBufferPosition - 1 )
-					{
-						// Grab all the field chars before the
-						// quote if there are any.
-						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-						fieldStartPosition = readerBufferPosition;
-					}
-					if( cPrev != configuration.Quote || !inQuotes )
-					{
-						// Set the new field start position to
-						// the char after the quote.
-
-						if( configuration.CountBytes )
-						{
-							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
-						}
-
-						fieldStartPosition = readerBufferPosition;
-					}
 				}
 				else if( configuration.AllowComments && c == configuration.Comment && ( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' ) )
 				{

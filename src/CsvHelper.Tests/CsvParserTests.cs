@@ -129,11 +129,11 @@ namespace CsvHelper.Tests
 
 			var record = parser.Read();
 			Assert.Equal( " one ", record[0] );
-			Assert.Equal( " two three ", record[1] );
+			Assert.Equal( " \"two three\" ", record[1] );
 			Assert.Equal( " four ", record[2] );
 
 			record = parser.Read();
-			Assert.Equal( "  five \" six \" seven  ", record[0] );
+			Assert.Equal( " \" five \"\" six \"\" seven \" ", record[0] );
 
 			record = parser.Read();
 			Assert.Null( record );
