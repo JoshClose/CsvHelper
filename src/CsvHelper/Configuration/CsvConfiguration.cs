@@ -372,7 +372,8 @@ namespace CsvHelper.Configuration
 						{
 							map = PropertyMap( refProp )
 								.Ignore( refCsvFieldAttribute.Ignore )
-								.Index( refCsvFieldAttribute.Index );
+								.Index( refCsvFieldAttribute.Index )
+								.Format( refCsvFieldAttribute.Format );
 							if( refCsvFieldAttribute.Name != null )
 							{
 								map.Name( refCsvFieldAttribute.Name );

@@ -556,7 +556,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( string.IsNullOrEmpty(propertyMap.FormatValue) && (propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo(typeof(string))) )
+				if( string.IsNullOrEmpty( propertyMap.FormatValue ) && ( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) ) )
 				{
 					// Skip if the type isn't convertible.
 					continue;
@@ -580,24 +580,33 @@ namespace CsvHelper
 
 				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.PropertyValue );
 				
-				// use string.Format(string, object) instead of type converter
-				if (!string.IsNullOrEmpty(propertyMap.FormatValue))
+				if( !string.IsNullOrEmpty( propertyMap.FormatValue ) )
 				{
-					var formatExpression = Expression.Constant(propertyMap.FormatValue);
-					var method = typeof(string).GetMethod("Format", new[] { typeof(string), typeof(object) });
-					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
-
-					fieldExpression = Expression.Call(method, formatExpression, fieldExpression);
+					// Use string.Format instead of TypeConverter.
+					var formatExpression = Expression.Constant( propertyMap.FormatValue );
+					//MethodInfo method;
+					if( configuration.UseInvariantCulture )
+					{
+						var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object ) } );
+						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+						fieldExpression = Expression.Call( method, Expression.Constant( CultureInfo.InvariantCulture ), formatExpression, fieldExpression );
+					}
+					else
+					{
+						var method = typeof( string ).GetMethod( "Format", new[] { typeof( string ), typeof( object ) } );
+						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+						fieldExpression = Expression.Call( method, formatExpression, fieldExpression );
+					}
 				}
 				else
 				{
-					var typeConverterExpression = Expression.Constant(propertyMap.TypeConverterValue);
+					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
 					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod(convertMethod, new[] { typeof(object) });
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
 
-					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
+					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 
-					fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression);
+					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 				}
 
 				var areEqualExpression = Expression.Equal( currentRecordObject, Expression.Constant( null ) );

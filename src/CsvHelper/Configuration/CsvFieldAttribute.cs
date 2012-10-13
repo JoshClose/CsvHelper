@@ -18,7 +18,6 @@ namespace CsvHelper.Configuration
 		private int index = -1;
 		private object defaultValue;
 		private bool defaultIsSet;
-		private string format;
 
 		/// <summary>
 		/// When reading, is used to get the field
@@ -95,16 +94,11 @@ namespace CsvHelper.Configuration
 		public virtual string ReferenceKey { get; set; }
 
 		/// <summary>
-		/// Gets or sets the format string used when converting the value to string.
+		/// Gets or sets the format used when converting the value to string.
 		/// </summary>
 		/// <value>
-		/// A composite format string.
+		/// The format.
 		/// </value>
-		public virtual string Format
-		{
-			get { return format; }
-			set { format = value; }
-		}
-
+		public virtual string Format { get; set; }
 	}
 }
