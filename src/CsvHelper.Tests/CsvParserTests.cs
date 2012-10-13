@@ -899,5 +899,23 @@ namespace CsvHelper.Tests
 				Assert.Equal( "three, four", record[1] );
 			}
 		}
+
+		[Fact]
+		public void InconsistentColumnsTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "Column 1,Column 2" );
+				writer.WriteLine( "1,2,3" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Throws<CsvBadDataException>( () => parser.Read() );
+			}
+		}
 	}
 }

@@ -593,6 +593,7 @@ namespace CsvHelper
 				{
 					throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ), ex );
 				}
+
 				yield return record;
 			}
 		}

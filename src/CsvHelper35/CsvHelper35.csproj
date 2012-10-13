@@ -78,8 +78,8 @@
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMap`1.cs">
       <Link>Configuration\CsvPropertyReferenceMap`1.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper\CsvDuplicateHeaderFieldNameException.cs">
-      <Link>CsvDuplicateHeaderFieldNameException.cs</Link>
+    <Compile Include="..\CsvHelper\CsvBadDataException.cs">
+      <Link>CsvBadDataException.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\CsvHelperException.cs">
       <Link>CsvHelperException.cs</Link>

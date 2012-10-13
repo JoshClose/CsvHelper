@@ -44,6 +44,9 @@
     <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
       <Link>Configuration\CsvConfigurationException.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\CsvBadDataException.cs">
+      <Link>CsvBadDataException.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\CsvHelperException.cs">
       <Link>CsvHelperException.cs</Link>
     </Compile>

@@ -96,6 +96,11 @@ namespace CsvHelper
 			{
 				return ReadLine();
 			}
+			catch( CsvHelperException )
+			{
+				// We threw it, so let it go.
+				throw;
+			}
 			catch( Exception ex )
 			{
 				throw new CsvParserException( string.Format( "A parsing error occurred. Line: {0} Character: {1}", currentRow, currentCharacter ), ex );
@@ -111,6 +116,11 @@ namespace CsvHelper
 		{
 			if( record.Length < recordPosition + 1 )
 			{
+				if( currentRow > 1 )
+				{
+					throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
+				}
+
 				// Resize record if it's too small.
 				Array.Resize( ref record, recordPosition + 1 );
 				FieldCount = record.Length;
