@@ -239,6 +239,8 @@ namespace CsvHelper.Tests
 				Assert.Equal( "one", record[0] );
 				Assert.Equal( "two", record[1] );
 				Assert.Equal( "three", record[2] );
+
+				Assert.Null( parser.Read() );
 			}
 		}
 
@@ -262,6 +264,8 @@ namespace CsvHelper.Tests
 				Assert.Equal( "four", record[0] );
 				Assert.Equal( "five", record[1] );
 				Assert.Equal( "six", record[2] );
+
+				Assert.Null( parser.Read() );
 			}
 		}
 
