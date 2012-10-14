@@ -975,7 +975,8 @@ namespace CsvHelper
 				bindings.Add( Expression.Bind( referenceMap.Property, referenceObjectExpression ) );
 			}
 
-			var body = Expression.MemberInit( Expression.New( recordType ), bindings );
+			var constructorExpression = configuration.Constructor ?? Expression.New( recordType );
+			var body = Expression.MemberInit( constructorExpression, bindings );
 			var func = expressionCompiler( body, readerParameter );
 			recordFuncs[recordType] = func;
 

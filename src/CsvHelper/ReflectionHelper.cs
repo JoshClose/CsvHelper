@@ -67,6 +67,24 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Gets the constructor <see cref="NewExpression"/> from the give <see cref="Expression"/>.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the object that will be constructed.</typeparam>
+		/// <param name="expression">The constructor <see cref="Expression"/>.</param>
+		/// <returns>A constructor <see cref="NewExpression"/>.</returns>
+		/// <exception cref="System.ArgumentException">Not a constructor expression.;expression</exception>
+		public static NewExpression GetConstructor<T>( Expression<Func<T>> expression )
+		{
+			var newExpression = expression.Body as NewExpression;
+			if( newExpression == null )
+			{
+				throw new ArgumentException( "Not a constructor expression.", "expression" );
+			}
+
+			return newExpression;
+		}
+
+		/// <summary>
 		/// Gets the property from the expression.
 		/// </summary>
 		/// <typeparam name="TModel">The type of the model.</typeparam>

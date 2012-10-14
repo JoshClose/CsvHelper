@@ -3,7 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -14,6 +17,11 @@ namespace CsvHelper.Configuration
 	{
 		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
 		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
+
+		/// <summary>
+		/// Gets the constructor expression.
+		/// </summary>
+		public virtual NewExpression Constructor { get; protected set; } 
 
 		/// <summary>
 		/// The class property mappings.

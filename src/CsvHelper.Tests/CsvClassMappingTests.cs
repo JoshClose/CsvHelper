@@ -92,17 +92,25 @@ namespace CsvHelper.Tests
 			Assert.Equal( 3, map.PropertyMaps[1].NamesValue.Length );
 			Assert.Equal( 3, map.PropertyMaps[2].NamesValue.Length );
 
-			Assert.Equal("guid1", map.PropertyMaps[0].NamesValue[0]);
-			Assert.Equal("guid2", map.PropertyMaps[0].NamesValue[1]);
-			Assert.Equal("guid3", map.PropertyMaps[0].NamesValue[2]);
+			Assert.Equal( "guid1", map.PropertyMaps[0].NamesValue[0] );
+			Assert.Equal( "guid2", map.PropertyMaps[0].NamesValue[1] );
+			Assert.Equal( "guid3", map.PropertyMaps[0].NamesValue[2] );
 
-			Assert.Equal("int1", map.PropertyMaps[1].NamesValue[0]);
-			Assert.Equal("int2", map.PropertyMaps[1].NamesValue[1]);
-			Assert.Equal("int3", map.PropertyMaps[1].NamesValue[2]);
+			Assert.Equal( "int1", map.PropertyMaps[1].NamesValue[0] );
+			Assert.Equal( "int2", map.PropertyMaps[1].NamesValue[1] );
+			Assert.Equal( "int3", map.PropertyMaps[1].NamesValue[2] );
 
-			Assert.Equal("string1", map.PropertyMaps[2].NamesValue[0]);
-			Assert.Equal("string2", map.PropertyMaps[2].NamesValue[1]);
-			Assert.Equal("string3", map.PropertyMaps[2].NamesValue[2]);
+			Assert.Equal( "string1", map.PropertyMaps[2].NamesValue[0] );
+			Assert.Equal( "string2", map.PropertyMaps[2].NamesValue[1] );
+			Assert.Equal( "string3", map.PropertyMaps[2].NamesValue[2] );
+		}
+
+		[Fact]
+		public void MapConstructorTest()
+		{
+			var map = new TestMappingConstructorClass();
+
+			Assert.NotNull( map.Constructor );
 		}
 
 		private class TestClass
@@ -111,6 +119,21 @@ namespace CsvHelper.Tests
 			public int IntColumn { get; set; }
 			public Guid GuidColumn { get; set; }
 			public string NotUsedColumn { get; set; }
+
+			public TestClass(){}
+
+			public TestClass( string stringColumn )
+			{
+				StringColumn = stringColumn;
+			}
+		}
+		
+		private sealed class TestMappingConstructorClass : CsvClassMap<TestClass>
+		{
+			public TestMappingConstructorClass()
+			{
+				ConstructUsing( () => new TestClass( "String Column" ) );
+			}
 		}
 
 		private sealed class TestMappingDefaultClass : CsvClassMap<TestClass>

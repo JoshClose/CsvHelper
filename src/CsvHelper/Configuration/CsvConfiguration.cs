@@ -34,6 +34,11 @@ namespace CsvHelper.Configuration
 
 #if !NET_2_0
 		/// <summary>
+		/// Gets the constructor expression.
+		/// </summary>
+		public virtual NewExpression Constructor { get; private set; } 
+
+		/// <summary>
 		/// Gets the property mappings.
 		/// </summary>
 		public virtual CsvPropertyMapCollection Properties
@@ -246,9 +251,9 @@ namespace CsvHelper.Configuration
 		/// Maps a property of a class to a CSV field.
 		/// </summary>
 		/// <param name="property">The property to map.</param>
-		public virtual CsvPropertyMap PropertyMap(PropertyInfo property)
+		public virtual CsvPropertyMap PropertyMap( PropertyInfo property )
 		{
-			return new CsvPropertyMap(property);
+			return new CsvPropertyMap( property );
 		}
 
 		/// <summary>
@@ -295,6 +300,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual void ClassMapping( CsvClassMap classMap )
 		{
+			Constructor = classMap.Constructor;
 			properties = classMap.PropertyMaps;
 			references = classMap.ReferenceMaps;
 		}

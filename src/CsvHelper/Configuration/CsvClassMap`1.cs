@@ -15,6 +15,15 @@ namespace CsvHelper.Configuration
 	public abstract class CsvClassMap<T> : CsvClassMap where T : class
 	{
 		/// <summary>
+		/// Constructs the row object using the given expression.
+		/// </summary>
+		/// <param name="expression">The expression.</param>
+		protected virtual void ConstructUsing( Expression<Func<T>> expression )
+		{
+			Constructor = ReflectionHelper.GetConstructor( expression );
+		}
+
+		/// <summary>
 		/// Maps a property to a CSV field.
 		/// </summary>
 		/// <param name="expression">The property to map.</param>
