@@ -183,9 +183,7 @@ namespace CsvHelper
 		{
 			if( configuration.CountBytes )
 			{
-				// Get the full string.
-				var s = new string( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition );
-				BytePosition += configuration.Encoding.GetByteCount( s );
+				BytePosition += configuration.Encoding.GetByteCount( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition );
 			}
 
 			field += new string( readerBuffer, fieldStartPosition, length );
@@ -261,7 +259,6 @@ namespace CsvHelper
 
 				if( c == configuration.Quote )
 				{
-				    bool quoteCounted = false;
 					if( !fieldIsEscaped && ( cPrev == configuration.Delimiter || cPrev == '\r' || cPrev == '\n' || cPrev == '\0' ) )
 					{
 						// The field is escaped only if the first char of
@@ -284,19 +281,16 @@ namespace CsvHelper
 						// Grab all the field chars before the
 						// quote if there are any.
 						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-					    quoteCounted = true;
+
+						// We need to add an extra byte position because we didn't 
+						// include the quote in the string that was appended.
+						BytePosition++;
 					}
 
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
 						// Set the new field start position to
 						// the char after the quote.
-
-						if( configuration.CountBytes && !quoteCounted )
-						{
-							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
-						}
-
 						fieldStartPosition = readerBufferPosition;
 					}
 
