@@ -826,6 +826,32 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void ByteCountTestWithQuotedFieldsExtraQuote()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.CountBytes = true;
+				writer.Write( "1,\"2\" \" a\r\n" );
+				writer.Write( "\"3\",4\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Equal( 10, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 17, parser.BytePosition );
+
+				parser.Read();
+				Assert.Equal( 18, parser.BytePosition );
+			}
+		}
+
+
+		[Fact]
 		public void ByteCountUsingCharWithMoreThanSingleByteTest()
 		{
 			var encoding = Encoding.Unicode;

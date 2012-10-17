@@ -181,12 +181,20 @@ namespace CsvHelper
 		/// <param name="length">The length.</param>
 		protected virtual void AppendField( ref string field, int fieldStartPosition, int length )
 		{
+			field += new string( readerBuffer, fieldStartPosition, length );
+		}
+
+		/// <summary>
+		/// Updates the byte position using the data from the reader buffer.
+		/// </summary>
+		/// <param name="fieldStartPosition">The field start position.</param>
+		/// <param name="length">The length.</param>
+		protected virtual void UpdateBytePosition( int fieldStartPosition, int length )
+		{
 			if( configuration.CountBytes )
 			{
-				BytePosition += configuration.Encoding.GetByteCount( readerBuffer, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+				BytePosition += configuration.Encoding.GetByteCount( readerBuffer, fieldStartPosition, length );
 			}
-
-			field += new string( readerBuffer, fieldStartPosition, length );
 		}
 
 		/// <summary>
@@ -218,6 +226,7 @@ namespace CsvHelper
 						// The buffer ran out. Take the current
 						// text and add it to the field.
 						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					}
 
 					charsRead = reader.Read( readerBuffer, 0, readerBuffer.Length );
@@ -281,14 +290,19 @@ namespace CsvHelper
 						// Grab all the field chars before the
 						// quote if there are any.
 						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-
-						// We need to add an extra byte position because we didn't 
-						// include the quote in the string that was appended.
-						BytePosition++;
+						// Include the quote in the byte count.
+						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					}
 
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
+						if( inQuotes )
+						{
+							// If this is the first quote, it will not 
+							// have been counted yet so we need to count it.
+							UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+						}
+
 						// Set the new field start position to
 						// the char after the quote.
 						fieldStartPosition = readerBufferPosition;
@@ -317,11 +331,6 @@ namespace CsvHelper
 				{
 					// We are on a commented line.
 					// Ignore the character.
-
-					if( configuration.CountBytes )
-					{
-						BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
-					}
 				}
 				else if( c == configuration.Delimiter )
 				{
@@ -329,6 +338,8 @@ namespace CsvHelper
 					// done reading the field and can
 					// add it to the record.
 					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					// Include the comma in the byte count.
+					UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					AddFieldToRecord( ref recordPosition, field );
 					fieldStartPosition = readerBufferPosition;
 
@@ -340,10 +351,7 @@ namespace CsvHelper
 					{
 						// We are still on the same line.
 
-						if( configuration.CountBytes )
-						{
-							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
-						}
+						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 
 						fieldStartPosition = readerBufferPosition;
 						continue;
@@ -353,10 +361,7 @@ namespace CsvHelper
 					{
 						// We have hit a blank line. Ignore it.
 
-						if( configuration.CountBytes )
-						{
-							BytePosition += configuration.Encoding.GetByteCount( new[] { c } );
-						}
+						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 
 						fieldStartPosition = readerBufferPosition;
 						inComment = false;
@@ -367,6 +372,8 @@ namespace CsvHelper
 					// If we hit the end of the record, add 
 					// the current field and return the record.
 					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+					// Include the \r or \n in the byte count.
+					UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					AddFieldToRecord( ref recordPosition, field );
 					break;
 				}
