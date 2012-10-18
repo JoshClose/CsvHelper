@@ -84,7 +84,7 @@
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="MissingFrom20\EnumerableHelper.cs" />
-    <Compile Include="MissingFrom20\Predicates.cs" />
+    <Compile Include="MissingFrom20\Delegates.cs" />
     <Compile Include="MissingFrom20\StringHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
