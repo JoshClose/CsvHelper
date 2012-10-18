@@ -226,6 +226,15 @@ namespace CsvHelper
 			// when reading records.
 			currentIndex = index;
 
+			if( index >= currentRecord.Length )
+			{
+				if( configuration.IsStrictMode )
+				{
+					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+				}
+				return default( string );
+			}
+
 			return currentRecord[index];
 		}
 
@@ -328,6 +337,16 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
+
+			if( index >= currentRecord.Length )
+			{
+				if( configuration.IsStrictMode )
+				{
+					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+				}
+				return default( T );
+			}
+
 
 			return (T)GetField( index, converter );
 		}

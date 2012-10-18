@@ -234,6 +234,74 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void GetMissingFieldByIndexStrictTest()
+		{
+			var data = new Queue<string[]>();
+			data.Enqueue( new[] { "One", "Two" } );
+			data.Enqueue( new[] { "1", "2" } );
+			data.Enqueue( null );
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
+			reader.Read();
+
+			Assert.Throws<CsvMissingFieldException>( () => reader.GetField( 2 ) );
+		}
+
+		[Fact]
+		public void GetMissingFieldGenericByIndexStrictTest()
+		{
+			var data = new Queue<string[]>();
+			data.Enqueue( new[] { "One", "Two" } );
+			data.Enqueue( new[] { "1", "2" } );
+			data.Enqueue( null );
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
+			reader.Read();
+
+			Assert.Throws<CsvMissingFieldException>( () => reader.GetField<string>( 2 ) );
+		}
+
+		[Fact]
+		public void GetMissingFieldByIndexStrictOffTest()
+		{
+			var data = new Queue<string[]>();
+			data.Enqueue( new[] { "One", "Two" } );
+			data.Enqueue( new[] { "1", "2" } );
+			data.Enqueue( null );
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = false } };
+			reader.Read();
+
+			Assert.Null( reader.GetField( 2 ) );
+		}
+
+		[Fact]
+		public void GetMissingFieldGenericByIndexStrictOffTest()
+		{
+			var data = new Queue<string[]>();
+			data.Enqueue( new[] { "One", "Two" } );
+			data.Enqueue( new[] { "1", "2" } );
+			data.Enqueue( null );
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+
+			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = false } };
+			reader.Read();
+
+			Assert.Null( reader.GetField<string>( 2 ) );
+		}
+
+		[Fact]
 		public void GetFieldByNameNoHeaderExceptionTest()
 		{
 			var data = new [] { "1", "2" };
