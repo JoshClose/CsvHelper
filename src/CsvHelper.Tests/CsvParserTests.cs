@@ -850,7 +850,6 @@ namespace CsvHelper.Tests
 			}
 		}
 
-
 		[Fact]
 		public void ByteCountUsingCharWithMoreThanSingleByteTest()
 		{
@@ -968,8 +967,53 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
+				parser.Configuration.DetectColumnCountChanges = true;
 				parser.Read();
 				Assert.Throws<CsvBadDataException>( () => parser.Read() );
+			}
+		}
+
+		[Fact]
+		public void InconsistentColumnsSmallerTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "1,2,3,4" );
+				writer.WriteLine( "5,6,7" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.DetectColumnCountChanges = true;
+				parser.Read();
+				Assert.Throws<CsvBadDataException>( () => parser.Read() );
+			}
+		}
+
+		[Fact]
+		public void SimulateSeekingTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				// Already read:
+				// 1,2,3\r
+				// Seeked to this position.
+				writer.Write( "\n4,5,6\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				// Make sure this doesn't throw an exception.
+				var row = parser.Read();
+
+				Assert.NotNull( row );
+				Assert.Equal( "4", row[0] );
+				Assert.Equal( "5", row[1] );
+				Assert.Equal( "6", row[2] );
 			}
 		}
 	}

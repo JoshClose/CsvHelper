@@ -90,6 +90,16 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Gets or sets a value indicating whether changes in the column
+		/// count should be detected. If true, a <see cref="CsvBadDataException"/>
+		/// will be thrown if a different column count is detected.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if [detect column count changes]; otherwise, <c>false</c>.
+		/// </value>
+		public virtual bool DetectColumnCountChanges { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating whether matching header
 		/// column names is case sensitive. True for case sensitive
 		/// matching, otherwise false.

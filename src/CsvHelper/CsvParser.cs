@@ -6,6 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
+#if NET_2_0
+using CsvHelper.MissingFrom20;
+#endif
+#if !NET_2_0
+using System.Linq;
+#endif
 
 namespace CsvHelper
 {
@@ -19,6 +25,7 @@ namespace CsvHelper
 		private readonly char[] readerBuffer;
 		private int readerBufferPosition;
 		private int charsRead;
+		private int columnCount;
 		private string[] record;
 		private int currentRow;
 		private int currentCharacter;
@@ -94,7 +101,24 @@ namespace CsvHelper
 
 			try
 			{
-				return ReadLine();
+				var row = ReadLine();
+
+				if( configuration.DetectColumnCountChanges )
+				{
+					if( columnCount > 0 && ( columnCount != row.Length || 
+#if NET_2_0
+						EnumerableHelper.Any( row, field => field == null )
+#else
+						row.Any( field => field == null ) 
+#endif
+						) )
+					{
+						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
+					}
+					columnCount = row.Length;
+				}
+
+				return row;
 			}
 			catch( CsvHelperException )
 			{
@@ -116,11 +140,6 @@ namespace CsvHelper
 		{
 			if( record.Length < recordPosition + 1 )
 			{
-				if( currentRow > 1 )
-				{
-					throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
-				}
-
 				// Resize record if it's too small.
 				Array.Resize( ref record, recordPosition + 1 );
 				FieldCount = record.Length;
