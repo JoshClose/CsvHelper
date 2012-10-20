@@ -29,7 +29,6 @@ namespace CsvHelper
 		private string[] headerRecord;
 		private ICsvParser parser;
 		private int currentIndex = -1;
-		private string currentName;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 #if !NET_2_0
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
@@ -153,10 +152,12 @@ namespace CsvHelper
 				ParseNamedIndexes();
 			}
 
-			currentRecord = parser.Read();
+			do
+			{
+				currentRecord = parser.Read();
+			} while( configuration.SkipEmptyRecords && IsRecordEmpty( false ) );
 
 			currentIndex = -1;
-
 			hasBeenRead = true;
 
 			return currentRecord != null;
@@ -528,6 +529,18 @@ namespace CsvHelper
 			return TryGetField( index, converter, out field );
 		}
 
+		/// <summary>
+		/// Determines whether the current record is empty.
+		/// A record is considered empty if all fields are empty.
+		/// </summary>
+		/// <returns>
+		///   <c>true</c> if [is record empty]; otherwise, <c>false</c>.
+		/// </returns>
+		public virtual bool IsRecordEmpty()
+		{
+			return IsRecordEmpty( true );
+		}
+
 #if !NET_2_0
 		/// <summary>
 		/// Gets the record converted into <see cref="Type"/> T.
@@ -730,6 +743,30 @@ namespace CsvHelper
 			{
 				throw new CsvReaderException( "You must call read on the reader before accessing its data." );
 			}
+		}
+
+		/// <summary>
+		/// Determines whether the current record is empty.
+		/// A record is considered empty if all fields are empty.
+		/// </summary>
+		/// <param name="checkHasBeenRead">True to check if the record 
+		/// has been read, otherwise false.</param>
+		/// <returns>
+		///   <c>true</c> if [is record empty]; otherwise, <c>false</c>.
+		/// </returns>
+		protected virtual bool IsRecordEmpty( bool checkHasBeenRead )
+		{
+			CheckDisposed();
+			if( checkHasBeenRead )
+			{
+				CheckHasBeenRead();
+			}
+
+#if NET_2_0
+			return EnumerableHelper.All( currentRecord, string.IsNullOrEmpty );
+#else
+			return currentRecord.All( string.IsNullOrEmpty );
+#endif
 		}
 
 		/// <summary>

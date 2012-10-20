@@ -235,6 +235,15 @@ namespace CsvHelper.Configuration
 			set { encoding = value; }
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating whether empty rows should be skipped when reading.
+		/// A record is considered empty if all fields are empty.
+		/// </summary>
+		/// <value>
+		///   <c>true</c> if [skip empty rows]; otherwise, <c>false</c>.
+		/// </value>
+		public virtual bool SkipEmptyRecords { get; set; }
+
 #if !NET_2_0
 		/// <summary>
 		/// Maps a property of a class to a CSV field.

@@ -33,5 +33,18 @@ namespace CsvHelper.MissingFrom20
 
 			return false;
 		}
+
+		public static bool All<TSource>( IEnumerable<TSource> enumerable, Func<TSource, bool> predicate )
+		{
+			foreach( var item in enumerable )
+			{
+				if( !predicate( item ) )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
 	}
 }

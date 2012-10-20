@@ -935,6 +935,34 @@ namespace CsvHelper.Tests
 			Assert.False( records[5].BoolNullableColumn );
 		}
 
+		[Fact]
+		public void SkipEmptyRecordsTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "2", "3" } );
+			queue.Enqueue( new[] { "", "", "" } );
+			queue.Enqueue( new[] { "4", "5", "6" } );
+			queue.Enqueue( null );
+
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( queue.Dequeue );
+
+			var reader = new CsvReader( parserMock.Object );
+			reader.Configuration.HasHeaderRecord = false;
+			reader.Configuration.SkipEmptyRecords = true;
+
+			reader.Read();
+			Assert.Equal( "1",  reader.CurrentRecord[0] );
+			Assert.Equal( "2",  reader.CurrentRecord[1] );
+			Assert.Equal( "3",  reader.CurrentRecord[2] );
+
+			reader.Read();
+			Assert.Equal( "4", reader.CurrentRecord[0] );
+			Assert.Equal( "5", reader.CurrentRecord[1] );
+			Assert.Equal( "6", reader.CurrentRecord[2] );
+		}
+
 		private class TestBoolean
 		{
 			public bool BoolColumn { get; set; }
