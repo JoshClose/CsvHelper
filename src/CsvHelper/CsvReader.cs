@@ -564,7 +564,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ), ex );
+				throw GetException( typeof( T ), ex );
 			}
 			return record;
 		}
@@ -591,7 +591,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw new CsvReaderException( GetExceptionMessage( type, ex ), ex );
+				throw GetException( type, ex );
 			}
 			return record;
 		}
@@ -623,7 +623,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					throw new CsvReaderException( GetExceptionMessage( typeof( T ), ex ), ex );
+					throw GetException( typeof( T ), ex );
 				}
 
 				yield return record;
@@ -657,7 +657,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					throw new CsvReaderException( GetExceptionMessage( type, ex ), ex );
+					throw GetException( type, ex );
 				}
 				yield return record;
 			}
@@ -938,31 +938,48 @@ namespace CsvHelper
 		/// <param name="type">The type of record.</param>
 		/// <param name="ex">The original exception.</param>
 		/// <returns>The new exception message.</returns>
-		protected virtual string GetExceptionMessage(Type type, Exception ex)
+		protected virtual CsvReaderException GetException( Type type, Exception ex )
 		{
-			var error = new StringBuilder();
-			error.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
-			error.AppendFormat( "Row: '{0}' (1-based)", parser.Row ).AppendLine();
-			error.AppendFormat( "Field Index: '{0}' (0-based)", currentIndex ).AppendLine();
+			var message = new StringBuilder();
+			message.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
+			message.AppendFormat( "Row: '{0}' (1 based)", parser.Row ).AppendLine();
+			message.AppendFormat( "Field Index: '{0}' (0 based)", currentIndex ).AppendLine();
+			string fieldName = null;
 			if( configuration.HasHeaderRecord )
 			{
-				var name = ( from pair in namedIndexes
+				fieldName = ( from pair in namedIndexes
 				             from index in pair.Value
 				             where index == currentIndex
 				             select pair.Key ).SingleOrDefault();
-				if( name != null )
+				if( fieldName != null )
 				{
-					error.AppendFormat( "Field Name: '{0}'", name ).AppendLine();
+					message.AppendFormat( "Field Name: '{0}'", fieldName ).AppendLine();
 				}
 			}
+			string fieldValue = null;
 			if( currentIndex < currentRecord.Length )
 			{
-				error.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
+				fieldValue = currentRecord[currentIndex];
+				message.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
 			}
-			error.AppendLine();
-			error.AppendLine( ex.ToString() );
 
-			return error.ToString();
+			var exception = new CsvReaderException( message.ToString(), ex )
+			{
+				RowNumber = parser.Row,
+				FieldIndex = currentIndex
+			};
+
+			if( fieldName != null )
+			{
+				exception.FieldName = fieldName;
+			}
+
+			if( fieldValue != null )
+			{
+				exception.FieldValue = fieldValue;
+			}
+
+			return exception;
 		}
 
 		/// <summary>

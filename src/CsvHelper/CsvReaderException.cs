@@ -13,6 +13,38 @@ namespace CsvHelper
 	public class CsvReaderException : CsvHelperException
 	{
 		/// <summary>
+		/// Gets the row number the error occurred on. (1 based).
+		/// </summary>
+		/// <value>
+		/// The row number.
+		/// </value>
+		public virtual int RowNumber { get; internal set; }
+
+		/// <summary>
+		/// Gets the index of the field that the error occurred on. (0 based).
+		/// </summary>
+		/// <value>
+		/// The index of the field.
+		/// </value>
+		public virtual int FieldIndex { get; internal set; }
+
+		/// <summary>
+		/// Gets the name of the field that the error occurred on.
+		/// </summary>
+		/// <value>
+		/// The name of the field.
+		/// </value>
+		public virtual string FieldName { get; internal set; }
+
+		/// <summary>
+		/// Gets the value of the field that the error occurred on.
+		/// </summary>
+		/// <value>
+		/// The field value.
+		/// </value>
+		public virtual string FieldValue { get; internal set; }
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvReaderException"/> class.
 		/// </summary>
 		public CsvReaderException() {}

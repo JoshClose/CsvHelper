@@ -35,6 +35,11 @@ namespace CsvHelper.Tests
 					// There is no header so a field name should not be in the message.
 					Assert.True( !ex.ToString().Contains( "Field Name: 'IntColumn'" ) );
 					Assert.True( ex.ToString().Contains( "Field Value: ''" ) );
+
+					Assert.Equal( 1, ex.RowNumber );
+					Assert.Equal( 0, ex.FieldIndex );
+					Assert.Null( ex.FieldName );
+					Assert.Equal( string.Empty, ex.FieldValue );
 				}
 			}
 		}
@@ -65,6 +70,11 @@ namespace CsvHelper.Tests
 					Assert.True( ex.ToString().Contains( "Field Index: '0'" ) );
 					Assert.True( ex.ToString().Contains( "Field Name: 'IntColumn'" ) );
 					Assert.True( ex.ToString().Contains( "Field Value: ''" ) );
+
+					Assert.Equal( 3, ex.RowNumber );
+					Assert.Equal( 0, ex.FieldIndex );
+					Assert.Equal( "IntColumn", ex.FieldName );
+					Assert.Equal( string.Empty, ex.FieldValue );
 				}
 			}
 		}
@@ -97,6 +107,11 @@ namespace CsvHelper.Tests
 					Assert.True( ex.ToString().Contains( "Field Index: '0'" ) );
 					Assert.True( ex.ToString().Contains( "Field Name: 'IntColumn'" ) );
 					Assert.True( ex.ToString().Contains( "Field Value: ''" ) );
+
+					Assert.Equal( 4, ex.RowNumber );
+					Assert.Equal( 0, ex.FieldIndex );
+					Assert.Equal( "IntColumn", ex.FieldName );
+					Assert.Equal( string.Empty, ex.FieldValue );
 				}
 			}
 		}
@@ -127,6 +142,11 @@ namespace CsvHelper.Tests
 					Assert.True( ex.ToString().Contains( "Field Index: '0'" ) );
 					Assert.True( ex.ToString().Contains( "Field Name: 'IntColumn'" ) );
 					Assert.True( ex.ToString().Contains( "Field Value: 'one'" ) );
+
+					Assert.Equal( 3, ex.RowNumber );
+					Assert.Equal( 0, ex.FieldIndex );
+					Assert.Equal( "IntColumn", ex.FieldName );
+					Assert.Equal( "one", ex.FieldValue );
 				}
 			}
 		}
