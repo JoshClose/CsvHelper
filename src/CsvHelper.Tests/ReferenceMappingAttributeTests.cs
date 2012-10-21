@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System.Collections.Generic;
 using CsvHelper.Configuration;
 using Moq;
 using Xunit;
@@ -13,57 +15,52 @@ namespace CsvHelper.Tests
 		[Fact]
 		public void ReferenceMappingTest()
 		{
-			var count = 0;
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[]
+			{
+				"FirstName",
+				"LastName",
+				"HomeStreet",
+				"HomeCity",
+				"HomeState",
+				"HomeZip",
+				"WorkStreet",
+				"WorkCity",
+				"WorkState",
+				"WorkZip"
+			} );
+			queue.Enqueue( new[]
+			{
+				"John",
+				"Doe",
+				"1234 Home St",
+				"Home Town",
+				"Home State",
+				"12345",
+				"5678 Work Rd",
+				"Work City",
+				"Work State",
+				"67890"
+			} );
+			queue.Enqueue( null );
 			var parserMock = new Mock<ICsvParser>();
 			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( count == 0 )
-				{
-					return new[]
-					{
-						"FirstName",
-						"LastName",
-						"HomeStreet",
-						"HomeCity",
-						"HomeState",
-						"HomeZip",
-						"WorkStreet",
-						"WorkCity",
-						"WorkState",
-						"WorkZip"
-					};
-				}
-				count++;
-				return new[]
-				{
-					"John",
-					"Doe",
-					"1234 Home St",
-					"Home Town",
-					"Home State",
-					"12345",
-					"5678 Work Rd",
-					"Work City",
-					"Work State",
-					"67890"
-				};
-			} );
+			parserMock.Setup( m => m.Read() ).Returns( queue.Dequeue );
 
 			var reader = new CsvReader( parserMock.Object );
 			reader.Read();
 			var person = reader.GetRecord<Person>();
 
-			Assert.Equal( "FirstName", person.FirstName );
-			Assert.Equal( "LastName", person.LastName );
-			Assert.Equal( "HomeStreet", person.HomeAddress.Street );
-			Assert.Equal( "HomeCity", person.HomeAddress.City );
-			Assert.Equal( "HomeState", person.HomeAddress.State );
-			Assert.Equal( "HomeZip", person.HomeAddress.Zip );
-			Assert.Equal( "WorkStreet", person.WorkAddress.Street );
-			Assert.Equal( "WorkCity", person.WorkAddress.City );
-			Assert.Equal( "WorkState", person.WorkAddress.State );
-			Assert.Equal( "WorkZip", person.WorkAddress.Zip );
+			Assert.Equal( "John", person.FirstName );
+			Assert.Equal( "Doe", person.LastName );
+			Assert.Equal( "1234 Home St", person.HomeAddress.Street );
+			Assert.Equal( "Home Town", person.HomeAddress.City );
+			Assert.Equal( "Home State", person.HomeAddress.State );
+			Assert.Equal( "12345", person.HomeAddress.Zip );
+			Assert.Equal( "5678 Work Rd", person.WorkAddress.Street );
+			Assert.Equal( "Work City", person.WorkAddress.City );
+			Assert.Equal( "Work State", person.WorkAddress.State );
+			Assert.Equal( "67890", person.WorkAddress.Zip );
 		}
 
 		private class Person
