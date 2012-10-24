@@ -20,7 +20,7 @@ namespace CsvHelper
 		/// </returns>
 		public static bool IsNullOrWhiteSpace( this string s )
 		{
-			return s == null || !s.Any( c => !char.IsWhiteSpace( c ) );
+			return string.IsNullOrEmpty( s ) || s.All( char.IsWhiteSpace );
 		}
 	}
 }

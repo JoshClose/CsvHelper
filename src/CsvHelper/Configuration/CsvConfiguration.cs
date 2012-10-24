@@ -203,13 +203,6 @@ namespace CsvHelper.Configuration
 		public virtual bool UseInvariantCulture { get; set; }
 
 		/// <summary>
-		/// Gets or sets the number of fields the CSV file has.
-		/// If this is known ahead of time, set
-		/// to make parsing more efficient.
-		/// </summary>
-		public virtual int FieldCount { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating whether all fields are quoted when writing,
 		/// or just ones that have to be.
 		/// </summary>

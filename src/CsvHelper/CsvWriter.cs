@@ -513,6 +513,12 @@ namespace CsvHelper
 			return (Action<ICsvWriter, T>)typeActions[type];
 		}
 
+		/// <summary>
+		/// Gets the action delegate used to write the custom
+		/// class object to the writer.
+		/// </summary>
+		/// <param name="type">The type of the custom class being written.</param>
+		/// <returns>The action delegate.</returns>
 		protected virtual Action<ICsvWriter, object> GetWriteRecordAction( Type type )
 		{
 			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<ICsvWriter, object>>( body, writerParameter, recordParameter ).Compile() );
@@ -520,6 +526,12 @@ namespace CsvHelper
 			return (Action<ICsvWriter, object>)typeActions[type];
 		}
 
+		/// <summary>
+		/// Creates the write record action for the given type if it
+		/// doesn't already exist.
+		/// </summary>
+		/// <param name="type">The type of the custom class being written.</param>
+		/// <param name="expressionCompiler">The expression compiler.</param>
 		protected virtual void CreateWriteRecordAction( Type type, Func<Expression, ParameterExpression, ParameterExpression, Delegate> expressionCompiler )
 		{
 			if( typeActions.ContainsKey( type ) )

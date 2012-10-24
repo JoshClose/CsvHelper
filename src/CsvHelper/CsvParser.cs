@@ -103,7 +103,7 @@ namespace CsvHelper
 			{
 				var row = ReadLine();
 
-				if( configuration.DetectColumnCountChanges )
+				if( configuration.DetectColumnCountChanges && row != null )
 				{
 					if( columnCount > 0 && ( columnCount != row.Length || 
 #if NET_2_0

@@ -955,6 +955,26 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void ConsistentColumnsWithDetectColumnChangesTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "Column 1,Column 2" );
+				writer.WriteLine( "1,2" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.DetectColumnCountChanges = true;
+				while( parser.Read() != null )
+				{
+				}
+			}
+		}
+
+		[Fact]
 		public void InconsistentColumnsTest()
 		{
 			using( var stream = new MemoryStream() )
