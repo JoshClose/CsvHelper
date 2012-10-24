@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.9.0</version>
+    <version>1.9.1</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -11,19 +11,8 @@
     <description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</description>
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
-Features:
--Parser can read malformed CSV records.
--Parser keeps track of byte position.
--Easy formatting when writing instead of having to use a TypeConverter.
--Config option to throw an exception when rows have a different column count.
--Class construction option added to class mapping.
--Config option to skip empty records.
--CsvReaderExcption has informational properties added to it.
-
 Bug Fixes:
--CsvReaderException didn't have the original inner exception attached.
--Parsing was incorrect when last row didn't end with a CRLF.
--Getting by index that doesn't exist will throw a MissingFieldException when IsStrictReading is on, just like it does with named indexes.
+-Fixed issue with detecting column count changes.
 	</releaseNotes>
   </metadata>
 </package>
