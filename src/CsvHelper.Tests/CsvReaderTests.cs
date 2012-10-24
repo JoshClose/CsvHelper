@@ -961,6 +961,8 @@ namespace CsvHelper.Tests
 			Assert.Equal( "4", reader.CurrentRecord[0] );
 			Assert.Equal( "5", reader.CurrentRecord[1] );
 			Assert.Equal( "6", reader.CurrentRecord[2] );
+
+			Assert.False( reader.Read() );
 		}
 
 		private class TestBoolean

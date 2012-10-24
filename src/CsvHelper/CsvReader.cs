@@ -762,6 +762,11 @@ namespace CsvHelper
 				CheckHasBeenRead();
 			}
 
+			if( currentRecord == null )
+			{
+				return false;
+			}
+
 #if NET_2_0
 			return EnumerableHelper.All( currentRecord, string.IsNullOrEmpty );
 #else
