@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace CsvHelper.Configuration
@@ -25,6 +26,7 @@ namespace CsvHelper.Configuration
 		private object defaultValue;
 		private bool isDefaultValueSet;
 		private string format;
+		private Expression convertExpression;
 
 		/// <summary>
 		/// Gets the property value.
@@ -76,6 +78,15 @@ namespace CsvHelper.Configuration
 		/// The format.
 		/// </value>
 		public virtual string FormatValue { get { return format; } }
+
+		/// <summary>
+		/// Gets the expression used to convert data in the
+		/// row to the property.
+		/// </summary>
+		/// <value>
+		/// The convert using value.
+		/// </value>
+		public virtual Expression ConvertUsingValue { get { return convertExpression; } } 
 
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
@@ -181,6 +192,18 @@ namespace CsvHelper.Configuration
 		public virtual CsvPropertyMap TypeConverter<T>() where T : TypeConverter
 		{
 			TypeConverter( Activator.CreateInstance<T>() );
+			return this;
+		}
+
+		/// <summary>
+		/// Specifies an expression to be used to convert data in the
+		/// row to the property.
+		/// </summary>
+		/// <typeparam name="T">The type of the property that will be set.</typeparam>
+		/// <param name="convertExpression">The convert expression.</param>
+		public virtual CsvPropertyMap ConvertUsing<T>( Expression<Func<ICsvReaderRow, T>> convertExpression )
+		{
+			this.convertExpression = convertExpression;
 			return this;
 		}
 

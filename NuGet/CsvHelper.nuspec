@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.9.2</version>
+    <version>1.10.0</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -11,8 +11,9 @@
     <description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</description>
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
+Features:
+-Mapping property for CreateUsing which allows user to specify how the property gets created.
 Bug Fixes:
--Fixed issue with skipping empty records.
 	</releaseNotes>
   </metadata>
 </package>

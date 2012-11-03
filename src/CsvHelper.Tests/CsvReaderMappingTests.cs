@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// Copyright 2009-2012 Josh Close
+// This file is a part of CsvHelper and is licensed under the MS-PL
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+// http://csvhelper.com
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
@@ -58,6 +62,35 @@ namespace CsvHelper.Tests
 			Assert.Equal( "one", record.StringColumn );
 		}
 
+		[Fact]
+		public void ConvertUsingTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "2" } );
+			queue.Enqueue( new[] { "3", "4" } );
+			queue.Enqueue( null );
+
+			var parserMock = new Mock<ICsvParser>();
+			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
+			parserMock.Setup( m => m.Read() ).Returns( queue.Dequeue );
+
+			var csvReader = new CsvReader( parserMock.Object );
+			csvReader.Configuration.HasHeaderRecord = false;
+			csvReader.Configuration.ClassMapping<ConvertUsingMap>();
+
+			var records = csvReader.GetRecords<TestClass>().ToList();
+
+			Assert.NotNull( records );
+			Assert.Equal( 2, records.Count );
+			Assert.Equal( 3, records[0].IntColumn );
+			Assert.Equal( 7, records[1].IntColumn );
+		}
+
+		private class TestClass
+		{
+			public int IntColumn { get; set; }
+		}
+
 		private class MultipleNamesAttributeClass
 		{
 			[CsvField( Names = new[] { "int1", "int2", "int3" } )]
@@ -85,6 +118,14 @@ namespace CsvHelper.Tests
 			{
 				ConstructUsing( () => new ConstructorMappingClass( "one" ) );
 				Map( m => m.IntColumn ).Index( 0 );
+			}
+		}
+
+		private sealed class ConvertUsingMap : CsvClassMap<TestClass>
+		{
+			public ConvertUsingMap()
+			{
+				Map( m => m.IntColumn ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
 			}
 		}
 	}

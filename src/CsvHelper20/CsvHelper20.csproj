@@ -77,6 +77,9 @@
     <Compile Include="..\CsvHelper\ICsvReader.cs">
       <Link>ICsvReader.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\ICsvReaderRow.cs">
+      <Link>ICsvReaderRow.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\ICsvWriter.cs">
       <Link>ICsvWriter.cs</Link>
     </Compile>

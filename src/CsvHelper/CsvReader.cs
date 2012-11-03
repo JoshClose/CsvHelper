@@ -1105,6 +1105,14 @@ namespace CsvHelper
 		{
 			foreach( var propertyMap in properties )
 			{
+				if( propertyMap.ConvertUsingValue != null )
+				{
+					// The user is providing the expression to do the conversion.
+					var exp = Expression.Invoke( propertyMap.ConvertUsingValue, Expression.Constant( this ) );
+					bindings.Add( Expression.Bind( propertyMap.PropertyValue, exp ) );
+					continue;
+				}
+
 				if( propertyMap.IgnoreValue )
 				{
 					// Skip ignored properties.
@@ -1125,7 +1133,7 @@ namespace CsvHelper
 				}
 
 				// Get the field using the field index.
-				var method = typeof( ICsvReader ).GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
+				var method = typeof( ICsvReaderRow ).GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
 				Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
 
 				// Convert the field.
