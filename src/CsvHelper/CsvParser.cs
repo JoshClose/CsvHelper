@@ -113,7 +113,7 @@ namespace CsvHelper
 #endif
 						) )
 					{
-						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
+						throw ExceptionHelper.GetReaderException<CsvBadDataException>( "An inconsistent number of columns has been detected.", null, this, null, null, null, null );
 					}
 					columnCount = row.Length;
 				}
@@ -127,7 +127,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw new CsvParserException( string.Format( "A parsing error occurred. Line: {0} Character: {1}", currentRow, currentCharacter ), ex );
+				throw ExceptionHelper.GetReaderException<CsvParserException>( "A parsing error occurred.", ex, this, null, null, null, null );
 			}
 		}
 

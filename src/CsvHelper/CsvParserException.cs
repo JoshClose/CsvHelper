@@ -10,8 +10,23 @@ namespace CsvHelper
 	/// <summary>
 	/// Represents errors that occur while parsing a CSV file.
 	/// </summary>
-	public class CsvParserException : CsvHelperException
+	public class CsvParserException : CsvHelperException, ICsvParserExceptionInfo
 	{
+		/// <summary>
+		/// Gets the character position that the parser is currently on.
+		/// </summary>
+		public long CharPosition { get; set; }
+
+		/// <summary>
+		/// Gets the byte position that the parser is currently on.
+		/// </summary>
+		public long BytePosition { get; set; }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// </summary>
+		public int Row { get; set; }
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvParserException"/> class.
 		/// </summary>

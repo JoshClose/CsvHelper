@@ -564,7 +564,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw GetException( typeof( T ), ex );
+				throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
 			}
 			return record;
 		}
@@ -591,7 +591,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw GetException( type, ex );
+				throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, type, namedIndexes, currentIndex, currentRecord );
 			}
 			return record;
 		}
@@ -623,7 +623,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					throw GetException( typeof( T ), ex );
+					throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
 				}
 
 				yield return record;
@@ -657,7 +657,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					throw GetException( type, ex );
+					throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, type, namedIndexes, currentIndex, currentRecord );
 				}
 				yield return record;
 			}
@@ -937,56 +937,6 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
-		/// <summary>
-		/// Gets a new exception message adding more detailed information.
-		/// </summary>
-		/// <param name="type">The type of record.</param>
-		/// <param name="ex">The original exception.</param>
-		/// <returns>The new exception message.</returns>
-		protected virtual CsvReaderException GetException( Type type, Exception ex )
-		{
-			var message = new StringBuilder();
-			message.AppendFormat( "An error occurred trying to read a record of type '{0}'.", type.FullName ).AppendLine();
-			message.AppendFormat( "Row: '{0}' (1 based)", parser.Row ).AppendLine();
-			message.AppendFormat( "Field Index: '{0}' (0 based)", currentIndex ).AppendLine();
-			string fieldName = null;
-			if( configuration.HasHeaderRecord )
-			{
-				fieldName = ( from pair in namedIndexes
-				             from index in pair.Value
-				             where index == currentIndex
-				             select pair.Key ).SingleOrDefault();
-				if( fieldName != null )
-				{
-					message.AppendFormat( "Field Name: '{0}'", fieldName ).AppendLine();
-				}
-			}
-			string fieldValue = null;
-			if( currentIndex < currentRecord.Length )
-			{
-				fieldValue = currentRecord[currentIndex];
-				message.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex] ).AppendLine();
-			}
-
-			var exception = new CsvReaderException( message.ToString(), ex )
-			{
-				RowNumber = parser.Row,
-				FieldIndex = currentIndex
-			};
-
-			if( fieldName != null )
-			{
-				exception.FieldName = fieldName;
-			}
-
-			if( fieldValue != null )
-			{
-				exception.FieldValue = fieldValue;
-			}
-
-			return exception;
-		}
-
 		/// <summary>
 		/// Gets the function delegate used to populate
 		/// a custom class object with data from the reader.

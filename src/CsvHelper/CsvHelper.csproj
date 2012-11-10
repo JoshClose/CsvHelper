@@ -88,8 +88,11 @@
     <Compile Include="CsvReaderException.cs" />
     <Compile Include="CsvWriter.cs" />
     <Compile Include="CsvWriterException.cs" />
+    <Compile Include="ExceptionHelper.cs" />
     <Compile Include="ICsvParser.cs" />
+    <Compile Include="ICsvParserExceptionInfo.cs" />
     <Compile Include="ICsvReader.cs" />
+    <Compile Include="ICsvReaderExceptionInfo.cs" />
     <Compile Include="ICsvReaderRow.cs" />
     <Compile Include="ICsvWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -10,15 +10,22 @@ namespace CsvHelper
 	/// <summary>
 	/// Represents errors that occur while reading a CSV file.
 	/// </summary>
-	public class CsvReaderException : CsvHelperException
+	public class CsvReaderException : CsvHelperException, ICsvReaderExceptionInfo
 	{
 		/// <summary>
-		/// Gets the row number the error occurred on. (1 based).
+		/// Gets the character position that the parser is currently on.
 		/// </summary>
-		/// <value>
-		/// The row number.
-		/// </value>
-		public virtual int RowNumber { get; internal set; }
+		public virtual long CharPosition { get; set; }
+
+		/// <summary>
+		/// Gets the byte position that the parser is currently on.
+		/// </summary>
+		public virtual long BytePosition { get; set; }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// </summary>
+		public virtual int Row { get; set; }
 
 		/// <summary>
 		/// Gets the index of the field that the error occurred on. (0 based).
@@ -26,7 +33,7 @@ namespace CsvHelper
 		/// <value>
 		/// The index of the field.
 		/// </value>
-		public virtual int FieldIndex { get; internal set; }
+		public virtual int FieldIndex { get; set; }
 
 		/// <summary>
 		/// Gets the name of the field that the error occurred on.
@@ -34,7 +41,7 @@ namespace CsvHelper
 		/// <value>
 		/// The name of the field.
 		/// </value>
-		public virtual string FieldName { get; internal set; }
+		public virtual string FieldName { get; set; }
 
 		/// <summary>
 		/// Gets the value of the field that the error occurred on.
@@ -42,7 +49,7 @@ namespace CsvHelper
 		/// <value>
 		/// The field value.
 		/// </value>
-		public virtual string FieldValue { get; internal set; }
+		public virtual string FieldValue { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvReaderException"/> class.
