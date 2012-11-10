@@ -10,6 +10,9 @@ using System.Linq.Expressions;
 #endif
 using System.Reflection;
 using System.Text;
+#if WINRT_4_5
+using CsvHelper.MissingFromRt45;
+#endif
 
 namespace CsvHelper.Configuration
 {
@@ -22,7 +25,11 @@ namespace CsvHelper.Configuration
 		private CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
 		private List<CsvPropertyReferenceMap> references = new List<CsvPropertyReferenceMap>();
 #endif
+#if !WINRT_4_5
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
+#endif
+#if WINRT_4_5
+#endif
 		private bool hasHeaderRecord = true;
 		private bool isStrictMode = true;
 		private char delimiter = ',';
@@ -30,7 +37,7 @@ namespace CsvHelper.Configuration
 		private char comment = '#';
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
-		private Encoding encoding = Encoding.Default;
+		private Encoding encoding = Encoding.UTF8;
 
 #if !NET_2_0
 		/// <summary>
@@ -55,6 +62,7 @@ namespace CsvHelper.Configuration
 		}
 #endif
 
+#if !WINRT_4_5
 		/// <summary>
 		/// Gets or sets the property binding flags.
 		/// This determines what properties on the custom
@@ -65,6 +73,7 @@ namespace CsvHelper.Configuration
 			get { return propertyBindingFlags; }
 			set { propertyBindingFlags = value; }
 		}
+#endif
 
 		/// <summary>
 		/// Gets or sets a value indicating if the
@@ -336,7 +345,8 @@ namespace CsvHelper.Configuration
 		/// <param name="type">The type of custom class that contains the attributes.</param>
 		public virtual void AttributeMapping( Type type )
 		{
-			var props = type.GetProperties( PropertyBindingFlags );
+			var props = type.GetProperties();
+
 			foreach( var property in props )
 			{
 				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, true );
@@ -380,7 +390,7 @@ namespace CsvHelper.Configuration
 					// This is a reference mapping.
 					var refMap = ReferenceMap( property );
 					references.Add( refMap );
-					var refProps = property.PropertyType.GetProperties( PropertyBindingFlags );
+					var refProps = property.PropertyType.GetProperties();
 					foreach( var refProp in refProps )
 					{
 						var refCsvFieldAttributes = ReflectionHelper.GetAttributes<CsvFieldAttribute>( refProp, true );

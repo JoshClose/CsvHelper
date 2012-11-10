@@ -3,112 +3,117 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
-using System.ComponentModel;
 using CsvHelper.Configuration;
-using Xunit;
+using CsvHelper.TypeConversion;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvClassMappingTests
 	{
-		[Fact]
+		[TestMethod]
 		public void MapTest()
 		{
 			var map = new TestMappingDefaultClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( "GuidColumn", map.PropertyMaps[0].NameValue );
-			Assert.Equal( -1, map.PropertyMaps[0].IndexValue );
-			Assert.Equal( typeof( GuidConverter ), map.PropertyMaps[0].TypeConverterValue.GetType() );
+			Assert.AreEqual( "GuidColumn", map.PropertyMaps[0].NameValue );
+			Assert.AreEqual( -1, map.PropertyMaps[0].IndexValue );
+			Assert.AreEqual( typeof( GuidConverter ), map.PropertyMaps[0].TypeConverterValue.GetType() );
 
-			Assert.Equal( "IntColumn", map.PropertyMaps[1].NameValue );
-			Assert.Equal( -1, map.PropertyMaps[1].IndexValue );
-			Assert.Equal( typeof( Int32Converter ), map.PropertyMaps[1].TypeConverterValue.GetType() );
+			Assert.AreEqual( "IntColumn", map.PropertyMaps[1].NameValue );
+			Assert.AreEqual( -1, map.PropertyMaps[1].IndexValue );
+			Assert.AreEqual( typeof( Int32Converter ), map.PropertyMaps[1].TypeConverterValue.GetType() );
 
-			Assert.Equal( "StringColumn", map.PropertyMaps[2].NameValue );
-			Assert.Equal( -1, map.PropertyMaps[2].IndexValue );
-			Assert.Equal( typeof( StringConverter ), map.PropertyMaps[2].TypeConverterValue.GetType() );
+			Assert.AreEqual( "StringColumn", map.PropertyMaps[2].NameValue );
+			Assert.AreEqual( -1, map.PropertyMaps[2].IndexValue );
+			Assert.AreEqual( typeof( StringConverter ), map.PropertyMaps[2].TypeConverterValue.GetType() );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void MapNameTest()
 		{
 			var map = new TestMappingNameClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( "Guid Column", map.PropertyMaps[0].NameValue );
-			Assert.Equal( "Int Column", map.PropertyMaps[1].NameValue );
-			Assert.Equal( "String Column", map.PropertyMaps[2].NameValue );
+			Assert.AreEqual( "Guid Column", map.PropertyMaps[0].NameValue );
+			Assert.AreEqual( "Int Column", map.PropertyMaps[1].NameValue );
+			Assert.AreEqual( "String Column", map.PropertyMaps[2].NameValue );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void MapIndexTest()
 		{
 			var map = new TestMappingIndexClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( 2, map.PropertyMaps[0].IndexValue );
-			Assert.Equal( 3, map.PropertyMaps[1].IndexValue );
-			Assert.Equal( 1, map.PropertyMaps[2].IndexValue );
+			Assert.AreEqual( 2, map.PropertyMaps[0].IndexValue );
+			Assert.AreEqual( 3, map.PropertyMaps[1].IndexValue );
+			Assert.AreEqual( 1, map.PropertyMaps[2].IndexValue );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void MapIgnoreTest()
 		{
 			var map = new TestMappingIngoreClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.True( map.PropertyMaps[0].IgnoreValue );
-			Assert.False( map.PropertyMaps[1].IgnoreValue );
-			Assert.True( map.PropertyMaps[2].IgnoreValue );
+			Assert.IsTrue( map.PropertyMaps[0].IgnoreValue );
+			Assert.IsFalse( map.PropertyMaps[1].IgnoreValue );
+			Assert.IsTrue( map.PropertyMaps[2].IgnoreValue );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void MapTypeConverterTest()
 		{
 			var map = new TestMappingTypeConverterClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.IsType<Int16Converter>( map.PropertyMaps[0].TypeConverterValue );
-			Assert.IsType<StringConverter>( map.PropertyMaps[1].TypeConverterValue );
-			Assert.IsType<Int64Converter>( map.PropertyMaps[2].TypeConverterValue );
+			Assert.IsInstanceOfType( map.PropertyMaps[0].TypeConverterValue, typeof( Int16Converter ) );
+			Assert.IsInstanceOfType( map.PropertyMaps[1].TypeConverterValue, typeof( StringConverter ) );
+			Assert.IsInstanceOfType( map.PropertyMaps[2].TypeConverterValue, typeof( Int64Converter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void MapMultipleNamesTest()
 		{
 			var map = new TestMappingMultipleNamesClass();
 
-			Assert.Equal( 3, map.PropertyMaps.Count );
+			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.Equal( 3, map.PropertyMaps[0].NamesValue.Length );
-			Assert.Equal( 3, map.PropertyMaps[1].NamesValue.Length );
-			Assert.Equal( 3, map.PropertyMaps[2].NamesValue.Length );
+			Assert.AreEqual( 3, map.PropertyMaps[0].NamesValue.Length );
+			Assert.AreEqual( 3, map.PropertyMaps[1].NamesValue.Length );
+			Assert.AreEqual( 3, map.PropertyMaps[2].NamesValue.Length );
 
-			Assert.Equal( "guid1", map.PropertyMaps[0].NamesValue[0] );
-			Assert.Equal( "guid2", map.PropertyMaps[0].NamesValue[1] );
-			Assert.Equal( "guid3", map.PropertyMaps[0].NamesValue[2] );
+			Assert.AreEqual("guid1", map.PropertyMaps[0].NamesValue[0]);
+			Assert.AreEqual("guid2", map.PropertyMaps[0].NamesValue[1]);
+			Assert.AreEqual("guid3", map.PropertyMaps[0].NamesValue[2]);
 
-			Assert.Equal( "int1", map.PropertyMaps[1].NamesValue[0] );
-			Assert.Equal( "int2", map.PropertyMaps[1].NamesValue[1] );
-			Assert.Equal( "int3", map.PropertyMaps[1].NamesValue[2] );
+			Assert.AreEqual("int1", map.PropertyMaps[1].NamesValue[0]);
+			Assert.AreEqual("int2", map.PropertyMaps[1].NamesValue[1]);
+			Assert.AreEqual("int3", map.PropertyMaps[1].NamesValue[2]);
 
-			Assert.Equal( "string1", map.PropertyMaps[2].NamesValue[0] );
-			Assert.Equal( "string2", map.PropertyMaps[2].NamesValue[1] );
-			Assert.Equal( "string3", map.PropertyMaps[2].NamesValue[2] );
+			Assert.AreEqual("string1", map.PropertyMaps[2].NamesValue[0]);
+			Assert.AreEqual("string2", map.PropertyMaps[2].NamesValue[1]);
+			Assert.AreEqual("string3", map.PropertyMaps[2].NamesValue[2]);
 		}
 
-		[Fact]
+		[TestMethod]
 		public void MapConstructorTest()
 		{
 			var map = new TestMappingConstructorClass();
 
-			Assert.NotNull( map.Constructor );
+			Assert.IsNotNull( map.Constructor );
 		}
 
 		private class TestClass

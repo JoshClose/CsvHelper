@@ -5,68 +5,53 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvReaderConstructorTests
 	{
-		[Fact]
+		[TestMethod]
 		public void InvalidParameterTest()
 		{
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvReader( (TextReader)null );
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvReader( null, new CsvConfiguration() );
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				using( var stream = new MemoryStream() )
-				using( var reader = new StreamReader( stream ) )
-				{
-					new CsvReader( reader, null );
-				}
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvReader( (CsvParser)null );
-			} );
-
-			Assert.Throws<CsvConfigurationException>( () =>
+			try
 			{
 				new CsvReader( new TestParser() );
-			} );
+				Assert.Fail();
+			}
+			catch( CsvConfigurationException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void EnsureInternalsAreSetupCorrectlyWhenPassingTextReaderTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvReader( reader ) )
 			{
-				Assert.Same( csv.Configuration, csv.Parser.Configuration );
+				Assert.AreSame( csv.Configuration, csv.Parser.Configuration );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void EnsureInternalsAreSetupCorrectlyWhenPassingTextReaderAndConfigurationTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvReader( reader, new CsvConfiguration() ) )
 			{
-				Assert.Same( csv.Configuration, csv.Parser.Configuration );
+				Assert.AreSame( csv.Configuration, csv.Parser.Configuration );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void EnsureInternalsAreSetupCorrectlyWhenPassingParserTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -76,8 +61,8 @@ namespace CsvHelper.Tests
 
 				using( var csv = new CsvReader( parser ) )
 				{
-					Assert.Same( csv.Configuration, csv.Parser.Configuration );
-					Assert.Same( parser, csv.Parser );
+					Assert.AreSame( csv.Configuration, csv.Parser.Configuration );
+					Assert.AreSame( parser, csv.Parser );
 				}
 			}
 		}

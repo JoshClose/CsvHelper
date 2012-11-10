@@ -5,36 +5,18 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvParserConstructorTests
 	{
-		[Fact]
-		public void InvalidParametersTest()
-		{
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvParser( null );
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvParser( null, new CsvConfiguration() );
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				using( var stream = new MemoryStream() )
-				using( var reader = new StreamReader( stream ) )
-				{
-					new CsvParser( reader, null );
-				}
-			} );
-		}
-
-		[Fact]
+		[TestMethod]
 		public void EnsureInternalsAreSetupWhenPassingReaderAndConfigTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -43,7 +25,7 @@ namespace CsvHelper.Tests
 				var config = new CsvConfiguration();
 				using( var parser = new CsvParser( reader, config ) )
 				{
-					Assert.Same( config, parser.Configuration );
+					Assert.AreSame( config, parser.Configuration );
 				}
 			}
 		}

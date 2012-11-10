@@ -4,372 +4,360 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Moq;
-using Xunit;
+using CsvHelper.Tests.Mocks;
+using CsvHelper.TypeConversion;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvReaderTests
 	{
-		[Fact]
+		[TestMethod]
 		public void HasHeaderRecordNotReadExceptionTest()
 		{
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			var reader = new CsvReader( parserMock.Object );
+			var parserMock = new ParserMock( new Queue<string[]>() );
+			var reader = new CsvReader( parserMock );
 
-			Assert.Throws<CsvReaderException>( () => reader.GetField<int>(0) );
+			try
+			{
+				reader.GetField<int>( 0 );
+				Assert.Fail();
+			}
+			catch( CsvReaderException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void HasHeaderRecordTest()
 		{
-			var isHeaderRecord = true;
-			var data1 = new [] { "One", "Two" };
-			var data2 = new [] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
 
-			var reader = new CsvReader( parserMock.Object );
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			// Check to see if the header record and first record are set properly.
-			Assert.Equal( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
-			Assert.Equal( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
-			Assert.Equal( Convert.ToInt32( data2[0] ), reader.GetField<int>( 0 ) );
-			Assert.Equal( Convert.ToInt32( data2[1] ), reader.GetField<int>( 1 ) );
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( 0 ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( 1 ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetTypeTest()
 		{
-			var data = new []
-            {
-                "1",
-                "blah",
-                DateTime.Now.ToString(),
-                "true",
-                "c",
-                "",
-                Guid.NewGuid().ToString(),
-            };
+			var data = new[]
+			{
+				"1",
+				"blah",
+				DateTime.Now.ToString(),
+				"true",
+				"c",
+				"",
+				Guid.NewGuid().ToString(),
+			};
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			queue.Enqueue( data );
+			queue.Enqueue( null );
 
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
-			Assert.Equal( Convert.ToInt16( data[0] ), reader.GetField<short>( 0 ) );
-			Assert.Equal( Convert.ToInt16( data[0] ), reader.GetField<short?>( 0 ) );
-			Assert.Equal( null, reader.GetField<short?>( 5 ) );
-			Assert.Equal( Convert.ToInt32( data[0] ), reader.GetField<int>( 0 ) );
-			Assert.Equal( Convert.ToInt32( data[0] ), reader.GetField<int?>( 0 ) );
-			Assert.Equal( null, reader.GetField<int?>( 5 ) );
-			Assert.Equal( Convert.ToInt64( data[0] ), reader.GetField<long>( 0 ) );
-			Assert.Equal( Convert.ToInt64( data[0] ), reader.GetField<long?>( 0 ) );
-			Assert.Equal( null, reader.GetField<long?>( 5 ) );
-			Assert.Equal( Convert.ToDecimal( data[0] ), reader.GetField<decimal>( 0 ) );
-			Assert.Equal( Convert.ToDecimal( data[0] ), reader.GetField<decimal?>( 0 ) );
-			Assert.Equal( null, reader.GetField<decimal?>( 5 ) );
-			Assert.Equal( Convert.ToSingle( data[0] ), reader.GetField<float>( 0 ) );
-			Assert.Equal( Convert.ToSingle( data[0] ), reader.GetField<float?>( 0 ) );
-			Assert.Equal( null, reader.GetField<float?>( 5 ) );
-			Assert.Equal( Convert.ToDouble( data[0] ), reader.GetField<double>( 0 ) );
-			Assert.Equal( Convert.ToDouble( data[0] ), reader.GetField<double?>( 0 ) );
-			Assert.Equal( null, reader.GetField<double?>( 5 ) );
-			Assert.Equal( data[1], reader.GetField<string>( 1 ) );
-			Assert.Equal( string.Empty, reader.GetField<string>( 5 ) );
-			Assert.Equal( Convert.ToDateTime( data[2] ), reader.GetField<DateTime>( 2 ) );
-			Assert.Equal( Convert.ToDateTime( data[2] ), reader.GetField<DateTime?>( 2 ) );
-			Assert.Equal( null, reader.GetField<DateTime?>( 5 ) );
-			Assert.Equal( Convert.ToBoolean( data[3] ), reader.GetField<bool>( 3 ) );
-			Assert.Equal( Convert.ToBoolean( data[3] ), reader.GetField<bool?>( 3 ) );
-			Assert.Equal( null, reader.GetField<bool?>( 5 ) );
-			Assert.Equal( Convert.ToChar( data[4] ), reader.GetField<char>( 4 ) );
-			Assert.Equal( Convert.ToChar( data[4] ), reader.GetField<char?>( 4 ) );
-			Assert.Equal( null, reader.GetField<char?>( 5 ) );
-			Assert.Equal( new Guid( data[6] ), reader.GetField<Guid>( 6 ) );
-			Assert.Equal( null, reader.GetField<Guid?>( 5 ) );
+			Assert.AreEqual( Convert.ToInt16( data[0] ), reader.GetField<short>( 0 ) );
+			Assert.AreEqual( Convert.ToInt16( data[0] ), reader.GetField<short?>( 0 ) );
+			Assert.AreEqual( null, reader.GetField<short?>( 5 ) );
+			Assert.AreEqual( Convert.ToInt32( data[0] ), reader.GetField<int>( 0 ) );
+			Assert.AreEqual( Convert.ToInt32( data[0] ), reader.GetField<int?>( 0 ) );
+			Assert.AreEqual( null, reader.GetField<int?>( 5 ) );
+			Assert.AreEqual( Convert.ToInt64( data[0] ), reader.GetField<long>( 0 ) );
+			Assert.AreEqual( Convert.ToInt64( data[0] ), reader.GetField<long?>( 0 ) );
+			Assert.AreEqual( null, reader.GetField<long?>( 5 ) );
+			Assert.AreEqual( Convert.ToDecimal( data[0] ), reader.GetField<decimal>( 0 ) );
+			Assert.AreEqual( Convert.ToDecimal( data[0] ), reader.GetField<decimal?>( 0 ) );
+			Assert.AreEqual( null, reader.GetField<decimal?>( 5 ) );
+			Assert.AreEqual( Convert.ToSingle( data[0] ), reader.GetField<float>( 0 ) );
+			Assert.AreEqual( Convert.ToSingle( data[0] ), reader.GetField<float?>( 0 ) );
+			Assert.AreEqual( null, reader.GetField<float?>( 5 ) );
+			Assert.AreEqual( Convert.ToDouble( data[0] ), reader.GetField<double>( 0 ) );
+			Assert.AreEqual( Convert.ToDouble( data[0] ), reader.GetField<double?>( 0 ) );
+			Assert.AreEqual( null, reader.GetField<double?>( 5 ) );
+			Assert.AreEqual( data[1], reader.GetField<string>( 1 ) );
+			Assert.AreEqual( string.Empty, reader.GetField<string>( 5 ) );
+			Assert.AreEqual( Convert.ToDateTime( data[2] ), reader.GetField<DateTime>( 2 ) );
+			Assert.AreEqual( Convert.ToDateTime( data[2] ), reader.GetField<DateTime?>( 2 ) );
+			Assert.AreEqual( null, reader.GetField<DateTime?>( 5 ) );
+			Assert.AreEqual( Convert.ToBoolean( data[3] ), reader.GetField<bool>( 3 ) );
+			Assert.AreEqual( Convert.ToBoolean( data[3] ), reader.GetField<bool?>( 3 ) );
+			Assert.AreEqual( null, reader.GetField<bool?>( 5 ) );
+			Assert.AreEqual( Convert.ToChar( data[4] ), reader.GetField<char>( 4 ) );
+			Assert.AreEqual( Convert.ToChar( data[4] ), reader.GetField<char?>( 4 ) );
+			Assert.AreEqual( null, reader.GetField<char?>( 5 ) );
+			Assert.AreEqual( new Guid( data[6] ), reader.GetField<Guid>( 6 ) );
+			Assert.AreEqual( null, reader.GetField<Guid?>( 5 ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetFieldByIndexTest()
 		{
-			var data = new [] { "1", "2" };
+			var data = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			var parserMock = new ParserMock( queue );
 
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data );
-
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.HasHeaderRecord = false;
 			reader.Read();
 
-			Assert.Equal( 1, reader.GetField<int>( 0 ) );
-			Assert.Equal( 2, reader.GetField<int>( 1 ) );
+			Assert.AreEqual( 1, reader.GetField<int>( 0 ) );
+			Assert.AreEqual( 2, reader.GetField<int>( 1 ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetFieldByNameTest()
 		{
-			var isHeaderRecord = true;
-			var data1 = new [] { "One", "Two" };
-			var data2 = new [] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
-
-			var reader = new CsvReader( parserMock.Object );
-			reader.Read();
-
-			Assert.Equal( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
-			Assert.Equal( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
-		}
-
-		[Fact]
-		public void GetFieldByNameAndIndexTest()
-		{
-			var isHeaderRecord = true;
-			var data1 = new[] { "One", "One" };
-			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
-
-			var reader = new CsvReader( parserMock.Object );
-			reader.Read();
-
-			Assert.Equal( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One", 0 ) );
-			Assert.Equal( Convert.ToInt32( data2[1] ), reader.GetField<int>( "One", 1 ) );
-		}
-
-		[Fact]
-		public void GetMissingFieldByNameTest()
-		{
-			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
 			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
+			reader.Read();
+
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
+		}
+
+		[TestMethod]
+		public void GetFieldByNameAndIndexTest()
+		{
+			var data1 = new[] { "One", "One" };
+			var data2 = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+			reader.Read();
+
+			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One", 0 ) );
+			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "One", 1 ) );
+		}
+
+		[TestMethod]
+		public void GetMissingFieldByNameTest()
+		{
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
 			reader.Configuration.IsStrictMode = false;
 			reader.Read();
 
-			Assert.Throws<IndexOutOfRangeException>( () => reader.GetField<string>( "blah" ) );
+			try
+			{
+				reader.GetField<string>( "blah" );
+				Assert.Fail();
+			}
+			catch( IndexOutOfRangeException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetMissingFieldByNameStrictTest()
 		{
-			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
 			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
 			reader.Read();
 
-			Assert.Throws<CsvMissingFieldException>( () => reader.GetField<string>( "blah" ) );
+			try
+			{
+				reader.GetField<string>( "blah" );
+				Assert.Fail();
+			}
+			catch( CsvMissingFieldException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetMissingFieldByIndexStrictTest()
 		{
 			var data = new Queue<string[]>();
 			data.Enqueue( new[] { "One", "Two" } );
 			data.Enqueue( new[] { "1", "2" } );
 			data.Enqueue( null );
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
 			reader.Read();
 
-			Assert.Throws<CsvMissingFieldException>( () => reader.GetField( 2 ) );
+			try
+			{
+				reader.GetField( 2 );
+				Assert.Fail();
+			}
+			catch( CsvMissingFieldException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetMissingFieldGenericByIndexStrictTest()
 		{
 			var data = new Queue<string[]>();
 			data.Enqueue( new[] { "One", "Two" } );
 			data.Enqueue( new[] { "1", "2" } );
 			data.Enqueue( null );
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
 			reader.Read();
 
-			Assert.Throws<CsvMissingFieldException>( () => reader.GetField<string>( 2 ) );
+			try
+			{
+				reader.GetField<string>( 2 );
+				Assert.Fail();
+			}
+			catch( CsvMissingFieldException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetMissingFieldByIndexStrictOffTest()
 		{
 			var data = new Queue<string[]>();
 			data.Enqueue( new[] { "One", "Two" } );
 			data.Enqueue( new[] { "1", "2" } );
 			data.Enqueue( null );
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = false } };
+			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = false } };
 			reader.Read();
 
-			Assert.Null( reader.GetField( 2 ) );
+			Assert.IsNull( reader.GetField( 2 ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetMissingFieldGenericByIndexStrictOffTest()
 		{
 			var data = new Queue<string[]>();
 			data.Enqueue( new[] { "One", "Two" } );
 			data.Enqueue( new[] { "1", "2" } );
 			data.Enqueue( null );
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data.Dequeue() );
+			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = false } };
+			var reader = new CsvReader( parserMock )
+			{
+				Configuration = { IsStrictMode = false }
+			};
 			reader.Read();
 
-			Assert.Null( reader.GetField<string>( 2 ) );
+			Assert.IsNull( reader.GetField<string>( 2 ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetFieldByNameNoHeaderExceptionTest()
 		{
-			var data = new [] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () => data );
+			var data = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { HasHeaderRecord = false } };
+			var reader = new CsvReader( parserMock ) { Configuration = { HasHeaderRecord = false } };
 			reader.Read();
 
-			Assert.Throws<CsvReaderException>( () => reader.GetField<int>( "One" ) );
+			try
+			{
+				reader.GetField<int>( "One" );
+				Assert.Fail();
+			}
+			catch( CsvReaderException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordWithDuplicateHeaderFields()
 		{
 			var data = new[] { "Field1", "Field1" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () => data );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			queue.Enqueue( data );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Configuration.IsStrictMode = true;
 			reader.Read();
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordGenericTest()
 		{
-			var headerData = new []
+			var headerData = new[]
             {
                 "IntColumn",
                 "String Column",
                 "GuidColumn",
             };
-			var recordData = new []
+			var recordData = new[]
             {
                 "1",
                 "string column",
 				Guid.NewGuid().ToString(),
             };
-			var isHeaderRecord = true;
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			csvParserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return headerData;
-				}
-				return recordData;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( headerData );
+			queue.Enqueue( recordData );
+			queue.Enqueue( null );
+			var csvParserMock = new ParserMock( queue );
 
-			var csv = new CsvReader( csvParserMock.Object );
+			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
 
-			Assert.Equal( Convert.ToInt32( recordData[0] ), record.IntColumn );
-			Assert.Equal( recordData[1], record.StringColumn );
-			Assert.Equal( "test", record.TypeConvertedColumn );
-			Assert.Equal( Convert.ToInt32( recordData[0] ), record.FirstColumn );
-			Assert.Equal( new Guid( recordData[2] ), record.GuidColumn );
+			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
+			Assert.AreEqual( recordData[1], record.StringColumn );
+			Assert.AreEqual( "test", record.TypeConvertedColumn );
+			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.FirstColumn );
+			Assert.AreEqual( new Guid( recordData[2] ), record.GuidColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordTest()
 		{
 			var headerData = new[]
@@ -384,78 +372,59 @@ namespace CsvHelper.Tests
                 "string column",
 				Guid.NewGuid().ToString(),
             };
-			var isHeaderRecord = true;
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			csvParserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return headerData;
-				}
-				return recordData;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( headerData );
+			queue.Enqueue( recordData );
+			queue.Enqueue( null );
+			var csvParserMock = new ParserMock( queue );
 
-			var csv = new CsvReader( csvParserMock.Object );
+			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
 			csv.Read();
 			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ));
 
-			Assert.Equal( Convert.ToInt32( recordData[0] ), record.IntColumn );
-			Assert.Equal( recordData[1], record.StringColumn );
-			Assert.Equal( "test", record.TypeConvertedColumn );
-			Assert.Equal( Convert.ToInt32( recordData[0] ), record.FirstColumn );
-			Assert.Equal( new Guid( recordData[2] ), record.GuidColumn );
+			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
+			Assert.AreEqual( recordData[1], record.StringColumn );
+			Assert.AreEqual( "test", record.TypeConvertedColumn );
+			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.FirstColumn );
+			Assert.AreEqual( new Guid( recordData[2] ), record.GuidColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordsGenericTest()
 		{
-			var headerData = new []
+			var headerData = new[]
             {
                 "IntColumn",
                 "String Column",
                 "GuidColumn",
             };
-			var count = -1;
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			var guid = Guid.NewGuid();
-			csvParserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				count++;
-				if( count == 0 )
-				{
-					return headerData;
-				}
-				if( count > 2 )
-				{
-					return null;
-				}
-				return new[] { count.ToString(), "string column " + count, guid.ToString() };
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( headerData );
+			queue.Enqueue( new[] { "1", "string column 1", guid.ToString() } );
+			queue.Enqueue( new[] { "2", "string column 2", guid.ToString() } );
+			queue.Enqueue( null );
+			var csvParserMock = new ParserMock( queue );
 
-			var csv = new CsvReader( csvParserMock.Object );
+			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
 			var records = csv.GetRecords<TestRecord>().ToList();
 
-			Assert.Equal( 2, records.Count );
+			Assert.AreEqual( 2, records.Count );
 
 			for( var i = 1; i <= records.Count; i++ )
 			{
 				var record = records[i - 1];
-				Assert.Equal( i , record.IntColumn );
-				Assert.Equal( "string column " + i, record.StringColumn );
-				Assert.Equal( "test", record.TypeConvertedColumn );
-				Assert.Equal( i, record.FirstColumn );
-				Assert.Equal( guid, record.GuidColumn );
+				Assert.AreEqual( i , record.IntColumn );
+				Assert.AreEqual( "string column " + i, record.StringColumn );
+				Assert.AreEqual( "test", record.TypeConvertedColumn );
+				Assert.AreEqual( i, record.FirstColumn );
+				Assert.AreEqual( guid, record.GuidColumn );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordsTest()
 		{
 			var headerData = new[]
@@ -464,289 +433,185 @@ namespace CsvHelper.Tests
                 "String Column",
                 "GuidColumn",
             };
-			var count = -1;
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
 			var guid = Guid.NewGuid();
-			csvParserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				count++;
-				if( count == 0 )
-				{
-					return headerData;
-				}
-				if( count > 2 )
-				{
-					return null;
-				}
-				return new[] { count.ToString(), "string column " + count, guid.ToString() };
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( headerData );
+			queue.Enqueue( new[] { "1", "string column 1", guid.ToString() } );
+			queue.Enqueue( new[] { "2", "string column 2", guid.ToString() } );
+			queue.Enqueue( null );
+			var csvParserMock = new ParserMock( queue );
 
-			var csv = new CsvReader( csvParserMock.Object );
+			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
 			var records = csv.GetRecords( typeof( TestRecord ) ).ToList();
 
-			Assert.Equal( 2, records.Count );
+			Assert.AreEqual( 2, records.Count );
 
 			for( var i = 1; i <= records.Count; i++ )
 			{
 				var record = (TestRecord)records[i - 1];
-				Assert.Equal( i, record.IntColumn );
-				Assert.Equal( "string column " + i, record.StringColumn );
-				Assert.Equal( "test", record.TypeConvertedColumn );
-				Assert.Equal( i, record.FirstColumn );
-				Assert.Equal( guid, record.GuidColumn );
+				Assert.AreEqual( i, record.IntColumn );
+				Assert.AreEqual( "string column " + i, record.StringColumn );
+				Assert.AreEqual( "test", record.TypeConvertedColumn );
+				Assert.AreEqual( i, record.FirstColumn );
+				Assert.AreEqual( guid, record.GuidColumn );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordsWithDuplicateHeaderNames()
 		{
 			var headerData = new[]
-            {
+			{
                 "Column",
                 "Column",
                 "Column"
             };
 
-			var count = -1;
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			csvParserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				count++;
-				if( count == 0 )
-				{
-					return headerData;
-				}
-				if( count > 2 )
-				{
-					return null;
-				}
-				return new[] { "one", "two", "three" };
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( headerData );
+			queue.Enqueue( new[] { "one", "two", "three" } );
+			queue.Enqueue( new[] { "one", "two", "three" } );
+			queue.Enqueue( null );
+			var csvParserMock = new ParserMock( queue );
 
-			var csv = new CsvReader( csvParserMock.Object );
+			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = true;
 			var records = csv.GetRecords<TestRecordDuplicateHeaderNames>().ToList();
 
-			Assert.Equal( 2, records.Count );
+			Assert.AreEqual( 2, records.Count );
 
 			for( var i = 1; i <= records.Count; i++ )
 			{
 				var record = records[i - 1];
-				Assert.Equal( "one", record.Column1 );
-				Assert.Equal( "two", record.Column2 );
-				Assert.Equal( "three", record.Column3 );
+				Assert.AreEqual( "one", record.Column1 );
+				Assert.AreEqual( "two", record.Column2 );
+				Assert.AreEqual( "three", record.Column3 );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordEmptyFileWithHeaderOnTest()
 		{
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( (string[])null );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var csvReader = new CsvReader( parserMock.Object );
-			Assert.Throws<CsvReaderException>( () => csvReader.Read() );
+			var csvReader = new CsvReader( parserMock );
+			try
+			{
+				csvReader.Read();
+				Assert.Fail();
+			}
+			catch( CsvReaderException )
+			{
+			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void TryGetFieldInvalidIndexTest()
 		{
-			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
 			var data2 = new[] { "one", "two" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			int field;
 			var got = reader.TryGetField( 0, out field );
-			Assert.False( got );
-			Assert.Equal( default( int ), field );
+			Assert.IsFalse( got );
+			Assert.AreEqual( default( int ), field );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void TryGetFieldInvalidNameTest()
 		{
-			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
 			var data2 = new[] { "one", "two" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			int field;
 			var got = reader.TryGetField( "One", out field );
-			Assert.False( got );
-			Assert.Equal( default( int ), field );
+			Assert.IsFalse( got );
+			Assert.AreEqual( default( int ), field );
 		}
 
-		[Fact]
-		public void TryGetFieldInvalidConverterIndexTest()
-		{
-			var isHeaderRecord = true;
-			var data1 = new[] { "One", "Two" };
-			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
-
-			var reader = new CsvReader( parserMock.Object );
-			reader.Read();
-
-			int field;
-			var got = reader.TryGetField( 0, new GuidConverter(), out field );
-			Assert.False( got );
-			Assert.Equal( default( int ), field );
-		}
-
-		[Fact]
-		public void TryGetFieldInvalidConverterNameTest()
-		{
-			var isHeaderRecord = true;
-			var data1 = new[] { "One", "Two" };
-			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
-
-			var reader = new CsvReader( parserMock.Object );
-			reader.Read();
-
-			int field;
-			var got = reader.TryGetField( "One", new GuidConverter(), out field );
-			Assert.False( got );
-			Assert.Equal( default( int ), field );
-		}
-
-		[Fact]
+		[TestMethod]
 		public void TryGetFieldTest()
 		{
-			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
 			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			int field;
 			var got = reader.TryGetField( 0, out field );
-			Assert.True( got );
-			Assert.Equal( 1, field );
+			Assert.IsTrue( got );
+			Assert.AreEqual( 1, field );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void TryGetFieldStrictTest()
 		{
-			var isHeaderRecord = true;
 			var data1 = new[] { "One", "Two" };
 			var data2 = new[] { "1", "2" };
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return data1;
-				}
-				return data2;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data1 );
+			queue.Enqueue( data2 );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
 			reader.Read();
 
 			int field;
 			var got = reader.TryGetField( "One", out field );
-			Assert.True( got );
-			Assert.Equal( 1, field );
+			Assert.IsTrue( got );
+			Assert.AreEqual( 1, field );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void TryGetFieldEmptyDate()
 		{
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
 			// fails for an emptry string for a date.
 			var data = new[] { " " };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var mockFactory = new MockRepository( MockBehavior.Default );
-
-			var parserMock = mockFactory.Create<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( data );
-
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.HasHeaderRecord = false;
 			reader.Read();
 
 			DateTime field;
 			var got = reader.TryGetField( 0, out field );
 
-			Assert.False( got );
-			Assert.Equal( DateTime.MinValue, field );
+			Assert.IsFalse( got );
+			Assert.AreEqual( DateTime.MinValue, field );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordNoAttributesTest()
 		{
 			var headerData = new[]
@@ -763,36 +628,28 @@ namespace CsvHelper.Tests
 				Guid.NewGuid().ToString(),
 				"blah",
             };
-			var isHeaderRecord = true;
-			var mockFactory = new MockRepository( MockBehavior.Default );
-			var csvParserMock = mockFactory.Create<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			csvParserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				if( isHeaderRecord )
-				{
-					isHeaderRecord = false;
-					return headerData;
-				}
-				return recordData;
-			} );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( headerData );
+			queue.Enqueue( recordData );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
 
-			var csv = new CsvReader( csvParserMock.Object );
+			var csv = new CsvReader( parserMock );
 			csv.Configuration.IsStrictMode = false;
 			csv.Read();
 			var record = csv.GetRecord<TestRecordNoAttributes>();
 
-			Assert.Equal( Convert.ToInt32( recordData[0] ), record.IntColumn );
-			Assert.Equal( recordData[1], record.StringColumn );
-			Assert.Equal( default( string ), record.IgnoredColumn );
-			Assert.Equal( default( string ), record.TypeConvertedColumn );
-			Assert.Equal( default( int ),record.FirstColumn );
-			Assert.Equal( new Guid( recordData[2] ), record.GuidColumn );
-			Assert.Equal( default( int ), record.NoMatchingFields );
-			Assert.Equal( default( TestRecord ), record.CustomTypeColumn );
+			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
+			Assert.AreEqual( recordData[1], record.StringColumn );
+			Assert.AreEqual( default( string ), record.IgnoredColumn );
+			Assert.AreEqual( default( string ), record.TypeConvertedColumn );
+			Assert.AreEqual( default( int ),record.FirstColumn );
+			Assert.AreEqual( new Guid( recordData[2] ), record.GuidColumn );
+			Assert.AreEqual( default( int ), record.NoMatchingFields );
+			Assert.AreEqual( default( TestRecord ), record.CustomTypeColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetRecordEmptyValuesNullableTest()
 		{
 			var stream = new MemoryStream();
@@ -810,27 +667,27 @@ namespace CsvHelper.Tests
 
 			csvReader.Read();
 			var record = csvReader.GetRecord<TestNullable>();
-			Assert.NotNull( record );
-			Assert.Equal( "one", record.StringColumn );
-			Assert.Equal( 1, record.IntColumn );
-			Assert.Equal( new Guid( "11111111-1111-1111-1111-111111111111" ), record.GuidColumn );
+			Assert.IsNotNull( record );
+			Assert.AreEqual( "one", record.StringColumn );
+			Assert.AreEqual( 1, record.IntColumn );
+			Assert.AreEqual( new Guid( "11111111-1111-1111-1111-111111111111" ), record.GuidColumn );
 
 			csvReader.Read();
 			record = csvReader.GetRecord<TestNullable>();
-			Assert.NotNull( record );
-			Assert.Equal( string.Empty, record.StringColumn );
-			Assert.Equal( null, record.IntColumn );
-			Assert.Equal( null, record.GuidColumn );
+			Assert.IsNotNull( record );
+			Assert.AreEqual( string.Empty, record.StringColumn );
+			Assert.AreEqual( null, record.IntColumn );
+			Assert.AreEqual( null, record.GuidColumn );
 
 			csvReader.Read();
 			record = csvReader.GetRecord<TestNullable>();
-			Assert.NotNull( record );
-			Assert.Equal( "three", record.StringColumn );
-			Assert.Equal( 3, record.IntColumn );
-			Assert.Equal( new Guid( "33333333-3333-3333-3333-333333333333" ), record.GuidColumn );
+			Assert.IsNotNull( record );
+			Assert.AreEqual( "three", record.StringColumn );
+			Assert.AreEqual( 3, record.IntColumn );
+			Assert.AreEqual( new Guid( "33333333-3333-3333-3333-333333333333" ), record.GuidColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void CaseInsensitiveHeaderMatchingTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -846,32 +703,31 @@ namespace CsvHelper.Tests
 				csv.Configuration.IsCaseSensitive = false;
 				csv.Read();
 
-				Assert.Equal( "1", csv.GetField( "one" ) );
-				Assert.Equal( "2", csv.GetField( "TWO" ) );
-				Assert.Equal( "3", csv.GetField( "ThreE" ) );
+				Assert.AreEqual( "1", csv.GetField( "one" ) );
+				Assert.AreEqual( "2", csv.GetField( "TWO" ) );
+				Assert.AreEqual( "3", csv.GetField( "ThreE" ) );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void InvalidateRecordsCacheTest()
 		{
-			var csvParserMock = new Mock<ICsvParser>();
-			csvParserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			var csvReader = new CsvReader( csvParserMock.Object );
+			var parserMock = new ParserMock( new Queue<string[]>() );
+			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.AttributeMapping<TestRecord>();
 
-			Assert.True( csvReader.Configuration.Properties.Count > 0 );
+			Assert.IsTrue( csvReader.Configuration.Properties.Count > 0 );
 
 			csvReader.InvalidateRecordCache<TestRecord>();
 
-			Assert.Equal( 0, csvReader.Configuration.Properties.Count );
+			Assert.AreEqual( 0, csvReader.Configuration.Properties.Count );
 
 			csvReader.Configuration.AttributeMapping<TestRecordNoAttributes>();
 
-			Assert.True( csvReader.Configuration.Properties.Count > 0 );
+			Assert.IsTrue( csvReader.Configuration.Properties.Count > 0 );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void DefaultValueTest()
 		{
 			var stream = new MemoryStream();
@@ -889,15 +745,15 @@ namespace CsvHelper.Tests
 			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
 
 			var record = records[0];
-			Assert.Equal( -1, record.IntColumn );
-			Assert.Equal( null, record.StringColumn );
+			Assert.AreEqual( -1, record.IntColumn );
+			Assert.AreEqual( null, record.StringColumn );
 
 			record = records[1];
-			Assert.Equal( 2, record.IntColumn );
-			Assert.Equal( "two", record.StringColumn );
+			Assert.AreEqual( 2, record.IntColumn );
+			Assert.AreEqual( "two", record.StringColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void BooleanTypeConverterTest()
 		{
 			var stream = new MemoryStream();
@@ -919,21 +775,21 @@ namespace CsvHelper.Tests
 
 			var records = csvReader.GetRecords<TestBoolean>().ToList();
 
-			Assert.True( records[0].BoolColumn );
-			Assert.True( records[0].BoolNullableColumn);
-			Assert.True( records[1].BoolColumn);
-			Assert.True( records[1].BoolNullableColumn );
-			Assert.True( records[2].BoolColumn );
-			Assert.True( records[2].BoolNullableColumn );
-			Assert.False( records[3].BoolColumn );
-			Assert.False( records[3].BoolNullableColumn);
-			Assert.False( records[4].BoolColumn );
-			Assert.False( records[4].BoolNullableColumn );
-			Assert.False( records[5].BoolColumn );
-			Assert.False( records[5].BoolNullableColumn );
+			Assert.IsTrue( records[0].BoolColumn );
+			Assert.IsTrue( records[0].BoolNullableColumn);
+			Assert.IsTrue( records[1].BoolColumn);
+			Assert.IsTrue( records[1].BoolNullableColumn );
+			Assert.IsTrue( records[2].BoolColumn );
+			Assert.IsTrue( records[2].BoolNullableColumn );
+			Assert.IsFalse( records[3].BoolColumn );
+			Assert.IsFalse( records[3].BoolNullableColumn);
+			Assert.IsFalse( records[4].BoolColumn );
+			Assert.IsFalse( records[4].BoolNullableColumn );
+			Assert.IsFalse( records[5].BoolColumn );
+			Assert.IsFalse( records[5].BoolNullableColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void SkipEmptyRecordsTest()
 		{
 			var queue = new Queue<string[]>();
@@ -942,25 +798,23 @@ namespace CsvHelper.Tests
 			queue.Enqueue( new[] { "4", "5", "6" } );
 			queue.Enqueue( null );
 
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( queue.Dequeue );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Configuration.HasHeaderRecord = false;
 			reader.Configuration.SkipEmptyRecords = true;
 
 			reader.Read();
-			Assert.Equal( "1",  reader.CurrentRecord[0] );
-			Assert.Equal( "2",  reader.CurrentRecord[1] );
-			Assert.Equal( "3",  reader.CurrentRecord[2] );
+			Assert.AreEqual( "1",  reader.CurrentRecord[0] );
+			Assert.AreEqual( "2",  reader.CurrentRecord[1] );
+			Assert.AreEqual( "3",  reader.CurrentRecord[2] );
 
 			reader.Read();
-			Assert.Equal( "4", reader.CurrentRecord[0] );
-			Assert.Equal( "5", reader.CurrentRecord[1] );
-			Assert.Equal( "6", reader.CurrentRecord[2] );
+			Assert.AreEqual( "4", reader.CurrentRecord[0] );
+			Assert.AreEqual( "5", reader.CurrentRecord[1] );
+			Assert.AreEqual( "6", reader.CurrentRecord[2] );
 
-			Assert.False( reader.Read() );
+			Assert.IsFalse( reader.Read() );
 		}
 
 		private class TestBoolean
@@ -1045,16 +899,16 @@ namespace CsvHelper.Tests
 			public string Column3 { get; set; }
 		}
 
-		private class TestTypeConverter : TypeConverter
+		private class TestTypeConverter : DefaultTypeConverter
 		{
-			public override object ConvertFrom( ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value )
+			public override object ConvertFromString( CultureInfo culture, string text )
 			{
 				return "test";
 			}
 
-			public override bool CanConvertFrom( ITypeDescriptorContext context, Type sourceType )
+			public override bool CanConvertFrom( Type type )
 			{
-				return sourceType == typeof( string );
+				return type == typeof( string );
 			}
 		}
 	}

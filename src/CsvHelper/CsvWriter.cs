@@ -3,19 +3,22 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
 #endif
+using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 #if NET_2_0
 using CsvHelper.MissingFrom20;
+#endif
+#if WINRT_4_5
+using CsvHelper.MissingFromRt45;
 #endif
 
 namespace CsvHelper
@@ -89,6 +92,8 @@ namespace CsvHelper
 				var hasQuote = false;
 #if NET_2_0
 				if( EnumerableHelper.Contains( field, configuration.Quote ) )
+#elif WINRT_4_5
+				if( field.Contains( configuration.Quote.ToString() ) )
 #else
 				if( field.Contains( configuration.Quote ) )
 #endif
@@ -155,13 +160,9 @@ namespace CsvHelper
 			{
 				WriteField( field as string );
 			}
-			else if( type.IsValueType )
-			{
-				WriteField( field.ToString() );
-			}
 			else
 			{
-				var converter = TypeDescriptor.GetConverter( typeof( T ) );
+				var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
 				WriteField( field, converter );
 			}
 		}
@@ -175,12 +176,12 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
 		/// <param name="converter">The converter used to convert the field into a string.</param>
-		public virtual void WriteField<T>( T field, TypeConverter converter )
+		public virtual void WriteField<T>( T field, ITypeConverter converter )
 		{
 			CheckDisposed();
 
 			var fieldString = Configuration.UseInvariantCulture
-			                  	? converter.ConvertToInvariantString( field )
+			                  	? converter.ConvertToString( CultureInfo.InvariantCulture, field )
 			                  	: converter.ConvertToString( field );
 			WriteField( fieldString );
 		}
@@ -419,7 +420,7 @@ namespace CsvHelper
 						continue;
 					}
 
-					if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) )
+					if( propertyMap.TypeConverterValue == null )
 					{
 						// Skip if the type isn't convertible.
 						continue;
@@ -472,7 +473,7 @@ namespace CsvHelper
 						continue;
 					}
 
-					if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) )
+					if( propertyMap.TypeConverterValue == null )
 					{
 						// Skip if the type isn't convertible.
 						continue;

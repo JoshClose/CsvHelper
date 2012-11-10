@@ -6,14 +6,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Moq;
-using Xunit;
+using CsvHelper.Tests.Mocks;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvReaderMappingTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ReadMultipleNamesTest()
 		{
 			var data = new List<string[]>
@@ -24,45 +29,40 @@ namespace CsvHelper.Tests
 				null
 			};
 
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			var index = -1;
-			parserMock.Setup( m => m.Read() ).Returns( () =>
-			{
-				index++;
-				return data[index];
-			} );
+			var queue = new Queue<string[]>( data );
+			var parserMock = new ParserMock( queue );
 
-			var csvReader = new CsvReader( parserMock.Object );
+			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.AttributeMapping<MultipleNamesAttributeClass>();
 
 			var records = csvReader.GetRecords<MultipleNamesAttributeClass>().ToList();
 
-			Assert.NotNull( records );
-			Assert.Equal( 2, records.Count );
-			Assert.Equal( 1, records[0].IntColumn );
-			Assert.Equal( "one", records[0].StringColumn );
-			Assert.Equal( 2, records[1].IntColumn );
-			Assert.Equal( "two", records[1].StringColumn );
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 1, records[0].IntColumn );
+			Assert.AreEqual( "one", records[0].StringColumn );
+			Assert.AreEqual( 2, records[1].IntColumn );
+			Assert.AreEqual( "two", records[1].StringColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ConstructUsingTest()
 		{
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( new[] { "1" } );
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1" } );
+			var parserMock = new ParserMock( queue );
 
-			var csvReader = new CsvReader( parserMock.Object );
+			var csvReader = new CsvReader( parserMock );
+			csvReader.Configuration.HasHeaderRecord = false;
 			csvReader.Configuration.ClassMapping<ConstructorMappingClassMap>();
 
 			csvReader.Read();
 			var record = csvReader.GetRecord<ConstructorMappingClass>();
 
-			Assert.Equal( "one", record.StringColumn );
+			Assert.AreEqual( "one", record.StringColumn );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ConvertUsingTest()
 		{
 			var queue = new Queue<string[]>();
@@ -70,20 +70,18 @@ namespace CsvHelper.Tests
 			queue.Enqueue( new[] { "3", "4" } );
 			queue.Enqueue( null );
 
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( queue.Dequeue );
+			var parserMock = new ParserMock( queue );
 
-			var csvReader = new CsvReader( parserMock.Object );
+			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.HasHeaderRecord = false;
 			csvReader.Configuration.ClassMapping<ConvertUsingMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.NotNull( records );
-			Assert.Equal( 2, records.Count );
-			Assert.Equal( 3, records[0].IntColumn );
-			Assert.Equal( 7, records[1].IntColumn );
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 3, records[0].IntColumn );
+			Assert.AreEqual( 7, records[1].IntColumn );
 		}
 
 		private class TestClass

@@ -5,13 +5,18 @@
 using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvWriterMappingTests
 	{
-		[Fact]
+		[TestMethod]
 		public void WriteMultipleNamesTest()
 		{
 			var records = new List<MultipleNamesAttributeClass>
@@ -40,8 +45,8 @@ namespace CsvHelper.Tests
 			expected += "1,one\r\n";
 			expected += "2,two\r\n";
 
-			Assert.NotNull( csv );
-			Assert.Equal( expected, csv );
+			Assert.IsNotNull( csv );
+			Assert.AreEqual( expected, csv );
 		}
 
 		private class MultipleNamesAttributeClass

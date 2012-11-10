@@ -5,36 +5,18 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvWriterConstructorTests
 	{
-		[Fact]
-		public void InvalidParametersTest()
-		{
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvWriter( null );
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				new CsvWriter( null, new CsvConfiguration() );
-			} );
-
-			Assert.Throws<ArgumentNullException>( () =>
-			{
-				using( var stream = new MemoryStream() )
-				using( var writer = new StreamWriter( stream ) )
-				{
-					new CsvWriter( writer, null );
-				}
-			} );
-		}
-
-		[Fact]
+		[TestMethod]
 		public void EnsureInternalsAreSetupWhenPasingWriterAndConfigTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -43,7 +25,7 @@ namespace CsvHelper.Tests
 				var config = new CsvConfiguration();
 				using( var csv = new CsvWriter( writer, config ) )
 				{
-					Assert.Same( config, csv.Configuration );
+					Assert.AreSame( config, csv.Configuration );
 				}
 			}
 		}

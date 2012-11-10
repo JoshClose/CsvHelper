@@ -39,6 +39,7 @@
     <AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Moq">
       <HintPath>..\..\lib\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
     </Reference>
@@ -61,7 +62,6 @@
     <Compile Include="CsvWriterFormatTests.cs" />
     <Compile Include="CsvWriterMappingTests.cs" />
     <Compile Include="CsvWriterSubClassingTests.cs" />
-    <Compile Include="CustomTypeConverterTests.cs" />
     <Compile Include="CsvClassMappingTests.cs" />
     <Compile Include="CsvConfigurationTests.cs" />
     <Compile Include="CsvFieldAttributeMappingTests.cs" />
@@ -72,10 +72,16 @@
     <Compile Include="CsvWriterConstructorTests.cs" />
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="LocalCultureTests.cs" />
+    <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringExtensionTests.cs" />
     <Compile Include="ReferenceMappingAttributeTests.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />
+    <Compile Include="TypeConversion\BooleanConverterTests.cs" />
+    <Compile Include="TypeConversion\ByteConverterTests.cs" />
+    <Compile Include="TypeConversion\CharConverterTests.cs" />
+    <Compile Include="TypeConversion\DateTimeConverterTests.cs" />
+    <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CsvHelper.snk" />

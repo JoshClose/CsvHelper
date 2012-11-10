@@ -24,6 +24,26 @@ namespace CsvHelper.Tests
 			RunTestInSpecificCulture( ReadRecordsTestBody, "uk-UA" );
 		}
 
+		[Fact]
+		public void WriteRecordsTest()
+		{
+			RunTestInSpecificCulture( WriteRecordsTestBody, "uk-UA" );
+		}
+
+		private static void RunTestInSpecificCulture( Action action, string cultureName )
+		{
+			var originalCulture = Thread.CurrentThread.CurrentCulture;
+			try
+			{
+				Thread.CurrentThread.CurrentCulture = new CultureInfo( cultureName );
+				action();
+			}
+			finally
+			{
+				Thread.CurrentThread.CurrentCulture = originalCulture;
+			}
+		}
+
 		private static void ReadRecordsTestBody()
 		{
 			const string source = "DecimalColumn;DateTimeColumn\r\n" +
@@ -41,12 +61,6 @@ namespace CsvHelper.Tests
 			var record = records.First();
 			Assert.Equal( 12.0m, record.DecimalColumn );
 			Assert.Equal( new DateTime( 2010, 11, 11 ), record.DateTimeColumn );
-		}
-
-		[Fact]
-		public void WriteRecordsTest()
-		{
-			RunTestInSpecificCulture( WriteRecordsTestBody, "uk-UA" );
 		}
 
 		private static void WriteRecordsTestBody()
@@ -68,23 +82,9 @@ namespace CsvHelper.Tests
 			var csvFile = writer.ToString();
 
 			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
-			                        "12,0;11.11.2010\r\n";
+			                        "12,0;11.11.2010 0:00:00\r\n";
 
 			Assert.Equal( expected, csvFile );
-		}
-
-		private static void RunTestInSpecificCulture( Action action, string cultureName )
-		{
-			var originalCulture = Thread.CurrentThread.CurrentCulture;
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo( cultureName );
-				action();
-			}
-			finally
-			{
-				Thread.CurrentThread.CurrentCulture = originalCulture;
-			}
 		}
 
 		private class TestRecordWithDecimal

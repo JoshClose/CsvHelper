@@ -3,10 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using CsvHelper.TypeConversion;
 
 namespace CsvHelper
 {
@@ -25,8 +25,8 @@ namespace CsvHelper
 		public static T GetAttribute<T>( PropertyInfo property, bool inherit ) where T : Attribute
 		{
 			T attribute = null;
-			var attributes = property.GetCustomAttributes( typeof( T ), inherit );
-			if( attributes.Length > 0 )
+			var attributes = property.GetCustomAttributes( typeof( T ), inherit ).ToList();
+			if( attributes.Count > 0 )
 			{
 				attribute = attributes[0] as T;
 			}
@@ -47,20 +47,20 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the <see cref="TypeConverter"/> for the <see cref="PropertyInfo"/>.
+		/// Gets the <see cref="ITypeConverter"/> for the <see cref="PropertyInfo"/>.
 		/// </summary>
-		/// <param name="property">The property to get the <see cref="TypeConverter"/> from.</param>
-		/// <returns>The <see cref="TypeConverter"/> </returns>
-		public static TypeConverter GetTypeConverterFromAttribute( PropertyInfo property )
+		/// <param name="property">The property to get the <see cref="ITypeConverter"/> from.</param>
+		/// <returns>The <see cref="ITypeConverter"/> </returns>
+		public static ITypeConverter GetTypeConverterFromAttribute( PropertyInfo property )
 		{
-			TypeConverter typeConverter = null;
+			ITypeConverter typeConverter = null;
 			var typeConverterAttribute = GetAttribute<TypeConverterAttribute>( property, false );
 			if( typeConverterAttribute != null )
 			{
-				var typeConverterType = Type.GetType( typeConverterAttribute.ConverterTypeName, false );
+				var typeConverterType = typeConverterAttribute.Type;
 				if( typeConverterType != null )
 				{
-					typeConverter = Activator.CreateInstance( typeConverterType ) as TypeConverter;
+					typeConverter = Activator.CreateInstance( typeConverterType ) as ITypeConverter;
 				}
 			}
 			return typeConverter;

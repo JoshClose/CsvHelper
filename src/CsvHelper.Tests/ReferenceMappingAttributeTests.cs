@@ -2,16 +2,22 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
 using System.Collections.Generic;
 using CsvHelper.Configuration;
-using Moq;
-using Xunit;
+using CsvHelper.Tests.Mocks;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class ReferenceMappingAttributeTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ReferenceMappingTest()
 		{
 			var queue = new Queue<string[]>();
@@ -28,7 +34,7 @@ namespace CsvHelper.Tests
 				"WorkState",
 				"WorkZip"
 			} );
-			queue.Enqueue( new[]
+			var row = new[]
 			{
 				"John",
 				"Doe",
@@ -40,26 +46,25 @@ namespace CsvHelper.Tests
 				"Work City",
 				"Work State",
 				"67890"
-			} );
+			};
+			queue.Enqueue( row );
 			queue.Enqueue( null );
-			var parserMock = new Mock<ICsvParser>();
-			parserMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			parserMock.Setup( m => m.Read() ).Returns( queue.Dequeue );
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock.Object );
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 			var person = reader.GetRecord<Person>();
 
-			Assert.Equal( "John", person.FirstName );
-			Assert.Equal( "Doe", person.LastName );
-			Assert.Equal( "1234 Home St", person.HomeAddress.Street );
-			Assert.Equal( "Home Town", person.HomeAddress.City );
-			Assert.Equal( "Home State", person.HomeAddress.State );
-			Assert.Equal( "12345", person.HomeAddress.Zip );
-			Assert.Equal( "5678 Work Rd", person.WorkAddress.Street );
-			Assert.Equal( "Work City", person.WorkAddress.City );
-			Assert.Equal( "Work State", person.WorkAddress.State );
-			Assert.Equal( "67890", person.WorkAddress.Zip );
+			Assert.AreEqual( "John", person.FirstName );
+			Assert.AreEqual( "Doe", person.LastName );
+			Assert.AreEqual( "1234 Home St", person.HomeAddress.Street );
+			Assert.AreEqual( "Home Town", person.HomeAddress.City );
+			Assert.AreEqual( "Home State", person.HomeAddress.State );
+			Assert.AreEqual( "12345", person.HomeAddress.Zip );
+			Assert.AreEqual( "5678 Work Rd", person.WorkAddress.Street );
+			Assert.AreEqual( "Work City", person.WorkAddress.City );
+			Assert.AreEqual( "Work State", person.WorkAddress.State );
+			Assert.AreEqual( "67890", person.WorkAddress.Zip );
 		}
 
 		private class Person

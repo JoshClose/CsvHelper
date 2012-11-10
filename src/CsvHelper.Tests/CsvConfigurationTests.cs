@@ -4,55 +4,60 @@
 // http://csvhelper.com
 using System.IO;
 using CsvHelper.Configuration;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvConfigurationTests
 	{
-		[Fact]
-		public void EnsureReaderAndParserConfigIsSameTest()
+		[TestMethod]
+		public void EnsureReaderAndParserConfigIsAreSameTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			{
 				var csvReader = new CsvReader( reader );
 
-				Assert.Same( csvReader.Configuration, csvReader.Parser.Configuration );
+				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
 
 				var config = new CsvConfiguration();
 				var parser = new CsvParser( reader, config );
 				csvReader = new CsvReader( parser );
 
-				Assert.Same( csvReader.Configuration, csvReader.Parser.Configuration );
+				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void AddingMappingsWithGenericMethod1()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings, TestClass>();
 
-			Assert.Equal( 2, config.Properties.Count );
+			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void AddingMappingsWithGenericMethod2()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings>();
 
-			Assert.Equal( 2, config.Properties.Count );
+			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void AddingMappingsFromClassMapInstance()
 		{
 			var config = new CsvConfiguration();
 			config.ClassMapping( new TestClassMappings() );
 
-			Assert.Equal( 2, config.Properties.Count );
+			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
 		private class TestClass

@@ -2,21 +2,26 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class StringExtensionTests
 	{
-		[Fact]
+		[TestMethod]
 		public void IsNullOrWhiteSpaceTest()
 		{
 			string nullString = null;
-			Assert.True( nullString.IsNullOrWhiteSpace() );
-			Assert.True( "".IsNullOrWhiteSpace() );
-			Assert.True( " ".IsNullOrWhiteSpace() );
-			Assert.True( "	".IsNullOrWhiteSpace() );
-			Assert.False( "a".IsNullOrWhiteSpace() );
+			Assert.IsTrue( nullString.IsNullOrWhiteSpace() );
+			Assert.IsTrue( "".IsNullOrWhiteSpace() );
+			Assert.IsTrue( " ".IsNullOrWhiteSpace() );
+			Assert.IsTrue( "	".IsNullOrWhiteSpace() );
+			Assert.IsFalse( "a".IsNullOrWhiteSpace() );
 		}
 	}
 }

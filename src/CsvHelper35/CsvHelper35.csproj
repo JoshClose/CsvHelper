@@ -45,9 +45,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\CsvHelper\Configuration\BooleanTypeConverter.cs">
-      <Link>Configuration\BooleanTypeConverter.cs</Link>
-    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>
@@ -134,6 +131,69 @@
     </Compile>
     <Compile Include="..\CsvHelper\StringExtensions.cs">
       <Link>StringExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\BooleanConverter.cs">
+      <Link>TypeConversion\BooleanConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\ByteConverter.cs">
+      <Link>TypeConversion\ByteConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\CharConverter.cs">
+      <Link>TypeConversion\CharConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DateTimeConverter.cs">
+      <Link>TypeConversion\DateTimeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DecimalConverter.cs">
+      <Link>TypeConversion\DecimalConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DefaultTypeConverter.cs">
+      <Link>TypeConversion\DefaultTypeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DoubleConverter.cs">
+      <Link>TypeConversion\DoubleConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\FloatConverter.cs">
+      <Link>TypeConversion\FloatConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\GuidConverter.cs">
+      <Link>TypeConversion\GuidConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\Int16Converter.cs">
+      <Link>TypeConversion\Int16Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\Int32Converter.cs">
+      <Link>TypeConversion\Int32Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\Int64Converter.cs">
+      <Link>TypeConversion\Int64Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\ITypeConverter.cs">
+      <Link>TypeConversion\ITypeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\NullableConverter.cs">
+      <Link>TypeConversion\NullableConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\SByteConverter.cs">
+      <Link>TypeConversion\SByteConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\StringConverter.cs">
+      <Link>TypeConversion\StringConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterAttribute.cs">
+      <Link>TypeConversion\TypeConverterAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterFactory.cs">
+      <Link>TypeConversion\TypeConverterFactory.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\UInt16Converter.cs">
+      <Link>TypeConversion\UInt16Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\UInt32Converter.cs">
+      <Link>TypeConversion\UInt32Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\UInt64Converter.cs">
+      <Link>TypeConversion\UInt64Converter.cs</Link>
     </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

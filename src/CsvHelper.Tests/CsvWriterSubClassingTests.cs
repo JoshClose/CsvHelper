@@ -4,13 +4,18 @@
 // http://csvhelper.com
 using System.Collections.Generic;
 using System.IO;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvWriterSubClassingTests
 	{
-		[Fact]
+		[TestMethod]
 		public void WriteRecordTest()
 		{
 			var data = new List<Test>
