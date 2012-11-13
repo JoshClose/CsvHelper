@@ -817,6 +817,27 @@ namespace CsvHelper.Tests
 			Assert.IsFalse( reader.Read() );
 		}
 
+		[TestMethod]
+		public void MultipleGetRecordsCalls()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var csvReader = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "IntColumn,StringColumn" );
+				writer.WriteLine( "1,one" );
+				writer.WriteLine( "2,two" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csvReader.Configuration.IsStrictMode = false;
+				var records = csvReader.GetRecords<TestRecord>();
+				Assert.AreEqual( 2, records.Count() );
+				Assert.AreEqual( 0, records.Count() );
+			}
+		}
+
 		private class TestBoolean
 		{
 			public bool BoolColumn { get; set; }

@@ -151,7 +151,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && currentRecord == null )
+			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
 				headerRecord = parser.Read();
 				ParseNamedIndexes();

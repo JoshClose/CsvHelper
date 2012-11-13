@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.12.0</version>
+    <version>1.12.1</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -12,8 +12,8 @@
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
 Features:
--Added support for WinRT.
 Bug Fixes:
+-Fixed issue where an exception was being thrown when reading all the records multiple times.
 	</releaseNotes>
   </metadata>
 </package>
