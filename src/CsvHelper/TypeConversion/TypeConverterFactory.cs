@@ -43,9 +43,13 @@ namespace CsvHelper.TypeConversion
 			{
 				return new DoubleConverter();
 			}
+			if( type == typeof( Enum ) )
+			{
+				return new EnumConverter( type );
+			}
 			if( type == typeof( float ) )
 			{
-				return new FloatConverter();
+				return new SingleConverter();
 			}
 			if( type == typeof( Guid ) )
 			{

@@ -35,7 +35,9 @@ namespace CsvHelper.MissingFromRt45
 		/// <returns>A System.Reflection.MethodInfo object representing the public method with the specified name, if found; otherwise, null.</returns>
 		public static MethodInfo GetMethod( this Type type, string name )
 		{
-			return type.GetRuntimeMethod( name, null );
+			return ( from method in type.GetRuntimeMethods()
+			         where method.Name == name
+					 select method ).SingleOrDefault();
 		}
 
 		/// <summary>

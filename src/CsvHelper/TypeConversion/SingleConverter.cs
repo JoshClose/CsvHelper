@@ -5,7 +5,7 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts a Float to and from a string.
 	/// </summary>
-	public class FloatConverter : DefaultTypeConverter
+	public class SingleConverter : DefaultTypeConverter
 	{
 		/// <summary>
 		/// Converts the string to an object.

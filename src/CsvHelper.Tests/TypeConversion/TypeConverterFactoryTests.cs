@@ -59,7 +59,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( float ) );
 
-			Assert.IsType<FloatConverter>( converter );
+			Assert.IsType<SingleConverter>( converter );
 		}
 
 		[Fact]

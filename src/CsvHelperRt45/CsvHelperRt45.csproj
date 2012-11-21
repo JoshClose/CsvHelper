@@ -209,8 +209,8 @@
     <Compile Include="..\CsvHelper\TypeConversion\DoubleConverter.cs">
       <Link>TypeConversion\DoubleConverter.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper\TypeConversion\FloatConverter.cs">
-      <Link>TypeConversion\FloatConverter.cs</Link>
+    <Compile Include="..\CsvHelper\TypeConversion\EnumConverter.cs">
+      <Link>TypeConversion\EnumConverter.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\GuidConverter.cs">
       <Link>TypeConversion\GuidConverter.cs</Link>
@@ -232,6 +232,9 @@
     </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\SByteConverter.cs">
       <Link>TypeConversion\SByteConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\SingleConverter.cs">
+      <Link>TypeConversion\SingleConverter.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\StringConverter.cs">
       <Link>TypeConversion\StringConverter.cs</Link>
