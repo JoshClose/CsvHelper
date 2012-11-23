@@ -47,7 +47,7 @@ namespace CsvHelper.Tests
 			var data = reader.ReadToEnd();
 
 			Assert.AreEqual( "one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,1,1,1,1," + guid + "\r\n", data );
-		}
+		}      
 
 		[TestMethod]
 		public void WriteRecordTest()
@@ -74,6 +74,32 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( expected, csvFile );
 		}
+
+        [TestMethod]
+        public void WriteRecordInvariantCultureTest()
+        {
+            var record = new TestRecord
+            {
+                IntColumn = 1,
+                StringColumn = "string column",
+                IgnoredColumn = "ignored column",
+                FirstColumn = "first column",
+            };
+
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream) { AutoFlush = true };
+            var csv = new CsvWriter(writer, new CsvConfiguration{UseInvariantCulture = true});
+
+            csv.WriteRecord(record);
+
+            stream.Position = 0;
+            var reader = new StreamReader(stream);
+            var csvFile = reader.ReadToEnd();
+            var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+            expected += "first column,1,string column,testinvariant\r\n";
+
+            Assert.AreEqual(expected, csvFile);
+        }
 
 		[TestMethod]
 		public void WriteRecordNoIndexesTest()
@@ -333,9 +359,9 @@ namespace CsvHelper.Tests
 				return "test";
 			}
 
-			string ITypeConverter.ConvertToString( CultureInfo culture, object value )
+			public string ConvertToString( CultureInfo culture, object value )
 			{
-				throw new NotImplementedException();
+                return "testinvariant";
 			}
 
 			public object ConvertFromString( string text )
