@@ -290,6 +290,49 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( expected, csv );
 		}
 
+        [TestMethod]
+        public void WriteHeaderTest()
+        {
+            string csv;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvWriter = new CsvWriter(writer))
+            {
+                csvWriter.Configuration.HasHeaderRecord = true;
+                csvWriter.WriteHeader(typeof(TestRecord));
+
+                writer.Flush();
+                stream.Position = 0;
+
+                csv = reader.ReadToEnd();
+            }
+
+            const string Expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+            Assert.AreEqual( Expected, csv );
+        }
+
+        [TestMethod]
+        public void WriteHeaderNotWriteIfSoConfiguredTest()
+        {
+            string csv;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvWriter = new CsvWriter(writer))
+            {
+                csvWriter.Configuration.HasHeaderRecord = false;
+                csvWriter.WriteHeader(typeof(TestRecord));
+
+                writer.Flush();
+                stream.Position = 0;
+
+                csv = reader.ReadToEnd();
+            }
+            
+            Assert.AreEqual(string.Empty, csv);
+        }
+
 		private class TestRecord
 		{
 			[CsvField( Index = 1, Name = "Int Column" )]

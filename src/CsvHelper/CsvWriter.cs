@@ -210,10 +210,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
-			{
-				WriteHeader<T>();
-			}
+		    WriteHeader<T>();
 
 			GetWriteRecordAction<T>()( this, record );
 
@@ -229,10 +226,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
-			{
-				WriteHeader( type );
-			}
+		    WriteHeader( type );
 
 			GetWriteRecordAction( type ).DynamicInvoke( this, record );
 
@@ -248,10 +242,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
-			{
-				WriteHeader<T>();
-			}
+		    WriteHeader<T>();
 
 			foreach( var record in records )
 			{
@@ -269,10 +260,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
-			{
-				WriteHeader( type );
-			}
+		    WriteHeader( type );
 
 			foreach( var record in records )
 			{
@@ -355,7 +343,7 @@ namespace CsvHelper
 		/// Writes the header record from the given properties.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
-		protected virtual void WriteHeader<T>() where T : class
+		public virtual void WriteHeader<T>() where T : class
 		{
 			WriteHeader( typeof( T ) );
 		}
@@ -364,8 +352,12 @@ namespace CsvHelper
 		/// Writes the header record from the given properties.
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
-		protected virtual void WriteHeader( Type type )
+		public virtual void WriteHeader( Type type )
 		{
+            if(!configuration.HasHeaderRecord || hasHeaderBeenWritten )
+            {
+                return;
+            }
 			if( configuration.Properties.Count == 0 )
 			{
 				configuration.AttributeMapping( type );
