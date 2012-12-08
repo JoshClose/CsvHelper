@@ -40,14 +40,14 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.False( (bool)converter.ConvertFromString( "False" ) );
 			Assert.False( (bool)converter.ConvertFromString( "FALSE" ) );
 			Assert.False( (bool)converter.ConvertFromString( "0" ) );
-			Assert.True( (bool)converter.ConvertFromString( "no" ) );
-			Assert.True( (bool)converter.ConvertFromString( "NO" ) );
-			Assert.True( (bool)converter.ConvertFromString( "n" ) );
-			Assert.True( (bool)converter.ConvertFromString( "N" ) );
+			Assert.False( (bool)converter.ConvertFromString( "no" ) );
+			Assert.False( (bool)converter.ConvertFromString( "NO" ) );
+			Assert.False( (bool)converter.ConvertFromString( "n" ) );
+			Assert.False( (bool)converter.ConvertFromString( "N" ) );
 			Assert.False( (bool)converter.ConvertFromString( " false " ) );
 			Assert.False( (bool)converter.ConvertFromString( " 0 " ) );
-			Assert.True( (bool)converter.ConvertFromString( " no " ) );
-			Assert.True( (bool)converter.ConvertFromString( " n " ) );
+			Assert.False( (bool)converter.ConvertFromString( " no " ) );
+			Assert.False( (bool)converter.ConvertFromString( " n " ) );
 
 			Assert.Throws<NotSupportedException>( () => converter.ConvertFromString( null ) );
 		}

@@ -44,7 +44,7 @@ namespace CsvHelper.TypeConversion
 			if( culture.CompareInfo.Compare( "no", t, CompareOptions.IgnoreCase ) == 0 ||
 				culture.CompareInfo.Compare( "n", t, CompareOptions.IgnoreCase ) == 0 )
 			{
-				return true;
+				return false;
 			}
 
 			return base.ConvertFromString( culture, text );
