@@ -8,13 +8,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper35.Tests
 {
+	[TestClass]
 	public class CsvWriterTests
 	{
-		[Fact]
+		[TestMethod]
 		public void WriteRecordNonGenericTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -31,11 +32,10 @@ namespace CsvHelper35.Tests
 				var text = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "Id,Name" );
 				expected.AppendLine( "1,one" );
 				expected.AppendLine( "2,two" );
 
-				Assert.Equal( expected.ToString(), text );
+				Assert.AreEqual( expected.ToString(), text );
 			}
 		}
 

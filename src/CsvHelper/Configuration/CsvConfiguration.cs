@@ -38,6 +38,8 @@ namespace CsvHelper.Configuration
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
 		private Encoding encoding = Encoding.UTF8;
+		private bool quoteAllFields = false;
+		private bool quoteNoFields = false;
 
 #if !NET_2_0
 		/// <summary>
@@ -213,12 +215,48 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating whether all fields are quoted when writing,
-		/// or just ones that have to be.
+		/// or just ones that have to be. <see cref="QuoteAllFields"/> and
+		/// <see cref="QuoteNoFields"/> cannot be true at the same time. Turning one
+		/// on will turn the other off.
 		/// </summary>
 		/// <value>
 		///   <c>true</c> if all fields should be quoted; otherwise, <c>false</c>.
 		/// </value>
-		public virtual bool QuoteAllFields { get; set; }
+		public virtual bool QuoteAllFields
+		{
+			get { return quoteAllFields; }
+			set
+			{
+				quoteAllFields = value;
+				if( quoteAllFields && quoteNoFields )
+				{
+					// Both can't be true at the same time.
+					quoteNoFields = false;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets or sets a value indicating whether no fields are quoted when writing.
+		/// <see cref="QuoteAllFields"/> and <see cref="QuoteNoFields"/> cannot be true 
+		/// at the same time. Turning one on will turn the other off.
+		/// </summary>
+		/// <value>
+		///   <c>true</c> if [quote no fields]; otherwise, <c>false</c>.
+		/// </value>
+		public virtual bool QuoteNoFields
+		{
+			get { return quoteNoFields; }
+			set
+			{
+				quoteNoFields = value;
+				if( quoteNoFields && quoteAllFields )
+				{
+					// Both can't be true at the same time.
+					quoteAllFields = false;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the number of bytes should

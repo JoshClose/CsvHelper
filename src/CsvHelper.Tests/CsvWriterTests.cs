@@ -287,6 +287,37 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( expected, csv );
 		}
 
+		[TestMethod]
+		public void WriteRecordsNoFieldsQuotedTest()
+		{
+			var record = new TestRecord
+			{
+				IntColumn = 1,
+				StringColumn = "string \" column",
+				IgnoredColumn = "ignored column",
+				FirstColumn = "first, column",
+			};
+
+			string csv;
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csvWriter = new CsvWriter( writer ) )
+			{
+				csvWriter.Configuration.QuoteNoFields = true;
+				csvWriter.WriteRecord( record );
+
+				writer.Flush();
+				stream.Position = 0;
+
+				csv = reader.ReadToEnd();
+			}
+
+			var expected = "first, column,1,string \" column,test\r\n";
+
+			Assert.AreEqual( expected, csv );
+		}
+
         [TestMethod]
         public void WriteHeaderTest()
         {
@@ -309,26 +340,24 @@ namespace CsvHelper.Tests
             Assert.AreEqual( Expected, csv );
         }
 
-        [TestMethod]
-        public void WriteHeaderNotWriteIfSoConfiguredTest()
-        {
-            string csv;
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvWriter = new CsvWriter(writer))
-            {
-                csvWriter.Configuration.HasHeaderRecord = false;
-                csvWriter.WriteHeader(typeof(TestRecord));
-
-                writer.Flush();
-                stream.Position = 0;
-
-                csv = reader.ReadToEnd();
-            }
-            
-            Assert.AreEqual(string.Empty, csv);
-        }
+		[TestMethod]
+		public void WriteHeaderFailsIfHasHeaderRecordIsNotConfiguredTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csvWriter = new CsvWriter( writer ) )
+			{
+				csvWriter.Configuration.HasHeaderRecord = false;
+				try
+				{
+					csvWriter.WriteHeader( typeof( TestRecord ) );
+					Assert.Fail();
+				}
+				catch( CsvWriterException )
+				{
+				}
+			}
+		}
 
 		private class TestRecord
 		{

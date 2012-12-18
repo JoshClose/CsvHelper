@@ -32,8 +32,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,DateColumn,DecimalColumn,TypeConvertedColumn\r\n";
-			expected += "first column,0001,10/1/2012,$150.99,Type-string\r\n";
+			var expected = "first column,0001,10/1/2012,$150.99,Type-string\r\n";
 
 			Assert.Equal( expected, csvFile );
 		}
@@ -73,9 +72,7 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			var expected =
-				"FirstName,LastName,Updated,HomeStreet,HomeCity,HomeState,HomeZip,WorkStreet,WorkCity,WorkState,WorkZip\r\n" +
-				"First Name,Last Name,2012-10-01 12:12:12.123,Home Street,Home City,Home State,02201,Work Street,Work City,Work State,04100\r\n";
+			var expected = "First Name,Last Name,2012-10-01 12:12:12.123,Home Street,Home City,Home State,02201,Work Street,Work City,Work State,04100\r\n";
 
 			Assert.Equal( expected, csvFile );
 

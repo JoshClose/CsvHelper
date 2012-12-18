@@ -88,7 +88,7 @@ namespace CsvHelper
 			{
 				shouldQuote = true;
 			}
-			else if( !string.IsNullOrEmpty( field ) )
+			else if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
 #if NET_2_0
