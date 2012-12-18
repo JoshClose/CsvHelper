@@ -69,8 +69,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = "first column,1,string column,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -95,8 +94,8 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "Int Column,StringColumn,FirstColumn,TypeConvertedColumn\r\n";
-			expected += "1,string column,first column,test\r\n";
+
+			var expected = "1,string column,first column,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -175,8 +174,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = "first column,1,string column,test\r\n";
 			expected += ",,,\r\n";
 			expected += "first column,1,string column,test\r\n";
 
@@ -217,8 +215,7 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			var expected = "FirstName,LastName,HomeStreet,HomeCity,HomeState,HomeZip,WorkStreet,WorkCity,WorkState,WorkZip\r\n" +
-			               "First Name,Last Name,Home Street,Home City,Home State,Home Zip,Work Street,Work City,Work State,Work Zip\r\n";
+			var expected = "First Name,Last Name,Home Street,Home City,Home State,Home Zip,Work Street,Work City,Work State,Work Zip\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 
@@ -243,6 +240,7 @@ namespace CsvHelper.Tests
 			{
 				csvWriter.WriteRecords( people );
 				csvWriter.InvalidateRecordCache<Person>();
+				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.WriteRecords( addresses );
 
 				writer.Flush();
@@ -284,11 +282,53 @@ namespace CsvHelper.Tests
 				csv = reader.ReadToEnd();
 			}
 
-			var expected = "\"FirstColumn\",\"Int Column\",\"StringColumn\",\"TypeConvertedColumn\"\r\n";
-			expected += "\"first column\",\"1\",\"string column\",\"test\"\r\n";
+			var expected = "\"first column\",\"1\",\"string column\",\"test\"\r\n";
 
 			Assert.AreEqual( expected, csv );
 		}
+
+        [TestMethod]
+        public void WriteHeaderTest()
+        {
+            string csv;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvWriter = new CsvWriter(writer))
+            {
+                csvWriter.Configuration.HasHeaderRecord = true;
+                csvWriter.WriteHeader(typeof(TestRecord));
+
+                writer.Flush();
+                stream.Position = 0;
+
+                csv = reader.ReadToEnd();
+            }
+
+            const string Expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+            Assert.AreEqual( Expected, csv );
+        }
+
+        [TestMethod]
+        public void WriteHeaderNotWriteIfSoConfiguredTest()
+        {
+            string csv;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvWriter = new CsvWriter(writer))
+            {
+                csvWriter.Configuration.HasHeaderRecord = false;
+                csvWriter.WriteHeader(typeof(TestRecord));
+
+                writer.Flush();
+                stream.Position = 0;
+
+                csv = reader.ReadToEnd();
+            }
+            
+            Assert.AreEqual(string.Empty, csv);
+        }
 
 		private class TestRecord
 		{

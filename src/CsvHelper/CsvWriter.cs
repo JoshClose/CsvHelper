@@ -33,6 +33,7 @@ namespace CsvHelper
 		private TextWriter writer;
 #if !NET_2_0
 		private bool hasHeaderBeenWritten;
+		private bool hasRecordBeenWritten;
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 #endif
 		private readonly CsvConfiguration configuration;
@@ -202,6 +203,66 @@ namespace CsvHelper
 
 #if !NET_2_0
 		/// <summary>
+		/// Writes the header record from the given properties.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		public virtual void WriteHeader<T>() where T : class
+		{
+			WriteHeader( typeof( T ) );
+		}
+
+		/// <summary>
+		/// Writes the header record from the given properties.
+		/// </summary>
+		/// <param name="type">The type of the record.</param>
+		public virtual void WriteHeader( Type type )
+		{
+			if( type == null )
+			{
+				throw new ArgumentNullException( "type" );
+			}
+
+			if( !configuration.HasHeaderRecord )
+			{
+				throw new CsvWriterException( "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
+			}
+
+			if( hasHeaderBeenWritten )
+			{
+				throw new CsvWriterException( "The header record has already been written. You can't write it more than once." );
+			}
+
+			if( hasRecordBeenWritten )
+			{
+				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
+			}
+
+			if( configuration.Properties.Count == 0 )
+			{
+				configuration.AttributeMapping( type );
+			}
+
+			var properties = new CsvPropertyMapCollection();
+			properties.AddRange( configuration.Properties );
+			foreach( var reference in configuration.References )
+			{
+				properties.AddRange( reference.ReferenceProperties );
+			}
+
+			foreach( var property in properties )
+			{
+				if( !property.IgnoreValue )
+				{
+					WriteField( property.NameValue );
+				}
+			}
+
+			NextRecord();
+
+			hasHeaderBeenWritten = true;
+		}
+
+		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
@@ -210,12 +271,9 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
-			{
-				WriteHeader<T>();
-			}
-
 			GetWriteRecordAction<T>()( this, record );
+
+			hasRecordBeenWritten = true;
 
 			NextRecord();
 		}
@@ -229,12 +287,9 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
-			{
-				WriteHeader( type );
-			}
-
 			GetWriteRecordAction( type ).DynamicInvoke( this, record );
+
+			hasRecordBeenWritten = true;
 
 			NextRecord();
 		}
@@ -248,7 +303,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
+			if( configuration.HasHeaderRecord )
 			{
 				WriteHeader<T>();
 			}
@@ -269,7 +324,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
+			if( configuration.HasHeaderRecord )
 			{
 				WriteHeader( type );
 			}
@@ -290,8 +345,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void InvalidateRecordCache<T>() where T : class
 		{
-			typeActions.Remove( typeof( T ) );
-			configuration.Properties.Clear();
+			InvalidateRecordCache( typeof( T ) );
 		}
 
 		/// <summary>
@@ -304,6 +358,9 @@ namespace CsvHelper
 		public virtual void InvalidateRecordCache( Type type )
 		{
 			typeActions.Remove( type );
+			configuration.Properties.Clear();
+			hasHeaderBeenWritten = false;
+			hasRecordBeenWritten = false;
 		}
 #endif
 
@@ -349,46 +406,6 @@ namespace CsvHelper
 				throw new ObjectDisposedException( GetType().ToString() );
 			}
 		}
-
-#if !NET_2_0
-		/// <summary>
-		/// Writes the header record from the given properties.
-		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		protected virtual void WriteHeader<T>() where T : class
-		{
-			WriteHeader( typeof( T ) );
-		}
-
-		/// <summary>
-		/// Writes the header record from the given properties.
-		/// </summary>
-		/// <param name="type">The type of the record.</param>
-		protected virtual void WriteHeader( Type type )
-		{
-			if( configuration.Properties.Count == 0 )
-			{
-				configuration.AttributeMapping( type );
-			}
-
-			var properties = new CsvPropertyMapCollection();
-			properties.AddRange( configuration.Properties );
-			foreach( var reference in configuration.References )
-			{
-				properties.AddRange( reference.ReferenceProperties );
-			}
-
-			foreach( var property in properties )
-			{
-				if( !property.IgnoreValue )
-				{
-					WriteField( property.NameValue );
-				}
-			}
-			NextRecord();
-			hasHeaderBeenWritten = true;
-		}
-#endif
 
 #if NET_3_5
 		/// <summary>
