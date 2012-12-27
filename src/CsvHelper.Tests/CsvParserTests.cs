@@ -853,6 +853,91 @@ namespace CsvHelper.Tests
 			}
 		}
 
+        [TestMethod]
+        public void ByteCountTestWithQuotedFieldsEmptyQuotedField()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var parser = new CsvParser(reader))
+            {
+                parser.Configuration.CountBytes = true;
+                writer.Write("1,\"\",2\r\n");
+                writer.Write("\"3\",4,\"5\"\r\n");
+                writer.Flush();
+                stream.Position = 0;
+
+                parser.Read();
+                Assert.AreEqual(7, parser.BytePosition);
+
+                parser.Read();
+                Assert.AreEqual(18, parser.BytePosition);
+
+                parser.Read();
+                Assert.AreEqual(19, parser.BytePosition);
+            }
+        }
+
+        [TestMethod]
+        public void ByteCountTestWithQuotedFieldsClosingQuoteAtStartOfBuffer()
+        {
+            var config = new Configuration.CsvConfiguration()
+            {
+                CountBytes = true,
+                BufferSize = 4
+            };
+
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var parser = new CsvParser(reader, config))
+            {
+                writer.Write("1,\"2\",3\r\n");
+                writer.Write("\"4\",5,\"6\"\r\n");
+                writer.Flush();
+                stream.Position = 0;
+
+                parser.Read();
+                Assert.AreEqual(8, parser.BytePosition);
+
+                parser.Read();
+                Assert.AreEqual(19, parser.BytePosition);
+
+                parser.Read();
+                Assert.AreEqual(20, parser.BytePosition);
+            }
+        }
+
+        [TestMethod]
+        public void ByteCountTestWithQuotedFieldsEscapedQuoteAtStartOfBuffer()
+        {
+            var config = new Configuration.CsvConfiguration()
+            {
+                CountBytes = true,
+                BufferSize = 4
+            };
+
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var parser = new CsvParser(reader, config))
+            {
+                writer.Write("1,\"2a\",3\r\n");
+                writer.Write("\"\"\"4\"\"\",5,\"6\"\r\n");
+                writer.Flush();
+                stream.Position = 0;
+
+                var r1 = parser.Read();
+                Assert.AreEqual(9, parser.BytePosition);
+
+                var r2 = parser.Read();
+                Assert.AreEqual(24, parser.BytePosition);
+
+                parser.Read();
+                Assert.AreEqual(25, parser.BytePosition);
+            }
+        }
+
 		[TestMethod]
 		public void ByteCountUsingCharWithMoreThanSingleByteTest()
 		{
