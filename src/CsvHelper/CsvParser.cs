@@ -312,13 +312,14 @@ namespace CsvHelper
 						// Include the quote in the byte count.
 						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					}
-
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
-						if( inQuotes )
+						if( inQuotes || cPrev == configuration.Quote || readerBufferPosition == 1)
 						{
-							// If this is the first quote, it will not 
-							// have been counted yet so we need to count it.
+							// The quote will be uncounted and needs to be catered for if:
+                            // 1. It's the opening quote
+                            // 2. It's the closing quote on an empty field ("")
+                            // 3. It's the closing quote and has appeared as the first character in the buffer
 							UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 						}
 
