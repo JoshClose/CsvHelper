@@ -834,7 +834,12 @@ namespace CsvHelper.Tests
 				csvReader.Configuration.IsStrictMode = false;
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual( 2, records.Count() );
-				Assert.AreEqual( 0, records.Count() );
+				try
+				{
+					records.Count();
+					Assert.Fail();
+				}
+				catch( CsvReaderException ) {}
 			}
 		}
 

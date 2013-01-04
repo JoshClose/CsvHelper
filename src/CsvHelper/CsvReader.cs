@@ -34,6 +34,7 @@ namespace CsvHelper
 		private string[] headerRecord;
 		private ICsvParser parser;
 		private int currentIndex = -1;
+		private bool doneReading;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 #if !NET_2_0
 		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
@@ -151,6 +152,15 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
+			if( doneReading )
+			{
+				const string message = "The reader has already exhausted all records. " +
+				              "If you would like iterate the records more than " +
+				              "once, store the records in memory. i.e. Use " +
+				              "CsvReader.GetRecords<T>().ToList()";
+				throw new CsvReaderException( message );
+			}
+
 			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
 				headerRecord = parser.Read();
@@ -164,6 +174,11 @@ namespace CsvHelper
 
 			currentIndex = -1;
 			hasBeenRead = true;
+
+			if( currentRecord == null )
+			{
+				doneReading = true;
+			}
 
 			return currentRecord != null;
 		}
