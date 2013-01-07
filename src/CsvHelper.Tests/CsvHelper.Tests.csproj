@@ -55,6 +55,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CsvParserDelimiterTests.cs" />
     <Compile Include="CsvParserExcelCompatibleTests.cs" />
     <Compile Include="CsvReaderErrorMessageTests.cs" />
     <Compile Include="CsvReaderMappingTests.cs" />

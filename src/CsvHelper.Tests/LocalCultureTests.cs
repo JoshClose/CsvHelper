@@ -51,7 +51,7 @@ namespace CsvHelper.Tests
 
 			var configuration = new CsvConfiguration
 			{
-				Delimiter = ';',
+				Delimiter = ";",
 			};
 			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ) );
 
@@ -75,7 +75,7 @@ namespace CsvHelper.Tests
 			};
 
 			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvConfiguration { Delimiter = ';' } );
+			var csv = new CsvWriter( writer, new CsvConfiguration { Delimiter = ";" } );
 
 			csv.WriteRecords( records );
 

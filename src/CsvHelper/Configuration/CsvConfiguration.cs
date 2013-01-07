@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
@@ -32,7 +33,7 @@ namespace CsvHelper.Configuration
 #endif
 		private bool hasHeaderRecord = true;
 		private bool isStrictMode = true;
-		private char delimiter = ',';
+		private string delimiter = ",";
 		private char quote = '"';
 		private char comment = '#';
 		private int bufferSize = 2048;
@@ -125,24 +126,24 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the delimiter used to separate fields.
 		/// Default is ',';
 		/// </summary>
-		public virtual char Delimiter
+		public virtual string Delimiter
 		{
 			get { return delimiter; }
 			set
 			{
-				if( value == '\n' )
+				if( value == "\n" )
 				{
 					throw new CsvHelperException( "Newline is not a valid delimiter." );
 				}
-				if( value == '\r' )
+				if( value == "\r" )
 				{
 					throw new CsvHelperException( "Carriage return is not a valid delimiter." );
 				}
-				if( value == '\0' )
+				if( value == "\0" )
 				{
 					throw new CsvHelperException( "Null is not a valid delimiter." );
 				}
-				if( value == quote )
+				if( value == quote.ToString( UseInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture ) )
 				{
 					throw new CsvHelperException( "You can not use the quote as a delimiter." );
 				}
@@ -171,7 +172,7 @@ namespace CsvHelper.Configuration
 				{
 					throw new CsvHelperException( "Null is not a valid quote." );
 				}
-				if( value == delimiter )
+				if( value.ToString( UseInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture ) == delimiter )
 				{
 					throw new CsvHelperException( "You can not use the delimiter as a quote." );
 				}

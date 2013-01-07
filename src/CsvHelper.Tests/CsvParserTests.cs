@@ -501,7 +501,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader ) { Configuration = { Delimiter = '\t' } };
+			var parser = new CsvParser( reader ) { Configuration = { Delimiter = "\t" } };
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -532,23 +532,24 @@ namespace CsvHelper.Tests
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
-			writer.WriteLine( "one,two,three," );
-			writer.Write( "four,five,six," );
+			writer.WriteLine( "1,2," );
+			writer.Write( "4,5," );
 			writer.Flush();
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
 			var parser = new CsvParser( reader );
+			parser.Configuration.HasHeaderRecord = false;
 
 			var record = parser.Read();
 
 			Assert.IsNotNull( record );
-			Assert.AreEqual( "", record[3] );
+			Assert.AreEqual( "", record[2] );
 
 			record = parser.Read();
 
 			Assert.IsNotNull( record );
-			Assert.AreEqual( "", record[3] );
+			Assert.AreEqual( "", record[2] );
 
 			record = parser.Read();
 

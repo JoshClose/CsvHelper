@@ -227,6 +227,9 @@ namespace CsvHelper
 			var inQuotes = false;
 			var fieldIsEscaped = false;
 			var inComment = false;
+			var inDelimeter = false;
+			var delimeterPosition = 0;
+			var prevCharWasDelimeter = false;
 			var recordPosition = 0;
 			record = new string[FieldCount];
 			currentRow++;
@@ -258,7 +261,7 @@ namespace CsvHelper
 
 						if( c != '\r' && c != '\n' && c != '\0' )
 						{
-							if( c == configuration.Delimiter )
+							if( prevCharWasDelimeter )
 							{
 								// Handle an empty field at the end of the row.
 								field = "";
@@ -287,7 +290,7 @@ namespace CsvHelper
 
 				if( c == configuration.Quote )
 				{
-					if( !fieldIsEscaped && ( cPrev == configuration.Delimiter || cPrev == '\r' || cPrev == '\n' || cPrev == '\0' ) )
+					if( !fieldIsEscaped && ( prevCharWasDelimeter || cPrev == '\r' || cPrev == '\n' || cPrev == '\0' ) )
 					{
 						// The field is escaped only if the first char of
 						// the field is a quote.
@@ -314,7 +317,7 @@ namespace CsvHelper
 					}
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
-						if( inQuotes || cPrev == configuration.Quote || readerBufferPosition == 1)
+						if( inQuotes || cPrev == configuration.Quote || readerBufferPosition == 1 )
 						{
 							// The quote will be uncounted and needs to be catered for if:
                             // 1. It's the opening quote
@@ -331,6 +334,7 @@ namespace CsvHelper
 					continue;
 				}
 
+				prevCharWasDelimeter = false;
 
 				if( fieldIsEscaped && inQuotes )
 				{
@@ -352,18 +356,38 @@ namespace CsvHelper
 					// We are on a commented line.
 					// Ignore the character.
 				}
-				else if( c == configuration.Delimiter )
+				else if( c == configuration.Delimiter[0] || inDelimeter )
 				{
-					// If we hit the delimiter, we are
-					// done reading the field and can
-					// add it to the record.
-					AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
-					// Include the comma in the byte count.
-					UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
-					AddFieldToRecord( ref recordPosition, field );
-					fieldStartPosition = readerBufferPosition;
+					if( !inDelimeter )
+					{
+						// If we hit the delimiter, we are
+						// done reading the field and can
+						// add it to the record.
+						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
+						// Include the comma in the byte count.
+						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+						AddFieldToRecord( ref recordPosition, field );
+						fieldStartPosition = readerBufferPosition;
+						field = null;
 
-					field = null;
+						inDelimeter = true;
+					}
+					
+					if( delimeterPosition == configuration.Delimiter.Length - 1 )
+					{
+						// We are done reading the delimeter.
+
+						// Include the delimiter in the byte count.
+						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+						inDelimeter = false;
+						prevCharWasDelimeter = true;
+						delimeterPosition = 0;
+						fieldStartPosition = readerBufferPosition;
+					}
+					else
+					{
+						delimeterPosition++;
+					}
 				}
 				else if( c == '\r' || c == '\n' )
 				{
