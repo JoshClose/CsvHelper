@@ -28,7 +28,6 @@ namespace CsvHelper
 		private int columnCount;
 		private string[] record;
 		private int currentRow;
-		private int currentCharacter;
 		private readonly CsvConfiguration configuration;
 		private char cPrev = '\0';
 		private char c = '\0';
@@ -233,12 +232,9 @@ namespace CsvHelper
 			var recordPosition = 0;
 			record = new string[FieldCount];
 			currentRow++;
-			currentCharacter = 0;
 
 			while( true )
 			{
-				currentCharacter++;
-
 				if( readerBufferPosition == charsRead )
 				{
 					// We need to read more of the stream.
