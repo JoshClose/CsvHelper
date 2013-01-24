@@ -946,7 +946,7 @@ namespace CsvHelper
 
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
-				var name = headerRecord[i];
+				var name = headerRecord[i].Trim();
 				if( !Configuration.IsCaseSensitive )
 				{
 					name = name.ToLower();
