@@ -1,55 +1,67 @@
 ﻿using System;
 using CsvHelper.TypeConversion;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
+	[TestClass]
 	public class BooleanConverterTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ConvertToStringTest()
 		{
 			var converter = new BooleanConverter();
 
-			Assert.Equal( "True", converter.ConvertToString( true ) );
+			Assert.AreEqual( "True", converter.ConvertToString( true ) );
 
-			Assert.Equal( "False", converter.ConvertToString( false ) );
+			Assert.AreEqual( "False", converter.ConvertToString( false ) );
 
-			Assert.Equal( "", converter.ConvertToString( null ) );
-			Assert.Equal( "1", converter.ConvertToString( 1 ) );
+			Assert.AreEqual( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( 1 ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new BooleanConverter();
 
-			Assert.True( (bool)converter.ConvertFromString( "true" ) );
-			Assert.True( (bool)converter.ConvertFromString( "True" ) );
-			Assert.True( (bool)converter.ConvertFromString( "TRUE" ) );
-			Assert.True( (bool)converter.ConvertFromString( "1" ) );
-			Assert.True( (bool)converter.ConvertFromString( "yes" ) );
-			Assert.True( (bool)converter.ConvertFromString( "YES" ) );
-			Assert.True( (bool)converter.ConvertFromString( "y" ) );
-			Assert.True( (bool)converter.ConvertFromString( "Y" ) );
-			Assert.True( (bool)converter.ConvertFromString( " true " ) );
-			Assert.True( (bool)converter.ConvertFromString( " yes " ) );
-			Assert.True( (bool)converter.ConvertFromString( " y " ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "true" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "True" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "TRUE" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "1" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "yes" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "YES" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "y" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( "Y" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( " true " ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( " yes " ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( " y " ) );
 
-			Assert.False( (bool)converter.ConvertFromString( "false" ) );
-			Assert.False( (bool)converter.ConvertFromString( "False" ) );
-			Assert.False( (bool)converter.ConvertFromString( "FALSE" ) );
-			Assert.False( (bool)converter.ConvertFromString( "0" ) );
-			Assert.False( (bool)converter.ConvertFromString( "no" ) );
-			Assert.False( (bool)converter.ConvertFromString( "NO" ) );
-			Assert.False( (bool)converter.ConvertFromString( "n" ) );
-			Assert.False( (bool)converter.ConvertFromString( "N" ) );
-			Assert.False( (bool)converter.ConvertFromString( " false " ) );
-			Assert.False( (bool)converter.ConvertFromString( " 0 " ) );
-			Assert.False( (bool)converter.ConvertFromString( " no " ) );
-			Assert.False( (bool)converter.ConvertFromString( " n " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "false" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "False" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "FALSE" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "0" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "no" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "NO" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "n" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( "N" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( " false " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( " 0 " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( " no " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( " n " ) );
 
-			Assert.Throws<NotSupportedException>( () => converter.ConvertFromString( null ) );
+			try
+			{
+				converter.ConvertFromString( null );
+				Assert.Fail();
+			}
+			catch( NotSupportedException )
+			{
+			}
 		}
 	}
 }

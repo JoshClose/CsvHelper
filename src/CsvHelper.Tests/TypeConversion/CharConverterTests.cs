@@ -1,32 +1,44 @@
 ﻿using System;
 using CsvHelper.TypeConversion;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
+	[TestClass]
 	public class CharConverterTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ConvertToStringTest()
 		{
 			var converter = new CharConverter();
 
-			Assert.Equal( "a", converter.ConvertToString( 'a' ) );
-			
-			Assert.Equal( "True", converter.ConvertToString( true ) );
-	
-			Assert.Equal( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "a", converter.ConvertToString( 'a' ) );
+
+			Assert.AreEqual( "True", converter.ConvertToString( true ) );
+
+			Assert.AreEqual( "", converter.ConvertToString( null ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new CharConverter();
 
-			Assert.Equal( 'a', converter.ConvertFromString( "a" ) );
-			Assert.Equal( 'a', converter.ConvertFromString( " a " ) );
+			Assert.AreEqual( 'a', converter.ConvertFromString( "a" ) );
+			Assert.AreEqual( 'a', converter.ConvertFromString( " a " ) );
 
-			Assert.Throws<NotSupportedException>( () => converter.ConvertFromString( null ) );
+			try
+			{
+				converter.ConvertFromString( null );
+				Assert.Fail();
+			}
+			catch( NotSupportedException )
+			{
+			}
 		}
 	}
 }

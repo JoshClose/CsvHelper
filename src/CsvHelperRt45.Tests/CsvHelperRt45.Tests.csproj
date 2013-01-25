@@ -123,6 +123,15 @@
     <Compile Include="..\CsvHelper.Tests\CsvParserConstructorTests.cs">
       <Link>CsvParserConstructorTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserDelimiterTests.cs">
+      <Link>CsvParserDelimiterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserExcelCompatibleTests.cs">
+      <Link>CsvParserExcelCompatibleTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserRawRecordTests.cs">
+      <Link>CsvParserRawRecordTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvParserTests.cs">
       <Link>CsvParserTests.cs</Link>
     </Compile>
@@ -144,6 +153,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvWriterConstructorTests.cs">
       <Link>CsvWriterConstructorTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterFormatTests.cs">
+      <Link>CsvWriterFormatTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvWriterMappingTests.cs">
       <Link>CsvWriterMappingTests.cs</Link>
     </Compile>
@@ -161,6 +173,24 @@
     </Compile>
     <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
       <Link>ReferenceMappingClassMapTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\BooleanConverterTests.cs">
+      <Link>TypeConversion\BooleanConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\ByteConverterTests.cs">
+      <Link>TypeConversion\ByteConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\CharConverterTests.cs">
+      <Link>TypeConversion\CharConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeConverterTests.cs">
+      <Link>TypeConversion\DateTimeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumConverterTests.cs">
+      <Link>TypeConversion\EnumConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterFactoryTests.cs">
+      <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -192,6 +222,9 @@
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

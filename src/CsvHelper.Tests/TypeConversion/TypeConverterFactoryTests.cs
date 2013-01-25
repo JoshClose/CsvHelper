@@ -1,145 +1,150 @@
 ﻿using System;
 using CsvHelper.TypeConversion;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
+	[TestClass]
 	public class TypeConverterFactoryTests
 	{
-		[Fact]
+		[TestMethod]
 		public void GetConverterForUnknownTypeTest()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( TestClass ) );
 
-			Assert.IsType<DefaultTypeConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( DefaultTypeConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForByte()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( byte ) );
 
-			Assert.IsType<ByteConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( ByteConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForChar()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( char ) );
 
-			Assert.IsType<CharConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( CharConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForDateTime()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( DateTime ) );
 
-			Assert.IsType<DateTimeConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( DateTimeConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForDecimal()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( decimal ) );
 
-			Assert.IsType<DecimalConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( DecimalConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForDouble()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( double ) );
 
-			Assert.IsType<DoubleConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( DoubleConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForFloat()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( float ) );
 
-			Assert.IsType<SingleConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( SingleConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForGuid()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( Guid ) );
 
-			Assert.IsType<GuidConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( GuidConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForInt16()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( short ) );
 
-			Assert.IsType<Int16Converter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( Int16Converter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForInt32()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( int ) );
 
-			Assert.IsType<Int32Converter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( Int32Converter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForInt64()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( long ) );
 
-			Assert.IsType<Int64Converter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( Int64Converter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForNullable()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( int? ) );
 
-			Assert.IsType<NullableConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( NullableConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForSByte()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( sbyte ) );
 
-			Assert.IsType<SByteConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( SByteConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForString()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( string ) );
 
-			Assert.IsType<StringConverter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( StringConverter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForUInt16()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( ushort ) );
 
-			Assert.IsType<UInt16Converter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( UInt16Converter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForUInt32()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( uint ) );
 
-			Assert.IsType<UInt32Converter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( UInt32Converter ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void GetConverterForUInt64()
 		{
 			var converter = TypeConverterFactory.CreateTypeConverter( typeof( ulong ) );
 
-			Assert.IsType<UInt64Converter>( converter );
+			Assert.IsInstanceOfType( converter, typeof( UInt64Converter ) );
 		}
 
 

@@ -1,30 +1,42 @@
 ﻿using System;
 using CsvHelper.TypeConversion;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
+	[TestClass]
 	public class ByteConverterTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ConvertToStringTest()
 		{
 			var converter = new ByteConverter();
 
-			Assert.Equal( "123", converter.ConvertToString( (byte)123 ) );
+			Assert.AreEqual( "123", converter.ConvertToString( (byte)123 ) );
 
-			Assert.Equal( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "", converter.ConvertToString( null ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new ByteConverter();
 
-			Assert.Equal( (byte)123, converter.ConvertFromString( "123" ) );
-			Assert.Equal( (byte)123, converter.ConvertFromString( " 123 " ) );
+			Assert.AreEqual( (byte)123, converter.ConvertFromString( "123" ) );
+			Assert.AreEqual( (byte)123, converter.ConvertFromString( " 123 " ) );
 
-			Assert.Throws<NotSupportedException>( () => converter.ConvertFromString( null ) );
+			try
+			{
+				converter.ConvertFromString( null );
+				Assert.Fail();
+			}
+			catch( NotSupportedException )
+			{
+			}
 		}
 	}
 }
