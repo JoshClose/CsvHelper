@@ -147,8 +147,20 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.IsInstanceOfType( converter, typeof( UInt64Converter ) );
 		}
 
+		[TestMethod]
+		public void GetConverterForEnum()
+		{
+			var converter = TypeConverterFactory.CreateTypeConverter( typeof( TestEnum ) );
+
+			Assert.IsInstanceOfType( converter, typeof( EnumConverter ) );
+		}
+
 
 		private class TestClass
+		{
+		}
+
+		private enum TestEnum
 		{
 		}
 	}

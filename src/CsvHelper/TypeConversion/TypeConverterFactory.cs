@@ -43,7 +43,7 @@ namespace CsvHelper.TypeConversion
 			{
 				return new DoubleConverter();
 			}
-			if( type == typeof( Enum ) )
+			if( typeof( Enum ).IsAssignableFrom( type ) )
 			{
 				return new EnumConverter( type );
 			}
