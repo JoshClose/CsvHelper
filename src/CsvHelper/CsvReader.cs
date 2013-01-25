@@ -154,10 +154,11 @@ namespace CsvHelper
 
 			if( doneReading )
 			{
-				const string message = "The reader has already exhausted all records. " +
-				              "If you would like iterate the records more than " +
-				              "once, store the records in memory. i.e. Use " +
-				              "CsvReader.GetRecords<T>().ToList()";
+				const string message =
+					"The reader has already exhausted all records. " +
+					"If you would like to iterate the records more than " +
+					"once, store the records in memory. i.e. Use " +
+					"CsvReader.GetRecords<T>().ToList()";
 				throw new CsvReaderException( message );
 			}
 
@@ -170,7 +171,8 @@ namespace CsvHelper
 			do
 			{
 				currentRecord = parser.Read();
-			} while( configuration.SkipEmptyRecords && IsRecordEmpty( false ) );
+			} 
+			while( configuration.SkipEmptyRecords && IsRecordEmpty( false ) );
 
 			currentIndex = -1;
 			hasBeenRead = true;
