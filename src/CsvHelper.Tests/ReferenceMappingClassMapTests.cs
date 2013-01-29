@@ -68,7 +68,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( row[9], person.WorkAddress.Zip );
 		}
 
-		private class Person
+		public class Person
 		{
 			public string FirstName { get; set; }
 
@@ -79,7 +79,7 @@ namespace CsvHelper.Tests
 			public Address WorkAddress { get; set; }
 		}
 
-		private class Address
+		public class Address
 		{
 			public string Street { get; set; }
 
@@ -90,7 +90,7 @@ namespace CsvHelper.Tests
 			public string Zip { get; set; }
 		}
 
-		private sealed class PersonMap : CsvClassMap<Person>
+		public sealed class PersonMap : CsvClassMap<Person>
 		{
 			public PersonMap()
 			{
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class HomeAddressMap : CsvClassMap<Address>
+		public sealed class HomeAddressMap : CsvClassMap<Address>
 		{
 			public HomeAddressMap()
 			{
@@ -112,7 +112,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class WorkAddressMap : CsvClassMap<Address>
+		public sealed class WorkAddressMap : CsvClassMap<Address>
 		{
 			public WorkAddressMap()
 			{

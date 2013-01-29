@@ -67,7 +67,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "67890", person.WorkAddress.Zip );
 		}
 
-		private class Person
+		public class Person
 		{
 			[CsvField( Name = "FirstName" )]
 			public string FirstName { get; set; }
@@ -82,7 +82,7 @@ namespace CsvHelper.Tests
 			public Address WorkAddress { get; set; }
 		}
 
-		private class Address
+		public class Address
 		{
 			[CsvField( ReferenceKey = "Home", Name = "HomeStreet" )]
 			[CsvField( ReferenceKey = "Work", Name = "WorkStreet" )]

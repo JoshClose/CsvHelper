@@ -871,7 +871,7 @@ namespace CsvHelper.Tests
 		}
 
 		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
-		private class TestRecord
+		public class TestRecord
 		{
 			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
@@ -925,7 +925,7 @@ namespace CsvHelper.Tests
 			public string Column3 { get; set; }
 		}
 
-		private class TestTypeConverter : DefaultTypeConverter
+		public class TestTypeConverter : DefaultTypeConverter
 		{
 			public override object ConvertFromString( CultureInfo culture, string text )
 			{

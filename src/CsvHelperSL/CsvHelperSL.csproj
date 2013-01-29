@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C1754646-5927-425B-943F-4A5658DB7450}</ProjectGuid>
+    <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CsvHelper</RootNamespace>
+    <AssemblyName>CsvHelper</AssemblyName>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+  </PropertyGroup>
+  <!-- This property group is only here to support building this project using the 
+       MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
+       to set the TargetFrameworkVersion to v3.5 -->
+  <PropertyGroup Condition="'$(MSBuildToolsVersion)' == '3.5'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;TRACE;SILVERLIGHT</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Bin\Release</OutputPath>
+    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
+      <Link>Configuration\CsvClassMap.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvClassMap`1.cs">
+      <Link>Configuration\CsvClassMap`1.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvConfiguration.cs">
+      <Link>Configuration\CsvConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
+      <Link>Configuration\CsvConfigurationException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvFieldAttribute.cs">
+      <Link>Configuration\CsvFieldAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMap.cs">
+      <Link>Configuration\CsvPropertyMap.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMapCollection.cs">
+      <Link>Configuration\CsvPropertyMapCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMapComparer.cs">
+      <Link>Configuration\CsvPropertyMapComparer.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMap.cs">
+      <Link>Configuration\CsvPropertyReferenceMap.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMap`1.cs">
+      <Link>Configuration\CsvPropertyReferenceMap`1.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvBadDataException.cs">
+      <Link>CsvBadDataException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvHelperException.cs">
+      <Link>CsvHelperException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvMissingFieldException.cs">
+      <Link>CsvMissingFieldException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvParser.cs">
+      <Link>CsvParser.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvParserException.cs">
+      <Link>CsvParserException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvReader.cs">
+      <Link>CsvReader.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvReaderException.cs">
+      <Link>CsvReaderException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvWriter.cs">
+      <Link>CsvWriter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvWriterException.cs">
+      <Link>CsvWriterException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ExceptionHelper.cs">
+      <Link>ExceptionHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvParser.cs">
+      <Link>ICsvParser.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvParserExceptionInfo.cs">
+      <Link>ICsvParserExceptionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvReader.cs">
+      <Link>ICsvReader.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvReaderExceptionInfo.cs">
+      <Link>ICsvReaderExceptionInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvReaderRow.cs">
+      <Link>ICsvReaderRow.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvWriter.cs">
+      <Link>ICsvWriter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ReflectionHelper.cs">
+      <Link>ReflectionHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\StringExtensions.cs">
+      <Link>StringExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\BooleanConverter.cs">
+      <Link>TypeConversion\BooleanConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\ByteConverter.cs">
+      <Link>TypeConversion\ByteConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\CharConverter.cs">
+      <Link>TypeConversion\CharConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DateTimeConverter.cs">
+      <Link>TypeConversion\DateTimeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DecimalConverter.cs">
+      <Link>TypeConversion\DecimalConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DefaultTypeConverter.cs">
+      <Link>TypeConversion\DefaultTypeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DoubleConverter.cs">
+      <Link>TypeConversion\DoubleConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\EnumConverter.cs">
+      <Link>TypeConversion\EnumConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\GuidConverter.cs">
+      <Link>TypeConversion\GuidConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\Int16Converter.cs">
+      <Link>TypeConversion\Int16Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\Int32Converter.cs">
+      <Link>TypeConversion\Int32Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\Int64Converter.cs">
+      <Link>TypeConversion\Int64Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\ITypeConverter.cs">
+      <Link>TypeConversion\ITypeConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\NullableConverter.cs">
+      <Link>TypeConversion\NullableConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\SByteConverter.cs">
+      <Link>TypeConversion\SByteConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\SingleConverter.cs">
+      <Link>TypeConversion\SingleConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\StringConverter.cs">
+      <Link>TypeConversion\StringConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterAttribute.cs">
+      <Link>TypeConversion\TypeConverterAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterFactory.cs">
+      <Link>TypeConversion\TypeConverterFactory.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\UInt16Converter.cs">
+      <Link>TypeConversion\UInt16Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\UInt32Converter.cs">
+      <Link>TypeConversion\UInt32Converter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\UInt64Converter.cs">
+      <Link>TypeConversion\UInt64Converter.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+	<Reference Include="mscorlib" />
+    <Reference Include="system" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{A1591282-1198-4647-A2B1-27E5FF5F6F3B}">
+        <SilverlightProjectProperties />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

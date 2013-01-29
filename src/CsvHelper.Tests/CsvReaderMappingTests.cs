@@ -84,7 +84,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 7, records[1].IntColumn );
 		}
 
-		private class TestClass
+		public class TestClass
 		{
 			public int IntColumn { get; set; }
 		}
@@ -98,7 +98,7 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 		}
 
-		private class ConstructorMappingClass
+		public class ConstructorMappingClass
 		{
 			public int IntColumn { get; set; }
 
@@ -110,7 +110,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ConstructorMappingClassMap : CsvClassMap<ConstructorMappingClass>
+		public sealed class ConstructorMappingClassMap : CsvClassMap<ConstructorMappingClass>
 		{
 			public ConstructorMappingClassMap()
 			{
@@ -119,7 +119,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ConvertUsingMap : CsvClassMap<TestClass>
+		public sealed class ConvertUsingMap : CsvClassMap<TestClass>
 		{
 			public ConvertUsingMap()
 			{
