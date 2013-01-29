@@ -16,6 +16,7 @@ namespace CsvHelper.Tests.Mocks
 		public long CharPosition { get; private set; }
 		public long BytePosition { get; private set; }
 		public int Row { get; private set; }
+		public string RawRecord { get; private set; }
 
 		public ParserMock( Queue<string[]> rows )
 		{

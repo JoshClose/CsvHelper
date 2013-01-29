@@ -143,7 +143,7 @@ namespace CsvHelper.Configuration
 				{
 					throw new CsvHelperException( "Null is not a valid delimiter." );
 				}
-				if( value == quote.ToString( UseInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture ) )
+				if( value == Convert.ToString( quote ) )
 				{
 					throw new CsvHelperException( "You can not use the quote as a delimiter." );
 				}
@@ -172,7 +172,7 @@ namespace CsvHelper.Configuration
 				{
 					throw new CsvHelperException( "Null is not a valid quote." );
 				}
-				if( value.ToString( UseInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture ) == delimiter )
+				if( Convert.ToString( value ) == delimiter )
 				{
 					throw new CsvHelperException( "You can not use the delimiter as a quote." );
 				}

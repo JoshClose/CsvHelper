@@ -1,12 +1,17 @@
 ﻿using System;
 using CsvHelper.TypeConversion;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
+	[TestClass]
 	public class DateTimeConverterTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ConvertToStringTest()
 		{
 			var converter = new DateTimeConverter();
@@ -14,14 +19,14 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.Equal( dateTime.ToString(), converter.ConvertToString( dateTime ) );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( dateTime ) );
 
 			// Invalid conversions.
-			Assert.Equal( "1", converter.ConvertToString( 1 ) );
-			Assert.Equal( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( 1 ) );
+			Assert.AreEqual( "", converter.ConvertToString( null ) );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new DateTimeConverter();
@@ -29,12 +34,19 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.Equal( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString() ).ToString() );
-			Assert.Equal( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString( "o" ) ).ToString() );
-			Assert.Equal( dateTime.ToString(), converter.ConvertFromString( " " + dateTime + " " ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString() ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString( "o" ) ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( " " + dateTime + " " ).ToString() );
 
 			// Invalid conversions.
-			Assert.Throws<NotSupportedException>( () => converter.ConvertFromString( null ) );
+			try
+			{
+				converter.ConvertFromString( null );
+				Assert.Fail();
+			}
+			catch( NotSupportedException )
+			{
+			}
 		}
 	}
 }

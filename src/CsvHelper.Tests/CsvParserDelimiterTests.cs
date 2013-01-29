@@ -1,5 +1,9 @@
 ﻿using System.IO;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
@@ -269,13 +273,12 @@ namespace CsvHelper.Tests
 				parser.Configuration.CountBytes = true;
 
 				parser.Read();
-				Assert.AreEqual( 5, parser.BytePosition );
-
-				parser.Read();
-				Assert.AreEqual( 11, parser.BytePosition );
+				Assert.AreEqual( 6, parser.BytePosition );
 
 				parser.Read();
 				Assert.AreEqual( 12, parser.BytePosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 
@@ -297,13 +300,12 @@ namespace CsvHelper.Tests
 				parser.Configuration.CountBytes = true;
 
 				parser.Read();
-				Assert.AreEqual( 6, parser.BytePosition );
-
-				parser.Read();
-				Assert.AreEqual( 13, parser.BytePosition );
+				Assert.AreEqual( 7, parser.BytePosition );
 
 				parser.Read();
 				Assert.AreEqual( 14, parser.BytePosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 	}

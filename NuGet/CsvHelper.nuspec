@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.13.0</version>
+    <version>1.14.0</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -12,12 +12,11 @@
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
 Features:
--Added Enum converter.
--Made WriteHeader public.
--Configuration to never quote fields.
+-Delimiter is a string instead of a char.
+-Added CsvParser.RawRecord which contains the raw CSV record.
 Bug Fixes:
--Boolean converter returning true for "no".
--Issue with GetMethod in WinRT build.
+-CsvReaderException is thrown if you try to iterate the CsvReader multiple times.
+-Issue with byte position and quote.
 	</releaseNotes>
   </metadata>
 </package>

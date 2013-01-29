@@ -3,13 +3,18 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System.IO;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class CsvParserExcelCompatibleTests
 	{
-		[Fact]
+		[TestMethod]
 		public void ParseTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -23,15 +28,15 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "one", record[0] );
-				Assert.Equal( "two", record[1] );
-				Assert.Equal( "three", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "three", record[2] );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ParseEscapedFieldsTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -46,15 +51,15 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "one", record[0] );
-				Assert.Equal( "two", record[1] );
-				Assert.Equal( "three", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "three", record[2] );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ParseEscapedAndNonFieldsTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -69,15 +74,15 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "one", record[0] );
-				Assert.Equal( "two", record[1] );
-				Assert.Equal( "three", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two", record[1] );
+				Assert.AreEqual( "three", record[2] );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ParseEscapedFieldWithSpaceAfterTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -92,15 +97,15 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "one", record[0] );
-				Assert.Equal( "two ", record[1] );
-				Assert.Equal( "three", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "two ", record[1] );
+				Assert.AreEqual( "three", record[2] );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ParseEscapedFieldWithSpaceBeforeTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -115,15 +120,15 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "one", record[0] );
-				Assert.Equal( " \"two\"", record[1] );
-				Assert.Equal( "three", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( " \"two\"", record[1] );
+				Assert.AreEqual( "three", record[2] );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ParseEscapedFieldWithQuoteAfterTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -138,17 +143,17 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "1", record[0] );
-				Assert.Equal( "two \"2", record[1] );
-				Assert.Equal( "3", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "1", record[0] );
+				Assert.AreEqual( "two \"2", record[1] );
+				Assert.AreEqual( "3", record[2] );
 
-				Assert.Null( parser.Read() );
+				Assert.IsNull( parser.Read() );
 			}
 		}
 
-		[Fact]
+		[TestMethod]
 		public void ParseEscapedFieldWithEscapedQuoteTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -163,11 +168,11 @@ namespace CsvHelper.Tests
 
 				var record = parser.Read();
 
-				Assert.NotNull( record );
-				Assert.Equal( 3, record.Length );
-				Assert.Equal( "1", record[0] );
-				Assert.Equal( "two \" 2", record[1] );
-				Assert.Equal( "3", record[2] );
+				Assert.IsNotNull( record );
+				Assert.AreEqual( 3, record.Length );
+				Assert.AreEqual( "1", record[0] );
+				Assert.AreEqual( "two \" 2", record[1] );
+				Assert.AreEqual( "3", record[2] );
 			}
 		}
 	}

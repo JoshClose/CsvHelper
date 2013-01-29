@@ -9,22 +9,27 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using CsvHelper.Configuration;
-using Xunit;
+#if WINRT_4_5
+using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace CsvHelper.Tests
 {
+	[TestClass]
 	public class LocalCultureTests
 	{
 		// In 'uk-UA' decimal separator is the ','
 		// For 'Invariant' and many other cultures decimal separator is '.'
 
-		[Fact]
+		[TestMethod]
 		public void ReadRecordsTest()
 		{
 			RunTestInSpecificCulture( ReadRecordsTestBody, "uk-UA" );
 		}
 
-		[Fact]
+		[TestMethod]
 		public void WriteRecordsTest()
 		{
 			RunTestInSpecificCulture( WriteRecordsTestBody, "uk-UA" );
@@ -57,10 +62,10 @@ namespace CsvHelper.Tests
 
 			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
 
-			Assert.Equal( 1, records.Count() );
+			Assert.AreEqual( 1, records.Count() );
 			var record = records.First();
-			Assert.Equal( 12.0m, record.DecimalColumn );
-			Assert.Equal( new DateTime( 2010, 11, 11 ), record.DateTimeColumn );
+			Assert.AreEqual( 12.0m, record.DecimalColumn );
+			Assert.AreEqual( new DateTime( 2010, 11, 11 ), record.DateTimeColumn );
 		}
 
 		private static void WriteRecordsTestBody()
@@ -84,7 +89,7 @@ namespace CsvHelper.Tests
 			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
 			                        "12,0;11.11.2010 0:00:00\r\n";
 
-			Assert.Equal( expected, csvFile );
+			Assert.AreEqual( expected, csvFile );
 		}
 
 		private class TestRecordWithDecimal

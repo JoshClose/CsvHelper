@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="CsvParserDelimiterTests.cs" />
     <Compile Include="CsvParserExcelCompatibleTests.cs" />
+    <Compile Include="CsvParserRawRecordTests.cs" />
     <Compile Include="CsvReaderErrorMessageTests.cs" />
     <Compile Include="CsvReaderMappingTests.cs" />
     <Compile Include="CsvReaderSubClassingTests.cs" />

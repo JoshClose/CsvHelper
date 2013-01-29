@@ -16,6 +16,29 @@ namespace CsvHelper.Tests
 	public class CsvParserTests
 	{
 		[TestMethod]
+		public void SimpleParseTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "1,2\r\n" );
+				writer.Write( "3,4\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+				Assert.IsNotNull( row );
+
+				row = parser.Read();
+				Assert.IsNotNull( row );
+
+				Assert.IsNull( parser.Read() );
+			}
+		}
+
+		[TestMethod]
 		public void ParseNewRecordTest()
 		{
 			var stream = new MemoryStream();
@@ -210,17 +233,17 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ParseCrLnOnlyTest()
 		{
-			using (var stream = new MemoryStream())
-			using (var reader = new StreamReader(stream))
-			using (var writer = new StreamWriter(stream))
-			using (var parser = new CsvParser(reader))
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
 			{
-				writer.Write("\r\n");
+				writer.Write( "\r\n" );
 				writer.Flush();
 				stream.Position = 0;
 
 				var record = parser.Read();
-				Assert.IsNull(record);
+				Assert.IsNull( record );
 			}
 		}
 
@@ -618,22 +641,21 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual( 8, parser.CharPosition );
+				Assert.AreEqual( 9, parser.CharPosition );
 
 				parser.Read();
-				Assert.AreEqual( 15, parser.CharPosition );
+				Assert.AreEqual( 16, parser.CharPosition );
 
 				parser.Read();
-				Assert.AreEqual( 18, parser.CharPosition );
+				Assert.AreEqual( 19, parser.CharPosition );
 
 				parser.Read();
-				Assert.AreEqual( 39, parser.CharPosition );
-
-				parser.Read();
-				Assert.AreEqual( 56, parser.CharPosition );
+				Assert.AreEqual( 40, parser.CharPosition );
 
 				parser.Read();
 				Assert.AreEqual( 57, parser.CharPosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 
@@ -794,13 +816,12 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual( 4, parser.BytePosition );
-
-				parser.Read();
-				Assert.AreEqual( 9, parser.BytePosition );
+				Assert.AreEqual( 5, parser.BytePosition );
 
 				parser.Read();
 				Assert.AreEqual( 10, parser.BytePosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 
@@ -819,13 +840,12 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual( 6, parser.BytePosition );
-
-				parser.Read();
-				Assert.AreEqual( 13, parser.BytePosition );
+				Assert.AreEqual( 7, parser.BytePosition );
 
 				parser.Read();
 				Assert.AreEqual( 14, parser.BytePosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 
@@ -844,100 +864,96 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual( 10, parser.BytePosition );
-
-				parser.Read();
-				Assert.AreEqual( 17, parser.BytePosition );
+				Assert.AreEqual( 11, parser.BytePosition );
 
 				parser.Read();
 				Assert.AreEqual( 18, parser.BytePosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 
-        [TestMethod]
-        public void ByteCountTestWithQuotedFieldsEmptyQuotedField()
-        {
-            using (var stream = new MemoryStream())
-            using (var writer = new StreamWriter(stream))
-            using (var reader = new StreamReader(stream))
-            using (var parser = new CsvParser(reader))
-            {
-                parser.Configuration.CountBytes = true;
-                writer.Write("1,\"\",2\r\n");
-                writer.Write("\"3\",4,\"5\"\r\n");
-                writer.Flush();
-                stream.Position = 0;
+		[TestMethod]
+		public void ByteCountTestWithQuotedFieldsEmptyQuotedField()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.CountBytes = true;
+				writer.Write( "1,\"\",2\r\n" );
+				writer.Write( "\"3\",4,\"5\"\r\n" );
+				writer.Flush();
+				stream.Position = 0;
 
-                parser.Read();
-                Assert.AreEqual(7, parser.BytePosition);
+				parser.Read();
+				Assert.AreEqual( 8, parser.BytePosition );
 
-                parser.Read();
-                Assert.AreEqual(18, parser.BytePosition);
+				parser.Read();
+				Assert.AreEqual( 19, parser.BytePosition );
 
-                parser.Read();
-                Assert.AreEqual(19, parser.BytePosition);
-            }
-        }
+				Assert.IsNull( parser.Read() );
+			}
+		}
 
-        [TestMethod]
-        public void ByteCountTestWithQuotedFieldsClosingQuoteAtStartOfBuffer()
-        {
-            var config = new Configuration.CsvConfiguration()
-            {
-                CountBytes = true,
-                BufferSize = 4
-            };
+		[TestMethod]
+		public void ByteCountTestWithQuotedFieldsClosingQuoteAtStartOfBuffer()
+		{
+			var config = new Configuration.CsvConfiguration()
+			{
+				CountBytes = true,
+				BufferSize = 4
+			};
 
-            using (var stream = new MemoryStream())
-            using (var writer = new StreamWriter(stream))
-            using (var reader = new StreamReader(stream))
-            using (var parser = new CsvParser(reader, config))
-            {
-                writer.Write("1,\"2\",3\r\n");
-                writer.Write("\"4\",5,\"6\"\r\n");
-                writer.Flush();
-                stream.Position = 0;
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader, config ) )
+			{
+				writer.Write( "1,\"2\",3\r\n" );
+				writer.Write( "\"4\",5,\"6\"\r\n" );
+				writer.Flush();
+				stream.Position = 0;
 
-                parser.Read();
-                Assert.AreEqual(8, parser.BytePosition);
+				parser.Read();
+				Assert.AreEqual( 9, parser.BytePosition );
 
-                parser.Read();
-                Assert.AreEqual(19, parser.BytePosition);
+				parser.Read();
+				Assert.AreEqual( 20, parser.BytePosition );
 
-                parser.Read();
-                Assert.AreEqual(20, parser.BytePosition);
-            }
-        }
+				Assert.IsNull( parser.Read() );
+			}
+		}
 
-        [TestMethod]
-        public void ByteCountTestWithQuotedFieldsEscapedQuoteAtStartOfBuffer()
-        {
-            var config = new Configuration.CsvConfiguration()
-            {
-                CountBytes = true,
-                BufferSize = 4
-            };
+		[TestMethod]
+		public void ByteCountTestWithQuotedFieldsEscapedQuoteAtStartOfBuffer()
+		{
+			var config = new Configuration.CsvConfiguration()
+			{
+				CountBytes = true,
+				BufferSize = 4
+			};
 
-            using (var stream = new MemoryStream())
-            using (var writer = new StreamWriter(stream))
-            using (var reader = new StreamReader(stream))
-            using (var parser = new CsvParser(reader, config))
-            {
-                writer.Write("1,\"2a\",3\r\n");
-                writer.Write("\"\"\"4\"\"\",5,\"6\"\r\n");
-                writer.Flush();
-                stream.Position = 0;
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader, config ) )
+			{
+				writer.Write( "1,\"2a\",3\r\n" );
+				writer.Write( "\"\"\"4\"\"\",5,\"6\"\r\n" );
+				writer.Flush();
+				stream.Position = 0;
 
-                var r1 = parser.Read();
-                Assert.AreEqual(9, parser.BytePosition);
+				var r1 = parser.Read();
+				Assert.AreEqual( 10, parser.BytePosition );
 
-                var r2 = parser.Read();
-                Assert.AreEqual(24, parser.BytePosition);
+				var r2 = parser.Read();
+				Assert.AreEqual( 25, parser.BytePosition );
 
-                parser.Read();
-                Assert.AreEqual(25, parser.BytePosition);
-            }
-        }
+				Assert.IsNull( parser.Read() );
+			}
+		}
 
 		[TestMethod]
 		public void ByteCountUsingCharWithMoreThanSingleByteTest()
@@ -958,16 +974,15 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual( 8, parser.BytePosition );
+				Assert.AreEqual( 10, parser.BytePosition );
 
 				parser.Read();
-				Assert.AreEqual( 18, parser.BytePosition );
-
-				parser.Read();
-				Assert.AreEqual( 28, parser.BytePosition );
+				Assert.AreEqual( 20, parser.BytePosition );
 
 				parser.Read();
 				Assert.AreEqual( 30, parser.BytePosition );
+
+				Assert.IsNull( parser.Read() );
 			}
 		}
 

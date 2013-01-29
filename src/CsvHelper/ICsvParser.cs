@@ -39,9 +39,16 @@ namespace CsvHelper
 		int Row { get; }
 
 		/// <summary>
+		/// Gets the raw row for the current record that was parsed.
+		/// For this to be populated, you need to turn on
+		/// <see cref="CsvConfiguration.CaptureRawRow"/>
+		/// </summary>
+		string RawRecord { get; }
+
+		/// <summary>
 		/// Reads a record from the CSV file.
 		/// </summary>
-		/// <returns>A <see cref="List{String}" /> of fields for the record read.</returns>
+		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
 		string[] Read();
 	}
 }
