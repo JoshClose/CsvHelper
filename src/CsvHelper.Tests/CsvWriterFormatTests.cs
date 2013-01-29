@@ -13,12 +13,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+    using System.Threading;
+
+    [TestClass]
 	public class CsvWriterFormatTests
 	{
 		[TestMethod]
 		public void WriteFieldTest()
 		{
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+
 			var record = new TestRecord
 			{
 				IntColumn = 1,
