@@ -41,6 +41,7 @@ namespace CsvHelper.Configuration
 		private Encoding encoding = Encoding.UTF8;
 		private bool quoteAllFields = false;
 		private bool quoteNoFields = false;
+        private bool isIgnoreSpacesInHeader = false;
 
 #if !NET_2_0
 		/// <summary>
@@ -258,6 +259,18 @@ namespace CsvHelper.Configuration
 				}
 			}
 		}
+
+        /// <summary>
+        /// Gets or sets a value indicating whether matching header
+		/// column names should ignore spaces. True for ignoring space
+		/// matching, otherwise false.
+        /// </summary>
+
+        public virtual bool IsIgnoreSpaceInHeader
+        {
+            get { return isIgnoreSpacesInHeader; }
+            set { isIgnoreSpacesInHeader = value; }
+        }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the number of bytes should
