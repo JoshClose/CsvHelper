@@ -165,6 +165,29 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "One", 1 ) );
 		}
 
+        [TestMethod]
+        public void GetSpacedFieldByNameTest()
+        {
+            var data1 = new[] { "One", "Two Is Multiple", "three", "four is FUNKy" };
+            var data2 = new[] { "1", "2", "3", "4" };
+
+            var queue = new Queue<string[]>();
+            queue.Enqueue(data1);
+            queue.Enqueue(data2);
+
+            var parseMock = new ParserMock(queue);
+
+            var reader = new CsvReader(parseMock);
+            reader.Configuration.IsCaseSensitive = false;
+            reader.Configuration.IsIgnoreSpaceInHeader = true;
+            reader.Read();
+
+            Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>("one"));
+            Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>("twoismultiple"));
+            Assert.AreEqual(Convert.ToInt32(data2[2]), reader.GetField<int>("three"));
+            Assert.AreEqual(Convert.ToInt32(data2[3]), reader.GetField<int>("fourisfunky"));
+        }
+
 		[TestMethod]
 		public void GetMissingFieldByNameTest()
 		{

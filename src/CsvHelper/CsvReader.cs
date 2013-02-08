@@ -954,6 +954,11 @@ namespace CsvHelper
 					name = name.ToLower();
 				}
 
+                if (Configuration.IsIgnoreSpaceInHeader)
+                {
+                    name = name.Replace(" ", "");
+                }
+
 				if( namedIndexes.ContainsKey( name ) )
 				{
 					namedIndexes[name].Add( i );
