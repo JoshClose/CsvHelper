@@ -1157,32 +1157,37 @@ namespace CsvHelper.Tests
 			}
 		}
 		
+		[TestMethod]
+		public void EndBufferTest()
+		{
+			var config = new CsvHelper.Configuration.CsvConfiguration
+			{
+				BufferSize = 12
+			};
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader, config ) )
+			{
+				writer.Write( "111,222,333\r\naaa,bbb,ccc\r\n" );
+				writer.Flush();
+				stream.Position = 0;
 
-	        [TestMethod]
-	        public void EndBufferTest()
-	        {
-	            var config = new CsvHelper.Configuration.CsvConfiguration
-	            {
-	                BufferSize = 12
-	            };
-	            using (var stream = new MemoryStream())
-	            using (var writer = new StreamWriter(stream))
-	            using (var reader = new StreamReader(stream))
-	            using (var parser = new CsvParser(reader, config))
-	            {
-	                writer.Write("111,222,333\r\naaa,bbb,ccc\r\n");
-	                writer.Flush();
-	                stream.Position = 0;
-	
-	                // BufferSize is set to 12 to force a buffer read after the first \r
-	                var row = parser.Read();
-	
-	                Assert.IsNotNull(row);
-	                Assert.AreEqual("111", row[0]);
-	                Assert.AreEqual("222", row[1]);
-	                //Assert.AreEqual("333\naa", row[2]);
-	                Assert.AreEqual("333", row[2]);
-	            }
-	        }
+				// BufferSize is set to 12 to force a buffer read after the first \r
+				var row = parser.Read();
+
+				Assert.IsNotNull( row );
+				Assert.AreEqual( "111", row[0] );
+				Assert.AreEqual( "222", row[1] );
+				Assert.AreEqual( "333", row[2] );
+
+				row = parser.Read();
+
+				Assert.IsNotNull( row );
+				Assert.AreEqual( "aaa", row[0] );
+				Assert.AreEqual( "bbb", row[1] );
+				Assert.AreEqual( "ccc", row[2] );
+			}
+		}
 	}
 }

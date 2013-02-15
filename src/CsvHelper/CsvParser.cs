@@ -243,8 +243,8 @@ namespace CsvHelper
 			while( true )
 			{
 				cPrev = c;
-				int fLen = readerBufferPosition - fieldStartPosition;
-				c = GetChar( ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fLen );
+				var fieldLength = readerBufferPosition - fieldStartPosition;
+				c = GetChar( ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength );
 				if( c == '\0' )
 				{
 					break;
@@ -355,7 +355,7 @@ namespace CsvHelper
 				}
 				else if( c == '\r' || c == '\n' )
 				{
-					var fieldLength = readerBufferPosition - fieldStartPosition - 1;
+					fieldLength = readerBufferPosition - fieldStartPosition - 1;
 					if( c == '\r' )
 					{
 						var cNext = GetChar( ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, true );
@@ -436,8 +436,8 @@ namespace CsvHelper
 					// The buffer ran out. Take the current
 					// text and add it to the field.
 					AppendField( ref field, fieldStartPosition, fieldLength );
-					fieldLength = 0;
 					UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+					fieldLength = 0;
 
 					RawRecord += new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition );
 				}
