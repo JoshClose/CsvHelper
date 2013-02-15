@@ -13,9 +13,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.Tests", "CsvHelper.Tests\CsvHelper.Tests.csproj", "{AB3E6DA8-0419-4341-89E0-3EFDF0ECA9D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3EBB2EEF-29C1-48E4-8416-D7FFDE004AA2}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper35", "CsvHelper35\CsvHelper35.csproj", "{82541DA4-EE4A-4078-BF05-63B48A8AA51E}"
 EndProject
@@ -30,6 +27,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.SpeedTests", "CsvHelper.SpeedTests\CsvHelper.SpeedTests.csproj", "{6F8B2AB9-A296-4003-9A55-A8113D4B0028}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelperRt45.Tests", "CsvHelperRt45.Tests\CsvHelperRt45.Tests.csproj", "{1545FE0B-1A6C-431B-8014-0EB3BF501E1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelperSL", "CsvHelperSL\CsvHelperSL.csproj", "{C1754646-5927-425B-943F-4A5658DB7450}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelperSL.Tests", "CsvHelperSL.Tests\CsvHelperSL.Tests.csproj", "{65FB38EE-FBC0-4583-A91E-5684002E680F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -207,6 +208,34 @@ Global
 		{1545FE0B-1A6C-431B-8014-0EB3BF501E1D}.Release|x86.ActiveCfg = Release|x86
 		{1545FE0B-1A6C-431B-8014-0EB3BF501E1D}.Release|x86.Build.0 = Release|x86
 		{1545FE0B-1A6C-431B-8014-0EB3BF501E1D}.Release|x86.Deploy.0 = Release|x86
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|ARM.ActiveCfg = Release|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|x64.ActiveCfg = Release|Any CPU
+		{C1754646-5927-425B-943F-4A5658DB7450}.Release|x86.ActiveCfg = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|ARM.ActiveCfg = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|x64.ActiveCfg = Release|Any CPU
+		{65FB38EE-FBC0-4583-A91E-5684002E680F}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

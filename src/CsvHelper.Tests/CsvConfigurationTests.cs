@@ -60,13 +60,13 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 2, config.Properties.Count );
 		}
 
-		private class TestClass
+		public class TestClass
 		{
 			public string StringColumn { get; set; }
 			public int IntColumn { get; set; }
 		}
 
-		private class TestClassMappings : CsvClassMap<TestClass>
+		public class TestClassMappings : CsvClassMap<TestClass>
 		{
 			public TestClassMappings()
 			{

@@ -1112,7 +1112,7 @@ namespace CsvHelper
 				}
 
 				// Get the field using the field index.
-				var method = typeof( ICsvReaderRow ).GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
+				var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof(string), new[] { typeof( int ) } ).GetGetMethod();
 				Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
 
 				// Convert the field.
