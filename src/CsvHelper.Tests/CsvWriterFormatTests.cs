@@ -21,7 +21,11 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void WriteFieldTest()
 		{
-            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+#if WINRT_4_5
+			Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "en-US";
+#else
+			Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+#endif
 
 			var record = new TestRecord
 			{
