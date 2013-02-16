@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7BE49C75-44C7-47C9-8CCA-ED549A56AEE6}</ProjectGuid>
+    <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CsvHelperSl5.Tests</RootNamespace>
+    <AssemblyName>CsvHelperSl5.Tests</AssemblyName>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+  </PropertyGroup>
+  <!-- This property group is only here to support building this project using the 
+       MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
+       to set the TargetFrameworkVersion to v3.5 -->
+  <PropertyGroup Condition="'$(MSBuildToolsVersion)' == '3.5'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;TRACE;SILVERLIGHT</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Bin\Release</OutputPath>
+    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Silverlight.Testing">
+      <HintPath>..\..\lib\Silverlight5ToolkitTesting\Microsoft.Silverlight.Testing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight">
+      <HintPath>..\..\lib\Silverlight5ToolkitTesting\Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="System.Windows" />
+    <Reference Include="system" />
+    <Reference Include="System.Core">
+      <HintPath>$(TargetFrameworkDirectory)System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Windows.Browser" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CsvHelper.Tests\CsvClassMappingTests.cs">
+      <Link>CsvClassMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvConfigurationTests.cs">
+      <Link>CsvConfigurationTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvFieldAttributeMappingTests.cs">
+      <Link>CsvFieldAttributeMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserConstructorTests.cs">
+      <Link>CsvParserConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserDelimiterTests.cs">
+      <Link>CsvParserDelimiterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserExcelCompatibleTests.cs">
+      <Link>CsvParserExcelCompatibleTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserRawRecordTests.cs">
+      <Link>CsvParserRawRecordTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserTests.cs">
+      <Link>CsvParserTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderConstructorTests.cs">
+      <Link>CsvReaderConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderErrorMessageTests.cs">
+      <Link>CsvReaderErrorMessageTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderMappingTests.cs">
+      <Link>CsvReaderMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderSubClassingTests.cs">
+      <Link>CsvReaderSubClassingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderTests.cs">
+      <Link>CsvReaderTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterConstructorTests.cs">
+      <Link>CsvWriterConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterFormatTests.cs">
+      <Link>CsvWriterFormatTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterMappingTests.cs">
+      <Link>CsvWriterMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterSubClassingTests.cs">
+      <Link>CsvWriterSubClassingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterTests.cs">
+      <Link>CsvWriterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\LocalCultureTests.cs">
+      <Link>LocalCultureTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\Mocks\ParserMock.cs">
+      <Link>Mocks\ParserMock.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReferenceMappingAttributeTests.cs">
+      <Link>ReferenceMappingAttributeTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
+      <Link>ReferenceMappingClassMapTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\BooleanConverterTests.cs">
+      <Link>TypeConversion\BooleanConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\ByteConverterTests.cs">
+      <Link>TypeConversion\ByteConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\CharConverterTests.cs">
+      <Link>TypeConversion\CharConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeConverterTests.cs">
+      <Link>TypeConversion\DateTimeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumConverterTests.cs">
+      <Link>TypeConversion\EnumConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterFactoryTests.cs">
+      <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CsvHelperSl5\CsvHelperSl5.csproj">
+      <Project>{226b1b8e-c3b5-47ff-a5c7-cebcda9fdeae}</Project>
+      <Name>CsvHelperSl5</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{A1591282-1198-4647-A2B1-27E5FF5F6F3B}">
+        <SilverlightProjectProperties />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

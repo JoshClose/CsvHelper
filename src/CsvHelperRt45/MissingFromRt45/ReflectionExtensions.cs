@@ -13,12 +13,15 @@ namespace CsvHelper.MissingFromRt45
 		/// Gets the property.
 		/// </summary>
 		/// <param name="type">The type.</param>
-		/// <param name="name">The <see cref="string"/> containing the name of the public property to get.</param>
-		/// <param name="types">An array of <see cref="Type"/> objects representing the number, order, and type of 
-		/// the parameters for the indexed property to get.-or- An empty array of the type System.Type (that is, 
+		/// <param name="name">The <see cref="string" /> containing the name of the public property to get.</param>
+		/// <param name="returnType">Type of the return.</param>
+		/// <param name="types">An array of <see cref="Type" /> objects representing the number, order, and type of
+		/// the parameters for the indexed property to get.-or- An empty array of the type System.Type (that is,
 		/// Type[] types = new Type[0]) to get a property that is not indexed.</param>
-		/// <returns>A System.Reflection.PropertyInfo object representing the public property whose parameters match the specified argument types, if found; otherwise, null.</returns>
-		public static PropertyInfo GetProperty( this Type type, string name, Type[] types )
+		/// <returns>
+		/// A System.Reflection.PropertyInfo object representing the public property whose parameters match the specified argument types, if found; otherwise, null.
+		/// </returns>
+		public static PropertyInfo GetProperty( this Type type, string name, Type returnType, Type[] types )
 		{
 			return ( from property in type.GetRuntimeProperties()
 					 where property.Name == name

@@ -519,13 +519,7 @@ namespace CsvHelper
 			// returning null, so we need to handle this special case.
 			if( converter is DateTimeConverter )
 			{
-#if NET_2_0
 				if( StringHelper.IsNullOrWhiteSpace( currentRecord[index] ) )
-#elif NET_3_5
-				if( currentRecord[index].IsNullOrWhiteSpace() )
-#else
-				if( string.IsNullOrWhiteSpace( currentRecord[index] ) )
-#endif
 				{
 					field = default( T );
 					return false;
@@ -1112,7 +1106,7 @@ namespace CsvHelper
 				}
 
 				// Get the field using the field index.
-				var method = typeof( ICsvReaderRow ).GetProperty( "Item", new[] { typeof( int ) } ).GetGetMethod();
+				var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 				Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
 
 				// Convert the field.

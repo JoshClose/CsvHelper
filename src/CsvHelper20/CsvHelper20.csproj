@@ -95,6 +95,9 @@
     <Compile Include="..\CsvHelper\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\StringHelper.cs">
+      <Link>StringHelper.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\BooleanConverter.cs">
       <Link>TypeConversion\BooleanConverter.cs</Link>
     </Compile>
@@ -163,7 +166,6 @@
     </Compile>
     <Compile Include="MissingFrom20\EnumerableHelper.cs" />
     <Compile Include="MissingFrom20\Delegates.cs" />
-    <Compile Include="MissingFrom20\StringHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -129,8 +129,8 @@
     <Compile Include="..\CsvHelper\ReflectionHelper.cs">
       <Link>ReflectionHelper.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper\StringExtensions.cs">
-      <Link>StringExtensions.cs</Link>
+    <Compile Include="..\CsvHelper\StringHelper.cs">
+      <Link>StringHelper.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\BooleanConverter.cs">
       <Link>TypeConversion\BooleanConverter.cs</Link>
