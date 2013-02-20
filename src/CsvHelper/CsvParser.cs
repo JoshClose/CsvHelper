@@ -363,6 +363,17 @@ namespace CsvHelper
 						{
 							readerBufferPosition++;
 							CharPosition++;
+
+							if (readerBufferPosition == 1)
+							{
+								// The buffer ended between \r and \n. \n is the first character of the next buffer.
+								// The readerBufferPosition and fieldStartPosition have been reset because
+								// of the GetChar call to check the next char. This means AppendField and
+								// UpdateBytePosition have already been called in GetChar, so we just
+								// need to call AddFieldToRecord.
+								AddFieldToRecord(ref recordPosition, field);
+								break;
+							}
 						}
 						else if( cNext == '\0' && cPrev != '\0' )
 						{
