@@ -1189,5 +1189,45 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "ccc", row[2] );
 			}
 		}
+
+		[TestMethod]
+		public void InconsistentColumnsMultipleRowsTest()
+		{
+			using ( var stream = new MemoryStream() )
+			using ( var writer = new StreamWriter(stream) )
+			using ( var reader = new StreamReader(stream) )
+			using ( var parser = new CsvParser(reader) )
+			{
+				writer.WriteLine( "Column 1,Column 2" );
+				writer.WriteLine( "1,2" );       // Valid
+				writer.WriteLine( "1,2,3" );     // Error - too many fields
+				writer.WriteLine( "1,2" );       // Valid
+				writer.WriteLine( "1" );         // Error - not enough fields
+				writer.WriteLine( "1,2,3,4" );   // Error - too many fields
+				writer.WriteLine( "1,2" );       // Valid
+				writer.WriteLine( "1,2" );       // Valid
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.DetectColumnCountChanges = true;
+				int failCount = 0;
+
+				while ( true )
+				{
+					try
+					{
+						if ( parser.Read() == null )
+							break;
+					}
+					catch ( CsvBadDataException )
+					{
+						failCount++;
+					}
+				}
+
+				// Expect only 3 errors
+				Assert.AreEqual<int>( 3, failCount );
+			}
+		}
 	}
 }
