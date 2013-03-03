@@ -96,16 +96,16 @@ namespace CsvHelper.Tests
 			[CsvField( Index = 1, Name = "Int Column", Format = "{0:0000}" )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Format = "{0:d}" )]
+			[CsvField( Index = 2, Format = "{0:d}" )]
 			public DateTime DateColumn { get; set; }
 
-			[CsvField( Format = "{0:c}" )]
+			[CsvField( Index = 3, Format = "{0:c}" )]
 			public decimal DecimalColumn { get; set; }
 
 			[CsvField( Index = 0 )]
 			public string FirstColumn { get; set; }
 
-			[CsvField( Format = "Type-{0}" )]
+			[CsvField( Index = 4, Format = "Type-{0}" )]
 			public string TypeConvertedColumn { get; set; }
 		}
 

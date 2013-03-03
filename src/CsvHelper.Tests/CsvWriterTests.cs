@@ -359,6 +359,101 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteRecordWithDelimiterInFieldTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var record = new TestSinglePropertyRecord
+				{
+					Name = "one,two"
+				};
+				csv.WriteRecord( record );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "\"one,two\"\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void WriteRecordWithQuoteInFieldTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var record = new TestSinglePropertyRecord
+				{
+					Name = "one\"two"
+				};
+				csv.WriteRecord( record );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "\"one\"\"two\"\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void WriteRecordWithQuoteAllFieldsOnAndDelimiterInFieldTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.QuoteAllFields = true;
+				var record = new TestSinglePropertyRecord
+				{
+					Name = "one,two"
+				};
+				csv.WriteRecord( record );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "\"one,two\"\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void WriteRecordWithQuoteAllFieldsOnAndQuoteInFieldTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.QuoteAllFields = true;
+				var record = new TestSinglePropertyRecord
+				{
+					Name = "one\"two"
+				};
+				csv.WriteRecord( record );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "\"one\"\"two\"\r\n", text );
+			}
+		}
+
+		private class TestSinglePropertyRecord
+		{
+			public string Name { get; set; }
+		}
+
 		private class TestRecord
 		{
 			[CsvField( Index = 1, Name = "Int Column" )]

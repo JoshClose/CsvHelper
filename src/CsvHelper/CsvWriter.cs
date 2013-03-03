@@ -83,12 +83,9 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField( string field )
 		{
-			var shouldQuote = false;
-			if( configuration.QuoteAllFields )
-			{
-				shouldQuote = true;
-			}
-			else if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
+			var shouldQuote = configuration.QuoteAllFields;
+
+			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
 #if NET_2_0
@@ -103,10 +100,11 @@ namespace CsvHelper
 					field = field.Replace( configuration.Quote.ToString(), string.Concat( configuration.Quote, configuration.Quote ) );
 					hasQuote = true;
 				}
+
 				if( hasQuote ||
 				    field[0] == ' ' ||
 				    field[field.Length - 1] == ' ' ||
-				    field.Contains( configuration.Delimiter.ToString() ) ||
+				    field.Contains( configuration.Delimiter ) ||
 				    field.Contains( "\n" ) ||
 				    field.Contains( "\r" ) )
 				{
