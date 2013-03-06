@@ -146,7 +146,10 @@ namespace CsvHelper
 			{
 				// Resize record if it's too small.
 				Array.Resize( ref record, recordPosition + 1 );
-				FieldCount = record.Length;
+				// 1. If header does not exist, then update FieldCount
+				// 2. If header does exist and it is the first row, then update FieldCount
+				if ( !configuration.HasHeaderRecord || currentRow == 1 )
+					FieldCount = record.Length;
 			}
 
 			record[recordPosition] = field;
