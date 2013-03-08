@@ -84,6 +84,28 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 7, records[1].IntColumn );
 		}
 
+		[TestMethod]
+		public void ConvertUsingBlockTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "2" } );
+			queue.Enqueue( new[] { "3", "4" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var csvReader = new CsvReader( parserMock );
+			csvReader.Configuration.HasHeaderRecord = false;
+			csvReader.Configuration.ClassMapping<ConvertUsingBlockMap>();
+
+			var records = csvReader.GetRecords<TestClass>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 3, records[0].IntColumn );
+			Assert.AreEqual( 7, records[1].IntColumn );
+		}
+
 		private class TestClass
 		{
 			public int IntColumn { get; set; }
@@ -124,6 +146,19 @@ namespace CsvHelper.Tests
 			public ConvertUsingMap()
 			{
 				Map( m => m.IntColumn ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
+			}
+		}
+
+		private sealed class ConvertUsingBlockMap : CsvClassMap<TestClass>
+		{
+			public ConvertUsingBlockMap()
+			{
+				Map( m => m.IntColumn ).ConvertUsing( row =>
+				{
+					var x = row.GetField<int>( 0 );
+					var y = row.GetField<int>( 1 );
+					return x + y;
+				} );
 			}
 		}
 	}

@@ -194,9 +194,9 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="T">The type of the property that will be set.</typeparam>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual CsvPropertyMap ConvertUsing<T>( Expression<Func<ICsvReaderRow, T>> convertExpression )
+		public virtual CsvPropertyMap ConvertUsing<T>( Func<ICsvReaderRow, T> convertExpression )
 		{
-			this.convertExpression = convertExpression;
+			this.convertExpression = (Expression<Func<ICsvReaderRow, T>>)( x => convertExpression( x ) );
 			return this;
 		}
 
