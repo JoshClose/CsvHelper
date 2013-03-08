@@ -3,8 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+#if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
+#endif
 using System.Reflection;
 using CsvHelper.TypeConversion;
 
@@ -15,6 +17,40 @@ namespace CsvHelper
 	/// </summary>
 	public static class ReflectionHelper
 	{
+		/// <summary>
+		/// Creates an instance of type <see cref="T"/>.
+		/// </summary>
+		/// <typeparam name="T">The type of instance to create.</typeparam>
+		/// <returns>A new instance of type <see cref="T"/>.</returns>
+		public static T CreateInstance<T>()
+		{
+#if NET_2_0
+			return Activator.CreateInstance<T>();
+#else
+
+			var constructor = Expression.New( typeof( T ) );
+			var compiled = (Func<T>)Expression.Lambda( constructor ).Compile();
+			return compiled();
+#endif
+		}
+
+		/// <summary>
+		/// Creates an instance of the specified type.
+		/// </summary>
+		/// <param name="type">The type of instance to create.</param>
+		/// <returns>A new instance of the specified type.</returns>
+		public static object CreateInstance( Type type )
+		{
+#if NET_2_0
+			return Activator.CreateInstance( type );
+#else
+			var constructor = Expression.New( type );
+			var compiled = (Func<object>)Expression.Lambda( constructor ).Compile();
+			return compiled();
+#endif
+		}
+
+#if !NET_2_0
 		/// <summary>
 		/// Gets the first attribute of type T on property.
 		/// </summary>
@@ -125,5 +161,6 @@ namespace CsvHelper
 
 			return memberExpression;
 		}
+#endif
 	}
 }

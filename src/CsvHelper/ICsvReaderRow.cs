@@ -119,12 +119,44 @@ namespace CsvHelper
 		/// (column) name and the index instance of that field. The index 
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
 		/// <returns>The field converted to <see cref="Type"/> T.</returns>
 		T GetField<T>( string name, int index, ITypeConverter converter );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at position (column) index using
+		/// the given <see cref="ITypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+		/// <param name="index">The zero based index of the field.</param>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
+		T GetField<T, TConverter>( int index ) where TConverter : ITypeConverter;
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at position (column) name using
+		/// the given <see cref="ITypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
+		T GetField<T, TConverter>( string name ) where TConverter : ITypeConverter;
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at position 
+		/// (column) name and the index instance of that field. The index 
+		/// is used when there are multiple columns with the same header name.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <returns>The field converted to <see cref="Type"/> T.</returns>
+		T GetField<T, TConverter>( string name, int index ) where TConverter : ITypeConverter;
 
 		/// <summary>
 		/// Gets the field converted to <see cref="Type"/> T at position (column) index.
@@ -189,6 +221,40 @@ namespace CsvHelper
 		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
 		bool TryGetField<T>( string name, int index, ITypeConverter converter, out T field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at position (column) index
+		/// using the specified <see cref="ITypeConverter" />.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+		/// <param name="index">The zero based index of the field.</param>
+		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T, TConverter>( int index, out T field ) where TConverter : ITypeConverter;
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at position (column) name
+		/// using the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T, TConverter>( string name, out T field ) where TConverter : ITypeConverter;
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Type"/> T at position (column) name
+		/// using the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
+		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField<T, TConverter>( string name, int index, out T field ) where TConverter : ITypeConverter;
 
 		/// <summary>
 		/// Determines whether the current record is empty.

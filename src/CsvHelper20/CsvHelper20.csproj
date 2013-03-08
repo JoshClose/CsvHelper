@@ -95,6 +95,9 @@
     <Compile Include="..\CsvHelper\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\ReflectionHelper.cs">
+      <Link>ReflectionHelper.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\StringHelper.cs">
       <Link>StringHelper.cs</Link>
     </Compile>

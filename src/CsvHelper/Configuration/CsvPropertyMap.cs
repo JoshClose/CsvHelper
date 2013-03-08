@@ -184,7 +184,7 @@ namespace CsvHelper.Configuration
 		/// <see cref="TypeConverter"/> to use.</typeparam>
 		public virtual CsvPropertyMap TypeConverter<T>() where T : ITypeConverter
 		{
-			TypeConverter( Activator.CreateInstance<T>() );
+			TypeConverter( ReflectionHelper.CreateInstance<T>() );
 			return this;
 		}
 

@@ -337,7 +337,7 @@ namespace CsvHelper.Configuration
 			where TMap : CsvClassMap<TClass>
 			where TClass : class
 		{
-			var mapping = Activator.CreateInstance<TMap>() as CsvClassMap<TClass>;
+			var mapping = ReflectionHelper.CreateInstance<TMap>();
 			ClassMapping( mapping );
 		}
 
@@ -349,7 +349,7 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 		public virtual void ClassMapping<TMap>() where TMap : CsvClassMap
 		{
-			var mapping = Activator.CreateInstance<TMap>();
+			var mapping = ReflectionHelper.CreateInstance<TMap>();
 			ClassMapping( mapping );
 		}
 
