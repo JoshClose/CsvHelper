@@ -161,7 +161,7 @@ namespace CsvHelper
 			}
 			else
 			{
-				var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+				var converter = TypeConverterFactory.GetConverter<T>();
 				WriteField( field, converter );
 			}
 		}

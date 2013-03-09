@@ -97,7 +97,7 @@ namespace CsvHelper.Configuration
 
 			// Set some defaults.
 			names.Add( property.Name );
-			typeConverter = TypeConverterFactory.CreateTypeConverter( property.PropertyType );
+			typeConverter = TypeConverterFactory.GetConverter( property.PropertyType );
 		}
 
 		/// <summary>

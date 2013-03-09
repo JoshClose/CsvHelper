@@ -351,7 +351,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+			var converter = TypeConverterFactory.GetConverter<T>();
 			return GetField<T>( index, converter );
 		}
 
@@ -366,7 +366,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+			var converter = TypeConverterFactory.GetConverter<T>();
 			return GetField<T>( name, converter );
 		}
 
@@ -384,7 +384,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+			var converter = TypeConverterFactory.GetConverter<T>();
 			return GetField<T>( name, index, converter );
 		}
 
@@ -514,7 +514,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+			var converter = TypeConverterFactory.GetConverter<T>();
 			return TryGetField( index, converter, out field );
 		}
 
@@ -530,7 +530,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+			var converter = TypeConverterFactory.GetConverter<T>();
 			return TryGetField( name, converter, out field );
 		}
 
@@ -549,7 +549,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var converter = TypeConverterFactory.CreateTypeConverter( typeof( T ) );
+			var converter = TypeConverterFactory.GetConverter<T>();
 			return TryGetField( name, index, converter, out field );
 		}
 

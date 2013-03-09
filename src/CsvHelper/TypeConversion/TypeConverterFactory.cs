@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 #if WINRT_4_5
 using CsvHelper.MissingFromRt45;
@@ -15,81 +16,60 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public static class TypeConverterFactory
 	{
+		private static readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
+
 		/// <summary>
-		/// Creates an <see cref="ITypeConverter"/> from the given <see cref="Type"/>.
+		/// Gets the available <see cref="ITypeConverter"/>s.
 		/// </summary>
-		/// <param name="type">The <see cref="Type"/> of the converter to create.</param>
-		/// <returns>The created <see cref="ITypeConverter"/>.</returns>
-		/// <exception cref="System.NotSupportedException">Thrown when there is no <see cref="ITypeConverter"/> for the given type.</exception>
-		public static ITypeConverter CreateTypeConverter( Type type )
+		public static Dictionary<Type, ITypeConverter> TypeConverters
 		{
-			if( type == typeof( bool ) )
+			get { return typeConverters; }
+		}
+
+		/// <summary>
+		/// Initializes the <see cref="TypeConverterFactory" /> class.
+		/// </summary>
+		static TypeConverterFactory()
+		{
+			CreateDefaultConverters();
+		}
+
+		/// <summary>
+		/// Sets the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// </summary>
+		/// <param name="type">The type the converter converts.</param>
+		/// <param name="typeConverter">The type converter that converts the type.</param>
+		public static void SetConverter( Type type, ITypeConverter typeConverter )
+		{
+			TypeConverters[type] = typeConverter;
+		}
+
+		/// <summary>
+		/// Sets the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// </summary>
+		/// <typeparam name="T">The type the converter converts.</typeparam>
+		/// <param name="typeConverter">The type converter that converts the type.</param>
+		public static void SetConverter<T>( ITypeConverter typeConverter )
+		{
+			TypeConverters[typeof( T )] = typeConverter;
+		}
+
+		/// <summary>
+		/// Gets the converter for the given <see cref="Type"/>.
+		/// </summary>
+		/// <param name="type">The type to get the converter for.</param>
+		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="Type"/>.</returns>
+		public static ITypeConverter GetConverter( Type type )
+		{
+			if( typeConverters.ContainsKey( type ) )
 			{
-				return new BooleanConverter();
+				return typeConverters[type];
 			}
-			if( type == typeof( byte ) )
-			{
-				return new ByteConverter();
-			}
-			if( type == typeof( char ) )
-			{
-				return new CharConverter();
-			}
-			if( type == typeof( DateTime ) )
-			{
-				return new DateTimeConverter();
-			}
-			if( type == typeof( decimal ) )
-			{
-				return new DecimalConverter();
-			}
-			if( type == typeof( double ) )
-			{
-				return new DoubleConverter();
-			}
+
 			if( typeof( Enum ).IsAssignableFrom( type ) )
 			{
-				return new EnumConverter( type );
-			}
-			if( type == typeof( float ) )
-			{
-				return new SingleConverter();
-			}
-			if( type == typeof( Guid ) )
-			{
-				return new GuidConverter();
-			}
-			if( type == typeof( short ) )
-			{
-				return new Int16Converter();
-			}
-			if( type == typeof( int ) )
-			{
-				return new Int32Converter();
-			}
-			if( type == typeof( long ) )
-			{
-				return new Int64Converter();
-			}
-			if( type == typeof( sbyte ) )
-			{
-				return new SByteConverter();
-			}
-			if( type == typeof( string ) )
-			{
-				return new StringConverter();
-			}
-			if( type == typeof( ushort ) )
-			{
-				return new UInt16Converter();
-			}
-			if( type == typeof( uint ) )
-			{
-				return new UInt32Converter();
-			}
-			if( type == typeof( ulong ) )
-			{
-				return new UInt64Converter();
+				SetConverter( type, new EnumConverter( type ) );
+				return GetConverter( type );
 			}
 
 #if WINRT_4_5
@@ -97,12 +77,43 @@ namespace CsvHelper.TypeConversion
 #else
 			var isGenericType = type.IsGenericType;
 #endif
-			if( isGenericType && type.GetGenericTypeDefinition() == typeof( System.Nullable<> ) )
+			if( isGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
 			{
-				return new NullableConverter( type );
+				SetConverter( type, new NullableConverter( type ) );
+				return GetConverter( type );
 			}
 
 			return new DefaultTypeConverter();
 		}
+
+		/// <summary>
+		/// Gets the converter for the given <see cref="Type"/>.
+		/// </summary>
+		/// <typeparam name="T">The type to get the converter for.</typeparam>
+		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="Type"/>.</returns>
+		public static ITypeConverter GetConverter<T>()
+		{
+			return GetConverter( typeof( T ) );
+		}
+
+		private static void CreateDefaultConverters()
+		{
+			SetConverter( typeof( bool ), new BooleanConverter() );
+			SetConverter( typeof( byte ), new ByteConverter() );
+			SetConverter( typeof( char ), new CharConverter() );
+			SetConverter( typeof( DateTime ), new DateTimeConverter() );
+			SetConverter( typeof( decimal ), new DecimalConverter() );
+			SetConverter( typeof( double ), new DoubleConverter() );
+			SetConverter( typeof( float ), new SingleConverter() );
+			SetConverter( typeof( Guid ), new GuidConverter() );
+			SetConverter( typeof( short ), new Int16Converter() );
+			SetConverter( typeof( int ), new Int32Converter() );
+			SetConverter( typeof( long ), new Int64Converter() );
+			SetConverter( typeof( sbyte ), new SByteConverter() );
+			SetConverter( typeof( string ), new StringConverter() );
+			SetConverter( typeof( ushort ), new UInt16Converter() );
+			SetConverter( typeof( uint ), new UInt32Converter() );
+			SetConverter( typeof( ulong ), new UInt64Converter() );
+		} 
 	}
 }
