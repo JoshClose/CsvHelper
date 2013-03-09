@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.15.0</version>
+    <version>1.16.0</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -12,10 +12,10 @@
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
 Features:
--Silveright 4/5 support added.
+-Changed mapping for ConvertUsing to accept a Func so a block expression can be used.
+-Added GetField&lt;T, TConverter&gt; overloads.
+-Changed TypeConverterFactory to use a set of cached type converters so global type converters can be used.
 Bug Fixes:
--Fixed issue with char position being off and fields being read wrong when buffer landed in between \r and \n.
--Fixed issue with writing with Configuration.QuoteAllFields enabled and quotes in the field not being quoted.
 	</releaseNotes>
   </metadata>
 </package>
