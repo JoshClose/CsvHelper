@@ -31,10 +31,17 @@ namespace CsvHelper.Tests.TypeConversion
 
 			Assert.IsInstanceOfType( converter, typeof( DefaultTypeConverter ) );
 
-			TypeConverterFactory.SetConverter<TestKnownClass>( new TestKnownConverter() );
+			TypeConverterFactory.AddConverter<TestKnownClass>( new TestKnownConverter() );
 			converter = TypeConverterFactory.GetConverter<TestKnownClass>();
 
 			Assert.IsInstanceOfType( converter, typeof( TestKnownConverter ) );
+		}
+
+		[TestMethod]
+		public void RemoveConverterForUnknownType()
+		{
+			TypeConverterFactory.RemoveConverter<TestUnknownClass>();
+			TypeConverterFactory.RemoveConverter( typeof( TestUnknownClass ) );
 		}
 
 		[TestMethod]

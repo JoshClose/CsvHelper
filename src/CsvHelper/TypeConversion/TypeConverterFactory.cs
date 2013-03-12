@@ -17,14 +17,7 @@ namespace CsvHelper.TypeConversion
 	public static class TypeConverterFactory
 	{
 		private static readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
-
-		/// <summary>
-		/// Gets the available <see cref="ITypeConverter"/>s.
-		/// </summary>
-		public static Dictionary<Type, ITypeConverter> TypeConverters
-		{
-			get { return typeConverters; }
-		}
+		private static readonly object locker = new object();
 
 		/// <summary>
 		/// Initializes the <see cref="TypeConverterFactory" /> class.
@@ -35,23 +28,70 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Sets the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
 		/// </summary>
 		/// <param name="type">The type the converter converts.</param>
 		/// <param name="typeConverter">The type converter that converts the type.</param>
-		public static void SetConverter( Type type, ITypeConverter typeConverter )
+		public static void AddConverter( Type type, ITypeConverter typeConverter )
 		{
-			TypeConverters[type] = typeConverter;
+			if( type == null )
+			{
+				throw new ArgumentNullException( "type" );
+			}
+
+			if( typeConverter == null )
+			{
+				throw new ArgumentNullException( "typeConverter" );
+			}
+
+			lock( locker )
+			{
+				typeConverters[type] = typeConverter;
+			}
 		}
 
 		/// <summary>
-		/// Sets the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
 		/// </summary>
 		/// <typeparam name="T">The type the converter converts.</typeparam>
 		/// <param name="typeConverter">The type converter that converts the type.</param>
-		public static void SetConverter<T>( ITypeConverter typeConverter )
+		public static void AddConverter<T>( ITypeConverter typeConverter )
 		{
-			TypeConverters[typeof( T )] = typeConverter;
+			if( typeConverter == null )
+			{
+				throw new ArgumentNullException( "typeConverter" );
+			}
+
+			lock( locker )
+			{
+				typeConverters[typeof( T )] = typeConverter;
+			}
+		}
+
+		/// <summary>
+		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// </summary>
+		/// <param name="type">The type to remove the converter for.</param>
+		public static void RemoveConverter( Type type )
+		{
+			if( type == null )
+			{
+				throw new ArgumentNullException( "type" );
+			}
+
+			lock( locker )
+			{
+				typeConverters.Remove( type );
+			}
+		}
+
+		/// <summary>
+		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// </summary>
+		/// <typeparam name="T">The type to remove the converter for.</typeparam>
+		public static void RemoveConverter<T>()
+		{
+			RemoveConverter( typeof( T ) );
 		}
 
 		/// <summary>
@@ -61,14 +101,23 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="Type"/>.</returns>
 		public static ITypeConverter GetConverter( Type type )
 		{
-			if( typeConverters.ContainsKey( type ) )
+			if( type == null )
 			{
-				return typeConverters[type];
+				throw new ArgumentNullException( "type" );
+			}
+
+			lock( locker )
+			{
+				ITypeConverter typeConverter;
+				if( typeConverters.TryGetValue( type, out typeConverter ) )
+				{
+					return typeConverter;
+				}
 			}
 
 			if( typeof( Enum ).IsAssignableFrom( type ) )
 			{
-				SetConverter( type, new EnumConverter( type ) );
+				AddConverter( type, new EnumConverter( type ) );
 				return GetConverter( type );
 			}
 
@@ -79,7 +128,7 @@ namespace CsvHelper.TypeConversion
 #endif
 			if( isGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
 			{
-				SetConverter( type, new NullableConverter( type ) );
+				AddConverter( type, new NullableConverter( type ) );
 				return GetConverter( type );
 			}
 
@@ -98,22 +147,22 @@ namespace CsvHelper.TypeConversion
 
 		private static void CreateDefaultConverters()
 		{
-			SetConverter( typeof( bool ), new BooleanConverter() );
-			SetConverter( typeof( byte ), new ByteConverter() );
-			SetConverter( typeof( char ), new CharConverter() );
-			SetConverter( typeof( DateTime ), new DateTimeConverter() );
-			SetConverter( typeof( decimal ), new DecimalConverter() );
-			SetConverter( typeof( double ), new DoubleConverter() );
-			SetConverter( typeof( float ), new SingleConverter() );
-			SetConverter( typeof( Guid ), new GuidConverter() );
-			SetConverter( typeof( short ), new Int16Converter() );
-			SetConverter( typeof( int ), new Int32Converter() );
-			SetConverter( typeof( long ), new Int64Converter() );
-			SetConverter( typeof( sbyte ), new SByteConverter() );
-			SetConverter( typeof( string ), new StringConverter() );
-			SetConverter( typeof( ushort ), new UInt16Converter() );
-			SetConverter( typeof( uint ), new UInt32Converter() );
-			SetConverter( typeof( ulong ), new UInt64Converter() );
+			AddConverter( typeof( bool ), new BooleanConverter() );
+			AddConverter( typeof( byte ), new ByteConverter() );
+			AddConverter( typeof( char ), new CharConverter() );
+			AddConverter( typeof( DateTime ), new DateTimeConverter() );
+			AddConverter( typeof( decimal ), new DecimalConverter() );
+			AddConverter( typeof( double ), new DoubleConverter() );
+			AddConverter( typeof( float ), new SingleConverter() );
+			AddConverter( typeof( Guid ), new GuidConverter() );
+			AddConverter( typeof( short ), new Int16Converter() );
+			AddConverter( typeof( int ), new Int32Converter() );
+			AddConverter( typeof( long ), new Int64Converter() );
+			AddConverter( typeof( sbyte ), new SByteConverter() );
+			AddConverter( typeof( string ), new StringConverter() );
+			AddConverter( typeof( ushort ), new UInt16Converter() );
+			AddConverter( typeof( uint ), new UInt32Converter() );
+			AddConverter( typeof( ulong ), new UInt64Converter() );
 		} 
 	}
 }
