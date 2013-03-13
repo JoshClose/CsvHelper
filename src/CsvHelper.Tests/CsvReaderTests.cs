@@ -843,6 +843,32 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void NoSetterTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "Name" } );
+			queue.Enqueue( new[] { "Test" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+
+			// This should not throw an exception.
+			reader.GetRecords<NoSetter>().ToList();
+		}
+
+		private class NoSetter
+		{
+			private string name;
+
+			public string Name
+			{
+				get { return name; }
+			}
+		}
+
 		private class TestBoolean
 		{
 			public bool BoolColumn { get; set; }

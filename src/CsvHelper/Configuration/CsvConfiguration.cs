@@ -384,10 +384,17 @@ namespace CsvHelper.Configuration
 		/// <param name="type">The type of custom class that contains the attributes.</param>
 		public virtual void AttributeMapping( Type type )
 		{
-			var props = type.GetProperties();
+			var props = type.GetProperties( propertyBindingFlags );
 
 			foreach( var property in props )
 			{
+				if( !property.CanWrite )
+				{
+					// This property can't be set and will thrown an
+					// exception later, so we'll ignore it.
+					continue;
+				}
+
 				var csvFieldAttribute = ReflectionHelper.GetAttribute<CsvFieldAttribute>( property, true );
 				if( csvFieldAttribute == null || csvFieldAttribute.ReferenceKey == null )
 				{
