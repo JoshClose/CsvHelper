@@ -612,17 +612,18 @@ namespace CsvHelper
 				{
 					// Use string.Format instead of TypeConverter.
 					var formatExpression = Expression.Constant( propertyMap.FormatValue );
-					//MethodInfo method;
 					if( configuration.UseInvariantCulture )
 					{
-						var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object ) } );
+						var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object[] ) } );
 						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+						fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
 						fieldExpression = Expression.Call( method, Expression.Constant( CultureInfo.InvariantCulture ), formatExpression, fieldExpression );
 					}
 					else
 					{
-						var method = typeof( string ).GetMethod( "Format", new[] { typeof( string ), typeof( object ) } );
+						var method = typeof( string ).GetMethod( "Format", new[] { typeof( string ), typeof( object[] ) } );
 						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+						fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
 						fieldExpression = Expression.Call( method, formatExpression, fieldExpression );
 					}
 				}

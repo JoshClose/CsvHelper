@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.16.0</version>
+    <version>1.17.0</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -11,11 +11,12 @@
     <description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</description>
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
-Features:
--Changed mapping for ConvertUsing to accept a Func so a block expression can be used.
--Added GetField&lt;T, TConverter&gt; overloads.
--Changed TypeConverterFactory to use a set of cached type converters so global type converters can be used.
-Bug Fixes:
+Added Features:
+-Made TypeConverterFactory thread safe.
+-Added TypeConverterFactory.Remove method.
+-Changed TypeConverterFactory.Set method to Add.
+Bugs Fixed:
+-Properties that can't be set will be ignored in attribute mapping.
 	</releaseNotes>
   </metadata>
 </package>

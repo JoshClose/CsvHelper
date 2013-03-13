@@ -384,7 +384,11 @@ namespace CsvHelper.Configuration
 		/// <param name="type">The type of custom class that contains the attributes.</param>
 		public virtual void AttributeMapping( Type type )
 		{
+#if !WINRT_4_5
 			var props = type.GetProperties( propertyBindingFlags );
+#else
+			var props = type.GetProperties();
+#endif
 
 			foreach( var property in props )
 			{
