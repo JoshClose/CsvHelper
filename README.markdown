@@ -15,6 +15,11 @@ Documentation
 
 http://github.com/JoshClose/CsvHelper/wiki
 
+Discussion
+=======
+csvhelper@googlegroups.com
+https://groups.google.com/forum/?fromgroups#!forum/csvhelper
+
 License
 =======
 
