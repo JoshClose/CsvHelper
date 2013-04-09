@@ -630,12 +630,11 @@ namespace CsvHelper
 				else
 				{
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
-
-					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-
-					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+                    var methodArgs = Configuration.UseInvariantCulture ? new[] { typeof(CultureInfo), typeof(object) } : new[] { typeof(object) };
+                    var method = propertyMap.TypeConverterValue.GetType().GetMethod("ConvertToString", methodArgs);
+				    fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+				    var argExpressions = Configuration.UseInvariantCulture ? new[] { Expression.Constant( CultureInfo.InvariantCulture ), fieldExpression } : new[] { fieldExpression };
+                    fieldExpression = Expression.Call(typeConverterExpression, method, argExpressions);
 				}
 
 				var areEqualExpression = Expression.Equal( currentRecordObject, Expression.Constant( null ) );
