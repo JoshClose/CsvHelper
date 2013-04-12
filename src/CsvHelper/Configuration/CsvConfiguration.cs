@@ -39,6 +39,7 @@ namespace CsvHelper.Configuration
 		private int bufferSize = 2048;
 		private bool isCaseSensitive = true;
 		private Encoding encoding = Encoding.UTF8;
+		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields = false;
 		private bool quoteNoFields = false;
 
@@ -208,13 +209,6 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets a value indicating if InvariantCulture
-		/// should be used when reading and writing. True to
-		/// use InvariantCulture, false to use CurrentCulture.
-		/// </summary>
-		public virtual bool UseInvariantCulture { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating whether all fields are quoted when writing,
 		/// or just ones that have to be. <see cref="QuoteAllFields"/> and
 		/// <see cref="QuoteNoFields"/> cannot be true at the same time. Turning one
@@ -274,6 +268,15 @@ namespace CsvHelper.Configuration
 		{
 			get { return encoding; }
 			set { encoding = value; }
+		}
+
+		/// <summary>
+		/// Gets or sets the culture info used to read an write CSV files.
+		/// </summary>
+		public virtual CultureInfo CultureInfo
+		{
+			get { return cultureInfo; }
+			set { cultureInfo = value; }
 		}
 
 		/// <summary>

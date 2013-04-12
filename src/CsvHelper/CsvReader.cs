@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
-using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if !NET_2_0
@@ -309,8 +307,7 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		public virtual object GetField( int index, ITypeConverter converter )
 		{
-			var culture = Configuration.UseInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
-			return converter.ConvertFromString( culture, currentRecord[index] );
+			return converter.ConvertFromString( Configuration.CultureInfo, currentRecord[index] );
 		}
 
 		/// <summary>
@@ -982,33 +979,12 @@ namespace CsvHelper
 				}
 			}
 
-			CultureInfo culture;
-			CompareOptions compareOptions;
-			if( Configuration.UseInvariantCulture && !Configuration.IsCaseSensitive )
-			{
-				culture = CultureInfo.InvariantCulture;
-				compareOptions = CompareOptions.IgnoreCase;
-			}
-			else if( Configuration.UseInvariantCulture && Configuration.IsCaseSensitive )
-			{
-				culture = CultureInfo.InvariantCulture;
-				compareOptions = CompareOptions.None;
-			}
-			else if( !Configuration.UseInvariantCulture && !Configuration.IsCaseSensitive )
-			{
-				culture = CultureInfo.CurrentCulture;
-				compareOptions = CompareOptions.IgnoreCase;
-			}
-			else
-			{
-				culture = CultureInfo.CurrentCulture;
-				compareOptions = CompareOptions.None;
-			}
+			var compareOptions = !Configuration.IsCaseSensitive ? CompareOptions.IgnoreCase : CompareOptions.None;
 #if !NET_2_0
 			var name =
 				( from i in namedIndexes
 				  from n in names
-				  where culture.CompareInfo.Compare( i.Key, n, compareOptions ) == 0
+				  where Configuration.CultureInfo.CompareInfo.Compare( i.Key, n, compareOptions ) == 0
 				  select i.Key ).SingleOrDefault();
 #else
 			string name = null;
@@ -1016,7 +992,7 @@ namespace CsvHelper
 			{
 				foreach( var n in names )
 				{
-					if( culture.CompareInfo.Compare( pair.Key, n, compareOptions ) == 0 )
+					if( Configuration.CultureInfo.CompareInfo.Compare( pair.Key, n, compareOptions ) == 0 )
 					{
 						name = pair.Key;
 					}
@@ -1219,7 +1195,7 @@ namespace CsvHelper
 
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-				var culture = Expression.Constant( Configuration.UseInvariantCulture ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture );
+				var culture = Expression.Constant( Configuration.CultureInfo );
 
 				// Create type converter expression.
 				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, culture, fieldExpression );

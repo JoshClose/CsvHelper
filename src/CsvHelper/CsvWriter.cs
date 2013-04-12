@@ -4,13 +4,11 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
 #endif
-using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
@@ -179,9 +177,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var fieldString = Configuration.UseInvariantCulture
-			                  	? converter.ConvertToString( CultureInfo.InvariantCulture, field )
-			                  	: converter.ConvertToString( field );
+			var fieldString = converter.ConvertToString( Configuration.CultureInfo, field );
 			WriteField( fieldString );
 		}
 
@@ -194,7 +190,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var record = string.Join( configuration.Delimiter.ToString(), currentRecord.ToArray() );
+			var record = string.Join( configuration.Delimiter, currentRecord.ToArray() );
 			writer.WriteLine( record );
 			currentRecord.Clear();
 		}
@@ -443,8 +439,7 @@ namespace CsvHelper
 
 					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 
@@ -496,8 +491,7 @@ namespace CsvHelper
 
 					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 
@@ -612,26 +606,15 @@ namespace CsvHelper
 				{
 					// Use string.Format instead of TypeConverter.
 					var formatExpression = Expression.Constant( propertyMap.FormatValue );
-					if( configuration.UseInvariantCulture )
-					{
-						var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object[] ) } );
-						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-						fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
-						fieldExpression = Expression.Call( method, Expression.Constant( CultureInfo.InvariantCulture ), formatExpression, fieldExpression );
-					}
-					else
-					{
-						var method = typeof( string ).GetMethod( "Format", new[] { typeof( string ), typeof( object[] ) } );
-						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-						fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
-						fieldExpression = Expression.Call( method, formatExpression, fieldExpression );
-					}
+					var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object[] ) } );
+					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+					fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
+					fieldExpression = Expression.Call( method, Expression.Constant( Configuration.CultureInfo ), formatExpression, fieldExpression );
 				}
 				else
 				{
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var convertMethod = Configuration.UseInvariantCulture ? "ConvertToInvariantString" : "ConvertToString";
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( convertMethod, new[] { typeof( object ) } );
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
 
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 

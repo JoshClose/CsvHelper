@@ -449,6 +449,32 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteRecordsWithInvariantCultureTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.CultureInfo = CultureInfo.InvariantCulture;
+
+				var record = new TestRecord
+				{
+					IntColumn = 1,
+					FirstColumn = "first column",
+					IgnoredColumn = "ignored column",
+					StringColumn = "string column",
+				};
+
+				csv.WriteRecord( record );
+				writer.Flush();
+				stream.Position = 0;
+
+				var csvString = reader.ReadToEnd();
+			}
+		}
+
 		private class TestSinglePropertyRecord
 		{
 			public string Name { get; set; }
