@@ -363,6 +363,11 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual void ClassMapping( CsvClassMap classMap )
 		{
+			if( classMap.Constructor == null && classMap.PropertyMaps.Count == 0 && classMap.ReferenceMaps.Count == 0 )
+			{
+				throw new CsvConfigurationException( "No mappings were specified in the CsvClassMap." );
+			}
+
 			Constructor = classMap.Constructor;
 			properties = classMap.PropertyMaps;
 			references = classMap.ReferenceMaps;
@@ -477,6 +482,11 @@ namespace CsvHelper.Configuration
 						refMap.ReferenceProperties.Add( map );
 					}
 				}
+			}
+
+			if( properties.Count == 0 && references.Count == 0 )
+			{
+				throw new CsvConfigurationException( "No properties were mapped. Only properties can be mapped. Are you trying to use fields?" );
 			}
 		}
 #endif

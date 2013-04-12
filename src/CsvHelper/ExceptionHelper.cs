@@ -66,7 +66,7 @@ namespace CsvHelper
 #endif
 
 			string fieldValue = null;
-			if( currentIndex.HasValue && currentRecord != null && currentIndex < currentRecord.Length )
+			if( currentIndex >= 0 && currentRecord != null && currentIndex < currentRecord.Length )
 			{
 				fieldValue = currentRecord[currentIndex.Value];
 				messageInfo.AppendFormat( "Field Value: '{0}'", currentRecord[currentIndex.Value] ).AppendLine();

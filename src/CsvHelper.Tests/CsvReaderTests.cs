@@ -847,8 +847,8 @@ namespace CsvHelper.Tests
 		public void NoSetterTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "Name" } );
-			queue.Enqueue( new[] { "Test" } );
+			queue.Enqueue( new[] { "Name", "NoSet" } );
+			queue.Enqueue( new[] { "name", "test" } );
 			queue.Enqueue( null );
 
 			var parserMock = new ParserMock( queue );
@@ -859,13 +859,42 @@ namespace CsvHelper.Tests
 			reader.GetRecords<NoSetter>().ToList();
 		}
 
+		[TestMethod]
+		public void OnlyFieldsTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "Name" } );
+			queue.Enqueue( new[] { "name" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+
+			try
+			{
+				reader.GetRecords<OnlyFields>().ToList();
+				Assert.Fail();
+			}
+			catch( CsvConfigurationException )
+			{
+			}
+		}
+
+		private class OnlyFields
+		{
+			public string Name;
+		}
+
 		private class NoSetter
 		{
-			private string name;
+			private string noSet;
 
-			public string Name
+			public string Name { get; set; }
+
+			public string NoSet
 			{
-				get { return name; }
+				get { return noSet; }
 			}
 		}
 

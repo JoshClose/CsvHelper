@@ -780,7 +780,7 @@ namespace CsvHelper
 				{
 					record = GetReadRecordFunc<T>()( this );
 				}
-				catch( CsvReaderException )
+				catch( CsvHelperException )
 				{
 					// We threw the exception, so let it go.
 					throw;
