@@ -719,7 +719,7 @@ namespace CsvHelper
 			T record;
 			try
 			{
-				record = GetReadRecordFunc<T>()( this );
+				record = GetReadRecordFunc<T>()();
 			}
 			catch( CsvReaderException )
 			{
@@ -746,7 +746,7 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = GetReadRecordFunc( type )( this );
+				record = GetReadRecordFunc( type )();
 			}
 			catch( CsvReaderException )
 			{
@@ -778,7 +778,7 @@ namespace CsvHelper
 				T record;
 				try
 				{
-					record = GetReadRecordFunc<T>()( this );
+					record = GetReadRecordFunc<T>()();
 				}
 				catch( CsvHelperException )
 				{
@@ -812,7 +812,7 @@ namespace CsvHelper
 				object record;
 				try
 				{
-					record = GetReadRecordFunc( type )( this );
+					record = GetReadRecordFunc( type )();
 				}
 				catch( CsvReaderException )
 				{
@@ -1051,12 +1051,12 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="Type"/> of object that is created
 		/// and populated.</typeparam>
 		/// <returns>The function delegate.</returns>
-		protected virtual Func<ICsvReader, T> GetReadRecordFunc<T>() where T : class
+		protected virtual Func<T> GetReadRecordFunc<T>() where T : class
 		{
 			var recordType = typeof( T );
-			CreateReadRecordFunc( recordType, ( body, readerParameter ) => Expression.Lambda<Func<ICsvReader, T>>( body, readerParameter ).Compile() );
+			CreateReadRecordFunc( recordType, ( body ) => Expression.Lambda<Func<T>>( body ).Compile() );
 
-			return (Func<ICsvReader, T>)recordFuncs[recordType];
+			return (Func<T>)recordFuncs[recordType];
 		}
 
 		/// <summary>
@@ -1066,11 +1066,11 @@ namespace CsvHelper
 		/// <param name="recordType">The <see cref="Type"/> of object that is created
 		/// and populated.</param>
 		/// <returns>The function delegate.</returns>
-		protected virtual Func<ICsvReader, object> GetReadRecordFunc( Type recordType )
+		protected virtual Func<object> GetReadRecordFunc( Type recordType )
 		{
-			CreateReadRecordFunc( recordType, ( body, readerParameter ) => Expression.Lambda<Func<ICsvReader, object>>( body, readerParameter ).Compile() );
+			CreateReadRecordFunc( recordType, ( body ) => Expression.Lambda<Func<object>>( body ).Compile() );
 
-			return (Func<ICsvReader, object>)recordFuncs[recordType];
+			return (Func<object>)recordFuncs[recordType];
 		}
 
 		/// <summary>
@@ -1079,7 +1079,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="recordType">Type of the record.</param>
 		/// <param name="expressionCompiler">The expression compiler.</param>
-		protected virtual void CreateReadRecordFunc( Type recordType, Func<Expression, ParameterExpression, Delegate> expressionCompiler )
+		protected virtual void CreateReadRecordFunc( Type recordType, Func<Expression, Delegate> expressionCompiler )
 		{
 			if( recordFuncs.ContainsKey( recordType ) )
 			{
@@ -1087,7 +1087,6 @@ namespace CsvHelper
 			}
 
 			var bindings = new List<MemberBinding>();
-			var readerParameter = Expression.Parameter( typeof( ICsvReader ), "reader" );
 
 			// If there is no property mappings yet, use attribute mappings.
 			if( configuration.Properties.Count == 0 )
@@ -1095,24 +1094,19 @@ namespace CsvHelper
 				configuration.AttributeMapping( recordType );
 			}
 
-			AddPropertyBindings( readerParameter, configuration.Properties, bindings );
+			AddPropertyBindings( configuration.Properties, bindings );
 
 			foreach( var referenceMap in configuration.References )
 			{
-				var referenceReaderParameter = Expression.Parameter( typeof( ICsvReader ), "reader2" );
 				var referenceBindings = new List<MemberBinding>();
-				AddPropertyBindings( referenceReaderParameter, referenceMap.ReferenceProperties, referenceBindings );
+				AddPropertyBindings( referenceMap.ReferenceProperties, referenceBindings );
 				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
-				var referenceFunc = Expression.Lambda( referenceBody, referenceReaderParameter );
-				var referenceCompiled = referenceFunc.Compile();
-				var referenceCompiledMethod = referenceCompiled.GetType().GetMethod( "Invoke" );
-				Expression referenceObjectExpression = Expression.Call( Expression.Constant( referenceCompiled ), referenceCompiledMethod, Expression.Constant( this ) );
-				bindings.Add( Expression.Bind( referenceMap.Property, referenceObjectExpression ) );
+				bindings.Add( Expression.Bind( referenceMap.Property, referenceBody ) );
 			}
 
 			var constructorExpression = configuration.Constructor ?? Expression.New( recordType );
 			var body = Expression.MemberInit( constructorExpression, bindings );
-			var func = expressionCompiler( body, readerParameter );
+			var func = expressionCompiler( body );
 			recordFuncs[recordType] = func;
 
 			#region This is the expression that is built:
@@ -1158,7 +1152,7 @@ namespace CsvHelper
 		/// <param name="readerParameter">The reader parameter.</param>
 		/// <param name="properties">The properties.</param>
 		/// <param name="bindings">The bindings.</param>
-		protected virtual void AddPropertyBindings( ParameterExpression readerParameter, CsvPropertyMapCollection properties, List<MemberBinding> bindings )
+		protected virtual void AddPropertyBindings( CsvPropertyMapCollection properties, List<MemberBinding> bindings )
 		{
 			foreach( var propertyMap in properties )
 			{
@@ -1191,7 +1185,7 @@ namespace CsvHelper
 
 				// Get the field using the field index.
 				var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
-				Expression fieldExpression = Expression.Call( readerParameter, method, Expression.Constant( index, typeof( int ) ) );
+				Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
 
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
