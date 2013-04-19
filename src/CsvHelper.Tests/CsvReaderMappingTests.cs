@@ -106,6 +106,28 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 7, records[1].IntColumn );
 		}
 
+		[TestMethod]
+		public void ConvertUsingConstantTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "2" } );
+			queue.Enqueue( new[] { "3", "4" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var csvReader = new CsvReader( parserMock );
+			csvReader.Configuration.HasHeaderRecord = false;
+			csvReader.Configuration.ClassMapping<ConvertUsingConstantMap>();
+
+			var records = csvReader.GetRecords<TestClass>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 1, records[0].IntColumn );
+			Assert.AreEqual( 1, records[1].IntColumn );
+		}
+
 		private class TestClass
 		{
 			public int IntColumn { get; set; }
@@ -159,6 +181,14 @@ namespace CsvHelper.Tests
 					var y = row.GetField<int>( 1 );
 					return x + y;
 				} );
+			}
+		}
+
+		private sealed class ConvertUsingConstantMap : CsvClassMap<TestClass>
+		{
+			public ConvertUsingConstantMap()
+			{
+				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
 			}
 		}
 	}

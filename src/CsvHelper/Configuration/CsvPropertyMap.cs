@@ -202,7 +202,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// The format the <see cref="ICsvWriter"/> will use instead
-		/// of a <see cref="TypeConverter"/> to conver the value to a string.
+		/// of a <see cref="TypeConverter"/> to convert the value to a string.
 		/// </summary>
 		/// <param name="format">The format.</param>
 		public virtual CsvPropertyMap Format( string format )
