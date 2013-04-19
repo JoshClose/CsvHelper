@@ -54,9 +54,11 @@
     <Compile Include="CsvParserRawRecordTests.cs" />
     <Compile Include="CsvReaderErrorMessageTests.cs" />
     <Compile Include="CsvReaderMappingTests.cs" />
+    <Compile Include="CsvReaderReferenceMappingTests.cs" />
     <Compile Include="CsvReaderSubClassingTests.cs" />
     <Compile Include="CsvWriterFormatTests.cs" />
     <Compile Include="CsvWriterMappingTests.cs" />
+    <Compile Include="CsvWriterReferenceMappingTests.cs" />
     <Compile Include="CsvWriterSubClassingTests.cs" />
     <Compile Include="CsvClassMappingTests.cs" />
     <Compile Include="CsvConfigurationTests.cs" />
@@ -67,6 +69,7 @@
     <Compile Include="CsvReaderTests.cs" />
     <Compile Include="CsvWriterConstructorTests.cs" />
     <Compile Include="CsvWriterTests.cs" />
+    <Compile Include="InvalidateRecordsCacheTests.cs" />
     <Compile Include="LocalCultureTests.cs" />
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

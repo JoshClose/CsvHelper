@@ -22,12 +22,12 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.AreEqual( 4, config.Mapping.PropertyMaps.Count );
 
-			Assert.AreEqual( "Guid Column", config.Properties[0].NameValue );
-			Assert.AreEqual( "Int Column", config.Properties[1].NameValue );
-			Assert.AreEqual( "String Column", config.Properties[2].NameValue );
-			Assert.AreEqual( "NotUsedColumn", config.Properties[3].NameValue );
+			Assert.AreEqual( "Guid Column", config.Mapping.PropertyMaps[0].NameValue );
+			Assert.AreEqual( "Int Column", config.Mapping.PropertyMaps[1].NameValue );
+			Assert.AreEqual( "String Column", config.Mapping.PropertyMaps[2].NameValue );
+			Assert.AreEqual( "NotUsedColumn", config.Mapping.PropertyMaps[3].NameValue );
 		}
 
 		[TestMethod]
@@ -36,12 +36,12 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.AreEqual( 4, config.Mapping.PropertyMaps.Count );
 
-			Assert.AreEqual( 1, config.Properties[0].IndexValue );
-			Assert.AreEqual( 2, config.Properties[1].IndexValue );
-			Assert.AreEqual( 3, config.Properties[2].IndexValue );
-			Assert.AreEqual( -1, config.Properties[3].IndexValue );
+			Assert.AreEqual( 1, config.Mapping.PropertyMaps[0].IndexValue );
+			Assert.AreEqual( 2, config.Mapping.PropertyMaps[1].IndexValue );
+			Assert.AreEqual( 3, config.Mapping.PropertyMaps[2].IndexValue );
+			Assert.AreEqual( -1, config.Mapping.PropertyMaps[3].IndexValue );
 		}
 
 		[TestMethod]
@@ -50,12 +50,12 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.AreEqual( 4, config.Mapping.PropertyMaps.Count );
 
-			Assert.IsInstanceOfType( config.Properties[0].TypeConverterValue, typeof( StringConverter ) );
-			Assert.IsInstanceOfType( config.Properties[1].TypeConverterValue, typeof( Int32Converter ) );
-			Assert.IsInstanceOfType( config.Properties[2].TypeConverterValue, typeof( Int16Converter ) );
-			Assert.IsInstanceOfType( config.Properties[3].TypeConverterValue, typeof( StringConverter) );
+			Assert.IsInstanceOfType( config.Mapping.PropertyMaps[0].TypeConverterValue, typeof( StringConverter ) );
+			Assert.IsInstanceOfType( config.Mapping.PropertyMaps[1].TypeConverterValue, typeof( Int32Converter ) );
+			Assert.IsInstanceOfType( config.Mapping.PropertyMaps[2].TypeConverterValue, typeof( Int16Converter ) );
+			Assert.IsInstanceOfType( config.Mapping.PropertyMaps[3].TypeConverterValue, typeof( StringConverter ) );
 		}
 
 		[TestMethod]
@@ -64,12 +64,12 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestClass>();
 
-			Assert.AreEqual( 4, config.Properties.Count );
+			Assert.AreEqual( 4, config.Mapping.PropertyMaps.Count );
 
-			Assert.IsFalse( config.Properties[0].IgnoreValue );
-			Assert.IsTrue( config.Properties[1].IgnoreValue );
-			Assert.IsFalse( config.Properties[2].IgnoreValue );
-			Assert.IsFalse( config.Properties[3].IgnoreValue );
+			Assert.IsFalse( config.Mapping.PropertyMaps[0].IgnoreValue );
+			Assert.IsTrue( config.Mapping.PropertyMaps[1].IgnoreValue );
+			Assert.IsFalse( config.Mapping.PropertyMaps[2].IgnoreValue );
+			Assert.IsFalse( config.Mapping.PropertyMaps[3].IgnoreValue );
 		}
 
 		[TestMethod]
@@ -78,12 +78,12 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.AttributeMapping<TestMultipleNamesClass>();
 
-			Assert.AreEqual( 2, config.Properties.Count );
-			Assert.AreEqual( 2, config.Properties[0].NamesValue.Length );
-			Assert.AreEqual( "Id1", config.Properties[0].NamesValue[0] );
-			Assert.AreEqual( "Id2", config.Properties[0].NamesValue[1] );
-			Assert.AreEqual( "Name1", config.Properties[1].NamesValue[0] );
-			Assert.AreEqual( "Name2", config.Properties[1].NamesValue[1] );
+			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Mapping.PropertyMaps[0].NamesValue.Length );
+			Assert.AreEqual( "Id1", config.Mapping.PropertyMaps[0].NamesValue[0] );
+			Assert.AreEqual( "Id2", config.Mapping.PropertyMaps[0].NamesValue[1] );
+			Assert.AreEqual( "Name1", config.Mapping.PropertyMaps[1].NamesValue[0] );
+			Assert.AreEqual( "Name2", config.Mapping.PropertyMaps[1].NamesValue[1] );
 		}
 
 		private class TestClass

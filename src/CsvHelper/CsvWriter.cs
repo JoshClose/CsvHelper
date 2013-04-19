@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 #endif
+using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
@@ -231,17 +232,13 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
-			if( configuration.Properties.Count == 0 )
+			if( configuration.Mapping == null )
 			{
 				configuration.AttributeMapping( type );
 			}
 
 			var properties = new CsvPropertyMapCollection();
-			properties.AddRange( configuration.Properties );
-			foreach( var reference in configuration.References )
-			{
-				properties.AddRange( reference.ReferenceProperties );
-			}
+			AddProperties( properties, configuration.Mapping );
 
 			foreach( var property in properties )
 			{
@@ -352,9 +349,59 @@ namespace CsvHelper
 		public virtual void InvalidateRecordCache( Type type )
 		{
 			typeActions.Remove( type );
-			configuration.Properties.Clear();
 			hasHeaderBeenWritten = false;
 			hasRecordBeenWritten = false;
+		}
+
+		/// <summary>
+		/// Adds the properties from the mapping. This will recursively
+		/// traverse the mapping tree and add all properties for
+		/// reference maps.
+		/// </summary>
+		/// <param name="properties">The properties to be added to.</param>
+		/// <param name="mapping">The mapping where the properties are added from.</param>
+		protected virtual void AddProperties( CsvPropertyMapCollection properties, CsvClassMap mapping )
+		{
+			properties.AddRange( mapping.PropertyMaps );
+			foreach( var refMap in mapping.ReferenceMaps )
+			{
+				AddProperties( properties, refMap.Mapping );
+			}
+		}
+
+		/// <summary>
+		/// Creates a parameter for the given property. This will
+		/// recursively traverse the mapping to to find property
+		/// mapping and create a new property access for each
+		/// reference map it goes through.
+		/// </summary>
+		/// <param name="parameter">The current parameter.</param>
+		/// <param name="mapping">The mapping to look for the property map on.</param>
+		/// <param name="propertyMap">The property map to look for on the mapping.</param>
+		/// <returns>A <see cref="ParameterExpression"/> to access the given property map.</returns>
+		protected virtual Expression CreateParameterForProperty( Expression parameter, CsvClassMap mapping, CsvPropertyMap propertyMap )
+		{
+			var propertyMapping = mapping.PropertyMaps.SingleOrDefault( pm => pm == propertyMap );
+			if( propertyMapping != null )
+			{
+				// If the property map exists on this level of the class
+				// mapping, we can return the parameter.
+				return parameter;
+			}
+
+			// The property isn't on this level of the mapping.
+			// We need to search down through the reference maps.
+			foreach( var refMap in mapping.ReferenceMaps )
+			{
+				var wrappedParameter = Expression.Property( parameter, refMap.Property );
+				var param = CreateParameterForProperty( wrappedParameter, refMap.Mapping, propertyMap );
+				if( param != null )
+				{
+					return param;
+				}
+			}
+
+			return null;
 		}
 #endif
 
@@ -418,12 +465,12 @@ namespace CsvHelper
 				var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( typeof( T ), "record" );
 
-				if( configuration.Properties.Count == 0 )
+				if( configuration.Mapping == null )
 				{
 					configuration.AttributeMapping<T>();
 				}
 
-				foreach( var propertyMap in configuration.Properties )
+				foreach( var propertyMap in configuration.Mapping.PropertyMaps )
 				{
 					if( propertyMap.IgnoreValue )
 					{
@@ -470,12 +517,12 @@ namespace CsvHelper
 				var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 				var recordParameter = Expression.Parameter( type, "record" );
 
-				if( configuration.Properties.Count == 0 )
+				if( configuration.Mapping == null )
 				{
 					configuration.AttributeMapping( type );
 				}
 
-				foreach( var propertyMap in configuration.Properties )
+				foreach( var propertyMap in configuration.Mapping.PropertyMaps )
 				{
 					if( propertyMap.IgnoreValue )
 					{
@@ -552,7 +599,7 @@ namespace CsvHelper
 			var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 			var recordParameter = Expression.Parameter( type, "record" );
 
-			if( configuration.Properties.Count == 0 )
+			if( configuration.Mapping == null )
 			{
 				configuration.AttributeMapping( type );
 			}
@@ -560,11 +607,7 @@ namespace CsvHelper
 			// Get a list of all the properties so they will
 			// be sorted properly.
 			var properties = new CsvPropertyMapCollection();
-			properties.AddRange( configuration.Properties );
-			foreach( var reference in configuration.References )
-			{
-				properties.AddRange( reference.ReferenceProperties );
-			}
+			AddProperties( properties, configuration.Mapping );
 
 			// A list of expressions that will go inside
 			// the lambda code block.
@@ -587,18 +630,8 @@ namespace CsvHelper
 				// So we don't have to access a modified closure.
 				var propertyMapCopy = propertyMap;
 
-				// Get the reference this property is a part of.
-				var reference = ( from r in configuration.References
-				                  from p in r.ReferenceProperties
-				                  where p == propertyMapCopy
-				                  select r ).SingleOrDefault();
-
-				// Get the current object. Either the param passed in
-				// or a reference property object.
-				var currentRecordObject =
-					reference == null
-						? (Expression)recordParameter
-						: Expression.Property( recordParameter, reference.Property );
+				// Find the object that contains this property.
+				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Mapping, propertyMap );
 
 				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.PropertyValue );
 				
@@ -621,7 +654,7 @@ namespace CsvHelper
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 				}
 
-				var areEqualExpression = Expression.Equal( currentRecordObject, Expression.Constant( null ) );
+				var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 				fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 
 				var writeFieldMethodCall = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );

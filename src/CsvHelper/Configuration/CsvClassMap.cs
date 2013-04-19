@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration
 	///<summary>
 	/// Maps class properties to CSV fields.
 	///</summary>
-	public abstract class CsvClassMap
+	public class CsvClassMap
 	{
 		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
 		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();

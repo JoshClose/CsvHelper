@@ -42,6 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderReferenceMappingTests.cs">
+      <Link>CsvReaderReferenceMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\InvalidateRecordsCacheTests.cs">
+      <Link>InvalidateRecordsCacheTests.cs</Link>
+    </Compile>
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

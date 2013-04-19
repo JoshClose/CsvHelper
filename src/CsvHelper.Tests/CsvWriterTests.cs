@@ -222,41 +222,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void InvalidateRecordsCacheTest()
-		{
-			var people = new List<Person>
-			{
-				new Person { FirstName = "first name" }
-			};
-			var addresses = new List<Address>
-			{
-				new Address { City = "city" }
-			};
-
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csvWriter = new CsvWriter( writer ) )
-			{
-				csvWriter.WriteRecords( people );
-				csvWriter.InvalidateRecordCache<Person>();
-				csvWriter.Configuration.HasHeaderRecord = false;
-				csvWriter.WriteRecords( addresses );
-
-				writer.Flush();
-				stream.Position = 0;
-
-				var csvText = reader.ReadToEnd();
-
-				var expectedText = "FirstName,LastName,HomeAddress,WorkAddress\r\n";
-				expectedText += "first name,,,\r\n";
-				expectedText += ",city,,\r\n";
-
-				Assert.AreEqual( expectedText, csvText );
-			}
-		}
-
-		[TestMethod]
 		public void WriteRecordsAllFieldsQuotedTest()
 		{
 			var record = new TestRecord

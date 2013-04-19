@@ -39,7 +39,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings, TestClass>();
 
-			Assert.AreEqual( 2, config.Properties.Count );
+			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
 		}
 
 		[TestMethod]
@@ -48,7 +48,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings>();
 
-			Assert.AreEqual( 2, config.Properties.Count );
+			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
 		}
 
 		[TestMethod]
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.ClassMapping( new TestClassMappings() );
 
-			Assert.AreEqual( 2, config.Properties.Count );
+			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
 		}
 
 		private class TestClass

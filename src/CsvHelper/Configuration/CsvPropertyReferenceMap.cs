@@ -13,7 +13,6 @@ namespace CsvHelper.Configuration
 	public class CsvPropertyReferenceMap
 	{
 		private readonly PropertyInfo property;
-		private CsvPropertyMapCollection referenceProperties = new CsvPropertyMapCollection();
 
 		/// <summary>
 		/// Gets the property.
@@ -24,16 +23,9 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets the reference properties.
+		/// Gets the mapping.
 		/// </summary>
-		/// <value>
-		/// The reference properties.
-		/// </value>
-		public CsvPropertyMapCollection ReferenceProperties
-		{
-			get { return referenceProperties; }
-			protected set { referenceProperties = value; }
-		}
+		public CsvClassMap Mapping { get; protected set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
@@ -42,6 +34,7 @@ namespace CsvHelper.Configuration
 		public CsvPropertyReferenceMap( PropertyInfo property )
 		{
 			this.property = property;
+			Mapping = ReflectionHelper.CreateInstance<CsvClassMap>();
 		}
 
 		/// <summary>
@@ -57,8 +50,7 @@ namespace CsvHelper.Configuration
 			}
 
 			this.property = property;
-			var map = (CsvClassMap)Activator.CreateInstance(type);
-			referenceProperties = map.PropertyMaps;
+			Mapping = (CsvClassMap)ReflectionHelper.CreateInstance( type );
 		}
 	}
 }

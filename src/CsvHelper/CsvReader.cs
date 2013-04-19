@@ -836,8 +836,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void InvalidateRecordCache<T>() where T : class
 		{
-			recordFuncs.Remove( typeof( T ) );
-			configuration.Properties.Clear();
+			InvalidateRecordCache( typeof( T ) );
 		}
 
 		/// <summary>
@@ -851,6 +850,7 @@ namespace CsvHelper
 		public virtual void InvalidateRecordCache( Type type )
 		{
 			recordFuncs.Remove( type );
+			doneReading = false;
 		}
 #endif
 
@@ -1088,70 +1088,51 @@ namespace CsvHelper
 
 			var bindings = new List<MemberBinding>();
 
+			// TODO: Get rid of this call. It's called in CreatePropertyBindingsForMapping.
 			// If there is no property mappings yet, use attribute mappings.
-			if( configuration.Properties.Count == 0 )
+			if( configuration.Mapping == null )
 			{
-				configuration.AttributeMapping( recordType );
+				configuration.Mapping = configuration.CreateClassMapFromAttributeMapping( recordType );
 			}
 
-			AddPropertyBindings( configuration.Properties, bindings );
+			CreatePropertyBindingsForMapping( configuration.Mapping, recordType, bindings );
 
-			foreach( var referenceMap in configuration.References )
-			{
-				var referenceBindings = new List<MemberBinding>();
-				AddPropertyBindings( referenceMap.ReferenceProperties, referenceBindings );
-				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
-				bindings.Add( Expression.Bind( referenceMap.Property, referenceBody ) );
-			}
-
-			var constructorExpression = configuration.Constructor ?? Expression.New( recordType );
+			var constructorExpression = configuration.Mapping.Constructor ?? Expression.New( recordType );
 			var body = Expression.MemberInit( constructorExpression, bindings );
 			var func = expressionCompiler( body );
 			recordFuncs[recordType] = func;
+		}
 
-			#region This is the expression that is built:
+		/// <summary>
+		/// Creates the property bindings for the given <see cref="CsvClassMap"/>.
+		/// </summary>
+		/// <param name="mapping">The mapping to create the bindings for.</param>
+		/// <param name="recordType">The type of record.</param>
+		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
+		protected virtual void CreatePropertyBindingsForMapping( CsvClassMap mapping, Type recordType, List<MemberBinding> bindings )
+		{
+			// If there is no property mappings yet, use attribute mappings.
+			if( mapping == null )
+			{
+				mapping = configuration.CreateClassMapFromAttributeMapping( recordType );
+			}
 
-			//
-			// Func<CsvReader, T> func = reader => 
-			// {
-			//	foreach( var propertyMap in configuration.Properties )
-			//	{
-			//		string field = reader[index];
-			//		object converted = ITypeConverter.ConvertFromString( field );
-			//		T convertedAsType = converted as T;
-			//		property.Property = convertedAsType;
-			//	}
-			//	
-			//	foreach( var referenceMap in configuration.References )
-			//	{
-			//		Func<CsvReader, referenceMap.Property.PropertyType> func2 = reader2 =>
-			//		{
-			//			foreach( var property in referenceMap.ReferenceProperties )
-			//			{
-			//				string field = reader[index];
-			//				object converted = ITypeConverter.ConvertFromString( field );
-			//				T convertedAsType = converted as T;
-			//				property.Property = convertedAsType;
-			//			}
-			//		};
-			//		reference.Property = func2( (CsvReader)this );
-			//	}
-			// };
-			//
-			// The func can then be called:
-			//
-			// func( CsvReader reader );
-			//
+			AddPropertyBindings( mapping.PropertyMaps, bindings );
 
-			#endregion
+			foreach( var referenceMap in mapping.ReferenceMaps )
+			{
+				var referenceBindings = new List<MemberBinding>();
+				CreatePropertyBindingsForMapping( referenceMap.Mapping, referenceMap.Property.PropertyType, referenceBindings );
+				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
+				bindings.Add( Expression.Bind( referenceMap.Property, referenceBody ) );
+			}
 		}
 
 		/// <summary>
 		/// Adds a <see cref="MemberBinding"/> for each property for it's field.
 		/// </summary>
-		/// <param name="readerParameter">The reader parameter.</param>
-		/// <param name="properties">The properties.</param>
-		/// <param name="bindings">The bindings.</param>
+		/// <param name="properties">The properties to add bindings for.</param>
+		/// <param name="bindings">The bindings that will be added to from the properties.</param>
 		protected virtual void AddPropertyBindings( CsvPropertyMapCollection properties, List<MemberBinding> bindings )
 		{
 			foreach( var propertyMap in properties )

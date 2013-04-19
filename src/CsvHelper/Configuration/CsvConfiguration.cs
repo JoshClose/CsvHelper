@@ -22,10 +22,6 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvConfiguration
 	{
-#if !NET_2_0
-		private CsvPropertyMapCollection properties = new CsvPropertyMapCollection();
-		private List<CsvPropertyReferenceMap> references = new List<CsvPropertyReferenceMap>();
-#endif
 #if !WINRT_4_5
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 #endif
@@ -45,25 +41,9 @@ namespace CsvHelper.Configuration
 
 #if !NET_2_0
 		/// <summary>
-		/// Gets the constructor expression.
+		/// Gets or sets the mapping.
 		/// </summary>
-		public virtual NewExpression Constructor { get; private set; } 
-
-		/// <summary>
-		/// Gets the property mappings.
-		/// </summary>
-		public virtual CsvPropertyMapCollection Properties
-		{
-			get { return properties; }
-		}
-
-		/// <summary>
-		/// Gets the reference mappings.
-		/// </summary>
-		public virtual List<CsvPropertyReferenceMap> References
-		{
-			get { return references; }
-		}
+		public virtual CsvClassMap Mapping { get; set; }
 #endif
 
 #if !WINRT_4_5
@@ -305,9 +285,10 @@ namespace CsvHelper.Configuration
 		/// <param name="expression">The expression.</param>
 		/// <returns></returns>
 		public virtual CsvPropertyReferenceMap ReferenceMap<T>( Expression<Func<T, object>> expression )
+			where T : CsvClassMap
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-			return new CsvPropertyReferenceMap( property );
+			return new CsvPropertyReferenceMap<T>( property );
 		}
 
 		/// <summary>
@@ -368,9 +349,7 @@ namespace CsvHelper.Configuration
 				throw new CsvConfigurationException( "No mappings were specified in the CsvClassMap." );
 			}
 
-			Constructor = classMap.Constructor;
-			properties = classMap.PropertyMaps;
-			references = classMap.ReferenceMaps;
+			Mapping = classMap;
 		}
 
 		/// <summary>
@@ -381,7 +360,7 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="TClass">The type of custom class that contains the attributes.</typeparam>
 		public virtual void AttributeMapping<TClass>() where TClass : class
 		{
-			AttributeMapping( typeof( TClass ) );
+			Mapping = CreateClassMapFromAttributeMapping( typeof( TClass ) );
 		}
 
 		/// <summary>
@@ -392,11 +371,24 @@ namespace CsvHelper.Configuration
 		/// <param name="type">The type of custom class that contains the attributes.</param>
 		public virtual void AttributeMapping( Type type )
 		{
+			Mapping = CreateClassMapFromAttributeMapping( type );
+		}
+
+		/// <summary>
+		/// Use <see cref="CsvFieldAttribute"/>s to configure mappings.
+		/// All properties are mapped by default and attribute mapping 
+		/// will change the default property behavior.
+		/// </summary>
+		/// <param name="type">The type of custom class that contains the attributes.</param>
+		public virtual CsvClassMap CreateClassMapFromAttributeMapping( Type type )
+		{
 #if !WINRT_4_5
 			var props = type.GetProperties( propertyBindingFlags );
 #else
 			var props = type.GetProperties();
 #endif
+
+			var mapping = new CsvClassMap();
 
 			foreach( var property in props )
 			{
@@ -441,13 +433,13 @@ namespace CsvHelper.Configuration
 					{
 						map.TypeConverter( typeConverter );
 					}
-					properties.Add( map );
+					mapping.PropertyMaps.Add( map );
 				}
 				else
 				{
 					// This is a reference mapping.
 					var refMap = ReferenceMap( property );
-					references.Add( refMap );
+					mapping.ReferenceMaps.Add( refMap );
 					var refProps = property.PropertyType.GetProperties();
 					foreach( var refProp in refProps )
 					{
@@ -479,15 +471,17 @@ namespace CsvHelper.Configuration
 						{
 							map.TypeConverter( typeConverter );
 						}
-						refMap.ReferenceProperties.Add( map );
+						refMap.Mapping.PropertyMaps.Add( map );
 					}
 				}
 			}
 
-			if( properties.Count == 0 && references.Count == 0 )
+			if( mapping.PropertyMaps.Count == 0 && mapping.ReferenceMaps.Count == 0 )
 			{
 				throw new CsvConfigurationException( "No properties were mapped. Only properties can be mapped. Are you trying to use fields?" );
 			}
+
+			return mapping;
 		}
 #endif
 	}

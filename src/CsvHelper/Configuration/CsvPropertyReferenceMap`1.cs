@@ -20,8 +20,7 @@ namespace CsvHelper.Configuration
 		/// <param name="property">The property.</param>
 		public CsvPropertyReferenceMap( PropertyInfo property ) : base( property )
 		{
-			var map = Activator.CreateInstance<TClassMap>();
-			ReferenceProperties = map.PropertyMaps;
+			Mapping = ReflectionHelper.CreateInstance<TClassMap>();
 		}
 	}
 }

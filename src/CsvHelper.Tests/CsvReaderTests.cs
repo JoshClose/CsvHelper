@@ -710,24 +710,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void InvalidateRecordsCacheTest()
-		{
-			var parserMock = new ParserMock( new Queue<string[]>() );
-			var csvReader = new CsvReader( parserMock );
-			csvReader.Configuration.AttributeMapping<TestRecord>();
-
-			Assert.IsTrue( csvReader.Configuration.Properties.Count > 0 );
-
-			csvReader.InvalidateRecordCache<TestRecord>();
-
-			Assert.AreEqual( 0, csvReader.Configuration.Properties.Count );
-
-			csvReader.Configuration.AttributeMapping<TestRecordNoAttributes>();
-
-			Assert.IsTrue( csvReader.Configuration.Properties.Count > 0 );
-		}
-
-		[TestMethod]
 		public void DefaultValueTest()
 		{
 			var stream = new MemoryStream();
