@@ -31,6 +31,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( new Queue<string[]>( data ) );
 
 			var csvReader = new MyCsvReader( parserMock );
+			csvReader.Configuration.ClassMapping<TestMap>();
 			csvReader.GetRecords<Test>().ToList();
 		}
 
@@ -43,6 +44,15 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 			public string Name { get; set; }
+		}
+
+		private sealed class TestMap : CsvClassMap<Test>
+		{
+			public TestMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
 		}
 	}
 }

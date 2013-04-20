@@ -31,7 +31,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
-				csvWriter.Configuration.AttributeMapping<MultipleNamesAttributeClass>();
+				csvWriter.Configuration.ClassMapping<MultipleNamesAttributeClassMap>();
 				csvWriter.WriteRecords( records );
 
 				writer.Flush();
@@ -51,11 +51,18 @@ namespace CsvHelper.Tests
 
 		private class MultipleNamesAttributeClass
 		{
-			[CsvField( Names = new[] { "int1", "int2", "int3" } )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Names = new[] { "string1", "string2", "string3" } )]
 			public string StringColumn { get; set; }
+		}
+
+		private sealed class MultipleNamesAttributeClassMap : CsvClassMap<MultipleNamesAttributeClass>
+		{
+			public MultipleNamesAttributeClassMap()
+			{
+				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
+				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
+			}
 		}
 	}
 }

@@ -57,9 +57,6 @@
     <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
       <Link>Configuration\CsvConfigurationException.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper\Configuration\CsvFieldAttribute.cs">
-      <Link>Configuration\CsvFieldAttribute.cs</Link>
-    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyMap.cs">
       <Link>Configuration\CsvPropertyMap.cs</Link>
     </Compile>

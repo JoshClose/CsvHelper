@@ -56,6 +56,8 @@ namespace CsvHelper.SpeedTests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
+				csv.Configuration.ClassMapping<TestClassMap>();
+
 				var stopwatch = new Stopwatch();
 				stopwatch.Start();
 
@@ -149,20 +151,27 @@ namespace CsvHelper.SpeedTests
 
 		private class TestClass
 		{
-			[CsvField( Name = "Int Column" )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Name = "String Column" )]
 			public string StringColumn { get; set; }
 
-			[CsvField( Name = "Date Column" )]
 			public DateTime DateColumn { get; set; }
 
-			[CsvField( Name = "Bool Column" )]
 			public bool BoolColumn { get; set; }
 
-			[CsvField( Name = "Guid Column" )]
 			public Guid GuidColumn { get; set; }
+		}
+
+		private sealed class TestClassMap : CsvClassMap<TestClass>
+		{
+			public TestClassMap()
+			{
+				Map( m => m.IntColumn ).Name( "Int Column" );
+				Map( m => m.StringColumn ).Name( "String Column" );
+				Map( m => m.DateColumn ).Name( "Date Column" );
+				Map( m => m.BoolColumn ).Name( "Bool Column" );
+				Map( m => m.GuidColumn ).Name( "Guid Column" );
+			}
 		}
 	}
 }

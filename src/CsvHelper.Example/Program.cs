@@ -109,9 +109,11 @@ namespace CsvHelper.Example
 
 			using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true ) ) ) )
 			{
+				reader.Configuration.ClassMapping<CustomObjectWithMappingMap>();
+
 				while( reader.Read() )
 				{
-					Console.WriteLine( reader.GetRecord<CustomObjectWithAttributes>() );
+					Console.WriteLine( reader.GetRecord<CustomObjectWithMapping>() );
 				}
 			}
 			Console.WriteLine();
@@ -241,9 +243,9 @@ namespace CsvHelper.Example
 		{
 			Console.WriteLine( "Write records with attributes:" );
 
-			var records = new List<CustomObjectWithAttributes>
+			var records = new List<CustomObjectWithMapping>
 			{
-				new CustomObjectWithAttributes
+				new CustomObjectWithMapping
 				{
 					CustomTypeColumn = new CustomType
 					{
@@ -255,7 +257,7 @@ namespace CsvHelper.Example
 					IntColumn = 1,
 					StringColumn = "one",
 				},
-				new CustomObjectWithAttributes
+				new CustomObjectWithMapping
 				{
 					CustomTypeColumn = new CustomType
 					{
@@ -290,9 +292,9 @@ namespace CsvHelper.Example
 		{
 			Console.WriteLine( "Write all records with attributes:" );
 
-			var records = new List<CustomObjectWithAttributes>
+			var records = new List<CustomObjectWithMapping>
 			{
-				new CustomObjectWithAttributes
+				new CustomObjectWithMapping
 				{
 					CustomTypeColumn = new CustomType
 					{
@@ -304,7 +306,7 @@ namespace CsvHelper.Example
 					IntColumn = 1,
 					StringColumn = "one",
 				},
-				new CustomObjectWithAttributes
+				new CustomObjectWithMapping
 				{
 					CustomTypeColumn = new CustomType
 					{
@@ -323,6 +325,7 @@ namespace CsvHelper.Example
 			using( var streamReader = new StreamReader( memoryStream ) )
 			using( var writer = new CsvWriter( streamWriter ) )
 			{
+				writer.Configuration.ClassMapping<CustomObjectWithMappingMap>();
 				writer.WriteRecords( records );
 
 				memoryStream.Position = 0;
@@ -423,28 +426,33 @@ namespace CsvHelper.Example
 			}
 		}
 
-		public class CustomObjectWithAttributes
+		public class CustomObjectWithMapping
 		{
-			[System.ComponentModel.TypeConverter( typeof( CustomTypeTypeConverter ) )]
-			[CsvField( Name = "Custom Type Column", Index = 3 )]
 			public CustomType CustomTypeColumn { get; set; }
 
-			[CsvField( Name = "Guid Column", Index = 2 )]
 			public Guid GuidColumn { get; set; }
 
-			[CsvField( Name = "Int Column", Index = 1 )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Name = "String Column", Index = 0 )]
 			public string StringColumn { get; set; }
 
-			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
 			public override string ToString()
 			{
 				var serializer = new JavaScriptSerializer();
 				return serializer.Serialize( this );
+			}
+		}
+
+		public sealed class CustomObjectWithMappingMap : CsvClassMap<CustomObjectWithMapping>
+		{
+			public CustomObjectWithMappingMap()
+			{
+				Map( m => m.CustomTypeColumn ).Name( "Custom Type Column" ).Index( 3 ).TypeConverter<CustomTypeTypeConverter>();
+				Map( m => m.GuidColumn ).Name( "Guid Column" ).Index( 2 );
+				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 );
+				Map( m => m.StringColumn ).Name( "String Column" ).Index( 0 );
 			}
 		}
 	}

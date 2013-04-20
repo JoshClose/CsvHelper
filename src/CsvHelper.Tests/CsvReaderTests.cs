@@ -347,6 +347,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.ClassMapping<TestRecordMap>();
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
 
@@ -380,6 +381,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.ClassMapping<TestRecordMap>();
 			csv.Read();
 			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ));
 
@@ -409,6 +411,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.ClassMapping<TestRecordMap>();
 			var records = csv.GetRecords<TestRecord>().ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -443,6 +446,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.ClassMapping<TestRecordMap>();
 			var records = csv.GetRecords( typeof( TestRecord ) ).ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -477,6 +481,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.IsStrictMode = true;
+			csv.Configuration.ClassMapping<TestRecordDuplicateHeaderNamesMap>();
 			var records = csv.GetRecords<TestRecordDuplicateHeaderNames>().ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -612,44 +617,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void GetRecordNoAttributesTest()
-		{
-			var headerData = new[]
-            {
-                "IntColumn",
-                "StringColumn",
-                "GuidColumn",
-                "CustomTypeColumn",
-            };
-			var recordData = new[]
-            {
-                "1",
-                "string column",
-				Guid.NewGuid().ToString(),
-				"blah",
-            };
-			var queue = new Queue<string[]>();
-			queue.Enqueue( headerData );
-			queue.Enqueue( recordData );
-			queue.Enqueue( null );
-			var parserMock = new ParserMock( queue );
-
-			var csv = new CsvReader( parserMock );
-			csv.Configuration.IsStrictMode = false;
-			csv.Read();
-			var record = csv.GetRecord<TestRecordNoAttributes>();
-
-			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
-			Assert.AreEqual( recordData[1], record.StringColumn );
-			Assert.AreEqual( default( string ), record.IgnoredColumn );
-			Assert.AreEqual( default( string ), record.TypeConvertedColumn );
-			Assert.AreEqual( default( int ),record.FirstColumn );
-			Assert.AreEqual( new Guid( recordData[2] ), record.GuidColumn );
-			Assert.AreEqual( default( int ), record.NoMatchingFields );
-			Assert.AreEqual( default( TestRecord ), record.CustomTypeColumn );
-		}
-
-		[TestMethod]
 		public void GetRecordEmptyValuesNullableTest()
 		{
 			var stream = new MemoryStream();
@@ -664,6 +631,7 @@ namespace CsvHelper.Tests
 
 			var reader = new StreamReader( stream );
 			var csvReader = new CsvReader( reader );
+			csvReader.Configuration.ClassMapping<TestNullableMap>();
 
 			csvReader.Read();
 			var record = csvReader.GetRecord<TestNullable>();
@@ -723,6 +691,7 @@ namespace CsvHelper.Tests
 
 			var reader = new StreamReader( stream );
 			var csvReader = new CsvReader( reader );
+			csvReader.Configuration.ClassMapping<TestDefaultValuesMap>();
 
 			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
 
@@ -754,6 +723,7 @@ namespace CsvHelper.Tests
 
 			var reader = new StreamReader( stream );
 			var csvReader = new CsvReader( reader );
+			csvReader.Configuration.ClassMapping<TestBooleanMap>();
 
 			var records = csvReader.GetRecords<TestBoolean>().ToList();
 
@@ -814,6 +784,7 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				csvReader.Configuration.IsStrictMode = false;
+				csvReader.Configuration.ClassMapping<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual( 2, records.Count() );
 				try
@@ -823,22 +794,6 @@ namespace CsvHelper.Tests
 				}
 				catch( CsvReaderException ) {}
 			}
-		}
-
-		[TestMethod]
-		public void NoSetterTest()
-		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "Name", "NoSet" } );
-			queue.Enqueue( new[] { "name", "test" } );
-			queue.Enqueue( null );
-
-			var parserMock = new ParserMock( queue );
-
-			var reader = new CsvReader( parserMock );
-
-			// This should not throw an exception.
-			reader.GetRecords<NoSetter>().ToList();
 		}
 
 		[TestMethod]
@@ -855,6 +810,7 @@ namespace CsvHelper.Tests
 
 			try
 			{
+				reader.Configuration.ClassMapping<OnlyFieldsMap>();
 				reader.GetRecords<OnlyFields>().ToList();
 				Assert.Fail();
 			}
@@ -868,15 +824,11 @@ namespace CsvHelper.Tests
 			public string Name;
 		}
 
-		private class NoSetter
+		private sealed class OnlyFieldsMap : CsvClassMap<OnlyFields>
 		{
-			private string noSet;
-
-			public string Name { get; set; }
-
-			public string NoSet
+			public OnlyFieldsMap()
 			{
-				get { return noSet; }
+				Map( m => m.Name );
 			}
 		}
 
@@ -889,13 +841,30 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 		}
 
+		private sealed class TestBooleanMap : CsvClassMap<TestBoolean>
+		{
+			public TestBooleanMap()
+			{
+				Map( m => m.BoolColumn );
+				Map( m => m.BoolNullableColumn );
+				Map( m => m.StringColumn );
+			}
+		}
+
 		private class TestDefaultValues
 		{
-			[CsvField( Default = -1 )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Default = null )]
 			public string StringColumn { get; set; }
+		}
+
+		private sealed class TestDefaultValuesMap : CsvClassMap<TestDefaultValues>
+		{
+			public TestDefaultValuesMap()
+			{
+				Map( m => m.IntColumn ).Default( -1 );
+				Map( m => m.StringColumn ).Default( null );
+			}
 		}
 
 		private class TestNullable
@@ -907,23 +876,27 @@ namespace CsvHelper.Tests
 			public Guid? GuidColumn { get; set; }
 		}
 
+		private sealed class TestNullableMap : CsvClassMap<TestNullable>
+		{
+			public TestNullableMap()
+			{
+				Map( m => m.IntColumn );
+				Map( m => m.StringColumn );
+				Map( m => m.GuidColumn );
+			}
+		}
+
 		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]
 		private class TestRecord
 		{
-			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Name = "String Column" )]
 			public string StringColumn { get; set; }
 
-			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
-			[CsvField( Index = 1 )]
-			[TypeConverter( typeof( TestTypeConverter ) )]
 			public string TypeConvertedColumn { get; set; }
 
-			[CsvField( Index = 0 )]
 			public int FirstColumn { get; set; }
 
 			public Guid GuidColumn { get; set; }
@@ -931,35 +904,36 @@ namespace CsvHelper.Tests
 			public int NoMatchingFields { get; set; }
 		}
 
-		private class TestRecordNoAttributes
+		private sealed class TestRecordMap : CsvClassMap<TestRecord>
 		{
-			public int IntColumn { get; set; }
-
-			public string StringColumn { get; set; }
-
-			public string IgnoredColumn { get; set; }
-
-			public string TypeConvertedColumn { get; set; }
-
-			public int FirstColumn { get; set; }
-
-			public Guid GuidColumn { get; set; }
-
-			public int NoMatchingFields { get; set; }
-
-			public TestRecord CustomTypeColumn { get; set; }
+			public TestRecordMap()
+			{
+				Map( m => m.IntColumn ).TypeConverter<Int32Converter>();
+				Map( m => m.StringColumn ).Name( "String Column" );
+				Map( m => m.TypeConvertedColumn ).Index( 1 ).TypeConverter<TestTypeConverter>();
+				Map( m => m.FirstColumn ).Index( 0 );
+				Map( m => m.GuidColumn );
+				Map( m => m.NoMatchingFields );
+			}
 		}
 
 		private class TestRecordDuplicateHeaderNames
 		{
-			[CsvField( Name = "Column", Index = 0 )]
 			public string Column1 { get; set; }
 
-			[CsvField( Name = "Column", Index = 1 )]
 			public string Column2 { get; set; }
 
-			[CsvField( Name = "Column", Index = 2 )]
 			public string Column3 { get; set; }
+		}
+
+		private sealed class TestRecordDuplicateHeaderNamesMap : CsvClassMap<TestRecordDuplicateHeaderNames>
+		{
+			public TestRecordDuplicateHeaderNamesMap()
+			{
+				Map( m => m.Column1 ).Name( "Column" ).Index( 0 );
+				Map( m => m.Column2 ).Name( "Column" ).Index( 1 );
+				Map( m => m.Column3 ).Name( "Column" ).Index( 2 );
+			}
 		}
 
 		private class TestTypeConverter : DefaultTypeConverter

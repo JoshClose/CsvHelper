@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 #endif
 using System.Reflection;
+using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper
@@ -128,7 +129,14 @@ namespace CsvHelper
 		/// <returns>The <see cref="PropertyInfo"/> for the expression.</returns>
 		public static PropertyInfo GetProperty<TModel>( Expression<Func<TModel, object>> expression )
 		{
-			return (PropertyInfo)GetMemberExpression( expression ).Member;
+			var member = GetMemberExpression( expression ).Member;
+			var property = member as PropertyInfo;
+			if( property == null )
+			{
+				throw new CsvConfigurationException( string.Format( "'{0}' is not a property. Did you try to map a field by accident?", member.Name ) );
+			}
+
+			return property;
 		}
 
 		/// <summary>

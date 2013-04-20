@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper;
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper35.Tests
@@ -23,6 +24,8 @@ namespace CsvHelper35.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
+				csv.Configuration.ClassMapping<TestMap>();
+
 				csv.WriteRecord( typeof( Test ), new Test { Id = 1, Name = "one" } );
 				csv.WriteRecord( typeof( Test ), new Test { Id = 2, Name = "two" } );
 
@@ -44,6 +47,15 @@ namespace CsvHelper35.Tests
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+		}
+
+		private sealed class TestMap : CsvClassMap<Test>
+		{
+			public TestMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
 		}
 	}
 }

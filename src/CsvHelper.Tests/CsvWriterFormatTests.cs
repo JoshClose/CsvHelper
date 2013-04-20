@@ -39,6 +39,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
+			csv.Configuration.ClassMapping<TestRecordMap>();
 
 			csv.WriteRecord( record );
 
@@ -93,20 +94,27 @@ namespace CsvHelper.Tests
 
 		private class TestRecord
 		{
-			[CsvField( Index = 1, Name = "Int Column", Format = "{0:0000}" )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Index = 2, Format = "{0:d}" )]
 			public DateTime DateColumn { get; set; }
 
-			[CsvField( Index = 3, Format = "{0:c}" )]
 			public decimal DecimalColumn { get; set; }
 
-			[CsvField( Index = 0 )]
 			public string FirstColumn { get; set; }
 
-			[CsvField( Index = 4, Format = "Type-{0}" )]
 			public string TypeConvertedColumn { get; set; }
+		}
+
+		private sealed class TestRecordMap : CsvClassMap<TestRecord>
+		{
+			public TestRecordMap()
+			{
+				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).Format( "{0:0000}" );
+				Map( m => m.DateColumn ).Index( 2 ).Format( "{0:d}" );
+				Map( m => m.DecimalColumn ).Index( 3 ).Format( "{0:c}" );
+				Map( m => m.FirstColumn ).Index( 0 );
+				Map( m => m.TypeConvertedColumn ).Index( 4 ).Format( "Type-{0}" );
+			}
 		}
 
 		private class Person

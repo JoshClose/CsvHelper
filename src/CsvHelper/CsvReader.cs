@@ -1092,7 +1092,8 @@ namespace CsvHelper
 			// If there is no property mappings yet, use attribute mappings.
 			if( configuration.Mapping == null )
 			{
-				configuration.Mapping = configuration.CreateClassMapFromAttributeMapping( recordType );
+				// TODO: auto class mapping
+				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
 			}
 
 			CreatePropertyBindingsForMapping( configuration.Mapping, recordType, bindings );
@@ -1114,7 +1115,8 @@ namespace CsvHelper
 			// If there is no property mappings yet, use attribute mappings.
 			if( mapping == null )
 			{
-				mapping = configuration.CreateClassMapFromAttributeMapping( recordType );
+				// TODO: auto class mapping
+				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
 			}
 
 			AddPropertyBindings( mapping.PropertyMaps, bindings );

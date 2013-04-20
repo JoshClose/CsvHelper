@@ -62,7 +62,6 @@
     <Compile Include="CsvWriterSubClassingTests.cs" />
     <Compile Include="CsvClassMappingTests.cs" />
     <Compile Include="CsvConfigurationTests.cs" />
-    <Compile Include="CsvFieldAttributeMappingTests.cs" />
     <Compile Include="CsvParserConstructorTests.cs" />
     <Compile Include="CsvParserTests.cs" />
     <Compile Include="CsvReaderConstructorTests.cs" />
@@ -73,7 +72,6 @@
     <Compile Include="LocalCultureTests.cs" />
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReferenceMappingAttributeTests.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />
     <Compile Include="ReflectionHelperTests.cs" />
     <Compile Include="TypeConversion\BooleanConverterTests.cs" />

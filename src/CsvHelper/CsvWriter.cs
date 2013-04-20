@@ -234,7 +234,8 @@ namespace CsvHelper
 
 			if( configuration.Mapping == null )
 			{
-				configuration.AttributeMapping( type );
+				// TODO: auto class mapping
+				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
 			}
 
 			var properties = new CsvPropertyMapCollection();
@@ -493,7 +494,8 @@ namespace CsvHelper
 
 			if( configuration.Mapping == null )
 			{
-				configuration.AttributeMapping( type );
+				// TODO: auto class mapping
+				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
 			}
 
 			// Get a list of all the properties so they will

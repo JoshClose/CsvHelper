@@ -70,7 +70,6 @@
   <ItemGroup>
     <Compile Include="Configuration\CsvClassMap`1.cs" />
     <Compile Include="Configuration\CsvConfigurationException.cs" />
-    <Compile Include="Configuration\CsvFieldAttribute.cs" />
     <Compile Include="Configuration\CsvClassMap.cs" />
     <Compile Include="Configuration\CsvPropertyMap.cs" />
     <Compile Include="Configuration\CsvPropertyReferenceMap.cs" />

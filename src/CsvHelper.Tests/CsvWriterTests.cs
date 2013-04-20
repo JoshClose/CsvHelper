@@ -63,6 +63,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
+			csv.Configuration.ClassMapping<TestRecordMap>();
 
 			csv.WriteRecord( record );
 
@@ -88,6 +89,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
             var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
+			csv.Configuration.ClassMapping<TestRecordNoIndexesMap>();
 
 			csv.WriteRecord( record );
 
@@ -124,6 +126,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
             var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
+			csv.Configuration.ClassMapping<TestRecordMap>();
 
 			csv.WriteRecords( records );
 
@@ -143,6 +146,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
             var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer ) { Configuration = { HasHeaderRecord = false } };
+			csv.Configuration.ClassMapping<TestRecordMap>();
 			csv.WriteRecord( new TestRecord() );
 
 			stream.Position = 0;
@@ -166,6 +170,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
             var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
+			csv.Configuration.ClassMapping<TestRecordMap>();
 
 			csv.WriteRecord( record );
 			csv.WriteRecord( (TestRecord)null );
@@ -239,6 +244,7 @@ namespace CsvHelper.Tests
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
 				csvWriter.Configuration.QuoteAllFields = true;
+				csvWriter.Configuration.ClassMapping<TestRecordMap>();
 				csvWriter.WriteRecord( record );
 
 				writer.Flush();
@@ -270,6 +276,7 @@ namespace CsvHelper.Tests
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
 				csvWriter.Configuration.QuoteNoFields = true;
+				csvWriter.Configuration.ClassMapping<TestRecordMap>();
 				csvWriter.WriteRecord( record );
 
 				writer.Flush();
@@ -293,6 +300,7 @@ namespace CsvHelper.Tests
             using (var csvWriter = new CsvWriter(writer))
             {
                 csvWriter.Configuration.HasHeaderRecord = true;
+	            csvWriter.Configuration.ClassMapping<TestRecordMap>();
                 csvWriter.WriteHeader(typeof(TestRecord));
 
                 writer.Flush();
@@ -313,6 +321,7 @@ namespace CsvHelper.Tests
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
 				csvWriter.Configuration.HasHeaderRecord = false;
+				csvWriter.Configuration.ClassMapping<TestRecordMap>();
 				try
 				{
 					csvWriter.WriteHeader( typeof( TestRecord ) );
@@ -332,6 +341,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
+				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one,two"
@@ -354,6 +364,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
+				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one\"two"
@@ -377,6 +388,7 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvWriter( writer ) )
 			{
 				csv.Configuration.QuoteAllFields = true;
+				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one,two"
@@ -400,6 +412,7 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvWriter( writer ) )
 			{
 				csv.Configuration.QuoteAllFields = true;
+				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one\"two"
@@ -423,6 +436,7 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvWriter( writer ) )
 			{
 				csv.Configuration.CultureInfo = CultureInfo.InvariantCulture;
+				csv.Configuration.ClassMapping<TestRecordMap>();
 
 				var record = new TestRecord
 				{
@@ -445,40 +459,60 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
+		private sealed class TestSinglePropertyRecordMap : CsvClassMap<TestSinglePropertyRecord>
+		{
+			public TestSinglePropertyRecordMap()
+			{
+				Map( m => m.Name );
+			}
+		}
+
 		private class TestRecord
 		{
-			[CsvField( Index = 1, Name = "Int Column" )]
-			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
 
 			public string StringColumn { get; set; }
 
-			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
-			[CsvField( Index = 0 )]
 			public string FirstColumn { get; set; }
 
-			[TypeConverter( typeof( TestTypeConverter ) )]
 			public string TypeConvertedColumn { get; set; }
+		}
+
+		private sealed class TestRecordMap : CsvClassMap<TestRecord>
+		{
+			public TestRecordMap()
+			{
+				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverter<Int32Converter>();
+				Map( m => m.StringColumn );
+				Map( m => m.FirstColumn ).Index( 0 );
+				Map( m => m.TypeConvertedColumn ).TypeConverter<TestTypeConverter>();
+			}
 		}
 
 		private class TestRecordNoIndexes
 		{
-			[CsvField( Name = "Int Column" )]
-			[TypeConverter( typeof( Int32Converter ) )]
 			public int IntColumn { get; set; }
 
 			public string StringColumn { get; set; }
 
-			[CsvField( Ignore = true )]
 			public string IgnoredColumn { get; set; }
 
-			[CsvField]
 			public string FirstColumn { get; set; }
 
-			[TypeConverter( typeof( TestTypeConverter ) )]
 			public string TypeConvertedColumn { get; set; }
+		}
+
+		private sealed class TestRecordNoIndexesMap : CsvClassMap<TestRecordNoIndexes>
+		{
+			public TestRecordNoIndexesMap()
+			{
+				Map( m => m.IntColumn ).Name( "Int Column" ).TypeConverter<Int32Converter>();
+				Map( m => m.StringColumn );
+				Map( m => m.FirstColumn );
+				Map( m => m.TypeConvertedColumn ).TypeConverter<TestTypeConverter>();
+			}
 		}
 
 		private class TestTypeConverter : ITypeConverter

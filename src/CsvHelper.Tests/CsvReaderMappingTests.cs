@@ -33,9 +33,9 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var csvReader = new CsvReader( parserMock );
-			csvReader.Configuration.AttributeMapping<MultipleNamesAttributeClass>();
+			csvReader.Configuration.ClassMapping<MultipleNamesClassMap>();
 
-			var records = csvReader.GetRecords<MultipleNamesAttributeClass>().ToList();
+			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
 
 			Assert.IsNotNull( records );
 			Assert.AreEqual( 2, records.Count );
@@ -133,13 +133,20 @@ namespace CsvHelper.Tests
 			public int IntColumn { get; set; }
 		}
 
-		private class MultipleNamesAttributeClass
+		private class MultipleNamesClass
 		{
-			[CsvField( Names = new[] { "int1", "int2", "int3" } )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Names = new[] { "string1", "string2", "string3" } )]
 			public string StringColumn { get; set; }
+		}
+
+		private sealed class MultipleNamesClassMap : CsvClassMap<MultipleNamesClass>
+		{
+			public MultipleNamesClassMap()
+			{
+				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
+				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
+			}
 		}
 
 		private class ConstructorMappingClass

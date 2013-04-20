@@ -69,9 +69,6 @@
     <Compile Include="..\CsvHelper.Tests\CsvConfigurationTests.cs">
       <Link>CsvConfigurationTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\CsvFieldAttributeMappingTests.cs">
-      <Link>CsvFieldAttributeMappingTests.cs</Link>
-    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvParserConstructorTests.cs">
       <Link>CsvParserConstructorTests.cs</Link>
     </Compile>
@@ -122,9 +119,6 @@
     </Compile>
     <Compile Include="..\CsvHelper.Tests\Mocks\ParserMock.cs">
       <Link>Mocks\ParserMock.cs</Link>
-    </Compile>
-    <Compile Include="..\CsvHelper.Tests\ReferenceMappingAttributeTests.cs">
-      <Link>ReferenceMappingAttributeTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
       <Link>ReferenceMappingClassMapTests.cs</Link>

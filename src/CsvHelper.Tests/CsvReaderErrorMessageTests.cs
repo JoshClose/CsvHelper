@@ -27,6 +27,7 @@ namespace CsvHelper.Tests
 			{
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.Configuration.AllowComments = true;
+				csvReader.Configuration.ClassMapping<Test1Map>();
 				writer.WriteLine( ",one" );
 				writer.WriteLine( "2,two" );
 				writer.Flush();
@@ -62,6 +63,7 @@ namespace CsvHelper.Tests
 			using( var csvReader = new CsvReader( reader ) )
 			{
 				csvReader.Configuration.AllowComments = true;
+				csvReader.Configuration.ClassMapping<Test1Map>();
 				writer.WriteLine( "IntColumn,StringColumn" );
 				writer.WriteLine( "1,one" );
 				writer.WriteLine( ",two" );
@@ -97,6 +99,7 @@ namespace CsvHelper.Tests
 			using( var csvReader = new CsvReader( reader ) )
 			{
 				csvReader.Configuration.AllowComments = true;
+				csvReader.Configuration.ClassMapping<Test1Map>();
 				writer.WriteLine( "IntColumn,StringColumn" );
 				writer.WriteLine( "# comment" );
 				writer.WriteLine();
@@ -133,6 +136,7 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var csvReader = new CsvReader( reader ) )
 			{
+				csvReader.Configuration.ClassMapping<Test1Map>();
 				writer.WriteLine( "IntColumn,StringColumn" );
 				writer.WriteLine();
 				writer.WriteLine( "one,one" );
@@ -168,6 +172,7 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var csvReader = new CsvReader( reader ) )
 			{
+				csvReader.Configuration.ClassMapping<Test2Map>();
 				writer.WriteLine( "StringColumn,IntColumn" );
 				writer.WriteLine( "one," );
 				writer.WriteLine( "two,2" );
@@ -204,6 +209,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csvReader.Configuration.HasHeaderRecord = false;
+					csvReader.Configuration.ClassMapping<Test3Map>();
 					var records = csvReader.GetRecords<Test3>().ToList();
 				}
 				catch( CsvReaderException ex )
@@ -215,11 +221,18 @@ namespace CsvHelper.Tests
 
 		private class Test1
 		{
-			[CsvField( Index = 0 )]
 			public int IntColumn { get; set; }
 
-			[CsvField( Index = 1 )]
 			public string StringColumn { get; set; }
+		}
+
+		private sealed class Test1Map : CsvClassMap<Test1>
+		{
+			public Test1Map()
+			{
+				Map( m => m.IntColumn ).Index( 0 );
+				Map( m => m.StringColumn ).Index( 1 );
+			}
 		}
 
 		private class Test2
@@ -229,16 +242,32 @@ namespace CsvHelper.Tests
 			public int IntColumn { get; set; }
 		}
 
+		private sealed class Test2Map : CsvClassMap<Test2>
+		{
+			public Test2Map()
+			{
+				Map( m => m.StringColumn );
+				Map( m => m.IntColumn );
+			}
+		}
+
 		private class Test3
 		{
-			[CsvField(Index = 0)]
 			public int Id { get; set; }
 
-			[CsvField(Index = 1)]
 			public DateTime CreationDate { get; set; }
 
-			[CsvField(Index = 2)]
 			public string Description { get; set; }
+		}
+
+		private sealed class Test3Map : CsvClassMap<Test3>
+		{
+			public Test3Map()
+			{
+				Map( m => m.Id ).Index( 0 );
+				Map( m => m.CreationDate ).Index( 1 );
+				Map( m => m.Description ).Index( 2 );
+			}
 		}
 	}
 }
