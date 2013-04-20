@@ -45,8 +45,8 @@ namespace CsvHelper
 			return Activator.CreateInstance( type );
 #else
 			var constructor = Expression.New( type );
-			var compiled = (Func<object>)Expression.Lambda( constructor ).Compile();
-			return compiled();
+			var compiled = Expression.Lambda( constructor ).Compile();
+			return compiled.DynamicInvoke();
 #endif
 		}
 

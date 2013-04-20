@@ -746,7 +746,7 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = GetReadRecordFunc( type )();
+				record = GetReadRecordFunc( type ).DynamicInvoke();
 			}
 			catch( CsvReaderException )
 			{
@@ -812,7 +812,7 @@ namespace CsvHelper
 				object record;
 				try
 				{
-					record = GetReadRecordFunc( type )();
+					record = GetReadRecordFunc( type ).DynamicInvoke();
 				}
 				catch( CsvReaderException )
 				{
@@ -1054,7 +1054,7 @@ namespace CsvHelper
 		protected virtual Func<T> GetReadRecordFunc<T>() where T : class
 		{
 			var recordType = typeof( T );
-			CreateReadRecordFunc( recordType, ( body ) => Expression.Lambda<Func<T>>( body ).Compile() );
+			CreateReadRecordFunc( recordType );
 
 			return (Func<T>)recordFuncs[recordType];
 		}
@@ -1066,11 +1066,11 @@ namespace CsvHelper
 		/// <param name="recordType">The <see cref="Type"/> of object that is created
 		/// and populated.</param>
 		/// <returns>The function delegate.</returns>
-		protected virtual Func<object> GetReadRecordFunc( Type recordType )
+		protected virtual Delegate GetReadRecordFunc( Type recordType )
 		{
-			CreateReadRecordFunc( recordType, ( body ) => Expression.Lambda<Func<object>>( body ).Compile() );
+			CreateReadRecordFunc( recordType );
 
-			return (Func<object>)recordFuncs[recordType];
+			return recordFuncs[recordType];
 		}
 
 		/// <summary>
@@ -1079,7 +1079,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="recordType">Type of the record.</param>
 		/// <param name="expressionCompiler">The expression compiler.</param>
-		protected virtual void CreateReadRecordFunc( Type recordType, Func<Expression, Delegate> expressionCompiler )
+		protected virtual void CreateReadRecordFunc( Type recordType )
 		{
 			if( recordFuncs.ContainsKey( recordType ) )
 			{
@@ -1099,8 +1099,8 @@ namespace CsvHelper
 
 			var constructorExpression = configuration.Mapping.Constructor ?? Expression.New( recordType );
 			var body = Expression.MemberInit( constructorExpression, bindings );
-			var func = expressionCompiler( body );
-			recordFuncs[recordType] = func;
+			var funcType = typeof( Func<> ).MakeGenericType( recordType );
+			recordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
 		}
 
 		/// <summary>

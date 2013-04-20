@@ -42,14 +42,80 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CsvHelper.Tests\CsvClassMappingTests.cs">
+      <Link>CsvClassMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvConfigurationTests.cs">
+      <Link>CsvConfigurationTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvFieldAttributeMappingTests.cs">
+      <Link>CsvFieldAttributeMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserConstructorTests.cs">
+      <Link>CsvParserConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserDelimiterTests.cs">
+      <Link>CsvParserDelimiterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserExcelCompatibleTests.cs">
+      <Link>CsvParserExcelCompatibleTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserRawRecordTests.cs">
+      <Link>CsvParserRawRecordTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserTests.cs">
+      <Link>CsvParserTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderConstructorTests.cs">
+      <Link>CsvReaderConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderErrorMessageTests.cs">
+      <Link>CsvReaderErrorMessageTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderMappingTests.cs">
+      <Link>CsvReaderMappingTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvReaderReferenceMappingTests.cs">
       <Link>CsvReaderReferenceMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderSubClassingTests.cs">
+      <Link>CsvReaderSubClassingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderTests.cs">
+      <Link>CsvReaderTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterConstructorTests.cs">
+      <Link>CsvWriterConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterFormatTests.cs">
+      <Link>CsvWriterFormatTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterMappingTests.cs">
+      <Link>CsvWriterMappingTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvWriterReferenceMappingTests.cs">
       <Link>CsvWriterReferenceMappingTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterSubClassingTests.cs">
+      <Link>CsvWriterSubClassingTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\InvalidateRecordsCacheTests.cs">
       <Link>InvalidateRecordsCacheTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\LocalCultureTests.cs">
+      <Link>LocalCultureTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\Mocks\ParserMock.cs">
+      <Link>Mocks\ParserMock.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReferenceMappingAttributeTests.cs">
+      <Link>ReferenceMappingAttributeTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
+      <Link>ReferenceMappingClassMapTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReflectionHelperTests.cs">
+      <Link>ReflectionHelperTests.cs</Link>
     </Compile>
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
