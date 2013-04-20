@@ -45,6 +45,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvReaderReferenceMappingTests.cs">
       <Link>CsvReaderReferenceMappingTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterReferenceMappingTests.cs">
+      <Link>CsvWriterReferenceMappingTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\InvalidateRecordsCacheTests.cs">
       <Link>InvalidateRecordsCacheTests.cs</Link>
     </Compile>

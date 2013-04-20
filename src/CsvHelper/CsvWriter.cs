@@ -262,7 +262,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			GetWriteRecordAction<T>()( this, record );
+			GetWriteRecordAction<T>()( record );
 
 			hasRecordBeenWritten = true;
 
@@ -278,7 +278,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			GetWriteRecordAction( type ).DynamicInvoke( this, record );
+			GetWriteRecordAction( type ).DynamicInvoke( record );
 
 			hasRecordBeenWritten = true;
 
@@ -301,7 +301,7 @@ namespace CsvHelper
 
 			foreach( var record in records )
 			{
-				GetWriteRecordAction<T>()( this, record );
+				GetWriteRecordAction<T>()( record );
 				NextRecord();
 			}
 		}
@@ -322,7 +322,7 @@ namespace CsvHelper
 
 			foreach( var record in records )
 			{
-				GetWriteRecordAction( type ).DynamicInvoke( this, record );
+				GetWriteRecordAction( type ).DynamicInvoke( record );
 				NextRecord();
 			}
 		}
@@ -448,59 +448,19 @@ namespace CsvHelper
 			}
 		}
 
-#if NET_3_5
+#if !NET_2_0
 		/// <summary>
 		/// Gets the action delegate used to write the custom
 		/// class object to the writer.
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<ICsvWriter, T> GetWriteRecordAction<T>() where T : class
+		protected virtual Action<T> GetWriteRecordAction<T>() where T : class
 		{
 			var type = typeof( T );
+			CreateWriteRecordAction( type );
 
-			if( !typeActions.ContainsKey( type ) )
-			{
-				Action<ICsvWriter, T> func = null;
-				var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
-				var recordParameter = Expression.Parameter( typeof( T ), "record" );
-
-				if( configuration.Mapping == null )
-				{
-					configuration.AttributeMapping<T>();
-				}
-
-				foreach( var propertyMap in configuration.Mapping.PropertyMaps )
-				{
-					if( propertyMap.IgnoreValue )
-					{
-						// Skip ignored properties.
-						continue;
-					}
-
-					if( propertyMap.TypeConverterValue == null )
-					{
-						// Skip if the type isn't convertible.
-						continue;
-					}
-
-					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
-					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
-					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
-
-					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
-
-					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-					func += Expression.Lambda<Action<ICsvWriter, T>>( body, writerParameter, recordParameter ).Compile();
-				}
-
-				typeActions[type] = func;
-			}
-
-			return (Action<ICsvWriter, T>)typeActions[type];
+			return (Action<T>)typeActions[type];
 		}
 
 		/// <summary>
@@ -511,76 +471,9 @@ namespace CsvHelper
 		/// <returns>The action delegate.</returns>
 		protected virtual Delegate GetWriteRecordAction( Type type )
 		{
-			if( !typeActions.ContainsKey( type ) )
-			{
-				var delegates = new List<Delegate>();
-				var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
-				var recordParameter = Expression.Parameter( type, "record" );
-
-				if( configuration.Mapping == null )
-				{
-					configuration.AttributeMapping( type );
-				}
-
-				foreach( var propertyMap in configuration.Mapping.PropertyMaps )
-				{
-					if( propertyMap.IgnoreValue )
-					{
-						// Skip ignored properties.
-						continue;
-					}
-
-					if( propertyMap.TypeConverterValue == null )
-					{
-						// Skip if the type isn't convertible.
-						continue;
-					}
-
-					Expression fieldExpression = Expression.Property( recordParameter, propertyMap.PropertyValue );
-					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
-					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
-
-					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
-
-					var body = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-					var actionType = typeof( Action<,> ).MakeGenericType( typeof( ICsvWriter ), type );
-					delegates.Add( Expression.Lambda( actionType, body, writerParameter, recordParameter ).Compile() );
-				}
-
-				typeActions[type] = Delegate.Combine( delegates.ToArray() );
-			}
+			CreateWriteRecordAction( type );
 
 			return typeActions[type];
-		}
-#elif !NET_2_0
-		/// <summary>
-		/// Gets the action delegate used to write the custom
-		/// class object to the writer.
-		/// </summary>
-		/// <typeparam name="T">The type of the custom class being written.</typeparam>
-		/// <returns>The action delegate.</returns>
-		protected virtual Action<ICsvWriter, T> GetWriteRecordAction<T>() where T : class
-		{
-			var type = typeof( T );
-			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<ICsvWriter, T>>( body, writerParameter, recordParameter ).Compile() );
-
-			return (Action<ICsvWriter, T>)typeActions[type];
-		}
-
-		/// <summary>
-		/// Gets the action delegate used to write the custom
-		/// class object to the writer.
-		/// </summary>
-		/// <param name="type">The type of the custom class being written.</param>
-		/// <returns>The action delegate.</returns>
-		protected virtual Action<ICsvWriter, object> GetWriteRecordAction( Type type )
-		{
-			CreateWriteRecordAction( type, ( body, writerParameter, recordParameter ) => Expression.Lambda<Action<ICsvWriter, object>>( body, writerParameter, recordParameter ).Compile() );
-
-			return (Action<ICsvWriter, object>)typeActions[type];
 		}
 
 		/// <summary>
@@ -589,14 +482,13 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the custom class being written.</param>
 		/// <param name="expressionCompiler">The expression compiler.</param>
-		protected virtual void CreateWriteRecordAction( Type type, Func<Expression, ParameterExpression, ParameterExpression, Delegate> expressionCompiler )
+		protected virtual void CreateWriteRecordAction( Type type )
 		{
 			if( typeActions.ContainsKey( type ) )
 			{
 				return;
 			}
 
-			var writerParameter = Expression.Parameter( typeof( ICsvWriter ), "writer" );
 			var recordParameter = Expression.Parameter( type, "record" );
 
 			if( configuration.Mapping == null )
@@ -609,9 +501,7 @@ namespace CsvHelper
 			var properties = new CsvPropertyMapCollection();
 			AddProperties( properties, configuration.Mapping );
 
-			// A list of expressions that will go inside
-			// the lambda code block.
-			var expressions = new List<Expression>();
+			var delegates = new List<Delegate>();
 
 			foreach( var propertyMap in properties )
 			{
@@ -626,9 +516,6 @@ namespace CsvHelper
 					// Skip if the type isn't convertible.
 					continue;
 				}
-
-				// So we don't have to access a modified closure.
-				var propertyMapCopy = propertyMap;
 
 				// Find the object that contains this property.
 				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Mapping, propertyMap );
@@ -648,23 +535,32 @@ namespace CsvHelper
 				{
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
 					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
-
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
 				}
 
 				var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 				fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 
-				var writeFieldMethodCall = Expression.Call( writerParameter, "WriteField", new[] { typeof( string ) }, fieldExpression );
-				expressions.Add( writeFieldMethodCall );
+				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
+
+				var actionType = typeof( Action<> ).MakeGenericType( type );
+				delegates.Add( Expression.Lambda( actionType, writeFieldMethodCall, recordParameter ).Compile() );
 			}
 
-			var body = Expression.Block( expressions );
-			var func = expressionCompiler( body, writerParameter, recordParameter );
+			typeActions[type] = CombineDelegates( delegates );
+		}
 
-			typeActions[type] = func;
+		/// <summary>
+		/// Combines the delegates into a single multicast delegate.
+		/// This is needed because Silverlight doesn't have the
+		/// Delegate.Combine( params Delegate[] ) overload.
+		/// </summary>
+		/// <param name="delegates">The delegates to combine.</param>
+		/// <returns>A multicast delegate combined from the given delegates.</returns>
+		protected virtual Delegate CombineDelegates( IEnumerable<Delegate> delegates )
+		{
+			return delegates.Aggregate<Delegate, Delegate>( null, Delegate.Combine );
 		}
 #endif
 	}
