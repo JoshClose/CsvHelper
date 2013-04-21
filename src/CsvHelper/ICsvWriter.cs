@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 
 namespace CsvHelper
 {
@@ -51,6 +52,29 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
 		void WriteField<T>( T field );
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <param name="field">The field to write.</param>
+		/// <param name="converter">The converter used to convert the field into a string.</param>
+		void WriteField<T>( T field, ITypeConverter converter );
+
+		/// <summary>
+		/// Writes the field to the CSV file
+		/// using the given <see cref="ITypeConverter"/>.
+		/// When all fields are written for a record,
+		/// <see cref="NextRecord()" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <typeparam name="TConverter">The type of the converter.</typeparam>
+		/// <param name="field">The field to write.</param>
+		void WriteField<T, TConverter>( T field );
 
 		/// <summary>
 		/// Ends writing of the current record

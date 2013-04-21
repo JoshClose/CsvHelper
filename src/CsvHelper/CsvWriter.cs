@@ -184,6 +184,24 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Writes the field to the CSV file
+		/// using the given <see cref="ITypeConverter"/>.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <typeparam name="T">The type of the field.</typeparam>
+		/// <typeparam name="TConverter">The type of the converter.</typeparam>
+		/// <param name="field">The field to write.</param>
+		public virtual void WriteField<T, TConverter>( T field )
+		{
+			CheckDisposed();
+
+			var converter = TypeConverterFactory.GetConverter<TConverter>();
+			WriteField( field, converter );
+		}
+
+		/// <summary>
 		/// Ends writing of the current record
 		/// and starts a new record. This is used
 		/// when manually writing records with <see cref="ICsvWriter.WriteField{T}" />
