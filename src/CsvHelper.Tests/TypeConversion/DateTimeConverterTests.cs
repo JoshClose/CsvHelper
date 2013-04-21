@@ -48,7 +48,7 @@ namespace CsvHelper.Tests.TypeConversion
 				converter.ConvertFromString( null );
 				Assert.Fail();
 			}
-			catch( NotSupportedException )
+			catch( CsvTypeConverterException )
 			{
 			}
 		}

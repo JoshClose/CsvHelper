@@ -99,6 +99,7 @@
     <Compile Include="TypeConversion\BooleanConverter.cs" />
     <Compile Include="TypeConversion\ByteConverter.cs" />
     <Compile Include="TypeConversion\CharConverter.cs" />
+    <Compile Include="TypeConversion\CsvTypeConverterException.cs" />
     <Compile Include="TypeConversion\DateTimeConverter.cs" />
     <Compile Include="TypeConversion\DecimalConverter.cs" />
     <Compile Include="TypeConversion\DoubleConverter.cs" />

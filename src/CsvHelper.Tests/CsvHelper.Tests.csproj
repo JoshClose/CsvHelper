@@ -68,6 +68,7 @@
     <Compile Include="CsvReaderTests.cs" />
     <Compile Include="CsvWriterConstructorTests.cs" />
     <Compile Include="CsvWriterTests.cs" />
+    <Compile Include="ExceptionTests.cs" />
     <Compile Include="InvalidateRecordsCacheTests.cs" />
     <Compile Include="LocalCultureTests.cs" />
     <Compile Include="Mocks\ParserMock.cs" />

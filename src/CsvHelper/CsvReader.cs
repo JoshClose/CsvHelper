@@ -721,14 +721,10 @@ namespace CsvHelper
 			{
 				record = GetReadRecordFunc<T>()();
 			}
-			catch( CsvReaderException )
-			{
-				// We threw the exception, so let it go.
-				throw;
-			}
 			catch( Exception ex )
 			{
-				throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
+				ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
+				throw;
 			}
 			return record;
 		}
@@ -748,14 +744,10 @@ namespace CsvHelper
 			{
 				record = GetReadRecordFunc( type ).DynamicInvoke();
 			}
-			catch( CsvReaderException )
-			{
-				// We threw the exception, so let it go.
-				throw;
-			}
 			catch( Exception ex )
 			{
-				throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, type, namedIndexes, currentIndex, currentRecord );
+				ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
+				throw;
 			}
 			return record;
 		}
@@ -780,14 +772,10 @@ namespace CsvHelper
 				{
 					record = GetReadRecordFunc<T>()();
 				}
-				catch( CsvHelperException )
-				{
-					// We threw the exception, so let it go.
-					throw;
-				}
 				catch( Exception ex )
 				{
-					throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
+					ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
+					throw;
 				}
 
 				yield return record;
@@ -814,14 +802,10 @@ namespace CsvHelper
 				{
 					record = GetReadRecordFunc( type ).DynamicInvoke();
 				}
-				catch( CsvReaderException )
-				{
-					// We threw the exception, so let it go.
-					throw;
-				}
 				catch( Exception ex )
 				{
-					throw ExceptionHelper.GetReaderException<CsvReaderException>( "An error occurred reading the record.", ex, parser, type, namedIndexes, currentIndex, currentRecord );
+					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
+					throw;
 				}
 				yield return record;
 			}

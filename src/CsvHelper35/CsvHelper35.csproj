@@ -138,6 +138,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\CharConverter.cs">
       <Link>TypeConversion\CharConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\CsvTypeConverterException.cs">
+      <Link>TypeConversion\CsvTypeConverterException.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\DateTimeConverter.cs">
       <Link>TypeConversion\DateTimeConverter.cs</Link>
     </Compile>

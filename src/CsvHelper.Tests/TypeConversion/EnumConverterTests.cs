@@ -56,15 +56,16 @@ namespace CsvHelper.Tests.TypeConversion
 				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( "" ) );
 				Assert.Fail();
 			}
-			catch( NotSupportedException )
+			catch( CsvTypeConverterException )
 			{
 			}
+
 			try
 			{
 				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( null ) );
 				Assert.Fail();
 			}
-			catch( NotSupportedException )
+			catch( CsvTypeConverterException )
 			{
 			}
 		}

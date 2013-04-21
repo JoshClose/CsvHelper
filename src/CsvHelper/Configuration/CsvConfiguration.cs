@@ -114,19 +114,19 @@ namespace CsvHelper.Configuration
 			{
 				if( value == "\n" )
 				{
-					throw new CsvHelperException( "Newline is not a valid delimiter." );
+					throw new CsvConfigurationException( "Newline is not a valid delimiter." );
 				}
 				if( value == "\r" )
 				{
-					throw new CsvHelperException( "Carriage return is not a valid delimiter." );
+					throw new CsvConfigurationException( "Carriage return is not a valid delimiter." );
 				}
 				if( value == "\0" )
 				{
-					throw new CsvHelperException( "Null is not a valid delimiter." );
+					throw new CsvConfigurationException( "Null is not a valid delimiter." );
 				}
 				if( value == Convert.ToString( quote ) )
 				{
-					throw new CsvHelperException( "You can not use the quote as a delimiter." );
+					throw new CsvConfigurationException( "You can not use the quote as a delimiter." );
 				}
 				delimiter = value;
 			}
@@ -143,19 +143,19 @@ namespace CsvHelper.Configuration
 			{
 				if( value == '\n' )
 				{
-					throw new CsvHelperException( "Newline is not a valid quote." );
+					throw new CsvConfigurationException( "Newline is not a valid quote." );
 				}
 				if( value == '\r' )
 				{
-					throw new CsvHelperException( "Carriage return is not a valid quote." );
+					throw new CsvConfigurationException( "Carriage return is not a valid quote." );
 				}
 				if( value == '\0' )
 				{
-					throw new CsvHelperException( "Null is not a valid quote." );
+					throw new CsvConfigurationException( "Null is not a valid quote." );
 				}
 				if( Convert.ToString( value ) == delimiter )
 				{
-					throw new CsvHelperException( "You can not use the delimiter as a quote." );
+					throw new CsvConfigurationException( "You can not use the delimiter as a quote." );
 				}
 				quote = value;
 			}

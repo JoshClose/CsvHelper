@@ -263,7 +263,15 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			GetWriteRecordAction<T>()( record );
+			try
+			{
+				GetWriteRecordAction<T>()( record );
+			}
+			catch( Exception ex )
+			{
+				ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
+				throw;
+			}
 
 			hasRecordBeenWritten = true;
 
@@ -279,7 +287,15 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			GetWriteRecordAction( type ).DynamicInvoke( record );
+			try
+			{
+				GetWriteRecordAction( type ).DynamicInvoke( record );
+			}
+			catch( Exception ex )
+			{
+				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
+				throw;
+			}
 
 			hasRecordBeenWritten = true;
 
@@ -302,7 +318,15 @@ namespace CsvHelper
 
 			foreach( var record in records )
 			{
-				GetWriteRecordAction<T>()( record );
+				try
+				{
+					GetWriteRecordAction<T>()( record );
+				}
+				catch( Exception ex )
+				{
+					ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
+					throw;
+				}
 				NextRecord();
 			}
 		}
@@ -323,7 +347,15 @@ namespace CsvHelper
 
 			foreach( var record in records )
 			{
-				GetWriteRecordAction( type ).DynamicInvoke( record );
+				try
+				{
+					GetWriteRecordAction( type ).DynamicInvoke( this, record );
+				}
+				catch( Exception ex )
+				{
+					ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
+					throw;
+				}
 				NextRecord();
 			}
 		}

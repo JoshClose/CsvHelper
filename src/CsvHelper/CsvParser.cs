@@ -117,21 +117,17 @@ namespace CsvHelper
 #endif
 						) )
 					{
-						throw ExceptionHelper.GetReaderException<CsvBadDataException>( "An inconsistent number of columns has been detected.", null, this, null, null, null, null );
+						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
 					}
 					columnCount = row.Length;
 				}
 
 				return row;
 			}
-			catch( CsvHelperException )
-			{
-				// We threw it, so let it go.
-				throw;
-			}
 			catch( Exception ex )
 			{
-				throw ExceptionHelper.GetReaderException<CsvParserException>( "A parsing error occurred.", ex, this, null, null, null, null );
+				ExceptionHelper.AddExceptionDataMessage( ex, this, null, null, null, null );
+				throw;
 			}
 		}
 

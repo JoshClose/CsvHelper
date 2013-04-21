@@ -67,7 +67,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public virtual object ConvertFromString( CultureInfo culture, string text )
 		{
-			throw new NotSupportedException( "The conversion cannot be performed." );
+			throw new CsvTypeConverterException( "The conversion cannot be performed." );
 		}
 
 		/// <summary>
