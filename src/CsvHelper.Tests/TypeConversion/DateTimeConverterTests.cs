@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Globalization;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -23,11 +24,11 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( dateTime ) );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( CultureInfo.CurrentCulture, dateTime ) );
 
 			// Invalid conversions.
-			Assert.AreEqual( "1", converter.ConvertToString( 1 ) );
-			Assert.AreEqual( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( CultureInfo.CurrentCulture, 1 ) );
+			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
 		}
 
 		[TestMethod]
@@ -38,14 +39,14 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString() ).ToString() );
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString( "o" ) ).ToString() );
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( " " + dateTime + " " ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( CultureInfo.CurrentCulture, dateTime.ToString() ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( CultureInfo.CurrentCulture, dateTime.ToString( "o" ) ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( CultureInfo.CurrentCulture, " " + dateTime + " " ).ToString() );
 
 			// Invalid conversions.
 			try
 			{
-				converter.ConvertFromString( null );
+				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

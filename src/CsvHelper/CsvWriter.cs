@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 #if !NET_2_0
 using System.Linq;
@@ -568,9 +569,9 @@ namespace CsvHelper
 				else
 				{
 					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( object ) } );
+					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( CultureInfo ), typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression );
+					fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( Configuration.CultureInfo ), fieldExpression );
 				}
 
 				var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );

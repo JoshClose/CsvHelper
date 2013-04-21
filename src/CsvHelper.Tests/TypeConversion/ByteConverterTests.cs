@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Globalization;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -20,9 +21,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new ByteConverter();
 
-			Assert.AreEqual( "123", converter.ConvertToString( (byte)123 ) );
+			Assert.AreEqual( "123", converter.ConvertToString( CultureInfo.CurrentCulture, (byte)123 ) );
 
-			Assert.AreEqual( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
 		}
 
 		[TestMethod]
@@ -30,12 +31,12 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new ByteConverter();
 
-			Assert.AreEqual( (byte)123, converter.ConvertFromString( "123" ) );
-			Assert.AreEqual( (byte)123, converter.ConvertFromString( " 123 " ) );
+			Assert.AreEqual( (byte)123, converter.ConvertFromString( CultureInfo.CurrentCulture, "123" ) );
+			Assert.AreEqual( (byte)123, converter.ConvertFromString( CultureInfo.CurrentCulture, " 123 " ) );
 
 			try
 			{
-				converter.ConvertFromString( null );
+				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

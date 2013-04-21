@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
 #if WINRT_4_5
@@ -21,12 +22,6 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void WriteFieldTest()
 		{
-#if WINRT_4_5
-			Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = "en-US";
-#else
-			Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
-#endif
-
 			var record = new TestRecord
 			{
 				IntColumn = 1,
@@ -39,6 +34,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
+			csv.Configuration.CultureInfo = new CultureInfo( "en-US" );
 			csv.Configuration.ClassMapping<TestRecordMap>();
 
 			csv.WriteRecord( record );

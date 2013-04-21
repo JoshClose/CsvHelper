@@ -84,26 +84,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the <see cref="ITypeConverter"/> for the <see cref="PropertyInfo"/>.
-		/// </summary>
-		/// <param name="property">The property to get the <see cref="ITypeConverter"/> from.</param>
-		/// <returns>The <see cref="ITypeConverter"/> </returns>
-		public static ITypeConverter GetTypeConverterFromAttribute( PropertyInfo property )
-		{
-			ITypeConverter typeConverter = null;
-			var typeConverterAttribute = GetAttribute<TypeConverterAttribute>( property, false );
-			if( typeConverterAttribute != null )
-			{
-				var typeConverterType = typeConverterAttribute.Type;
-				if( typeConverterType != null )
-				{
-					typeConverter = Activator.CreateInstance( typeConverterType ) as ITypeConverter;
-				}
-			}
-			return typeConverter;
-		}
-
-		/// <summary>
 		/// Gets the constructor <see cref="NewExpression"/> from the give <see cref="Expression"/>.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the object that will be constructed.</typeparam>

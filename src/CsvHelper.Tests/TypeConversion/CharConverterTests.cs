@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Globalization;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -20,11 +21,11 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new CharConverter();
 
-			Assert.AreEqual( "a", converter.ConvertToString( 'a' ) );
+			Assert.AreEqual( "a", converter.ConvertToString( CultureInfo.CurrentCulture, 'a' ) );
 
-			Assert.AreEqual( "True", converter.ConvertToString( true ) );
+			Assert.AreEqual( "True", converter.ConvertToString( CultureInfo.CurrentCulture, true ) );
 
-			Assert.AreEqual( "", converter.ConvertToString( null ) );
+			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
 		}
 
 		[TestMethod]
@@ -32,12 +33,12 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new CharConverter();
 
-			Assert.AreEqual( 'a', converter.ConvertFromString( "a" ) );
-			Assert.AreEqual( 'a', converter.ConvertFromString( " a " ) );
+			Assert.AreEqual( 'a', converter.ConvertFromString( CultureInfo.CurrentCulture, "a" ) );
+			Assert.AreEqual( 'a', converter.ConvertFromString( CultureInfo.CurrentCulture, " a " ) );
 
 			try
 			{
-				converter.ConvertFromString( null );
+				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

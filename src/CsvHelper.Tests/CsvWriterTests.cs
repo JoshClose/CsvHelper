@@ -517,19 +517,9 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : ITypeConverter
 		{
-			public string ConvertToString( object value )
+			public string ConvertToString( CultureInfo culture, object value )
 			{
 				return "test";
-			}
-
-			string ITypeConverter.ConvertToString( CultureInfo culture, object value )
-			{
-				throw new NotImplementedException();
-			}
-
-			public object ConvertFromString( string text )
-			{
-				throw new NotImplementedException();
 			}
 
 			public object ConvertFromString( CultureInfo culture, string text )
