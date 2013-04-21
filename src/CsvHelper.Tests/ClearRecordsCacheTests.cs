@@ -9,10 +9,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-	public class InvalidateRecordsCacheTests
+	public class ClearRecordsCacheTests
 	{
 		[TestMethod]
-		public void InvalidateReaderTest()
+		public void ClearReaderTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
@@ -34,7 +34,7 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( null, record.Name );
 
 				stream.Position = 0;
-				csv.InvalidateRecordCache<Test>();
+				csv.ClearRecordCache<Test>();
 
 				csv.Configuration.ClassMapping<TestMap2>();
 				csv.Read();
@@ -47,7 +47,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void InvalidateWriterTest()
+		public void ClearWriterTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
@@ -58,7 +58,7 @@ namespace CsvHelper.Tests
 				var record = new Test { Id = 1, Name = "one" };
 				csv.WriteRecord( record );
 
-				csv.InvalidateRecordCache<Test>();
+				csv.ClearRecordCache<Test>();
 				csv.Configuration.ClassMapping<TestMap2>();
 				record = new Test { Id = 2, Name = "two" };
 				csv.WriteRecord( record );

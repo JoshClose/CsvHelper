@@ -362,29 +362,41 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Invalidates the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ICsvWriter.InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// changes, <see cref="ICsvWriter.ClearRecordCache{T}"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
-		public virtual void InvalidateRecordCache<T>() where T : class
+		/// <typeparam name="T">The record type.</typeparam>
+		public virtual void ClearRecordCache<T>() where T : class
 		{
-			InvalidateRecordCache( typeof( T ) );
+			ClearRecordCache( typeof( T ) );
 		}
 
 		/// <summary>
-		/// Invalidates the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ICsvWriter.InvalidateRecordCache"/> needs to be called to updated the
+		/// changes, <see cref="ICsvWriter.ClearRecordCache(System.Type)"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
-		public virtual void InvalidateRecordCache( Type type )
+		/// <param name="type">The record type.</param>
+		public virtual void ClearRecordCache( Type type )
 		{
 			typeActions.Remove( type );
-			hasHeaderBeenWritten = false;
-			hasRecordBeenWritten = false;
+		}
+
+		/// <summary>
+		/// Clears the record cache for all types. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ICsvWriter.ClearRecordCache()"/> needs to be called to update the
+		/// record cache.
+		/// </summary>
+		public virtual void ClearRecordCache()
+		{
+			typeActions.Clear();
 		}
 
 		/// <summary>

@@ -89,24 +89,33 @@ namespace CsvHelper
 		void WriteRecords( Type type, IEnumerable<object> records );
 
 		/// <summary>
-		/// Invalidates the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// changes, <see cref="ClearRecordCache{T}"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
-		void InvalidateRecordCache<T>() where T : class;
+		void ClearRecordCache<T>() where T : class;
 
 		/// <summary>
-		/// Invalidates the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="InvalidateRecordCache"/> needs to be called to updated the
+		/// changes, <see cref="ClearRecordCache( Type )"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
 		/// <param name="type">The record type.</param>
-		void InvalidateRecordCache( Type type );
+		void ClearRecordCache( Type type );
+
+		/// <summary>
+		/// Clears the record cache for all types. After <see cref="WriteRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ClearRecordCache()"/> needs to be called to update the
+		/// record cache.
+		/// </summary>
+		void ClearRecordCache();
 #endif
 	}
 }

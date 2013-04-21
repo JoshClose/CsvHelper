@@ -26,14 +26,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="index">The zero based index of the field.</param>
 		/// <returns>The raw field.</returns>
-		string this[ int index ] { get; }
+		string this[int index] { get; }
 
 		/// <summary>
 		/// Gets the raw field at position (column) name.
 		/// </summary>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The raw field.</returns>
-		string this[ string name ] { get; }
+		string this[string name] { get; }
 
 		/// <summary>
 		/// Gets the raw field at position (column) name.
@@ -41,7 +41,7 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="index">The zero based index of the field.</param>
 		/// <returns>The raw field.</returns>
-		string this[ string name, int index ] { get; }
+		string this[string name, int index] { get; }
 
 		/// <summary>
 		/// Gets the raw field at position (column) index.
@@ -299,23 +299,32 @@ namespace CsvHelper
 		IEnumerable<object> GetRecords( Type type );
 
 		/// <summary>
-		/// Invalidates the record cache for the given type. After <see cref="GetRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// changes, <see cref="ClearRecordCache{T}"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
-		void InvalidateRecordCache<T>() where T : class;
+		void ClearRecordCache<T>() where T : class;
 
 		/// <summary>
-		/// Invalidates the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ICsvReader.InvalidateRecordCache{T}"/> needs to be called to updated the
+		/// changes, <see cref="ClearRecordCache( Type )"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
 		/// <param name="type">The type to invalidate.</param>
-		void InvalidateRecordCache( Type type );
+		void ClearRecordCache( Type type );
+
+		/// <summary>
+		/// Clears the record cache for all types. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+		/// changes, <see cref="ClearRecordCache()"/> needs to be called to update the
+		/// record cache.
+		/// </summary>
+		void ClearRecordCache();
 #endif
 	}
 }
