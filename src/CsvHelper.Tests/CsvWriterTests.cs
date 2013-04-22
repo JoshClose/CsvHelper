@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
@@ -452,6 +453,42 @@ namespace CsvHelper.Tests
 
 				var csvString = reader.ReadToEnd();
 			}
+		}
+
+		[TestMethod]
+		public void WriteNoGetterTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<TestPrivateGet>
+				{
+					new TestPrivateGet
+					{
+						Id = 1,
+						Name = "one"
+					}
+				};
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var data = reader.ReadToEnd();
+				var expected = new StringBuilder();
+				expected.AppendLine( "Id" );
+				expected.AppendLine( "1" );
+
+				Assert.AreEqual( expected.ToString(), data );
+			}
+		}
+
+		private class TestPrivateGet
+		{
+			public int Id { get; set; }
+
+			public string Name { private get; set; }
 		}
 
 		private class TestSinglePropertyRecord

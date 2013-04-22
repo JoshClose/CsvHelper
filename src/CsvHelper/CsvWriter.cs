@@ -253,7 +253,7 @@ namespace CsvHelper
 
 			if( configuration.Mapping == null )
 			{
-				configuration.Mapping = configuration.AutoMap( type, CsvConfiguration.AutoMapMode.Writer );
+				configuration.Mapping = configuration.AutoMap( type );
 			}
 
 			var properties = new CsvPropertyMapCollection();
@@ -261,7 +261,7 @@ namespace CsvHelper
 
 			foreach( var property in properties )
 			{
-				if( !property.IgnoreValue )
+				if( CanWrite( property ) )
 				{
 					WriteField( property.NameValue );
 				}
@@ -557,7 +557,7 @@ namespace CsvHelper
 			if( configuration.Mapping == null )
 			{
 				// We need to check again in case the header was not written.
-				configuration.Mapping = configuration.AutoMap( type, CsvConfiguration.AutoMapMode.Writer );
+				configuration.Mapping = configuration.AutoMap( type );
 			}
 
 			// Get a list of all the properties so they will
@@ -569,9 +569,8 @@ namespace CsvHelper
 
 			foreach( var propertyMap in properties )
 			{
-				if( propertyMap.IgnoreValue )
+				if( !CanWrite( propertyMap ) )
 				{
-					// Skip ignored properties.
 					continue;
 				}
 
@@ -625,6 +624,25 @@ namespace CsvHelper
 		protected virtual Delegate CombineDelegates( IEnumerable<Delegate> delegates )
 		{
 			return delegates.Aggregate<Delegate, Delegate>( null, Delegate.Combine );
+		}
+
+		/// <summary>
+		/// Checks if the property can be written.
+		/// </summary>
+		/// <param name="propertyMap">The property map that we are checking.</param>
+		/// <returns>A value indicating if the property can be written.
+		/// True if the property can be written, otherwise false.</returns>
+		protected virtual bool CanWrite( CsvPropertyMap propertyMap )
+		{
+			var cantWrite =
+				// Ignored properties.
+				propertyMap.IgnoreValue ||
+				// Properties that don't have a public getter
+				// and we are honoring the accessor modifier.
+				propertyMap.PropertyValue.GetGetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				// Properties that don't have a getter at all.
+				propertyMap.PropertyValue.GetGetMethod( true ) == null;
+			return !cantWrite;
 		}
 #endif
 	}

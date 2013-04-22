@@ -1085,7 +1085,7 @@ namespace CsvHelper
 
 			if( configuration.Mapping == null )
 			{
-				configuration.Mapping = Configuration.AutoMap( recordType, CsvConfiguration.AutoMapMode.Reader );
+				configuration.Mapping = Configuration.AutoMap( recordType );
 			}
 
 			CreatePropertyBindingsForMapping( configuration.Mapping, recordType, bindings );
@@ -1108,6 +1108,11 @@ namespace CsvHelper
 
 			foreach( var referenceMap in mapping.ReferenceMaps )
 			{
+				if( !CanRead( referenceMap ) )
+				{
+					continue;
+				}
+
 				var referenceBindings = new List<MemberBinding>();
 				CreatePropertyBindingsForMapping( referenceMap.Mapping, referenceMap.Property.PropertyType, referenceBindings );
 				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
@@ -1132,9 +1137,8 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( propertyMap.IgnoreValue )
+				if( !CanRead( propertyMap ) )
 				{
-					// Skip ignored properties.
 					continue;
 				}
 
@@ -1178,6 +1182,30 @@ namespace CsvHelper
 
 				bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
 			}
+		}
+
+		protected bool CanRead( CsvPropertyMap propertyMap )
+		{
+			var cantRead =
+				// Ignored properties.
+				propertyMap.IgnoreValue ||
+				// Properties that don't have a public setter
+				// and we are honoring the accessor modifier.
+				propertyMap.PropertyValue.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				// Properties that don't have a setter at all.
+				propertyMap.PropertyValue.GetSetMethod( true ) == null;
+			return !cantRead;
+		}
+
+		protected bool CanRead( CsvPropertyReferenceMap propertyReferenceMap )
+		{
+			var cantRead =
+				// Properties that don't have a public setter
+				// and we are honoring the accessor modifier.
+				propertyReferenceMap.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				// Properties that don't have a setter at all.
+				propertyReferenceMap.Property.GetSetMethod( true ) == null;
+			return !cantRead;
 		}
 #endif
 	}

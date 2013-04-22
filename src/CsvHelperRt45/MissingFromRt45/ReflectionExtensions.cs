@@ -90,7 +90,49 @@ namespace CsvHelper.MissingFromRt45
 		/// <returns>A MethodInfo object representing the public get accessor for this property, or null if the get accessor is non-public or does not exist.</returns>
 		public static MethodInfo GetGetMethod( this PropertyInfo property )
 		{
+			return property.GetMethod.IsPublic ? property.GetMethod : null;
+		}
+
+		/// <summary>
+		/// Returns the public or non-public get accessor for this property.
+		/// </summary>
+		/// <param name="property">The property.</param>
+		/// <param name="isPrivate">Indicates whether a non-public get accessor should be returned. true if a non-public accessor is to be returned; otherwise, false.</param>
+		/// <returns></returns>
+		public static MethodInfo GetGetMethod( this PropertyInfo property, bool isPrivate )
+		{
+			if( !isPrivate && property.GetMethod.IsPrivate )
+			{
+				return null;
+			}
+
 			return property.GetMethod;
+		}
+
+		/// <summary>
+		/// Returns the public set accessor for this property.
+		/// </summary>
+		/// <param name="property">The property.</param>
+		/// <returns>A MethodInfo object representing the public set accessor for this property, or null if the set accessor is non-public or does not exist.</returns>
+		public static MethodInfo GetSetMethod( this PropertyInfo property )
+		{
+			return property.SetMethod.IsPublic ? property.SetMethod : null;
+		}
+
+		/// <summary>
+		/// Returns the set accessor for this property.
+		/// </summary>
+		/// <param name="property">The property.</param>
+		/// <param name="isPrivate">Indicates whether the accessor should be returned if it is non-public. true if a non-public accessor is to be returned; otherwise, false.</param>
+		/// <returns></returns>
+		public static MethodInfo GetSetMethod( this PropertyInfo property, bool isPrivate )
+		{
+			if( !isPrivate && property.SetMethod.IsPrivate )
+			{
+				return null;
+			}
+
+			return property.SetMethod;
 		}
 	}
 }
