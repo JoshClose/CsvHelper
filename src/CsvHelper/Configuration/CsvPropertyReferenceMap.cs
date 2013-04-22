@@ -30,26 +30,25 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
 		/// </summary>
+		/// <param name="mapType">The <see cref="CsvClassMap"/> type to create to use for the reference map.</param>
 		/// <param name="property">The property.</param>
-		protected CsvPropertyReferenceMap( PropertyInfo property )
-		{
-			this.property = property;
-		}
+		public CsvPropertyReferenceMap( Type mapType, PropertyInfo property )
+			: this( property, ReflectionHelper.CreateInstance( mapType ) as CsvClassMap ) {}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
 		/// </summary>
-		/// <param name="type">The type.</param>
 		/// <param name="property">The property.</param>
-		public CsvPropertyReferenceMap( Type type, PropertyInfo property )
+		/// <param name="mapping">The <see cref="CsvClassMap"/> to use for the reference map.</param>
+		public CsvPropertyReferenceMap( PropertyInfo property, CsvClassMap mapping )
 		{
-			if( type != typeof( CsvClassMap ) )
+			if( mapping == null )
 			{
-				throw new ArgumentException( "The type is not a CsvClassMap." );
+				throw new ArgumentNullException( "mapping" );
 			}
 
 			this.property = property;
-			Mapping = (CsvClassMap)ReflectionHelper.CreateInstance( type );
+			Mapping = mapping;
 		}
 	}
 }

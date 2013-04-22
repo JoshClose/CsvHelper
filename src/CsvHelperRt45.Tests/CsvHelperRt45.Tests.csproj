@@ -111,6 +111,12 @@
     <SDKReference Include="TestPlatform, Version=11.0" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CsvHelper.Tests\AutoMappingTests.cs">
+      <Link>AutoMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ClearRecordsCacheTests.cs">
+      <Link>ClearRecordsCacheTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvClassMappingTests.cs">
       <Link>CsvClassMappingTests.cs</Link>
     </Compile>

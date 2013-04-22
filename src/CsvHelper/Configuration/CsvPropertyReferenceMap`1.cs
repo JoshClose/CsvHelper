@@ -18,9 +18,7 @@ namespace CsvHelper.Configuration
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap&lt;TClassMap&gt;"/> class.
 		/// </summary>
 		/// <param name="property">The property.</param>
-		public CsvPropertyReferenceMap( PropertyInfo property ) : base( property )
-		{
-			Mapping = ReflectionHelper.CreateInstance<TClassMap>();
-		}
+		public CsvPropertyReferenceMap( PropertyInfo property )
+			: base( property, ReflectionHelper.CreateInstance<TClassMap>() ) {}
 	}
 }

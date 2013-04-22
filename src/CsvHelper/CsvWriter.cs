@@ -253,8 +253,7 @@ namespace CsvHelper
 
 			if( configuration.Mapping == null )
 			{
-				// TODO: auto class mapping
-				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
+				configuration.Mapping = configuration.AutoMap( type, CsvConfiguration.AutoMapMode.Writer );
 			}
 
 			var properties = new CsvPropertyMapCollection();
@@ -557,8 +556,8 @@ namespace CsvHelper
 
 			if( configuration.Mapping == null )
 			{
-				// TODO: auto class mapping
-				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
+				// We need to check again in case the header was not written.
+				configuration.Mapping = configuration.AutoMap( type, CsvConfiguration.AutoMapMode.Writer );
 			}
 
 			// Get a list of all the properties so they will

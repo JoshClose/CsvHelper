@@ -1083,12 +1083,9 @@ namespace CsvHelper
 
 			var bindings = new List<MemberBinding>();
 
-			// TODO: Get rid of this call. It's called in CreatePropertyBindingsForMapping.
-			// If there is no property mappings yet, use attribute mappings.
 			if( configuration.Mapping == null )
 			{
-				// TODO: auto class mapping
-				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
+				configuration.Mapping = Configuration.AutoMap( recordType, CsvConfiguration.AutoMapMode.Reader );
 			}
 
 			CreatePropertyBindingsForMapping( configuration.Mapping, recordType, bindings );
@@ -1107,13 +1104,6 @@ namespace CsvHelper
 		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
 		protected virtual void CreatePropertyBindingsForMapping( CsvClassMap mapping, Type recordType, List<MemberBinding> bindings )
 		{
-			// If there is no property mappings yet, use attribute mappings.
-			if( mapping == null )
-			{
-				// TODO: auto class mapping
-				throw new CsvConfigurationException( "No mapping has been created. Use Configuration.ClassMapping to create a map." );
-			}
-
 			AddPropertyBindings( mapping.PropertyMaps, bindings );
 
 			foreach( var referenceMap in mapping.ReferenceMaps )

@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoMappingTests.cs" />
     <Compile Include="CsvParserDelimiterTests.cs" />
     <Compile Include="CsvParserExcelCompatibleTests.cs" />
     <Compile Include="CsvParserRawRecordTests.cs" />

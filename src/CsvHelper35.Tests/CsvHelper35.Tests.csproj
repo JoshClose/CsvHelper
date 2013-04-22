@@ -42,6 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CsvHelper.Tests\AutoMappingTests.cs">
+      <Link>AutoMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ClearRecordsCacheTests.cs">
+      <Link>ClearRecordsCacheTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvClassMappingTests.cs">
       <Link>CsvClassMappingTests.cs</Link>
     </Compile>
@@ -95,9 +101,6 @@
     </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvWriterSubClassingTests.cs">
       <Link>CsvWriterSubClassingTests.cs</Link>
-    </Compile>
-    <Compile Include="..\CsvHelper.Tests\InvalidateRecordsCacheTests.cs">
-      <Link>InvalidateRecordsCacheTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\LocalCultureTests.cs">
       <Link>LocalCultureTests.cs</Link>

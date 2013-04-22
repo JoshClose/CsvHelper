@@ -11,6 +11,8 @@ using System.Linq.Expressions;
 #endif
 using System.Reflection;
 using System.Text;
+using CsvHelper.TypeConversion;
+
 #if WINRT_4_5
 using CsvHelper.MissingFromRt45;
 #endif
@@ -36,8 +38,8 @@ namespace CsvHelper.Configuration
 		private bool isCaseSensitive = true;
 		private Encoding encoding = Encoding.UTF8;
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-		private bool quoteAllFields = false;
-		private bool quoteNoFields = false;
+		private bool quoteAllFields;
+		private bool quoteNoFields;
 
 #if !NET_2_0
 		/// <summary>
@@ -309,6 +311,88 @@ namespace CsvHelper.Configuration
 			}
 
 			Mapping = classMap;
+		}
+
+		public virtual CsvClassMap AutoMap<T>( AutoMapMode mode )
+		{
+			return AutoMap( typeof( T ), mode );
+		}
+
+		public virtual CsvClassMap AutoMap( Type type, AutoMapMode mode )
+		{
+#if WINRT_4_5
+			var properties = type.GetProperties();
+#else
+			var properties = type.GetProperties( propertyBindingFlags );
+#endif
+			var map = new CsvClassMap();
+			foreach( var property in properties )
+			{
+				if( mode == AutoMapMode.Reader && !property.CanWrite )
+				{
+					// Skip records that can't be written to when reading.
+					continue;
+				}
+
+				if( mode == AutoMapMode.Writer && !property.CanRead )
+				{
+					// Skip records that can't be read from when writing.
+					continue;
+				}
+
+				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );
+#if WINRT_4_5
+				var hasDefaultConstructor = property.PropertyType.GetTypeInfo().DeclaredConstructors.Any( c => !c.GetParameters().Any() );
+#else
+				var hasDefaultConstructor = property.PropertyType.GetConstructor( Type.EmptyTypes ) != null;
+#endif
+				if( isDefaultConverter && hasDefaultConstructor )
+				{
+					// If the type is not a one covered by our type converters
+					// and it has a parameterless constructor, create a
+					// reference map for it.
+					var refMap = AutoMap( property.PropertyType, mode );
+					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
+					{
+						map.ReferenceMaps.Add( new CsvPropertyReferenceMap( property, refMap ) );
+					}
+				}
+				else
+				{
+					var propertyMap = new CsvPropertyMap( property );
+					if( mode == AutoMapMode.Reader && propertyMap.TypeConverterValue.CanConvertFrom( typeof( string ) ) ||
+					    mode == AutoMapMode.Writer && propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
+					{
+						// Only add the property map if it can be converted later on.
+						// If the property will use the default converter, don't add it because
+						// we don't want the .ToString() value to be used when auto mapping.
+						map.PropertyMaps.Add( new CsvPropertyMap( property ) );
+					}
+				}
+			}
+
+			return map;
+		}
+
+		/// <summary>
+		/// Auto mapping mode options.
+		/// </summary>
+		public enum AutoMapMode
+		{
+			/// <summary>
+			/// No mode set.
+			/// </summary>
+			None = 0,
+
+			/// <summary>
+			/// The reader is calling the method.
+			/// </summary>
+			Reader = 1,
+
+			/// <summary>
+			/// The writer is calling the method.
+			/// </summary>
+			Writer = 2
 		}
 #endif
 	}
