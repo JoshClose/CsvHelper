@@ -240,8 +240,8 @@ namespace CsvHelper
 			{
 				cPrev = c;
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				c = GetChar( ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength );
-				if( c == '\0' )
+				var read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength );
+				if( !read )
 				{
 					break;
 				}
@@ -354,23 +354,12 @@ namespace CsvHelper
 					fieldLength = readerBufferPosition - fieldStartPosition - 1;
 					if( c == '\r' )
 					{
-						var cNext = GetChar( ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, true );
+						char cNext;
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, true );
 						if( cNext == '\n' )
 						{
 							readerBufferPosition++;
 							CharPosition++;
-						}
-						else if( cNext == '\0' && cPrev != '\0' )
-						{
-							// cNext = \0: Handle \r as the line ending at the EOF.
-							// cPrev != \0: Let it go if the file only contains a \r.
-
-							// The readerBufferPosition and fieldStartPosition have been reset because
-							// of the GetChar call to check the next char. This means AppendField and
-							// UpdateBytePosition have already been called in GetChar, so we just
-							// need to call AddFieldToRecord.
-							AddFieldToRecord( ref recordPosition, field );
-							break;
 						}
 					}
 
@@ -412,6 +401,7 @@ namespace CsvHelper
 		/// Gets the current character from the buffer while
 		/// advancing the buffer if it ran out.
 		/// </summary>
+		/// <param name="ch">The char that gets the read char set to.</param>
 		/// <param name="fieldStartPosition">The start position of the current field.</param>
 		/// <param name="rawFieldStartPosition">The start position of the raw field.</param>
 		/// <param name="field">The field.</param>
@@ -420,8 +410,8 @@ namespace CsvHelper
 		/// <param name="fieldLength">The length of the field in the buffer.</param>
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
-		/// <returns>The current character in the buffer.</returns>
-		protected char GetChar( ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool isPeek = false )
+		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
+		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool isPeek = false )
 		{
 			if( readerBufferPosition == charsRead )
 			{
@@ -451,7 +441,8 @@ namespace CsvHelper
 					{
 						// Don't do any record handling because we're just looking ahead
 						// and not actually getting the next char to use.
-						return '\0';
+						ch = '\0';
+						return false;
 					}
 
 					if( c != '\r' && c != '\n' && c != '\0' )
@@ -470,11 +461,13 @@ namespace CsvHelper
 						record = null;
 					}
 
-					return '\0';
+					ch = '\0';
+					return false;
 				}
 			}
 
-			return readerBuffer[readerBufferPosition];
+			ch = readerBuffer[readerBufferPosition];
+			return true;
 		}
 	}
 }

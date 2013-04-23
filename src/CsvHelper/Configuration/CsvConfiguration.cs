@@ -324,13 +324,17 @@ namespace CsvHelper.Configuration
 		/// Generates a <see cref="CsvClassMap"/> for the type.
 		/// </summary>
 		/// <typeparam name="T">The type to generate the map for.</typeparam>
-		/// <param name="mode">The mode to use for mapping.</param>
-		/// <returns></returns>
+		/// <returns>The generate map.</returns>
 		public virtual CsvClassMap AutoMap<T>()
 		{
 			return AutoMap( typeof( T ) );
 		}
 
+		/// <summary>
+		/// Generates a <see cref="CsvClassMap"/> for the type.
+		/// </summary>
+		/// <param name="type">The ytpe to generate for the map.</param>
+		/// <returns>The generate map.</returns>
 		public virtual CsvClassMap AutoMap( Type type )
 		{
 #if WINRT_4_5

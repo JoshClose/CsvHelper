@@ -1189,5 +1189,25 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "ccc", row[2] );
 			}
 		}
+
+		[TestMethod]
+		public void NullCharTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "1,\0,3" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+				Assert.IsNotNull( row );
+				Assert.AreEqual( "1", row[0] );
+				Assert.AreEqual( "\0", row[1] );
+				Assert.AreEqual( "3", row[2] );
+			}
+		}
 	}
 }
