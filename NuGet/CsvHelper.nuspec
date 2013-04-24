@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>1.17.0</version>
+    <version>2.0.0-beta1</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/mit</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -12,11 +12,16 @@
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
 Added Features:
--Made TypeConverterFactory thread safe.
--Added TypeConverterFactory.Remove method.
--Changed TypeConverterFactory.Set method to Add.
+-References mapping works for whole mapping tree, not just a single level.
+-Auto mapping by property name is used if no map is specified.
+-Multiple maps can be used for a configuration.
+-Exceptions are no longer wrapped. More details are now available in Exception.Data["CsvHelper"].
+-Config option for reading and writing from properties that have private get and set accessors.
+-Configuration.CultureInfo settings instead of Configuration.UseInvariantCulture
+-CsvConfigurationException if no mappings are found.
+-Removed attribute mapping.
 Bugs Fixed:
--Properties that can't be set will be ignored in attribute mapping.
+-Parser can read data with \0 in them.
 	</releaseNotes>
   </metadata>
 </package>
