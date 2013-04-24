@@ -58,7 +58,6 @@ namespace CsvHelper.Tests
 			{
 				Delimiter = ";",
 			};
-			configuration.ClassMapping<TestRecordWithDecimalMap>();
 			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ) );
 
 			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
@@ -82,7 +81,6 @@ namespace CsvHelper.Tests
 
 			var writer = new StringWriter();
 			var csv = new CsvWriter( writer, new CsvConfiguration { Delimiter = ";" } );
-			csv.Configuration.ClassMapping<TestRecordWithDecimalMap>();
 
 			csv.WriteRecords( records );
 
@@ -98,15 +96,6 @@ namespace CsvHelper.Tests
 		{
 			public decimal DecimalColumn { get; set; }
 			public DateTime DateTimeColumn { get; set; }
-		}
-
-		private sealed class TestRecordWithDecimalMap : CsvClassMap<TestRecordWithDecimal>
-		{
-			public TestRecordWithDecimalMap()
-			{
-				Map( m => m.DecimalColumn );
-				Map( m => m.DateTimeColumn );
-			}
 		}
 	}
 }

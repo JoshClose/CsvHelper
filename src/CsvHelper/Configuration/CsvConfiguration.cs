@@ -3,16 +3,13 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 #if !NET_2_0
 using System.Linq;
-using System.Linq.Expressions;
 #endif
 using System.Reflection;
 using System.Text;
 using CsvHelper.TypeConversion;
-
 #if WINRT_4_5
 using CsvHelper.MissingFromRt45;
 #endif
@@ -27,8 +24,6 @@ namespace CsvHelper.Configuration
 #if !WINRT_4_5
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 #endif
-#if WINRT_4_5
-#endif
 		private bool hasHeaderRecord = true;
 		private bool isStrictMode = true;
 		private string delimiter = ",";
@@ -40,12 +35,18 @@ namespace CsvHelper.Configuration
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields;
 		private bool quoteNoFields;
+#if !NET_2_0
+		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
+#endif
 
 #if !NET_2_0
 		/// <summary>
-		/// Gets or sets the mapping.
+		/// The configured <see cref="CsvClassMap"/>s.
 		/// </summary>
-		public virtual CsvClassMap Mapping { get; set; }
+		public virtual CsvClassMapCollection Maps
+		{
+			get { return maps; }
+		}
 #endif
 
 #if !WINRT_4_5
@@ -279,45 +280,22 @@ namespace CsvHelper.Configuration
 
 #if !NET_2_0
 		/// <summary>
-		/// Use a <see cref="CsvClassMap{T}"/> to configure mappings.
+		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
 		/// When using a class map, no properties are mapped by default.
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		/// <typeparam name="TClass">The type of custom class that is being mapped.</typeparam>
-		public virtual void ClassMapping<TMap, TClass>()
-			where TMap : CsvClassMap<TClass>
-			where TClass : class
+		public virtual void ClassMapping<TMap>() 
+			where TMap : CsvClassMap
 		{
-			var mapping = ReflectionHelper.CreateInstance<TMap>();
-			ClassMapping( mapping );
-		}
+			var map = ReflectionHelper.CreateInstance<TMap>();
 
-		/// <summary>
-		/// Use a <see cref="CsvClassMap{T}"/> to configure mappings.
-		/// When using a class map, no properties are mapped by default.
-		/// Only properties specified in the mapping are used.
-		/// </summary>
-		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual void ClassMapping<TMap>() where TMap : CsvClassMap
-		{
-			var mapping = ReflectionHelper.CreateInstance<TMap>();
-			ClassMapping( mapping );
-		}
-
-		/// <summary>
-		/// Use a <see cref="CsvClassMap"/> instance to configure mappings.
-		/// When using a class map, no properties are mapped by default.
-		/// Only properties specified in the mapping are used.
-		/// </summary>
-		public virtual void ClassMapping( CsvClassMap classMap )
-		{
-			if( classMap.Constructor == null && classMap.PropertyMaps.Count == 0 && classMap.ReferenceMaps.Count == 0 )
+			if( map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
 			{
 				throw new CsvConfigurationException( "No mappings were specified in the CsvClassMap." );
 			}
 
-			Mapping = classMap;
+			Maps.Add( map );
 		}
 
 		/// <summary>
@@ -342,7 +320,8 @@ namespace CsvHelper.Configuration
 #else
 			var properties = type.GetProperties( propertyBindingFlags );
 #endif
-			var map = new CsvClassMap();
+			var mapType = typeof( CsvAutoClassMap<> ).MakeGenericType( type );
+			var map = (CsvClassMap)ReflectionHelper.CreateInstance( mapType );
 			foreach( var property in properties )
 			{
 				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );

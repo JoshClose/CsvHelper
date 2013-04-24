@@ -1083,14 +1083,14 @@ namespace CsvHelper
 
 			var bindings = new List<MemberBinding>();
 
-			if( configuration.Mapping == null )
+			if( configuration.Maps[recordType] == null )
 			{
-				configuration.Mapping = Configuration.AutoMap( recordType );
+				configuration.Maps.Add( configuration.AutoMap( recordType ) );
 			}
 
-			CreatePropertyBindingsForMapping( configuration.Mapping, recordType, bindings );
+			CreatePropertyBindingsForMapping( configuration.Maps[recordType], recordType, bindings );
 
-			var constructorExpression = configuration.Mapping.Constructor ?? Expression.New( recordType );
+			var constructorExpression = configuration.Maps[recordType].Constructor ?? Expression.New( recordType );
 			var body = Expression.MemberInit( constructorExpression, bindings );
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
 			recordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
@@ -1184,6 +1184,12 @@ namespace CsvHelper
 			}
 		}
 
+		/// <summary>
+		/// Determines if the property for the <see cref="CsvPropertyMap"/>
+		/// can be read.
+		/// </summary>
+		/// <param name="propertyMap">The property map.</param>
+		/// <returns>A value indicating of the property can be read. True if it can, otherwise false.</returns>
 		protected bool CanRead( CsvPropertyMap propertyMap )
 		{
 			var cantRead =
@@ -1197,6 +1203,12 @@ namespace CsvHelper
 			return !cantRead;
 		}
 
+		/// <summary>
+		/// Determines if the property for the <see cref="CsvPropertyReferenceMap"/>
+		/// can be read.
+		/// </summary>
+		/// <param name="propertyReferenceMap">The reference map.</param>
+		/// <returns>A value indicating of the property can be read. True if it can, otherwise false.</returns>
 		protected bool CanRead( CsvPropertyReferenceMap propertyReferenceMap )
 		{
 			var cantRead =

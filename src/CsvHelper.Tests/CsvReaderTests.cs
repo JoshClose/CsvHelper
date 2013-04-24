@@ -631,7 +631,6 @@ namespace CsvHelper.Tests
 
 			var reader = new StreamReader( stream );
 			var csvReader = new CsvReader( reader );
-			csvReader.Configuration.ClassMapping<TestNullableMap>();
 
 			csvReader.Read();
 			var record = csvReader.GetRecord<TestNullable>();
@@ -723,7 +722,6 @@ namespace CsvHelper.Tests
 
 			var reader = new StreamReader( stream );
 			var csvReader = new CsvReader( reader );
-			csvReader.Configuration.ClassMapping<TestBooleanMap>();
 
 			var records = csvReader.GetRecords<TestBoolean>().ToList();
 
@@ -810,6 +808,7 @@ namespace CsvHelper.Tests
 
 			try
 			{
+				// This needs a class map because auto mapping only works with properties.
 				reader.Configuration.ClassMapping<OnlyFieldsMap>();
 				reader.GetRecords<OnlyFields>().ToList();
 				Assert.Fail();
@@ -841,16 +840,6 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 		}
 
-		private sealed class TestBooleanMap : CsvClassMap<TestBoolean>
-		{
-			public TestBooleanMap()
-			{
-				Map( m => m.BoolColumn );
-				Map( m => m.BoolNullableColumn );
-				Map( m => m.StringColumn );
-			}
-		}
-
 		private class TestDefaultValues
 		{
 			public int IntColumn { get; set; }
@@ -874,16 +863,6 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 
 			public Guid? GuidColumn { get; set; }
-		}
-
-		private sealed class TestNullableMap : CsvClassMap<TestNullable>
-		{
-			public TestNullableMap()
-			{
-				Map( m => m.IntColumn );
-				Map( m => m.StringColumn );
-				Map( m => m.GuidColumn );
-			}
 		}
 
 		[DebuggerDisplay( "IntColumn = {IntColumn}, StringColumn = {StringColumn}, IgnoredColumn = {IgnoredColumn}, TypeConvertedColumn = {TypeConvertedColumn}, FirstColumn = {FirstColumn}" )]

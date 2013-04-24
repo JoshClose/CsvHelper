@@ -28,7 +28,6 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream );
 			var csvWriter = new MyCsvWriter( writer );
-			csvWriter.Configuration.ClassMapping<TestMap>();
 
 			csvWriter.WriteRecords( data );
 		}
@@ -42,15 +41,6 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 			public string Name { get; set; }
-		}
-
-		private sealed class TestMap : CsvClassMap<Test>
-		{
-			public TestMap()
-			{
-				Map( m => m.Id );
-				Map( m => m.Name );
-			}
 		}
 	}
 }

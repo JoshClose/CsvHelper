@@ -342,7 +342,6 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one,two"
@@ -365,7 +364,6 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one\"two"
@@ -389,7 +387,6 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvWriter( writer ) )
 			{
 				csv.Configuration.QuoteAllFields = true;
-				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one,two"
@@ -413,7 +410,6 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvWriter( writer ) )
 			{
 				csv.Configuration.QuoteAllFields = true;
-				csv.Configuration.ClassMapping<TestSinglePropertyRecordMap>();
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one\"two"
@@ -494,14 +490,6 @@ namespace CsvHelper.Tests
 		private class TestSinglePropertyRecord
 		{
 			public string Name { get; set; }
-		}
-
-		private sealed class TestSinglePropertyRecordMap : CsvClassMap<TestSinglePropertyRecord>
-		{
-			public TestSinglePropertyRecordMap()
-			{
-				Map( m => m.Name );
-			}
 		}
 
 		private class TestRecord

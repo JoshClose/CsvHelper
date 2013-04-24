@@ -37,9 +37,9 @@ namespace CsvHelper.Tests
 		public void AddingMappingsWithGenericMethod1()
 		{
 			var config = new CsvConfiguration();
-			config.ClassMapping<TestClassMappings, TestClass>();
+			config.ClassMapping<TestClassMappings>();
 
-			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
 		}
 
 		[TestMethod]
@@ -48,16 +48,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.ClassMapping<TestClassMappings>();
 
-			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
-		}
-
-		[TestMethod]
-		public void AddingMappingsFromClassMapInstance()
-		{
-			var config = new CsvConfiguration();
-			config.ClassMapping( new TestClassMappings() );
-
-			Assert.AreEqual( 2, config.Mapping.PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
 		}
 
 		private class TestClass

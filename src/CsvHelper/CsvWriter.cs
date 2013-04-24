@@ -251,13 +251,13 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
-			if( configuration.Mapping == null )
+			if( configuration.Maps[type] == null )
 			{
-				configuration.Mapping = configuration.AutoMap( type );
+				configuration.Maps.Add( configuration.AutoMap( type ) );
 			}
 
 			var properties = new CsvPropertyMapCollection();
-			AddProperties( properties, configuration.Mapping );
+			AddProperties( properties, configuration.Maps[type] );
 
 			foreach( var property in properties )
 			{
@@ -554,16 +554,16 @@ namespace CsvHelper
 
 			var recordParameter = Expression.Parameter( type, "record" );
 
-			if( configuration.Mapping == null )
+			if( configuration.Maps[type] == null )
 			{
 				// We need to check again in case the header was not written.
-				configuration.Mapping = configuration.AutoMap( type );
+				configuration.Maps.Add( configuration.AutoMap( type ) );
 			}
 
 			// Get a list of all the properties so they will
 			// be sorted properly.
 			var properties = new CsvPropertyMapCollection();
-			AddProperties( properties, configuration.Mapping );
+			AddProperties( properties, configuration.Maps[type] );
 
 			var delegates = new List<Delegate>();
 
@@ -581,7 +581,7 @@ namespace CsvHelper
 				}
 
 				// Find the object that contains this property.
-				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Mapping, propertyMap );
+				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Maps[type], propertyMap );
 
 				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.PropertyValue );
 				

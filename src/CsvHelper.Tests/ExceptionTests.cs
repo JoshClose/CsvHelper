@@ -26,7 +26,6 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ClassMapping<NoDefaultConstructorMap>();
 				try
 				{
 					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
@@ -90,15 +89,6 @@ namespace CsvHelper.Tests
 			{
 				Id = id;
 				Name = name;
-			}
-		}
-
-		private sealed class NoDefaultConstructorMap : CsvClassMap<NoDefaultConstructor>
-		{
-			public NoDefaultConstructorMap()
-			{
-				Map( m => m.Id );
-				Map( m => m.Name );
 			}
 		}
 

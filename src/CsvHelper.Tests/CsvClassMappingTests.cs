@@ -116,6 +116,43 @@ namespace CsvHelper.Tests
 			Assert.IsNotNull( map.Constructor );
 		}
 
+		[TestMethod]
+		public void MapMultipleTypesTest()
+		{
+			var config = new CsvConfiguration();
+			config.ClassMapping<AMap>();
+			config.ClassMapping<BMap>();
+
+			Assert.IsNotNull( config.Maps[typeof( A )] );
+			Assert.IsNotNull( config.Maps[typeof( B )] );
+		}
+
+		private class A
+		{
+			public int AId { get; set; }
+		}
+
+		private sealed class AMap : CsvClassMap<A>
+		{
+			public AMap()
+			{
+				Map( m => m.AId );
+			}
+		}
+
+		private class B
+		{
+			public int BId { get; set; }
+		}
+
+		private sealed class BMap : CsvClassMap<B>
+		{
+			public BMap()
+			{
+				Map( m => m.BId );
+			}
+		}
+
 		private class TestClass
 		{
 			public string StringColumn { get; set; }
