@@ -82,21 +82,21 @@ namespace CsvHelper.Configuration
 
 			if( !useFieldName )
 			{
-				if( x.IndexValue == -1 && y.IndexValue == -1 )
+				if( x.Data.Index == -1 && y.Data.Index == -1 )
 				{
 					return 0;
 				}
-				if( x.IndexValue == -1 )
+				if( x.Data.Index == -1 )
 				{
 					return 1;
 				}
-				if( y.IndexValue == -1 )
+				if( y.Data.Index == -1 )
 				{
 					return -1;
 				}
 			}
 
-			return useFieldName ? x.NameValue.CompareTo( y.NameValue ) : x.IndexValue.CompareTo( y.IndexValue );
+			return useFieldName ? x.Data.Index.CompareTo( y.Data.Index ) : x.Data.Index.CompareTo( y.Data.Index );
 		}
 	}
 }

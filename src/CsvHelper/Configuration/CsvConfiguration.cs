@@ -344,8 +344,8 @@ namespace CsvHelper.Configuration
 				else
 				{
 					var propertyMap = new CsvPropertyMap( property );
-					if( propertyMap.TypeConverterValue.CanConvertFrom( typeof( string ) ) ||
-					    propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
+					if( propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) ||
+					    propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
 					{
 						// Only add the property map if it can be converted later on.
 						// If the property will use the default converter, don't add it because

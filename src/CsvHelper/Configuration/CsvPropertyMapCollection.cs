@@ -199,7 +199,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		private void Sort()
 		{
-			if( list.Any( c => c.IndexValue > -1 ) )
+			if( list.Any( c => c.Data.Index > -1 ) )
 			{
 				list.Sort( new CsvPropertyMapComparer( false ) );
 			}

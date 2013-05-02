@@ -1129,11 +1129,11 @@ namespace CsvHelper
 		{
 			foreach( var propertyMap in properties )
 			{
-				if( propertyMap.ConvertUsingValue != null )
+				if( propertyMap.Data.ConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
-					var exp = Expression.Invoke( propertyMap.ConvertUsingValue, Expression.Constant( this ) );
-					bindings.Add( Expression.Bind( propertyMap.PropertyValue, exp ) );
+					var exp = Expression.Invoke( propertyMap.Data.ConvertExpression, Expression.Constant( this ) );
+					bindings.Add( Expression.Bind( propertyMap.Data.Property, exp ) );
 					continue;
 				}
 
@@ -1142,13 +1142,13 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertFrom( typeof( string ) ) )
+				if( propertyMap.Data.TypeConverter == null || !propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) )
 				{
 					// Skip if the type isn't convertible.
 					continue;
 				}
 
-				var index = propertyMap.IndexValue < 0 ? GetFieldIndex( propertyMap.NamesValue ) : propertyMap.IndexValue;
+				var index = propertyMap.Data.Index < 0 ? GetFieldIndex( propertyMap.Data.Names.ToArray() ) : propertyMap.Data.Index;
 				if( index == -1 )
 				{
 					// Skip if the index was not found.
@@ -1160,17 +1160,17 @@ namespace CsvHelper
 				Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
 
 				// Convert the field.
-				var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
+				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
 				var culture = Expression.Constant( Configuration.CultureInfo );
 
 				// Create type converter expression.
 				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, culture, fieldExpression );
-				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.PropertyValue.PropertyType );
+				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
 
-				if( propertyMap.IsDefaultValueSet )
+				if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
-					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.DefaultValue ), propertyMap.PropertyValue.PropertyType );
+					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
 
 					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( fieldExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
 					fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
@@ -1180,7 +1180,7 @@ namespace CsvHelper
 					fieldExpression = typeConverterFieldExpression;
 				}
 
-				bindings.Add( Expression.Bind( propertyMap.PropertyValue, fieldExpression ) );
+				bindings.Add( Expression.Bind( propertyMap.Data.Property, fieldExpression ) );
 			}
 		}
 
@@ -1194,12 +1194,12 @@ namespace CsvHelper
 		{
 			var cantRead =
 				// Ignored properties.
-				propertyMap.IgnoreValue ||
+				propertyMap.Data.Ignore ||
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyMap.PropertyValue.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
 				// Properties that don't have a setter at all.
-				propertyMap.PropertyValue.GetSetMethod( true ) == null;
+				propertyMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;
 		}
 

@@ -31,7 +31,7 @@ namespace CsvHelper.Configuration
 		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-			if( PropertyMaps.Any( m => m.PropertyValue == property ) )
+			if( PropertyMaps.Any( m => m.Data.Property == property ) )
 			{
 				throw new CsvConfigurationException( string.Format( "Property '{0}' has already been mapped.", property.Name ) );
 			}

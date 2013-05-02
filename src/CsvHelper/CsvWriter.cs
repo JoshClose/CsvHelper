@@ -263,7 +263,7 @@ namespace CsvHelper
 			{
 				if( CanWrite( property ) )
 				{
-					WriteField( property.NameValue );
+					WriteField( property.Data.Names.FirstOrDefault() );
 				}
 			}
 
@@ -574,7 +574,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( string.IsNullOrEmpty( propertyMap.FormatValue ) && ( propertyMap.TypeConverterValue == null || !propertyMap.TypeConverterValue.CanConvertTo( typeof( string ) ) ) )
+				if( string.IsNullOrEmpty( propertyMap.Data.Format ) && ( propertyMap.Data.TypeConverter == null || !propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) ) )
 				{
 					// Skip if the type isn't convertible.
 					continue;
@@ -583,12 +583,12 @@ namespace CsvHelper
 				// Find the object that contains this property.
 				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Maps[type], propertyMap );
 
-				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.PropertyValue );
+				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.Data.Property );
 				
-				if( !string.IsNullOrEmpty( propertyMap.FormatValue ) )
+				if( !string.IsNullOrEmpty( propertyMap.Data.Format ) )
 				{
 					// Use string.Format instead of TypeConverter.
-					var formatExpression = Expression.Constant( propertyMap.FormatValue );
+					var formatExpression = Expression.Constant( propertyMap.Data.Format );
 					var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object[] ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
@@ -596,8 +596,8 @@ namespace CsvHelper
 				}
 				else
 				{
-					var typeConverterExpression = Expression.Constant( propertyMap.TypeConverterValue );
-					var method = propertyMap.TypeConverterValue.GetType().GetMethod( "ConvertToString", new[] { typeof( CultureInfo ), typeof( object ) } );
+					var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
+					var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( CultureInfo ), typeof( object ) } );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( Configuration.CultureInfo ), fieldExpression );
 				}
@@ -636,12 +636,12 @@ namespace CsvHelper
 		{
 			var cantWrite =
 				// Ignored properties.
-				propertyMap.IgnoreValue ||
+				propertyMap.Data.Ignore ||
 				// Properties that don't have a public getter
 				// and we are honoring the accessor modifier.
-				propertyMap.PropertyValue.GetGetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IgnorePrivateAccessor ||
 				// Properties that don't have a getter at all.
-				propertyMap.PropertyValue.GetGetMethod( true ) == null;
+				propertyMap.Data.Property.GetGetMethod( true ) == null;
 			return !cantWrite;
 		}
 #endif

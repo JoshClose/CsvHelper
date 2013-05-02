@@ -18,86 +18,24 @@ namespace CsvHelper.Configuration
 	[DebuggerDisplay( "Name = {NameValue}, Index = {IndexValue}, Ignore = {IgnoreValue}, Property = {PropertyValue}, TypeConverter = {TypeConverterValue}" )]
 	public class CsvPropertyMap
 	{
-		private readonly PropertyInfo property;
-		private readonly List<string> names = new List<string>();
-		private int index = -1;
-		private ITypeConverter typeConverter;
-		private bool ignore;
-		private object defaultValue;
-		private bool isDefaultValueSet;
-		private string format;
-		private Expression convertExpression;
+		private readonly CsvPropertyMapData data;
 
-		/// <summary>
-		/// Gets the property value.
-		/// </summary>
-		public virtual PropertyInfo PropertyValue { get { return property; } }
-
-		/// <summary>
-		/// Gets the name value. In the case of multiple, just grabs the first.
-		/// </summary>
-		public virtual string NameValue { get { return names.FirstOrDefault(); } }
-
-		/// <summary>
-		/// Gets all the name values.
-		/// </summary>
-		public virtual string[] NamesValue { get { return names.ToArray(); } }
-
-		/// <summary>
-		/// Gets the index value.
-		/// </summary>
-		public virtual int IndexValue { get { return index; } }
-
-		/// <summary>
-		/// Gets the type converter value.
-		/// </summary>
-		public virtual ITypeConverter TypeConverterValue { get { return typeConverter; } }
-
-		/// <summary>
-		/// Gets a value indicating whether the field should be ignored.
-		/// </summary>
-		public virtual bool IgnoreValue { get { return ignore; } }
-
-		/// <summary>
-		/// Gets the default value used when a CSV field is empty.
-		/// </summary>
-		public virtual object DefaultValue { get { return defaultValue; } }
-
-		/// <summary>
-		/// Gets a value indicating whether this instance is default value set.
-		/// </summary>
-		/// <value>
-		/// 	<c>true</c> if this instance is default value set; otherwise, <c>false</c>.
-		/// </value>
-		public virtual bool IsDefaultValueSet { get { return isDefaultValueSet; } }
-
-		/// <summary>
-		/// Gets the format used when converting the value to string.
-		/// </summary>
-		/// <value>
-		/// The format.
-		/// </value>
-		public virtual string FormatValue { get { return format; } }
-
-		/// <summary>
-		/// Gets the expression used to convert data in the
-		/// row to the property.
-		/// </summary>
-		/// <value>
-		/// The convert using value.
-		/// </value>
-		public virtual Expression ConvertUsingValue { get { return convertExpression; } } 
+		public CsvPropertyMapData Data
+		{
+			get { return data; }
+		}
 
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
 		/// </summary>
 		public CsvPropertyMap( PropertyInfo property )
 		{
-			this.property = property;
-
-			// Set some defaults.
-			names.Add( property.Name );
-			typeConverter = TypeConverterFactory.GetConverter( property.PropertyType );
+			data = new CsvPropertyMapData( property )
+			{
+				// Set some defaults.
+				TypeConverter = TypeConverterFactory.GetConverter( property.PropertyType )
+			};
+			data.Names.Add( property.Name );
 		}
 
 		/// <summary>
@@ -114,8 +52,8 @@ namespace CsvHelper.Configuration
 		/// <param name="names">The possible names of the CSV field.</param>
 		public virtual CsvPropertyMap Name( params string[] names )
 		{
-			this.names.Clear();
-			this.names.AddRange( names );
+			data.Names.Clear();
+			data.Names.AddRange( names );
 			return this;
 		}
 
@@ -130,7 +68,7 @@ namespace CsvHelper.Configuration
 		/// <param name="index">The index of the CSV field.</param>
 		public virtual CsvPropertyMap Index( int index )
 		{
-			this.index = index;
+			data.Index = index;
 			return this;
 		}
 
@@ -139,7 +77,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual CsvPropertyMap Ignore()
 		{
-			ignore = true;
+			data.Ignore = true;
 			return this;
 		}
 
@@ -149,7 +87,7 @@ namespace CsvHelper.Configuration
 		/// <param name="ignore">True to ignore, otherwise false.</param>
 		public virtual CsvPropertyMap Ignore( bool ignore )
 		{
-			this.ignore = ignore;
+			data.Ignore = ignore;
 			return this;
 		}
 
@@ -160,8 +98,7 @@ namespace CsvHelper.Configuration
 		/// <param name="defaultValue">The default value.</param>
 		public virtual CsvPropertyMap Default( object defaultValue )
 		{
-			this.defaultValue = defaultValue;
-			isDefaultValueSet = true;
+			data.Default = defaultValue;
 			return this;
 		}
 
@@ -172,7 +109,7 @@ namespace CsvHelper.Configuration
 		/// <param name="typeConverter">The TypeConverter to use.</param>
 		public virtual CsvPropertyMap TypeConverter( ITypeConverter typeConverter )
 		{
-			this.typeConverter = typeConverter;
+			data.TypeConverter = typeConverter;
 			return this;
 		}
 
@@ -196,7 +133,7 @@ namespace CsvHelper.Configuration
 		/// <param name="convertExpression">The convert expression.</param>
 		public virtual CsvPropertyMap ConvertUsing<T>( Func<ICsvReaderRow, T> convertExpression )
 		{
-			this.convertExpression = (Expression<Func<ICsvReaderRow, T>>)( x => convertExpression( x ) );
+			data.ConvertExpression = (Expression<Func<ICsvReaderRow, T>>)( x => convertExpression( x ) );
 			return this;
 		}
 
@@ -207,7 +144,7 @@ namespace CsvHelper.Configuration
 		/// <param name="format">The format.</param>
 		public virtual CsvPropertyMap Format( string format )
 		{
-			this.format = format;
+			data.Format = format;
 			return this;
 		}
 	}

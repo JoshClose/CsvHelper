@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
@@ -23,17 +24,17 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.AreEqual( "GuidColumn", map.PropertyMaps[0].NameValue );
-			Assert.AreEqual( -1, map.PropertyMaps[0].IndexValue );
-			Assert.AreEqual( typeof( GuidConverter ), map.PropertyMaps[0].TypeConverterValue.GetType() );
+			Assert.AreEqual( "GuidColumn", map.PropertyMaps[0].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( -1, map.PropertyMaps[0].Data.Index );
+			Assert.AreEqual( typeof( GuidConverter ), map.PropertyMaps[0].Data.TypeConverter.GetType() );
 
-			Assert.AreEqual( "IntColumn", map.PropertyMaps[1].NameValue );
-			Assert.AreEqual( -1, map.PropertyMaps[1].IndexValue );
-			Assert.AreEqual( typeof( Int32Converter ), map.PropertyMaps[1].TypeConverterValue.GetType() );
+			Assert.AreEqual( "IntColumn", map.PropertyMaps[1].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( -1, map.PropertyMaps[1].Data.Index );
+			Assert.AreEqual( typeof( Int32Converter ), map.PropertyMaps[1].Data.TypeConverter.GetType() );
 
-			Assert.AreEqual( "StringColumn", map.PropertyMaps[2].NameValue );
-			Assert.AreEqual( -1, map.PropertyMaps[2].IndexValue );
-			Assert.AreEqual( typeof( StringConverter ), map.PropertyMaps[2].TypeConverterValue.GetType() );
+			Assert.AreEqual( "StringColumn", map.PropertyMaps[2].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( -1, map.PropertyMaps[2].Data.Index );
+			Assert.AreEqual( typeof( StringConverter ), map.PropertyMaps[2].Data.TypeConverter.GetType() );
 		}
 
 		[TestMethod]
@@ -43,9 +44,9 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.AreEqual( "Guid Column", map.PropertyMaps[0].NameValue );
-			Assert.AreEqual( "Int Column", map.PropertyMaps[1].NameValue );
-			Assert.AreEqual( "String Column", map.PropertyMaps[2].NameValue );
+			Assert.AreEqual( "Guid Column", map.PropertyMaps[0].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( "Int Column", map.PropertyMaps[1].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( "String Column", map.PropertyMaps[2].Data.Names.FirstOrDefault() );
 		}
 
 		[TestMethod]
@@ -55,9 +56,9 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.AreEqual( 2, map.PropertyMaps[0].IndexValue );
-			Assert.AreEqual( 3, map.PropertyMaps[1].IndexValue );
-			Assert.AreEqual( 1, map.PropertyMaps[2].IndexValue );
+			Assert.AreEqual( 2, map.PropertyMaps[0].Data.Index );
+			Assert.AreEqual( 3, map.PropertyMaps[1].Data.Index );
+			Assert.AreEqual( 1, map.PropertyMaps[2].Data.Index );
 		}
 
 		[TestMethod]
@@ -67,9 +68,9 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.IsTrue( map.PropertyMaps[0].IgnoreValue );
-			Assert.IsFalse( map.PropertyMaps[1].IgnoreValue );
-			Assert.IsTrue( map.PropertyMaps[2].IgnoreValue );
+			Assert.IsTrue( map.PropertyMaps[0].Data.Ignore );
+			Assert.IsFalse( map.PropertyMaps[1].Data.Ignore );
+			Assert.IsTrue( map.PropertyMaps[2].Data.Ignore );
 		}
 
 		[TestMethod]
@@ -79,9 +80,9 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.IsInstanceOfType( map.PropertyMaps[0].TypeConverterValue, typeof( Int16Converter ) );
-			Assert.IsInstanceOfType( map.PropertyMaps[1].TypeConverterValue, typeof( StringConverter ) );
-			Assert.IsInstanceOfType( map.PropertyMaps[2].TypeConverterValue, typeof( Int64Converter ) );
+			Assert.IsInstanceOfType( map.PropertyMaps[0].Data.TypeConverter, typeof( Int16Converter ) );
+			Assert.IsInstanceOfType( map.PropertyMaps[1].Data.TypeConverter, typeof( StringConverter ) );
+			Assert.IsInstanceOfType( map.PropertyMaps[2].Data.TypeConverter, typeof( Int64Converter ) );
 		}
 
 		[TestMethod]
@@ -91,21 +92,21 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
-			Assert.AreEqual( 3, map.PropertyMaps[0].NamesValue.Length );
-			Assert.AreEqual( 3, map.PropertyMaps[1].NamesValue.Length );
-			Assert.AreEqual( 3, map.PropertyMaps[2].NamesValue.Length );
+			Assert.AreEqual( 3, map.PropertyMaps[0].Data.Names.Count );
+			Assert.AreEqual( 3, map.PropertyMaps[1].Data.Names.Count );
+			Assert.AreEqual( 3, map.PropertyMaps[2].Data.Names.Count );
 
-			Assert.AreEqual("guid1", map.PropertyMaps[0].NamesValue[0]);
-			Assert.AreEqual("guid2", map.PropertyMaps[0].NamesValue[1]);
-			Assert.AreEqual("guid3", map.PropertyMaps[0].NamesValue[2]);
+			Assert.AreEqual("guid1", map.PropertyMaps[0].Data.Names[0]);
+			Assert.AreEqual("guid2", map.PropertyMaps[0].Data.Names[1]);
+			Assert.AreEqual("guid3", map.PropertyMaps[0].Data.Names[2]);
 
-			Assert.AreEqual("int1", map.PropertyMaps[1].NamesValue[0]);
-			Assert.AreEqual("int2", map.PropertyMaps[1].NamesValue[1]);
-			Assert.AreEqual("int3", map.PropertyMaps[1].NamesValue[2]);
+			Assert.AreEqual("int1", map.PropertyMaps[1].Data.Names[0]);
+			Assert.AreEqual("int2", map.PropertyMaps[1].Data.Names[1]);
+			Assert.AreEqual("int3", map.PropertyMaps[1].Data.Names[2]);
 
-			Assert.AreEqual("string1", map.PropertyMaps[2].NamesValue[0]);
-			Assert.AreEqual("string2", map.PropertyMaps[2].NamesValue[1]);
-			Assert.AreEqual("string3", map.PropertyMaps[2].NamesValue[2]);
+			Assert.AreEqual("string1", map.PropertyMaps[2].Data.Names[0]);
+			Assert.AreEqual("string2", map.PropertyMaps[2].Data.Names[1]);
+			Assert.AreEqual("string3", map.PropertyMaps[2].Data.Names[2]);
 		}
 
 		[TestMethod]
