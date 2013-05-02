@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 #if WINRT_4_5
 using System.Reflection;
+using CsvHelper.MissingFromRt45;
 #endif
 using CsvHelper.Configuration;
 
@@ -45,11 +46,7 @@ namespace CsvHelper
 		/// <param name="map">The map.</param>
 		public void Add( CsvClassMap map )
 		{
-#if WINRT_4_5
-			var type = map.GetType().GetTypeInfo().BaseType.GenericTypeArguments.First();
-#else
-			var type = map.GetType().BaseType.GetGenericArguments().First();
-#endif
+			var type = GetGenericCsvClassMapType( map.GetType() ).GetGenericArguments().First();
 
 			if( data.ContainsKey( type ) )
 			{
@@ -76,6 +73,31 @@ namespace CsvHelper
 		public void Clear()
 		{
 			data.Clear();
+		}
+
+		/// <summary>
+		/// Goes up the inheritance tree to find the type instance of CsvClassMap{}.
+		/// </summary>
+		/// <param name="type">The type to traverse.</param>
+		/// <returns>The type that is CsvClassMap{}.</returns>
+		private Type GetGenericCsvClassMapType( Type type )
+		{
+#if WINRT_4_5
+			var typeInfo = type.GetTypeInfo();
+			if( typeInfo.BaseType.GetTypeInfo().IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
+			{
+				return type;
+			}
+
+			return GetGenericCsvClassMapType( typeInfo.BaseType );
+#else
+			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
+			{
+				return type;
+			}
+
+			return GetGenericCsvClassMapType( type.BaseType );
+#endif
 		}
 	}
 }

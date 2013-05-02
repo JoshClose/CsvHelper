@@ -320,7 +320,7 @@ namespace CsvHelper.Configuration
 #else
 			var properties = type.GetProperties( propertyBindingFlags );
 #endif
-			var mapType = typeof( CsvAutoClassMap<> ).MakeGenericType( type );
+			var mapType = typeof( CsvClassMap<> ).MakeGenericType( type );
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( mapType );
 			foreach( var property in properties )
 			{

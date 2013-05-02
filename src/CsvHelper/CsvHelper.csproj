@@ -68,7 +68,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\CsvAutoClassMap`1.cs" />
     <Compile Include="Configuration\CsvClassMap`1.cs" />
     <Compile Include="Configuration\CsvConfigurationException.cs" />
     <Compile Include="Configuration\CsvClassMap.cs" />

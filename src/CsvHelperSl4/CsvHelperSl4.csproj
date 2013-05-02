@@ -59,9 +59,6 @@
     <Reference Include="System.Windows.Browser" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\CsvHelper\Configuration\CsvAutoClassMap`1.cs">
-      <Link>Configuration\CsvAutoClassMap`1.cs</Link>
-    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>

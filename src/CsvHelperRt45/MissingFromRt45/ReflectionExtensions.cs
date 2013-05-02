@@ -84,6 +84,16 @@ namespace CsvHelper.MissingFromRt45
 		}
 
 		/// <summary>
+		/// Returns an array of System.Type objects that represent the type arguments of a generic type or the type parameters of a generic type definition.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <returns>An array of System.Type objects that represent the type arguments of a generic type. Returns an empty array if the current type is not a generic type.</returns>
+		public static Type[] GetGenericArguments( this Type type )
+		{
+			return type.GetTypeInfo().GenericTypeArguments;
+		}
+
+		/// <summary>
 		/// Returns the public get accessor for this property.
 		/// </summary>
 		/// <param name="property">The property.</param>
