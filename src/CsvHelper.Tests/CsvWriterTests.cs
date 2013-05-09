@@ -480,6 +480,23 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteDynamicTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.WriteRecord( new { Id = 1, Name = "one" } );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+				Assert.AreEqual( "1,one\r\n", text );
+			}
+		}
+
 		private class TestPrivateGet
 		{
 			public int Id { get; set; }

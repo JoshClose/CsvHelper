@@ -818,6 +818,24 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void ReaderDynamicTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "Id", "Name" } );
+			queue.Enqueue( new[] { "1", "one" } );
+			queue.Enqueue( new[] { "2", "two" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var csv = new CsvReader( parserMock );
+			csv.Read();
+			var row = csv.GetRecord<dynamic>();
+
+			// TODO: Implement reading into a dynamic object.
+		}
+
 		private class OnlyFields
 		{
 			public string Name;
