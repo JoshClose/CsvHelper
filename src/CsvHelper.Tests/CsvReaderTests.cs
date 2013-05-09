@@ -818,8 +818,9 @@ namespace CsvHelper.Tests
 			}
 		}
 
+#if !NET_3_5
 		[TestMethod]
-		public void ReaderDynamicTest()
+		public void ReaderDynamicHasHeaderTest()
 		{
 			var queue = new Queue<string[]>();
 			queue.Enqueue( new[] { "Id", "Name" } );
@@ -833,8 +834,29 @@ namespace CsvHelper.Tests
 			csv.Read();
 			var row = csv.GetRecord<dynamic>();
 
-			// TODO: Implement reading into a dynamic object.
+			Assert.AreEqual( "1", row.Id );
+			Assert.AreEqual( "one", row.Name );
 		}
+
+		[TestMethod]
+		public void ReaderDynamicNoHeaderTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "one" } );
+			queue.Enqueue( new[] { "2", "two" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var csv = new CsvReader( parserMock );
+			csv.Configuration.HasHeaderRecord = false;
+			csv.Read();
+			var row = csv.GetRecord<dynamic>();
+
+			Assert.AreEqual( "1", row.Field1 );
+			Assert.AreEqual( "one", row.Field2 );
+		}
+#endif
 
 		private class OnlyFields
 		{

@@ -8,12 +8,15 @@ using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+#if NET_2_0
+using CsvHelper.MissingFrom20;
+#endif
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
 #endif
-#if NET_2_0
-using CsvHelper.MissingFrom20;
+#if !NET_2_0 && !NET_3_5
+using System.Dynamic;
 #endif
 #if WINRT_4_5
 using CsvHelper.MissingFromRt45;
@@ -719,7 +722,7 @@ namespace CsvHelper
 			T record;
 			try
 			{
-				record = GetReadRecordFunc<T>()();
+				record = CreateRecord<T>();
 			}
 			catch( Exception ex )
 			{
@@ -742,7 +745,7 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = GetReadRecordFunc( type ).DynamicInvoke();
+				record = CreateRecord( type );
 			}
 			catch( Exception ex )
 			{
@@ -770,7 +773,7 @@ namespace CsvHelper
 				T record;
 				try
 				{
-					record = GetReadRecordFunc<T>()();
+					record = CreateRecord<T>();
 				}
 				catch( Exception ex )
 				{
@@ -800,7 +803,7 @@ namespace CsvHelper
 				object record;
 				try
 				{
-					record = GetReadRecordFunc( type ).DynamicInvoke();
+					record = CreateRecord( type );
 				}
 				catch( Exception ex )
 				{
@@ -1040,6 +1043,48 @@ namespace CsvHelper
 
 #if !NET_2_0
 		/// <summary>
+		/// Creates the record for the given type.
+		/// </summary>
+		/// <typeparam name="T">The type of record to create.</typeparam>
+		/// <returns>The created record.</returns>
+		protected virtual T CreateRecord<T>() where T : class
+		{
+#if !NET_3_5
+			// If the type is an object, a dynamic
+			// object will be created. That is the
+			// only way we can dynamically add properties
+			// to a type of object.
+			if( typeof( T ) == typeof( object ) )
+			{
+				return CreateDynamic();
+			}
+#endif
+
+			return GetReadRecordFunc<T>()();
+		}
+
+		/// <summary>
+		/// Creates the record for the given type.
+		/// </summary>
+		/// <param name="type">The type of record to create.</param>
+		/// <returns>The created record.</returns>
+		protected virtual object CreateRecord( Type type )
+		{
+#if !NET_3_5
+			// If the type is an object, a dynamic
+			// object will be created. That is the
+			// only way we can dynamically add properties
+			// to a type of object.
+			if( type == typeof( object ) )
+			{
+				return CreateDynamic();
+			}
+#endif
+
+			return GetReadRecordFunc( type ).DynamicInvoke();
+		}
+
+		/// <summary>
 		/// Gets the function delegate used to populate
 		/// a custom class object with data from the reader.
 		/// </summary>
@@ -1218,6 +1263,38 @@ namespace CsvHelper
 				// Properties that don't have a setter at all.
 				propertyReferenceMap.Property.GetSetMethod( true ) == null;
 			return !cantRead;
+		}
+#endif
+
+#if !NET_2_0 && !NET_3_5
+		/// <summary>
+		/// Creates a dynamic object from the current record.
+		/// </summary>
+		/// <returns>The dynamic object.</returns>
+		protected dynamic CreateDynamic()
+		{
+			var obj = new ExpandoObject();
+			var dict = obj as IDictionary<string, object>;
+			if( headerRecord != null )
+			{
+				for( var i = 0; i < headerRecord.Length; i++ )
+				{
+					var header = headerRecord[i];
+					var field = currentRecord[i];
+					dict.Add( header, field );
+				}
+			}
+			else
+			{
+				for( var i = 0; i < currentRecord.Length; i++ )
+				{
+					var propertyName = "Field" + ( i + 1 );
+					var field = currentRecord[i];
+					dict.Add( propertyName, field );
+				}
+			}
+
+			return obj;
 		}
 #endif
 	}
