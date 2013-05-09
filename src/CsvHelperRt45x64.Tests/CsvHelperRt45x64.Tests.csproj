@@ -6,17 +6,15 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{1545FE0B-1A6C-431B-8014-0EB3BF501E1D}</ProjectGuid>
+    <ProjectGuid>{9ED3D612-DBD6-4AAD-AEC9-31C59E6A3825}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CsvHelperRt45.Tests</RootNamespace>
-    <AssemblyName>CsvHelperRt45.Tests</AssemblyName>
+    <RootNamespace>CsvHelperRt45x64.Tests</RootNamespace>
+    <AssemblyName>CsvHelperRt45x64.Tests</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>CsvHelperRt45.Tests_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <RestorePackages>true</RestorePackages>
+    <PackageCertificateKeyFile>CsvHelperRt45x64.Tests_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -60,7 +58,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINRT_4_5</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -82,7 +80,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINRT_4_5</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -92,7 +90,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINRT_4_5</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -168,7 +166,7 @@
     <Compile Include="..\CsvHelper.Tests\CsvWriterTests.cs">
       <Link>CsvWriterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\Mocks\ParserMock.cs">
+    <Compile Include="..\csvhelper.tests\mocks\ParserMock.cs">
       <Link>Mocks\ParserMock.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
@@ -177,22 +175,22 @@
     <Compile Include="..\CsvHelper.Tests\ReflectionHelperTests.cs">
       <Link>ReflectionHelperTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\TypeConversion\BooleanConverterTests.cs">
+    <Compile Include="..\csvhelper.tests\typeconversion\BooleanConverterTests.cs">
       <Link>TypeConversion\BooleanConverterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\TypeConversion\ByteConverterTests.cs">
+    <Compile Include="..\csvhelper.tests\typeconversion\ByteConverterTests.cs">
       <Link>TypeConversion\ByteConverterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\TypeConversion\CharConverterTests.cs">
+    <Compile Include="..\csvhelper.tests\typeconversion\CharConverterTests.cs">
       <Link>TypeConversion\CharConverterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeConverterTests.cs">
+    <Compile Include="..\csvhelper.tests\typeconversion\DateTimeConverterTests.cs">
       <Link>TypeConversion\DateTimeConverterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumConverterTests.cs">
+    <Compile Include="..\csvhelper.tests\typeconversion\EnumConverterTests.cs">
       <Link>TypeConversion\EnumConverterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterFactoryTests.cs">
+    <Compile Include="..\csvhelper.tests\typeconversion\TypeConverterFactoryTests.cs">
       <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -201,7 +199,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="CsvHelperRt45.Tests_TemporaryKey.pfx" />
+    <None Include="CsvHelperRt45x64.Tests_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\UnitTestLogo.png">
@@ -218,19 +216,15 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CsvHelperRt45\CsvHelperRt45.csproj">
-      <Project>{94f068ba-019d-4d70-9967-28387aba6f29}</Project>
-      <Name>CsvHelperRt45</Name>
+    <ProjectReference Include="..\CsvHelperRt45x64\CsvHelperRt45x64.csproj">
+      <Project>{47469aca-6fbd-4760-ac72-ecc9f95af28c}</Project>
+      <Name>CsvHelperRt45x64</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
   </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
