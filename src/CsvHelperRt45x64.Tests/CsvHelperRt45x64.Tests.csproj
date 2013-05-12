@@ -190,6 +190,9 @@
     <Compile Include="..\csvhelper.tests\typeconversion\EnumConverterTests.cs">
       <Link>TypeConversion\EnumConverterTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumerableConverterTests.cs">
+      <Link>TypeConversion\EnumerableConverterTests.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper.tests\typeconversion\TypeConverterFactoryTests.cs">
       <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
     </Compile>

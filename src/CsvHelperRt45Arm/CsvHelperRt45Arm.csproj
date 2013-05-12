@@ -224,6 +224,9 @@
     <Compile Include="..\csvhelper\typeconversion\EnumConverter.cs">
       <Link>TypeConversion\EnumConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\EnumerableConverter.cs">
+      <Link>TypeConversion\EnumerableConverter.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper\typeconversion\GuidConverter.cs">
       <Link>TypeConversion\GuidConverter.cs</Link>
     </Compile>

@@ -114,6 +114,9 @@
     <Compile Include="..\CsvHelper.Tests\ReflectionHelperTests.cs">
       <Link>ReflectionHelperTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumerableConverterTests.cs">
+      <Link>EnumerableConverterTests.cs</Link>
+    </Compile>
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

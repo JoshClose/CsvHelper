@@ -107,6 +107,7 @@
     <Compile Include="TypeConversion\DecimalConverter.cs" />
     <Compile Include="TypeConversion\DoubleConverter.cs" />
     <Compile Include="TypeConversion\EnumConverter.cs" />
+    <Compile Include="TypeConversion\EnumerableConverter.cs" />
     <Compile Include="TypeConversion\SingleConverter.cs" />
     <Compile Include="TypeConversion\GuidConverter.cs" />
     <Compile Include="TypeConversion\Int16Converter.cs" />

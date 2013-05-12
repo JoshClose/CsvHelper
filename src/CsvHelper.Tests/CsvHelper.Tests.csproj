@@ -81,6 +81,7 @@
     <Compile Include="TypeConversion\CharConverterTests.cs" />
     <Compile Include="TypeConversion\EnumConverterTests.cs" />
     <Compile Include="TypeConversion\DateTimeConverterTests.cs" />
+    <Compile Include="TypeConversion\EnumerableConverterTests.cs" />
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
   </ItemGroup>
   <ItemGroup>

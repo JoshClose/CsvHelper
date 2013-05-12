@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 #if WINRT_4_5
@@ -115,6 +116,11 @@ namespace CsvHelper.TypeConversion
 				}
 			}
 
+			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
+			{
+				return GetConverter( typeof( IEnumerable ) );
+			}
+
 			if( typeof( Enum ).IsAssignableFrom( type ) )
 			{
 				AddConverter( type, new EnumConverter( type ) );
@@ -163,6 +169,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter( typeof( ushort ), new UInt16Converter() );
 			AddConverter( typeof( uint ), new UInt32Converter() );
 			AddConverter( typeof( ulong ), new UInt64Converter() );
+			AddConverter( typeof( IEnumerable ), new EnumerableConverter() );
 		} 
 	}
 }

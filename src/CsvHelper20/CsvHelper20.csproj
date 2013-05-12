@@ -128,6 +128,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\EnumConverter.cs">
       <Link>TypeConversion\EnumConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\EnumerableConverter.cs">
+      <Link>TypeConversion\EnumerableConverter.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\GuidConverter.cs">
       <Link>TypeConversion\GuidConverter.cs</Link>
     </Compile>
