@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections;
 using System.Globalization;
 #if !NET_2_0
 using System.Linq;
@@ -315,6 +316,14 @@ namespace CsvHelper.Configuration
 		/// <returns>The generate map.</returns>
 		public virtual CsvClassMap AutoMap( Type type )
 		{
+			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
+			{
+				throw new CsvConfigurationException( "Types that inhererit IEnumerable cannot be auto mapped. " +
+				                                     "Did you accidentally call GetRecord or WriteRecord which " +
+				                                     "acts on a single record instead of calling GetRecords or " +
+				                                     "WriteRecords which acts on a list of records?" );
+			}
+
 #if WINRT_4_5
 			var properties = type.GetProperties();
 #else

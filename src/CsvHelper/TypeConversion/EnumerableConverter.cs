@@ -23,10 +23,9 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( CultureInfo culture, string text )
 		{
-			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field." +
-			                                     "If you want to do this, create your own ITypeConverter and register" +
-												 "it in the TypeConverterFactory by calling AddConverter. If you were" +
-			                                     "trying to read a row you may have called GetRecord instead of GetRecords." );
+			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field. " +
+			                                     "If you want to do this, create your own ITypeConverter and register " +
+												 "it in the TypeConverterFactory by calling AddConverter." );
 		}
 
 		/// <summary>
@@ -37,8 +36,8 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The string representation of the object.</returns>
 		public override string ConvertToString( CultureInfo culture, object value )
 		{
-			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field." +
-												 "If you want to do this, create your own ITypeConverter and register" +
+			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field. " +
+												 "If you want to do this, create your own ITypeConverter and register " +
 												 "it in the TypeConverterFactory by calling AddConverter." );
 		}
 
@@ -51,7 +50,7 @@ namespace CsvHelper.TypeConversion
 		/// </returns>
 		public override bool CanConvertFrom( Type type )
 		{
-			return false;
+			return true;
 		}
 
 		/// <summary>
@@ -63,7 +62,7 @@ namespace CsvHelper.TypeConversion
 		/// </returns>
 		public override bool CanConvertTo( Type type )
 		{
-			return false;
+			return true;
 		}
 	}
 }

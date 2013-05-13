@@ -10,6 +10,7 @@ using System.Text;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -178,6 +179,20 @@ namespace CsvHelper.Tests
 				expected.AppendLine( "1" );
 
 				Assert.AreEqual( expected.ToString(), data );
+			}
+		}
+
+		[TestMethod]
+		public void AutoMapEnumerableTest()
+		{
+			var config = new CsvConfiguration();
+			try
+			{
+				config.AutoMap( typeof( List<string> ) );
+				Assert.Fail();
+			}
+			catch( CsvConfigurationException )
+			{
 			}
 		}
 
