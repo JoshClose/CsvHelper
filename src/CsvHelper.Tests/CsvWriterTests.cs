@@ -559,12 +559,12 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : ITypeConverter
 		{
-			public string ConvertToString( CultureInfo culture, object value )
+			public string ConvertToString( TypeConverterOptions options, object value )
 			{
 				return "test";
 			}
 
-			public object ConvertFromString( CultureInfo culture, string text )
+			public object ConvertFromString( TypeConverterOptions options, string text )
 			{
 				throw new NotImplementedException();
 			}

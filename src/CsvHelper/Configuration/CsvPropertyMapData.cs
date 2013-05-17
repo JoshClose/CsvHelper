@@ -18,6 +18,7 @@ namespace CsvHelper.Configuration
 		private readonly List<string> names = new List<string>();
 		private int index = -1;
 		private object defaultValue;
+		private readonly TypeConverterOptions typeConverterOptions = new TypeConverterOptions();
 
 		/// <summary>
 		/// Gets the <see cref="PropertyInfo"/> that the data
@@ -51,6 +52,14 @@ namespace CsvHelper.Configuration
 		public virtual ITypeConverter TypeConverter { get; set; }
 
 		/// <summary>
+		/// Gets or sets the type converter options.
+		/// </summary>
+		public virtual TypeConverterOptions TypeConverterOptions
+		{
+			get { return typeConverterOptions; }
+		}
+
+		/// <summary>
 		/// Gets or sets a value indicating whether the field should be ignored.
 		/// </summary>
 		public virtual bool Ignore { get; set; }
@@ -72,11 +81,6 @@ namespace CsvHelper.Configuration
 		/// Gets or sets a value indicating whether this instance is default value set.
 		/// </summary>
 		public virtual bool IsDefaultSet { get; set; }
-
-		/// <summary>
-		/// Gets or sets the format used when converting the value to string.
-		/// </summary>
-		public virtual string Format { get; set; }
 
 		/// <summary>
 		/// Gets or sets the expression used to convert data in the

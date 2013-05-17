@@ -114,8 +114,29 @@
     <Compile Include="..\CsvHelper.Tests\ReflectionHelperTests.cs">
       <Link>ReflectionHelperTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\BooleanConverterTests.cs">
+      <Link>TypeConversion\BooleanConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\ByteConverterTests.cs">
+      <Link>TypeConversion\ByteConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\CharConverterTests.cs">
+      <Link>TypeConversion\CharConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeConverterTests.cs">
+      <Link>TypeConversion\DateTimeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumConverterTests.cs">
+      <Link>TypeConversion\EnumConverterTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumerableConverterTests.cs">
-      <Link>EnumerableConverterTests.cs</Link>
+      <Link>TypeConversion\EnumerableConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterFactoryTests.cs">
+      <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterTests.cs">
+      <Link>TypeConversion\TypeConverterTests.cs</Link>
     </Compile>
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

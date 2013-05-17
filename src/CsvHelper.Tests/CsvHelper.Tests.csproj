@@ -83,6 +83,7 @@
     <Compile Include="TypeConversion\DateTimeConverterTests.cs" />
     <Compile Include="TypeConversion\EnumerableConverterTests.cs" />
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
+    <Compile Include="TypeConversion\TypeConverterTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CsvHelper.snk" />

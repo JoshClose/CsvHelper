@@ -15,18 +15,18 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="value">The object to convert to a string.</param>
 		/// <returns>The string representation of the object.</returns>
-		string ConvertToString( CultureInfo culture, object value );
+		string ConvertToString( TypeConverterOptions options, object value );
 
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <returns>The object created from the string.</returns>
-		object ConvertFromString( CultureInfo culture, string text );
+		object ConvertFromString( TypeConverterOptions options, string text );
 
 		/// <summary>
 		/// Determines whether this instance [can convert from] the specified type.

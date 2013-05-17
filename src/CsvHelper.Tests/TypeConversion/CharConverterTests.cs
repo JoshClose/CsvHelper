@@ -20,25 +20,31 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new CharConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
+			Assert.AreEqual( "a", converter.ConvertToString( typeConverterOptions, 'a' ) );
 
-			Assert.AreEqual( "a", converter.ConvertToString( CultureInfo.CurrentCulture, 'a' ) );
+			Assert.AreEqual( "True", converter.ConvertToString( typeConverterOptions, true ) );
 
-			Assert.AreEqual( "True", converter.ConvertToString( CultureInfo.CurrentCulture, true ) );
-
-			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
+			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new CharConverter();
-
-			Assert.AreEqual( 'a', converter.ConvertFromString( CultureInfo.CurrentCulture, "a" ) );
-			Assert.AreEqual( 'a', converter.ConvertFromString( CultureInfo.CurrentCulture, " a " ) );
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
+			Assert.AreEqual( 'a', converter.ConvertFromString( typeConverterOptions, "a" ) );
+			Assert.AreEqual( 'a', converter.ConvertFromString( typeConverterOptions, " a " ) );
 
 			try
 			{
-				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
+				converter.ConvertFromString( typeConverterOptions, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

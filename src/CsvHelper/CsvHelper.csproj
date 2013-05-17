@@ -118,6 +118,7 @@
     <Compile Include="TypeConversion\SByteConverter.cs" />
     <Compile Include="TypeConversion\StringConverter.cs" />
     <Compile Include="TypeConversion\DefaultTypeConverter.cs" />
+    <Compile Include="TypeConversion\TypeConverterOptions.cs" />
     <Compile Include="TypeConversion\TypeConverterFactory.cs" />
     <Compile Include="TypeConversion\UInt32Converter.cs" />
     <Compile Include="TypeConversion\UInt64Converter.cs" />

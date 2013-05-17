@@ -36,25 +36,33 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new EnumConverter( typeof( TestEnum ) );
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
-			Assert.AreEqual( "None", converter.ConvertToString( CultureInfo.CurrentCulture, (TestEnum)0 ) );
-			Assert.AreEqual( "None", converter.ConvertToString( CultureInfo.CurrentCulture, TestEnum.None ) );
-			Assert.AreEqual( "One", converter.ConvertToString( CultureInfo.CurrentCulture, (TestEnum)1 ) );
-			Assert.AreEqual( "One", converter.ConvertToString( CultureInfo.CurrentCulture, TestEnum.One ) );
-			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
+			Assert.AreEqual( "None", converter.ConvertToString( typeConverterOptions, (TestEnum)0 ) );
+			Assert.AreEqual( "None", converter.ConvertToString( typeConverterOptions, TestEnum.None ) );
+			Assert.AreEqual( "One", converter.ConvertToString( typeConverterOptions, (TestEnum)1 ) );
+			Assert.AreEqual( "One", converter.ConvertToString( typeConverterOptions, TestEnum.One ) );
+			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new EnumConverter( typeof( TestEnum ) );
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
-			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( CultureInfo.CurrentCulture, "One" ) );
-			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( CultureInfo.CurrentCulture, "one" ) );
-			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( CultureInfo.CurrentCulture, "1" ) );
+			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( typeConverterOptions, "One" ) );
+			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( typeConverterOptions, "one" ) );
+			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( typeConverterOptions, "1" ) );
 			try
 			{
-				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( CultureInfo.CurrentCulture, "" ) );
+				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( typeConverterOptions, "" ) );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )
@@ -63,7 +71,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( CultureInfo.CurrentCulture, null ) );
+				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( typeConverterOptions, null ) );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

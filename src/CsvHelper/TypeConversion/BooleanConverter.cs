@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
 using System.Globalization;
 
 namespace CsvHelper.TypeConversion
@@ -14,10 +16,10 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( CultureInfo culture, string text )
+		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
 			bool b;
 			if( bool.TryParse( text, out b ) )
@@ -39,19 +41,23 @@ namespace CsvHelper.TypeConversion
 			}
 
 			var t = ( text ?? string.Empty ).Trim();
-			if( culture.CompareInfo.Compare( "yes", t, CompareOptions.IgnoreCase ) == 0 ||
-				culture.CompareInfo.Compare( "y", t, CompareOptions.IgnoreCase ) == 0 )
+			foreach( var trueValue in options.BooleanTrueValues )
 			{
-				return true;
+				if( options.CultureInfo.CompareInfo.Compare( trueValue, t, CompareOptions.IgnoreCase ) == 0 )
+				{
+					return true;
+				}
 			}
 
-			if( culture.CompareInfo.Compare( "no", t, CompareOptions.IgnoreCase ) == 0 ||
-				culture.CompareInfo.Compare( "n", t, CompareOptions.IgnoreCase ) == 0 )
+			foreach( var falseValue in options.BooleanFalseValues )
 			{
-				return false;
+				if( options.CultureInfo.CompareInfo.Compare( falseValue, t, CompareOptions.IgnoreCase ) == 0 )
+				{
+					return false;
+				}
 			}
 
-			return base.ConvertFromString( culture, text );
+			return base.ConvertFromString( options, text );
 		}
 
 		/// <summary>
@@ -61,7 +67,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>
 		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
 		/// </returns>
-		public override bool CanConvertFrom( System.Type type )
+		public override bool CanConvertFrom( Type type )
 		{
 			// We only care about strings.
 			return type == typeof( string );

@@ -15,23 +15,20 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="value">The object to convert to a string.</param>
 		/// <returns>The string representation of the object.</returns>
-		public virtual string ConvertToString( CultureInfo culture, object value )
+		public virtual string ConvertToString( TypeConverterOptions options, object value )
 		{
 			if( value == null )
 			{
 				return string.Empty;
 			}
 
-			if( culture != null && !Equals( culture, CultureInfo.CurrentCulture ) )
+			var formattable = value as IFormattable;
+			if( formattable != null )
 			{
-				var formattable = value as IFormattable;
-				if( formattable != null )
-				{
-					return formattable.ToString( null, culture );
-				}
+				return formattable.ToString( options.Format, options.CultureInfo );
 			}
 
 			return value.ToString();
@@ -40,10 +37,10 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <returns>The object created from the string.</returns>
-		public virtual object ConvertFromString( CultureInfo culture, string text )
+		public virtual object ConvertFromString( TypeConverterOptions options, string text )
 		{
 			throw new CsvTypeConverterException( "The conversion cannot be performed." );
 		}

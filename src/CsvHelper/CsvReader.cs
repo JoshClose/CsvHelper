@@ -310,7 +310,11 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		public virtual object GetField( int index, ITypeConverter converter )
 		{
-			return converter.ConvertFromString( Configuration.CultureInfo, currentRecord[index] );
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = configuration.CultureInfo
+			};
+			return converter.ConvertFromString( typeConverterOptions, currentRecord[index] );
 		}
 
 		/// <summary>
@@ -1206,10 +1210,14 @@ namespace CsvHelper
 
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				var culture = Expression.Constant( Configuration.CultureInfo );
+				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+				{
+					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
+				}
+				var typeConverterOptions = Expression.Constant( propertyMap.Data.TypeConverterOptions );
 
 				// Create type converter expression.
-				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, culture, fieldExpression );
+				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, typeConverterOptions, fieldExpression );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
 
 				if( propertyMap.Data.IsDefaultSet )

@@ -20,33 +20,41 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new DateTimeConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( CultureInfo.CurrentCulture, dateTime ) );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( typeConverterOptions, dateTime ) );
 
 			// Invalid conversions.
-			Assert.AreEqual( "1", converter.ConvertToString( CultureInfo.CurrentCulture, 1 ) );
-			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( typeConverterOptions, 1 ) );
+			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new DateTimeConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( CultureInfo.CurrentCulture, dateTime.ToString() ).ToString() );
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( CultureInfo.CurrentCulture, dateTime.ToString( "o" ) ).ToString() );
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( CultureInfo.CurrentCulture, " " + dateTime + " " ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( typeConverterOptions, dateTime.ToString() ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( typeConverterOptions, dateTime.ToString( "o" ) ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( typeConverterOptions, " " + dateTime + " " ).ToString() );
 
 			// Invalid conversions.
 			try
 			{
-				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
+				converter.ConvertFromString( typeConverterOptions, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

@@ -257,6 +257,9 @@
     <Compile Include="..\csvhelper\typeconversion\TypeConverterFactory.cs">
       <Link>TypeConversion\TypeConverterFactory.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterOptions.cs">
+      <Link>TypeConversion\TypeConverterOptions.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper\typeconversion\UInt16Converter.cs">
       <Link>TypeConversion\UInt16Converter.cs</Link>
     </Compile>

@@ -372,23 +372,13 @@ namespace CsvHelper.Example
 
 		public class CustomTypeTypeConverter : ITypeConverter
 		{
-			public string ConvertToString( object value )
-			{
-				return ConvertToString( CultureInfo.CurrentCulture, value );
-			}
-
-			public string ConvertToString( CultureInfo culture, object value )
+			public string ConvertToString( TypeConverterOptions options, object value )
 			{
 				var obj = (CustomType)value;
 				return string.Format( "{0}|{1}|{2}", obj.First, obj.Second, obj.Third );
 			}
 
-			public object ConvertFromString( string text )
-			{
-				return ConvertFromString( CultureInfo.CurrentCulture, text );
-			}
-
-			public object ConvertFromString( CultureInfo culture, string text )
+			public object ConvertFromString( TypeConverterOptions options, string text )
 			{
 				var values = ( (string)text ).Split( '|' );
 

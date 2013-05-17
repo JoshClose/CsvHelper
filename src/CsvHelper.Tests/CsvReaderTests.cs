@@ -957,7 +957,7 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : DefaultTypeConverter
 		{
-			public override object ConvertFromString( CultureInfo culture, string text )
+			public override object ConvertFromString( TypeConverterOptions options, string text )
 			{
 				return "test";
 			}

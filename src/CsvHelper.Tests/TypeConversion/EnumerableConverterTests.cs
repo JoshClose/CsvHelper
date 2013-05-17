@@ -8,11 +8,11 @@ using System.Globalization;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 using System.IO;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -23,12 +23,16 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertTest()
 		{
 			var converter = new EnumerableConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
 			Assert.IsTrue( converter.CanConvertFrom( typeof( string ) ) );
 			Assert.IsTrue( converter.CanConvertTo( typeof( string ) ) );
 			try
 			{
-				converter.ConvertFromString( CultureInfo.CurrentCulture, "" );
+				converter.ConvertFromString( typeConverterOptions, "" );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )
@@ -36,7 +40,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 			try
 			{
-				converter.ConvertToString( CultureInfo.CurrentCulture, 5 );
+				converter.ConvertToString( typeConverterOptions, 5 );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

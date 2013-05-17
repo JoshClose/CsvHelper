@@ -20,23 +20,31 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new ByteConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
-			Assert.AreEqual( "123", converter.ConvertToString( CultureInfo.CurrentCulture, (byte)123 ) );
+			Assert.AreEqual( "123", converter.ConvertToString( typeConverterOptions, (byte)123 ) );
 
-			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
+			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new ByteConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
-			Assert.AreEqual( (byte)123, converter.ConvertFromString( CultureInfo.CurrentCulture, "123" ) );
-			Assert.AreEqual( (byte)123, converter.ConvertFromString( CultureInfo.CurrentCulture, " 123 " ) );
+			Assert.AreEqual( (byte)123, converter.ConvertFromString( typeConverterOptions, "123" ) );
+			Assert.AreEqual( (byte)123, converter.ConvertFromString( typeConverterOptions, " 123 " ) );
 
 			try
 			{
-				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
+				converter.ConvertFromString( typeConverterOptions, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

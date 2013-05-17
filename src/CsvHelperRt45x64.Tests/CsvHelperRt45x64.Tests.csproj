@@ -196,6 +196,9 @@
     <Compile Include="..\csvhelper.tests\typeconversion\TypeConverterFactoryTests.cs">
       <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterTests.cs">
+      <Link>TypeConversion\TypeConverterTests.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -20,48 +20,56 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new BooleanConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
-			Assert.AreEqual( "True", converter.ConvertToString( CultureInfo.CurrentCulture, true ) );
+			Assert.AreEqual( "True", converter.ConvertToString( typeConverterOptions, true ) );
 
-			Assert.AreEqual( "False", converter.ConvertToString( CultureInfo.CurrentCulture, false ) );
+			Assert.AreEqual( "False", converter.ConvertToString( typeConverterOptions, false ) );
 
-			Assert.AreEqual( "", converter.ConvertToString( CultureInfo.CurrentCulture, null ) );
-			Assert.AreEqual( "1", converter.ConvertToString( CultureInfo.CurrentCulture, 1 ) );
+			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( typeConverterOptions, 1 ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new BooleanConverter();
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
 
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "true" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "True" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "TRUE" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "1" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "yes" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "YES" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "y" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "Y" ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " true " ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " yes " ) );
-			Assert.IsTrue( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " y " ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "true" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "True" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "TRUE" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "1" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "yes" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "YES" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "y" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, "Y" ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, " true " ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, " yes " ) );
+			Assert.IsTrue( (bool)converter.ConvertFromString( typeConverterOptions, " y " ) );
 
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "false" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "False" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "FALSE" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "0" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "no" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "NO" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "n" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, "N" ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " false " ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " 0 " ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " no " ) );
-			Assert.IsFalse( (bool)converter.ConvertFromString( CultureInfo.CurrentCulture, " n " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "false" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "False" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "FALSE" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "0" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "no" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "NO" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "n" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, "N" ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, " false " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, " 0 " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, " no " ) );
+			Assert.IsFalse( (bool)converter.ConvertFromString( typeConverterOptions, " n " ) );
 
 			try
 			{
-				converter.ConvertFromString( CultureInfo.CurrentCulture, null );
+				converter.ConvertFromString( typeConverterOptions, null );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

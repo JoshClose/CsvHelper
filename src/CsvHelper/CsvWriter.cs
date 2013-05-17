@@ -179,7 +179,11 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var fieldString = converter.ConvertToString( Configuration.CultureInfo, field );
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = configuration.CultureInfo
+			};
+			var fieldString = converter.ConvertToString( typeConverterOptions, field );
 			WriteField( fieldString );
 		}
 
@@ -574,7 +578,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( string.IsNullOrEmpty( propertyMap.Data.Format ) && ( propertyMap.Data.TypeConverter == null || !propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) ) )
+				if( propertyMap.Data.TypeConverter == null || !propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) )
 				{
 					// Skip if the type isn't convertible.
 					continue;
@@ -585,22 +589,15 @@ namespace CsvHelper
 
 				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.Data.Property );
 				
-				if( !string.IsNullOrEmpty( propertyMap.Data.Format ) )
+				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
+				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
 				{
-					// Use string.Format instead of TypeConverter.
-					var formatExpression = Expression.Constant( propertyMap.Data.Format );
-					var method = typeof( string ).GetMethod( "Format", new[] { typeof( IFormatProvider ), typeof( string ), typeof( object[] ) } );
-					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.NewArrayInit( typeof( object ), fieldExpression );
-					fieldExpression = Expression.Call( method, Expression.Constant( Configuration.CultureInfo ), formatExpression, fieldExpression );
+					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
-				else
-				{
-					var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-					var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( CultureInfo ), typeof( object ) } );
-					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( Configuration.CultureInfo ), fieldExpression );
-				}
+				var typeConverterOptions = Expression.Constant( propertyMap.Data.TypeConverterOptions );
+				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( TypeConverterOptions ), typeof( object ) } );
+				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptions, fieldExpression );
 
 				var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 				fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );

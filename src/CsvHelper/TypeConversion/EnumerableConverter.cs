@@ -18,10 +18,10 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Throws an exception.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( CultureInfo culture, string text )
+		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
 			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field. " +
 			                                     "If you want to do this, create your own ITypeConverter and register " +
@@ -31,10 +31,10 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Throws an exception.
 		/// </summary>
-		/// <param name="culture">The culture used when converting.</param>
+		/// <param name="options">The options to use when converting.</param>
 		/// <param name="value">The object to convert to a string.</param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( CultureInfo culture, object value )
+		public override string ConvertToString( TypeConverterOptions options, object value )
 		{
 			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field. " +
 												 "If you want to do this, create your own ITypeConverter and register " +

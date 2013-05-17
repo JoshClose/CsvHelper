@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -138,13 +139,83 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// The format the <see cref="ICsvWriter"/> will use instead
-		/// of a <see cref="TypeConverter"/> to convert the value to a string.
+		/// The <see cref="CultureInfo"/> used when type converting.
+		/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
+		/// setting.
+		/// </summary>
+		/// <param name="cultureInfo">The culture info.</param>
+		public virtual CsvPropertyMap TypeConverterOption( CultureInfo cultureInfo )
+		{
+			data.TypeConverterOptions.CultureInfo = cultureInfo;
+			return this;
+		}
+
+		/// <summary>
+		/// The <see cref="DateTimeStyles"/> to use when type converting.
+		/// This is used when doing any <see cref="DateTime"/> conversions.
+		/// </summary>
+		/// <param name="dateTimeStyle">The date time style.</param>
+		public virtual CsvPropertyMap TypeConverterOption( DateTimeStyles dateTimeStyle )
+		{
+			data.TypeConverterOptions.DateTimeStyle = dateTimeStyle;
+			return this;
+		}
+
+		/// <summary>
+		/// The <see cref="NumberStyles"/> to use when type converting.
+		/// This is used when doing any number conversions.
+		/// </summary>
+		/// <param name="numberStyle"></param>
+		public virtual CsvPropertyMap TypeConverterOption( NumberStyles numberStyle )
+		{
+			data.TypeConverterOptions.NumberStyle = numberStyle;
+			return this;
+		}
+
+		/// <summary>
+		/// The string format to be used when type converting.
 		/// </summary>
 		/// <param name="format">The format.</param>
-		public virtual CsvPropertyMap Format( string format )
+		public virtual CsvPropertyMap TypeConverterOption( string format )
 		{
-			data.Format = format;
+			data.TypeConverterOptions.Format = format;
+			return this;
+		}
+
+		/// <summary>
+		/// The string values used to represent a boolean when converting.
+		/// </summary>
+		/// <param name="isTrue">A value indicating whether true values or false values are being set.</param>
+		/// <param name="booleanValues">The string boolean values.</param>
+		public virtual CsvPropertyMap TypeConverterOption( bool isTrue, params string[] booleanValues )
+		{
+			return TypeConverterOption( isTrue, true, booleanValues );
+		}
+
+		/// <summary>
+		/// The string values used to represent a boolean when converting.
+		/// </summary>
+		/// <param name="isTrue">A value indicating whether true values or false values are being set.</param>
+		/// <param name="clearValues">A value indication if the current values should be cleared before adding the new ones.</param>
+		/// <param name="booleanValues">The string boolean values.</param>
+		public virtual CsvPropertyMap TypeConverterOption( bool isTrue, bool clearValues, params string[] booleanValues )
+		{
+			if( isTrue )
+			{
+				if( clearValues )
+				{
+					data.TypeConverterOptions.BooleanTrueValues.Clear();
+				}
+				data.TypeConverterOptions.BooleanTrueValues.AddRange( booleanValues );
+			}
+			else
+			{
+				if( clearValues )
+				{
+					data.TypeConverterOptions.BooleanFalseValues.Clear();
+				}
+				data.TypeConverterOptions.BooleanFalseValues.AddRange( booleanValues );
+			}
 			return this;
 		}
 	}
