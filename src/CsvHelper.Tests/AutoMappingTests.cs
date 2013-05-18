@@ -196,11 +196,41 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void AutoMapWithExistingMapTest()
+		{
+			var config = new CsvConfiguration();
+			config.Maps.Add( new SimpleMap() );
+			var data = new
+			{
+				Simple = new Simple
+				{
+					Id = 1,
+					Name = "one"
+				}
+			};
+			var map = config.AutoMap( data.GetType() );
+
+			Assert.IsNotNull( map );
+			Assert.AreEqual( 0, map.PropertyMaps.Count );
+			Assert.AreEqual( 1, map.ReferenceMaps.Count );
+			Assert.IsInstanceOfType( map.ReferenceMaps[0].Mapping, typeof( SimpleMap ) );
+		}
+
 		private class Simple
 		{
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+		}
+
+		private sealed class SimpleMap : CsvClassMap<Simple>
+		{
+			public SimpleMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
 		}
 
 		private class A

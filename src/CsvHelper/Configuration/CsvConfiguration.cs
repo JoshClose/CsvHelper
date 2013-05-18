@@ -324,6 +324,12 @@ namespace CsvHelper.Configuration
 				                                     "WriteRecords which acts on a list of records?" );
 			}
 
+			if( maps[type] != null )
+			{
+				// If the map already exists, use it.
+				return maps[type];
+			}
+
 #if WINRT_4_5
 			var properties = type.GetProperties();
 #else
