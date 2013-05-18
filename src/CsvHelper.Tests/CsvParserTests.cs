@@ -1209,5 +1209,24 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "3", row[2] );
 			}
 		}
+		
+		[TestMethod]
+		public void RawRecordCorruptionTest()
+		{
+			var val = new string( 'a', 2038 ) + ",b\r\n";
+			val += "test1,test2";
+
+			using( var reader = new StringReader( val ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				var originalRows = val.Split( new[] { '\n' } );
+				var rowNumber = 0;
+				while( ( parser.Read() ) != null )
+				{
+					var originalRowData = originalRows[rowNumber++];
+					Assert.AreEqual( originalRowData.TrimEnd(), parser.RawRecord.TrimEnd() );
+				}
+			}
+		}
 	}
 }

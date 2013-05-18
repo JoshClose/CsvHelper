@@ -417,16 +417,13 @@ namespace CsvHelper
 			{
 				// We need to read more of the stream.
 
-				if( fieldStartPosition != readerBufferPosition )
-				{
-					// The buffer ran out. Take the current
-					// text and add it to the field.
-					AppendField( ref field, fieldStartPosition, fieldLength );
-					UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
-					fieldLength = 0;
+				// The buffer ran out. Take the current
+				// text and add it to the field.
+				AppendField( ref field, fieldStartPosition, fieldLength );
+				UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+				fieldLength = 0;
 
-					RawRecord += new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition );
-				}
+				RawRecord += new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition );
 
 				charsRead = reader.Read( readerBuffer, 0, readerBuffer.Length );
 				readerBufferPosition = 0;
