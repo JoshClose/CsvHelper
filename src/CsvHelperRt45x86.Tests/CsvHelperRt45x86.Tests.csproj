@@ -224,7 +224,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CsvHelperRt45\CsvHelperRt45x86.csproj">
+    <ProjectReference Include="..\CsvHelperRt45x86\CsvHelperRt45x86.csproj">
       <Project>{94f068ba-019d-4d70-9967-28387aba6f29}</Project>
       <Name>CsvHelperRt45x86</Name>
     </ProjectReference>
