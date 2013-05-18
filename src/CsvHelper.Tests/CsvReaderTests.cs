@@ -818,7 +818,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-#if !NET_3_5
+#if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()
 		{
