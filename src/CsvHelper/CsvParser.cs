@@ -25,7 +25,6 @@ namespace CsvHelper
 		private readonly char[] readerBuffer;
 		private int readerBufferPosition;
 		private int charsRead;
-		private int columnCount;
 		private string[] record;
 		private int currentRow;
 		private readonly CsvConfiguration configuration;
@@ -109,7 +108,7 @@ namespace CsvHelper
 
 				if( configuration.DetectColumnCountChanges && row != null )
 				{
-					if( columnCount > 0 && ( columnCount != row.Length || 
+					if( FieldCount > 0 && ( FieldCount != row.Length || 
 #if NET_2_0
 						EnumerableHelper.Any( row, field => field == null )
 #else
@@ -119,7 +118,6 @@ namespace CsvHelper
 					{
 						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
 					}
-					columnCount = row.Length;
 				}
 
 				return row;
@@ -142,7 +140,16 @@ namespace CsvHelper
 			{
 				// Resize record if it's too small.
 				Array.Resize( ref record, recordPosition + 1 );
-				FieldCount = record.Length;
+
+				// Set the field count. If there is a header
+				// record, then we can go by the number of
+				// headers there is. If there is no header
+				// record, then we can go by the first row.
+				// Either way, we're using the first row.
+				if( currentRow == 1 )
+				{
+					FieldCount = record.Length;
+				}
 			}
 
 			record[recordPosition] = field;
