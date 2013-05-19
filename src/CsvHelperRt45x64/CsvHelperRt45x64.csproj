@@ -107,7 +107,7 @@
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\csvhelperrt45\missingfromrt45\ReflectionExtensions.cs">
+    <Compile Include="..\CsvHelperRt45x86\MissingFromRt45\ReflectionExtensions.cs">
       <Link>MissingFromRt45\ReflectionExtensions.cs</Link>
     </Compile>
     <Compile Include="..\csvhelper\configuration\CsvClassMap.cs">

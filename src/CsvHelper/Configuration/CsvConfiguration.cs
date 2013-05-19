@@ -273,13 +273,32 @@ namespace CsvHelper.Configuration
 		public virtual bool SkipEmptyRecords { get; set; }
 
 		/// <summary>
-		/// Ignore the private get and set accessors and
-		/// read and write from the property anyway.
+		/// Gets or sets a value indicating if private
+		/// get and set property accessors should be
+		/// ignored when reading and writing.
 		/// True to ignore, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool IgnorePrivateAccessor { get; set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether
+		/// exceptions that occur duruing reading
+		/// should be ignored. True to ignore exceptions,
+		/// otherwise false. Default is false.
+		/// This is only applicable when during
+		/// <see cref="ICsvReader.GetRecords{T}"/>.
+		/// </summary>
+		public virtual bool IgnoreReadingExceptions { get; set; }
+
 #if !NET_2_0
+		/// <summary>
+		/// Gets or sets the callback that is called when a reading
+		/// exception occurs. This will only happen when
+		/// <see cref="IgnoreReadingExceptions"/> is true, and when
+		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
+		/// </summary>
+		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
+
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
 		/// When using a class map, no properties are mapped by default.

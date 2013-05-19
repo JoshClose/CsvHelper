@@ -818,6 +818,36 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void IgnoreExceptionsTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "BoolColumn", "BoolNullableColumn", "StringColumn" } );
+			queue.Enqueue( new[] { "1", "1", "one" } );
+			queue.Enqueue( new[] { "two", "1", "two" } );
+			queue.Enqueue( new[] { "1", "1", "three" } );
+			queue.Enqueue( new[] { "four", "1", "four" } );
+			queue.Enqueue( new[] { "1", "1", "five" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+			var csv = new CsvReader( parserMock );
+			csv.Configuration.IgnoreReadingExceptions = true;
+			var callbackCount = 0;
+			csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
+			{
+				callbackCount++;
+			};
+
+			var records = csv.GetRecords<TestBoolean>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 3, records.Count );
+			Assert.AreEqual( 2, callbackCount );
+			Assert.AreEqual( "one", records[0].StringColumn );
+			Assert.AreEqual( "three", records[1].StringColumn );
+			Assert.AreEqual( "five", records[2].StringColumn );
+		}
+
 #if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()

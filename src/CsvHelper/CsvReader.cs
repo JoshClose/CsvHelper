@@ -781,6 +781,18 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
+					if( configuration.IgnoreReadingExceptions )
+					{
+#if !NET_2_0
+						if( configuration.ReadingExceptionCallback != null )
+						{
+							configuration.ReadingExceptionCallback( ex, this );
+						}
+#endif
+
+						continue;
+					}
+
 					ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
 					throw;
 				}
@@ -811,9 +823,22 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
+					if( configuration.IgnoreReadingExceptions )
+					{
+#if !NET_2_0
+						if( configuration.ReadingExceptionCallback != null )
+						{
+							configuration.ReadingExceptionCallback( ex, this );
+						}
+#endif
+
+						continue;
+					}
+
 					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
 					throw;
 				}
+
 				yield return record;
 			}
 		}

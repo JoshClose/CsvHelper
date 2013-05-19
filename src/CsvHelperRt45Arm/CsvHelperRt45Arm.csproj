@@ -104,7 +104,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\CsvHelperRt45\MissingFromRt45\ReflectionExtensions.cs">
+    <Compile Include="..\CsvHelperRt45x86\MissingFromRt45\ReflectionExtensions.cs">
       <Link>MissingFromRt45\ReflectionExtensions.cs</Link>
     </Compile>
     <Compile Include="..\csvhelper\configuration\CsvClassMap.cs">
