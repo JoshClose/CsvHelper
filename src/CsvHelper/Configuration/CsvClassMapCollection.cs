@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +10,8 @@ using System.Linq;
 using System.Reflection;
 using CsvHelper.MissingFromRt45;
 #endif
-using CsvHelper.Configuration;
 
-namespace CsvHelper
+namespace CsvHelper.Configuration
 {
 	/// <summary>
 	/// Collection that holds CsvClassMaps for record types.

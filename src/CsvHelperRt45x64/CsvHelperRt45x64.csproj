@@ -113,6 +113,9 @@
     <Compile Include="..\csvhelper\configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvClassMapCollection.cs">
+      <Link>Configuration\CsvClassMapCollection.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper\configuration\CsvClassMap`1.cs">
       <Link>Configuration\CsvClassMap`1.cs</Link>
     </Compile>
@@ -142,9 +145,6 @@
     </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
-    </Compile>
-    <Compile Include="..\CsvHelper\CsvClassMapCollection.cs">
-      <Link>CsvClassMapCollection.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\CsvHelperException.cs">
       <Link>CsvHelperException.cs</Link>
