@@ -26,7 +26,7 @@ namespace CsvHelper.Configuration
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
 #endif
 		private bool hasHeaderRecord = true;
-		private bool isStrictMode = true;
+		private bool willThrowOnMissingField = true;
 		private string delimiter = ",";
 		private char quote = '"';
 		private char comment = '#';
@@ -75,15 +75,15 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets a value indicating if strict reading is enabled.
-		/// True to enable strict reading, otherwise false.
-		/// Strict reading will cause a <see cref="CsvMissingFieldException" />
-		/// to be thrown if a named index is not found.
+		/// Gets or sets a value indicating if an exception will be
+		/// thrown if a field defined in a mapping is missing.
+		/// True to throw an exception, otherwise false.
+		/// Default is true.
 		/// </summary>
-		public virtual bool IsStrictMode
+		public virtual bool WillThrowOnMissingField
 		{
-			get { return isStrictMode; }
-			set { isStrictMode = value; }
+			get { return willThrowOnMissingField; }
+			set { willThrowOnMissingField = value; }
 		}
 
 		/// <summary>

@@ -252,7 +252,7 @@ namespace CsvHelper
 
 			if( index >= currentRecord.Length )
 			{
-				if( configuration.IsStrictMode )
+				if( configuration.WillThrowOnMissingField )
 				{
 					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
 				}
@@ -407,7 +407,7 @@ namespace CsvHelper
 
 			if( index >= currentRecord.Length )
 			{
-				if( configuration.IsStrictMode )
+				if( configuration.WillThrowOnMissingField )
 				{
 					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
 				}
@@ -1003,7 +1003,7 @@ namespace CsvHelper
 #endif
 			if( name == null )
 			{
-				if( configuration.IsStrictMode )
+				if( configuration.WillThrowOnMissingField )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.

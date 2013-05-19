@@ -176,7 +176,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.IsStrictMode = false;
+			reader.Configuration.WillThrowOnMissingField = false;
 			reader.Read();
 
 			try
@@ -199,7 +199,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue( data2 );
 			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = true } };
 			reader.Read();
 
 			try
@@ -221,7 +221,7 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = true } };
 			reader.Read();
 
 			try
@@ -243,7 +243,7 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = true } };
 			reader.Read();
 
 			try
@@ -265,7 +265,7 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = false } };
+			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = false } };
 			reader.Read();
 
 			Assert.IsNull( reader.GetField( 2 ) );
@@ -282,7 +282,7 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock )
 			{
-				Configuration = { IsStrictMode = false }
+				Configuration = { WillThrowOnMissingField = false }
 			};
 			reader.Read();
 
@@ -320,7 +320,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.IsStrictMode = true;
+			reader.Configuration.WillThrowOnMissingField = true;
 			reader.Read();
 		}
 
@@ -346,7 +346,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.WillThrowOnMissingField = false;
 			csv.Configuration.ClassMapping<TestRecordMap>();
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
@@ -380,7 +380,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.WillThrowOnMissingField = false;
 			csv.Configuration.ClassMapping<TestRecordMap>();
 			csv.Read();
 			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ));
@@ -410,7 +410,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.WillThrowOnMissingField = false;
 			csv.Configuration.ClassMapping<TestRecordMap>();
 			var records = csv.GetRecords<TestRecord>().ToList();
 
@@ -445,7 +445,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.IsStrictMode = false;
+			csv.Configuration.WillThrowOnMissingField = false;
 			csv.Configuration.ClassMapping<TestRecordMap>();
 			var records = csv.GetRecords( typeof( TestRecord ) ).ToList();
 
@@ -480,7 +480,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.IsStrictMode = true;
+			csv.Configuration.WillThrowOnMissingField = true;
 			csv.Configuration.ClassMapping<TestRecordDuplicateHeaderNamesMap>();
 			var records = csv.GetRecords<TestRecordDuplicateHeaderNames>().ToList();
 
@@ -584,7 +584,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue( null );
 			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { IsStrictMode = true } };
+			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = true } };
 			reader.Read();
 
 			int field;
@@ -781,7 +781,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csvReader.Configuration.IsStrictMode = false;
+				csvReader.Configuration.WillThrowOnMissingField = false;
 				csvReader.Configuration.ClassMapping<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual( 2, records.Count() );
