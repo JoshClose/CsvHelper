@@ -179,14 +179,7 @@ namespace CsvHelper.Tests
 			reader.Configuration.WillThrowOnMissingField = false;
 			reader.Read();
 
-			try
-			{
-				reader.GetField<string>( "blah" );
-				Assert.Fail();
-			}
-			catch( IndexOutOfRangeException )
-			{
-			}
+			Assert.IsNull( reader.GetField<string>( "blah" ) );
 		}
 
 		[TestMethod]
@@ -207,8 +200,9 @@ namespace CsvHelper.Tests
 				reader.GetField<string>( "blah" );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException )
+			catch( CsvMissingFieldException ex )
 			{
+				Assert.AreEqual( "Fields 'blah' do not exist in the CSV file.", ex.Message );
 			}
 		}
 
@@ -229,8 +223,9 @@ namespace CsvHelper.Tests
 				reader.GetField( 2 );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException )
+			catch( CsvMissingFieldException ex )
 			{
+				Assert.AreEqual( "Field at index '2' does not exist.", ex.Message );
 			}
 		}
 
@@ -251,8 +246,9 @@ namespace CsvHelper.Tests
 				reader.GetField<string>( 2 );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException )
+			catch( CsvMissingFieldException ex )
 			{
+				Assert.AreEqual( "Field at index '2' does not exist.", ex.Message );
 			}
 		}
 

@@ -405,12 +405,13 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			if( index >= currentRecord.Length )
+			if( index >= currentRecord.Length || index < 0 )
 			{
 				if( configuration.WillThrowOnMissingField )
 				{
 					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
 				}
+
 				return default( T );
 			}
 			
@@ -1035,6 +1036,7 @@ namespace CsvHelper
 					var namesJoined = string.Format( "'{0}'", string.Join( "', '", names ) );
 					throw new CsvMissingFieldException( string.Format( "Fields {0} do not exist in the CSV file.", namesJoined ) );
 				}
+
 				return -1;
 			}
 
