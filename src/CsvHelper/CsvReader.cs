@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if NET_2_0
@@ -999,34 +1000,25 @@ namespace CsvHelper
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
 
-			if( !Configuration.IsCaseSensitive )
-			{
-				for( var i = 0; i < names.Length; i++ )
-				{
-					names[i] = names[i].ToLower();
-				}
-			}
-
-			var compareOptions = !Configuration.IsCaseSensitive ? CompareOptions.IgnoreCase : CompareOptions.None;
-#if !NET_2_0
-			var name =
-				( from i in namedIndexes
-				  from n in names
-				  where Configuration.CultureInfo.CompareInfo.Compare( i.Key, n, compareOptions ) == 0
-				  select i.Key ).SingleOrDefault();
-#else
+			var compareOptions = !Configuration.IsHeaderCaseSensitive ? CompareOptions.IgnoreCase : CompareOptions.None;
 			string name = null;
 			foreach( var pair in namedIndexes )
 			{
+				var namedIndex = pair.Key;
+				if( configuration.IgnoreHeaderWhiteSpace )
+				{
+					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
+				}
+
 				foreach( var n in names )
 				{
-					if( Configuration.CultureInfo.CompareInfo.Compare( pair.Key, n, compareOptions ) == 0 )
+					if( Configuration.CultureInfo.CompareInfo.Compare( namedIndex, n, compareOptions ) == 0 )
 					{
 						name = pair.Key;
 					}
 				}
 			}
-#endif
+
 			if( name == null )
 			{
 				if( configuration.WillThrowOnMissingField )
@@ -1056,7 +1048,7 @@ namespace CsvHelper
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];
-				if( !Configuration.IsCaseSensitive )
+				if( !Configuration.IsHeaderCaseSensitive )
 				{
 					name = name.ToLower();
 				}

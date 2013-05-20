@@ -31,7 +31,7 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private char comment = '#';
 		private int bufferSize = 2048;
-		private bool isCaseSensitive = true;
+		private bool isHeaderCaseSensitive = true;
 		private Encoding encoding = Encoding.UTF8;
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields;
@@ -99,13 +99,20 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets a value indicating whether matching header
 		/// column names is case sensitive. True for case sensitive
-		/// matching, otherwise false.
+		/// matching, otherwise false. Default is true.
 		/// </summary>
-		public virtual bool IsCaseSensitive
+		public virtual bool IsHeaderCaseSensitive
 		{
-			get { return isCaseSensitive; }
-			set { isCaseSensitive = value; }
+			get { return isHeaderCaseSensitive; }
+			set { isHeaderCaseSensitive = value; }
 		}
+
+		/// <summary>
+		/// Gets or sets a value indicating whether matcher header
+		/// column names will ignore white space. True to ignore
+		/// white space, otherwise false, Default is false.
+		/// </summary>
+		public virtual bool IgnoreHeaderWhiteSpace { get; set; }
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.

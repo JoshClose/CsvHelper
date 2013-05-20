@@ -663,13 +663,30 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.IsCaseSensitive = false;
+				csv.Configuration.IsHeaderCaseSensitive = false;
 				csv.Read();
 
 				Assert.AreEqual( "1", csv.GetField( "one" ) );
 				Assert.AreEqual( "2", csv.GetField( "TWO" ) );
 				Assert.AreEqual( "3", csv.GetField( "ThreE" ) );
 			}
+		}
+
+		[TestMethod]
+		public void SpacesInHeaderTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { " Int Column ", " String Column " } );
+			queue.Enqueue( new[] { "1", "one" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.IgnoreHeaderWhiteSpace = true;
+			var data = reader.GetRecords<TestDefaultValues>().ToList();
+			Assert.IsNotNull( data );
+			Assert.AreEqual( 1, data.Count );
+			Assert.AreEqual( 1, data[0].IntColumn );
+			Assert.AreEqual( "one", data[0].StringColumn );
 		}
 
 		[TestMethod]
