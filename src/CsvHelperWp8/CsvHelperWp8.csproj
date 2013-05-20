@@ -151,14 +151,8 @@
     <Compile Include="..\CsvHelper\ICsvParser.cs">
       <Link>ICsvParser.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper\ICsvParserExceptionInfo.cs">
-      <Link>ICsvParserExceptionInfo.cs</Link>
-    </Compile>
     <Compile Include="..\CsvHelper\ICsvReader.cs">
       <Link>ICsvReader.cs</Link>
-    </Compile>
-    <Compile Include="..\CsvHelper\ICsvReaderExceptionInfo.cs">
-      <Link>ICsvReaderExceptionInfo.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\ICsvReaderRow.cs">
       <Link>ICsvReaderRow.cs</Link>
