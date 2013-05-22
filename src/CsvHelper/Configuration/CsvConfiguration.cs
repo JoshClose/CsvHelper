@@ -373,7 +373,7 @@ namespace CsvHelper.Configuration
 #endif
 				if( isDefaultConverter && hasDefaultConstructor )
 				{
-					// If the type is not a one covered by our type converters
+					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
 					// reference map for it.
 					var refMap = AutoMap( property.PropertyType );
