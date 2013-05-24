@@ -1216,7 +1216,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = propertyMap.Data.Index < 0 ? GetFieldIndex( propertyMap.Data.Names.ToArray() ) : propertyMap.Data.Index;
+				var index = propertyMap.Data.Index < 0 ? GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex ) : propertyMap.Data.Index;
 				if( index == -1 )
 				{
 					// Skip if the index was not found.

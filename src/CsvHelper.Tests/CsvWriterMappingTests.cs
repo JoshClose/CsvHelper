@@ -19,10 +19,10 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void WriteMultipleNamesTest()
 		{
-			var records = new List<MultipleNamesAttributeClass>
+			var records = new List<MultipleNamesClass>
 			{
-				new MultipleNamesAttributeClass { IntColumn = 1, StringColumn = "one" },
-				new MultipleNamesAttributeClass { IntColumn = 2, StringColumn = "two" }
+				new MultipleNamesClass { IntColumn = 1, StringColumn = "one" },
+				new MultipleNamesClass { IntColumn = 2, StringColumn = "two" }
 			};
 
 			string csv;
@@ -31,7 +31,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
-				csvWriter.Configuration.ClassMapping<MultipleNamesAttributeClassMap>();
+				csvWriter.Configuration.ClassMapping<MultipleNamesClassMap>();
 				csvWriter.WriteRecords( records );
 
 				writer.Flush();
@@ -49,16 +49,63 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( expected, csv );
 		}
 
-		private class MultipleNamesAttributeClass
+		[TestMethod]
+		public void SameNameMultipleTimesTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var records = new List<SameNameMultipleTimesClass>
+				{
+					new SameNameMultipleTimesClass
+					{
+						Name1 = "1",
+						Name2 = "2",
+						Name3 = "3"
+					}
+				};
+				csv.Configuration.ClassMapping<SameNameMultipleTimesClassMap>();
+				csv.WriteRecords( records );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+				var expected = "ColumnName,ColumnName,ColumnName\r\n3,1,2\r\n";
+				Assert.AreEqual( expected, text );
+			}
+		}
+
+		private class SameNameMultipleTimesClass
+		{
+			public string Name1 { get; set; }
+
+			public string Name2 { get; set; }
+
+			public string Name3 { get; set; }
+		}
+
+		private sealed class SameNameMultipleTimesClassMap : CsvClassMap<SameNameMultipleTimesClass>
+		{
+			public SameNameMultipleTimesClassMap()
+			{
+				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
+				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
+				Map( m => m.Name3 ).Name( "ColumnName" ).NameIndex( 0 );
+			}
+		}
+
+		private class MultipleNamesClass
 		{
 			public int IntColumn { get; set; }
 
 			public string StringColumn { get; set; }
 		}
 
-		private sealed class MultipleNamesAttributeClassMap : CsvClassMap<MultipleNamesAttributeClass>
+		private sealed class MultipleNamesClassMap : CsvClassMap<MultipleNamesClass>
 		{
-			public MultipleNamesAttributeClassMap()
+			public MultipleNamesClassMap()
 			{
 				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
 				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );

@@ -14,6 +14,7 @@ namespace CsvHelper.Configuration
 	public class CsvPropertyMapCollection : IList<CsvPropertyMap>
 	{
 		private readonly List<CsvPropertyMap> list = new List<CsvPropertyMap>();
+		private readonly CsvPropertyMapComparer comparer = new CsvPropertyMapComparer();
 
 		/// <summary>
 		/// Returns an enumerator that iterates through the collection.
@@ -199,10 +200,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		private void Sort()
 		{
-			if( list.Any( c => c.Data.Index > -1 ) )
-			{
-				list.Sort( new CsvPropertyMapComparer( false ) );
-			}
+			list.Sort( comparer );
 		}
 	}
 }

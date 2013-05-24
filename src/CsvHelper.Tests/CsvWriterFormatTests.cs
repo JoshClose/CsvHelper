@@ -81,10 +81,9 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			var expected = "First Name,Last Name,2012-10-01 12:12:12.123,Home Street,Home City,Home State,02201,Work Street,Work City,Work State,04100\r\n";
+			var expected = "First Name,Home City,Home State,Home Street,02201,Last Name,2012-10-01 12:12:12.123,Work City,Work State,Work Street,04100\r\n";
 
 			Assert.AreEqual( expected, csvFile );
-
 		}
 
 		private class TestRecord

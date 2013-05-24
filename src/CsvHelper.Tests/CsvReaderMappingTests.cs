@@ -128,9 +128,46 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 1, records[1].IntColumn );
 		}
 
+		[TestMethod]
+		public void ReadSameNameMultipleTimesTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "ColumnName", "ColumnName", "ColumnName" } );
+			queue.Enqueue( new[] { "2", "3", "1" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+
+			var csv = new CsvReader( parserMock );
+			csv.Configuration.ClassMapping<SameNameMultipleTimesClassMap>();
+
+			var records = csv.GetRecords<SameNameMultipleTimesClass>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 1, records.Count );
+		}
+
 		private class TestClass
 		{
 			public int IntColumn { get; set; }
+		}
+
+		private class SameNameMultipleTimesClass
+		{
+			public string Name1 { get; set; }
+
+			public string Name2 { get; set; }
+
+			public string Name3 { get; set; }
+		}
+
+		private sealed class SameNameMultipleTimesClassMap : CsvClassMap<SameNameMultipleTimesClass>
+		{
+			public SameNameMultipleTimesClassMap()
+			{
+				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
+				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
+				Map( m => m.Name3 ).Name( "ColumnName" ).NameIndex( 0 );
+			}
 		}
 
 		private class MultipleNamesClass

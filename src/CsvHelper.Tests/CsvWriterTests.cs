@@ -87,20 +87,22 @@ namespace CsvHelper.Tests
 				FirstColumn = "first column",
 			};
 
-			var stream = new MemoryStream();
-            var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter( writer );
-			csv.Configuration.ClassMapping<TestRecordNoIndexesMap>();
+			using( var stream = new MemoryStream() )
+            using( var writer = new StreamWriter(stream) { AutoFlush = true } )
+            using( var csv = new CsvWriter( writer ) )
+            {
+	            csv.Configuration.ClassMapping<TestRecordNoIndexesMap>();
 
-			csv.WriteRecord( record );
+	            csv.WriteRecord( record );
 
-			stream.Position = 0;
-			var reader = new StreamReader( stream );
-			var csvFile = reader.ReadToEnd();
+	            stream.Position = 0;
+	            var reader = new StreamReader( stream );
+	            var csvFile = reader.ReadToEnd();
 
-			var expected = "1,string column,first column,test\r\n";
+	            var expected = "first column,1,string column,test\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+	            Assert.AreEqual( expected, csvFile );
+            }
 		}
 
 		[TestMethod]
@@ -221,10 +223,9 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			var expected = "First Name,Last Name,Home Street,Home City,Home State,Home Zip,Work Street,Work City,Work State,Work Zip\r\n";
+			var expected = "First Name,Home City,Home State,Home Street,Home Zip,Last Name,Work City,Work State,Work Street,Work Zip\r\n";
 
 			Assert.AreEqual( expected, csvFile );
-
 		}
 
 		[TestMethod]

@@ -59,6 +59,18 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// When reading, is used to get the 
+		/// index of the name used when there 
+		/// are multiple names that are the same.
+		/// </summary>
+		/// <param name="index">The index of the name.</param>
+		public virtual CsvPropertyMap NameIndex( int index )
+		{
+			data.NameIndex = index;
+			return this;
+		}
+
+		/// <summary>
 		/// When reading, is used to get the field at
 		/// the given index. If a Name is specified, Index is 
 		/// used to get the instance of the named index when 

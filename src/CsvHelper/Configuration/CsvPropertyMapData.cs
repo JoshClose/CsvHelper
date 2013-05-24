@@ -38,6 +38,13 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Gets or sets the index of the name.
+		/// This is used if there are multiple
+		/// columns with the same names.
+		/// </summary>
+		public virtual int NameIndex { get; set; }
+
+		/// <summary>
 		/// Gets or sets the column index.
 		/// </summary>
 		public virtual int Index
