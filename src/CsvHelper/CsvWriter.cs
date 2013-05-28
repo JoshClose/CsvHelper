@@ -371,7 +371,7 @@ namespace CsvHelper
 			{
 				try
 				{
-					GetWriteRecordAction( type ).DynamicInvoke( this, record );
+					GetWriteRecordAction( type ).DynamicInvoke( record );
 				}
 				catch( Exception ex )
 				{
