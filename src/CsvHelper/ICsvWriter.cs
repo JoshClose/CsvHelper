@@ -89,7 +89,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
-		void WriteRecord<T>( T record ) where T : class;
+		void WriteRecord<T>( T record );
 
 		/// <summary>
 		/// Writes the record to the CSV file.
@@ -103,7 +103,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		void WriteRecords<T>( IEnumerable<T> records ) where T : class;
+        void WriteRecords<T>(IEnumerable<T> records);
 
 		/// <summary>
 		/// Writes the list of records to the CSV file.
@@ -120,7 +120,7 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
-		void ClearRecordCache<T>() where T : class;
+		void ClearRecordCache<T>();
 
 		/// <summary>
 		/// Clears the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
