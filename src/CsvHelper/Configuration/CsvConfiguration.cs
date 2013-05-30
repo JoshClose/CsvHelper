@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 #if !NET_2_0
 using System.Linq;
@@ -342,12 +343,18 @@ namespace CsvHelper.Configuration
 		/// <returns>The generate map.</returns>
 		public virtual CsvClassMap AutoMap( Type type )
 		{
+			var mapParents = new LinkedList<Type>();
+			return AutoMapInternal( type, mapParents );
+		}
+
+		internal CsvClassMap AutoMapInternal( Type type, LinkedList<Type> mapParents )
+		{
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
 				throw new CsvConfigurationException( "Types that inhererit IEnumerable cannot be auto mapped. " +
-				                                     "Did you accidentally call GetRecord or WriteRecord which " +
-				                                     "acts on a single record instead of calling GetRecords or " +
-				                                     "WriteRecords which acts on a list of records?" );
+													 "Did you accidentally call GetRecord or WriteRecord which " +
+													 "acts on a single record instead of calling GetRecords or " +
+													 "WriteRecords which acts on a list of records?" );
 			}
 
 			if( maps[type] != null )
@@ -376,7 +383,13 @@ namespace CsvHelper.Configuration
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
 					// reference map for it.
-					var refMap = AutoMap( property.PropertyType );
+					if( CheckForCircularDependency( property.PropertyType, mapParents ) )
+					{
+						continue;
+					}
+
+					mapParents.AddLast( type );
+					var refMap = AutoMapInternal( property.PropertyType, mapParents );
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
 						map.ReferenceMaps.Add( new CsvPropertyReferenceMap( property, refMap ) );
@@ -386,7 +399,7 @@ namespace CsvHelper.Configuration
 				{
 					var propertyMap = new CsvPropertyMap( property );
 					if( propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) ||
-					    propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
+						propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
 					{
 						// Only add the property map if it can be converted later on.
 						// If the property will use the default converter, don't add it because
@@ -397,6 +410,31 @@ namespace CsvHelper.Configuration
 			}
 
 			return map;
+		}
+
+		internal bool CheckForCircularDependency( Type type, LinkedList<Type> mapParents )
+		{
+			if( mapParents.Count == 0 )
+			{
+				return false;
+			}
+
+			var node = mapParents.Last;
+			while( true )
+			{
+				if( node.Value == type )
+				{
+					return true;
+				}
+
+				node = node.Previous;
+				if( node == null )
+				{
+					break;
+				}
+			}
+
+			return false;
 		}
 #endif
 	}

@@ -62,20 +62,6 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		[TestMethod]
-		[Ignore]
-		public void CircularReferencesTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
-			{
-				// TODO: Fix circular dependency issue.
-				csv.Configuration.ClassMapping<ACircularMap>();
-			}
-		}
-
 		private class A
 		{
 			public string Id { get; set; }
@@ -100,20 +86,6 @@ namespace CsvHelper.Tests
 		private class D
 		{
 			public string Id { get; set; }
-		}
-
-		private class ACircular
-		{
-			public string Id { get; set; }
-
-			public BCircular B { get; set; }
-		}
-
-		private class BCircular
-		{
-			public string Id { get; set; }
-
-			public ACircular A { get; set; }
 		}
 
 		private sealed class AMap : CsvClassMap<A>
@@ -148,24 +120,6 @@ namespace CsvHelper.Tests
 			public DMap()
 			{
 				Map( m => m.Id ).Name( "DId" );
-			}
-		}
-
-		private sealed class ACircularMap : CsvClassMap<ACircular>
-		{
-			public ACircularMap()
-			{
-				Map( m => m.Id ).Name( "AId" );
-				References<BCircularMap>( m => m.B );
-			}
-		}
-
-		private sealed class BCircularMap : CsvClassMap<BCircular>
-		{
-			public BCircularMap()
-			{
-				Map( m => m.Id ).Name( "BId" );
-				References<ACircularMap>( m => m.A );
 			}
 		}
 	}
