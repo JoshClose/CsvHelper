@@ -720,7 +720,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>The record converted to <see cref="Type"/> T.</returns>
-		public virtual T GetRecord<T>() where T : class
+		public virtual T GetRecord<T>() 
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
@@ -768,7 +768,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		public virtual IEnumerable<T> GetRecords<T>() where T : class
+		public virtual IEnumerable<T> GetRecords<T>() 
 		{
 			CheckDisposed();
 			// Don't need to check if it's been read
@@ -852,7 +852,7 @@ namespace CsvHelper
 		/// changes, <see cref="ICsvReaderRow.ClearRecordCache{T}"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
-		public virtual void ClearRecordCache<T>() where T : class
+		public virtual void ClearRecordCache<T>() 
 		{
 			ClearRecordCache( typeof( T ) );
 		}
@@ -1070,7 +1070,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of record to create.</typeparam>
 		/// <returns>The created record.</returns>
-		protected virtual T CreateRecord<T>() where T : class
+		protected virtual T CreateRecord<T>() 
 		{
 #if !NET_3_5 && !WINDOWS_PHONE_7
 			// If the type is an object, a dynamic
@@ -1114,7 +1114,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="Type"/> of object that is created
 		/// and populated.</typeparam>
 		/// <returns>The function delegate.</returns>
-		protected virtual Func<T> GetReadRecordFunc<T>() where T : class
+		protected virtual Func<T> GetReadRecordFunc<T>() 
 		{
 			var recordType = typeof( T );
 			CreateReadRecordFunc( recordType );

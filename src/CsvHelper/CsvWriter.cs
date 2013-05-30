@@ -224,7 +224,7 @@ namespace CsvHelper
 		/// Writes the header record from the given properties.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
-		public virtual void WriteHeader<T>() where T : class
+		public virtual void WriteHeader<T>()
 		{
 			WriteHeader( typeof( T ) );
 		}
@@ -281,7 +281,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
-		public virtual void WriteRecord<T>( T record ) where T : class
+		public virtual void WriteRecord<T>( T record )
 		{
 			CheckDisposed();
 
@@ -329,7 +329,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords<T>( IEnumerable<T> records ) where T : class
+		public virtual void WriteRecords<T>( IEnumerable<T> records )
 		{
 			CheckDisposed();
 
@@ -390,7 +390,7 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
-		public virtual void ClearRecordCache<T>() where T : class
+		public virtual void ClearRecordCache<T>()
 		{
 			ClearRecordCache( typeof( T ) );
 		}
@@ -522,7 +522,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<T> GetWriteRecordAction<T>() where T : class
+		protected virtual Action<T> GetWriteRecordAction<T>()
 		{
 			var type = typeof( T );
 			CreateWriteRecordAction( type );
@@ -599,8 +599,11 @@ namespace CsvHelper
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptions, fieldExpression );
 
-				var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-				fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+                if (type.IsClass)
+                {
+                    var areEqualExpression = Expression.Equal(recordParameter, Expression.Constant(null));
+                    fieldExpression = Expression.Condition(areEqualExpression, Expression.Constant(string.Empty), fieldExpression);
+                }
 
 				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
 
