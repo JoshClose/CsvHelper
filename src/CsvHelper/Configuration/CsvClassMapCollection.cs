@@ -84,7 +84,7 @@ namespace CsvHelper.Configuration
 		{
 #if WINRT_4_5
 			var typeInfo = type.GetTypeInfo();
-			if( typeInfo.BaseType.GetTypeInfo().IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
+			if( typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{
 				return type;
 			}
