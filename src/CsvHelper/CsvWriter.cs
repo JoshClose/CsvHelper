@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -358,7 +359,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords( Type type, IEnumerable<object> records )
+		public virtual void WriteRecords( Type type, IEnumerable records )
 		{
 			CheckDisposed();
 

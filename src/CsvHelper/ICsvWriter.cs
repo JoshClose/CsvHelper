@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
@@ -110,7 +111,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="records">The list of records to write.</param>
-		void WriteRecords( Type type, IEnumerable<object> records );
+		void WriteRecords( Type type, IEnumerable records );
 
 		/// <summary>
 		/// Clears the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
