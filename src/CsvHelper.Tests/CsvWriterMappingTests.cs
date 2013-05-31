@@ -72,7 +72,7 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();
-				var expected = "ColumnName,ColumnName,ColumnName\r\n3,1,2\r\n";
+				var expected = "ColumnName,ColumnName,ColumnName\r\n1,2,3\r\n";
 				Assert.AreEqual( expected, text );
 			}
 		}
@@ -88,7 +88,7 @@ namespace CsvHelper.Tests
 
 		private sealed class SameNameMultipleTimesClassMap : CsvClassMap<SameNameMultipleTimesClass>
 		{
-			public SameNameMultipleTimesClassMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
 				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
@@ -105,7 +105,7 @@ namespace CsvHelper.Tests
 
 		private sealed class MultipleNamesClassMap : CsvClassMap<MultipleNamesClass>
 		{
-			public MultipleNamesClassMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
 				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );

@@ -51,7 +51,7 @@ namespace CsvHelper35.Tests
 
 		private sealed class TestMap : CsvClassMap<Test>
 		{
-			public TestMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Id );
 				Map( m => m.Name );

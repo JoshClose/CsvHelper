@@ -86,8 +86,8 @@ namespace CsvHelper.Tests
 
 			var csvFile = writer.ToString();
 
-			const string expected = "DateTimeColumn;DecimalColumn\r\n" +
-									"11.11.2010 0:00:00;12,0\r\n";
+			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
+									"12,0;11.11.2010 0:00:00\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}

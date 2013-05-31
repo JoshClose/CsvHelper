@@ -162,7 +162,7 @@ namespace CsvHelper.Tests
 
 		private sealed class SameNameMultipleTimesClassMap : CsvClassMap<SameNameMultipleTimesClass>
 		{
-			public SameNameMultipleTimesClassMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
 				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
@@ -179,7 +179,7 @@ namespace CsvHelper.Tests
 
 		private sealed class MultipleNamesClassMap : CsvClassMap<MultipleNamesClass>
 		{
-			public MultipleNamesClassMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
 				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
@@ -200,7 +200,7 @@ namespace CsvHelper.Tests
 
 		private sealed class ConstructorMappingClassMap : CsvClassMap<ConstructorMappingClass>
 		{
-			public ConstructorMappingClassMap()
+			public override void CreateMap()
 			{
 				ConstructUsing( () => new ConstructorMappingClass( "one" ) );
 				Map( m => m.IntColumn ).Index( 0 );
@@ -209,7 +209,7 @@ namespace CsvHelper.Tests
 
 		private sealed class ConvertUsingMap : CsvClassMap<TestClass>
 		{
-			public ConvertUsingMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
 			}
@@ -217,7 +217,7 @@ namespace CsvHelper.Tests
 
 		private sealed class ConvertUsingBlockMap : CsvClassMap<TestClass>
 		{
-			public ConvertUsingBlockMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).ConvertUsing( row =>
 				{
@@ -230,7 +230,7 @@ namespace CsvHelper.Tests
 
 		private sealed class ConvertUsingConstantMap : CsvClassMap<TestClass>
 		{
-			public ConvertUsingConstantMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
 			}

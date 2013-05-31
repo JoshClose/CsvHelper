@@ -5,7 +5,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace CsvHelper.Configuration
 {
@@ -70,55 +69,7 @@ namespace CsvHelper.Configuration
 				throw new ArgumentNullException( "y" );
 			}
 
-			// Sorting order:
-			// 1: Explicit indexing
-			// 2: Names
-			// 3: Neither
-
-			if( x.Data.Index > -1 && y.Data.Index > -1 )
-			{
-				// Index compare
-				return x.Data.Index.CompareTo( y.Data.Index );
-			}
-
-			if( x.Data.Names.Count > 0 && y.Data.Names.Count > 0 )
-			{
-				// Name compare
-				var compareValue = CultureInfo.InvariantCulture.CompareInfo.Compare( x.Data.Names[0], y.Data.Names[0] );
-				return compareValue == 0 ? x.Data.NameIndex.CompareTo( y.Data.NameIndex ) : compareValue;
-			}
-
-			if( x.Data.Index > 0 && y.Data.Names.Count > 0 )
-			{
-				// 1 < name
-				return -1;
-			}
-
-			if( x.Data.Names.Count > 0 && y.Data.Index > 0 )
-			{
-				// name > 1
-				return 1;
-			}
-			
-			if( x.Data.Index == -1 && y.Data.Index == -1 )
-			{
-				// -1 == -1
-				return 0;
-			}
-
-			if( x.Data.Index == -1 )
-			{
-				// -1 > 1/name
-				return 1;
-			}
-
-			if( y.Data.Index == -1 )
-			{
-				// 1/name < -1
-				return -1;
-			}
-
-			throw new CsvConfigurationException( "Property sorting fell through. This should never happen." );
+			return x.Data.Index.CompareTo( y.Data.Index );
 		}
 	}
 }

@@ -99,7 +99,7 @@ namespace CsvHelper.Tests
 	            var reader = new StreamReader( stream );
 	            var csvFile = reader.ReadToEnd();
 
-	            var expected = "first column,1,string column,test\r\n";
+	            var expected = "1,string column,first column,test\r\n";
 
 	            Assert.AreEqual( expected, csvFile );
             }
@@ -223,7 +223,7 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
 
-			var expected = "First Name,Home City,Home State,Home Street,Home Zip,Last Name,Work City,Work State,Work Street,Work Zip\r\n";
+			var expected = "First Name,Last Name,Home Street,Home City,Home State,Home Zip,Work Street,Work City,Work State,Work Zip\r\n";
 
 			Assert.AreEqual( expected, csvFile );
 		}
@@ -525,7 +525,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordMap : CsvClassMap<TestRecord>
 		{
-			public TestRecordMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverter<Int32Converter>();
 				Map( m => m.StringColumn );
@@ -549,7 +549,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordNoIndexesMap : CsvClassMap<TestRecordNoIndexes>
 		{
-			public TestRecordNoIndexesMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Name( "Int Column" ).TypeConverter<Int32Converter>();
 				Map( m => m.StringColumn );
@@ -605,7 +605,7 @@ namespace CsvHelper.Tests
 
 		private sealed class PersonMap : CsvClassMap<Person>
 		{
-			public PersonMap()
+			public override void CreateMap()
 			{
 				Map( m => m.FirstName );
 				Map( m => m.LastName );
@@ -616,7 +616,7 @@ namespace CsvHelper.Tests
 
 		private sealed class HomeAddressMap : CsvClassMap<Address>
 		{
-			public HomeAddressMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Street ).Name( "HomeStreet" );
 				Map( m => m.City ).Name( "HomeCity" );
@@ -627,7 +627,7 @@ namespace CsvHelper.Tests
 
 		private sealed class WorkAddressMap : CsvClassMap<Address>
 		{
-			public WorkAddressMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Street ).Name( "WorkStreet" );
 				Map( m => m.City ).Name( "WorkCity" );

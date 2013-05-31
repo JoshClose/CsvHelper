@@ -164,7 +164,7 @@ namespace CsvHelper.SpeedTests
 
 		private sealed class TestClassMap : CsvClassMap<TestClass>
 		{
-			public TestClassMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Name( "Int Column" );
 				Map( m => m.StringColumn ).Name( "String Column" );

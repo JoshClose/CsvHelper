@@ -8,7 +8,7 @@ using System.Reflection;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Mappinging info for a reference property mapping to a class.
+	/// Mapping info for a reference property mapping to a class.
 	/// </summary>
 	public class CsvPropertyReferenceMap
 	{
@@ -30,14 +30,6 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
 		/// </summary>
-		/// <param name="mapType">The <see cref="CsvClassMap"/> type to create to use for the reference map.</param>
-		/// <param name="property">The property.</param>
-		public CsvPropertyReferenceMap( Type mapType, PropertyInfo property )
-			: this( property, ReflectionHelper.CreateInstance( mapType ) as CsvClassMap ) {}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
-		/// </summary>
 		/// <param name="property">The property.</param>
 		/// <param name="mapping">The <see cref="CsvClassMap"/> to use for the reference map.</param>
 		public CsvPropertyReferenceMap( PropertyInfo property, CsvClassMap mapping )
@@ -49,6 +41,16 @@ namespace CsvHelper.Configuration
 
 			this.property = property;
 			Mapping = mapping;
+		}
+
+		/// <summary>
+		/// Get the largest index for the
+		/// properties and references.
+		/// </summary>
+		/// <returns>The max index.</returns>
+		internal int GetMaxIndex()
+		{
+			return Mapping.GetMaxIndex();
 		}
 	}
 }

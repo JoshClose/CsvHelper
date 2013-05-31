@@ -75,7 +75,7 @@ namespace CsvHelper.Tests
 
 		private sealed class AMap : CsvClassMap<A>
 		{
-			public AMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Id ).Name( "AId" );
 				References<BMap>( m => m.B );
@@ -84,7 +84,7 @@ namespace CsvHelper.Tests
 
 		private sealed class BMap : CsvClassMap<B>
 		{
-			public BMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Id ).Name( "BId" );
 				References<CMap>( m => m.C );
@@ -93,7 +93,7 @@ namespace CsvHelper.Tests
 
 		private sealed class CMap : CsvClassMap<C>
 		{
-			public CMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Id ).Name( "CId" );
 				References<DMap>( m => m.D );
@@ -102,7 +102,7 @@ namespace CsvHelper.Tests
 
 		private sealed class DMap : CsvClassMap<D>
 		{
-			public DMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Id ).Name( "DId" );
 			}

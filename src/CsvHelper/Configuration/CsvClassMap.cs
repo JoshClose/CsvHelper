@@ -2,10 +2,9 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -16,6 +15,22 @@ namespace CsvHelper.Configuration
 	{
 		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
 		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
+		private int indexStart = -1;
+
+		/// <summary>
+		/// Where to start the index at when
+		/// creating auto indexes for property maps.
+		/// </summary>
+		internal int IndexStart
+		{
+			get { return indexStart; }
+			set { indexStart = value; }
+		}
+
+		/// <summary>
+		/// Called to create the mappings.
+		/// </summary>
+		public abstract void CreateMap();
 
 		/// <summary>
 		/// Gets the constructor expression.
@@ -42,5 +57,23 @@ namespace CsvHelper.Configuration
 		/// Allow only internal creation of CsvClassMap.
 		/// </summary>
 		internal CsvClassMap() {}
+
+		/// <summary>
+		/// Get the largest index for the
+		/// properties and references.
+		/// </summary>
+		/// <returns>The max index.</returns>
+		internal int GetMaxIndex()
+		{
+			if( PropertyMaps.Count == 0 && ReferenceMaps.Count == 0 )
+			{
+				return IndexStart;
+			}
+
+			var indexes = new List<int> { PropertyMaps.Max( pm => pm.Data.Index ) };
+			indexes.AddRange( ReferenceMaps.Select( referenceMap => referenceMap.GetMaxIndex() ) );
+
+			return indexes.Max();
+		}
 	}
 }

@@ -788,7 +788,7 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var csvReader = new CsvReader( reader ) )
 			{
-				writer.WriteLine( "IntColumn,StringColumn" );
+				writer.WriteLine( "IntColumn,String Column" );
 				writer.WriteLine( "1,one" );
 				writer.WriteLine( "2,two" );
 				writer.Flush();
@@ -908,7 +908,7 @@ namespace CsvHelper.Tests
 
 		private sealed class OnlyFieldsMap : CsvClassMap<OnlyFields>
 		{
-			public OnlyFieldsMap()
+			public override void CreateMap()
 			{
 				Map( m => m.Name );
 			}
@@ -932,7 +932,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestDefaultValuesMap : CsvClassMap<TestDefaultValues>
 		{
-			public TestDefaultValuesMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Default( -1 );
 				Map( m => m.StringColumn ).Default( null );
@@ -968,7 +968,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordMap : CsvClassMap<TestRecord>
 		{
-			public TestRecordMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).TypeConverter<Int32Converter>();
 				Map( m => m.StringColumn ).Name( "String Column" );
@@ -990,11 +990,11 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordDuplicateHeaderNamesMap : CsvClassMap<TestRecordDuplicateHeaderNames>
 		{
-			public TestRecordDuplicateHeaderNamesMap()
+			public override void CreateMap()
 			{
-				Map( m => m.Column1 ).Name( "Column" ).Index( 0 );
-				Map( m => m.Column2 ).Name( "Column" ).Index( 1 );
-				Map( m => m.Column3 ).Name( "Column" ).Index( 2 );
+				Map( m => m.Column1 ).Name( "Column" ).NameIndex( 0 );
+				Map( m => m.Column2 ).Name( "Column" ).NameIndex( 1 );
+				Map( m => m.Column3 ).Name( "Column" ).NameIndex( 2 );
 			}
 		}
 

@@ -317,6 +317,7 @@ namespace CsvHelper.Configuration
 			where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
+			map.CreateMap();
 
 			if( map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
 			{
@@ -344,10 +345,10 @@ namespace CsvHelper.Configuration
 		public virtual CsvClassMap AutoMap( Type type )
 		{
 			var mapParents = new LinkedList<Type>();
-			return AutoMapInternal( type, mapParents );
+			return AutoMapInternal( type, -1, mapParents );
 		}
 
-		internal CsvClassMap AutoMapInternal( Type type, LinkedList<Type> mapParents )
+		internal CsvClassMap AutoMapInternal( Type type, int indexStart, LinkedList<Type> mapParents )
 		{
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
@@ -368,8 +369,9 @@ namespace CsvHelper.Configuration
 #else
 			var properties = type.GetProperties( propertyBindingFlags );
 #endif
-			var mapType = typeof( CsvClassMap<> ).MakeGenericType( type );
+			var mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( type );
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( mapType );
+			map.IndexStart = indexStart;
 			foreach( var property in properties )
 			{
 				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );
@@ -389,7 +391,7 @@ namespace CsvHelper.Configuration
 					}
 
 					mapParents.AddLast( type );
-					var refMap = AutoMapInternal( property.PropertyType, mapParents );
+					var refMap = AutoMapInternal( property.PropertyType, map.GetMaxIndex(), mapParents );
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
 						map.ReferenceMaps.Add( new CsvPropertyReferenceMap( property, refMap ) );
@@ -398,13 +400,14 @@ namespace CsvHelper.Configuration
 				else
 				{
 					var propertyMap = new CsvPropertyMap( property );
+					propertyMap.Data.Index = map.GetMaxIndex() + 1;
 					if( propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) ||
 						propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
 					{
 						// Only add the property map if it can be converted later on.
 						// If the property will use the default converter, don't add it because
 						// we don't want the .ToString() value to be used when auto mapping.
-						map.PropertyMaps.Add( new CsvPropertyMap( property ) );
+						map.PropertyMaps.Add( propertyMap );
 					}
 				}
 			}

@@ -1216,11 +1216,36 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = propertyMap.Data.Index < 0 ? GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex ) : propertyMap.Data.Index;
-				if( index == -1 )
+				var index = -1;
+				if( propertyMap.Data.IsNameSet )
 				{
-					// Skip if the index was not found.
-					continue;
+					// If a name was explicitly set, use it.
+					index = GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex );
+				}
+				else if( propertyMap.Data.IsIndexSet )
+				{
+					// If an index was explicity set, use it.
+					index = propertyMap.Data.Index;
+				}
+				else
+				{
+					// Fallback to defaults.
+
+					if( configuration.HasHeaderRecord )
+					{
+						// Fallback to the default name.
+						index = GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex );
+						if( index == -1 )
+						{
+							// Skip if the index was not found.
+							continue;
+						}
+					}
+					else if( index == -1 )
+					{
+						// Fallback to the default index.
+						index = propertyMap.Data.Index;
+					}
 				}
 
 				// Get the field using the field index.

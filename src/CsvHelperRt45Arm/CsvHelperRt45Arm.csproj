@@ -137,8 +137,8 @@
     <Compile Include="..\csvhelper\configuration\CsvPropertyReferenceMap.cs">
       <Link>Configuration\CsvPropertyReferenceMap.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvPropertyReferenceMap`1.cs">
-      <Link>Configuration\CsvPropertyReferenceMap`1.cs</Link>
+    <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
+      <Link>Configuration\DefaultCsvClassMap`1.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>

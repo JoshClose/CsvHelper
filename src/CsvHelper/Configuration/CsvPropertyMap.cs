@@ -21,6 +21,9 @@ namespace CsvHelper.Configuration
 	{
 		private readonly CsvPropertyMapData data;
 
+		/// <summary>
+		/// Property map data.
+		/// </summary>
 		public CsvPropertyMapData Data
 		{
 			get { return data; }
@@ -44,17 +47,21 @@ namespace CsvHelper.Configuration
 		/// at the index of the name if there was a
 		/// header specified. It will look for the
 		/// first name match in the order listed.
-		/// If there is an index
-		/// specified, that will take precedence over
-		/// the name. When writing, sets
-		/// the name of the field in the header record.
+		/// When writing, sets the name of the 
+		/// field in the header record.
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
 		public virtual CsvPropertyMap Name( params string[] names )
 		{
+			if( names == null || names.Length == 0 )
+			{
+				throw new ArgumentNullException( "names" );
+			}
+
 			data.Names.Clear();
 			data.Names.AddRange( names );
+			data.IsNameSet = true;
 			return this;
 		}
 
@@ -72,9 +79,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// When reading, is used to get the field at
-		/// the given index. If a Name is specified, Index is 
-		/// used to get the instance of the named index when 
-		/// multiple headers are the same. When writing, the fields
+		/// the given index. When writing, the fields
 		/// will be written in the order of the field
 		/// indexes.
 		/// </summary>
@@ -82,6 +87,7 @@ namespace CsvHelper.Configuration
 		public virtual CsvPropertyMap Index( int index )
 		{
 			data.Index = index;
+			data.IsIndexSet = true;
 			return this;
 		}
 

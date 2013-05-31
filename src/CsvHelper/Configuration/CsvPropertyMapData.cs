@@ -45,6 +45,13 @@ namespace CsvHelper.Configuration
 		public virtual int NameIndex { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if the name was
+		/// explicitly set. True if it was explicity set,
+		/// otherwise false.
+		/// </summary>
+		public virtual bool IsNameSet { get; set; }
+
+		/// <summary>
 		/// Gets or sets the column index.
 		/// </summary>
 		public virtual int Index
@@ -52,6 +59,13 @@ namespace CsvHelper.Configuration
 			get { return index; }
 			set { index = value; }
 		}
+
+		/// <summary>
+		/// Gets or sets a value indicating if the index was
+		/// explicitly set. True if it was explicitly set,
+		/// otherwise false.
+		/// </summary>
+		public virtual bool IsIndexSet { get; set; }
 
 		/// <summary>
 		/// Gets or sets the type converter.
@@ -86,6 +100,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating whether this instance is default value set.
+		/// the default value was explicitly set. True if it was
+		/// explicitly set, otherwise false.
 		/// </summary>
 		public virtual bool IsDefaultSet { get; set; }
 

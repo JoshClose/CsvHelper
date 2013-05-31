@@ -40,7 +40,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 		private sealed class TestMap : CsvClassMap<Test>
 		{
-			public TestMap()
+			public override void CreateMap()
 			{
 				Map( m => m.IntColumn ).Index( 0 ).TypeConverter<Converter>();
 			}
