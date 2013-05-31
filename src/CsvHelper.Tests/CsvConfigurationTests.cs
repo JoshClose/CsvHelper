@@ -51,6 +51,24 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
 		}
 
+		[TestMethod]
+		public void AddingMappingsWithNonGenericMethod()
+		{
+			var config = new CsvConfiguration();
+			config.ClassMapping( typeof( TestClassMappings ) );
+
+			Assert.AreEqual(2, config.Maps[typeof(TestClass)].PropertyMaps.Count);
+		}
+
+#if !WINRT_4_5
+		[TestMethod]
+		[ExpectedException(typeof(CsvConfigurationException))]
+		public void AddingMappingsWithNonGenericMethodThrowsWhenNotACsvClassMap()
+		{
+			new CsvConfiguration().ClassMapping(typeof(TestClass));
+		}
+#endif
+
 		private class TestClass
 		{
 			public string StringColumn { get; set; }
