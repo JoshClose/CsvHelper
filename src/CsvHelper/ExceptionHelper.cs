@@ -55,7 +55,10 @@ namespace CsvHelper
 		{
 			var messageInfo = new StringBuilder();
 
-			messageInfo.AppendFormat( "Row: '{0}' (1 based)", parser.Row ).AppendLine();
+			if( parser != null )
+			{
+				messageInfo.AppendFormat( "Row: '{0}' (1 based)", parser.Row ).AppendLine();
+			}
 
 			if( type != null )
 			{
@@ -68,12 +71,12 @@ namespace CsvHelper
 			}
 
 #if !NET_2_0
-			if( parser.Configuration.HasHeaderRecord && namedIndexes != null )
+			if( namedIndexes != null )
 			{
 				var fieldName = ( from pair in namedIndexes
-				                     from index in pair.Value
-				                     where index == currentIndex
-				                     select pair.Key ).SingleOrDefault();
+				                  from index in pair.Value
+				                  where index == currentIndex
+				                  select pair.Key ).SingleOrDefault();
 				if( fieldName != null )
 				{
 					messageInfo.AppendFormat( "Field Name: '{0}'", fieldName ).AppendLine();
