@@ -147,29 +147,29 @@ namespace CsvHelper.Tests
 		public void WriteRecordsCalledWithTwoParametersTest()
 		{
 			var records = new List<object>
-            {
-                new TestRecord
-                {
-                    IntColumn = 1,
-                    StringColumn = "string column",
-                    IgnoredColumn = "ignored column",
-                    FirstColumn = "first column",
-                },
-                new TestRecord
-                {
-                    IntColumn = 2,
-                    StringColumn = "string column 2",
-                    IgnoredColumn = "ignored column 2",
-                    FirstColumn = "first column 2",
-                },
-            };
+			{
+				new TestRecord
+				{
+					IntColumn = 1,
+					StringColumn = "string column",
+					IgnoredColumn = "ignored column",
+					FirstColumn = "first column",
+				},
+				new TestRecord
+				{
+					IntColumn = 2,
+					StringColumn = "string column 2",
+					IgnoredColumn = "ignored column 2",
+					FirstColumn = "first column 2",
+				},
+			};
 
 			var stream = new MemoryStream();
-            var writer = new StreamWriter(stream) { AutoFlush = true };
+			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 			csv.Configuration.ClassMapping<TestRecordMap>();
 
-			csv.WriteRecords(typeof(TestRecord), records );
+			csv.WriteRecords( typeof( TestRecord ), records );
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
