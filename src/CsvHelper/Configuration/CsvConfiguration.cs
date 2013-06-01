@@ -313,7 +313,7 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual void ClassMapping<TMap>() 
+		public virtual void ClassMapping<TMap>()
 			where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
@@ -325,26 +325,32 @@ namespace CsvHelper.Configuration
 		/// When using a class map, no properties are mapped by default.
 		/// Only properties specified in the mapping are used.
 		/// </summary>
-		public virtual void ClassMapping(Type classMapType)
+		/// <param name="classMapType">The type of mapping class to use.</param>
+		public virtual void ClassMapping( Type classMapType )
 		{
-			if( typeof(CsvClassMap).IsAssignableFrom(classMapType) == false )
+			if( !typeof( CsvClassMap ).IsAssignableFrom( classMapType ) )
 			{
-				throw new CsvConfigurationException( "Provided type is not derived from CsvClassMap" );
+				throw new ArgumentException( "The class map type must inherit from CsvClassMap." );
 			}
-			var map = (CsvClassMap) ReflectionHelper.CreateInstance(classMapType);
+
+			var map = (CsvClassMap)ReflectionHelper.CreateInstance( classMapType );
 			RegisterClassMap( map );
 		}
 
-		private void RegisterClassMap( CsvClassMap map )
+		/// <summary>
+		/// Registers the class map.
+		/// </summary>
+		/// <param name="map">The class map to register.</param>
+		protected virtual void RegisterClassMap( CsvClassMap map )
 		{
 			map.CreateMap();
 
-			if (map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0)
+			if( map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
 			{
-				throw new CsvConfigurationException("No mappings were specified in the CsvClassMap.");
+				throw new CsvConfigurationException( "No mappings were specified in the CsvClassMap." );
 			}
 
-			Maps.Add(map);
+			Maps.Add( map );
 		}
 
 		/// <summary>
@@ -360,7 +366,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Generates a <see cref="CsvClassMap"/> for the type.
 		/// </summary>
-		/// <param name="type">The ytpe to generate for the map.</param>
+		/// <param name="type">The type to generate for the map.</param>
 		/// <returns>The generate map.</returns>
 		public virtual CsvClassMap AutoMap( Type type )
 		{
@@ -368,7 +374,17 @@ namespace CsvHelper.Configuration
 			return AutoMapInternal( type, -1, mapParents );
 		}
 
-		internal CsvClassMap AutoMapInternal( Type type, int indexStart, LinkedList<Type> mapParents )
+		/// <summary>
+		/// Generates a <see cref="CsvClassMap"/> for the type.
+		/// This internal method is used to pass extra information
+		/// along so circular references can be checked, and
+		/// property maps can be auto indexed.
+		/// </summary>
+		/// <param name="type">The type to generate for the map.</param>
+		/// <param name="indexStart">The index that is started from.</param>
+		/// <param name="mapParents">The list of parents for the map.</param>
+		/// <returns></returns>
+		internal virtual CsvClassMap AutoMapInternal( Type type, int indexStart, LinkedList<Type> mapParents )
 		{
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
@@ -405,7 +421,7 @@ namespace CsvHelper.Configuration
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
 					// reference map for it.
-					if( CheckForCircularDependency( property.PropertyType, mapParents ) )
+					if( CheckForCircularReference( property.PropertyType, mapParents ) )
 					{
 						continue;
 					}
@@ -435,7 +451,14 @@ namespace CsvHelper.Configuration
 			return map;
 		}
 
-		internal bool CheckForCircularDependency( Type type, LinkedList<Type> mapParents )
+		/// <summary>
+		/// Checks for circular references.
+		/// </summary>
+		/// <param name="type">The type to check for.</param>
+		/// <param name="mapParents">The list of parents to check against.</param>
+		/// <returns>A value indicating if a circular reference was found.
+		/// True if a circular reference was found, otherwise false.</returns>
+		internal virtual bool CheckForCircularReference( Type type, LinkedList<Type> mapParents )
 		{
 			if( mapParents.Count == 0 )
 			{

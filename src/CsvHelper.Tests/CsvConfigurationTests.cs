@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
 using System.IO;
 using CsvHelper.Configuration;
 #if WINRT_4_5
@@ -57,15 +59,19 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration();
 			config.ClassMapping( typeof( TestClassMappings ) );
 
-			Assert.AreEqual(2, config.Maps[typeof(TestClass)].PropertyMaps.Count);
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
 		}
 
 #if !WINRT_4_5
 		[TestMethod]
-		[ExpectedException(typeof(CsvConfigurationException))]
 		public void AddingMappingsWithNonGenericMethodThrowsWhenNotACsvClassMap()
 		{
-			new CsvConfiguration().ClassMapping(typeof(TestClass));
+			try
+			{
+				new CsvConfiguration().ClassMapping( typeof( TestClass ) );
+				Assert.Fail();
+			}
+			catch( ArgumentException ) {}
 		}
 #endif
 
