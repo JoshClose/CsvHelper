@@ -5,7 +5,7 @@
 	/// to create a class map dynamically.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class DefaultCsvClassMap<T> : CsvClassMap<T> where T : class
+	public class DefaultCsvClassMap<T> : CsvClassMap<T>
 	{
 		/// <summary>
 		/// Called to create the mappings.

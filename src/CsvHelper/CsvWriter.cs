@@ -224,7 +224,7 @@ namespace CsvHelper
 		/// Writes the header record from the given properties.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
-		public virtual void WriteHeader<T>() where T : class
+		public virtual void WriteHeader<T>()
 		{
 			WriteHeader( typeof( T ) );
 		}
@@ -281,7 +281,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
-		public virtual void WriteRecord<T>( T record ) where T : class
+		public virtual void WriteRecord<T>( T record )
 		{
 			CheckDisposed();
 
@@ -329,11 +329,11 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords<T>( IEnumerable<T> records ) where T : class
+		public virtual void WriteRecords<T>( IEnumerable<T> records )
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord )
+			if( configuration.HasHeaderRecord && !typeof( T ).IsPrimitive )
 			{
 				WriteHeader<T>();
 			}
@@ -349,6 +349,7 @@ namespace CsvHelper
 					ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
 					throw;
 				}
+
 				NextRecord();
 			}
 		}
@@ -362,7 +363,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord )
+			if( configuration.HasHeaderRecord && !type.IsPrimitive )
 			{
 				WriteHeader( type );
 			}
@@ -378,6 +379,7 @@ namespace CsvHelper
 					ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
 					throw;
 				}
+
 				NextRecord();
 			}
 		}
@@ -390,7 +392,7 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
-		public virtual void ClearRecordCache<T>() where T : class
+		public virtual void ClearRecordCache<T>()
 		{
 			ClearRecordCache( typeof( T ) );
 		}
@@ -522,7 +524,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<T> GetWriteRecordAction<T>() where T : class
+		protected virtual Action<T> GetWriteRecordAction<T>()
 		{
 			var type = typeof( T );
 			CreateWriteRecordAction( type );
@@ -556,18 +558,39 @@ namespace CsvHelper
 				return;
 			}
 
-			var recordParameter = Expression.Parameter( type, "record" );
-
 			if( configuration.Maps[type] == null )
 			{
 				// We need to check again in case the header was not written.
 				configuration.Maps.Add( configuration.AutoMap( type ) );
 			}
 
+			if( type.IsPrimitive )
+			{
+				CreateActionForPrimitive( type );
+			}
+			else
+			{
+				CreateActionForObject( type );
+			}
+		}
+
+		/// <summary>
+		/// Creates the action for an object.
+		/// </summary>
+		/// <param name="type">The type of object to create the action for.</param>
+		protected virtual void CreateActionForObject( Type type )
+		{
+			var recordParameter = Expression.Parameter( type, "record" );
+
 			// Get a list of all the properties so they will
 			// be sorted properly.
 			var properties = new CsvPropertyMapCollection();
 			AddProperties( properties, configuration.Maps[type] );
+
+			if( properties.Count == 0 )
+			{
+				throw new CsvWriterException( string.Format( "No properties are mapped for type '{0}'.", type.FullName ) );
+			}
 
 			var delegates = new List<Delegate>();
 
@@ -588,19 +611,22 @@ namespace CsvHelper
 				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Maps[type], propertyMap );
 
 				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.Data.Property );
-				
+
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
 				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
 				var typeConverterOptions = Expression.Constant( propertyMap.Data.TypeConverterOptions );
-				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString", new[] { typeof( TypeConverterOptions ), typeof( object ) } );
+				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptions, fieldExpression );
 
-				var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-				fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+				if( type.IsClass )
+				{
+					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+				}
 
 				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
 
@@ -609,6 +635,27 @@ namespace CsvHelper
 			}
 
 			typeActions[type] = CombineDelegates( delegates );
+		}
+
+		/// <summary>
+		/// Creates the action for a primitive.
+		/// </summary>
+		/// <param name="type">The type of primitive to create the action for.</param>
+		protected virtual void CreateActionForPrimitive( Type type )
+		{
+			var recordParameter = Expression.Parameter( type, "record" );
+
+			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
+
+			var typeConverter = TypeConverterFactory.GetConverter( type );
+			var typeConverterExpression = Expression.Constant( typeConverter );
+			var method = typeConverter.GetType().GetMethod( "ConvertToString" );
+			fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( new TypeConverterOptions() ), fieldExpression );
+
+			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
+
+			var actionType = typeof( Action<> ).MakeGenericType( type );
+			typeActions[type] = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
 		}
 
 		/// <summary>

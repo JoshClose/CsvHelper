@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration
 	/// Maps class properties to CSV fields.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of class to map.</typeparam>
-	public abstract class CsvClassMap<T> : CsvClassMap where T : class
+	public abstract class CsvClassMap<T> : CsvClassMap
 	{
 		/// <summary>
 		/// Constructs the row object using the given expression.

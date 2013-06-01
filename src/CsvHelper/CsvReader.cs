@@ -720,7 +720,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>The record converted to <see cref="Type"/> T.</returns>
-		public virtual T GetRecord<T>() where T : class
+		public virtual T GetRecord<T>() 
 		{
 			CheckDisposed();
 			CheckHasBeenRead();
@@ -768,7 +768,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		public virtual IEnumerable<T> GetRecords<T>() where T : class
+		public virtual IEnumerable<T> GetRecords<T>() 
 		{
 			CheckDisposed();
 			// Don't need to check if it's been read
@@ -852,7 +852,7 @@ namespace CsvHelper
 		/// changes, <see cref="ICsvReaderRow.ClearRecordCache{T}"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
-		public virtual void ClearRecordCache<T>() where T : class
+		public virtual void ClearRecordCache<T>() 
 		{
 			ClearRecordCache( typeof( T ) );
 		}
@@ -1070,7 +1070,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of record to create.</typeparam>
 		/// <returns>The created record.</returns>
-		protected virtual T CreateRecord<T>() where T : class
+		protected virtual T CreateRecord<T>() 
 		{
 #if !NET_3_5 && !WINDOWS_PHONE_7
 			// If the type is an object, a dynamic
@@ -1114,7 +1114,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="Type"/> of object that is created
 		/// and populated.</typeparam>
 		/// <returns>The function delegate.</returns>
-		protected virtual Func<T> GetReadRecordFunc<T>() where T : class
+		protected virtual Func<T> GetReadRecordFunc<T>() 
 		{
 			var recordType = typeof( T );
 			CreateReadRecordFunc( recordType );
@@ -1149,19 +1149,57 @@ namespace CsvHelper
 				return;
 			}
 
-			var bindings = new List<MemberBinding>();
-
 			if( configuration.Maps[recordType] == null )
 			{
 				configuration.Maps.Add( configuration.AutoMap( recordType ) );
 			}
 
+			if( recordType.IsPrimitive )
+			{
+				CreateFuncForPrimitive( recordType );
+			}
+			else
+			{
+				CreateFuncForObject( recordType );
+			}
+		}
+
+		/// <summary>
+		/// Creates the function for an object.
+		/// </summary>
+		/// <param name="recordType">The type of object to create the function for.</param>
+		protected virtual void CreateFuncForObject( Type recordType )
+		{
+			var bindings = new List<MemberBinding>();
+
 			CreatePropertyBindingsForMapping( configuration.Maps[recordType], recordType, bindings );
+
+			if( bindings.Count == 0 )
+			{
+				throw new CsvReaderException( string.Format( string.Format( "No properties are mapped for type '{0}'.", recordType.FullName ) ) );
+			}
 
 			var constructorExpression = configuration.Maps[recordType].Constructor ?? Expression.New( recordType );
 			var body = Expression.MemberInit( constructorExpression, bindings );
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
 			recordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
+		}
+
+		/// <summary>
+		/// Creates the function for a primitive.
+		/// </summary>
+		/// <param name="recordType">The type of the primitive to create the function for.</param>
+		protected virtual void CreateFuncForPrimitive( Type recordType )
+		{
+			var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
+			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
+
+			var typeConverter = TypeConverterFactory.GetConverter( recordType );
+			fieldExpression = Expression.Call( Expression.Constant( typeConverter ), "ConvertFromString", null, Expression.Constant( new TypeConverterOptions() ), fieldExpression );
+			fieldExpression = Expression.Convert( fieldExpression, recordType );
+	
+			var funcType = typeof( Func<> ).MakeGenericType( recordType );
+			recordFuncs[recordType] = Expression.Lambda( funcType, fieldExpression ).Compile();
 		}
 
 		/// <summary>

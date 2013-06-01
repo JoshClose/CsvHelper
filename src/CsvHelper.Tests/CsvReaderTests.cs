@@ -861,6 +861,63 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "five", records[2].StringColumn );
 		}
 
+		[TestMethod]
+		public void ReadStructRecordsTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "Id", "Name" } );
+			queue.Enqueue( new[] { "1", "one" } );
+			queue.Enqueue( new[] { "2", "two" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+			var csv = new CsvReader( parserMock );
+			var records = csv.GetRecords<TestStruct>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 1, records[0].Id );
+			Assert.AreEqual( "one", records[0].Name );
+			Assert.AreEqual( 2, records[1].Id );
+			Assert.AreEqual( "two", records[1].Name );
+		}
+
+		[TestMethod]
+		public void ReadPrimitiveRecordsHasHeaderTrueTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "Id" } );
+			queue.Enqueue( new[] { "1" } );
+			queue.Enqueue( new[] { "2" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+			var csv = new CsvReader( parserMock );
+			csv.Configuration.HasHeaderRecord = true;
+			var records = csv.GetRecords<int>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 1, records[0] );
+			Assert.AreEqual( 2, records[1] );
+		}
+
+		[TestMethod]
+		public void ReadPrimitiveRecordsHasHeaderFalseTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1" } );
+			queue.Enqueue( new[] { "2" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+			var csv = new CsvReader( parserMock );
+			csv.Configuration.HasHeaderRecord = false;
+			var records = csv.GetRecords<int>().ToList();
+
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 2, records.Count );
+			Assert.AreEqual( 1, records[0] );
+			Assert.AreEqual( 2, records[1] );
+		}
+
 #if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()
@@ -900,6 +957,12 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "one", row.Field2 );
 		}
 #endif
+		private struct TestStruct
+		{
+			public int Id { get; set; }
+
+			public string Name { get; set; }
+		}
 
 		private class OnlyFields
 		{

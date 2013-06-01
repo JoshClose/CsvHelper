@@ -271,7 +271,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>The record converted to <see cref="Type"/> T.</returns>
-		T GetRecord<T>() where T : class;
+		T GetRecord<T>() ;
 
 		/// <summary>
 		/// Gets the record.
@@ -287,7 +287,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
-		IEnumerable<T> GetRecords<T>() where T : class;
+		IEnumerable<T> GetRecords<T>() ;
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
@@ -305,7 +305,7 @@ namespace CsvHelper
 		/// changes, <see cref="ClearRecordCache{T}"/> needs to be called to update the
 		/// record cache.
 		/// </summary>
-		void ClearRecordCache<T>() where T : class;
+		void ClearRecordCache<T>() ;
 
 		/// <summary>
 		/// Clears the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the

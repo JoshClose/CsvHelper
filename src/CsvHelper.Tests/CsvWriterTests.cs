@@ -498,6 +498,76 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WritePrimitivesRecordsHasHeaderTrueTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.HasHeaderRecord = true;
+				var list = new List<int> { 1, 2, 3 };
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "1\r\n2\r\n3\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void WritePrimitivesRecordsHasHeaderFalseTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.HasHeaderRecord = false;
+				var list = new List<int> { 1, 2, 3 };
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "1\r\n2\r\n3\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void WriteStructRecordsTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<TestStruct>
+				{
+					new TestStruct { Id = 1, Name = "one" },
+					new TestStruct { Id = 2, Name = "two" },
+				};
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "Id,Name\r\n1,one\r\n2,two\r\n", text );
+			}
+		}
+
+		private struct TestStruct
+		{
+			public int Id { get; set; }
+
+			public string Name { get; set; }
+		}
+
 		private class TestPrivateGet
 		{
 			public int Id { get; set; }
