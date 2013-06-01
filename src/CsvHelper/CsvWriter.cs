@@ -333,7 +333,13 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !typeof( T ).IsPrimitive )
+			if( configuration.HasHeaderRecord &&
+#if !WINRT_4_5
+			    !typeof( T ).IsPrimitive
+#else
+				!typeof( T ).GetTypeInfo().IsPrimitive
+#endif
+				)
 			{
 				WriteHeader<T>();
 			}
@@ -363,7 +369,13 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord && !type.IsPrimitive )
+			if( configuration.HasHeaderRecord &&
+#if !WINRT_4_5
+			    !type.IsPrimitive
+#else
+				!type.GetTypeInfo().IsPrimitive
+#endif
+				)
 			{
 				WriteHeader( type );
 			}
@@ -564,7 +576,11 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( type ) );
 			}
 
+#if !WINRT_4_5
 			if( type.IsPrimitive )
+#else
+			if( type.GetTypeInfo().IsPrimitive )
+#endif
 			{
 				CreateActionForPrimitive( type );
 			}
@@ -622,7 +638,11 @@ namespace CsvHelper
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptions, fieldExpression );
 
+#if !WINRT_4_5
 				if( type.IsClass )
+#else
+				if( type.GetTypeInfo().IsClass )
+#endif
 				{
 					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );

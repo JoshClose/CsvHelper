@@ -20,6 +20,7 @@ using System.Linq.Expressions;
 using System.Dynamic;
 #endif
 #if WINRT_4_5
+using System.Reflection;
 using CsvHelper.MissingFromRt45;
 #endif
 
@@ -1154,7 +1155,11 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( recordType ) );
 			}
 
+#if !WINRT_4_5
 			if( recordType.IsPrimitive )
+#else
+			if( recordType.GetTypeInfo().IsPrimitive )
+#endif
 			{
 				CreateFuncForPrimitive( recordType );
 			}
