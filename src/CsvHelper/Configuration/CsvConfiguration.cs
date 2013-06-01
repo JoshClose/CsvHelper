@@ -317,14 +317,34 @@ namespace CsvHelper.Configuration
 			where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
+			RegisterClassMap( map );
+		}
+
+		/// <summary>
+		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
+		/// When using a class map, no properties are mapped by default.
+		/// Only properties specified in the mapping are used.
+		/// </summary>
+		public virtual void ClassMapping(Type classMapType)
+		{
+			if( typeof(CsvClassMap).IsAssignableFrom(classMapType) == false )
+			{
+				throw new CsvConfigurationException( "Provided type is not derived from CsvClassMap" );
+			}
+			var map = (CsvClassMap) ReflectionHelper.CreateInstance(classMapType);
+			RegisterClassMap( map );
+		}
+
+		private void RegisterClassMap( CsvClassMap map )
+		{
 			map.CreateMap();
 
-			if( map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
+			if (map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0)
 			{
-				throw new CsvConfigurationException( "No mappings were specified in the CsvClassMap." );
+				throw new CsvConfigurationException("No mappings were specified in the CsvClassMap.");
 			}
 
-			Maps.Add( map );
+			Maps.Add(map);
 		}
 
 		/// <summary>
