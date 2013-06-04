@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// map will replace it.
 		/// </summary>
 		/// <param name="map">The map.</param>
-		public virtual void Add( CsvClassMap map )
+		internal virtual void Add( CsvClassMap map )
 		{
 			var type = GetGenericCsvClassMapType( map.GetType() ).GetGenericArguments().First();
 
@@ -59,18 +59,25 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Removes the map for the specified record type.
+		/// Removes the class map.
 		/// </summary>
-		/// <param name="type">The record type.</param>
-		public virtual void Remove( Type type )
+		/// <param name="classMapType">The class map type.</param>
+		internal virtual void Remove( Type classMapType )
 		{
+			if( !typeof( CsvClassMap ).IsAssignableFrom( classMapType ) )
+			{
+				throw new ArgumentException( "The class map type must inherit from CsvClassMap." );
+			}
+
+			var type = GetGenericCsvClassMapType( classMapType ).GetGenericArguments().First();
+
 			data.Remove( type );
 		}
 
 		/// <summary>
 		/// Removes all maps.
 		/// </summary>
-		public virtual void Clear()
+		internal virtual void Clear()
 		{
 			data.Clear();
 		}

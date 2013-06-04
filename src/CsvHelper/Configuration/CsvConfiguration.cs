@@ -354,6 +354,33 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Unregisters the class map.
+		/// </summary>
+		/// <typeparam name="TMap">The map type to unregister.</typeparam>
+		public virtual void UnregisterClassMap<TMap>()
+			where TMap : CsvClassMap
+		{
+			UnregisterClassMap( typeof( TMap ) );
+		}
+
+		/// <summary>
+		/// Unregisters the class map.
+		/// </summary>
+		/// <param name="classMapType">The map type to unregister.</param>
+		public virtual void UnregisterClassMap( Type classMapType )
+		{
+			maps.Remove( classMapType );
+		}
+
+		/// <summary>
+		/// Unregisters all class maps.
+		/// </summary>
+		public virtual void UnregisterClassMap()
+		{
+			maps.Clear();
+		}
+
+		/// <summary>
 		/// Generates a <see cref="CsvClassMap"/> for the type.
 		/// </summary>
 		/// <typeparam name="T">The type to generate the map for.</typeparam>

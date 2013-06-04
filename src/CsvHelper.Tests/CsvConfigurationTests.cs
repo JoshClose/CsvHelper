@@ -36,7 +36,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void AddingMappingsWithGenericMethod1()
+		public void AddingMappingsWithGenericMethod1Test()
 		{
 			var config = new CsvConfiguration();
 			config.RegisterClassMap<TestClassMappings>();
@@ -45,7 +45,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void AddingMappingsWithGenericMethod2()
+		public void AddingMappingsWithGenericMethod2Test()
 		{
 			var config = new CsvConfiguration();
 			config.RegisterClassMap<TestClassMappings>();
@@ -54,13 +54,60 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void AddingMappingsWithNonGenericMethod()
+		public void AddingMappingsWithNonGenericMethodTest()
 		{
 			var config = new CsvConfiguration();
 			config.RegisterClassMap( typeof( TestClassMappings ) );
 
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
 		}
+
+		[TestMethod]
+		public void RegisterClassMapGenericTest()
+		{
+			var config = new CsvConfiguration();
+
+			Assert.IsNull( config.Maps[typeof( TestClass )] );
+			config.RegisterClassMap<TestClassMappings>();
+			Assert.IsNotNull( config.Maps[typeof( TestClass )] );
+		}
+
+		[TestMethod]
+		public void RegisterClassMapNonGenericTest()
+		{
+			var config = new CsvConfiguration();
+
+			Assert.IsNull( config.Maps[typeof( TestClass )] );
+			config.RegisterClassMap( typeof( TestClassMappings ) );
+			Assert.IsNotNull( config.Maps[typeof( TestClass )] );
+		}
+
+		[TestMethod]
+		public void UnregisterClassMapGenericTest()
+		{
+			var config = new CsvConfiguration();
+
+			Assert.IsNull( config.Maps[typeof( TestClass )] );
+			config.RegisterClassMap<TestClassMappings>();
+			Assert.IsNotNull( config.Maps[typeof( TestClass )] );
+
+			config.UnregisterClassMap<TestClassMappings>();
+			Assert.IsNull( config.Maps[typeof( TestClass )] );
+		}
+
+		[TestMethod]
+		public void UnregisterClassNonMapGenericTest()
+		{
+			var config = new CsvConfiguration();
+
+			Assert.IsNull( config.Maps[typeof( TestClass )] );
+			config.RegisterClassMap( typeof( TestClassMappings ) );
+			Assert.IsNotNull( config.Maps[typeof( TestClass )] );
+
+			config.UnregisterClassMap( typeof( TestClassMappings ) );
+			Assert.IsNull( config.Maps[typeof( TestClass )] );
+		}
+
 
 #if !WINRT_4_5
 		[TestMethod]
