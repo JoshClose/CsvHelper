@@ -128,8 +128,8 @@ namespace CsvHelper.Tests
 		public void MapMultipleTypesTest()
 		{
 			var config = new CsvConfiguration();
-			config.ClassMapping<AMap>();
-			config.ClassMapping<BMap>();
+			config.RegisterClassMap<AMap>();
+			config.RegisterClassMap<BMap>();
 
 			Assert.IsNotNull( config.Maps[typeof( A )] );
 			Assert.IsNotNull( config.Maps[typeof( B )] );

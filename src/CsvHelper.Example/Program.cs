@@ -109,7 +109,7 @@ namespace CsvHelper.Example
 
 			using( var reader = new CsvReader( new StreamReader( GetDataStream( true, true ) ) ) )
 			{
-				reader.Configuration.ClassMapping<CustomObjectWithMappingMap>();
+				reader.Configuration.RegisterClassMap<CustomObjectWithMappingMap>();
 
 				while( reader.Read() )
 				{
@@ -325,7 +325,7 @@ namespace CsvHelper.Example
 			using( var streamReader = new StreamReader( memoryStream ) )
 			using( var writer = new CsvWriter( streamWriter ) )
 			{
-				writer.Configuration.ClassMapping<CustomObjectWithMappingMap>();
+				writer.Configuration.RegisterClassMap<CustomObjectWithMappingMap>();
 				writer.WriteRecords( records );
 
 				memoryStream.Position = 0;

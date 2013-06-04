@@ -28,7 +28,7 @@ namespace CsvHelper.Configuration
 		/// </value>
 		/// <param name="type">The record type.</param>
 		/// <returns>The <see cref="CsvClassMap"/> for the specified record type.</returns>
-		public CsvClassMap this[Type type]
+		public virtual CsvClassMap this[Type type]
 		{
 			get
 			{
@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// map will replace it.
 		/// </summary>
 		/// <param name="map">The map.</param>
-		public void Add( CsvClassMap map )
+		public virtual void Add( CsvClassMap map )
 		{
 			var type = GetGenericCsvClassMapType( map.GetType() ).GetGenericArguments().First();
 
@@ -62,7 +62,7 @@ namespace CsvHelper.Configuration
 		/// Removes the map for the specified record type.
 		/// </summary>
 		/// <param name="type">The record type.</param>
-		public void Remove( Type type )
+		public virtual void Remove( Type type )
 		{
 			data.Remove( type );
 		}
@@ -70,7 +70,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Removes all maps.
 		/// </summary>
-		public void Clear()
+		public virtual void Clear()
 		{
 			data.Clear();
 		}
@@ -80,7 +80,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type to traverse.</param>
 		/// <returns>The type that is CsvClassMap{}.</returns>
-		private Type GetGenericCsvClassMapType( Type type )
+		protected virtual Type GetGenericCsvClassMapType( Type type )
 		{
 #if WINRT_4_5
 			var typeInfo = type.GetTypeInfo();

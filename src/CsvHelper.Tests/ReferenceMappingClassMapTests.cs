@@ -51,7 +51,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.ClassMapping<PersonMap>();
+			reader.Configuration.RegisterClassMap<PersonMap>();
 			reader.Read();
 			var person = reader.GetRecord<Person>();
 

@@ -209,7 +209,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Ends writing of the current record
 		/// and starts a new record. This is used
-		/// when manually writing records with <see cref="ICsvWriter.WriteField{T}" />
+		/// when manually writing records with WriteField.
 		/// </summary>
 		public virtual void NextRecord()
 		{
@@ -563,7 +563,6 @@ namespace CsvHelper
 		/// doesn't already exist.
 		/// </summary>
 		/// <param name="type">The type of the custom class being written.</param>
-		/// <param name="expressionCompiler">The expression compiler.</param>
 		protected virtual void CreateWriteRecordAction( Type type )
 		{
 			if( typeActions.ContainsKey( type ) )

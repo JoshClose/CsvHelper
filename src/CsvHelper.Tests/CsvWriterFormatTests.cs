@@ -34,7 +34,7 @@ namespace CsvHelper.Tests
 			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
 			csv.Configuration.CultureInfo = new CultureInfo( "en-US" );
-			csv.Configuration.ClassMapping<TestRecordMap>();
+			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
 			csv.WriteRecord( record );
 
@@ -73,7 +73,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter( stream ) { AutoFlush = true };
 			var csv = new CsvWriter( writer );
-			csv.Configuration.ClassMapping<PersonMap>();
+			csv.Configuration.RegisterClassMap<PersonMap>();
 
 			csv.WriteRecord( record );
 

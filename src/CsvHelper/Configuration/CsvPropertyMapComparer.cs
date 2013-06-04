@@ -14,7 +14,7 @@ namespace CsvHelper.Configuration
 	/// fields that don't have an index are pushed
 	/// to the bottom.
 	/// </summary>
-	public class CsvPropertyMapComparer : IComparer, IComparer<CsvPropertyMap>
+	internal class CsvPropertyMapComparer : IComparer<CsvPropertyMap>
 	{
 		/// <summary>
 		/// Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.

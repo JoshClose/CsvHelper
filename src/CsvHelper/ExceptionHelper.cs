@@ -11,6 +11,9 @@ using System.Linq;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Common exception tasks.
+	/// </summary>
 	internal static class ExceptionHelper
 	{
 		/// <summary>

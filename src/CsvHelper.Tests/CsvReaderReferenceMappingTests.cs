@@ -20,7 +20,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvReader( reader ) )
 			{
-				csv.Configuration.ClassMapping<AMap>();
+				csv.Configuration.RegisterClassMap<AMap>();
 
 				writer.WriteLine( "AId,BId,CId,DId" );
 				writer.WriteLine( "a1,b1,c1,d1" );

@@ -31,7 +31,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
-				csvWriter.Configuration.ClassMapping<MultipleNamesClassMap>();
+				csvWriter.Configuration.RegisterClassMap<MultipleNamesClassMap>();
 				csvWriter.WriteRecords( records );
 
 				writer.Flush();
@@ -66,7 +66,7 @@ namespace CsvHelper.Tests
 						Name3 = "3"
 					}
 				};
-				csv.Configuration.ClassMapping<SameNameMultipleTimesClassMap>();
+				csv.Configuration.RegisterClassMap<SameNameMultipleTimesClassMap>();
 				csv.WriteRecords( records );
 				writer.Flush();
 				stream.Position = 0;

@@ -288,22 +288,22 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IgnorePrivateAccessor { get; set; }
 
+#if !NET_2_0
 		/// <summary>
 		/// Gets or sets a value indicating whether
 		/// exceptions that occur duruing reading
 		/// should be ignored. True to ignore exceptions,
 		/// otherwise false. Default is false.
 		/// This is only applicable when during
-		/// <see cref="ICsvReader.GetRecords{T}"/>.
+		/// <see cref="ICsvReaderRow.GetRecords{T}"/>.
 		/// </summary>
 		public virtual bool IgnoreReadingExceptions { get; set; }
 
-#if !NET_2_0
 		/// <summary>
 		/// Gets or sets the callback that is called when a reading
 		/// exception occurs. This will only happen when
 		/// <see cref="IgnoreReadingExceptions"/> is true, and when
-		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
+		/// calling <see cref="ICsvReaderRow.GetRecords{T}"/>.
 		/// </summary>
 		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
 
@@ -313,7 +313,7 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual void ClassMapping<TMap>()
+		public virtual void RegisterClassMap<TMap>()
 			where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
@@ -326,7 +326,7 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
-		public virtual void ClassMapping( Type classMapType )
+		public virtual void RegisterClassMap( Type classMapType )
 		{
 			if( !typeof( CsvClassMap ).IsAssignableFrom( classMapType ) )
 			{

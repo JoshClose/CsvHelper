@@ -308,7 +308,7 @@ namespace CsvHelper
 		void ClearRecordCache<T>() ;
 
 		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ClearRecordCache( Type )"/> needs to be called to update the
@@ -318,7 +318,7 @@ namespace CsvHelper
 		void ClearRecordCache( Type type );
 
 		/// <summary>
-		/// Clears the record cache for all types. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// Clears the record cache for all types. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ClearRecordCache()"/> needs to be called to update the

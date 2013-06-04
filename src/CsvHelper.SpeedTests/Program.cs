@@ -56,7 +56,7 @@ namespace CsvHelper.SpeedTests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ClassMapping<TestClassMap>();
+				csv.Configuration.RegisterClassMap<TestClassMap>();
 
 				var stopwatch = new Stopwatch();
 				stopwatch.Start();

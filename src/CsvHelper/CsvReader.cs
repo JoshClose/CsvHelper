@@ -859,7 +859,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ICsvReaderRow.ClearRecordCache(System.Type)"/> needs to be called to update the
@@ -872,7 +872,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Clears the record cache for all types. After <see cref="ICsvReader.GetRecord{T}"/> is called the
+		/// Clears the record cache for all types. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ICsvReaderRow.ClearRecordCache()"/> needs to be called to update the
@@ -1142,7 +1142,6 @@ namespace CsvHelper
 		/// doesn't already exist.
 		/// </summary>
 		/// <param name="recordType">Type of the record.</param>
-		/// <param name="expressionCompiler">The expression compiler.</param>
 		protected virtual void CreateReadRecordFunc( Type recordType )
 		{
 			if( recordFuncs.ContainsKey( recordType ) )
@@ -1330,7 +1329,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="propertyMap">The property map.</param>
 		/// <returns>A value indicating of the property can be read. True if it can, otherwise false.</returns>
-		protected bool CanRead( CsvPropertyMap propertyMap )
+		protected virtual bool CanRead( CsvPropertyMap propertyMap )
 		{
 			var cantRead =
 				// Ignored properties.
@@ -1349,7 +1348,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="propertyReferenceMap">The reference map.</param>
 		/// <returns>A value indicating of the property can be read. True if it can, otherwise false.</returns>
-		protected bool CanRead( CsvPropertyReferenceMap propertyReferenceMap )
+		protected virtual bool CanRead( CsvPropertyReferenceMap propertyReferenceMap )
 		{
 			var cantRead =
 				// Properties that don't have a public setter
@@ -1366,7 +1365,7 @@ namespace CsvHelper
 		/// Creates a dynamic object from the current record.
 		/// </summary>
 		/// <returns>The dynamic object.</returns>
-		protected dynamic CreateDynamic()
+		protected virtual dynamic CreateDynamic()
 		{
 			var obj = new ExpandoObject();
 			var dict = obj as IDictionary<string, object>;

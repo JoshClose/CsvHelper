@@ -63,7 +63,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ClassMapping<DestabilizeRuntimeMap>();
+				csv.Configuration.RegisterClassMap<DestabilizeRuntimeMap>();
 				try
 				{
 					var list = csv.GetRecords<DestabilizeRuntime>().ToList();

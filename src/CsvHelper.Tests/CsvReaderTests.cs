@@ -343,7 +343,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.WillThrowOnMissingField = false;
-			csv.Configuration.ClassMapping<TestRecordMap>();
+			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
 
@@ -377,7 +377,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.WillThrowOnMissingField = false;
-			csv.Configuration.ClassMapping<TestRecordMap>();
+			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
 			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ));
 
@@ -407,7 +407,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.WillThrowOnMissingField = false;
-			csv.Configuration.ClassMapping<TestRecordMap>();
+			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			var records = csv.GetRecords<TestRecord>().ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -442,7 +442,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.WillThrowOnMissingField = false;
-			csv.Configuration.ClassMapping<TestRecordMap>();
+			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			var records = csv.GetRecords( typeof( TestRecord ) ).ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -477,7 +477,7 @@ namespace CsvHelper.Tests
 
 			var csv = new CsvReader( csvParserMock );
 			csv.Configuration.WillThrowOnMissingField = true;
-			csv.Configuration.ClassMapping<TestRecordDuplicateHeaderNamesMap>();
+			csv.Configuration.RegisterClassMap<TestRecordDuplicateHeaderNamesMap>();
 			var records = csv.GetRecords<TestRecordDuplicateHeaderNames>().ToList();
 
 			Assert.AreEqual( 2, records.Count );
@@ -703,7 +703,7 @@ namespace CsvHelper.Tests
 
 			var reader = new StreamReader( stream );
 			var csvReader = new CsvReader( reader );
-			csvReader.Configuration.ClassMapping<TestDefaultValuesMap>();
+			csvReader.Configuration.RegisterClassMap<TestDefaultValuesMap>();
 
 			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
 
@@ -795,7 +795,7 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				csvReader.Configuration.WillThrowOnMissingField = false;
-				csvReader.Configuration.ClassMapping<TestRecordMap>();
+				csvReader.Configuration.RegisterClassMap<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual( 2, records.Count() );
 				try
@@ -822,7 +822,7 @@ namespace CsvHelper.Tests
 			try
 			{
 				// This needs a class map because auto mapping only works with properties.
-				reader.Configuration.ClassMapping<OnlyFieldsMap>();
+				reader.Configuration.RegisterClassMap<OnlyFieldsMap>();
 				reader.GetRecords<OnlyFields>().ToList();
 				Assert.Fail();
 			}

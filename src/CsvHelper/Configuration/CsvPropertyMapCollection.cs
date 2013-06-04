@@ -14,7 +14,21 @@ namespace CsvHelper.Configuration
 	public class CsvPropertyMapCollection : IList<CsvPropertyMap>
 	{
 		private readonly List<CsvPropertyMap> list = new List<CsvPropertyMap>();
-		private readonly CsvPropertyMapComparer comparer = new CsvPropertyMapComparer();
+		private readonly IComparer<CsvPropertyMap> comparer;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvPropertyMapCollection"/> class.
+		/// </summary>
+		public CsvPropertyMapCollection() : this( new CsvPropertyMapComparer() ) {}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvPropertyMapCollection"/> class.
+		/// </summary>
+		/// <param name="comparer">The comparer to use when sorting the property maps.</param>
+		public CsvPropertyMapCollection( IComparer<CsvPropertyMap> comparer )
+		{
+			this.comparer = comparer;
+		}
 
 		/// <summary>
 		/// Returns an enumerator that iterates through the collection.
@@ -49,7 +63,7 @@ namespace CsvHelper.Configuration
 		public virtual void Add( CsvPropertyMap item )
 		{
 			list.Add( item );
-			Sort();
+			list.Sort( comparer );
 		}
 
 		/// <summary>
@@ -59,7 +73,7 @@ namespace CsvHelper.Configuration
 		public virtual void AddRange( ICollection<CsvPropertyMap> collection )
 		{
 			list.AddRange( collection );
-			Sort();
+			list.Sort( comparer );
 		}
 
 		/// <summary>
@@ -88,18 +102,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
 		/// </summary>
-		/// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.
-		///                 </param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.
-		///                 </param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.
-		///                 </exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.
-		///                 </exception><exception cref="T:System.ArgumentException"><paramref name="array"/> is multidimensional.
-		///                     -or-
-		///                 <paramref name="arrayIndex"/> is equal to or greater than the length of <paramref name="array"/>.
-		///                     -or-
-		///                     The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.
-		///                     -or-
-		///                     Type <paramref name="T"/> cannot be cast automatically to the type of the destination <paramref name="array"/>.
-		///                 </exception>
+		/// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.</param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.</exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.</exception><exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.</exception>
 		public virtual void CopyTo( CsvPropertyMap[] array, int arrayIndex )
 		{
 			list.CopyTo( array, arrayIndex );
@@ -193,14 +196,6 @@ namespace CsvHelper.Configuration
 		{
 			get { return list[index]; }
 			set { list[index] = value; }
-		}
-
-		/// <summary>
-		/// Sorts the list using <see cref="CsvPropertyMapComparer"/>.
-		/// </summary>
-		private void Sort()
-		{
-			list.Sort( comparer );
 		}
 	}
 }

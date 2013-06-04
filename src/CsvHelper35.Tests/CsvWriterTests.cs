@@ -24,7 +24,7 @@ namespace CsvHelper35.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ClassMapping<TestMap>();
+				csv.Configuration.RegisterClassMap<TestMap>();
 
 				csv.WriteRecord( typeof( Test ), new Test { Id = 1, Name = "one" } );
 				csv.WriteRecord( typeof( Test ), new Test { Id = 2, Name = "two" } );

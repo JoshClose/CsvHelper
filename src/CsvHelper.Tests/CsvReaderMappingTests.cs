@@ -33,7 +33,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var csvReader = new CsvReader( parserMock );
-			csvReader.Configuration.ClassMapping<MultipleNamesClassMap>();
+			csvReader.Configuration.RegisterClassMap<MultipleNamesClassMap>();
 
 			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
 
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests
 
 			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.HasHeaderRecord = false;
-			csvReader.Configuration.ClassMapping<ConstructorMappingClassMap>();
+			csvReader.Configuration.RegisterClassMap<ConstructorMappingClassMap>();
 
 			csvReader.Read();
 			var record = csvReader.GetRecord<ConstructorMappingClass>();
@@ -74,7 +74,7 @@ namespace CsvHelper.Tests
 
 			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.HasHeaderRecord = false;
-			csvReader.Configuration.ClassMapping<ConvertUsingMap>();
+			csvReader.Configuration.RegisterClassMap<ConvertUsingMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
@@ -96,7 +96,7 @@ namespace CsvHelper.Tests
 
 			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.HasHeaderRecord = false;
-			csvReader.Configuration.ClassMapping<ConvertUsingBlockMap>();
+			csvReader.Configuration.RegisterClassMap<ConvertUsingBlockMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
@@ -118,7 +118,7 @@ namespace CsvHelper.Tests
 
 			var csvReader = new CsvReader( parserMock );
 			csvReader.Configuration.HasHeaderRecord = false;
-			csvReader.Configuration.ClassMapping<ConvertUsingConstantMap>();
+			csvReader.Configuration.RegisterClassMap<ConvertUsingConstantMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
@@ -138,7 +138,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( parserMock );
-			csv.Configuration.ClassMapping<SameNameMultipleTimesClassMap>();
+			csv.Configuration.RegisterClassMap<SameNameMultipleTimesClassMap>();
 
 			var records = csv.GetRecords<SameNameMultipleTimesClass>().ToList();
 

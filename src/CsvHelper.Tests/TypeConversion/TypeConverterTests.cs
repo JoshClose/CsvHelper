@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.TypeConversion
 			var parserMock = new ParserMock( queue );
 			var csv = new CsvReader( parserMock );
 			csv.Configuration.HasHeaderRecord = false;
-			csv.Configuration.ClassMapping<TestMap>();
+			csv.Configuration.RegisterClassMap<TestMap>();
 			var list = csv.GetRecords<Test>().ToList();
 		}
 

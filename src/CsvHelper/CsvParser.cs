@@ -130,33 +130,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Adds the field to the current record.
-		/// </summary>
-		/// <param name="recordPosition">The record position to add the field to.</param>
-		/// <param name="field">The field to add.</param>
-		protected virtual void AddFieldToRecord( ref int recordPosition, string field )
-		{
-			if( record.Length < recordPosition + 1 )
-			{
-				// Resize record if it's too small.
-				Array.Resize( ref record, recordPosition + 1 );
-
-				// Set the field count. If there is a header
-				// record, then we can go by the number of
-				// headers there is. If there is no header
-				// record, then we can go by the first row.
-				// Either way, we're using the first row.
-				if( currentRow == 1 )
-				{
-					FieldCount = record.Length;
-				}
-			}
-
-			record[recordPosition] = field;
-			recordPosition++;
-		}
-
-		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
@@ -197,6 +170,33 @@ namespace CsvHelper
 			{
 				throw new ObjectDisposedException( GetType().ToString() );
 			}
+		}
+
+		/// <summary>
+		/// Adds the field to the current record.
+		/// </summary>
+		/// <param name="recordPosition">The record position to add the field to.</param>
+		/// <param name="field">The field to add.</param>
+		protected virtual void AddFieldToRecord( ref int recordPosition, string field )
+		{
+			if( record.Length < recordPosition + 1 )
+			{
+				// Resize record if it's too small.
+				Array.Resize( ref record, recordPosition + 1 );
+
+				// Set the field count. If there is a header
+				// record, then we can go by the number of
+				// headers there is. If there is no header
+				// record, then we can go by the first row.
+				// Either way, we're using the first row.
+				if( currentRow == 1 )
+				{
+					FieldCount = record.Length;
+				}
+			}
+
+			record[recordPosition] = field;
+			recordPosition++;
 		}
 
 		/// <summary>

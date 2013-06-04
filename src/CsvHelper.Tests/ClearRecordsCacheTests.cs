@@ -33,7 +33,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ClassMapping<TestMap1>();
+				csv.Configuration.RegisterClassMap<TestMap1>();
 				csv.Read();
 				var record = csv.GetRecord<Test>();
 
@@ -44,7 +44,7 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 				csv.ClearRecordCache<Test>();
 
-				csv.Configuration.ClassMapping<TestMap2>();
+				csv.Configuration.RegisterClassMap<TestMap2>();
 				csv.Read();
 				record = csv.GetRecord<Test>();
 
@@ -62,12 +62,12 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ClassMapping<TestMap1>();
+				csv.Configuration.RegisterClassMap<TestMap1>();
 				var record = new Test { Id = 1, Name = "one" };
 				csv.WriteRecord( record );
 
 				csv.ClearRecordCache<Test>();
-				csv.Configuration.ClassMapping<TestMap2>();
+				csv.Configuration.RegisterClassMap<TestMap2>();
 				record = new Test { Id = 2, Name = "two" };
 				csv.WriteRecord( record );
 

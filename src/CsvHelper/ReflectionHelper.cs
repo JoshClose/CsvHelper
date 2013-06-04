@@ -16,13 +16,13 @@ namespace CsvHelper
 	/// <summary>
 	/// Common reflection tasks.
 	/// </summary>
-	public static class ReflectionHelper
+	internal static class ReflectionHelper
 	{
 		/// <summary>
-		/// Creates an instance of type <see cref="T"/>.
+		/// Creates an instance of type T.
 		/// </summary>
 		/// <typeparam name="T">The type of instance to create.</typeparam>
-		/// <returns>A new instance of type <see cref="T"/>.</returns>
+		/// <returns>A new instance of type T.</returns>
 		public static T CreateInstance<T>()
 		{
 #if NET_2_0

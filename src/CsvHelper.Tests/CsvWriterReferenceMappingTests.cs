@@ -21,7 +21,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ClassMapping<AMap>();
+				csv.Configuration.RegisterClassMap<AMap>();
 
 				var list = new List<A>();
 				for( var i = 0; i < 4; i++ )
