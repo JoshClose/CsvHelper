@@ -18,7 +18,7 @@ namespace CsvHelper
 		/// <param name="reader">The text reader to use for the csv parser.</param>
 		/// <param name="configuration">The configuration to use for the csv parser.</param>
 		/// <returns>The created parser.</returns>
-		public ICsvParser CreateParser( TextReader reader, CsvConfiguration configuration )
+		public virtual ICsvParser CreateParser( TextReader reader, CsvConfiguration configuration )
 		{
 			return new CsvParser( reader, configuration );
 		}
@@ -28,7 +28,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The text reader to use for the csv parser.</param>
 		/// <returns>The created parser.</returns>
-		public ICsvParser CreateParser( TextReader reader )
+		public virtual ICsvParser CreateParser( TextReader reader )
 		{
 			return new CsvParser( reader );
 		}
@@ -39,7 +39,7 @@ namespace CsvHelper
 		/// <param name="reader">The text reader to use for the csv reader.</param>
 		/// <param name="configuration">The configuration to use for the reader.</param>
 		/// <returns>The created reader.</returns>
-		public ICsvReader CreateReader( TextReader reader, CsvConfiguration configuration )
+		public virtual ICsvReader CreateReader( TextReader reader, CsvConfiguration configuration )
 		{
 			return new CsvReader( reader, configuration );
 		}
@@ -49,7 +49,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The text reader to use for the csv reader.</param>
 		/// <returns>The created reader.</returns>
-		public ICsvReader CreateReader( TextReader reader )
+		public virtual ICsvReader CreateReader( TextReader reader )
 		{
 			return new CsvReader( reader );
 		}
@@ -59,7 +59,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="parser">The parser used to create the reader.</param>
 		/// <returns>The created reader.</returns>
-		public ICsvReader CreateReader( ICsvParser parser )
+		public virtual ICsvReader CreateReader( ICsvParser parser )
 		{
 			return new CsvReader( parser );
 		}
@@ -70,7 +70,7 @@ namespace CsvHelper
 		/// <param name="writer">The text writer to use for the csv writer.</param>
 		/// <param name="configuration">The configuration to use for the writer.</param>
 		/// <returns>The created writer.</returns>
-		public ICsvWriter CreateWriter( TextWriter writer, CsvConfiguration configuration )
+		public virtual ICsvWriter CreateWriter( TextWriter writer, CsvConfiguration configuration )
 		{
 			return new CsvWriter( writer, configuration );
 		}
@@ -80,7 +80,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The text writer to use for the csv writer.</param>
 		/// <returns>The created writer.</returns>
-		public ICsvWriter CreateWriter( TextWriter writer )
+		public virtual ICsvWriter CreateWriter( TextWriter writer )
 		{
 			return new CsvWriter( writer );
 		}

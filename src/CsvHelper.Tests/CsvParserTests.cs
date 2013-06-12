@@ -1270,5 +1270,28 @@ namespace CsvHelper.Tests
 				}
 			}
 		}
+
+		[TestMethod]
+		public void ParseNoQuotesTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "one,\"two\",three \" four, \"five\" " );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.IgnoreQuotes = true;
+				var record = parser.Read();
+
+				Assert.IsNotNull( record );
+				Assert.AreEqual( "one", record[0] );
+				Assert.AreEqual( "\"two\"", record[1] );
+				Assert.AreEqual( "three \" four", record[2] );
+				Assert.AreEqual( " \"five\" ", record[3] );
+			}
+		}
 	}
 }

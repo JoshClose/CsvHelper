@@ -255,7 +255,7 @@ namespace CsvHelper
 				readerBufferPosition++;
 				CharPosition++;
 
-				if( c == configuration.Quote )
+				if( c == configuration.Quote && !configuration.IgnoreQuotes )
 				{
 					if( !fieldIsEscaped && ( prevCharWasDelimiter || cPrev == '\r' || cPrev == '\n' || cPrev == '\0' ) )
 					{
@@ -310,7 +310,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( cPrev == configuration.Quote )
+				if( cPrev == configuration.Quote && !configuration.IgnoreQuotes )
 				{
 					// If we're not in quotes and the
 					// previous char was a quote, the

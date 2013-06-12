@@ -281,6 +281,12 @@ namespace CsvHelper.Configuration
 		public virtual bool SkipEmptyRecords { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if quotes should be
+		/// ingored when parsing and treated like any other character.
+		/// </summary>
+		public virtual bool IgnoreQuotes { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if private
 		/// get and set property accessors should be
 		/// ignored when reading and writing.
