@@ -77,6 +77,7 @@
     <Compile Include="Configuration\CsvPropertyMapData.cs" />
     <Compile Include="Configuration\CsvPropertyReferenceMap.cs" />
     <Compile Include="CsvBadDataException.cs" />
+    <Compile Include="CsvFactory.cs" />
     <Compile Include="CsvHelperException.cs" />
     <Compile Include="CsvMissingFieldException.cs" />
     <Compile Include="CsvParser.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="CsvWriter.cs" />
     <Compile Include="CsvWriterException.cs" />
     <Compile Include="ExceptionHelper.cs" />
+    <Compile Include="ICsvFactory.cs" />
     <Compile Include="ICsvParser.cs" />
     <Compile Include="ICsvReader.cs" />
     <Compile Include="ICsvReaderRow.cs" />
