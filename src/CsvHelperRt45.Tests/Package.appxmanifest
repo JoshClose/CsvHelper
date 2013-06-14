@@ -1,15 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
   
-  <Identity Name="91097943-112f-4da7-b49b-4f24d80c2e24"
+  <Identity Name="a23f9e06-6a37-488e-a855-87997cc748b8"
             Publisher="CN=Josh"
             Version="1.0.0.0" />
   
   <Properties>
-    <DisplayName>CsvHelperRt45x64.Tests</DisplayName>
+    <DisplayName>CsvHelperRt45.Tests</DisplayName>
     <PublisherDisplayName>Josh</PublisherDisplayName>
     <Logo>Images\UnitTestStoreLogo.png</Logo>
-    <Description>CsvHelperRt45x64.Tests</Description>
+    <Description>CsvHelperRt45.Tests</Description>
   </Properties>
   
   <Prerequisites>

@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7FDE7CBC-7E18-4D9D-84A9-F77417EC341D}</ProjectGuid>
+    <ProjectGuid>{281B45A3-CE58-433D-8297-C94BC67C0098}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CsvHelper</RootNamespace>
@@ -23,33 +23,34 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINRT_4_5</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\CsvHelper.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
+    <OutputPath>..\..\NuGet\lib\netcore45\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINRT_4_5</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\NuGet\lib\netcore45\CsvHelper.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\ARM\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINRT_4_5</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <DocumentationFile>bin\ARM\Debug\CsvHelper.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
-    <OutputPath>..\..\NuGet\lib\netcore45\winrt_arm\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINRT_4_5</DefineConstants>
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -57,7 +58,6 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <DocumentationFile>..\..\NuGet\lib\netcore45\winrt_arm\CsvHelper.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -104,37 +104,37 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\CsvHelperRt45x86\MissingFromRt45\ReflectionExtensions.cs">
-      <Link>MissingFromRt45\ReflectionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvClassMap.cs">
+    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvClassMapCollection.cs">
       <Link>Configuration\CsvClassMapCollection.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvClassMap`1.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvClassMap`1.cs">
       <Link>Configuration\CsvClassMap`1.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvConfiguration.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvConfiguration.cs">
       <Link>Configuration\CsvConfiguration.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvConfigurationException.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
       <Link>Configuration\CsvConfigurationException.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvPropertyMap.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMap.cs">
       <Link>Configuration\CsvPropertyMap.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvPropertyMapCollection.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMapCollection.cs">
       <Link>Configuration\CsvPropertyMapCollection.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvPropertyMapComparer.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMapComparer.cs">
       <Link>Configuration\CsvPropertyMapComparer.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvPropertyMapData.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyMapData.cs">
       <Link>Configuration\CsvPropertyMapData.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\configuration\CsvPropertyReferenceMap.cs">
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMap.cs">
       <Link>Configuration\CsvPropertyReferenceMap.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
@@ -142,6 +142,9 @@
     </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\CsvFactory.cs">
+      <Link>CsvFactory.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\CsvHelperException.cs">
       <Link>CsvHelperException.cs</Link>
@@ -170,6 +173,9 @@
     <Compile Include="..\CsvHelper\ExceptionHelper.cs">
       <Link>ExceptionHelper.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\ICsvFactory.cs">
+      <Link>ICsvFactory.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\ICsvParser.cs">
       <Link>ICsvParser.cs</Link>
     </Compile>
@@ -191,87 +197,82 @@
     <Compile Include="..\CsvHelper\StringHelper.cs">
       <Link>StringHelper.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\BooleanConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\BooleanConverter.cs">
       <Link>TypeConversion\BooleanConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\ByteConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\ByteConverter.cs">
       <Link>TypeConversion\ByteConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\CharConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\CharConverter.cs">
       <Link>TypeConversion\CharConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\CsvTypeConverterException.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\CsvTypeConverterException.cs">
       <Link>TypeConversion\CsvTypeConverterException.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\DateTimeConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\DateTimeConverter.cs">
       <Link>TypeConversion\DateTimeConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\DecimalConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\DecimalConverter.cs">
       <Link>TypeConversion\DecimalConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\DefaultTypeConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\DefaultTypeConverter.cs">
       <Link>TypeConversion\DefaultTypeConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\DoubleConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\DoubleConverter.cs">
       <Link>TypeConversion\DoubleConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\EnumConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\EnumConverter.cs">
       <Link>TypeConversion\EnumConverter.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\EnumerableConverter.cs">
       <Link>TypeConversion\EnumerableConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\GuidConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\GuidConverter.cs">
       <Link>TypeConversion\GuidConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\Int16Converter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\Int16Converter.cs">
       <Link>TypeConversion\Int16Converter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\Int32Converter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\Int32Converter.cs">
       <Link>TypeConversion\Int32Converter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\Int64Converter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\Int64Converter.cs">
       <Link>TypeConversion\Int64Converter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\ITypeConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\ITypeConverter.cs">
       <Link>TypeConversion\ITypeConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\NullableConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\NullableConverter.cs">
       <Link>TypeConversion\NullableConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\SByteConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\SByteConverter.cs">
       <Link>TypeConversion\SByteConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\SingleConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\SingleConverter.cs">
       <Link>TypeConversion\SingleConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\StringConverter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\StringConverter.cs">
       <Link>TypeConversion\StringConverter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\TypeConverterFactory.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterFactory.cs">
       <Link>TypeConversion\TypeConverterFactory.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\TypeConverterOptions.cs">
       <Link>TypeConversion\TypeConverterOptions.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\UInt16Converter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\UInt16Converter.cs">
       <Link>TypeConversion\UInt16Converter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\UInt32Converter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\UInt32Converter.cs">
       <Link>TypeConversion\UInt32Converter.cs</Link>
     </Compile>
-    <Compile Include="..\csvhelper\typeconversion\UInt64Converter.cs">
+    <Compile Include="..\CsvHelper\TypeConversion\UInt64Converter.cs">
       <Link>TypeConversion\UInt64Converter.cs</Link>
     </Compile>
+    <Compile Include="MissingFromRt45\ReflectionExtensions.cs" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>..\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
