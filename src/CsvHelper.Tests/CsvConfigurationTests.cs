@@ -62,6 +62,15 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
 		}
 
+        [TestMethod]
+        public void AddingMappingsWithInstanceMethodTest()
+        {
+            var config = new CsvConfiguration();
+            config.RegisterClassMap(new TestClassMappings());
+
+            Assert.AreEqual(2, config.Maps[typeof(TestClass)].PropertyMaps.Count);
+        }
+
 		[TestMethod]
 		public void RegisterClassMapGenericTest()
 		{
@@ -81,6 +90,16 @@ namespace CsvHelper.Tests
 			config.RegisterClassMap( typeof( TestClassMappings ) );
 			Assert.IsNotNull( config.Maps[typeof( TestClass )] );
 		}
+
+        [TestMethod]
+        public void RegisterClassInstanceTest()
+        {
+            var config = new CsvConfiguration();
+
+            Assert.IsNull(config.Maps[typeof(TestClass)]);
+            config.RegisterClassMap(new TestClassMappings());
+            Assert.IsNotNull(config.Maps[typeof(TestClass)]);
+        }
 
 		[TestMethod]
 		public void UnregisterClassMapGenericTest()

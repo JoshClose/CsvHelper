@@ -347,7 +347,7 @@ namespace CsvHelper.Configuration
 		/// Registers the class map.
 		/// </summary>
 		/// <param name="map">The class map to register.</param>
-		protected virtual void RegisterClassMap( CsvClassMap map )
+		public virtual void RegisterClassMap( CsvClassMap map )
 		{
 			map.CreateMap();
 
