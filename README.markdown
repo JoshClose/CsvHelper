@@ -13,7 +13,7 @@ To install CsvHelper, run the following command in the Package Manager Console
 Documentation
 =======
 
-http://github.com/JoshClose/CsvHelper/wiki
+http://joshclose.github.io/CsvHelper/
 
 Discussion
 =======
