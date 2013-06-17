@@ -1,0 +1,29 @@
+body
+{
+	padding-top: 40px;
+}
+
+.home-link
+{
+	margin-top: 6px;
+}
+
+h1
+{
+	background: url(../images/logo.png) top left no-repeat;
+	height: 260px;
+	text-indent: -9999px;
+	width: 612px;
+}
+
+h2
+{
+	margin-bottom: 20px;
+	line-height: 60px;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.CodeMirror
+{
+	height: auto;
+}

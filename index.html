@@ -1,79 +1,198 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>CsvHelper</title>
+    <meta name="description" content="A .NET library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.">
 
-  <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Csvhelper : Library to help reading and writing CSV files" />
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-responsive.min.css"/>
+	<link rel="stylesheet" href="codemirror/codemirror.css"/>
+	<link rel="stylesheet" href="css/main.css"/>
+</head>
+<body data-spy="scroll" data-target="">
+<!--[if lt IE 7]><p class=chromeframe>Your browser is <em>ancient!</em> <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p><![endif]-->
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+<header>
+	<div class="navbar navbar-fixed-top">
+		<div class=navbar-inner>
+			<div class="container">
+				<a href="#" class="home-link pull-left"><img src="images/logo-small.png" width="30" height="30" /></a>
+				<ul class="nav">
+					<li><a href="#getting-started">Getting Started</a></li>
+					<li><a href="#configuration">Configuration</a></li>
+					<li><a href="#mapping">Mapping</a></li>
+					<li><a href="#reading">Reading</a></li>
+					<li><a href="#writing">Writing</a></li>
+					<li><a href="#type-conversion">Type Conversion</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Misc<b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#change-log">Change Log</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
 
-    <title>Csvhelper</title>
-  </head>
+			<a href="https://github.com/joshclose/csvhelper" target="_blank"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+		</div>
+	</div>
+</header>
 
-  <body>
+<div class="container">
+	<h1>CsvHelper</h1>
+	<p>A .NET library for reading and writing CSV files. Extremely fast, flexible and easy to use. Supports reading and writing of custom class objects.</p>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/JoshClose/CsvHelper">View on GitHub</a>
+	<h2 id="getting-started">Getting Started</h2>
 
-          <h1 id="project_title">Csvhelper</h1>
-          <h2 id="project_tagline">Library to help reading and writing CSV files</h2>
+	<p>
+		To install CsvHelper, run the following from the <a href="http://docs.nuget.org/docs/start-here/using-the-package-manager-console" target="_blank">Package Manager Console.</a>
+	</p>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/JoshClose/CsvHelper/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/JoshClose/CsvHelper/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+	<p><textarea data-code="">Install-Package CsvHelper</textarea></p>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+	<h2 id="reading">Reading</h2>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+	<h3>Reading all records</h3>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+	<p>Reading is setup to be as simple as possible. If you have a class structure setup that mirrors the CSV file,
+	you can read the whole file into an enumerable.</p>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+	<p><textarea data-code="text/x-csharp">
+var csv = new CsvReader( textReader );
+var records = csv.GetRecords&lt;MyClass&gt;();
+	</textarea></p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+	<p>The IEnumerable&lt;T&gt; that is returned will yield results. This means that a result isn't returned until you
+	actually access it. This is handy because the whole file won't be loaded into memory, and the file will be read as
+	you access each row. If you do something like Count() on the IEnumerable&lt;T&gt;, the whole file needs to be read
+	and you won't be able to iterate over it again without starting over. If you need to iterate the records more than
+	once (like using Count), you can load everything into a list and the work on the data.</p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+	<p><textarea data-code="text/x-csharp">
+var csv = new CsvReader( textReader );
+var records = csv.GetRecords&lt;MyClass&gt;().ToList();
+	</textarea></p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+	<h2 id="writing">Writing</h2>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+	<h2>Mapping</h2>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+	<h3 id="auto-mapping">Auto Mapping</h3>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+	<p>If you don't supply a mapping file, auto mapping will be used. Auto mapping will map the properties in your class
+	in the order they appear in. If the property is a custom class, it recursively map the properties from that class
+	in the order they appear in. If the auto mapper hits a circular reference, it will stop.</p>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+	<h2 id="configuration">Configuration</h2>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-      </section>
-    </div>
+	<h2 id="type-conversion">Type Conversion</h2>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Csvhelper maintained by <a href="https://github.com/JoshClose">JoshClose</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
+	<h2>Miscellaneous</h2>
 
-    
+	<h3 id="change-log">Change Log</h3>
 
-  </body>
+	<h4>2.0.1</h4>
+
+	<h4>2.0.0</h4>
+
+	<h4>1.17.0</h4>
+
+	<h4>1.16.0</h4>
+
+	<h4>1.15.0</h4>
+
+	<h4>1.14.0</h4>
+
+	<h4>1.13.0</h4>
+
+	<h4>1.12.1</h4>
+
+	<h4>1.12.0</h4>
+
+	<h4>1.11.0</h4>
+
+	<h4>1.10.0</h4>
+
+	<h4>1.9.2</h4>
+
+	<h4>1.9.1</h4>
+
+	<h4>1.9.0</h4>
+
+	<h4>1.8.0</h4>
+
+	<h4>1.7.0</h4>
+
+	<h4>1.6.0</h4>
+
+	<h4>1.5.0</h4>
+
+	<h4>1.4.0</h4>
+
+	<h4>1.3.0</h4>
+
+	<h4>1.2.0</h4>
+
+	<h4>1.1.2</h4>
+
+	<h4>1.1.1</h4>
+
+	<h4>1.0.0</h4>
+
+	<h4>0.16.0</h4>
+
+	<h4>0.15.0</h4>
+
+	<h4>0.14.0</h4>
+
+	<h4>0.13.0</h4>
+
+	<h4>0.12.0</h4>
+
+	<h4>0.11.0</h4>
+
+	<h4>0.10.0</h4>
+
+	<h4>0.9.1</h4>
+
+	<h4>0.9.0</h4>
+
+	<h4>0.8.1</h4>
+
+	<h4>0.8.0</h4>
+
+	<h4>0.7.0</h4>
+
+	<h4>0.6.0</h4>
+
+	<h4>0.5.1</h4>
+
+	<h4>0.5.0</h4>
+
+	<h4>0.4.0</h4>
+
+	<h4>0.3.0</h4>
+</div>
+
+<script src="js/jquery-1.10.1.min.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<script src="codemirror/codemirror.js"></script>
+<script src="codemirror/mode/clike/clike.js"></script>
+<script src="js/main.js"></script>
+
+<!--
+<script>
+    var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+-->
+</body>
 </html>
