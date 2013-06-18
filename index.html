@@ -151,81 +151,344 @@ var records = csv.GetRecords&lt;MyClass&gt;().ToList();
 
 	<h4>1.17.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Ignore properties that can't be set in attribute mapping.</li>
+		<li>Made TypeConverterFactory thread safe.</li>
+		<li>Added remove converter method.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue with writer exception in WinRT.</li>
+	</ul>
+
 	<h4>1.16.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Change TypeConverterFactory to use a set of cache type converters so global type converters can be used.</li>
+		<li>Added GetField&lt;T, TConverter&gt; overloads.</li>
+		<li>Changed all Activator.CreateInstance calls to use compiled expression trees to create them instead.</li>
+		<li>Changed mapping for ConvertUsing to accept a Func so a block expression can be used.</li>
+	</ul>
 
 	<h4>1.15.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Support for Silverlight 4 & 5.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue where writing with Configuration.QuoteAllFields enabled will not quote the quotes inside the field.</li>
+		<li>Issue with WinRT not building after pull request merge.</li>
+	</ul>
+
 	<h4>1.14.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Parse full line on read. This allows for the parser to retain the whole unchanged raw CSV lin on a read.</li>
+		<li>Changed delimiter config from a char to a string.</li>
+		<li>Iterating records multiple times will throw a CsvReaderException. This is to help stop confusion when 0 results
+		are returned the second iteration.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue where EnumConverter isn't created correctly from the TypeConverterFactory.</li>
+		<li>Issue with updating count for all closing quotes.</li>
+	</ul>
 
 	<h4>1.13.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Configuration to always not quote all fields.</li>
+		<li>WriteHeader method is public.</li>
+		<li>Added enum converter.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue with boolean converter returning true for "no" value.</li>
+		<li>Issue with GetMethod in WinRT.</li>
+	</ul>
+
 	<h4>1.12.1</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Isse where an exception was being thrown when reading all records multiple times.</li>
+	</ul>
 
 	<h4>1.12.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>WinRT support.</li>
+	</ul>
+
 	<h4>1.11.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Better exception information added to CsvBadDataException.</li>
+	</ul>
 
 	<h4>1.10.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Mapping property for CreateUsing which allows user to specify how the property gets created.</li>
+	</ul>
+
 	<h4>1.9.2</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue with skipping empty records.</li>
+	</ul>
 
 	<h4>1.9.1</h4>
 
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue with detecting column count changes.</li>
+	</ul>
+
 	<h4>1.9.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Added properties to CsvReaderException to give more information about the error.</li>
+		<li>Ability to skip empty records based on config settings.</li>
+		<li>Getting by index that doesn't exist will give a default or CsvMissingFieldException.</li>
+		<li>Made column count detection a config setting.</li>
+		<li>Map option for constructing the row object.</li>
+		<li>Throw exception when inconsistent column lengths are detected.</li>
+		<li>String.Format support in CsvWriter.</li>
+		<li>Excel compatible parsing.</li>
+		<li>Parser can keep track of the byte position using an encoding so a user cna seek to a stream and start
+		reading from there.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed bug with column count detection.</li>
+		<li>Issue with double counting the closing quote.</li>
+		<li>Issue where parsing was incorrect when the last row didn't have a CRLF at the end.</li>
+		<li>Issue with error messages.</li>
+	</ul>
 
 	<h4>1.8.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Writer overload for shouldQuote when writing a field.</li>
+		<li>Ability for using alternative names for headers in the configuration.</li>
+		<li>Better error messages.</li>
+	</ul>
+
 	<h4>1.7.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Configuration to quote all fields when writing.</li>
+		<li>Parser keeps a char count of where it's at.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed subclass issue by having the reader and writer use interfaces instead of concrete classes.</li>
+	</ul>
 
 	<h4>1.6.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Custom boolean type converter that can convert from 1 and 0 besides the normal conversion.</li>
+		<li>Property map configuration to set a default value.</li>
+		<li>CsvWriter no longer flushes to the output stream after every record.</li>
+		<li>Non-generic overloads for reading, writing, and attribute mapping.</li>
+		<li>Invalidate record cache will clear the properties list.</li>
+	</ul>
+
 	<h4>1.5.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Support .NET 2.0 and 3.5 builds.</li>
+	</ul>
 
 	<h4>1.4.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Case insensitive header matching.</li>
+	</ul>
+
 	<h4>1.3.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Removed CsvHelper class.</li>
+		<li>Property reference mapping. One level deep.</li>
+	</ul>
 
 	<h4>1.2.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Support for multiple duplicate header names.</li>
+	</ul>
+
 	<h4>1.1.2</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Issue when using a readonly or writeonly stream and disposing causes an exception.</li>
+	</ul>
 
 	<h4>1.1.1</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Updated CsvHelper.cs to allow for readonly and writeonly stream.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed DateTimeConverter issue where a white space string would return a DateTime.MinValue instead of null.</li>
+	</ul>
+
+	<h4>1.1.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Changed .NET 3.5 project to client profile.</li>
+		<li>Added getter for the current record in the header.</li>
+	</ul>
+
 	<h4>1.0.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Changed strict mode to default to true.</li>
+		<li>Renamed strict mode configuration property.</li>
+		<li>Changed reader to not throw an exception when there are duplicate header records unless in strict mode.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed bug where if there is no line ending at the end of the file, the last field would be null instead of
+			an empty string.</li>
+		<li>Fixed configuration references and constructor signatures.</li>
+	</ul>
 
 	<h4>0.16.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Added configuration option for using CultureInvariant to read/write.</li>
+		<li>Updated the reader/writer to use the config option.</li>
+		<li>Both CsvReader and CsvWriter are using Local culture when converting from/to strings.</li>
+		<li>CsvClassMap without generic argument.</li>
+	</ul>
+
 	<h4>0.15.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Changed TryGetField&lt;T&gt; to do a low level check instead of jsut wrapping in try/catch blocks.</li>
+		<li>Removed non generic TryGetField methods.</li>
+		<li>Formatting changes.</li>
+		<li>Changed CsvParser to use the Configuration.Comment char instead of #.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed indentation error caused by new constructor in CsvPropertyMap.</li>
+	</ul>
 
 	<h4>0.14.0</h4>
 
+	<h5>Features</h5>
+
+	<ul>
+		<li>Changed GetRecords&lt;T&gt; to return IEnumerable&lt;T&gt;.</li>
+		<li>Added convenience constructor to CsvPropertyMap.</li>
+		<li>Major configuration overhaul.</li>
+		<li>Changed end of file check to be more low level.</li>
+		<li>Final record is returned if there is a trailing delimiter.</li>
+		<li>Added an exception re-throw to parsing that tells the line and character number.</li>
+		<li>Added ability to change what the quote char is.</li>
+		<li>Added CSV specific exceptions.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fix for issue when CsvHelper uses CurrentCulture instead of InvariantCulture.</li>
+	</ul>
+
 	<h4>0.13.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Changed StreamReader to TextReader to be more generic.</li>
+	</ul>
 
 	<h4>0.12.0</h4>
 
-	<h4>0.11.0</h4>
+	<h5>Features</h5>
 
-	<h4>0.10.0</h4>
+	<ul>
+		<li>Added option to have a commented out line using '#' as the first character of the line.</li>
+	</ul>
 
-	<h4>0.9.1</h4>
+	<h5>Bug Fixes</h5>
 
-	<h4>0.9.0</h4>
-
-	<h4>0.8.1</h4>
-
-	<h4>0.8.0</h4>
-
-	<h4>0.7.0</h4>
-
-	<h4>0.6.0</h4>
-
-	<h4>0.5.1</h4>
-
-	<h4>0.5.0</h4>
-
-	<h4>0.4.0</h4>
-
-	<h4>0.3.0</h4>
+	<ul>
+		<li>Fixed issue with spaces in non-quoted field.</li>
+	</ul>
 </div>
 
 <script src="js/jquery-1.10.1.min.js"></script>
