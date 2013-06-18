@@ -99,7 +99,55 @@ var records = csv.GetRecords&lt;MyClass&gt;().ToList();
 
 	<h4>2.0.1</h4>
 
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Made a WinRT Any CPU build and removed the arch specific WinRT builds.</li>
+	</ul>
+
 	<h4>2.0.0</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Added parser configuration to ignoring quotes and treating them like any other character.</li>
+		<li>Added CsvFactory to create ICsvParser, ICsvReader, and ICsvWriter classes. This is useful
+		when you need to unit test code that uses CsvHelper since these 3 classes require a TextReader
+		or TextWriter to work.</li>
+		<li>All assembly versions are strong named but will use a single version of 2.0.0.0. The file
+		version and NuGet versions will change with every release.</li>
+		<li>Removed class type constraint from reading and writing.</li>
+		<li>Added non-generic class mapping overload.</li>
+		<li>WriteRecords param changed from IEnumerable&ltobject&gt to non-generic IEnumerable.</li>
+		<li>Value types can be read and written instead of just custom classes.</li>
+		<li>Indexes are automatically set and incremented when mapping in order of the Map and Reference calls.</li>
+		<li>Auto mapping with circular reference detection.</li>
+		<li>Config option to ignore spaces in header names.</li>
+		<li>Fixed exception handling. Exception are no longer wrapped. Exception.Data["CsvHelper"] contains
+		CsvHelper specific exception info.</li>
+		<li>Row exception can be skipped during GetRecords.</li>
+		<li>Renamed IsStrictMode to WillThrowOnMissingField.</li>
+		<li>Window Phone 7 & 8 builds.</li>
+		<li>Auto mapping will use defined maps if available.</li>
+		<li>Type converter options.</li>
+		<li>Added IEnumerable converter that throws an exception so people will know that converting to/from
+		and enumerable is not supported instead of getting a cryptic error message.</li>
+		<li>Dynamic support for reading and writing.</li>
+		<li>Multiple maps can be supplied.</li>
+		<li>Renamed InvalidateRecordCache to ClearRecordCache.</li>
+		<li>Recursive reference mapping down the whole mapping tree.</li>
+		<li>Configuration.CultureInfo was added in place of Configuration.UseInvariantCulture.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Getting the exception helper message failed when writing because no parser is available.</li>
+		<li>WriteRecords Dynamic invoke had wrong parameter count.</li>
+		<li>GetField( string ) was not returning null if the header is not found.</li>
+		<li>CsvBadDataException when there were extra columns in the row.</li>
+		<li>Raw record corruption.</li>
+	</ul>
 
 	<h4>1.17.0</h4>
 

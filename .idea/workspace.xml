@@ -2,20 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="787a925a-5155-4c3b-ae9f-59af82c250ec" name="Default" comment="">
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\images\bg_hr.png" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\images\blacktocat.png" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\images\icon_download.png" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\images\sprite_download.png" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\javascripts\main.js" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\params.json" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\stylesheets\pygment_trac.css" afterPath="" />
-      <change type="DELETED" beforePath="C:\Projects\CsvHelper\stylesheets\stylesheet.css" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="CsvHelper.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="787a925a-5155-4c3b-ae9f-59af82c250ec" time="1371437503213" ignored="false" />
-    <file path="/index.html" changelist="787a925a-5155-4c3b-ae9f-59af82c250ec" time="1371437621752" ignored="false" />
+    <file path="/Dummy.txt" changelist="787a925a-5155-4c3b-ae9f-59af82c250ec" time="1371438172352" ignored="false" />
+    <file path="/index.html" changelist="787a925a-5155-4c3b-ae9f-59af82c250ec" time="1371520109449" ignored="false" />
     <file path="/main.js" changelist="787a925a-5155-4c3b-ae9f-59af82c250ec" time="1371396327814" ignored="false" />
     <file path="/main.css" changelist="787a925a-5155-4c3b-ae9f-59af82c250ec" time="1371395263010" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -40,10 +33,9 @@
       <file leaf-file-name="index.html" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="72" column="84" selection-start="3518" selection-end="3518" vertical-scroll-proportion="0.83417934">
+            <state line="140" column="0" selection-start="6585" selection-end="6585" vertical-scroll-proportion="0.914137">
               <folding>
                 <element signature="tag#head#0;tag#html#0" expanded="false" />
-                <element signature="e#5454#5773#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -101,10 +93,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-9" />
-    <option name="y" value="-9" />
-    <option name="width" value="2578" />
-    <option name="height" value="1410" />
+    <option name="x" value="1280" />
+    <option name="width" value="1280" />
+    <option name="height" value="1392" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -132,6 +123,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -212,7 +204,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -231,13 +222,13 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-9" y="-9" width="2578" height="1410" extended-state="6" />
+    <frame x="1280" y="0" width="1280" height="1392" extended-state="1" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15057154" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.30831316" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
@@ -315,10 +306,9 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+        <state line="72" column="19" selection-start="3608" selection-end="3608" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="tag#head#0;tag#html#0" expanded="false" />
-            <element signature="e#5454#5773#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -337,9 +327,25 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bootstrap/css/bootstrap.css">
+    <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1042" column="20" selection-start="14504" selection-end="14504" vertical-scroll-proportion="0.0">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="tag#head#0;tag#html#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/main.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="33" selection-start="234" selection-end="234" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/css/main.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="0" selection-start="230" selection-end="230" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -367,11 +373,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="72" column="84" selection-start="3518" selection-end="3518" vertical-scroll-proportion="0.83417934">
+        <state line="140" column="0" selection-start="6585" selection-end="6585" vertical-scroll-proportion="0.914137">
           <folding>
             <element signature="tag#head#0;tag#html#0" expanded="false" />
-            <element signature="e#5454#5773#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bootstrap/css/bootstrap.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1042" column="20" selection-start="14504" selection-end="14504" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
