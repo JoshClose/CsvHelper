@@ -1263,11 +1263,11 @@ namespace CsvHelper
 				{
 					// If a name was explicitly set, use it.
 					index = GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex );
-                    if (index == -1)
-                    {
-                        // Skip if the index was not found.
-                        continue;
-                    }
+					if( index == -1 )
+					{
+						// Skip if the index was not found.
+						continue;
+					}
 				}
 				else if( propertyMap.Data.IsIndexSet )
 				{
