@@ -115,6 +115,12 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IgnoreHeaderWhiteSpace { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether headers and values will be trimmed
+        /// of leading and trailing whitespace
+        /// </summary>
+        public virtual bool TrimValues { get; set; }
+
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
 		/// Default is ',';

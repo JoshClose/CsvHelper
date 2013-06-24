@@ -174,6 +174,9 @@ namespace CsvHelper
 			do
 			{
 				currentRecord = parser.Read();
+
+                if (configuration.TrimValues && currentRecord != null)
+                    currentRecord = currentRecord.Select(x=> x != null ? x.Trim() : x).ToArray();
 			} 
 			while( configuration.SkipEmptyRecords && IsRecordEmpty( false ) );
 
@@ -1010,6 +1013,10 @@ namespace CsvHelper
 				{
 					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
 				}
+                if (configuration.TrimValues)
+                {
+                    namedIndex = namedIndex.Trim();
+                }
 
 				foreach( var n in names )
 				{
