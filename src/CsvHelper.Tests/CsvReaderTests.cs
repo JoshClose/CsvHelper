@@ -689,6 +689,23 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "one", data[0].StringColumn );
 		}
 
+        [TestMethod]
+        public void TrimTest()
+        {
+            var queue = new Queue<string[]>();
+            queue.Enqueue(new[] { " IntColumn ", " StringColumn " });
+            queue.Enqueue(new[] { " 1 ", " one " });
+            queue.Enqueue(null);
+            var parserMock = new ParserMock(queue);
+            var reader = new CsvReader(parserMock);
+            reader.Configuration.TrimValues = true;
+            var data = reader.GetRecords<TestDefaultValues>().ToList();
+            Assert.IsNotNull(data);
+            Assert.AreEqual(1, data.Count);
+            Assert.AreEqual(1, data[0].IntColumn);
+            Assert.AreEqual("one", data[0].StringColumn);
+        }
+
 		[TestMethod]
 		public void DefaultValueTest()
 		{
