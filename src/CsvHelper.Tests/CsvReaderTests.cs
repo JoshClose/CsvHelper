@@ -918,6 +918,38 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 2, records[1] );
 		}
 
+		[TestMethod]
+		public void TrimHeadersTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { " one ", " two three " } );
+			queue.Enqueue( new[] { "1", "2" } );
+			var parserMock = new ParserMock( queue );
+			parserMock.Configuration.TrimHeaders = true;
+			parserMock.Configuration.WillThrowOnMissingField = false;
+			var reader = new CsvReader( parserMock );
+			reader.Read();
+			Assert.AreEqual( "1", reader.GetField( "one" ) );
+			Assert.AreEqual( "2", reader.GetField( "two three" ) );
+			Assert.AreEqual( null, reader.GetField( "twothree" ) );
+		}
+
+		[TestMethod]
+		public void TrimFieldsTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { " 1 " } );
+			var parserMock = new ParserMock( queue );
+			parserMock.Configuration.HasHeaderRecord = false;
+			parserMock.Configuration.TrimFields = true;
+			parserMock.Configuration.WillThrowOnMissingField = false;
+			var reader = new CsvReader( parserMock );
+			reader.Read();
+			Assert.AreEqual( "1", reader.GetField( 0 ) );
+			Assert.AreEqual( null, reader.GetField( 1 ) );
+			Assert.AreEqual( 1, reader.GetField<int>( 0 ) );
+		}
+
 #if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()

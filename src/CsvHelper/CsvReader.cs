@@ -258,10 +258,17 @@ namespace CsvHelper
 				{
 					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
 				}
+
 				return default( string );
 			}
 
-			return currentRecord[index];
+			var field = currentRecord[index];
+			if( configuration.TrimFields )
+			{
+				field = field.Trim();
+			}
+
+			return field;
 		}
 
 		/// <summary>
@@ -1009,6 +1016,10 @@ namespace CsvHelper
 				if( configuration.IgnoreHeaderWhiteSpace )
 				{
 					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
+				}
+				else if( configuration.TrimHeaders )
+				{
+					namedIndex = namedIndex.Trim();
 				}
 
 				foreach( var n in names )
