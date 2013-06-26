@@ -25,10 +25,10 @@
 				<a href="#" class="home-link pull-left"><img src="images/logo-small.png" width="30" height="30" /></a>
 				<ul class="nav">
 					<li><a href="#getting-started">Getting Started</a></li>
-					<li><a href="#configuration">Configuration</a></li>
 					<li><a href="#mapping">Mapping</a></li>
 					<li><a href="#reading">Reading</a></li>
 					<li><a href="#writing">Writing</a></li>
+					<li><a href="#configuration">Configuration</a></li>
 					<li><a href="#type-conversion">Type Conversion</a></li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Misc<b class="caret"></b></a>
@@ -65,8 +65,7 @@
 
 	<p><textarea data-code="text/x-csharp">
 var csv = new CsvReader( textReader );
-var records = csv.GetRecords&lt;MyClass&gt;();
-	</textarea></p>
+var records = csv.GetRecords&lt;MyClass&gt;();</textarea></p>
 
 	<p>The IEnumerable&lt;T&gt; that is returned will yield results. This means that a result isn't returned until you
 	actually access it. This is handy because the whole file won't be loaded into memory, and the file will be read as
@@ -76,8 +75,46 @@ var records = csv.GetRecords&lt;MyClass&gt;();
 
 	<p><textarea data-code="text/x-csharp">
 var csv = new CsvReader( textReader );
-var records = csv.GetRecords&lt;MyClass&gt;().ToList();
-	</textarea></p>
+var records = csv.GetRecords&lt;MyClass&gt;().ToList();</textarea></p>
+
+	<h3>Reading records manually</h3>
+
+	<p>You can loop the rows and read them manually.</p>
+
+	<p><textarea data-code="text/x-csharp">
+var csv = new CsvReader( textReader );
+while( csv.Read() )
+{
+	var record = csv.GetRecord&lt;MyClass&gt;();
+}</textarea></p>
+
+	<h3>Reading individual fields</h3>
+
+	<p>You can also read each field manually if you like.</p>
+
+	<p><textarea data-code="text/x-csharp">
+var csv = new CsvReader( textReader );
+while( csv.Read() )
+{
+	var intField = csv.GetField&lt;int&gt;( 0 );
+	var stringField = csv.GetField&lt;string&gt;( 1 );
+	var boolField = csv.GetField&lt;bool&gt;( "HeaderName" );
+}</textarea></p>
+
+	<h3>TryGetField</h3>
+
+	<p>If you might have inconsistencies with getting fields, you can use TryGetField.</p>
+
+	<p><textarea data-code="text/x-csharp">
+var csv = new CsvReader( textReader );
+while( csv.Read() )
+{
+	int intField;
+	if( !csv.TryGetField( 0, out intField ) )
+	{
+		// Do something when it can't convert.
+	}
+}</textarea></p>
 
 	<h2 id="writing">Writing</h2>
 
@@ -96,6 +133,14 @@ var records = csv.GetRecords&lt;MyClass&gt;().ToList();
 	<h2>Miscellaneous</h2>
 
 	<h3 id="change-log">Change Log</h3>
+
+	<h4>2.1.1</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue when WillThrowOnMissingField is off and exception was still being thrown.</li>
+	</ul>
 
 	<h4>2.1.0</h4>
 

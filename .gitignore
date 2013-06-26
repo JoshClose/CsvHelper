@@ -13,3 +13,4 @@ docs/Help
 NuGet/lib/
 NuGet/*.nupkg
 *crunch*
+.idea/
