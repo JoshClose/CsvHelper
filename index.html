@@ -132,7 +132,45 @@ while( csv.Read() )
 	<h3 id="fluent-class-mapping">Fluent Class Mapping</h3>
 
 	<p>If your CSV file doesn't match up exactly with your custom class, you can use a fluent class map to set options
-	for how the class maps to the file. You need to <a href="#register-class-map">register your class map</a> in configuration.</p>
+	for how the class maps to the file. You need to <a href="#register-class-map">register your class map</a> in
+	configuration.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Id );
+		Map( m = > m.Name );
+	}
+}</textarea></p>
+
+	<h4>Reference Map</h4>
+
+	<p>Reference maps are used to map a property that is a custom class to it's own mapping that maps those properties
+	to several CSV columns. You can nest reference maps as many layers deep as you like.</p>
+
+	<p><textarea>
+public class PersonMap : CsvClassMap&lt;Person&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Id );
+		Map( m = > m.Name );
+		References&lt;AddressMap&gt;( m => m.Address );
+	}
+}
+
+public class AddressMap : CsvClassMap&lt;Address&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Street );
+		Map( m => m.City );
+		Map( m => m.State );
+		Map( m => m.Zip );
+	}
+}</textarea></p>
 
 	<h4>Index</h4>
 
@@ -257,6 +295,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea>
 
+	<section>
 	<h2 id="configuration">Configuration</h2>
 
 	<h3 id="register-class-map">Register Class Map</h3>
@@ -499,12 +538,15 @@ csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
 
 	<p><textarea>
 var generatedMap = csv.Configuration.AutoMap&lt;MyClass&gt;();</textarea></p>
-
-	<h2 id="type-conversion">Type Conversion</h2>
-
-	<h2>Miscellaneous</h2>
+	</section>
 
 	<section>
+	<h2 id="type-conversion">Type Conversion</h2>
+	</section>
+
+	<section>
+	<h2>Miscellaneous</h2>
+
 	<h3 id="change-log">Change Log</h3>
 
 	<h4>2.1.1</h4>
