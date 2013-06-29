@@ -63,9 +63,11 @@
 	<p>Reading is setup to be as simple as possible. If you have a class structure setup that mirrors the CSV file,
 	you can read the whole file into an enumerable.</p>
 
-	<p><textarea data-code="text/x-csharp">
+	<p><textarea>
 var csv = new CsvReader( textReader );
 var records = csv.GetRecords&lt;MyClass&gt;();</textarea></p>
+
+	<p>If you want to customize how the CSV file maps to your custom class objects, you can use <a href="#mapping">mapping</a>.</p>
 
 	<p>The IEnumerable&lt;T&gt; that is returned will yield results. This means that a result isn't returned until you
 	actually access it. This is handy because the whole file won't be loaded into memory, and the file will be read as
@@ -73,7 +75,7 @@ var records = csv.GetRecords&lt;MyClass&gt;();</textarea></p>
 	and you won't be able to iterate over it again without starting over. If you need to iterate the records more than
 	once (like using Count), you can load everything into a list and the work on the data.</p>
 
-	<p><textarea data-code="text/x-csharp">
+	<p><textarea>
 var csv = new CsvReader( textReader );
 var records = csv.GetRecords&lt;MyClass&gt;().ToList();</textarea></p>
 
@@ -81,7 +83,7 @@ var records = csv.GetRecords&lt;MyClass&gt;().ToList();</textarea></p>
 
 	<p>You can loop the rows and read them manually.</p>
 
-	<p><textarea data-code="text/x-csharp">
+	<p><textarea>
 var csv = new CsvReader( textReader );
 while( csv.Read() )
 {
@@ -92,7 +94,7 @@ while( csv.Read() )
 
 	<p>You can also read each field manually if you like.</p>
 
-	<p><textarea data-code="text/x-csharp">
+	<p><textarea>
 var csv = new CsvReader( textReader );
 while( csv.Read() )
 {
@@ -105,7 +107,7 @@ while( csv.Read() )
 
 	<p>If you might have inconsistencies with getting fields, you can use TryGetField.</p>
 
-	<p><textarea data-code="text/x-csharp">
+	<p><textarea>
 var csv = new CsvReader( textReader );
 while( csv.Read() )
 {
@@ -118,13 +120,142 @@ while( csv.Read() )
 
 	<h2 id="writing">Writing</h2>
 
-	<h2>Mapping</h2>
+	<h2 id="mapping">Mapping</h2>
 
 	<h3 id="auto-mapping">Auto Mapping</h3>
 
 	<p>If you don't supply a mapping file, auto mapping will be used. Auto mapping will map the properties in your class
-	in the order they appear in. If the property is a custom class, it recursively map the properties from that class
-	in the order they appear in. If the auto mapper hits a circular reference, it will stop.</p>
+	in the order they appear in. If the property is a custom class, it recursively maps the properties from that class
+	in the order they appear in. If the auto mapper hits a circular reference, it will stop going down that reference
+	branch.</p>
+
+	<h3 id="fluent-class-mapping">Fluent Class Mapping</h3>
+
+	<p>If your CSV file doesn't match up exactly with your custom class, you can use a fluent class map to set options
+	for how the class maps to the file.</p>
+
+	<h4>Index</h4>
+
+	<p>When mapping by index you specify the index of the CSV column that that you want to use for that property.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Id ).Index( 0 );
+		Map( m => m.Name ).Index( 1 );
+	}
+}</textarea></p>
+
+	<h4>Name</h4>
+
+	<p>When mapping by name you specify the name of the CSV column that you want to use for that property. For this to
+	work, the CSV file must have a header record. The name you specify must match with the name of the header record.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Id ).Name( "The Id Column" );
+		Map( m => m.Name ).Name( "The Name Column" );
+	}
+}</textarea></p>
+
+	<h4>Name Index</h4>
+
+	<p>Sometimes CSV files have multiple columns with the same name. When this happens, you can use NameIndex to
+	specify which column name you are referring to. The NameIndex is NOT the column in the CSV file.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.FirstName ).Name( "Name" ).NameIndex( 0 );
+		Map( m => m.LastName ).Name( "Name" ).NameIndex( 1 );
+	}
+}</textarea></p>
+
+	<h4>Ignore</h4>
+
+	<p>Currently this is not used. Mapping will only map properties that you specify. In the future there will be an
+	option to auto map within a class map, and any mappings explicitly stated will override the auto mapped ones. When
+	this happens, ignore will be used to ignore a property that was auto mapped.</p>
+
+	<h4>Default</h4>
+
+	<p>Default is used to set a default value you want to use if the field is empty.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Id ).Index( 0 ).Default( -1 );
+		Map( m => m.Name ).Index( 1 ).Default( "Unknown" );
+	}
+}</textarea></p>
+
+	<h4>Type Converter</h4>
+
+	<p>If the value of the CSV field can't automatically be converted into the type of the property, you can specify
+	a custom CsvHelper.TypeConversion.ITypeConverter to be used to convert the value. See
+	<a href="#type-conversion">Type Conversion</a> for documentation on how to create a custom type converter.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Id ).Index( 0 ).TypeConverter&lt;MyIdConverter&gt;();
+	}
+}</textarea></p>
+
+	<h4>Type Converter Options</h4>
+
+	<p>The default built in converters will handle most cases of type conversion, but sometimes there are some small
+	changes that you'd like to make, but don't want to create a whole new type converter that just parses an int
+	(for example) differently. You can specify some type converter options to handle these cases.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		Map( m => m.Description ).Index( 0 ).TypeConverterOption( CultureInfo.InvariantCulture );
+		Map( m => m.TimeStamp ).Index( 1 ).TypeConverterOption( DateTimeStyles.AdjustToUniversal );
+		Map( m => m.Cost ).Index( 2 ).TypeConverterOption( NumberStyles.Currency );
+		Map( m => m.CurrencyFormat ).Index( 3 ).TypeConverterOption( "C" );
+		Map( m => m.BooleanValue ).Index( 4 ).TypeConverterOption( true, "sure" ).TypeConverterOption( false, "nope" );
+	}
+}</textarea>
+
+	<h4>Convert Using</h4>
+
+	<p>When all else fails, you can use ConvertUsing. ConvertUsing allows you to write custom code inline to
+	convert the row into a single property value.</p>
+
+	<p><textarea>
+public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+{
+	public override void CreateMap()
+	{
+		// Constant value.
+		Map( m => m.Constant ).ConvertUsing( row => 3 );
+		// Aggregate of two rows.
+		Map( m => m.Aggregate ).ConvertUsing( row => row.Get&lt;int&gt;( 0 ) + row.Get&lt;int&gt;( 1 ) );
+		// Collection with a single value.
+		Map( m => m.Names ).ConvertUsing( row => new List&lt;string&gt;{ row.Get&lt;string&gt;( "Name" ) } );
+		// Just about anything.
+		Map( m => m.Anything ).ConvertUsing( row =>
+		{
+			// You can do anything you want in a block.
+			// Just make sure to return the same type as the property.
+		} );
+	}
+}</textarea>
 
 	<h2 id="configuration">Configuration</h2>
 
@@ -132,6 +263,7 @@ while( csv.Read() )
 
 	<h2>Miscellaneous</h2>
 
+	<section>
 	<h3 id="change-log">Change Log</h3>
 
 	<h4>2.1.1</h4>
@@ -542,6 +674,8 @@ while( csv.Read() )
 	<ul>
 		<li>Fixed issue with spaces in non-quoted field.</li>
 	</ul>
+
+	</section>
 </div>
 
 <script src="js/jquery-1.10.1.min.js"></script>

@@ -1,7 +1,6 @@
-//$(window).on("hashchange", function(){ window.scrollBy(0, -40) });
 $(function(){
-	$("textarea[data-code]").each(function(){
-		var mode = $(this).data("code");
+	$("textarea").each(function(){
+		var mode = $(this).data("code") || "text/x-csharp";
 		CodeMirror.fromTextArea(this, {
 			mode: mode,
 			readOnly: "nocursor",
