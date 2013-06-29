@@ -56,6 +56,8 @@
 
 	<p><textarea data-code="">Install-Package CsvHelper</textarea></p>
 
+	<!-- Reading -->
+	<section>
 	<h2 id="reading">Reading</h2>
 
 	<h3>Reading all records</h3>
@@ -117,9 +119,15 @@ while( csv.Read() )
 		// Do something when it can't convert.
 	}
 }</textarea></p>
+	</section>
 
+	<!-- Writing -->
+	<section>
 	<h2 id="writing">Writing</h2>
+	</section>
 
+	<!-- Mapping -->
+	<section>
 	<h2 id="mapping">Mapping</h2>
 
 	<h3 id="auto-mapping">Auto Mapping</h3>
@@ -294,7 +302,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 		} );
 	}
 }</textarea>
+	</section>
 
+	<!-- Configuration -->
 	<section>
 	<h2 id="configuration">Configuration</h2>
 
@@ -322,7 +332,7 @@ csv.Configuration.UnregisterClassMap();</textarea></p>
 	<p>You are able to access the registered class maps.</p>
 
 	<p><textarea>
-var myMap = csv.Configuration.Maps[typeof( MyClassMap )];</textarea></p>
+var myMap = csv.Configuration.Maps[typeof( MyClass )];</textarea></p>
 
 	<h3>Property Binding Flags</h3>
 
@@ -540,10 +550,12 @@ csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
 var generatedMap = csv.Configuration.AutoMap&lt;MyClass&gt;();</textarea></p>
 	</section>
 
+	<!-- Type Conversion -->
 	<section>
 	<h2 id="type-conversion">Type Conversion</h2>
 	</section>
 
+	<!-- Miscellaneous -->
 	<section>
 	<h2>Miscellaneous</h2>
 
