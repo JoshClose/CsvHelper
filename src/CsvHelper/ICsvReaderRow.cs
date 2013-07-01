@@ -19,7 +19,12 @@ namespace CsvHelper
 		/// <summary>
 		/// Get the current record;
 		/// </summary>
-		string[] CurrentRecord { get; }
+        string[] CurrentRecord { get; }
+
+        /// <summary>
+        /// Gets the current row.
+        /// </summary>
+        int Row { get; }
 
 		/// <summary>
 		/// Gets the raw field at position (column) index.

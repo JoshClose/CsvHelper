@@ -30,6 +30,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public string[] Read()
 		{
+		    ++Row;
 			return rows.Dequeue();
 		}
 	}
