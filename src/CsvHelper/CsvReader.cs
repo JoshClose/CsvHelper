@@ -88,21 +88,21 @@ namespace CsvHelper
 			}
 		}
 
-        /// <summary>
-        /// Gets the current row.
-        /// </summary>
-	    public int Row
-	    {
-	        get
-	        {
-                CheckDisposed();
-                CheckHasBeenRead();
+		/// <summary>
+		/// Gets the current row.
+		/// </summary>
+		public int Row
+		{
+			get
+			{
+				CheckDisposed();
+				CheckHasBeenRead();
 
-	            return parser.Row;
-	        }
-	    }
+				return parser.Row;
+			}
+		}
 
-	    /// <summary>
+		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
 		/// <see cref="CsvParser"/> as the default parser.
 		/// </summary>

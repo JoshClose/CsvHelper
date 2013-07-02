@@ -950,24 +950,24 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 1, reader.GetField<int>( 0 ) );
 		}
 
-        [TestMethod]
-        public void RowTest()
-        {
-            var queue = new Queue<string[]>();
-            queue.Enqueue(new[] { "1", "one" });
-            queue.Enqueue(new[] { "2", "two" });
+		[TestMethod]
+		public void RowTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "one" } );
+			queue.Enqueue( new[] { "2", "two" } );
 
-            var parserMock = new ParserMock(queue);
-            parserMock.Configuration.HasHeaderRecord = false;
+			var parserMock = new ParserMock( queue );
+			parserMock.Configuration.HasHeaderRecord = false;
 
-            var csv = new CsvReader(parserMock);
-            
-            csv.Read();
-            Assert.AreEqual(1, csv.Row);
+			var csv = new CsvReader( parserMock );
 
-            csv.Read();
-            Assert.AreEqual(2, csv.Row);
-        }
+			csv.Read();
+			Assert.AreEqual( 1, csv.Row );
+
+			csv.Read();
+			Assert.AreEqual( 2, csv.Row );
+		}
 
 #if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
