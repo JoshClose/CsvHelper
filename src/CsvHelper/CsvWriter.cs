@@ -84,6 +84,8 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField( string field )
 		{
+			CheckDisposed();
+
 			var shouldQuote = configuration.QuoteAllFields;
 
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
@@ -130,6 +132,8 @@ namespace CsvHelper
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
 		public virtual void WriteField( string field, bool shouldQuote )
 		{
+			CheckDisposed();
+
 			if( shouldQuote )
 			{
 				field = field ?? string.Empty;
@@ -227,6 +231,8 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		public virtual void WriteHeader<T>()
 		{
+			CheckDisposed();
+
 			WriteHeader( typeof( T ) );
 		}
 
@@ -236,6 +242,8 @@ namespace CsvHelper
 		/// <param name="type">The type of the record.</param>
 		public virtual void WriteHeader( Type type )
 		{
+			CheckDisposed();
+
 			if( type == null )
 			{
 				throw new ArgumentNullException( "type" );
@@ -407,6 +415,8 @@ namespace CsvHelper
 		/// <typeparam name="T">The record type.</typeparam>
 		public virtual void ClearRecordCache<T>()
 		{
+			CheckDisposed();
+
 			ClearRecordCache( typeof( T ) );
 		}
 
@@ -420,6 +430,8 @@ namespace CsvHelper
 		/// <param name="type">The record type.</param>
 		public virtual void ClearRecordCache( Type type )
 		{
+			CheckDisposed();
+
 			typeActions.Remove( type );
 		}
 
@@ -432,6 +444,8 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void ClearRecordCache()
 		{
+			CheckDisposed();
+
 			typeActions.Clear();
 		}
 
@@ -491,7 +505,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public virtual void Dispose()
+		public void Dispose()
 		{
 			Dispose( true );
 			GC.SuppressFinalize( this );
@@ -503,19 +517,21 @@ namespace CsvHelper
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
-			if( !disposed )
+			if( disposed )
 			{
-				if( disposing )
-				{
-					if( writer != null )
-					{
-						writer.Dispose();
-					}
-				}
-
-				disposed = true;
-				writer = null;
+				return;
 			}
+
+			if( disposing )
+			{
+				if( writer != null )
+				{
+					writer.Dispose();
+				}
+			}
+
+			disposed = true;
+			writer = null;
 		}
 
 		/// <summary>

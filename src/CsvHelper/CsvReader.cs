@@ -243,7 +243,7 @@ namespace CsvHelper
 		public virtual string this[string name, int index]
 		{
 			get 
-			{ 
+			{
 				CheckDisposed();
 				CheckHasBeenRead();
 
@@ -300,6 +300,7 @@ namespace CsvHelper
 			{
 				return null;
 			}
+
 			return GetField( index );
 		}
 
@@ -321,6 +322,7 @@ namespace CsvHelper
 			{
 				return null;
 			}
+
 			return GetField( fieldIndex );
 		}
 
@@ -333,11 +335,16 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		public virtual object GetField( int index, ITypeConverter converter )
 		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			var typeConverterOptions = new TypeConverterOptions
 			{
 				CultureInfo = configuration.CultureInfo
 			};
-			return converter.ConvertFromString( typeConverterOptions, currentRecord[index] );
+
+			var field = GetField( index );
+			return converter.ConvertFromString( typeConverterOptions, field );
 		}
 
 		/// <summary>
@@ -349,6 +356,9 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		public virtual object GetField( string name, ITypeConverter converter )
 		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			var index = GetFieldIndex( name );
 			return GetField( index, converter );
 		}
@@ -363,6 +373,9 @@ namespace CsvHelper
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
 		public virtual object GetField( string name, int index, ITypeConverter converter )
 		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			var fieldIndex = GetFieldIndex( name, index );
 			return GetField( fieldIndex, converter );
 		}
@@ -642,6 +655,7 @@ namespace CsvHelper
 				field = default( T );
 				return false;
 			}
+
 			return TryGetField( index, converter, out field );
 		}
 
@@ -666,6 +680,7 @@ namespace CsvHelper
 				field = default( T );
 				return false;
 			}
+
 			return TryGetField( index, converter, out field );
 		}
 
@@ -733,6 +748,9 @@ namespace CsvHelper
 		/// </returns>
 		public virtual bool IsRecordEmpty()
 		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
 			return IsRecordEmpty( true );
 		}
 
@@ -876,6 +894,8 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void ClearRecordCache<T>() 
 		{
+			CheckDisposed();
+
 			ClearRecordCache( typeof( T ) );
 		}
 
@@ -889,6 +909,8 @@ namespace CsvHelper
 		/// <param name="type">The type to invalidate.</param>
 		public virtual void ClearRecordCache( Type type )
 		{
+			CheckDisposed();
+
 			recordFuncs.Remove( type );
 		}
 
@@ -901,6 +923,8 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void ClearRecordCache()
 		{
+			CheckDisposed();
+
 			recordFuncs.Clear();
 		}
 #endif
@@ -909,7 +933,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public virtual void Dispose()
+		public void Dispose()
 		{
 			Dispose( true );
 			GC.SuppressFinalize( this );
@@ -921,19 +945,21 @@ namespace CsvHelper
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
-			if( !disposed )
+			if( disposed )
 			{
-				if( disposing )
-				{
-					if( parser != null )
-					{
-						parser.Dispose();
-					}
-				}
-
-				disposed = true;
-				parser = null;
+				return;
 			}
+
+			if( disposing )
+			{
+				if( parser != null )
+				{
+					parser.Dispose();
+				}
+			}
+
+			disposed = true;
+			parser = null;
 		}
 
 		/// <summary>

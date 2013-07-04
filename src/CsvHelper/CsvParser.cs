@@ -133,7 +133,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public virtual void Dispose()
+		public void Dispose()
 		{
 			Dispose( true );
 			GC.SuppressFinalize( this );
@@ -145,19 +145,21 @@ namespace CsvHelper
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
 		{
-			if( !disposed )
+			if( disposed )
 			{
-				if( disposing )
-				{
-					if( reader != null )
-					{
-						reader.Dispose();
-					}
-				}
-
-				disposed = true;
-				reader = null;
+				return;
 			}
+
+			if( disposing )
+			{
+				if( reader != null )
+				{
+					reader.Dispose();
+				}
+			}
+
+			disposed = true;
+			reader = null;
 		}
 
 		/// <summary>
