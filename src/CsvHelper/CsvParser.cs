@@ -28,8 +28,9 @@ namespace CsvHelper
 		private string[] record;
 		private int currentRow;
 		private readonly CsvConfiguration configuration;
-		private char cPrev = '\0';
+		private char? cPrev;
 		private char c = '\0';
+		private bool read;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -247,9 +248,13 @@ namespace CsvHelper
 
 			while( true )
 			{
-				cPrev = c;
+				if( read )
+				{
+					cPrev = c;
+				}
+
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				var read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength );
 				if( !read )
 				{
 					break;
@@ -259,7 +264,7 @@ namespace CsvHelper
 
 				if( c == configuration.Quote && !configuration.IgnoreQuotes )
 				{
-					if( !fieldIsEscaped && ( prevCharWasDelimiter || cPrev == '\r' || cPrev == '\n' || cPrev == '\0' ) )
+					if( !fieldIsEscaped && ( prevCharWasDelimiter || cPrev == '\r' || cPrev == '\n' || cPrev == null ) )
 					{
 						// The field is escaped only if the first char of
 						// the field is a quote.
@@ -372,7 +377,7 @@ namespace CsvHelper
 						}
 					}
 
-					if( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' || inComment )
+					if( cPrev == '\r' || cPrev == '\n' || inComment || cPrev == null )
 					{
 						// We have hit a blank line. Ignore it.
 
@@ -392,7 +397,7 @@ namespace CsvHelper
 					AddFieldToRecord( ref recordPosition, field );
 					break;
 				}
-				else if( configuration.AllowComments && c == configuration.Comment && ( cPrev == '\0' || cPrev == '\r' || cPrev == '\n' ) )
+				else if( configuration.AllowComments && c == configuration.Comment && ( cPrev == '\r' || cPrev == '\n' || cPrev == null ) )
 				{
 					inComment = true;
 				}
