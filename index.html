@@ -25,13 +25,78 @@
 				<a href="#" class="home-link pull-left"><img src="images/logo-small.png" width="30" height="30" /></a>
 				<ul class="nav">
 					<li><a href="#getting-started">Getting Started</a></li>
-					<li><a href="#reading">Reading</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Reading <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#reading">Reading</a></li>
+							<li class="divider"></li>
+							<li><a href="#reading-reading-all-records">Reading All Records</a></li>
+							<li><a href="#reading-reading-records-manually">Reading Records Manually</a></li>
+							<li><a href="#reading-reading-individual-fields">Reading Individual Fields</a></li>
+							<li><a href="#reading-try-get-field">TryGetField</a></li>
+						</ul>
+					</li>
 					<li><a href="#writing">Writing</a></li>
-					<li><a href="#mapping">Mapping</a></li>
-					<li><a href="#configuration">Configuration</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Mapping <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#mapping">Mapping</a></li>
+							<li class="divider"></li>
+							<li><a href="#mapping-auto-mapping">Auto Mapping</a></li>
+							<li class="dropdown-submenu">
+								<a href="#">Fluent Class Mapping</a>
+								<ul class="dropdown-menu">
+									<li><a href="#mapping-fluent-class-mapping">Fluent Class Mapping</a></li>
+									<li><a href="#mapping-reference-map">Reference Map</a></li>
+									<li><a href="#mapping-index">Index</a></li>
+									<li><a href="#mapping-name">Name</a></li>
+									<li><a href="#mapping-name-index">Name Index</a></li>
+									<li><a href="#mapping-ignore">Ignore</a></li>
+									<li><a href="#mapping-default">Default</a></li>
+									<li><a href="#mapping-type-converter">Type Converter</a></li>
+									<li><a href="#mapping-type-converter-options">Type Converter Options</a></li>
+									<li><a href="#mapping-convert-using">Convert Using</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Configuration <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#configuration">Configuration</a></li>
+							<li class="divider"></li>
+							<li><a href="#configuration-register-class-map">Register Class Map</a></li>
+							<li><a href="#configuration-unregister-class-map">Unregister Class Map</a></li>
+							<li><a href="#configuration-maps">Maps</a></li>
+							<li><a href="#configuration-property-binding-flags">Property Binding Flags</a></li>
+							<li><a href="#configuration-has-header-record">Has Header Record</a></li>
+							<li><a href="#configuration-will-throw-on-missing-field">Will Throw On Missing Field</a></li>
+							<li><a href="#configuration-detect-column-count-changes">Detect Column Count Changes</a></li>
+							<li><a href="#configuration-is-header-case-sensitive">Is Header Case Sensitive</a></li>
+							<li><a href="#configuration-ignore-header-white-space">Ignore Header White Space</a></li>
+							<li><a href="#configuration-trim-headers">Trim Headers</a></li>
+							<li><a href="#configuration-trim-fields">Trim Fields</a></li>
+							<li><a href="#configuration-delimiter">Delimiter</a></li>
+							<li><a href="#configuration-quote">Quote</a></li>
+							<li><a href="#configuration-comment">Comment</a></li>
+							<li><a href="#configuration-allow-comments">Allow Comments</a></li>
+							<li><a href="#configuration-buffer-size">Buffer Size</a></li>
+							<li><a href="#configuration-quote-all-fields">Quote All Fields</a></li>
+							<li><a href="#configuration-quote-no-fields">Quote No Fields</a></li>
+							<li><a href="#configuration-count-bytes">Count Bytes</a></li>
+							<li><a href="#configuration-encoding">Encoding</a></li>
+							<li><a href="#configuration-culture-info">Culture Info</a></li>
+							<li><a href="#configuration-skip-empty-records">Skip Empty Records</a></li>
+							<li><a href="#configuration-ignore-quotes">Ignore Quotes</a></li>
+							<li><a href="#configuration-ignore-private-accessor">Ignore Private Accessor</a></li>
+							<li><a href="#configuration-ignore-reading-exceptions">Ignore Reading Exceptions</a></li>
+							<li><a href="#configuration-reading-exception-callback">Reading Exception Callback</a></li>
+							<li><a href="#configuration-auto-map">Auto Map</a></li>
+						</ul>
+					</li>
 					<li><a href="#type-conversion">Type Conversion</a></li>
 					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Misc<b class="caret"></b></a>
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Misc <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href="#change-log">Change Log</a></li>
 						</ul>
@@ -60,7 +125,7 @@
 	<section>
 	<h2 id="reading">Reading</h2>
 
-	<h3>Reading all records</h3>
+	<h3 id="reading-reading-all-records">Reading all records</h3>
 
 	<p>Reading is setup to be as simple as possible. If you have a class structure setup that mirrors the CSV file,
 	you can read the whole file into an enumerable.</p>
@@ -81,7 +146,7 @@ var records = csv.GetRecords&lt;MyClass&gt;();</textarea></p>
 var csv = new CsvReader( textReader );
 var records = csv.GetRecords&lt;MyClass&gt;().ToList();</textarea></p>
 
-	<h3>Reading records manually</h3>
+	<h3 id="reading-reading-records-manually">Reading records manually</h3>
 
 	<p>You can loop the rows and read them manually.</p>
 
@@ -92,7 +157,7 @@ while( csv.Read() )
 	var record = csv.GetRecord&lt;MyClass&gt;();
 }</textarea></p>
 
-	<h3>Reading individual fields</h3>
+	<h3 id="reading-reading-individual-fields">Reading individual fields</h3>
 
 	<p>You can also read each field manually if you like.</p>
 
@@ -105,7 +170,7 @@ while( csv.Read() )
 	var boolField = csv.GetField&lt;bool&gt;( "HeaderName" );
 }</textarea></p>
 
-	<h3>TryGetField</h3>
+	<h3 id="reading-try-get-field">TryGetField</h3>
 
 	<p>If you might have inconsistencies with getting fields, you can use TryGetField.</p>
 
@@ -130,14 +195,14 @@ while( csv.Read() )
 	<section>
 	<h2 id="mapping">Mapping</h2>
 
-	<h3 id="auto-mapping">Auto Mapping</h3>
+	<h3 id="mapping-auto-mapping">Auto Mapping</h3>
 
 	<p>If you don't supply a mapping file, auto mapping will be used. Auto mapping will map the properties in your class
 	in the order they appear in. If the property is a custom class, it recursively maps the properties from that class
 	in the order they appear in. If the auto mapper hits a circular reference, it will stop going down that reference
 	branch.</p>
 
-	<h3 id="fluent-class-mapping">Fluent Class Mapping</h3>
+	<h3 id="mapping-fluent-class-mapping">Fluent Class Mapping</h3>
 
 	<p>If your CSV file doesn't match up exactly with your custom class, you can use a fluent class map to set options
 	for how the class maps to the file. You need to <a href="#register-class-map">register your class map</a> in
@@ -153,7 +218,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea></p>
 
-	<h4>Reference Map</h4>
+	<h4 id="mapping-reference-map">Reference Map</h4>
 
 	<p>Reference maps are used to map a property that is a custom class to it's own mapping that maps those properties
 	to several CSV columns. You can nest reference maps as many layers deep as you like.</p>
@@ -180,7 +245,7 @@ public class AddressMap : CsvClassMap&lt;Address&gt;
 	}
 }</textarea></p>
 
-	<h4>Index</h4>
+	<h4 id="mapping-index">Index</h4>
 
 	<p>When mapping by index you specify the index of the CSV column that that you want to use for that property.</p>
 
@@ -194,7 +259,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea></p>
 
-	<h4>Name</h4>
+	<h4 id="mapping-name">Name</h4>
 
 	<p>When mapping by name you specify the name of the CSV column that you want to use for that property. For this to
 	work, the CSV file must have a header record. The name you specify must match with the name of the header record.</p>
@@ -209,7 +274,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea></p>
 
-	<h4>Name Index</h4>
+	<h4 id="mapping-name-index">Name Index</h4>
 
 	<p>Sometimes CSV files have multiple columns with the same name. When this happens, you can use NameIndex to
 	specify which column name you are referring to. The NameIndex is NOT the column in the CSV file.</p>
@@ -224,13 +289,13 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea></p>
 
-	<h4>Ignore</h4>
+	<h4 id="mapping-ignore">Ignore</h4>
 
 	<p>Currently this is not used. Mapping will only map properties that you specify. In the future there will be an
 	option to auto map within a class map, and any mappings explicitly stated will override the auto mapped ones. When
 	this happens, ignore will be used to ignore a property that was auto mapped.</p>
 
-	<h4>Default</h4>
+	<h4 id="mapping-default">Default</h4>
 
 	<p>Default is used to set a default value you want to use if the field is empty.</p>
 
@@ -244,7 +309,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea></p>
 
-	<h4>Type Converter</h4>
+	<h4 id="mapping-type-converter">Type Converter</h4>
 
 	<p>If the value of the CSV field can't automatically be converted into the type of the property, you can specify
 	a custom CsvHelper.TypeConversion.ITypeConverter to be used to convert the value. See
@@ -259,7 +324,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea></p>
 
-	<h4>Type Converter Options</h4>
+	<h4 id="mapping-type-converter-options">Type Converter Options</h4>
 
 	<p>The default built in converters will handle most cases of type conversion, but sometimes there are some small
 	changes that you'd like to make, but don't want to create a whole new type converter that just parses an int
@@ -278,7 +343,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	}
 }</textarea>
 
-	<h4>Convert Using</h4>
+	<h4 id="mapping-convert-using">Convert Using</h4>
 
 	<p>When all else fails, you can use ConvertUsing. ConvertUsing allows you to write custom code inline to
 	convert the row into a single property value.</p>
@@ -308,7 +373,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	<section>
 	<h2 id="configuration">Configuration</h2>
 
-	<h3 id="register-class-map">Register Class Map</h3>
+	<h3 id="configuration-register-class-map">Register Class Map</h3>
 
 	<p>When using fluent class mapping, you need to register class maps for them to be used. You can register multiple
 	class maps to be used.</p>
@@ -317,7 +382,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 csv.Configuration.RegisterClassMap&lt;MyClassMap&gt;();
 csv.Configuration.RegisterClassMap&lt;AnotherClassMap&gt;();</textarea></p>
 
-	<h3>Unregister Class Map</h3>
+	<h3 id="configuration-unregister-class-map">Unregister Class Map</h3>
 
 	<p>You can unregister a class map if needed.</p>
 
@@ -327,14 +392,14 @@ csv.Configuration.UnregisterClassMap&lt;MyClassMap&gt;();
 // Unregister all class maps.
 csv.Configuration.UnregisterClassMap();</textarea></p>
 
-	<h3>Maps</h3>
+	<h3 id="configuration-maps">Maps</h3>
 
 	<p>You are able to access the registered class maps.</p>
 
 	<p><textarea>
 var myMap = csv.Configuration.Maps[typeof( MyClass )];</textarea></p>
 
-	<h3>Property Binding Flags</h3>
+	<h3 id="configuration-property-binding-flags">Property Binding Flags</h3>
 
 	<p>PropertyBindingFlags are the flags used to find the properties on the custom class.</p>
 
@@ -342,7 +407,7 @@ var myMap = csv.Configuration.Maps[typeof( MyClass )];</textarea></p>
 // Default value
 csv.Configuration.PropertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;</textarea></p>
 
-	<h3>Has Header Record</h3>
+	<h3 id="configuration-has-header-record">Has Header Record</h3>
 
 	<p>This flag tells the reader/writer if there is a header row in the CSV file. The must be true
 	for mapping properties by name to work (and there must be a header row).</p>
@@ -351,7 +416,7 @@ csv.Configuration.PropertyBindingFlags = BindingFlags.Public | BindingFlags.Inst
 // Default value
 csv.Configuration.HasHeaderRecord = true;</textarea></p>
 
-	<h3>Will Throw On Missing Field</h3>
+	<h3 id="configuration-will-throw-on-missing-field">Will Throw On Missing Field</h3>
 
 	<p>This flag indicates if an exception should be thrown if reading and an expected field is missing. This is useful
 	if you want to know if there is an issue with the CSV file.</p>
@@ -360,7 +425,7 @@ csv.Configuration.HasHeaderRecord = true;</textarea></p>
 // Default value
 csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 
-	<h3>Detect Column Count Changes</h3>
+	<h3 id="configuration-detect-column-count-changes">Detect Column Count Changes</h3>
 
 	<p>This flag will check for changes in the number of column from row to row. If true and a change is detected, a
 	CsvBadDataException will be thrown.</p>
@@ -369,7 +434,7 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 // Default value
 csv.Configuration.DetectColumnCountChanges = false;</textarea></p>
 
-	<h3>Is Header Case Sensitive</h3>
+	<h3 id="configuration-is-header-case-sensitive">Is Header Case Sensitive</h3>
 
 	<p>This flag sets whether matching CSV header names will be case sensitive.</p>
 
@@ -377,7 +442,7 @@ csv.Configuration.DetectColumnCountChanges = false;</textarea></p>
 // Default value
 csv.Configuration.IsHeaderCaseSensitive = true;</textarea></p>
 
-	<h3>Ignore Header White Space</h3>
+	<h3 id="configuration-ignore-header-white-space">Ignore Header White Space</h3>
 
 	<p>This flag tells the reader to ignore white space in the headers when matching the columns to the properties by
 	name.</p>
@@ -386,7 +451,7 @@ csv.Configuration.IsHeaderCaseSensitive = true;</textarea></p>
 // Default value
 csv.Configuration.IgnoreHeaderWhiteSpace = false;</textarea></p>
 
-	<h3>Trim Headers</h3>
+	<h3 id="configuration-trim-headers">Trim Headers</h3>
 
 	<p>This flag tells the reader to ignore white space from the beginning and ending of the headers when matching the
 	columns to the properties by name.</p>
@@ -395,7 +460,7 @@ csv.Configuration.IgnoreHeaderWhiteSpace = false;</textarea></p>
 // Default value
 csv.Configuration.TrimHeaders = false;</textarea></p>
 
-	<h3>Trim Fields</h3>
+	<h3 id="configuration-trim-fields">Trim Fields</h3>
 
 	<p>This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.</p>
 
@@ -403,7 +468,7 @@ csv.Configuration.TrimHeaders = false;</textarea></p>
 // Default value
 csv.Configuration.TrimFields = false;</textarea></p>
 
-	<h3>Delimiter</h3>
+	<h3 id="configuration-delimiter">Delimiter</h3>
 
 	<p>The value used to separate the fields in a CSV row.</p>
 
@@ -411,7 +476,7 @@ csv.Configuration.TrimFields = false;</textarea></p>
 // Default value
 csv.Configuration.Delimiter = ",";</textarea></p>
 
-	<h3>Quote</h3>
+	<h3 id="configuration-quote">Quote</h3>
 
 	<p>The value used to escape fields that contain a delimiter, quote, or line ending.</p>
 
@@ -419,7 +484,7 @@ csv.Configuration.Delimiter = ",";</textarea></p>
 // Default value
 csv.Configuration.Quote = '"';</textarea></p>
 
-	<h3>Comment</h3>
+	<h3 id="configuration-comment">Comment</h3>
 
 	<p>The value used to denote a line that is commented out.</p>
 
@@ -427,7 +492,7 @@ csv.Configuration.Quote = '"';</textarea></p>
 // Default value
 csv.Configuration.Comment = '#';</textarea></p>
 
-	<h3>Allow Comments</h3>
+	<h3 id="configuration-allow-comments">Allow Comments</h3>
 
 	<p>This flag tells the parser whether comments are enabled.</p>
 
@@ -435,7 +500,7 @@ csv.Configuration.Comment = '#';</textarea></p>
 // Default value
 csv.Configuration.AllowComments = false;</textarea></p>
 
-	<h3>Buffer Size</h3>
+	<h3 id="configuration-buffer-size">Buffer Size</h3>
 
 	<p>The size of the internal buffer that is used when reader or writing data to and from the TextReader and
 	TextWriter. Depending on where your TextReader or TextWriter came from, you may want to make this value larger or
@@ -445,7 +510,7 @@ csv.Configuration.AllowComments = false;</textarea></p>
 // Default value
 csv.Configuration.BufferSize = 2048;</textarea></p>
 
-	<h3>Quote All Fields</h3>
+	<h3 id="configuration-quote-all-fields">Quote All Fields</h3>
 
 	<p>A flag that tells the writer whether all fields written should have quotes around them; regardless if the field
 	contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same time.
@@ -455,7 +520,7 @@ csv.Configuration.BufferSize = 2048;</textarea></p>
 // Default value
 csv.Configuration.QuoteAllFields = false;</textarea></p>
 
-	<h3>Quote No Fields</h3>
+	<h3 id="configuration-quote-no-fields">Quote No Fields</h3>
 
 	<p>A flag that tell the writer whether all fields written should not have quotes around them; regardless if the
 	field contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same
@@ -465,7 +530,7 @@ csv.Configuration.QuoteAllFields = false;</textarea></p>
 // Default value
 csv.Configuration.QuoteAllFields = false;</textarea></p>
 
-	<h3>Count Bytes</h3>
+	<h3 id="configuration-count-bytes">Count Bytes</h3>
 
 	<p>A flag that will tell the parser to keep a count of all the bytes that have been read. You need to set
 	Configuration.Encoding to the same encoding of the CSV file for this to work properly. This will also slow down
@@ -475,7 +540,7 @@ csv.Configuration.QuoteAllFields = false;</textarea></p>
 // Default value
 csv.Configuration.CountBytes = false;</textarea></p>
 
-	<h3>Encoding</h3>
+	<h3 id="configuration-encoding">Encoding</h3>
 
 	<p>The encoding of the CSV file. This is only used when counting bytes. The underlying TextReader and TextWriter
 	will have it's own encoding that is used.</p>
@@ -484,7 +549,7 @@ csv.Configuration.CountBytes = false;</textarea></p>
 // Default value
 csv.Configuration.Encoding = Encoding.UTF8;</textarea></p>
 
-	<h3>Culture Info</h3>
+	<h3 id="configuration-culture-info">Culture Info</h3>
 
 	<p>The culture info used to read and write. This can be overridden per property in the mapping configuration.</p>
 
@@ -492,7 +557,7 @@ csv.Configuration.Encoding = Encoding.UTF8;</textarea></p>
 // Default value
 csv.Configuration.CultureInfo = CultureInfo.CurrentCulture;</textarea></p>
 
-	<h3>Skip Empty Records</h3>
+	<h3 id="configuration-skip-empty-records">Skip Empty Records</h3>
 
 	<p>A flag to let the reader know if a record should be skipped when reading if it's empty. A record is considered
 	empty if all fields are empty.</p>
@@ -501,7 +566,7 @@ csv.Configuration.CultureInfo = CultureInfo.CurrentCulture;</textarea></p>
 // Default value
 csv.Configuration.SkipEmptyRecords = false;</textarea></p>
 
-	<h3>Ignore Quotes</h3>
+	<h3 id="configuration-ignore-quotes">Ignore Quotes</h3>
 
 	<p>A flag that tells the parser to ignore quotes as an escape character and treat it like any other character.</p>
 
@@ -509,7 +574,7 @@ csv.Configuration.SkipEmptyRecords = false;</textarea></p>
 // Default value
 csv.Configuration.IgnoreQuotes = false;</textarea></p>
 
-	<h3>Ignore Private Accessor</h3>
+	<h3 id="configuration-ignore-private-accessor">Ignore Private Accessor</h3>
 
 	<p>A flag that tells the reader and writer to ignore private accessors when reading and writing. By default you
 	can't read from a private getter or write to a private setter. Turn this on will allow that. Properties that can't
@@ -519,7 +584,7 @@ csv.Configuration.IgnoreQuotes = false;</textarea></p>
 // Default value
 csv.Configuration.IgnorePrivateAccessor = false;</textarea></p>
 
-	<h3>Ignore Reading Exceptions</h3>
+	<h3 id="configuration-ignore-reading-exceptions">Ignore Reading Exceptions</h3>
 
 	<p>A flag that tells the reader to swallow any exceptions that occur while reading and to continue on. Exceptions
 	that occur in the parser will not be ignored. Parser exceptions mean the file is bad in some way, and the parser
@@ -529,7 +594,7 @@ csv.Configuration.IgnorePrivateAccessor = false;</textarea></p>
 // Default value
 csv.Configuration.IgnoreReadingExceptions = false;</textarea></p>
 
-	<h3>Reading Exception Callback</h3>
+	<h3 id="configuration-reading-exception-callback">Reading Exception Callback</h3>
 
 	<p>If you have Configuration.IgnoreReaderExceptions on and you want to know that the exceptions have occurred and
 	possibly do something with them, you can use this.</p>
@@ -540,7 +605,7 @@ csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
 	// Log the exception and current row information.
 };</textarea></p>
 
-	<h3>Auto Map</h3>
+	<h3 id="configuration-auto-map">Auto Map</h3>
 
 	<p>This is used to generate a CsvClassMap from a type automatically without a fluent class mapping. This will try
 	to map all properties including creating reference maps for properties that aren't native types. If the auto mapper
