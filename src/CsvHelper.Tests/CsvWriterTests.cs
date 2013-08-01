@@ -75,6 +75,33 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( expected, csvFile );
 		}
+        
+        [TestMethod]
+		public void WriteRecordWithDelimiterAfterLastFieldTestTest()
+		{
+			var record = new TestRecord
+			{
+				IntColumn = 1,
+				StringColumn = "string column",
+				IgnoredColumn = "ignored column",
+				FirstColumn = "first column",
+			};
+
+			var stream = new MemoryStream();
+			var writer = new StreamWriter( stream ) { AutoFlush = true };
+			var csv = new CsvWriter( writer );
+            csv.Configuration.DelimiterAfterLastField = true;
+			csv.Configuration.RegisterClassMap<TestRecordMap>();
+
+			csv.WriteRecord( record );
+
+			stream.Position = 0;
+			var reader = new StreamReader( stream );
+			var csvFile = reader.ReadToEnd();
+			var expected = "first column,1,string column,test,\r\n";
+
+			Assert.AreEqual( expected, csvFile );
+		}
 
 		[TestMethod]
 		public void WriteRecordNoIndexesTest()
