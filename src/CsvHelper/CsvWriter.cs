@@ -220,6 +220,8 @@ namespace CsvHelper
 			CheckDisposed();
 
 			var record = string.Join( configuration.Delimiter, currentRecord.ToArray() );
+		    if( configuration.DelimiterAfterLastField )
+		        record += configuration.Delimiter;
 			writer.WriteLine( record );
 			currentRecord.Clear();
 		}

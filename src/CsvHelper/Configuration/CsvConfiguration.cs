@@ -308,6 +308,8 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IgnorePrivateAccessor { get; set; }
 
+        public virtual bool DelimiterAfterLastField { get; set; }
+
 #if !NET_2_0
 		/// <summary>
 		/// Gets or sets a value indicating whether
