@@ -9,6 +9,9 @@ using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+#if !WINDOWS_PHONE_7
+using System.Dynamic;
+#endif
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
@@ -598,6 +601,52 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "Id,Name\r\n1,one\r\n2,two\r\n", text );
 			}
 		}
+
+#if !WINDOWS_PHONE_7
+		[TestMethod]
+		public void WriteDynamicListTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<dynamic>();
+				dynamic record = new { Id = 1, Name = "one" };
+				list.Add( record );
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+				Assert.AreEqual( "Id,Name\r\n1,one\r\n", text );
+			}
+		}
+
+		// TODO: Make reader/writer work with expando objects.
+		[Ignore]
+		[TestMethod]
+		public void WriteExpandoListTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<dynamic>();
+				dynamic record = new ExpandoObject();
+				record.Id = 1;
+				record.Name = "one";
+				list.Add( record );
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+				Assert.AreEqual( "Id,Name\r\n1,one\r\n", text );
+			}
+		}
+#endif
 
 		private struct TestStruct
 		{

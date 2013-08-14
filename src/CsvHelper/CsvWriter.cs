@@ -338,35 +338,12 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
+		[Obsolete( "This method is deprecated. Use WriteRecords( IEnumerable records ) instead.", false )]
 		public virtual void WriteRecords<T>( IEnumerable<T> records )
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord &&
-#if !WINRT_4_5
-			    !typeof( T ).IsPrimitive
-#else
-				!typeof( T ).GetTypeInfo().IsPrimitive
-#endif
-				)
-			{
-				WriteHeader<T>();
-			}
-
-			foreach( var record in records )
-			{
-				try
-				{
-					GetWriteRecordAction<T>()( record );
-				}
-				catch( Exception ex )
-				{
-					ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
-					throw;
-				}
-
-				NextRecord();
-			}
+			WriteRecords( (IEnumerable)records );
 		}
 
 		/// <summary>
@@ -374,30 +351,42 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="records">The list of records to write.</param>
+		[Obsolete( "This method is deprecated. Use WriteRecords( IEnumerable records ) instead.", false )]
 		public virtual void WriteRecords( Type type, IEnumerable records )
 		{
 			CheckDisposed();
 
-			if( configuration.HasHeaderRecord &&
-#if !WINRT_4_5
-			    !type.IsPrimitive
-#else
-				!type.GetTypeInfo().IsPrimitive
-#endif
-				)
-			{
-				WriteHeader( type );
-			}
+			WriteRecords( records );
+		}
+
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <param name="records">The list of records to write.</param>
+		public virtual void WriteRecords( IEnumerable records )
+		{
+			CheckDisposed();
 
 			foreach( var record in records )
 			{
+				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten &&
+#if !WINRT_4_5
+				!record.GetType().IsPrimitive
+#else
+				!record.GetType().GetTypeInfo().IsPrimitive
+#endif
+ )
+				{
+					WriteHeader( record.GetType() );
+				}
+
 				try
 				{
-					GetWriteRecordAction( type ).DynamicInvoke( record );
+					GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
 				}
 				catch( Exception ex )
 				{
-					ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
+					ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
 					throw;
 				}
 

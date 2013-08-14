@@ -104,14 +104,22 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-        void WriteRecords<T>(IEnumerable<T> records);
+		[Obsolete( "This method is deprecated. Use WriteRecords( IEnumerable records ) instead.", false )]
+		void WriteRecords<T>( IEnumerable<T> records );
 
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="records">The list of records to write.</param>
+		[Obsolete( "This method is deprecated. Use WriteRecords( IEnumerable records ) instead.", false )]
 		void WriteRecords( Type type, IEnumerable records );
+
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <param name="records">The list of records to write.</param>
+		void WriteRecords( IEnumerable records );
 
 		/// <summary>
 		/// Clears the record cache for the given type. After <see cref="WriteRecord{T}"/> is called the
