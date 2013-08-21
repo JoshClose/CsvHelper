@@ -67,6 +67,46 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( row[9], person.WorkAddress.Zip );
 		}
 
+		[TestMethod]
+		public void OnlyReferencesTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[]
+			{
+				"FirstName",
+				"LastName",
+				"HomeStreet",
+				"HomeCity",
+				"HomeState",
+				"HomeZip",
+				"WorkStreet",
+				"WorkCity",
+				"WorkState",
+				"WorkZip"
+			} );
+			queue.Enqueue( new[]
+			{
+				"John",
+				"Doe",
+				"1234 Home St",
+				"Home Town",
+				"Home State",
+				"12345",
+				"5678 Work Rd",
+				"Work City",
+				"Work State",
+				"67890"
+			} );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.RegisterClassMap<OnlyReferencesMap>();
+			reader.Read();
+			var person = reader.GetRecord<Person>();
+		}
+
 		private class Person
 		{
 			public string FirstName { get; set; }
@@ -119,6 +159,15 @@ namespace CsvHelper.Tests
 				Map(m => m.City).Name( "WorkCity" );
 				Map(m => m.State).Name( "WorkState" );
 				Map(m => m.Zip).Name( "WorkZip" );
+			}
+		}
+
+		private sealed class OnlyReferencesMap : CsvClassMap<Person>
+		{
+			public override void CreateMap()
+			{
+				References<HomeAddressMap>( m => m.HomeAddress );
+				References<WorkAddressMap>( m => m.WorkAddress );
 			}
 		}
 	}

@@ -70,7 +70,11 @@ namespace CsvHelper.Configuration
 				return IndexStart;
 			}
 
-			var indexes = new List<int> { PropertyMaps.Max( pm => pm.Data.Index ) };
+			var indexes = new List<int>();
+			if( PropertyMaps.Count > 0 )
+			{
+				indexes.Add( PropertyMaps.Max( pm => pm.Data.Index ) );
+			}
 			indexes.AddRange( ReferenceMaps.Select( referenceMap => referenceMap.GetMaxIndex() ) );
 
 			return indexes.Max();
