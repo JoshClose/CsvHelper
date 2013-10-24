@@ -296,7 +296,7 @@ namespace CsvHelper.Tests
 				csv = reader.ReadToEnd();
 			}
 
-			var expected = "\"first column\",\"1\",\"string column\",\"test\"\r\n";
+			var expected = "\"first column\",=\"1\",\"string column\",\"test\"\r\n";
 
 			Assert.AreEqual( expected, csv );
 		}
