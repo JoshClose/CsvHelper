@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CsvHelper.Tests.TypeConversion
 {
 	[TestClass]
-    public class TimeSpanConverterTests
+	public class TimeSpanConverterTests
 	{
 		[TestMethod]
 		public void ConvertToStringTest()
@@ -26,11 +26,10 @@ namespace CsvHelper.Tests.TypeConversion
 			};
 
 			var dateTime = DateTime.Now;
-		    var timeSpan = new TimeSpan(dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond);
-
+			var timeSpan = new TimeSpan( dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond );
 
 			// Valid conversions.
-            Assert.AreEqual(timeSpan.ToString(), converter.ConvertToString(typeConverterOptions, timeSpan));
+			Assert.AreEqual( timeSpan.ToString(), converter.ConvertToString( typeConverterOptions, timeSpan ) );
 
 			// Invalid conversions.
 			Assert.AreEqual( "1", converter.ConvertToString( typeConverterOptions, 1 ) );

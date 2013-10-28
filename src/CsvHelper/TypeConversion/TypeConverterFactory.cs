@@ -166,6 +166,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter( typeof( long ), new Int64Converter() );
 			AddConverter( typeof( sbyte ), new SByteConverter() );
 			AddConverter( typeof( string ), new StringConverter() );
+			AddConverter( typeof( TimeSpan ), new TimeSpanConverter() );
 			AddConverter( typeof( ushort ), new UInt16Converter() );
 			AddConverter( typeof( uint ), new UInt32Converter() );
 			AddConverter( typeof( ulong ), new UInt64Converter() );
