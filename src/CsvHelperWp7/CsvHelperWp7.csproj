@@ -195,6 +195,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\StringConverter.cs">
       <Link>TypeConversion\StringConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TimeSpanConverter.cs">
+      <Link>TypeConversion\TimeSpanConverter.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\TypeConverterFactory.cs">
       <Link>TypeConversion\TypeConverterFactory.cs</Link>
     </Compile>

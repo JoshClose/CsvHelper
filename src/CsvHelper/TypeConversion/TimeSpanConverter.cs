@@ -32,13 +32,27 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
-			var formatProvider = (IFormatProvider)options.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? options.CultureInfo;
+			var formatProvider = (IFormatProvider)options.CultureInfo;
 
 			TimeSpan span;
-			if( TimeSpan.TryParse( text, formatProvider, out span ) )
+
+#if !NET_2_0 && !NET_3_5
+			var timeSpanStyle = options.TimeSpanStyle ?? TimeSpanStyles.None;
+			if( !string.IsNullOrEmpty( options.Format ) && TimeSpan.TryParseExact( text, options.Format, formatProvider, timeSpanStyle, out span ) )
 			{
 				return span;
 			}
+
+			if( string.IsNullOrEmpty( options.Format ) && TimeSpan.TryParse( text, formatProvider, out span ) )
+			{
+				return span;
+			}
+#else
+			if( TimeSpan.TryParse( text, out span ) )
+			{
+				return span;
+			}
+#endif
 
 			return base.ConvertFromString( options, text );
 		}

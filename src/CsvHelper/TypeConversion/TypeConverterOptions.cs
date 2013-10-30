@@ -26,6 +26,13 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		public DateTimeStyles? DateTimeStyle { get; set; }
 
+#if !NET_2_0 && !NET_3_5
+		/// <summary>
+		/// Gets or sets the time span style.
+		/// </summary>
+		public TimeSpanStyles? TimeSpanStyle { get; set; }
+#endif
+
 		/// <summary>
 		/// Gets or sets the number style.
 		/// </summary>
