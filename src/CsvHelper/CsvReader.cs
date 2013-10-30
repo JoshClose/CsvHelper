@@ -823,6 +823,8 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
+					ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
+
 					if( configuration.IgnoreReadingExceptions )
 					{
 #if !NET_2_0
@@ -835,7 +837,6 @@ namespace CsvHelper
 						continue;
 					}
 
-					ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
 					throw;
 				}
 
@@ -865,6 +866,8 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
+					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
+
 					if( configuration.IgnoreReadingExceptions )
 					{
 #if !NET_2_0
@@ -877,7 +880,6 @@ namespace CsvHelper
 						continue;
 					}
 
-					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
 					throw;
 				}
 
