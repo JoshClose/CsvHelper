@@ -36,7 +36,16 @@
 							<li><a href="#reading-try-get-field">TryGetField</a></li>
 						</ul>
 					</li>
-					<li><a href="#writing">Writing</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Writing <b class="caret"></b></a>
+						<ul class="dropdown-menu">
+							<li><a href="#writing">Writing</a></li>
+							<li class="divider"></li>
+							<li><a href="#writing-writing-all-records">Writing All Records</a></li>
+							<li><a href="#writing-writing-records-manually">Writing Records Manually</a></li>
+							<li><a href="#writing-writing-individual-fields">Writing Individual Fields</a></li>
+						</ul>
+					</li>
 					<li class="dropdown">
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Mapping <b class="caret"></b></a>
 						<ul class="dropdown-menu">
@@ -189,6 +198,42 @@ while( csv.Read() )
 	<!-- Writing -->
 	<section>
 	<h2 id="writing">Writing</h2>
+
+	<h3 id="writing-writing-all-records">Writing all records</h3>
+
+	<p>Writing is setup to be as simple as possible. If you have a class structure setup that mirrors the CSV file,
+		you can write the whole file from an enumerable.</p>
+
+	<p><textarea>
+var csv = new CsvWriter( textWriter );
+csv.WriteRecords( records );</textarea></p>
+
+	<p>If you want to customize how the CSV file maps to your custom class objects, you can use <a href="#mapping">mapping</a>.</p>
+
+	<h3 id="writing-writing-records-manually">Writing records manually</h3>
+
+	<p>You can loop the objects and write them manually.</p>
+
+	<p><textarea>
+var csv = new CsvWriter( textWriter );
+foreach( var item in list )
+{
+	csv.WriteRecord( item );
+}</textarea></p>
+
+	<h3 id="writing-writing-individual-fields">Writing individual fields</h3>
+
+	<p>You can also write each field manually if you like.</p>
+
+	<p><textarea>
+var csv = new CsvWriter( textWriter );
+foreach( var item in list )
+{
+	csv.WriteField( "a" );
+	csv.WriteField( 2 );
+	csv.WriteField( true );
+}</textarea></p>
+
 	</section>
 
 	<!-- Mapping -->
