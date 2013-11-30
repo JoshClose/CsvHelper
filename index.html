@@ -74,33 +74,33 @@
 						<ul class="dropdown-menu">
 							<li><a href="#configuration">Configuration</a></li>
 							<li class="divider"></li>
-							<li><a href="#configuration-register-class-map">Register Class Map</a></li>
-							<li><a href="#configuration-unregister-class-map">Unregister Class Map</a></li>
-							<li><a href="#configuration-maps">Maps</a></li>
-							<li><a href="#configuration-property-binding-flags">Property Binding Flags</a></li>
-							<li><a href="#configuration-has-header-record">Has Header Record</a></li>
-							<li><a href="#configuration-will-throw-on-missing-field">Will Throw On Missing Field</a></li>
-							<li><a href="#configuration-detect-column-count-changes">Detect Column Count Changes</a></li>
-							<li><a href="#configuration-is-header-case-sensitive">Is Header Case Sensitive</a></li>
-							<li><a href="#configuration-ignore-header-white-space">Ignore Header White Space</a></li>
-							<li><a href="#configuration-trim-headers">Trim Headers</a></li>
-							<li><a href="#configuration-trim-fields">Trim Fields</a></li>
-							<li><a href="#configuration-delimiter">Delimiter</a></li>
-							<li><a href="#configuration-quote">Quote</a></li>
-							<li><a href="#configuration-comment">Comment</a></li>
 							<li><a href="#configuration-allow-comments">Allow Comments</a></li>
+							<li><a href="#configuration-auto-map">Auto Map</a></li>
 							<li><a href="#configuration-buffer-size">Buffer Size</a></li>
-							<li><a href="#configuration-quote-all-fields">Quote All Fields</a></li>
-							<li><a href="#configuration-quote-no-fields">Quote No Fields</a></li>
+							<li><a href="#configuration-comment">Comment</a></li>
 							<li><a href="#configuration-count-bytes">Count Bytes</a></li>
-							<li><a href="#configuration-encoding">Encoding</a></li>
 							<li><a href="#configuration-culture-info">Culture Info</a></li>
-							<li><a href="#configuration-skip-empty-records">Skip Empty Records</a></li>
-							<li><a href="#configuration-ignore-quotes">Ignore Quotes</a></li>
+							<li><a href="#configuration-delimiter">Delimiter</a></li>
+							<li><a href="#configuration-detect-column-count-changes">Detect Column Count Changes</a></li>
+							<li><a href="#configuration-encoding">Encoding</a></li>
+							<li><a href="#configuration-has-header-record">Has Header Record</a></li>
+							<li><a href="#configuration-ignore-header-white-space">Ignore Header White Space</a></li>
 							<li><a href="#configuration-ignore-private-accessor">Ignore Private Accessor</a></li>
 							<li><a href="#configuration-ignore-reading-exceptions">Ignore Reading Exceptions</a></li>
+							<li><a href="#configuration-ignore-quotes">Ignore Quotes</a></li>
+							<li><a href="#configuration-is-header-case-sensitive">Is Header Case Sensitive</a></li>
+							<li><a href="#configuration-maps">Maps</a></li>
+							<li><a href="#configuration-property-binding-flags">Property Binding Flags</a></li>
+							<li><a href="#configuration-quote">Quote</a></li>
+							<li><a href="#configuration-quote-all-fields">Quote All Fields</a></li>
+							<li><a href="#configuration-quote-no-fields">Quote No Fields</a></li>
 							<li><a href="#configuration-reading-exception-callback">Reading Exception Callback</a></li>
-							<li><a href="#configuration-auto-map">Auto Map</a></li>
+							<li><a href="#configuration-register-class-map">Register Class Map</a></li>
+							<li><a href="#configuration-skip-empty-records">Skip Empty Records</a></li>
+							<li><a href="#configuration-trim-fields">Trim Fields</a></li>
+							<li><a href="#configuration-trim-headers">Trim Headers</a></li>
+							<li><a href="#configuration-unregister-class-map">Unregister Class Map</a></li>
+							<li><a href="#configuration-will-throw-on-missing-field">Will Throw On Missing Field</a></li>
 						</ul>
 					</li>
 					<li><a href="#type-conversion">Type Conversion</a></li>
@@ -418,24 +418,138 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	<section>
 	<h2 id="configuration">Configuration</h2>
 
-	<h3 id="configuration-register-class-map">Register Class Map</h3>
+	<h3 id="configuration-allow-comments">Allow Comments</h3>
 
-	<p>When using fluent class mapping, you need to register class maps for them to be used. You can register multiple
-	class maps to be used.</p>
-
-	<p><textarea>
-csv.Configuration.RegisterClassMap&lt;MyClassMap&gt;();
-csv.Configuration.RegisterClassMap&lt;AnotherClassMap&gt;();</textarea></p>
-
-	<h3 id="configuration-unregister-class-map">Unregister Class Map</h3>
-
-	<p>You can unregister a class map if needed.</p>
+	<p>This flag tells the parser whether comments are enabled.</p>
 
 	<p><textarea>
-// Unregister single map.
-csv.Configuration.UnregisterClassMap&lt;MyClassMap&gt;();
-// Unregister all class maps.
-csv.Configuration.UnregisterClassMap();</textarea></p>
+// Default value
+csv.Configuration.AllowComments = false;</textarea></p>
+
+	<h3 id="configuration-auto-map">Auto Map</h3>
+
+	<p>This is used to generate a CsvClassMap from a type automatically without a fluent class mapping. This will try
+		to map all properties including creating reference maps for properties that aren't native types. If the auto mapper
+		detects a circular reference, it will not continue down that path.</p>
+
+	<p><textarea>
+var generatedMap = csv.Configuration.AutoMap&lt;MyClass&gt;();</textarea></p>
+
+	<h3 id="configuration-buffer-size">Buffer Size</h3>
+
+	<p>The size of the internal buffer that is used when reader or writing data to and from the TextReader and
+		TextWriter. Depending on where your TextReader or TextWriter came from, you may want to make this value larger or
+		smaller.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.BufferSize = 2048;</textarea></p>
+
+	<h3 id="configuration-comment">Comment</h3>
+
+	<p>The value used to denote a line that is commented out.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.Comment = '#';</textarea></p>
+
+	<h3 id="configuration-count-bytes">Count Bytes</h3>
+
+	<p>A flag that will tell the parser to keep a count of all the bytes that have been read. You need to set
+		Configuration.Encoding to the same encoding of the CSV file for this to work properly. This will also slow down
+		parsing of the file.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.CountBytes = false;</textarea></p>
+
+	<h3 id="configuration-culture-info">Culture Info</h3>
+
+	<p>The culture info used to read and write. This can be overridden per property in the mapping configuration.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.CultureInfo = CultureInfo.CurrentCulture;</textarea></p>
+
+	<h3 id="configuration-delimiter">Delimiter</h3>
+
+	<p>The value used to separate the fields in a CSV row.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.Delimiter = ",";</textarea></p>
+
+	<h3 id="configuration-detect-column-count-changes">Detect Column Count Changes</h3>
+
+	<p>This flag will check for changes in the number of column from row to row. If true and a change is detected, a
+		CsvBadDataException will be thrown.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.DetectColumnCountChanges = false;</textarea></p>
+
+	<h3 id="configuration-encoding">Encoding</h3>
+
+	<p>The encoding of the CSV file. This is only used when counting bytes. The underlying TextReader and TextWriter
+		will have it's own encoding that is used.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.Encoding = Encoding.UTF8;</textarea></p>
+
+	<h3 id="configuration-has-header-record">Has Header Record</h3>
+
+	<p>This flag tells the reader/writer if there is a header row in the CSV file. The must be true
+		for mapping properties by name to work (and there must be a header row).</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.HasHeaderRecord = true;</textarea></p>
+
+	<h3 id="configuration-ignore-header-white-space">Ignore Header White Space</h3>
+
+	<p>This flag tells the reader to ignore white space in the headers when matching the columns to the properties by
+		name.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.IgnoreHeaderWhiteSpace = false;</textarea></p>
+
+	<h3 id="configuration-ignore-private-accessor">Ignore Private Accessor</h3>
+
+	<p>A flag that tells the reader and writer to ignore private accessors when reading and writing. By default you
+		can't read from a private getter or write to a private setter. Turn this on will allow that. Properties that can't
+		be read from or written to are silently ignored.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.IgnorePrivateAccessor = false;</textarea></p>
+
+	<h3 id="configuration-ignore-reading-exceptions">Ignore Reading Exceptions</h3>
+
+	<p>A flag that tells the reader to swallow any exceptions that occur while reading and to continue on. Exceptions
+		that occur in the parser will not be ignored. Parser exceptions mean the file is bad in some way, and the parser
+		isn't able to recover.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.IgnoreReadingExceptions = false;</textarea></p>
+
+	<h3 id="configuration-ignore-quotes">Ignore Quotes</h3>
+
+	<p>A flag that tells the parser to ignore quotes as an escape character and treat it like any other character.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.IgnoreQuotes = false;</textarea></p>
+
+	<h3 id="configuration-is-header-case-sensitive">Is Header Case Sensitive</h3>
+
+	<p>This flag sets whether matching CSV header names will be case sensitive.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.IsHeaderCaseSensitive = true;</textarea></p>
 
 	<h3 id="configuration-maps">Maps</h3>
 
@@ -452,14 +566,89 @@ var myMap = csv.Configuration.Maps[typeof( MyClass )];</textarea></p>
 // Default value
 csv.Configuration.PropertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;</textarea></p>
 
-	<h3 id="configuration-has-header-record">Has Header Record</h3>
+	<h3 id="configuration-quote">Quote</h3>
 
-	<p>This flag tells the reader/writer if there is a header row in the CSV file. The must be true
-	for mapping properties by name to work (and there must be a header row).</p>
+	<p>The value used to escape fields that contain a delimiter, quote, or line ending.</p>
 
 	<p><textarea>
 // Default value
-csv.Configuration.HasHeaderRecord = true;</textarea></p>
+csv.Configuration.Quote = '"';</textarea></p>
+
+	<h3 id="configuration-quote-all-fields">Quote All Fields</h3>
+
+	<p>A flag that tells the writer whether all fields written should have quotes around them; regardless if the field
+		contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same time.
+		Setting one to true will set the other to false.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.QuoteAllFields = false;</textarea></p>
+
+	<h3 id="configuration-quote-no-fields">Quote No Fields</h3>
+
+	<p>A flag that tell the writer whether all fields written should not have quotes around them; regardless if the
+		field contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same
+		time. Setting one to true will set the other to false.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.QuoteAllFields = false;</textarea></p>
+
+	<h3 id="configuration-reading-exception-callback">Reading Exception Callback</h3>
+
+	<p>If you have Configuration.IgnoreReaderExceptions on and you want to know that the exceptions have occurred and
+		possibly do something with them, you can use this.</p>
+
+	<p><textarea>
+csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
+{
+	// Log the exception and current row information.
+};</textarea></p>
+
+	<h3 id="configuration-register-class-map">Register Class Map</h3>
+
+	<p>When using fluent class mapping, you need to register class maps for them to be used. You can register multiple
+	class maps to be used.</p>
+
+	<p><textarea>
+csv.Configuration.RegisterClassMap&lt;MyClassMap&gt;();
+csv.Configuration.RegisterClassMap&lt;AnotherClassMap&gt;();</textarea></p>
+
+	<h3 id="configuration-skip-empty-records">Skip Empty Records</h3>
+
+	<p>A flag to let the reader know if a record should be skipped when reading if it's empty. A record is considered
+		empty if all fields are empty.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.SkipEmptyRecords = false;</textarea></p>
+
+	<h3 id="configuration-trim-fields">Trim Fields</h3>
+
+	<p>This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.TrimFields = false;</textarea></p>
+
+	<h3 id="configuration-trim-headers">Trim Headers</h3>
+
+	<p>This flag tells the reader to ignore white space from the beginning and ending of the headers when matching the
+		columns to the properties by name.</p>
+
+	<p><textarea>
+// Default value
+csv.Configuration.TrimHeaders = false;</textarea></p>
+
+	<h3 id="configuration-unregister-class-map">Unregister Class Map</h3>
+
+	<p>You can unregister a class map if needed.</p>
+
+	<p><textarea>
+// Unregister single map.
+csv.Configuration.UnregisterClassMap&lt;MyClassMap&gt;();
+// Unregister all class maps.
+csv.Configuration.UnregisterClassMap();</textarea></p>
 
 	<h3 id="configuration-will-throw-on-missing-field">Will Throw On Missing Field</h3>
 
@@ -470,194 +659,6 @@ csv.Configuration.HasHeaderRecord = true;</textarea></p>
 // Default value
 csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 
-	<h3 id="configuration-detect-column-count-changes">Detect Column Count Changes</h3>
-
-	<p>This flag will check for changes in the number of column from row to row. If true and a change is detected, a
-	CsvBadDataException will be thrown.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.DetectColumnCountChanges = false;</textarea></p>
-
-	<h3 id="configuration-is-header-case-sensitive">Is Header Case Sensitive</h3>
-
-	<p>This flag sets whether matching CSV header names will be case sensitive.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.IsHeaderCaseSensitive = true;</textarea></p>
-
-	<h3 id="configuration-ignore-header-white-space">Ignore Header White Space</h3>
-
-	<p>This flag tells the reader to ignore white space in the headers when matching the columns to the properties by
-	name.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.IgnoreHeaderWhiteSpace = false;</textarea></p>
-
-	<h3 id="configuration-trim-headers">Trim Headers</h3>
-
-	<p>This flag tells the reader to ignore white space from the beginning and ending of the headers when matching the
-	columns to the properties by name.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.TrimHeaders = false;</textarea></p>
-
-	<h3 id="configuration-trim-fields">Trim Fields</h3>
-
-	<p>This flag tells the reader to trim whitespace from the beginning and ending of the field value when reading.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.TrimFields = false;</textarea></p>
-
-	<h3 id="configuration-delimiter">Delimiter</h3>
-
-	<p>The value used to separate the fields in a CSV row.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.Delimiter = ",";</textarea></p>
-
-	<h3 id="configuration-quote">Quote</h3>
-
-	<p>The value used to escape fields that contain a delimiter, quote, or line ending.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.Quote = '"';</textarea></p>
-
-	<h3 id="configuration-comment">Comment</h3>
-
-	<p>The value used to denote a line that is commented out.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.Comment = '#';</textarea></p>
-
-	<h3 id="configuration-allow-comments">Allow Comments</h3>
-
-	<p>This flag tells the parser whether comments are enabled.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.AllowComments = false;</textarea></p>
-
-	<h3 id="configuration-buffer-size">Buffer Size</h3>
-
-	<p>The size of the internal buffer that is used when reader or writing data to and from the TextReader and
-	TextWriter. Depending on where your TextReader or TextWriter came from, you may want to make this value larger or
-	smaller.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.BufferSize = 2048;</textarea></p>
-
-	<h3 id="configuration-quote-all-fields">Quote All Fields</h3>
-
-	<p>A flag that tells the writer whether all fields written should have quotes around them; regardless if the field
-	contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same time.
-	Setting one to true will set the other to false.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.QuoteAllFields = false;</textarea></p>
-
-	<h3 id="configuration-quote-no-fields">Quote No Fields</h3>
-
-	<p>A flag that tell the writer whether all fields written should not have quotes around them; regardless if the
-	field contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same
-	time. Setting one to true will set the other to false.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.QuoteAllFields = false;</textarea></p>
-
-	<h3 id="configuration-count-bytes">Count Bytes</h3>
-
-	<p>A flag that will tell the parser to keep a count of all the bytes that have been read. You need to set
-	Configuration.Encoding to the same encoding of the CSV file for this to work properly. This will also slow down
-	parsing of the file.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.CountBytes = false;</textarea></p>
-
-	<h3 id="configuration-encoding">Encoding</h3>
-
-	<p>The encoding of the CSV file. This is only used when counting bytes. The underlying TextReader and TextWriter
-	will have it's own encoding that is used.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.Encoding = Encoding.UTF8;</textarea></p>
-
-	<h3 id="configuration-culture-info">Culture Info</h3>
-
-	<p>The culture info used to read and write. This can be overridden per property in the mapping configuration.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.CultureInfo = CultureInfo.CurrentCulture;</textarea></p>
-
-	<h3 id="configuration-skip-empty-records">Skip Empty Records</h3>
-
-	<p>A flag to let the reader know if a record should be skipped when reading if it's empty. A record is considered
-	empty if all fields are empty.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.SkipEmptyRecords = false;</textarea></p>
-
-	<h3 id="configuration-ignore-quotes">Ignore Quotes</h3>
-
-	<p>A flag that tells the parser to ignore quotes as an escape character and treat it like any other character.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.IgnoreQuotes = false;</textarea></p>
-
-	<h3 id="configuration-ignore-private-accessor">Ignore Private Accessor</h3>
-
-	<p>A flag that tells the reader and writer to ignore private accessors when reading and writing. By default you
-	can't read from a private getter or write to a private setter. Turn this on will allow that. Properties that can't
-	be read from or written to are silently ignored.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.IgnorePrivateAccessor = false;</textarea></p>
-
-	<h3 id="configuration-ignore-reading-exceptions">Ignore Reading Exceptions</h3>
-
-	<p>A flag that tells the reader to swallow any exceptions that occur while reading and to continue on. Exceptions
-	that occur in the parser will not be ignored. Parser exceptions mean the file is bad in some way, and the parser
-	isn't able to recover.</p>
-
-	<p><textarea>
-// Default value
-csv.Configuration.IgnoreReadingExceptions = false;</textarea></p>
-
-	<h3 id="configuration-reading-exception-callback">Reading Exception Callback</h3>
-
-	<p>If you have Configuration.IgnoreReaderExceptions on and you want to know that the exceptions have occurred and
-	possibly do something with them, you can use this.</p>
-
-	<p><textarea>
-csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
-{
-	// Log the exception and current row information.
-};</textarea></p>
-
-	<h3 id="configuration-auto-map">Auto Map</h3>
-
-	<p>This is used to generate a CsvClassMap from a type automatically without a fluent class mapping. This will try
-	to map all properties including creating reference maps for properties that aren't native types. If the auto mapper
-	detects a circular reference, it will not continue down that path.</p>
-
-	<p><textarea>
-var generatedMap = csv.Configuration.AutoMap&lt;MyClass&gt;();</textarea></p>
 	</section>
 
 	<!-- Type Conversion -->
