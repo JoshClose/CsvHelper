@@ -460,6 +460,8 @@ namespace CsvHelper.Configuration
 				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );
 #if WINRT_4_5
 				var hasDefaultConstructor = property.PropertyType.GetTypeInfo().DeclaredConstructors.Any( c => !c.GetParameters().Any() );
+#elif PCL
+                var hasDefaultConstructor = property.PropertyType.GetConstructor( new Type[0] ) != null;
 #else
 				var hasDefaultConstructor = property.PropertyType.GetConstructor( Type.EmptyTypes ) != null;
 #endif

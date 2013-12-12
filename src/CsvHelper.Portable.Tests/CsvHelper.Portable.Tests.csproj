@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{061FBE68-1435-4ABD-82EC-F71BB4A2CA19}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CsvHelper.Portable.Tests</RootNamespace>
+    <AssemblyName>CsvHelper.Portable.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile158</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;PCL</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;PCL</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .NET Framework is automatically included -->
+    <ProjectReference Include="..\CsvHelper.Portable\CsvHelper.Portable.csproj">
+      <Project>{b8cfb21d-52e0-4fe8-ab1a-e20abead3f00}</Project>
+      <Name>CsvHelper.Portable</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\CsvHelper.Tests\AutoMappingTests.cs">
+      <Link>AutoMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ClearRecordsCacheTests.cs">
+      <Link>ClearRecordsCacheTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvClassMappingTests.cs">
+      <Link>CsvClassMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvConfigurationTests.cs">
+      <Link>CsvConfigurationTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserConstructorTests.cs">
+      <Link>CsvParserConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserDelimiterTests.cs">
+      <Link>CsvParserDelimiterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserExcelCompatibleTests.cs">
+      <Link>CsvParserExcelCompatibleTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserRawRecordTests.cs">
+      <Link>CsvParserRawRecordTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvParserTests.cs">
+      <Link>CsvParserTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderConstructorTests.cs">
+      <Link>CsvReaderConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderErrorMessageTests.cs">
+      <Link>CsvReaderErrorMessageTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderMappingTests.cs">
+      <Link>CsvReaderMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderReferenceMappingTests.cs">
+      <Link>CsvReaderReferenceMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderSubClassingTests.cs">
+      <Link>CsvReaderSubClassingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderTests.cs">
+      <Link>CsvReaderTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterConstructorTests.cs">
+      <Link>CsvWriterConstructorTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterFormatTests.cs">
+      <Link>CsvWriterFormatTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterMappingTests.cs">
+      <Link>CsvWriterMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterReferenceMappingTests.cs">
+      <Link>CsvWriterReferenceMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterSubClassingTests.cs">
+      <Link>CsvWriterSubClassingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvWriterTests.cs">
+      <Link>CsvWriterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ExceptionTests.cs">
+      <Link>ExceptionTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\LocalCultureTests.cs">
+      <Link>LocalCultureTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\Mocks\ParserMock.cs">
+      <Link>Mocks\ParserMock.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
+      <Link>ReferenceMappingClassMapTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ReflectionHelperTests.cs">
+      <Link>ReflectionHelperTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\BooleanConverterTests.cs">
+      <Link>TypeConversion\BooleanConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\ByteConverterTests.cs">
+      <Link>TypeConversion\ByteConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\CharConverterTests.cs">
+      <Link>TypeConversion\CharConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeConverterTests.cs">
+      <Link>TypeConversion\DateTimeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumConverterTests.cs">
+      <Link>TypeConversion\EnumConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumerableConverterTests.cs">
+      <Link>TypeConversion\EnumerableConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TimeSpanConverterTests.cs">
+      <Link>TypeConversion\TimeSpanConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterFactoryTests.cs">
+      <Link>TypeConversion\TypeConverterFactoryTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\TypeConverterTests.cs">
+      <Link>TypeConversion\TypeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

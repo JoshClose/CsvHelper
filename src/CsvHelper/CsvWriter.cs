@@ -93,7 +93,7 @@ namespace CsvHelper
 				var hasQuote = false;
 #if NET_2_0
 				if( EnumerableHelper.Contains( field, configuration.Quote ) )
-#elif WINRT_4_5
+#elif WINRT_4_5 || PCL
 				if( field.Contains( configuration.Quote.ToString() ) )
 #else
 				if( field.Contains( configuration.Quote ) )
