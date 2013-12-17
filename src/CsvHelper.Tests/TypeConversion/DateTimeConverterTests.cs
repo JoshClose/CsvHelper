@@ -61,5 +61,52 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 			}
 		}
+
+#if !SILVERLIGHT && !WINRT_4_5
+		[TestMethod]
+		public void ComponentModelCompatibilityTest()
+		{
+			var converter = new DateTimeConverter();
+			var cmConverter = new System.ComponentModel.DateTimeConverter();
+
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
+
+			var val = (DateTime)cmConverter.ConvertFromString( "" );
+			Assert.AreEqual( DateTime.MinValue, val );
+
+			val = (DateTime)converter.ConvertFromString( typeConverterOptions, "" );
+			Assert.AreEqual( DateTime.MinValue, val );
+
+			try
+			{
+				cmConverter.ConvertFromString( null );
+				Assert.Fail();
+			}
+			catch( NotSupportedException ){}
+
+			try
+			{
+				converter.ConvertFromString( typeConverterOptions, null );
+				Assert.Fail();
+			}
+			catch( CsvTypeConverterException ) { }
+
+			try
+			{
+				cmConverter.ConvertFromString( "blah" );
+				Assert.Fail();
+			}
+			catch( FormatException ){}
+
+			try
+			{
+				converter.ConvertFromString( typeConverterOptions, "blah" );
+			}
+			catch( FormatException ){}
+		}
+#endif
 	}
 }

@@ -20,17 +20,22 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
-			var formatProvider = (IFormatProvider)options.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? options.CultureInfo;
-
-			var dateTimeStyle = options.DateTimeStyle ?? DateTimeStyles.None;
-
-			DateTime dt;
-			if( DateTime.TryParse( text, formatProvider, dateTimeStyle, out dt ) )
+			if( text == null )
 			{
-				return dt;
+				return base.ConvertFromString( options, null );
 			}
 
-			return base.ConvertFromString( options, text );
+			if( text.Trim().Length == 0 )
+			{
+				return DateTime.MinValue;
+			}
+
+			var formatProvider = (IFormatProvider)options.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? options.CultureInfo;
+			var dateTimeStyle = options.DateTimeStyle ?? DateTimeStyles.None;
+
+			return string.IsNullOrEmpty( options.Format )
+				? DateTime.Parse( text, formatProvider, dateTimeStyle )
+				: DateTime.ParseExact( text, options.Format, formatProvider, dateTimeStyle );
 		}
 
 		/// <summary>
