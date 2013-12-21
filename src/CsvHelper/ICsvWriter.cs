@@ -86,6 +86,18 @@ namespace CsvHelper
 
 #if !NET_2_0
 		/// <summary>
+		/// Writes the header record from the given properties.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		void WriteHeader<T>();
+
+		/// <summary>
+		/// Writes the header record from the given properties.
+		/// </summary>
+		/// <param name="type">The type of the record.</param>
+		void WriteHeader( Type type );
+
+		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
