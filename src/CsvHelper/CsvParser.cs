@@ -66,16 +66,16 @@ namespace CsvHelper
 		public virtual string RawRecord { get; private set; }
 
 		/// <summary>
-		/// Creates a new parser using the given <see cref="StreamReader" />.
+		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
-		/// <param name="reader">The <see cref="StreamReader" /> with the CSV file data.</param>
+		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
 		public CsvParser( TextReader reader ) : this( reader, new CsvConfiguration() ) {}
 
 		/// <summary>
-		/// Creates a new parser using the given <see cref="StreamReader"/>
+		/// Creates a new parser using the given <see cref="TextReader"/>
 		/// and <see cref="CsvConfiguration"/>.
 		/// </summary>
-		/// <param name="reader">The <see cref="StreamReader"/> with teh CSV file data.</param>
+		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		public CsvParser( TextReader reader, CsvConfiguration configuration )
 		{
@@ -83,6 +83,7 @@ namespace CsvHelper
 			{
 				throw new ArgumentNullException( "reader" );
 			}
+
 			if( configuration == null )
 			{
 				throw new ArgumentNullException( "configuration" );
