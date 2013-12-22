@@ -255,7 +255,7 @@ namespace CsvHelper
 				}
 
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment );
 				if( !read )
 				{
 					break;
@@ -370,7 +370,7 @@ namespace CsvHelper
 					if( c == '\r' )
 					{
 						char cNext;
-						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, true );
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, true );
 						if( cNext == '\n' )
 						{
 							readerBufferPosition++;
@@ -423,10 +423,11 @@ namespace CsvHelper
 		/// <param name="prevCharWasDelimiter">A value indicating if the previous char read was a delimiter.</param>
 		/// <param name="recordPosition">The position in the record we are currently at.</param>
 		/// <param name="fieldLength">The length of the field in the buffer.</param>
+		/// <param name="inComment">A value indicating if the row is current a comment row.</param>
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
 		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
-		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool isPeek = false )
+		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool isPeek = false )
 		{
 			if( readerBufferPosition == charsRead )
 			{
@@ -457,7 +458,7 @@ namespace CsvHelper
 						return false;
 					}
 
-					if( c != '\r' && c != '\n' && c != '\0' )
+					if( c != '\r' && c != '\n' && c != '\0' && !inComment )
 					{
 						if( prevCharWasDelimiter )
 						{
