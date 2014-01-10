@@ -35,5 +35,45 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.AreEqual( "1", converter.ConvertToString( typeConverterOptions, 1 ) );
 			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
 		}
+		
+		[TestMethod]
+		public void ComponentModelCompatibilityTest()
+		{
+			var converter = new TimeSpanConverter();
+			var cmConverter = new System.ComponentModel.TimeSpanConverter();
+
+			var typeConverterOptions = new TypeConverterOptions
+			{
+				CultureInfo = CultureInfo.CurrentCulture
+			};
+
+			try
+			{
+				cmConverter.ConvertFromString( "" );
+				Assert.Fail();
+			}
+			catch( FormatException ) {}
+
+			try
+			{
+				var val = (DateTime)converter.ConvertFromString( typeConverterOptions, "" );
+				Assert.Fail();
+			}
+			catch( CsvTypeConverterException ) {}
+
+			try
+			{
+				cmConverter.ConvertFromString( null );
+				Assert.Fail();
+			}
+			catch( NotSupportedException ) { }
+
+			try
+			{
+				converter.ConvertFromString( typeConverterOptions, null );
+				Assert.Fail();
+			}
+			catch( CsvTypeConverterException ) { }
+		}
 	}
 }

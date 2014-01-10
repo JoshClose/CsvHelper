@@ -14,7 +14,7 @@ namespace CsvHelper
 	public interface ICsvParser : IDisposable
 	{
 		/// <summary>
-		/// Gets or sets the configuration.
+		/// Gets the configuration.
 		/// </summary>
 		CsvConfiguration Configuration { get; }
 

@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
 using System.IO;
 using System.Text;
 #if WINRT_4_5
@@ -1293,5 +1295,46 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( " \"five\" ", record[3] );
 			}
 		}
+
+		[TestMethod]
+		public void LastLineHasCommentTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "#comment" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.AllowComments = true;
+
+				var record = parser.Read();
+
+				Assert.IsNull( record );
+			}
+		}
+
+		[TestMethod]
+		public void LastLineHasCommentNoEolTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "#c" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.AllowComments = true;
+
+				var record = parser.Read();
+
+				Assert.IsNull( record );
+			}
+		}
+
 	}
 }

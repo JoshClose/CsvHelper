@@ -117,6 +117,9 @@
     <Compile Include="..\CsvHelper\CsvReaderException.cs">
       <Link>CsvReaderException.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\CsvSerializer.cs">
+      <Link>CsvSerializer.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\CsvWriter.cs">
       <Link>CsvWriter.cs</Link>
     </Compile>
@@ -134,6 +137,9 @@
     </Compile>
     <Compile Include="..\CsvHelper\ICsvReaderRow.cs">
       <Link>ICsvReaderRow.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvSerializer.cs">
+      <Link>ICsvSerializer.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\ICsvWriter.cs">
       <Link>ICsvWriter.cs</Link>

@@ -107,16 +107,7 @@ namespace CsvHelper
 		/// <see cref="CsvParser"/> as the default parser.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public CsvReader( TextReader reader )
-		{
-			if( reader == null )
-			{
-				throw new ArgumentNullException( "reader" );
-			}
-
-			configuration = new CsvConfiguration();
-			parser = new CsvParser( reader, configuration );
-		}
+		public CsvReader( TextReader reader ) : this( reader, new CsvConfiguration() ) {}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
@@ -130,6 +121,7 @@ namespace CsvHelper
 			{
 				throw new ArgumentNullException( "reader" );
 			}
+
 			if( configuration == null )
 			{
 				throw new ArgumentNullException( "configuration" );
@@ -149,6 +141,7 @@ namespace CsvHelper
 			{
 				throw new ArgumentNullException( "parser" );
 			}
+
 			if( parser.Configuration == null )
 			{
 				throw new CsvConfigurationException( "The given parser has no configuration." );

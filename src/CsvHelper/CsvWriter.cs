@@ -31,7 +31,7 @@ namespace CsvHelper
 	{
 		private bool disposed;
 		private readonly List<string> currentRecord = new List<string>();
-		private TextWriter writer;
+		private ICsvSerializer serializer;
 #if !NET_2_0
 		private bool hasHeaderBeenWritten;
 		private bool hasRecordBeenWritten;
@@ -48,14 +48,17 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates a new CSV writer using the given <see cref="StreamWriter" />.
+		/// Creates a new CSV writer using the given <see cref="TextWriter" />,
+		/// a default <see cref="CsvConfiguration"/> and <see cref="CsvSerializer"/>
+		/// as the default serializer.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
 		public CsvWriter( TextWriter writer ) : this( writer, new CsvConfiguration() ) {}
 
 		/// <summary>
-		/// Creates a new CSV writer using the given <see cref="StreamWriter"/>
-		/// and <see cref="CsvConfiguration"/>.
+		/// Creates a new CSV writer using the given <see cref="TextWriter"/>
+		/// and <see cref="CsvConfiguration"/> and <see cref="CsvSerializer"/>
+		/// as the default serializer.
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
@@ -65,13 +68,34 @@ namespace CsvHelper
 			{
 				throw new ArgumentNullException( "writer" );
 			}
+
 			if( configuration == null )
 			{
 				throw new ArgumentNullException( "configuration" );
 			}
 
-			this.writer = writer;
 			this.configuration = configuration;
+			serializer = new CsvSerializer( writer, configuration );
+		}
+
+		/// <summary>
+		/// Creates a new CSV writer using the given <see cref="ICsvSerializer"/>.
+		/// </summary>
+		/// <param name="serializer">The serializer.</param>
+		public CsvWriter( ICsvSerializer serializer )
+		{
+			if( serializer == null )
+			{
+				throw new ArgumentNullException( "serializer" );
+			}
+
+			if( serializer.Configuration == null )
+			{
+				throw new CsvConfigurationException( "The given serializer has no configuration." );
+			}
+
+			this.serializer = serializer;
+			configuration = serializer.Configuration;
 		}
 
 		/// <summary>
@@ -219,8 +243,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var record = string.Join( configuration.Delimiter, currentRecord.ToArray() );
-			writer.WriteLine( record );
+			serializer.Write( currentRecord.ToArray() );
 			currentRecord.Clear();
 		}
 
@@ -513,14 +536,14 @@ namespace CsvHelper
 
 			if( disposing )
 			{
-				if( writer != null )
+				if( serializer != null )
 				{
-					writer.Dispose();
+					serializer.Dispose();
 				}
 			}
 
 			disposed = true;
-			writer = null;
+			serializer = null;
 		}
 
 		/// <summary>
