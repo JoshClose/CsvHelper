@@ -642,7 +642,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var index = GetFieldIndex( name );
+			var index = GetFieldIndex( name, isTryGet: true );
 			if( index == -1 )
 			{
 				field = default( T );
@@ -667,7 +667,7 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var fieldIndex = GetFieldIndex( name, index );
+			var fieldIndex = GetFieldIndex( name, index, true );
 			if( fieldIndex == -1 )
 			{
 				field = default( T );
@@ -1015,12 +1015,13 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="name">The name of the field to get the index for.</param>
 		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
+		/// <param name="isTryGet">A value indicating if the call was initiated from a TryGet.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
-		protected virtual int GetFieldIndex( string name, int index = 0 )
+		protected virtual int GetFieldIndex( string name, int index = 0, bool isTryGet = false )
 		{
-			return GetFieldIndex( new[] { name }, index );
+			return GetFieldIndex( new[] { name }, index, isTryGet );
 		}
 
 		/// <summary>
@@ -1028,10 +1029,11 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="names">The possible names of the field to get the index for.</param>
 		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
+		/// <param name="isTryGet">A value indicating if the call was initiated from a TryGet.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
-		protected virtual int GetFieldIndex( string[] names, int index = 0 )
+		protected virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false )
 		{
 			if( names == null )
 			{
@@ -1068,7 +1070,7 @@ namespace CsvHelper
 
 			if( name == null )
 			{
-				if( configuration.WillThrowOnMissingField )
+				if( configuration.WillThrowOnMissingField && !isTryGet )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.

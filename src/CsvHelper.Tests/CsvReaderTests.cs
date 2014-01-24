@@ -613,6 +613,22 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void TryGetDoesNotThrowWhenWillThrowOnMissingFieldIsEnabled()
+		{
+			var data = new[] { "1" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.WillThrowOnMissingField = true;
+			reader.Read();
+			string field;
+			Assert.IsFalse( reader.TryGetField( "test", out field ) );
+		}
+
+		[TestMethod]
 		public void GetRecordEmptyValuesNullableTest()
 		{
 			var stream = new MemoryStream();
