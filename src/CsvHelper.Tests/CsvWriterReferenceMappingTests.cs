@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -62,6 +64,35 @@ namespace CsvHelper.Tests
 				expected.AppendLine( "a2,b2,c2,d2" );
 				expected.AppendLine( "a3,b3,c3,d3" );
 				expected.AppendLine( "a4,b4,c4,d4" );
+				Assert.AreEqual( expected.ToString(), data );
+			}
+		}
+
+		[TestMethod]
+		public void NullReferenceTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.RegisterClassMap<AMap>();
+
+				var list = new List<A>
+				{
+					new A
+					{
+						Id = "1",
+					}
+				};
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var data = reader.ReadToEnd();
+				var expected = new StringBuilder();
+				expected.AppendLine( "AId,BId,CId,DId" );
+				expected.AppendLine( "1,,," );
 				Assert.AreEqual( expected.ToString(), data );
 			}
 		}

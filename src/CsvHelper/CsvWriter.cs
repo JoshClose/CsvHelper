@@ -478,35 +478,44 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates a parameter for the given property. This will
-		/// recursively traverse the mapping to to find property
-		/// mapping and create a new property access for each
-		/// reference map it goes through.
+		/// Creates a property expression for the given property on the record.
+		/// This will recursively traverse the mapping to find the property
+		/// and create a safe property accessor for each level as it goes.
 		/// </summary>
-		/// <param name="parameter">The current parameter.</param>
-		/// <param name="mapping">The mapping to look for the property map on.</param>
+		/// <param name="recordExpression">The current property expression.</param>
+		/// <param name="mapping">The mapping to look for the property to map on.</param>
 		/// <param name="propertyMap">The property map to look for on the mapping.</param>
-		/// <returns>A <see cref="ParameterExpression"/> to access the given property map.</returns>
-		protected virtual Expression CreateParameterForProperty( Expression parameter, CsvClassMap mapping, CsvPropertyMap propertyMap )
+		/// <returns>An Expression to access the given property.</returns>
+		protected virtual Expression CreatePropertyExpression( Expression recordExpression, CsvClassMap mapping, CsvPropertyMap propertyMap )
 		{
-			var propertyMapping = mapping.PropertyMaps.SingleOrDefault( pm => pm == propertyMap );
-			if( propertyMapping != null )
+			if( mapping.PropertyMaps.Any( pm => pm == propertyMap ) )
 			{
-				// If the property map exists on this level of the class
-				// mapping, we can return the parameter.
-				return parameter;
+				// The property is on this level.
+				return Expression.Property( recordExpression, propertyMap.Data.Property );
 			}
 
 			// The property isn't on this level of the mapping.
 			// We need to search down through the reference maps.
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				var wrappedParameter = Expression.Property( parameter, refMap.Property );
-				var param = CreateParameterForProperty( wrappedParameter, refMap.Mapping, propertyMap );
-				if( param != null )
+				var wrapped = Expression.Property( recordExpression, refMap.Property );
+				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Mapping, propertyMap );
+				if( propertyExpression == null )
 				{
-					return param;
+					continue;
 				}
+				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
+
+#if !WINRT_4_5
+				var isValueType = propertyMap.Data.Property.PropertyType.IsValueType;
+#else
+				var isValueType = propertyMap.Data.Property.PropertyType.GetTypeInfo().IsValueType;
+#endif
+				var defaultValueExpression = isValueType
+					? (Expression)Expression.New( propertyMap.Data.Property.PropertyType )
+					: Expression.Constant( null, propertyMap.Data.Property.PropertyType );
+				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, propertyExpression );
+				return conditionExpression;
 			}
 
 			return null;
@@ -651,10 +660,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				// Find the object that contains this property.
-				var currentRecordObject = CreateParameterForProperty( recordParameter, configuration.Maps[type], propertyMap );
-
-				Expression fieldExpression = Expression.Property( currentRecordObject, propertyMap.Data.Property );
+				var fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
 
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
 				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
