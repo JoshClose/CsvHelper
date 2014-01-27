@@ -9,6 +9,8 @@ using System.Linq;
 using System.Text;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+#elif PCL
+using NUnit.Framework;
 #else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
@@ -20,7 +22,7 @@ namespace CsvHelper.Tests
 	public class AutoMappingTests
 	{
 		[TestMethod]
-		public void ReaderSimpleTest()
+        public void ReaderSimpleTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
