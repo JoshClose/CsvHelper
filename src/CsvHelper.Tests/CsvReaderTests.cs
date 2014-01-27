@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2013 Josh Close and Contributors
+﻿// Copyright 2009-2014 Josh Close and Contributors
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
@@ -610,6 +610,22 @@ namespace CsvHelper.Tests
 
 			Assert.IsFalse( got );
 			Assert.AreEqual( DateTime.MinValue, field );
+		}
+
+		[TestMethod]
+		public void TryGetDoesNotThrowWhenWillThrowOnMissingFieldIsEnabled()
+		{
+			var data = new[] { "1" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.WillThrowOnMissingField = true;
+			reader.Read();
+			string field;
+			Assert.IsFalse( reader.TryGetField( "test", out field ) );
 		}
 
 		[TestMethod]

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2013 Josh Close and Contributors
+﻿// Copyright 2009-2014 Josh Close and Contributors
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
@@ -16,7 +16,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a property to a CSV field.
 	/// </summary>
-	[DebuggerDisplay( "Name = {NameValue}, Index = {IndexValue}, Ignore = {IgnoreValue}, Property = {PropertyValue}, TypeConverter = {TypeConverterValue}" )]
+	[DebuggerDisplay( "Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
 	public class CsvPropertyMap
 	{
 		private readonly CsvPropertyMapData data;
