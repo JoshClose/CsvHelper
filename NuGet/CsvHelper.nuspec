@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>CsvHelper</id>
-    <version>2.4.0</version>
+    <version>2.4.1</version>
     <authors>Josh Close</authors>
     <licenseUrl>http://www.opensource.org/licenses/ms-pl.html</licenseUrl>
     <projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
@@ -11,14 +11,8 @@
     <description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</description>
     <tags>csv csvhelper comma separated value delimited</tags>
     <releaseNotes>
-		Added Features:
-		- Split writing up into a writer and a serializer to the writer can write other things besides CSV files.
 		Bugs Fixed:
-		- Added missing WriteHeader methods to ICsvWriter that were already in CsvWriter.
-		- Fixed NuGet package for WP8.
-		- Fixed issue where a commented row on the last line that doesn't have a newline will return the commented row.
-		- TryGetField will not throw MissingFieldException.
-		- Fixed NullReferenceException that was thrown when using reference maps and a reference was null.
+		- Fixed issue where parsing would add delimiter chars to the field when the buffer ran out in the middle of the delimiter.
 	</releaseNotes>
   </metadata>
 </package>
