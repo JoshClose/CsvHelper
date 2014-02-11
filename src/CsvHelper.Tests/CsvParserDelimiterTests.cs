@@ -2,10 +2,14 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
 using System.IO;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
+using System.Linq;
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 
@@ -310,6 +314,34 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( 14, parser.BytePosition );
 
 				Assert.IsNull( parser.Read() );
+			}
+		}
+
+		[TestMethod]
+		public void MultipleCharDelimiterWithBufferEndingInMiddleOfDelimiterTest()
+		{
+			var config = new CsvConfiguration
+			{
+				Delimiter = "|~|",
+				BufferSize = 3,
+			};
+
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader, config ) )
+			{
+				writer.WriteLine( "1|~|2" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+				Assert.IsNotNull( row );
+				Assert.AreEqual( 2, row.Length );
+				Assert.AreEqual( "1", row[0] );
+				Assert.AreEqual( "2", row[1] );
+				row = parser.Read();
+				Assert.IsNull( row );
 			}
 		}
 	}

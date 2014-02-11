@@ -255,7 +255,7 @@ namespace CsvHelper
 				}
 
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter );
 				if( !read )
 				{
 					break;
@@ -370,7 +370,7 @@ namespace CsvHelper
 					if( c == '\r' )
 					{
 						char cNext;
-						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, true );
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, true );
 						if( cNext == '\n' )
 						{
 							readerBufferPosition++;
@@ -427,15 +427,19 @@ namespace CsvHelper
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
 		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
-		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool isPeek = false )
+		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool isPeek = false )
 		{
 			if( readerBufferPosition == charsRead )
 			{
 				// We need to read more of the stream.
 
-				// The buffer ran out. Take the current
-				// text and add it to the field.
-				AppendField( ref field, fieldStartPosition, fieldLength );
+				if( !inDelimiter )
+				{
+					// The buffer ran out. Take the current
+					// text and add it to the field.
+					AppendField( ref field, fieldStartPosition, fieldLength );
+				}
+
 				UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 				fieldLength = 0;
 
