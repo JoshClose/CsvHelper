@@ -93,7 +93,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMap1 : CsvClassMap<Test>
 		{
-			public override void CreateMap()
+			public TestMap1()
 			{
 				Map( m => m.Id );
 			}
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMap2 : CsvClassMap<Test>
 		{
-			public override void CreateMap()
+			public TestMap2()
 			{
 				Map( m => m.Name );
 			}

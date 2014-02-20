@@ -88,7 +88,7 @@ namespace CsvHelper.Tests
 
 		private sealed class SameNameMultipleTimesClassMap : CsvClassMap<SameNameMultipleTimesClass>
 		{
-			public override void CreateMap()
+			public SameNameMultipleTimesClassMap()
 			{
 				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
 				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
@@ -105,7 +105,7 @@ namespace CsvHelper.Tests
 
 		private sealed class MultipleNamesClassMap : CsvClassMap<MultipleNamesClass>
 		{
-			public override void CreateMap()
+			public MultipleNamesClassMap()
 			{
 				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
 				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );

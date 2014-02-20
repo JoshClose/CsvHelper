@@ -1038,7 +1038,7 @@ namespace CsvHelper.Tests
 
 		private sealed class OnlyFieldsMap : CsvClassMap<OnlyFields>
 		{
-			public override void CreateMap()
+			public OnlyFieldsMap()
 			{
 				Map( m => m.Name );
 			}
@@ -1062,7 +1062,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestDefaultValuesMap : CsvClassMap<TestDefaultValues>
 		{
-			public override void CreateMap()
+			public TestDefaultValuesMap()
 			{
 				Map( m => m.IntColumn ).Default( -1 );
 				Map( m => m.StringColumn ).Default( null );
@@ -1098,7 +1098,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordMap : CsvClassMap<TestRecord>
 		{
-			public override void CreateMap()
+			public TestRecordMap()
 			{
 				Map( m => m.IntColumn ).TypeConverter<Int32Converter>();
 				Map( m => m.StringColumn ).Name( "String Column" );
@@ -1120,7 +1120,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordDuplicateHeaderNamesMap : CsvClassMap<TestRecordDuplicateHeaderNames>
 		{
-			public override void CreateMap()
+			public TestRecordDuplicateHeaderNamesMap()
 			{
 				Map( m => m.Column1 ).Name( "Column" ).NameIndex( 0 );
 				Map( m => m.Column2 ).Name( "Column" ).NameIndex( 1 );

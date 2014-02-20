@@ -682,7 +682,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordMap : CsvClassMap<TestRecord>
 		{
-			public override void CreateMap()
+			public TestRecordMap()
 			{
 				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverter<Int32Converter>();
 				Map( m => m.StringColumn );
@@ -706,7 +706,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestRecordNoIndexesMap : CsvClassMap<TestRecordNoIndexes>
 		{
-			public override void CreateMap()
+			public TestRecordNoIndexesMap()
 			{
 				Map( m => m.IntColumn ).Name( "Int Column" ).TypeConverter<Int32Converter>();
 				Map( m => m.StringColumn );
@@ -762,7 +762,7 @@ namespace CsvHelper.Tests
 
 		private sealed class PersonMap : CsvClassMap<Person>
 		{
-			public override void CreateMap()
+			public PersonMap()
 			{
 				Map( m => m.FirstName );
 				Map( m => m.LastName );
@@ -773,7 +773,7 @@ namespace CsvHelper.Tests
 
 		private sealed class HomeAddressMap : CsvClassMap<Address>
 		{
-			public override void CreateMap()
+			public HomeAddressMap()
 			{
 				Map( m => m.Street ).Name( "HomeStreet" );
 				Map( m => m.City ).Name( "HomeCity" );
@@ -784,7 +784,7 @@ namespace CsvHelper.Tests
 
 		private sealed class WorkAddressMap : CsvClassMap<Address>
 		{
-			public override void CreateMap()
+			public WorkAddressMap()
 			{
 				Map( m => m.Street ).Name( "WorkStreet" );
 				Map( m => m.City ).Name( "WorkCity" );

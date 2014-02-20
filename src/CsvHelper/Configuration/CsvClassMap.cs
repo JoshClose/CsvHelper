@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -30,7 +32,8 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Called to create the mappings.
 		/// </summary>
-		public abstract void CreateMap();
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Specify your mappings in the constructor instead.", false )]
+		public virtual void CreateMap() {}
 
 		/// <summary>
 		/// Gets the constructor expression.
@@ -78,6 +81,27 @@ namespace CsvHelper.Configuration
 			indexes.AddRange( ReferenceMaps.Select( referenceMap => referenceMap.GetMaxIndex() ) );
 
 			return indexes.Max();
+		}
+
+		/// <summary>
+		/// Resets the indexes based on the given start index.
+		/// </summary>
+		/// <param name="indexStart">The index start.</param>
+		/// <returns>The last index + 1.</returns>
+		internal int ReIndex( int indexStart = 0 )
+		{
+			foreach( var propertyMap in PropertyMaps )
+			{
+				propertyMap.Data.Index = indexStart;
+				indexStart++;
+			}
+
+			foreach( var referenceMap in ReferenceMaps )
+			{
+				indexStart = referenceMap.Mapping.ReIndex( indexStart );
+			}
+
+			return indexStart;
 		}
 	}
 }

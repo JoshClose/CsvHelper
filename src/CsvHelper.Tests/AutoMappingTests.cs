@@ -201,7 +201,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration();
 			var existingMap = new SimpleMap();
-			existingMap.CreateMap();
+			//existingMap.CreateMap();
 			config.Maps.Add( existingMap );
 			var data = new
 			{
@@ -240,7 +240,7 @@ namespace CsvHelper.Tests
 
 		private sealed class SimpleMap : CsvClassMap<Simple>
 		{
-			public override void CreateMap()
+			public SimpleMap()
 			{
 				Map( m => m.Id );
 				Map( m => m.Name );

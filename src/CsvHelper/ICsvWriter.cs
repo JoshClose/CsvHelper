@@ -116,7 +116,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="records">The list of records to write.</param>
-		[Obsolete( "This method is deprecated. Use WriteRecords( IEnumerable records ) instead.", false )]
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecords( IEnumerable records ) instead.", false )]
 		void WriteRecords<T>( IEnumerable<T> records );
 
 		/// <summary>
@@ -124,7 +124,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="records">The list of records to write.</param>
-		[Obsolete( "This method is deprecated. Use WriteRecords( IEnumerable records ) instead.", false )]
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecords( IEnumerable records ) instead.", false )]
 		void WriteRecords( Type type, IEnumerable records );
 
 		/// <summary>

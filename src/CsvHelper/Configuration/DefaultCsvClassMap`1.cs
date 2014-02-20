@@ -11,9 +11,5 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="T"></typeparam>
 	public class DefaultCsvClassMap<T> : CsvClassMap<T>
 	{
-		/// <summary>
-		/// Called to create the mappings.
-		/// </summary>
-		public override void CreateMap() {}
 	}
 }

@@ -109,7 +109,7 @@ namespace CsvHelper.Tests
 
 		private sealed class DestabilizeRuntimeMap : CsvClassMap<DestabilizeRuntime>
 		{
-			public override void CreateMap()
+			public DestabilizeRuntimeMap()
 			{
 				Map( m => m.Id ).ConvertUsing( row => 12 );
 				Map( m => m.Name );

@@ -21,7 +21,7 @@ namespace CsvHelper.Tests
 		public void MapTest()
 		{
 			var map = new TestMappingDefaultClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
@@ -42,7 +42,7 @@ namespace CsvHelper.Tests
 		public void MapNameTest()
 		{
 			var map = new TestMappingNameClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
@@ -55,7 +55,7 @@ namespace CsvHelper.Tests
 		public void MapIndexTest()
 		{
 			var map = new TestMappingIndexClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
@@ -68,7 +68,7 @@ namespace CsvHelper.Tests
 		public void MapIgnoreTest()
 		{
 			var map = new TestMappingIngoreClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
@@ -81,7 +81,7 @@ namespace CsvHelper.Tests
 		public void MapTypeConverterTest()
 		{
 			var map = new TestMappingTypeConverterClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
@@ -94,7 +94,7 @@ namespace CsvHelper.Tests
 		public void MapMultipleNamesTest()
 		{
 			var map = new TestMappingMultipleNamesClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.PropertyMaps.Count );
 
@@ -119,7 +119,7 @@ namespace CsvHelper.Tests
 		public void MapConstructorTest()
 		{
 			var map = new TestMappingConstructorClass();
-			map.CreateMap();
+			//map.CreateMap();
 
 			Assert.IsNotNull( map.Constructor );
 		}
@@ -142,7 +142,7 @@ namespace CsvHelper.Tests
 
 		private sealed class AMap : CsvClassMap<A>
 		{
-			public override void CreateMap()
+			public AMap()
 			{
 				Map( m => m.AId );
 			}
@@ -155,7 +155,7 @@ namespace CsvHelper.Tests
 
 		private sealed class BMap : CsvClassMap<B>
 		{
-			public override void CreateMap()
+			public BMap()
 			{
 				Map( m => m.BId );
 			}
@@ -178,7 +178,7 @@ namespace CsvHelper.Tests
 		
 		private sealed class TestMappingConstructorClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingConstructorClass()
 			{
 				ConstructUsing( () => new TestClass( "String Column" ) );
 			}
@@ -186,7 +186,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMappingDefaultClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingDefaultClass()
 			{
 				Map( m => m.GuidColumn );
 				Map( m => m.IntColumn );
@@ -196,7 +196,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMappingNameClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingNameClass()
 			{
 				Map( m => m.GuidColumn ).Name( "Guid Column" );
 				Map( m => m.IntColumn ).Name( "Int Column" );
@@ -206,7 +206,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMappingIndexClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingIndexClass()
 			{
 				Map( m => m.GuidColumn ).Index( 3 );
 				Map( m => m.IntColumn ).Index( 2 );
@@ -216,7 +216,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMappingIngoreClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingIngoreClass()
 			{
 				Map( m => m.GuidColumn ).Ignore();
 				Map( m => m.IntColumn );
@@ -226,7 +226,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMappingTypeConverterClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingTypeConverterClass()
 			{
 				Map( m => m.GuidColumn ).TypeConverter<Int16Converter>();
 				Map( m => m.IntColumn ).TypeConverter<StringConverter>();
@@ -236,7 +236,7 @@ namespace CsvHelper.Tests
 
 		private sealed class TestMappingMultipleNamesClass : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestMappingMultipleNamesClass()
 			{
 				Map( m => m.GuidColumn ).Name( "guid1", "guid2", "guid3" );
 				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );

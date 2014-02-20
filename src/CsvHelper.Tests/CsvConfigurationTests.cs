@@ -148,7 +148,7 @@ namespace CsvHelper.Tests
 
 		private class TestClassMappings : CsvClassMap<TestClass>
 		{
-			public override void CreateMap()
+			public TestClassMappings()
 			{
 				Map( c => c.StringColumn );
 				Map( c => c.IntColumn );

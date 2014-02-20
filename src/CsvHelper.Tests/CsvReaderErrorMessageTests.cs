@@ -209,7 +209,7 @@ namespace CsvHelper.Tests
 
 		private sealed class Test1Map : CsvClassMap<Test1>
 		{
-			public override void CreateMap()
+			public Test1Map()
 			{
 				Map( m => m.IntColumn ).Index( 0 );
 				Map( m => m.StringColumn ).Index( 1 );
@@ -225,7 +225,7 @@ namespace CsvHelper.Tests
 
 		private sealed class Test2Map : CsvClassMap<Test2>
 		{
-			public override void CreateMap()
+			public Test2Map()
 			{
 				Map( m => m.StringColumn );
 				Map( m => m.IntColumn );
@@ -243,7 +243,7 @@ namespace CsvHelper.Tests
 
 		private sealed class Test3Map : CsvClassMap<Test3>
 		{
-			public override void CreateMap()
+			public Test3Map()
 			{
 				Map( m => m.Id ).Index( 0 );
 				Map( m => m.CreationDate ).Index( 1 );

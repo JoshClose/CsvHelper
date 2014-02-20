@@ -333,8 +333,7 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual void RegisterClassMap<TMap>()
-			where TMap : CsvClassMap
+		public virtual void RegisterClassMap<TMap>() where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
 			RegisterClassMap( map );

@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace CsvHelper.Configuration
@@ -11,6 +12,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// A collection that holds <see cref="CsvPropertyMap"/>'s.
 	/// </summary>
+	[DebuggerDisplay( "Count = {list.Count}" )]
 	public class CsvPropertyMapCollection : IList<CsvPropertyMap>
 	{
 		private readonly List<CsvPropertyMap> list = new List<CsvPropertyMap>();

@@ -63,8 +63,8 @@ namespace CsvHelper.Configuration
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( type );
-			map.IndexStart = GetMaxIndex() + 1;
 			map.CreateMap();
+			map.ReIndex( GetMaxIndex() + 1 );
 			var reference = new CsvPropertyReferenceMap( property, map );
 			ReferenceMaps.Add( reference );
 			return reference;

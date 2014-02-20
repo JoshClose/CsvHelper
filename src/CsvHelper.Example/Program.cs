@@ -437,7 +437,7 @@ namespace CsvHelper.Example
 
 		public sealed class CustomObjectWithMappingMap : CsvClassMap<CustomObjectWithMapping>
 		{
-			public override void CreateMap()
+			public CustomObjectWithMappingMap()
 			{
 				Map( m => m.CustomTypeColumn ).Name( "Custom Type Column" ).Index( 3 ).TypeConverter<CustomTypeTypeConverter>();
 				Map( m => m.GuidColumn ).Name( "Guid Column" ).Index( 2 );

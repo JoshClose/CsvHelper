@@ -131,7 +131,7 @@ namespace CsvHelper.Tests
 
 		private sealed class PersonMap : CsvClassMap<Person>
 		{
-			public override void CreateMap()
+			public PersonMap()
 			{
 				Map( m => m.FirstName );
 				Map( m => m.LastName );
@@ -142,7 +142,7 @@ namespace CsvHelper.Tests
 
 		private sealed class HomeAddressMap : CsvClassMap<Address>
 		{
-			public override void CreateMap()
+			public HomeAddressMap()
 			{
 				Map( m => m.Street ).Name( "HomeStreet" );
 				Map( m => m.City ).Name( "HomeCity" );
@@ -153,7 +153,7 @@ namespace CsvHelper.Tests
 
 		private sealed class WorkAddressMap : CsvClassMap<Address>
 		{
-			public override void CreateMap()
+			public WorkAddressMap()
 			{
 				Map(m => m.Street).Name( "WorkStreet" );
 				Map(m => m.City).Name( "WorkCity" );
@@ -164,7 +164,7 @@ namespace CsvHelper.Tests
 
 		private sealed class OnlyReferencesMap : CsvClassMap<Person>
 		{
-			public override void CreateMap()
+			public OnlyReferencesMap()
 			{
 				References<HomeAddressMap>( m => m.HomeAddress );
 				References<WorkAddressMap>( m => m.WorkAddress );

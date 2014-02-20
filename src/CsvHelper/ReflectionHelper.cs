@@ -39,15 +39,24 @@ namespace CsvHelper
 		/// Creates an instance of the specified type.
 		/// </summary>
 		/// <param name="type">The type of instance to create.</param>
+		/// <param name="args">The constructor arguments.</param>
 		/// <returns>A new instance of the specified type.</returns>
-		public static object CreateInstance( Type type )
+		public static object CreateInstance( Type type, params object[] args )
 		{
 #if NET_2_0
-			return Activator.CreateInstance( type );
+			return Activator.CreateInstance( type, args );
 #else
-			var constructor = Expression.New( type );
-			var compiled = Expression.Lambda( constructor ).Compile();
-			return compiled.DynamicInvoke();
+
+			var argumentTypes = args.Select( a => a.GetType() ).ToArray();
+			var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
+#if WINRT_4_5
+			var constructorInfo = type.GetTypeInfo().DeclaredConstructors.Single( c => c.GetParameters().Length == args.Length );
+#else
+			var constructorInfo = type.GetConstructor( argumentTypes );
+#endif
+			var constructor = Expression.New( constructorInfo, argumentExpressions );
+			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
+			return compiled.DynamicInvoke( args );
 #endif
 		}
 
