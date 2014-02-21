@@ -116,6 +116,13 @@ namespace CsvHelper.Configuration
 		public virtual bool IgnoreHeaderWhiteSpace { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating whether references
+		/// should be ignored when auto mapping. True to ignore
+		/// references, otherwise false. Default is false.
+		/// </summary>
+		public virtual bool IgnoreReferences { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating whether headers
 		/// should be trimmed. True to trim headers,
 		/// otherwise false. Default is false.
@@ -418,7 +425,7 @@ namespace CsvHelper.Configuration
 		{
 			var mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( type );
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( mapType );
-			map.AutoMap();
+			map.AutoMap( IgnoreReferences );
 
 			return map;
 		}

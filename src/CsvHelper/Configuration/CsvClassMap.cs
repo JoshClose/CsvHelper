@@ -103,18 +103,20 @@ namespace CsvHelper.Configuration
 		/// Auto maps all properties for the given type. If a property
 		/// is mapped again it will override the existing map.
 		/// </summary>
-		public virtual void AutoMap()
+		public virtual void AutoMap( bool ignoreReferences = false)
 		{
 			var mapParents = new LinkedList<Type>();
-			AutoMapInternal( this, mapParents );
+			AutoMapInternal( this, ignoreReferences, mapParents );
 		}
 
 		/// <summary>
 		/// Auto maps the given map and checks for circular references as it goes.
 		/// </summary>
 		/// <param name="map">The map to auto map.</param>
+		/// <param name="ignoreReferences">A value indicating if references should be ignored when auto mapping. 
+		/// True to ignore references, otherwise false.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
-		internal static void AutoMapInternal( CsvClassMap map, LinkedList<Type> mapParents )
+		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, LinkedList<Type> mapParents )
 		{
 #if WINRT_4_5
 			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
@@ -145,6 +147,11 @@ namespace CsvHelper.Configuration
 #endif
 				if( isDefaultConverter && hasDefaultConstructor )
 				{
+					if( ignoreReferences )
+					{
+						continue;
+					}
+
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
 					// reference map for it.
@@ -156,7 +163,7 @@ namespace CsvHelper.Configuration
 					mapParents.AddLast( type );
 					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
 					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
-					AutoMapInternal( refMap, mapParents );
+					AutoMapInternal( refMap, false, mapParents );
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
 						map.ReferenceMaps.Add( new CsvPropertyReferenceMap( property, refMap ) );
