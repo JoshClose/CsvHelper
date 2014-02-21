@@ -3,9 +3,11 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
@@ -32,13 +34,17 @@ namespace CsvHelper.Configuration
 		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-			if( PropertyMaps.Any( m => m.Data.Property == property ) )
+	
+			var existingMap = PropertyMaps.SingleOrDefault( m => m.Data.Property == property );
+			if( existingMap != null )
 			{
-				throw new CsvConfigurationException( string.Format( "Property '{0}' has already been mapped.", property.Name ) );
+				return existingMap;
 			}
+
 			var propertyMap = new CsvPropertyMap( property );
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
+
 			return propertyMap;
 		}
 

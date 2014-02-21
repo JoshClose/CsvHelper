@@ -201,7 +201,6 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration();
 			var existingMap = new SimpleMap();
-			//existingMap.CreateMap();
 			config.Maps.Add( existingMap );
 			var data = new
 			{
@@ -216,7 +215,11 @@ namespace CsvHelper.Tests
 			Assert.IsNotNull( map );
 			Assert.AreEqual( 0, map.PropertyMaps.Count );
 			Assert.AreEqual( 1, map.ReferenceMaps.Count );
-			Assert.IsInstanceOfType( map.ReferenceMaps[0].Mapping, typeof( SimpleMap ) );
+
+			// Since Simple is a reference on the anonymous object, the type won't
+			// be re-used. Types which are created from automapping aren't added
+			// to the list of registered maps either.
+			Assert.IsNotInstanceOfType( map.ReferenceMaps[0].Mapping, typeof( SimpleMap ) );
 		}
 
 		[TestMethod]

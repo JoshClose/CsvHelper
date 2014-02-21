@@ -4,9 +4,15 @@
 // http://csvhelper.com
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using CsvHelper.TypeConversion;
+#if WINRT_4_5
+using CsvHelper.MissingFromRt45;
+#endif
 
 namespace CsvHelper.Configuration
 {
@@ -17,17 +23,6 @@ namespace CsvHelper.Configuration
 	{
 		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
 		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
-		private int indexStart = -1;
-
-		/// <summary>
-		/// Where to start the index at when
-		/// creating auto indexes for property maps.
-		/// </summary>
-		internal int IndexStart
-		{
-			get { return indexStart; }
-			set { indexStart = value; }
-		}
 
 		/// <summary>
 		/// Called to create the mappings.
@@ -70,7 +65,7 @@ namespace CsvHelper.Configuration
 		{
 			if( PropertyMaps.Count == 0 && ReferenceMaps.Count == 0 )
 			{
-				return IndexStart;
+				return -1;
 			}
 
 			var indexes = new List<int>();
@@ -102,6 +97,119 @@ namespace CsvHelper.Configuration
 			}
 
 			return indexStart;
+		}
+
+		/// <summary>
+		/// Auto maps all properties for the given type. If a property
+		/// is mapped again it will override the existing map.
+		/// </summary>
+		public virtual void AutoMap()
+		{
+			var mapParents = new LinkedList<Type>();
+			AutoMapInternal( this, mapParents );
+		}
+
+		/// <summary>
+		/// Auto maps the given map and checks for circular references as it goes.
+		/// </summary>
+		/// <param name="map">The map to auto map.</param>
+		/// <param name="mapParents">The list of parents for the map.</param>
+		internal static void AutoMapInternal( CsvClassMap map, LinkedList<Type> mapParents )
+		{
+#if WINRT_4_5
+			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
+#else
+			var type = map.GetType().BaseType.GetGenericArguments()[0];
+#endif
+
+			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
+			{
+				throw new CsvConfigurationException( "Types that inhererit IEnumerable cannot be auto mapped. " +
+													 "Did you accidentally call GetRecord or WriteRecord which " +
+													 "acts on a single record instead of calling GetRecords or " +
+													 "WriteRecords which acts on a list of records?" );
+			}
+
+#if WINRT_4_5
+			var properties = type.GetProperties();
+#else
+			var properties = type.GetProperties();
+#endif
+			foreach( var property in properties )
+			{
+				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );
+#if WINRT_4_5
+				var hasDefaultConstructor = property.PropertyType.GetTypeInfo().DeclaredConstructors.Any( c => !c.GetParameters().Any() );
+#else
+				var hasDefaultConstructor = property.PropertyType.GetConstructor( Type.EmptyTypes ) != null;
+#endif
+				if( isDefaultConverter && hasDefaultConstructor )
+				{
+					// If the type is not one covered by our type converters
+					// and it has a parameterless constructor, create a
+					// reference map for it.
+					if( CheckForCircularReference( property.PropertyType, mapParents ) )
+					{
+						continue;
+					}
+
+					mapParents.AddLast( type );
+					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
+					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
+					AutoMapInternal( refMap, mapParents );
+					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
+					{
+						map.ReferenceMaps.Add( new CsvPropertyReferenceMap( property, refMap ) );
+					}
+				}
+				else
+				{
+					var propertyMap = new CsvPropertyMap( property );
+					propertyMap.Data.Index = map.GetMaxIndex() + 1;
+					if( propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) ||
+						propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
+					{
+						// Only add the property map if it can be converted later on.
+						// If the property will use the default converter, don't add it because
+						// we don't want the .ToString() value to be used when auto mapping.
+						map.PropertyMaps.Add( propertyMap );
+					}
+				}
+			}
+
+			map.ReIndex();
+		}
+
+		/// <summary>
+		/// Checks for circular references.
+		/// </summary>
+		/// <param name="type">The type to check for.</param>
+		/// <param name="mapParents">The list of parents to check against.</param>
+		/// <returns>A value indicating if a circular reference was found.
+		/// True if a circular reference was found, otherwise false.</returns>
+		internal static bool CheckForCircularReference( Type type, LinkedList<Type> mapParents )
+		{
+			if( mapParents.Count == 0 )
+			{
+				return false;
+			}
+
+			var node = mapParents.Last;
+			while( true )
+			{
+				if( node.Value == type )
+				{
+					return true;
+				}
+
+				node = node.Previous;
+				if( node == null )
+				{
+					break;
+				}
+			}
+
+			return false;
 		}
 	}
 }
