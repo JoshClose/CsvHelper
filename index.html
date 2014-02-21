@@ -664,6 +664,9 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 	<!-- Type Conversion -->
 	<section>
 	<h2 id="type-conversion">Type Conversion</h2>
+
+	<p>Type converters are the way CsvHelper converts strings into .NET types, and .NET types into strings. The CsvHelper
+	type converter ecosystem stays close to the .NET</p>
 	</section>
 
 	<!-- Miscellaneous -->
@@ -671,6 +674,48 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 	<h2>Miscellaneous</h2>
 
 	<h3 id="change-log">Change Log</h3>
+
+	<h4>2.4.1</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue where parsing would add delimiter chars to the field when the buffer ran out in the middle of the delimiter.</li>
+	</ul>
+
+	<h4>2.4</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Split writing up into a writer and serializer so the writer can write other things besides CSV files.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue where a NullReferenceException was thrown when using reference maps and a reference was null.</li>
+		<li>Fixed issue where TryGetField was throwing MissingFieldException.</li>
+		<li>Fixed issue where a commented row on the last line that doesn't have a newline will return the commented row.</li>
+		<li>Fixed NuGet package for WP8.</li>
+		<li>Added missing WriteHeader methods to ICsvWriter that were a part of CsvWriter.</li>
+	</ul>
+
+	<h4>2.3</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Support for TimeSpan.</li>
+		<li>Support for writing records of type dynamic. The dynamic objects do not work with collections, which means ExpandoObject doesn't currently work.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue with extra exception info not being added when the reading exception callback is used.</li>
+		<li>Fixed issue where having only reference maps throws exception.</li>
+	</ul>
 
 	<h4>2.2.2</h4>
 
