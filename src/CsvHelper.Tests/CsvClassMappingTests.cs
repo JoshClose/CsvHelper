@@ -135,6 +135,16 @@ namespace CsvHelper.Tests
 			Assert.IsNotNull( config.Maps[typeof( B )] );
 		}
 
+		[TestMethod]
+		public void PropertyMapAccessTest()
+		{
+			var config = new CsvConfiguration();
+			config.RegisterClassMap<AMap>();
+			config.Maps[typeof( A )].PropertyMap<A>( m => m.AId ).Ignore();
+
+			Assert.AreEqual( true, config.Maps[typeof( A )].PropertyMaps[0].Data.Ignore );
+		}
+
 		private class A
 		{
 			public int AId { get; set; }

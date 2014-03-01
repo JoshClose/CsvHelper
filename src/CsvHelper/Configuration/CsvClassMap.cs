@@ -57,6 +57,19 @@ namespace CsvHelper.Configuration
 		internal CsvClassMap() {}
 
 		/// <summary>
+		/// Gets the property map for the given property expression.
+		/// </summary>
+		/// <typeparam name="T">The type of the class the property belongs to.</typeparam>
+		/// <param name="propertyExpression">The property expression.</param>
+		/// <returns>The CsvPropertyMap for the given expression.</returns>
+		public virtual CsvPropertyMap PropertyMap<T>( Expression<Func<T, object>> propertyExpression )
+		{
+			var property = ReflectionHelper.GetProperty( propertyExpression );
+			var propertyMap = propertyMaps.Single( pm => pm.Data.Property == property );
+			return propertyMap;
+		}
+
+		/// <summary>
 		/// Get the largest index for the
 		/// properties and references.
 		/// </summary>
