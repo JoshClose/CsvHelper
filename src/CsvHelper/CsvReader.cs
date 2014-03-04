@@ -1290,7 +1290,8 @@ namespace CsvHelper
 				if( propertyMap.Data.ConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
-					var exp = Expression.Invoke( propertyMap.Data.ConvertExpression, Expression.Constant( this ) );
+					Expression exp = Expression.Invoke( propertyMap.Data.ConvertExpression, Expression.Constant( this ) );
+					exp = Expression.Convert( exp, propertyMap.Data.Property.PropertyType );
 					bindings.Add( Expression.Bind( propertyMap.Data.Property, exp ) );
 					continue;
 				}

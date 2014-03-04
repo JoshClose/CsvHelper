@@ -53,40 +53,6 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		[TestMethod]
-		public void DestabilizeRuntimeTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
-			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,2" );
-				writer.WriteLine( "3,4" );
-				writer.Flush();
-				stream.Position = 0;
-
-				csv.Configuration.RegisterClassMap<DestabilizeRuntimeMap>();
-				try
-				{
-					var list = csv.GetRecords<DestabilizeRuntime>().ToList();
-					Assert.Fail();
-				}
-				catch( VerificationException ex )
-				{
-					var data = ex.Data["CsvHelper"];
-					var expected = new StringBuilder();
-					expected.AppendLine( "Row: '2' (1 based)" );
-					expected.AppendLine( "Type: 'CsvHelper.Tests.ExceptionTests+DestabilizeRuntime'" );
-					expected.AppendLine( "Field Index: '-1' (0 based)" );
-
-					Assert.IsNotNull( data );
-					Assert.AreEqual( expected.ToString(), data );
-				}
-			}
-		}
-
 		private class NoDefaultConstructor
 		{
 			public int Id { get; set; }
@@ -97,22 +63,6 @@ namespace CsvHelper.Tests
 			{
 				Id = id;
 				Name = name;
-			}
-		}
-
-		private class DestabilizeRuntime
-		{
-			public int? Id { get; set; }
-
-			public string Name { get; set; }
-		}
-
-		private sealed class DestabilizeRuntimeMap : CsvClassMap<DestabilizeRuntime>
-		{
-			public DestabilizeRuntimeMap()
-			{
-				Map( m => m.Id ).ConvertUsing( row => 12 );
-				Map( m => m.Name );
 			}
 		}
 	}
