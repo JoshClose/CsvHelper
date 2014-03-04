@@ -208,10 +208,12 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var typeConverterOptions = new TypeConverterOptions
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions<T>();
+			if( typeConverterOptions.CultureInfo == null )
 			{
-				CultureInfo = configuration.CultureInfo
-			};
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
 			var fieldString = converter.ConvertToString( typeConverterOptions, field );
 			WriteField( fieldString );
 		}
@@ -704,7 +706,14 @@ namespace CsvHelper
 			var typeConverter = TypeConverterFactory.GetConverter( type );
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeConverter.GetType().GetMethod( "ConvertToString" );
-			fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( new TypeConverterOptions() ), fieldExpression );
+
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( typeConverterOptions ), fieldExpression );
 
 			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
 

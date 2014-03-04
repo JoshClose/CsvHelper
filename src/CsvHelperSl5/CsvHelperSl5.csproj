@@ -219,6 +219,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\TypeConverterOptions.cs">
       <Link>TypeConversion\TypeConverterOptions.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\TypeConverterOptionsFactory.cs">
+      <Link>TypeConversion\TypeConverterOptionsFactory.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\UInt16Converter.cs">
       <Link>TypeConversion\UInt16Converter.cs</Link>
     </Compile>

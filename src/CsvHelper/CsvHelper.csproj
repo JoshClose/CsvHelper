@@ -121,6 +121,7 @@
     <Compile Include="TypeConversion\StringConverter.cs" />
     <Compile Include="TypeConversion\DefaultTypeConverter.cs" />
     <Compile Include="TypeConversion\TimeSpanConverter.cs" />
+    <Compile Include="TypeConversion\TypeConverterOptionsFactory.cs" />
     <Compile Include="TypeConversion\TypeConverterOptions.cs" />
     <Compile Include="TypeConversion\TypeConverterFactory.cs" />
     <Compile Include="TypeConversion\UInt32Converter.cs" />

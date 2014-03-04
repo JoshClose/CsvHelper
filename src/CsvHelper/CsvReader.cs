@@ -326,6 +326,7 @@ namespace CsvHelper
 		/// <param name="index">The index of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use GetField( Type, int, ITypeConverter ) instead.", false )]
 		public virtual object GetField( int index, ITypeConverter converter )
 		{
 			CheckDisposed();
@@ -347,6 +348,7 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use GetField( Type, string, ITypeConverter ) instead.", false )]
 		public virtual object GetField( string name, ITypeConverter converter )
 		{
 			CheckDisposed();
@@ -364,6 +366,7 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use GetField( Type, string, int, ITypeConverter ) instead.", false )]
 		public virtual object GetField( string name, int index, ITypeConverter converter )
 		{
 			CheckDisposed();
@@ -372,7 +375,65 @@ namespace CsvHelper
 			var fieldIndex = GetFieldIndex( name, index );
 			return GetField( fieldIndex, converter );
 		}
+		
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		public virtual object GetField( Type type, int index, ITypeConverter converter )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
 
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			var field = GetField( index );
+			return converter.ConvertFromString( typeConverterOptions, field );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		public virtual object GetField( Type type, string name, ITypeConverter converter )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var index = GetFieldIndex( name );
+			return GetField( type, index, converter );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		public virtual object GetField( Type type, string name, int index, ITypeConverter converter )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var fieldIndex = GetFieldIndex( name, index );
+			return GetField( type, fieldIndex, converter );
+		}
+		
 		/// <summary>
 		/// Gets the field converted to <see cref="Type"/> T at position (column) index.
 		/// </summary>
@@ -443,8 +504,8 @@ namespace CsvHelper
 
 				return default( T );
 			}
-			
-			return (T)GetField( index, converter );
+
+			return (T)GetField( typeof( T ), index, converter );
 		}
 
 		/// <summary>
@@ -618,7 +679,7 @@ namespace CsvHelper
 			// do it twice and just do it ourselves.
 			try
 			{
-				field = (T)GetField( index, converter );
+				field = GetField<T>( index, converter );
 				return true;
 			}
 			catch
@@ -1247,7 +1308,13 @@ namespace CsvHelper
 			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
 
 			var typeConverter = TypeConverterFactory.GetConverter( recordType );
-			fieldExpression = Expression.Call( Expression.Constant( typeConverter ), "ConvertFromString", null, Expression.Constant( new TypeConverterOptions() ), fieldExpression );
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( recordType );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			fieldExpression = Expression.Call( Expression.Constant( typeConverter ), "ConvertFromString", null, Expression.Constant( typeConverterOptions ), fieldExpression );
 			fieldExpression = Expression.Convert( fieldExpression, recordType );
 	
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
