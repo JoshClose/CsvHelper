@@ -2,6 +2,9 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace CsvHelper.MissingFrom20
@@ -38,6 +41,56 @@ namespace CsvHelper.MissingFrom20
 			foreach( var item in enumerable )
 			{
 				if( !predicate( item ) )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		public static bool SequenceEqual( IEnumerable x, IEnumerable y )
+		{
+			if( x == null )
+			{
+				throw new ArgumentNullException( "x" );
+			}
+
+			if( y == null )
+			{
+				throw new ArgumentNullException( "y" );
+			}
+
+			var xEnumerator = x.GetEnumerator();
+			var yEnumerator = y.GetEnumerator();
+
+			while( true )
+			{
+				var xMoved = xEnumerator.MoveNext();
+				var yMoved = yEnumerator.MoveNext();
+
+				if( xMoved != yMoved )
+				{
+					return false;
+				}
+
+				if( xMoved == false )
+				{
+					break;
+				}
+
+				if( xEnumerator.Current == null && yEnumerator.Current != null || 
+					xEnumerator.Current != null && yEnumerator.Current == null )
+				{
+					return false;
+				}
+
+				if( xEnumerator.Current == null && yEnumerator.Current == null )
+				{
+					return true;
+				}
+
+				if( !xEnumerator.Current.Equals( yEnumerator.Current ) )
 				{
 					return false;
 				}

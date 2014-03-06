@@ -669,10 +669,13 @@ namespace CsvHelper
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
-				var typeConverterOptions = Expression.Constant( propertyMap.Data.TypeConverterOptions );
+
+				var typeConverterOptions = TypeConverterOptions.Merge( TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+				var typeConverterOptionsExpression = Expression.Constant( typeConverterOptions );
+
 				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptions, fieldExpression );
+				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptionsExpression, fieldExpression );
 
 #if !WINRT_4_5
 				if( type.IsClass )

@@ -73,6 +73,65 @@ namespace CsvHelper
 		string GetField( string name, int index );
 
 		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="index">The index of the field.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		object GetField( Type type, int index );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		object GetField( Type type, string name );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		object GetField( Type type, string name, int index );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		object GetField( Type type, int index, ITypeConverter converter );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		object GetField( Type type, string name, ITypeConverter converter );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		object GetField( Type type, string name, int index, ITypeConverter converter );
+
+		/// <summary>
 		/// Gets the field converted to <see cref="Type"/> T at position (column) index.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>

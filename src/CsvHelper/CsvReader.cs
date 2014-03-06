@@ -375,7 +375,56 @@ namespace CsvHelper
 			var fieldIndex = GetFieldIndex( name, index );
 			return GetField( fieldIndex, converter );
 		}
-		
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="index">The index of the field.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		public virtual object GetField( Type type, int index )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var converter = TypeConverterFactory.GetConverter( type );
+			return GetField( type, index, converter );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		public virtual object GetField( Type type, string name )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var converter = TypeConverterFactory.GetConverter( type );
+			return GetField( type, name, converter );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="Object"/> using
+		/// the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <returns>The field converted to <see cref="Object"/>.</returns>
+		public virtual object GetField( Type type, string name, int index )
+		{
+			CheckDisposed();
+			CheckHasBeenRead();
+
+			var converter = TypeConverterFactory.GetConverter( type );
+			return GetField( type, name, index, converter );
+		}
+
 		/// <summary>
 		/// Gets the field converted to <see cref="Object"/> using
 		/// the specified <see cref="ITypeConverter"/>.
@@ -1421,10 +1470,11 @@ namespace CsvHelper
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
-				var typeConverterOptions = Expression.Constant( propertyMap.Data.TypeConverterOptions );
+				var typeConverterOptions = TypeConverterOptions.Merge( TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+				var typeConverterOptionsExpression = Expression.Constant( typeConverterOptions );
 
 				// Create type converter expression.
-				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, typeConverterOptions, fieldExpression );
+				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, typeConverterOptionsExpression, fieldExpression );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
 
 				if( propertyMap.Data.IsDefaultSet )
