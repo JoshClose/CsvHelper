@@ -15,14 +15,14 @@
 		</releaseNotes>
 	</metadata>
 	<files>
-		<file src="CsvHelper20\bin\Release\Pjax*.*" target="lib\net20\" />
-		<file src="CsvHelper35\bin\Release\Pjax*.*" target="lib\net35-client\" />
-		<file src="CsvHelper\bin\Release\Pjax*.*" target="lib\net40-client\" />
-		<file src="CsvHelperRt45\bin\Release\Pjax*.*" target="lib\netcore45\" />
-		<file src="CsvHelperSl4\bin\Release\Pjax*.*" target="lib\sl4\" />
-		<file src="CsvHelperSl5\bin\Release\Pjax*.*" target="lib\sl5\" />
-		<file src="CsvHelperWp8\bin\Release\Pjax*.*" target="lib\windowsphone8\" />
-		<file src="CsvHelperWp7\bin\Release\Pjax*.*" target="lib\wp71\" />
+		<file src="CsvHelper20\bin\Release\CsvHelper.*" target="lib\net20\" />
+		<file src="CsvHelper35\bin\Release\CsvHelper.*" target="lib\net35-client\" />
+		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net40-client\" />
+		<file src="CsvHelperRt45\bin\Release\CsvHelper.*" target="lib\netcore45\" />
+		<file src="CsvHelperSl4\bin\Release\CsvHelper.*" target="lib\sl4\" />
+		<file src="CsvHelperSl5\bin\Release\CsvHelper.*" target="lib\sl5\" />
+		<file src="CsvHelperWp8\bin\Release\CsvHelper.*" target="lib\windowsphone8\" />
+		<file src="CsvHelperWp7\bin\Release\CsvHelper.*" target="lib\wp71\" />
 	</files>
 
 </package>
