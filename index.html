@@ -34,6 +34,7 @@
 							<li><a href="#reading-reading-records-manually">Reading Records Manually</a></li>
 							<li><a href="#reading-reading-individual-fields">Reading Individual Fields</a></li>
 							<li><a href="#reading-try-get-field">TryGetField</a></li>
+							<li><a href="#reading-parsing">Parsing</a></li>
 						</ul>
 					</li>
 					<li class="dropdown">
@@ -193,6 +194,24 @@ while( csv.Read() )
 		// Do something when it can't convert.
 	}
 }</textarea></p>
+
+	<h3 id=reading-parsing>Parsing</h3>
+
+	<p>You can also use the parser directly without using the reader. The parser will give back an array of strings
+	for each row that is read, and null when it is finished.</p>
+
+	<p><textarea>
+var parser = new CsvParser( textReader );
+while( true )
+{
+	var row = parser.Read();
+	if( row == null )
+	{
+		break;
+	}
+}
+	</textarea></p>
+
 	</section>
 
 	<!-- Writing -->
@@ -412,6 +431,7 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 		} );
 	}
 }</textarea>
+
 	</section>
 
 	<!-- Configuration -->
@@ -674,6 +694,25 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 	<h2>Miscellaneous</h2>
 
 	<h3 id="change-log">Change Log</h3>
+
+	<h4>2.5</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Global type converter options.</li>
+		<li>Easier access to property maps to allow for changing maps on the fly.</li>
+		<li>Option to ignore references when auto mapping.</li>
+		<li>AutoMap functionality is available in class maps.</li>
+		<li>Mappings can be specified in the constructor of the mapping class. Overriding CreateMap is now deprecated.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Updated ConvertUsing to not cause the exception "Operation Could Destabilize the Runtime" when property is a
+		nullable type and a non-nullable type is returned.</li>
+	</ul>
 
 	<h4>2.4.1</h4>
 
