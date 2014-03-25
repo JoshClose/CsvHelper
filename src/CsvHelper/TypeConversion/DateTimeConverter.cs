@@ -20,6 +20,8 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
+			try
+			{
 			if( text == null )
 			{
 				return base.ConvertFromString( options, null );
@@ -36,6 +38,17 @@ namespace CsvHelper.TypeConversion
 			return string.IsNullOrEmpty( options.Format )
 				? DateTime.Parse( text, formatProvider, dateTimeStyle )
 				: DateTime.ParseExact( text, options.Format, formatProvider, dateTimeStyle );
+			}
+			catch (Exception exception)
+			{
+				string errormessage = string.Format("Exception while parsing value [{0}] to a date. Using Culture [{1}].", text, options.CultureInfo);
+				if (!string.IsNullOrEmpty(options.Format))
+				{
+					errormessage += string.Format(" Using option format [{0}]", options.Format);
+				}
+
+				throw new CsvTypeConverterException(errormessage, exception);
+			}
 		}
 
 		/// <summary>
