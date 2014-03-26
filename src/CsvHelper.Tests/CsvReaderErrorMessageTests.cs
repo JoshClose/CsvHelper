@@ -193,7 +193,7 @@ namespace CsvHelper.Tests
 					csvReader.Configuration.RegisterClassMap<Test3Map>();
 					var records = csvReader.GetRecords<Test3>().ToList();
 				}
-				catch( CsvReaderException )
+				catch (CsvTypeConverterException)
 				{
 					// Should throw this exception.
 				}

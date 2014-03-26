@@ -17,6 +17,8 @@ namespace CsvHelper.Tests.TypeConversion
 	[TestClass]
 	public class TypeConverterOptionsFactoryTests
 	{
+		private static CultureInfo _englishUsCultureInfo = new CultureInfo("en-US");
+
 		[TestMethod]
 		public void AddGetRemoveTest()
 		{
@@ -39,7 +41,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetFieldTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands, CultureInfo = _englishUsCultureInfo };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -61,7 +63,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetRecordsTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands, CultureInfo = _englishUsCultureInfo };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -72,7 +74,8 @@ namespace CsvHelper.Tests.TypeConversion
 				writer.WriteLine( "\"1,234\",\"5,678\"" );
 				writer.Flush();
 				stream.Position = 0;
-
+				
+				csvReader.Configuration.CultureInfo = _englishUsCultureInfo;
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.GetRecords<Test>().ToList();
 			}
@@ -94,6 +97,7 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 
 				csvReader.Configuration.HasHeaderRecord = false;
+				csvReader.Configuration.CultureInfo = _englishUsCultureInfo;
 				csvReader.Configuration.RegisterClassMap<TestMap>();
 				csvReader.GetRecords<Test>().ToList();
 			}
@@ -102,7 +106,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteFieldTest()
 		{
-			var options = new TypeConverterOptions { Format = "c" };
+			var options = new TypeConverterOptions { Format = "c", CultureInfo = _englishUsCultureInfo };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -123,7 +127,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteRecordsTest()
 		{
-			var options = new TypeConverterOptions { Format = "c" };
+			var options = new TypeConverterOptions { Format = "c", CultureInfo = _englishUsCultureInfo };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -135,6 +139,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
+				csvWriter.Configuration.CultureInfo = _englishUsCultureInfo;
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.WriteRecords( list );
 				writer.Flush();
@@ -148,7 +153,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteRecordsAppliedWhenMappedTest()
 		{
-			var options = new TypeConverterOptions { Format = "c" };
+			var options = new TypeConverterOptions { Format = "c", CultureInfo = _englishUsCultureInfo };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -160,6 +165,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
+				csvWriter.Configuration.CultureInfo = _englishUsCultureInfo;
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.Configuration.RegisterClassMap<TestMap>();
 				csvWriter.WriteRecords( list );

@@ -153,7 +153,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 				converter.ConvertFromString( typeConverterOptions, "blah" );
 			}
-			catch( FormatException ){}
+			catch (CsvTypeConverterException) { }
 		}
 #endif
 	}
