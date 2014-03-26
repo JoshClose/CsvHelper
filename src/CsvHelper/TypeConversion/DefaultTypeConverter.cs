@@ -42,7 +42,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public virtual object ConvertFromString( TypeConverterOptions options, string text )
 		{
-			throw new CsvTypeConverterException( "The conversion cannot be performed." );
+			throw new CsvTypeConverterException( string.Format("The conversion of value [{0}] using converter [{1}] cannot be performed. Using CultureInfo [{2}]", text, this, options.CultureInfo) );
 		}
 
 		/// <summary>

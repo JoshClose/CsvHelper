@@ -5,6 +5,8 @@
 using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
+
+using Microsoft.SqlServer.Server;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
@@ -62,6 +64,52 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
+		[TestMethod]
+		public void ShouldThrowTypeConversionExceptionThatContainsData()
+		{
+			var converter = new DateTimeConverter();
+			var typeConverterOptions = new TypeConverterOptions();
+			typeConverterOptions.CultureInfo = new CultureInfo("en-US");
+
+			try
+			{
+				converter.ConvertFromString(typeConverterOptions, "18-12-2014");
+				Assert.Fail();
+			}
+			catch (CsvTypeConverterException exception)
+			{
+				Assert.AreEqual("Exception while parsing value [18-12-2014] to a date. Using Culture [en-US].", exception.Message);
+				Assert.IsInstanceOfType(exception.InnerException, typeof(FormatException));
+			}
+			catch (Exception)
+			{
+				Assert.Fail();
+			}
+		}
+
+		[TestMethod]
+		public void ShouldThrowTypeConversionExceptionThatContainsDataWithFormatOptions()
+		{
+			var converter = new DateTimeConverter();
+			var typeConverterOptions = new TypeConverterOptions();
+			typeConverterOptions.CultureInfo = new CultureInfo("en-US");
+			typeConverterOptions.Format = "yyyyddMM";
+			try
+			{
+				converter.ConvertFromString(typeConverterOptions, "18-12-2014");
+				Assert.Fail();
+			}
+			catch (CsvTypeConverterException exception)
+			{
+				Assert.AreEqual("Exception while parsing value [18-12-2014] to a date. Using Culture [en-US]. Using option format [yyyyddMM]", exception.Message);
+				Assert.IsInstanceOfType(exception.InnerException, typeof(FormatException));
+			}
+			catch (Exception)
+			{
+				Assert.Fail();
+			}
+		}
+
 #if !SILVERLIGHT && !WINRT_4_5
 		[TestMethod]
 		public void ComponentModelCompatibilityTest()
@@ -105,7 +153,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 				converter.ConvertFromString( typeConverterOptions, "blah" );
 			}
-			catch( FormatException ){}
+			catch (CsvTypeConverterException) { }
 		}
 #endif
 	}

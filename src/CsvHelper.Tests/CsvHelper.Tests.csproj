@@ -84,6 +84,7 @@
     <Compile Include="TypeConversion\DateTimeConverterTests.cs" />
     <Compile Include="TypeConversion\EnumerableConverterTests.cs" />
     <Compile Include="TypeConversion\TimeSpanConverterTests.cs" />
+    <Compile Include="TypeConversion\TypeConverterExceptionTests.cs" />
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterOptionsFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterTests.cs" />
