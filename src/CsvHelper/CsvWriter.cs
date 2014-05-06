@@ -108,38 +108,35 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField( string field )
 		{
-			CheckDisposed();
+            CheckDisposed();
 
-			var shouldQuote = configuration.QuoteAllFields;
+            var shouldQuote = configuration.QuoteAllFields;
 
-			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
-			{
-				var hasQuote = false;
+            if (!configuration.QuoteNoFields && !string.IsNullOrEmpty(field))
+            {
+                var hasQuote = false;
 #if NET_2_0
 				if( EnumerableHelper.Contains( field, configuration.Quote ) )
-#elif WINRT_4_5
-				if( field.Contains( configuration.Quote.ToString() ) )
 #else
-				if( field.Contains( configuration.Quote ) )
+                if (field.Contains(configuration.QuoteString))
 #endif
-				{
-					// All quotes must be doubled.
-					field = field.Replace( configuration.Quote.ToString(), string.Concat( configuration.Quote, configuration.Quote ) );
-					hasQuote = true;
-				}
+                {
+                    // All quotes must be doubled.
+                    field = field.Replace(configuration.QuoteString, configuration.DoubleQuoteString);
+                    hasQuote = true;
+                }
 
-				if( hasQuote ||
-				    field[0] == ' ' ||
-				    field[field.Length - 1] == ' ' ||
-				    field.Contains( configuration.Delimiter ) ||
-				    field.Contains( "\n" ) ||
-				    field.Contains( "\r" ) )
-				{
-					shouldQuote = true;
-				}
-			}
+                if (!shouldQuote && hasQuote
+                    || field[0] == ' '
+                    || field[field.Length - 1] == ' '
+                    || field.IndexOfAny(configuration.MustQuoteCharacters) > -1
+                    || (configuration.Delimiter.Length > 1 && field.Contains(configuration.Delimiter)))
+                {
+                    shouldQuote = true;
+                }
+            }
 
-			WriteField( field, shouldQuote );
+            WriteField(field, shouldQuote);
 		}
 
 		/// <summary>
@@ -156,19 +153,14 @@ namespace CsvHelper
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
 		public virtual void WriteField( string field, bool shouldQuote )
 		{
-			CheckDisposed();
+            CheckDisposed();
 
-			if( shouldQuote )
-			{
-				field = field ?? string.Empty;
-				field = new StringBuilder( field.Length + 2 )
-					.Append( configuration.Quote )
-					.Append( field )
-					.Append( configuration.Quote )
-					.ToString();
-			}
+            if (shouldQuote)
+            {
+                field = configuration.Quote + field + configuration.Quote;
+            }
 
-			currentRecord.Add( field );
+            currentRecord.Add(field);
 		}
 
 		/// <summary>
@@ -190,7 +182,7 @@ namespace CsvHelper
 			}
 			else
 			{
-				var converter = TypeConverterFactory.GetConverter<T>();
+				var converter = TypeConverterFactory.GetConverter(field.GetType());
 				WriteField( field, converter );
 			}
 		}

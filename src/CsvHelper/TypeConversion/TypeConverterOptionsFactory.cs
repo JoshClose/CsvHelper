@@ -89,7 +89,14 @@ namespace CsvHelper.TypeConversion
 			lock( locker )
 			{
 				TypeConverterOptions options;
-				return typeConverterOptions.TryGetValue( type, out options ) ? options : new TypeConverterOptions();
+
+				if(!typeConverterOptions.TryGetValue( type, out options ))
+                {
+                    options = new TypeConverterOptions();
+                    typeConverterOptions.Add(type, options);
+                }
+                
+                return options;
 			}
 		}
 
