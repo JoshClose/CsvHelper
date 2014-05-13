@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using System.Text.RegularExpressions;
 #if NET_2_0
 using CsvHelper.MissingFrom20;
 #endif
@@ -111,6 +112,7 @@ namespace CsvHelper
 			CheckDisposed();
 
 			var shouldQuote = configuration.QuoteAllFields;
+            var prependEquals = false;
 
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
@@ -128,6 +130,12 @@ namespace CsvHelper
 					hasQuote = true;
 				}
 
+                // matches any numerical field, including decimal point
+                if ( new Regex( @"^\d*\.?\d*$" ).IsMatch( field ) )
+                {
+                    prependEquals = true;
+                }
+
 				if( hasQuote ||
 				    field[0] == ' ' ||
 				    field[field.Length - 1] == ' ' ||
@@ -139,7 +147,7 @@ namespace CsvHelper
 				}
 			}
 
-			WriteField( field, shouldQuote );
+			WriteField( field, shouldQuote, prependEquals );
 		}
 
 		/// <summary>
@@ -154,15 +162,22 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="field">The field to write.</param>
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
-		public virtual void WriteField( string field, bool shouldQuote )
+        /// <param name="prependEquals">True to prependEquals to field, defaults to false</param>
+		public virtual void WriteField( string field, bool shouldQuote, bool prependEquals = false )
 		{
 			CheckDisposed();
 
 			if( shouldQuote )
 			{
 				field = field ?? string.Empty;
-				field = new StringBuilder( field.Length + 2 )
-					.Append( configuration.Quote )
+				var builder = new StringBuilder( field.Length + 2 );
+
+                if ( prependEquals )
+                {
+                    builder.Append("=");
+                }
+
+				field = builder.Append( configuration.Quote )
 					.Append( field )
 					.Append( configuration.Quote )
 					.ToString();

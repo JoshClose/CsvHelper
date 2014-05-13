@@ -42,7 +42,8 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="field">The field to write.</param>
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
-		void WriteField( string field, bool shouldQuote );
+        /// <param name="prependEquals">True to prependEquals to field, defaults to false</param>
+		void WriteField( string field, bool shouldQuote, bool prependEquals = false );
 
 		/// <summary>
 		/// Writes the field to the CSV file.
