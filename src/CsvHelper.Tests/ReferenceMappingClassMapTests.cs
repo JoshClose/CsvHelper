@@ -107,6 +107,57 @@ namespace CsvHelper.Tests
 			var person = reader.GetRecord<Person>();
 		}
 
+        [TestMethod]
+        public void PrefixTest()
+        {
+            var queue = new Queue<string[]>();
+            queue.Enqueue(new[]
+			{
+				"FirstName",
+				"LastName",
+				"Home.Street",
+				"Home.City",
+				"Home.State",
+				"Home.Zip",
+				"Work.Street",
+				"Work.City",
+				"Work.State",
+				"Work.Zip"
+			});
+            var row = new[]
+			{
+				"John",
+				"Doe",
+				"1234 Home St",
+				"Home Town",
+				"Home State",
+				"12345",
+				"5678 Work Rd",
+				"Work City",
+				"Work State",
+				"67890"
+			};
+            queue.Enqueue(row);
+
+            var parserMock = new ParserMock(queue);
+
+            var reader = new CsvReader(parserMock);
+            reader.Configuration.RegisterClassMap<PrefixPersonMap>();
+            reader.Read();
+            var person = reader.GetRecord<Person>();
+
+            Assert.AreEqual(row[0], person.FirstName);
+            Assert.AreEqual(row[1], person.LastName);
+            Assert.AreEqual(row[2], person.HomeAddress.Street);
+            Assert.AreEqual(row[3], person.HomeAddress.City);
+            Assert.AreEqual(row[4], person.HomeAddress.State);
+            Assert.AreEqual(row[5], person.HomeAddress.Zip);
+            Assert.AreEqual(row[6], person.WorkAddress.Street);
+            Assert.AreEqual(row[7], person.WorkAddress.City);
+            Assert.AreEqual(row[8], person.WorkAddress.State);
+            Assert.AreEqual(row[9], person.WorkAddress.Zip);
+        }
+
 		private class Person
 		{
 			public string FirstName { get; set; }
@@ -170,5 +221,27 @@ namespace CsvHelper.Tests
 				References<WorkAddressMap>( m => m.WorkAddress );
 			}
 		}
+
+        private sealed class PrefixAddressMap : CsvClassMap<Address>
+        {
+            public PrefixAddressMap(string prefix)
+            {
+                Map(m => m.Street).Name(prefix + ".Street");
+                Map(m => m.City).Name(prefix + ".City");
+                Map(m => m.State).Name(prefix + ".State");
+                Map(m => m.Zip).Name(prefix + ".Zip");
+            }
+        }
+
+        private sealed class PrefixPersonMap : CsvClassMap<Person>
+        {
+            public PrefixPersonMap()
+            {
+                Map(m => m.FirstName);
+                Map(m => m.LastName);
+                References(new PrefixAddressMap("Home"), m => m.HomeAddress);
+                References(new PrefixAddressMap("Work"), m => m.WorkAddress);
+            }
+        } 
 	}
 }
