@@ -327,6 +327,14 @@ namespace CsvHelper.Configuration
 			set { ignoreBlankLines = value; }
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating if headers of reference
+		/// properties should get prefixed by the parent property name 
+		/// when automapping.
+		/// True to prefix, otherwise false, Default is false.
+		/// </summary>
+		public virtual bool PrefixReferenceHeaders { get; set; }
+
 #if !NET_2_0
 		/// <summary>
 		/// Gets or sets a value indicating whether
@@ -437,7 +445,7 @@ namespace CsvHelper.Configuration
 		{
 			var mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( type );
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( mapType );
-			map.AutoMap( IgnoreReferences );
+			map.AutoMap( IgnoreReferences, PrefixReferenceHeaders );
 
 			return map;
 		}

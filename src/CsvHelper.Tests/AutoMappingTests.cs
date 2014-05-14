@@ -234,6 +234,27 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 0, map.ReferenceMaps[0].Mapping.ReferenceMaps.Count );
 		}
 
+		[TestMethod]
+		public void AutoMapWithNestedHeaders()
+		{
+			var config = new CsvConfiguration
+			{
+				PrefixReferenceHeaders = true,
+			};
+			var map = config.AutoMap<Nested>();
+			Assert.AreEqual( "Simple1.Id", map.ReferenceMaps[0].Mapping.PropertyMaps[0].Data.Names[0] );
+			Assert.AreEqual( "Simple1.Name", map.ReferenceMaps[0].Mapping.PropertyMaps[1].Data.Names[0] );
+			Assert.AreEqual( "Simple2.Id", map.ReferenceMaps[1].Mapping.PropertyMaps[0].Data.Names[0] );
+			Assert.AreEqual( "Simple2.Name", map.ReferenceMaps[1].Mapping.PropertyMaps[1].Data.Names[0] );
+		}
+
+		private class Nested
+		{
+			public Simple Simple1 { get; set; }
+
+			public Simple Simple2 { get; set; }
+		}
+
 		private class Simple
 		{
 			public int Id { get; set; }

@@ -602,6 +602,50 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteNestedHeadersTest()
+		{
+			var list = new List<Person>
+			{
+				new Person
+				{
+					FirstName = "first",
+					LastName = "last",
+					HomeAddress = new Address
+					{
+						City = "home city",
+						State = "home state",
+						Street = "home street",
+						Zip = "home zip",
+					},
+					WorkAddress = new Address
+					{
+						City = "work city",
+						State = "work state",
+						Street = "work street",
+						Zip = "work zip",
+					},
+				},
+			};
+
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.PrefixReferenceHeaders = true;
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+				var expected = new StringBuilder();
+				expected.AppendLine( "FirstName,LastName,HomeAddress.Street,HomeAddress.City,HomeAddress.State,HomeAddress.Zip,WorkAddress.Street,WorkAddress.City,WorkAddress.State,WorkAddress.Zip" );
+				expected.AppendLine( "first,last,home street,home city,home state,home zip,work street,work city,work state,work zip" );
+				Assert.AreEqual( expected.ToString(), text );
+			}
+		}
+
 #if !WINDOWS_PHONE_7
 		[TestMethod]
 		public void WriteDynamicListTest()

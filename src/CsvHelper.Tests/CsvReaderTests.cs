@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
@@ -1016,6 +1017,30 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteNestedHeadersTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				csv.Configuration.PrefixReferenceHeaders = true;
+
+				writer.WriteLine( "Simple1.Id,Simple1.Name,Simple2.Id,Simple2.Name" );
+				writer.WriteLine( "1,one,2,two" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var records = csv.GetRecords<Nested>().ToList();
+				Assert.IsNotNull( records );
+				Assert.AreEqual( 1, records[0].Simple1.Id );
+				Assert.AreEqual( "one", records[0].Simple1.Name );
+				Assert.AreEqual( 2, records[0].Simple2.Id );
+				Assert.AreEqual( "two", records[0].Simple2.Name );
+			}
+		}
+
 
 #if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
@@ -1056,6 +1081,13 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "one", row.Field2 );
 		}
 #endif
+
+		private class Nested
+		{
+			public Simple Simple1 { get; set; }
+
+			public Simple Simple2 { get; set; }
+		}
 
 		private class Simple
 		{
