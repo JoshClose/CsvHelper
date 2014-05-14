@@ -117,23 +117,21 @@ namespace CsvHelper
 				var hasQuote = false;
 #if NET_2_0
 				if( EnumerableHelper.Contains( field, configuration.Quote ) )
-#elif WINRT_4_5
-				if( field.Contains( configuration.Quote.ToString() ) )
 #else
-				if( field.Contains( configuration.Quote ) )
+				if( field.Contains( configuration.QuoteString ) )
 #endif
 				{
 					// All quotes must be doubled.
-					field = field.Replace( configuration.Quote.ToString(), string.Concat( configuration.Quote, configuration.Quote ) );
+					field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
 					hasQuote = true;
 				}
 
-				if( hasQuote ||
-				    field[0] == ' ' ||
-				    field[field.Length - 1] == ' ' ||
-				    field.Contains( configuration.Delimiter ) ||
-				    field.Contains( "\n" ) ||
-				    field.Contains( "\r" ) )
+				if( shouldQuote
+				    || hasQuote
+				    || field[0] == ' '
+				    || field[field.Length - 1] == ' '
+				    || field.IndexOfAny( configuration.QuoteRequiredChars ) > -1
+				    || ( configuration.Delimiter.Length > 1 && field.Contains( configuration.Delimiter ) ) )
 				{
 					shouldQuote = true;
 				}
@@ -160,12 +158,7 @@ namespace CsvHelper
 
 			if( shouldQuote )
 			{
-				field = field ?? string.Empty;
-				field = new StringBuilder( field.Length + 2 )
-					.Append( configuration.Quote )
-					.Append( field )
-					.Append( configuration.Quote )
-					.ToString();
+				field = configuration.Quote + field + configuration.Quote;
 			}
 
 			currentRecord.Add( field );
@@ -190,7 +183,7 @@ namespace CsvHelper
 			}
 			else
 			{
-				var converter = TypeConverterFactory.GetConverter<T>();
+				var converter = TypeConverterFactory.GetConverter( field.GetType() );
 				WriteField( field, converter );
 			}
 		}

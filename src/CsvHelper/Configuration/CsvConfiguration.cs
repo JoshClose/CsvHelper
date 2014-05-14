@@ -30,6 +30,9 @@ namespace CsvHelper.Configuration
 		private bool willThrowOnMissingField = true;
 		private string delimiter = ",";
 		private char quote = '"';
+		private string quoteString = "\"";
+		private string doubleQuoteString = "\"\"";
+		private char[] quoteRequiredChars;
 		private char comment = '#';
 		private int bufferSize = 2048;
 		private bool isHeaderCaseSensitive = true;
@@ -150,23 +153,29 @@ namespace CsvHelper.Configuration
 				{
 					throw new CsvConfigurationException( "Newline is not a valid delimiter." );
 				}
+
 				if( value == "\r" )
 				{
 					throw new CsvConfigurationException( "Carriage return is not a valid delimiter." );
 				}
+
 				if( value == "\0" )
 				{
 					throw new CsvConfigurationException( "Null is not a valid delimiter." );
 				}
+
 				if( value == Convert.ToString( quote ) )
 				{
 					throw new CsvConfigurationException( "You can not use the quote as a delimiter." );
 				}
+
 				delimiter = value;
+
+				BuildRequiredQuoteChars();
 			}
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Gets or sets the character used to quote fields.
 		/// Default is '"'.
 		/// </summary>
@@ -179,23 +188,61 @@ namespace CsvHelper.Configuration
 				{
 					throw new CsvConfigurationException( "Newline is not a valid quote." );
 				}
+
 				if( value == '\r' )
 				{
 					throw new CsvConfigurationException( "Carriage return is not a valid quote." );
 				}
+
 				if( value == '\0' )
 				{
 					throw new CsvConfigurationException( "Null is not a valid quote." );
 				}
+
 				if( Convert.ToString( value ) == delimiter )
 				{
 					throw new CsvConfigurationException( "You can not use the delimiter as a quote." );
 				}
+
 				quote = value;
+
+				quoteString = Convert.ToString( value, cultureInfo );
+				doubleQuoteString = quoteString + quoteString;
 			}
 		}
 
 		/// <summary>
+		/// Gets a string representation of the currently configured Quote character.
+		/// </summary>
+		/// <value>
+		/// The new quote string.
+		/// </value>
+		public virtual string QuoteString
+		{
+			get { return quoteString; }
+		}
+
+		/// <summary>
+		/// Gets a string representation of two of the currently configured Quote characters.
+		/// </summary>
+		/// <value>
+		/// The new double quote string.
+		/// </value>
+		public virtual string DoubleQuoteString
+		{
+			get { return doubleQuoteString; }
+		}
+
+		/// <summary>
+		/// Gets an array characters that require
+		/// the field to be quoted.
+		/// </summary>
+		public virtual char[] QuoteRequiredChars
+		{
+			get { return quoteRequiredChars; }
+		}
+
+        /// <summary>
 		/// Gets or sets the character used to denote
 		/// a line that is commented out. Default is '#'.
 		/// </summary>
@@ -450,5 +497,23 @@ namespace CsvHelper.Configuration
 			return map;
 		}
 #endif
+
+		/// <summary>
+		/// Creates a new CsvConfiguration.
+		/// </summary>
+		public CsvConfiguration()
+		{
+			BuildRequiredQuoteChars();
+		}
+
+		/// <summary>
+		/// Builds the values for the RequiredQuoteChars property.
+		/// </summary>
+		private void BuildRequiredQuoteChars()
+		{
+			quoteRequiredChars = delimiter.Length > 1 ? 
+				new[] { '\r', '\n' } : 
+				new[] { '\r', '\n', delimiter[0] };
+		}
 	}
 }
