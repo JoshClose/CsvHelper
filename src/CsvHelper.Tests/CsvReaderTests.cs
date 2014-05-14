@@ -985,6 +985,38 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 2, csv.Row );
 		}
 
+		[TestMethod]
+		public void DoNotIgnoreBlankLinesTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				csv.Configuration.IgnoreBlankLines = false;
+				csv.Configuration.RegisterClassMap<SimpleMap>();
+
+				writer.WriteLine( "Id,Name" );
+				writer.WriteLine( "1,one" );
+				writer.WriteLine( "," );
+				writer.WriteLine( "" );
+				writer.WriteLine( "2,two" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var records = csv.GetRecords<Simple>().ToList();
+				Assert.AreEqual( 1, records[0].Id );
+				Assert.AreEqual( "one", records[0].Name );
+				Assert.AreEqual( null, records[1].Id );
+				Assert.AreEqual( "", records[1].Name );
+				Assert.AreEqual( null, records[2].Id );
+				Assert.AreEqual( "", records[2].Name );
+				Assert.AreEqual( 2, records[3].Id );
+				Assert.AreEqual( "two", records[3].Name );
+			}
+		}
+
+
 #if !NET_3_5 && !WINDOWS_PHONE_7
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()
@@ -1024,6 +1056,23 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "one", row.Field2 );
 		}
 #endif
+
+		private class Simple
+		{
+			public int? Id { get; set; }
+
+			public string Name { get; set; }
+		}
+
+		private sealed class SimpleMap : CsvClassMap<Simple>
+		{
+			public SimpleMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
+		}
+
 		private struct TestStruct
 		{
 			public int Id { get; set; }

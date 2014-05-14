@@ -37,6 +37,7 @@ namespace CsvHelper.Configuration
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields;
 		private bool quoteNoFields;
+		private bool ignoreBlankLines = true;
 #if !NET_2_0
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
 #endif
@@ -314,6 +315,17 @@ namespace CsvHelper.Configuration
 		/// True to ignore, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool IgnorePrivateAccessor { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if blank lines
+		/// should be ignored when reading.
+		/// True to ignore, otherwise false. Default is true.
+		/// </summary>
+		public virtual bool IgnoreBlankLines
+		{
+			get { return ignoreBlankLines; }
+			set { ignoreBlankLines = value; }
+		}
 
 #if !NET_2_0
 		/// <summary>
