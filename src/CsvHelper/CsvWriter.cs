@@ -506,6 +506,17 @@ namespace CsvHelper
 				{
 					continue;
 				}
+
+#if !WINRT_4_5
+				var isReferenceValueType = refMap.Property.PropertyType.IsValueType;
+#else
+				var isReferenceValueType = refMap.Property.PropertyType.GetTypeInfo().IsValueType;
+#endif
+				if( isReferenceValueType )
+				{
+					return propertyExpression;
+				}
+
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
 #if !WINRT_4_5

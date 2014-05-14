@@ -899,6 +899,23 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void WriteStructReferenceRecordsTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "Id", "Name" } );
+			queue.Enqueue( new[] { "1", "one" } );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+			var csv = new CsvReader( parserMock );
+			csv.Configuration.RegisterClassMap<TestStructParentMap>();
+			var records = csv.GetRecords<TestStructParent>().ToList();
+			Assert.IsNotNull( records );
+			Assert.AreEqual( 1, records.Count );
+			Assert.AreEqual( 1, records[0].Test.Id );
+			Assert.AreEqual( "one", records[0].Test.Name );
+		}
+
+		[TestMethod]
 		public void ReadPrimitiveRecordsHasHeaderTrueTest()
 		{
 			var queue = new Queue<string[]>();
@@ -1105,11 +1122,33 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		private class TestStructParent
+		{
+			public TestStruct Test { get; set; }
+		}
+
+		private sealed class TestStructParentMap : CsvClassMap<TestStructParent>
+		{
+			public TestStructParentMap()
+			{
+				References<TestStructMap>( m => m.Test );
+			}
+		}
+
 		private struct TestStruct
 		{
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+		}
+
+		private sealed class TestStructMap : CsvClassMap<TestStruct>
+		{
+			public TestStructMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
 		}
 
 		private class OnlyFields

@@ -4,11 +4,13 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 #if !WINDOWS_PHONE_7
 using System.Dynamic;
 #endif
@@ -603,6 +605,36 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void WriteStructReferenceRecordsTest()
+		{
+			var list = new List<TestStructParent>
+			{
+				new TestStructParent
+				{
+					Test = new TestStruct
+					{
+						Id = 1,
+						Name = "one",
+					},
+				},
+			};
+
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.RegisterClassMap<TestStructParentMap>();
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var data = reader.ReadToEnd();
+				Assert.AreEqual( "Id,Name\r\n1,one\r\n", data );
+			}
+		}
+
+		[TestMethod]
 		public void WriteNestedHeadersTest()
 		{
 			var list = new List<Person>
@@ -692,11 +724,33 @@ namespace CsvHelper.Tests
 		}
 #endif
 
+		private class TestStructParent
+		{
+			public TestStruct Test { get; set; }
+		}
+
+		private sealed class TestStructParentMap : CsvClassMap<TestStructParent>
+		{
+			public TestStructParentMap()
+			{
+				References<TestStructMap>( m => m.Test );
+			}
+		}
+
 		private struct TestStruct
 		{
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+		}
+
+		private sealed class TestStructMap : CsvClassMap<TestStruct>
+		{
+			public TestStructMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
 		}
 
 		private class TestPrivateGet
