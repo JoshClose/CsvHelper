@@ -76,9 +76,6 @@
     <Compile Include="..\CsvHelper.Tests\CsvParserDelimiterTests.cs">
       <Link>CsvParserDelimiterTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\CsvParserExcelCompatibleTests.cs">
-      <Link>CsvParserExcelCompatibleTests.cs</Link>
-    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvParserRawRecordTests.cs">
       <Link>CsvParserRawRecordTests.cs</Link>
     </Compile>
@@ -120,6 +117,9 @@
     </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvWriterTests.cs">
       <Link>CsvWriterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ExcelCompatibleTests.cs">
+      <Link>ExcelCompatibleTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\ExceptionTests.cs">
       <Link>ExceptionTests.cs</Link>

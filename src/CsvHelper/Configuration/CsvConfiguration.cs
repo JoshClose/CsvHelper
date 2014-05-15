@@ -80,6 +80,13 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Gets or sets a value indicating the if the CSV
+		/// file contains the Excel "sep=delimeter" config
+		/// option in the first row.
+		/// </summary>
+		public virtual bool HasExcelSeparator { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if an exception will be
 		/// thrown if a field defined in a mapping is missing.
 		/// True to throw an exception, otherwise false.

@@ -84,6 +84,11 @@ namespace CsvHelper
 		/// </summary>
 		void NextRecord();
 
+		/// <summary>
+		/// Write the Excel seperator record.
+		/// </summary>
+		void WriteExcelSeparator();
+
 #if !NET_2_0
 		/// <summary>
 		/// Writes the header record from the given properties.

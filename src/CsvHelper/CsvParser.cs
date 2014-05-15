@@ -31,6 +31,7 @@ namespace CsvHelper
 		private char? cPrev;
 		private char c = '\0';
 		private bool read;
+		private bool hasExcelSeparatorBeenRead;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -106,6 +107,11 @@ namespace CsvHelper
 
 			try
 			{
+				if( configuration.HasExcelSeparator && !hasExcelSeparatorBeenRead )
+				{
+					ReadExcelSeparator();
+				}
+
 				var row = ReadLine();
 
 				if( configuration.DetectColumnCountChanges && row != null )
@@ -491,6 +497,21 @@ namespace CsvHelper
 
 			ch = readerBuffer[readerBufferPosition];
 			return true;
+		}
+
+		/// <summary>
+		/// Reads the Excel seperator and sets it to the delimiter.
+		/// </summary>
+		protected virtual void ReadExcelSeparator()
+		{
+			// sep=delimiter
+			var sepLine = reader.ReadLine();
+			if( sepLine != null )
+			{
+				configuration.Delimiter = sepLine.Substring( 4 );
+			}
+
+			hasExcelSeparatorBeenRead = true;
 		}
 	}
 }

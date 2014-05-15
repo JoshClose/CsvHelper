@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is licensed under the MS-PL
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
+
+using System.Collections.Generic;
 using System.IO;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -12,7 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-	public class CsvParserExcelCompatibleTests
+	public class ExcelCompatibleTests
 	{
 		[TestMethod]
 		public void ParseTest()
@@ -174,6 +176,139 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "two \" 2", record[1] );
 				Assert.AreEqual( "3", record[2] );
 			}
+		}
+
+		[TestMethod]
+		public void ParserSepCrLfTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "sep=;\r\n" );
+				writer.Write( "1;2;3\r\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.HasExcelSeparator = true;
+				var record = parser.Read();
+
+				Assert.IsNotNull( record );
+				Assert.AreEqual( "1", record[0] );
+				Assert.AreEqual( "2", record[1] );
+				Assert.AreEqual( "3", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ParserSepCrTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "sep=;\r" );
+				writer.Write( "1;2;3\r" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.HasExcelSeparator = true;
+				var record = parser.Read();
+
+				Assert.IsNotNull( record );
+				Assert.AreEqual( "1", record[0] );
+				Assert.AreEqual( "2", record[1] );
+				Assert.AreEqual( "3", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ParserSepLfTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "sep=;\n" );
+				writer.Write( "1;2;3\n" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.HasExcelSeparator = true;
+				var record = parser.Read();
+
+				Assert.IsNotNull( record );
+				Assert.AreEqual( "1", record[0] );
+				Assert.AreEqual( "2", record[1] );
+				Assert.AreEqual( "3", record[2] );
+			}
+		}
+
+		[TestMethod]
+		public void WriteRecordsSepTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.Delimiter = ";";
+				csv.Configuration.HasExcelSeparator = true;
+				var list = new List<Simple>
+				{
+					new Simple
+					{
+						Id = 1,
+						Name = "one",
+					},
+				};
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "sep=;\r\nId;Name\r\n1;one\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void WriteRecordSepTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var record = new Simple
+				{
+					Id = 1,
+					Name = "one",
+				};
+
+				csv.Configuration.Delimiter = ";";
+				csv.Configuration.HasExcelSeparator = true;
+				csv.WriteExcelSeparator();
+				csv.WriteHeader<Simple>();
+				csv.WriteRecord( record );
+
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+
+				Assert.AreEqual( "sep=;\r\nId;Name\r\n1;one\r\n", text );
+			}
+		}
+
+		private class Simple
+		{
+			public int Id { get; set; }
+
+			public string Name { get; set; }
 		}
 	}
 }

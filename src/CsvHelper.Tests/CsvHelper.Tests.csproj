@@ -52,7 +52,7 @@
     <Compile Include="AutoMappingTests.cs" />
     <Compile Include="CsvClassMappingAutoMapTests.cs" />
     <Compile Include="CsvParserDelimiterTests.cs" />
-    <Compile Include="CsvParserExcelCompatibleTests.cs" />
+    <Compile Include="ExcelCompatibleTests.cs" />
     <Compile Include="CsvParserRawRecordTests.cs" />
     <Compile Include="CsvReaderErrorMessageTests.cs" />
     <Compile Include="CsvReaderMappingTests.cs" />

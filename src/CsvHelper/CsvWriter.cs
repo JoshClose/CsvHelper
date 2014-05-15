@@ -32,12 +32,13 @@ namespace CsvHelper
 		private bool disposed;
 		private readonly List<string> currentRecord = new List<string>();
 		private ICsvSerializer serializer;
-#if !NET_2_0
 		private bool hasHeaderBeenWritten;
 		private bool hasRecordBeenWritten;
+#if !NET_2_0
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 #endif
 		private readonly CsvConfiguration configuration;
+		private bool hasExcelSeperatorBeenRead;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -242,6 +243,28 @@ namespace CsvHelper
 			currentRecord.Clear();
 		}
 
+		/// <summary>
+		/// Write the Excel seperator record.
+		/// </summary>
+		public virtual void WriteExcelSeparator()
+		{
+			CheckDisposed();
+
+			if( hasHeaderBeenWritten )
+			{
+				throw new CsvWriterException( "The Excel seperator record must be the first record written in the file." );
+			}
+
+			if( hasRecordBeenWritten )
+			{
+				throw new CsvWriterException( "The Excel seperator record must be the first record written in the file." );
+			}
+
+			WriteField( "sep=" + configuration.Delimiter, false );
+
+			NextRecord();
+		}
+
 #if !NET_2_0
 		/// <summary>
 		/// Writes the header record from the given properties.
@@ -384,6 +407,12 @@ namespace CsvHelper
 		public virtual void WriteRecords( IEnumerable records )
 		{
 			CheckDisposed();
+
+			if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
+			{
+				WriteExcelSeparator();
+				hasExcelSeperatorBeenRead = true;
+			}
 
 			foreach( var record in records )
 			{
