@@ -31,7 +31,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		public DateTimeStyles? DateTimeStyle { get; set; }
 
-#if !NET_2_0 && !NET_3_5
+#if !NET_2_0 && !NET_3_5 && !PCL
 		/// <summary>
 		/// Gets or sets the time span style.
 		/// </summary>
@@ -92,7 +92,7 @@ namespace CsvHelper.TypeConversion
 					options.DateTimeStyle = source.DateTimeStyle;
 				}
 
-#if !NET_2_0 && !NET_3_5
+#if !NET_2_0 && !NET_3_5 && !PCL
 				if( source.TimeSpanStyle != null )
 				{
 					options.TimeSpanStyle = source.TimeSpanStyle;

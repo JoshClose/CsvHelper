@@ -163,7 +163,7 @@ namespace CsvHelper.Configuration
 #if WINRT_4_5
 				var hasDefaultConstructor = property.PropertyType.GetTypeInfo().DeclaredConstructors.Any( c => !c.GetParameters().Any() );
 #else
-				var hasDefaultConstructor = property.PropertyType.GetConstructor( Type.EmptyTypes ) != null;
+				var hasDefaultConstructor = property.PropertyType.GetConstructor( new Type[0] ) != null;
 #endif
 				if( isDefaultConverter && hasDefaultConstructor )
 				{

@@ -36,7 +36,7 @@ namespace CsvHelper.TypeConversion
 
 			TimeSpan span;
 
-#if !NET_2_0 && !NET_3_5
+#if !NET_2_0 && !NET_3_5 && !PCL
 			var timeSpanStyle = options.TimeSpanStyle ?? TimeSpanStyles.None;
 			if( !string.IsNullOrEmpty( options.Format ) && TimeSpan.TryParseExact( text, options.Format, formatProvider, timeSpanStyle, out span ) )
 			{

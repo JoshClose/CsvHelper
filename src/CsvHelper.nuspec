@@ -18,11 +18,12 @@
 		<file src="CsvHelper20\bin\Release\CsvHelper.*" target="lib\net20\" />
 		<file src="CsvHelper35\bin\Release\CsvHelper.*" target="lib\net35-client\" />
 		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net40-client\" />
-		<file src="CsvHelperRt45\bin\Release\CsvHelper.*" target="lib\netcore45\" />
+		<file src="CsvHelperRt45\bin\Release\CsvHelper.*" target="lib\windows8\" />
 		<file src="CsvHelperSl4\bin\Release\CsvHelper.*" target="lib\sl4\" />
 		<file src="CsvHelperSl5\bin\Release\CsvHelper.*" target="lib\sl5\" />
 		<file src="CsvHelperWp8\bin\Release\CsvHelper.*" target="lib\windowsphone8\" />
 		<file src="CsvHelperWp7\bin\Release\CsvHelper.*" target="lib\wp71\" />
+		<file src="CsvHelperPcl\bin\Release\CsvHelper.*" target="lib\portable-sl4+wp71+windows8+net40\" />
 	</files>
 
 </package>

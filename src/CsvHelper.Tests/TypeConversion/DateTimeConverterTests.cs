@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-#if !SILVERLIGHT && !WINRT_4_5
+#if !SILVERLIGHT && !WINRT_4_5 && !PCL
 		[TestMethod]
 		public void ComponentModelCompatibilityTest()
 		{

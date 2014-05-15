@@ -11,7 +11,7 @@ using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
-#if !WINDOWS_PHONE_7
+#if !WINDOWS_PHONE_7 && !PCL
 using System.Dynamic;
 #endif
 #if WINRT_4_5
@@ -678,7 +678,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-#if !WINDOWS_PHONE_7
+#if !WINDOWS_PHONE_7 && !PCL
 		[TestMethod]
 		public void WriteDynamicListTest()
 		{
