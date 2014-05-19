@@ -23,7 +23,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PCL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -45,6 +45,9 @@
   <ItemGroup>
     <Compile Include="..\CsvHelper.Tests\AutoMappingTests.cs">
       <Link>AutoMappingTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\ClassMapOrderingTests.cs">
+      <Link>ClassMapOrderingTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\ClearRecordsCacheTests.cs">
       <Link>ClearRecordsCacheTests.cs</Link>

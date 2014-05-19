@@ -99,8 +99,7 @@ namespace CsvHelper.Configuration
 		{
 			foreach( var propertyMap in PropertyMaps )
 			{
-				propertyMap.Data.Index = indexStart;
-				indexStart++;
+				propertyMap.Data.Index = indexStart + propertyMap.Data.Index;
 			}
 
 			foreach( var referenceMap in ReferenceMaps )
@@ -136,7 +135,7 @@ namespace CsvHelper.Configuration
 		/// get prefixed by the parent property name.
 		/// True to prefix, otherwise false.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
-		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents )
+		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 #if WINRT_4_5
 			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
@@ -183,7 +182,7 @@ namespace CsvHelper.Configuration
 					mapParents.AddLast( type );
 					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
 					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
-					AutoMapInternal( refMap, false, prefixReferenceHeaders, mapParents );
+					AutoMapInternal( refMap, false, prefixReferenceHeaders, mapParents, map.GetMaxIndex() + 1 );
 
 					if( prefixReferenceHeaders )
 					{
@@ -216,7 +215,7 @@ namespace CsvHelper.Configuration
 				}
 			}
 
-			map.ReIndex();
+			map.ReIndex( indexStart );
 		}
 
 		/// <summary>
