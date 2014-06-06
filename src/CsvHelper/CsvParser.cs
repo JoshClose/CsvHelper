@@ -392,12 +392,13 @@ namespace CsvHelper
 
 						fieldStartPosition = readerBufferPosition;
 						inComment = false;
-						currentRow++;
 
 						if( !configuration.IgnoreBlankLines )
 						{
 							break;
 						}
+
+						currentRow++;
 
 						continue;
 					}
