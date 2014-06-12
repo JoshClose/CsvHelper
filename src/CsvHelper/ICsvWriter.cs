@@ -110,29 +110,6 @@ namespace CsvHelper
 		void WriteRecord<T>( T record );
 
 		/// <summary>
-		/// Writes the record to the CSV file.
-		/// </summary>
-		/// <param name="type">The type of the record.</param>
-		/// <param name="record">The record to write.</param>
-		void WriteRecord( Type type, object record );
-
-		/// <summary>
-		/// Writes the list of records to the CSV file.
-		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		/// <param name="records">The list of records to write.</param>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecords( IEnumerable records ) instead.", false )]
-		void WriteRecords<T>( IEnumerable<T> records );
-
-		/// <summary>
-		/// Writes the list of records to the CSV file.
-		/// </summary>
-		/// <param name="type">The type of the record.</param>
-		/// <param name="records">The list of records to write.</param>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecords( IEnumerable records ) instead.", false )]
-		void WriteRecords( Type type, IEnumerable records );
-
-		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>

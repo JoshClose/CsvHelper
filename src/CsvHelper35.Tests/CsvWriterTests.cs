@@ -26,8 +26,8 @@ namespace CsvHelper35.Tests
 			{
 				csv.Configuration.RegisterClassMap<TestMap>();
 
-				csv.WriteRecord( typeof( Test ), new Test { Id = 1, Name = "one" } );
-				csv.WriteRecord( typeof( Test ), new Test { Id = 2, Name = "two" } );
+				csv.WriteRecord( new Test { Id = 1, Name = "one" } );
+				csv.WriteRecord( new Test { Id = 2, Name = "two" } );
 
 				writer.Flush();
 				stream.Position = 0;

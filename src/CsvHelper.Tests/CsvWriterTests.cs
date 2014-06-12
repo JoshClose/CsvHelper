@@ -174,7 +174,7 @@ namespace CsvHelper.Tests
 			var csv = new CsvWriter( writer );
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
-			csv.WriteRecords( typeof( TestRecord ), records );
+			csv.WriteRecords( records );
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
