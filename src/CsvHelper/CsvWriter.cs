@@ -18,9 +18,6 @@ using CsvHelper.TypeConversion;
 #if NET_2_0
 using CsvHelper.MissingFrom20;
 #endif
-#if WINRT_4_5
-using CsvHelper.MissingFromRt45;
-#endif
 
 namespace CsvHelper
 {
@@ -366,13 +363,7 @@ namespace CsvHelper
 
 			foreach( var record in records )
 			{
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten &&
-#if !WINRT_4_5
-				!record.GetType().IsPrimitive
-#else
-				!record.GetType().GetTypeInfo().IsPrimitive
-#endif
- )
+				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !record.GetType().IsPrimitive )
 				{
 					WriteHeader( record.GetType() );
 				}
@@ -479,11 +470,7 @@ namespace CsvHelper
 					continue;
 				}
 
-#if !WINRT_4_5
 				var isReferenceValueType = refMap.Property.PropertyType.IsValueType;
-#else
-				var isReferenceValueType = refMap.Property.PropertyType.GetTypeInfo().IsValueType;
-#endif
 				if( isReferenceValueType )
 				{
 					return propertyExpression;
@@ -491,11 +478,7 @@ namespace CsvHelper
 
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
-#if !WINRT_4_5
 				var isValueType = propertyMap.Data.Property.PropertyType.IsValueType;
-#else
-				var isValueType = propertyMap.Data.Property.PropertyType.GetTypeInfo().IsValueType;
-#endif
 				var defaultValueExpression = isValueType
 					? (Expression)Expression.New( propertyMap.Data.Property.PropertyType )
 					: Expression.Constant( null, propertyMap.Data.Property.PropertyType );
@@ -598,11 +581,7 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( type ) );
 			}
 
-#if !WINRT_4_5
 			if( type.IsPrimitive )
-#else
-			if( type.GetTypeInfo().IsPrimitive )
-#endif
 			{
 				CreateActionForPrimitive( type );
 			}
@@ -660,11 +639,7 @@ namespace CsvHelper
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptionsExpression, fieldExpression );
 
-#if !WINRT_4_5
 				if( type.IsClass )
-#else
-				if( type.GetTypeInfo().IsClass )
-#endif
 				{
 					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );

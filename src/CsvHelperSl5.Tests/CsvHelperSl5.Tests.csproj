@@ -165,12 +165,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CsvHelperSl5\CsvHelperSl5.csproj">
-      <Project>{226b1b8e-c3b5-47ff-a5c7-cebcda9fdeae}</Project>
-      <Name>CsvHelperSl5</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>

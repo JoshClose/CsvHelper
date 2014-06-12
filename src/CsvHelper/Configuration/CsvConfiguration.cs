@@ -12,9 +12,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using CsvHelper.TypeConversion;
-#if WINRT_4_5
-using CsvHelper.MissingFromRt45;
-#endif
 
 namespace CsvHelper.Configuration
 {
@@ -23,9 +20,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvConfiguration
 	{
-#if !WINRT_4_5
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
-#endif
 		private bool hasHeaderRecord = true;
 		private bool willThrowOnMissingField = true;
 		private string delimiter = ",";
@@ -55,7 +50,6 @@ namespace CsvHelper.Configuration
 		}
 #endif
 
-#if !WINRT_4_5
 		/// <summary>
 		/// Gets or sets the property binding flags.
 		/// This determines what properties on the custom
@@ -66,7 +60,6 @@ namespace CsvHelper.Configuration
 			get { return propertyBindingFlags; }
 			set { propertyBindingFlags = value; }
 		}
-#endif
 
 		/// <summary>
 		/// Gets or sets a value indicating if the

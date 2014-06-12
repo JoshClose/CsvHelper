@@ -1059,7 +1059,7 @@ namespace CsvHelper.Tests
 		}
 
 
-#if !NET_3_5 && !WINDOWS_PHONE_7 && !PCL
+#if !NET_3_5 && !PCL
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()
 		{

@@ -5,10 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-#if WINRT_4_5
-using System.Reflection;
-using CsvHelper.MissingFromRt45;
-#endif
 
 namespace CsvHelper.Configuration
 {
@@ -88,22 +84,12 @@ namespace CsvHelper.Configuration
 		/// <returns>The type that is CsvClassMap{}.</returns>
 		protected virtual Type GetGenericCsvClassMapType( Type type )
 		{
-#if WINRT_4_5
-			var typeInfo = type.GetTypeInfo();
-			if( typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
-			{
-				return type;
-			}
-
-			return GetGenericCsvClassMapType( typeInfo.BaseType );
-#else
 			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{
 				return type;
 			}
 
 			return GetGenericCsvClassMapType( type.BaseType );
-#endif
 		}
 	}
 }

@@ -49,11 +49,7 @@ namespace CsvHelper
 
 			var argumentTypes = args.Select( a => a.GetType() ).ToArray();
 			var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
-#if WINRT_4_5
-			var constructorInfo = type.GetTypeInfo().DeclaredConstructors.Single( c => c.GetParameters().Length == args.Length );
-#else
 			var constructorInfo = type.GetConstructor( argumentTypes );
-#endif
 			var constructor = Expression.New( constructorInfo, argumentExpressions );
 			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
 			return compiled.DynamicInvoke( args );

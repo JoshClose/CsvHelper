@@ -236,12 +236,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CsvHelperRt45\CsvHelperRt45.csproj">
-      <Project>{281b45a3-ce58-433d-8297-c94bc67c0098}</Project>
-      <Name>CsvHelperRt45</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>
   </PropertyGroup>

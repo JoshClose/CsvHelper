@@ -193,12 +193,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CsvHelperWp8\CsvHelperWp8.csproj">
-      <Project>{09478977-9978-43AA-AF67-8CB682156F81}</Project>
-      <Name>CsvHelperWp8</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup />
   <ItemGroup>
     <Reference Include="Microsoft.Silverlight.Testing">

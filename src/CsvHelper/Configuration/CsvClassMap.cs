@@ -9,9 +9,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.TypeConversion;
-#if WINRT_4_5
-using CsvHelper.MissingFromRt45;
-#endif
 
 namespace CsvHelper.Configuration
 {
@@ -137,12 +134,7 @@ namespace CsvHelper.Configuration
 		/// <param name="mapParents">The list of parents for the map.</param>
 		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
-#if WINRT_4_5
-			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
-#else
 			var type = map.GetType().BaseType.GetGenericArguments()[0];
-#endif
-
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
 				throw new CsvConfigurationException( "Types that inhererit IEnumerable cannot be auto mapped. " +
@@ -151,19 +143,11 @@ namespace CsvHelper.Configuration
 													 "WriteRecords which acts on a list of records?" );
 			}
 
-#if WINRT_4_5
 			var properties = type.GetProperties();
-#else
-			var properties = type.GetProperties();
-#endif
 			foreach( var property in properties )
 			{
 				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );
-#if WINRT_4_5
-				var hasDefaultConstructor = property.PropertyType.GetTypeInfo().DeclaredConstructors.Any( c => !c.GetParameters().Any() );
-#else
 				var hasDefaultConstructor = property.PropertyType.GetConstructor( new Type[0] ) != null;
-#endif
 				if( isDefaultConverter && hasDefaultConstructor )
 				{
 					if( ignoreReferences )

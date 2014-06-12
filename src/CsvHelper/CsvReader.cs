@@ -16,12 +16,8 @@ using CsvHelper.MissingFrom20;
 using System.Linq;
 using System.Linq.Expressions;
 #endif
-#if !NET_2_0 && !NET_3_5 && !WINDOWS_PHONE_7 && !PCL
+#if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
-#endif
-#if WINRT_4_5
-using System.Reflection;
-using CsvHelper.MissingFromRt45;
 #endif
 
 namespace CsvHelper
@@ -1231,7 +1227,7 @@ namespace CsvHelper
 		/// <returns>The created record.</returns>
 		protected virtual T CreateRecord<T>() 
 		{
-#if !NET_3_5 && !WINDOWS_PHONE_7 && !PCL
+#if !NET_3_5 && !PCL
 			// If the type is an object, a dynamic
 			// object will be created. That is the
 			// only way we can dynamically add properties
@@ -1252,7 +1248,7 @@ namespace CsvHelper
 		/// <returns>The created record.</returns>
 		protected virtual object CreateRecord( Type type )
 		{
-#if !NET_3_5 && !WINDOWS_PHONE_7 && !PCL
+#if !NET_3_5 && !PCL
 			// If the type is an object, a dynamic
 			// object will be created. That is the
 			// only way we can dynamically add properties
@@ -1312,11 +1308,7 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( recordType ) );
 			}
 
-#if !WINRT_4_5
 			if( recordType.IsPrimitive )
-#else
-			if( recordType.GetTypeInfo().IsPrimitive )
-#endif
 			{
 				CreateFuncForPrimitive( recordType );
 			}
@@ -1531,7 +1523,7 @@ namespace CsvHelper
 		}
 #endif
 
-#if !NET_2_0 && !NET_3_5 && !WINDOWS_PHONE_7 && !PCL
+#if !NET_2_0 && !NET_3_5 && !PCL
 		/// <summary>
 		/// Creates a dynamic object from the current record.
 		/// </summary>

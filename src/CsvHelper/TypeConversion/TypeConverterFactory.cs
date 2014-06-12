@@ -6,9 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-#if WINRT_4_5
-using CsvHelper.MissingFromRt45;
-#endif
 
 namespace CsvHelper.TypeConversion
 {
@@ -127,11 +124,7 @@ namespace CsvHelper.TypeConversion
 				return GetConverter( type );
 			}
 
-#if WINRT_4_5
-			var isGenericType = type.GetTypeInfo().IsGenericType;
-#else
 			var isGenericType = type.IsGenericType;
-#endif
 			if( isGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
 			{
 				AddConverter( type, new NullableConverter( type ) );

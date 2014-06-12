@@ -3,9 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
 // http://csvhelper.com
 using System;
-#if !WINRT_4_5
 using System.Runtime.Serialization;
-#endif
 
 namespace CsvHelper
 {
@@ -35,7 +33,7 @@ namespace CsvHelper
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
 		public CsvWriterException( string message, Exception innerException ) : base( message, innerException ) { }
 
-#if !WINRT_4_5 && !SILVERLIGHT && !PCL
+#if !PCL
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvWriterException"/> class
 		/// with serialized data.
