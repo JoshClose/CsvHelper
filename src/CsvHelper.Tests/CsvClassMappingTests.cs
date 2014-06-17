@@ -185,7 +185,7 @@ namespace CsvHelper.Tests
 				StringColumn = stringColumn;
 			}
 		}
-		
+
 		private sealed class TestMappingConstructorClass : CsvClassMap<TestClass>
 		{
 			public TestMappingConstructorClass()

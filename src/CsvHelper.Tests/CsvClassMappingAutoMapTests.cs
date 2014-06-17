@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 using CsvHelper.Configuration;
+using CsvHelper.Attributes;
 
 namespace CsvHelper.Tests
 {
@@ -27,6 +28,33 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 1, aMap.ReferenceMaps.Count );
 		}
+
+
+        [TestMethod]
+        public void TestCsvClass()
+        {
+            var aMap = new CMap();
+
+            Assert.AreEqual(3, aMap.PropertyMaps.Count);
+            Assert.AreEqual(0, aMap.PropertyMaps[0].Data.Index);
+            Assert.AreEqual(1, aMap.PropertyMaps[1].Data.Index);
+            Assert.AreEqual("IntColumnInCsv", aMap.PropertyMaps[1].Data.Names);
+            Assert.AreEqual(2, aMap.PropertyMaps[2].Data.Index);
+            Assert.AreEqual("GuidColumnInCsv", aMap.PropertyMaps[2].Data.Names);
+        }
+        
+        [TestMethod]
+        public void TestCsvProperty()
+        {
+            var aMap = new DMap();
+
+            Assert.AreEqual(3, aMap.PropertyMaps.Count);
+            Assert.AreEqual(0, aMap.PropertyMaps[0].Data.Index);
+            Assert.AreEqual(1, aMap.PropertyMaps[1].Data.Index);
+            Assert.AreEqual("IntColumnInCsv", aMap.PropertyMaps[1].Data.Names);
+            Assert.AreEqual(2, aMap.PropertyMaps[2].Data.Index);
+            Assert.AreEqual("GuidColumnInCsv", aMap.PropertyMaps[2].Data.Names);
+        }
 
 		private class A
 		{
@@ -60,5 +88,56 @@ namespace CsvHelper.Tests
 		private sealed class BMap : CsvClassMap<B>
 		{
 		}
+
+        [CsvClass]
+        private class C
+        {
+            [CsvProperty]
+            public string StringColumn { get; set; }
+
+            [CsvProperty("IntColumnInCsv")]
+            public int IntColumn { get; set; }
+
+            [CsvProperty("GuidColumnInCsv")]
+            public Guid GuidColumn { get; set; }
+
+            public string NotUsedColumn
+            {
+                get;
+                set;
+            }
+
+            private sealed class CMap : CsvClassMap<C>
+            {
+                public CMap()
+                {
+                    AutoMap();
+                }
+            }
+
+            private class D
+            {
+                public string NotUsedColumn1 { get; set; }
+
+                [CsvProperty]
+                public string StringColumn { get; set; }
+
+                [CsvProperty("IntColumnInCsv")]
+                public int IntColumn { get; set; }
+
+                [CsvProperty("GuidColumnInCsv")]
+                public Guid GuidColumn { get; set; }
+
+                public string NotUsedColumn2 { get; set; }
+            }
+
+            private sealed class DMap : CsvClassMap<D>
+            {
+                public DMap()
+                {
+                    AutoMap();
+                }
+            }
+        }
 	}
 }
