@@ -695,6 +695,39 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 
 	<h3 id="change-log">Change Log</h3>
 
+	<h4>2.6.1</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>PCL implementation. .NET 4.0+, Silveright 4.0+, WP7 7.5+, Windows 8</li>
+		<li>Excel separator record reading and writing.</li>
+		<li>Writer speed enhancements. Thanks to thecontrarycat.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue with mapping order when no index is specified.</li>
+	</ul>
+
+	<h4>2.6</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Added config to prefix headers of reference properties with the parent property name when automapping.</li>
+		<li>Ability to ignore blank lines. When this config option is set to false, the parser will return and array of
+		nulls. You can differentiate between a row with commas this way. The reader will behave the same way as a blank
+		record.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue when writing and a reference map type is a struct.</li>
+	</ul>
+
 	<h4>2.5</h4>
 
 	<h5>Features</h5>
