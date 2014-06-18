@@ -266,7 +266,7 @@ namespace CsvHelper
 			}
 
 			var field = currentRecord[index];
-			if( configuration.TrimFields )
+			if( configuration.TrimFields && field != null )
 			{
 				field = field.Trim();
 			}
@@ -1160,7 +1160,7 @@ namespace CsvHelper
 				{
 					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
 				}
-				else if( configuration.TrimHeaders )
+				else if( configuration.TrimHeaders && namedIndex != null )
 				{
 					namedIndex = namedIndex.Trim();
 				}
