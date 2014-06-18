@@ -273,9 +273,9 @@ foreach( var item in list )
 	configuration.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		Map( m => m.Id );
 		Map( m = > m.Name );
@@ -288,9 +288,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	to several CSV columns. You can nest reference maps as many layers deep as you like.</p>
 
 	<p><textarea>
-public class PersonMap : CsvClassMap&lt;Person&gt;
+public sealed class PersonMap : CsvClassMap&lt;Person&gt;
 {
-	public override void CreateMap()
+	public PersonMap()
 	{
 		Map( m => m.Id );
 		Map( m = > m.Name );
@@ -298,9 +298,9 @@ public class PersonMap : CsvClassMap&lt;Person&gt;
 	}
 }
 
-public class AddressMap : CsvClassMap&lt;Address&gt;
+public sealed class AddressMap : CsvClassMap&lt;Address&gt;
 {
-	public override void CreateMap()
+	public AddressMap()
 	{
 		Map( m => m.Street );
 		Map( m => m.City );
@@ -314,9 +314,9 @@ public class AddressMap : CsvClassMap&lt;Address&gt;
 	<p>When mapping by index you specify the index of the CSV column that that you want to use for that property.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		Map( m => m.Id ).Index( 0 );
 		Map( m => m.Name ).Index( 1 );
@@ -329,9 +329,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	work, the CSV file must have a header record. The name you specify must match with the name of the header record.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		Map( m => m.Id ).Name( "The Id Column" );
 		Map( m => m.Name ).Name( "The Name Column" );
@@ -344,9 +344,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	specify which column name you are referring to. The NameIndex is NOT the column in the CSV file.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		Map( m => m.FirstName ).Name( "Name" ).NameIndex( 0 );
 		Map( m => m.LastName ).Name( "Name" ).NameIndex( 1 );
@@ -364,9 +364,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	<p>Default is used to set a default value you want to use if the field is empty.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public override void MyClassMap()
 	{
 		Map( m => m.Id ).Index( 0 ).Default( -1 );
 		Map( m => m.Name ).Index( 1 ).Default( "Unknown" );
@@ -380,9 +380,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	<a href="#type-conversion">Type Conversion</a> for documentation on how to create a custom type converter.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		Map( m => m.Id ).Index( 0 ).TypeConverter&lt;MyIdConverter&gt;();
 	}
@@ -395,9 +395,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	(for example) differently. You can specify some type converter options to handle these cases.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		Map( m => m.Description ).Index( 0 ).TypeConverterOption( CultureInfo.InvariantCulture );
 		Map( m => m.TimeStamp ).Index( 1 ).TypeConverterOption( DateTimeStyles.AdjustToUniversal );
@@ -413,9 +413,9 @@ public class MyClassMap : CsvClassMap&lt;MyClass&gt;
 	convert the row into a single property value.</p>
 
 	<p><textarea>
-public class MyClassMap : CsvClassMap&lt;MyClass&gt;
+public sealed class MyClassMap : CsvClassMap&lt;MyClass&gt;
 {
-	public override void CreateMap()
+	public MyClassMap()
 	{
 		// Constant value.
 		Map( m => m.Constant ).ConvertUsing( row => 3 );
