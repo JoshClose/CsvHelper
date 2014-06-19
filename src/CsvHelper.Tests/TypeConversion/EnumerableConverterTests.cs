@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
@@ -51,43 +52,37 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ReadTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "Names" } );
-			queue.Enqueue( new[] { "one" } );
+			queue.Enqueue( new[] { "Id", "Names" } );
+			queue.Enqueue( new[] { "1", "one" } );
 			queue.Enqueue( null );
 			var parserMock = new ParserMock( queue );
 			var csv = new CsvReader( parserMock );
 			csv.Read();
-			try
-			{
-				csv.GetRecord<Test>();
-				Assert.Fail();
-			}
-			catch( CsvTypeConverterException )
-			{
-			}
+			var record = csv.GetRecord<Test>();
+			Assert.IsNull( record.Names );
 		}
 
 		[TestMethod]
 		public void WriteTest()
 		{
 			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				var test = new Test { Names = new List<int> { 1, 2 } };
-				try
-				{
-					csv.WriteRecord( test );
-					Assert.Fail();
-				}
-				catch( CsvTypeConverterException )
-				{
-				}
+				var test = new Test { Id = 1, Names = new List<int> { 1, 2 } };
+				csv.WriteRecord( test );
+				writer.Flush();
+				stream.Position = 0;
+
+				var data = reader.ReadToEnd();
+				Assert.AreEqual( "1\r\n", data );
 			}
 		}
 
 		private class Test
 		{
+			public int Id { get; set; }
 			public List<int> Names { get; set; }
 		}
 	}

@@ -16,7 +16,7 @@ namespace CsvHelper.Tests
 	public class DynamicProxyTests
 	{
 		[TestMethod]
-		public void Test()
+		public void WriteDynamicProxyObjectTest()
 		{
 			var list = new List<TestClass>();
 			var proxyGenerator = new Castle.DynamicProxy.ProxyGenerator();

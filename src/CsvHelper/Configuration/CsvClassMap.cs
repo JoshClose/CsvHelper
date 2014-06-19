@@ -146,7 +146,14 @@ namespace CsvHelper.Configuration
 			var properties = type.GetProperties();
 			foreach( var property in properties )
 			{
-				var isDefaultConverter = TypeConverterFactory.GetConverter( property.PropertyType ).GetType() == typeof( DefaultTypeConverter );
+				var typeConverterType = TypeConverterFactory.GetConverter( property.PropertyType ).GetType();
+				if( typeConverterType == typeof( EnumerableConverter ) )
+				{
+					// The IEnumerable converter just throws an exception so skip it.
+					continue;
+				}
+
+				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
 				var hasDefaultConstructor = property.PropertyType.GetConstructor( new Type[0] ) != null;
 				if( isDefaultConverter && hasDefaultConstructor )
 				{
