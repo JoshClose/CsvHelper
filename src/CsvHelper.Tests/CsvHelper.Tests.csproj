@@ -39,6 +39,9 @@
     <AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.3.0\lib\net40-client\Castle.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -53,6 +56,7 @@
     <Compile Include="ClassMapOrderingTests.cs" />
     <Compile Include="CsvClassMappingAutoMapTests.cs" />
     <Compile Include="CsvParserDelimiterTests.cs" />
+    <Compile Include="DynamicProxyTests.cs" />
     <Compile Include="ExcelCompatibleTests.cs" />
     <Compile Include="CsvParserRawRecordTests.cs" />
     <Compile Include="CsvReaderErrorMessageTests.cs" />
@@ -91,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CsvHelper.snk" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CsvHelper\CsvHelper.csproj">

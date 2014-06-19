@@ -27,8 +27,10 @@ namespace CsvHelper.Configuration
 		{
 			get
 			{
-				CsvClassMap map;
-				data.TryGetValue( type, out map );
+				var map = data.Keys
+					.Where( k => k.IsAssignableFrom( type ) )
+					.Select( k => data[k] ).FirstOrDefault();
+
 				return map;
 			}
 		}
