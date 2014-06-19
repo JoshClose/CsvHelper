@@ -77,7 +77,6 @@
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="ExceptionTests.cs" />
     <Compile Include="ClearRecordsCacheTests.cs" />
-    <Compile Include="InterfaceTests.cs" />
     <Compile Include="LocalCultureTests.cs" />
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
