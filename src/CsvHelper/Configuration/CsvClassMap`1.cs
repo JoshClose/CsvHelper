@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using CsvHelper.TypeConversion;
+using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -26,27 +27,39 @@ namespace CsvHelper.Configuration
 			Constructor = ReflectionHelper.GetConstructor( expression );
 		}
 
-		/// <summary>
-		/// Maps a property to a CSV field.
-		/// </summary>
-		/// <param name="expression">The property to map.</param>
-		/// <returns>The property mapping.</returns>
+        /// <summary>   Maps a property to a CSV field. </summary>
+        ///
+        /// <param name="expression">   An expression indicating the property to map. </param>
+        ///
+        /// <returns>   The property mapping. </returns>
+
 		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-	
-			var existingMap = PropertyMaps.SingleOrDefault( m => m.Data.Property == property );
-			if( existingMap != null )
-			{
-				return existingMap;
-			}
-
-			var propertyMap = new CsvPropertyMap( property );
-			propertyMap.Data.Index = GetMaxIndex() + 1;
-			PropertyMaps.Add( propertyMap );
-
-			return propertyMap;
+            return Map(property);
 		}
+
+        /// <summary>   Maps a property to a CSV field. </summary>
+        ///
+        /// <param name="property"> The property to map. </param>
+        ///
+        /// <returns>   The property mapping. </returns>
+
+        protected virtual CsvPropertyMap Map(PropertyInfo property)
+        {
+            var existingMap = PropertyMaps.SingleOrDefault(m => m.Data.Property == property);
+            if (existingMap != null)
+            {
+                return existingMap;
+            }
+
+            var propertyMap = new CsvPropertyMap(property);
+            propertyMap.Data.Index = GetMaxIndex() + 1;
+            PropertyMaps.Add(propertyMap);
+
+            return propertyMap;
+        }
+
 
 		/// <summary>
 		/// Maps a property to another class map.
