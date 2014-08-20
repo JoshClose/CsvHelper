@@ -81,6 +81,7 @@
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />
+    <Compile Include="ReferenceMappingIndexTests.cs" />
     <Compile Include="ReflectionHelperTests.cs" />
     <Compile Include="TypeConversion\BooleanConverterTests.cs" />
     <Compile Include="TypeConversion\ByteConverterTests.cs" />

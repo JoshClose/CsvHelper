@@ -96,7 +96,10 @@ namespace CsvHelper.Configuration
 		{
 			foreach( var propertyMap in PropertyMaps )
 			{
-				propertyMap.Data.Index = indexStart + propertyMap.Data.Index;
+				if( !propertyMap.Data.IsIndexSet )
+				{
+					propertyMap.Data.Index = indexStart + propertyMap.Data.Index;
+				}
 			}
 
 			foreach( var referenceMap in ReferenceMaps )
