@@ -1,10 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6445B2A3-9E05-4ABF-AE2E-C875773B277A}"
 	ProjectSection(SolutionItems) = preProject
 		CsvHelper.nuspec = CsvHelper.nuspec
 		..\README.markdown = ..\README.markdown
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3EBB2EEF-29C1-48E4-8416-D7FFDE004AA2}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper", "CsvHelper\CsvHelper.csproj", "{968A4E7C-B1E9-457E-B1F9-A774E68926C6}"
@@ -12,11 +19,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.Example", "CsvHelper.Example\CsvHelper.Example.csproj", "{A7E0B5A0-BCF6-4FDA-A5C0-51C5C0D9DD19}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.Tests", "CsvHelper.Tests\CsvHelper.Tests.csproj", "{AB3E6DA8-0419-4341-89E0-3EFDF0ECA9D2}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3EBB2EEF-29C1-48E4-8416-D7FFDE004AA2}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper35", "CsvHelper35\CsvHelper35.csproj", "{82541DA4-EE4A-4078-BF05-63B48A8AA51E}"
 EndProject
