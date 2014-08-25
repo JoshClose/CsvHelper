@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 	
-			var existingMap = PropertyMaps.SingleOrDefault( m => m.Data.Property == property );
+			var existingMap = PropertyMaps.SingleOrDefault( m => ReflectionHelper.PropertyInfoAreEqual( m.Data.Property, property ) );
 			if( existingMap != null )
 			{
 				return existingMap;
