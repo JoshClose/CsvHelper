@@ -78,6 +78,7 @@
     <Compile Include="ExceptionTests.cs" />
     <Compile Include="ClearRecordsCacheTests.cs" />
     <Compile Include="LocalCultureTests.cs" />
+    <Compile Include="MappingInheritedClassTests.cs" />
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />

@@ -34,8 +34,11 @@ namespace CsvHelper.Configuration
 		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-	
-			var existingMap = PropertyMaps.SingleOrDefault( m => m.Data.Property == property );
+
+			var existingMap = PropertyMaps.SingleOrDefault( m =>
+				m.Data.Property == property
+				|| m.Data.Property.Name == property.Name
+				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
 			if( existingMap != null )
 			{
 				return existingMap;

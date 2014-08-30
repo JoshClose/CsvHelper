@@ -122,6 +122,9 @@
     <Compile Include="..\CsvHelper.Tests\LocalCultureTests.cs">
       <Link>LocalCultureTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\MappingInheritedClassTests.cs">
+      <Link>MappingInheritedClassTests.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper.tests\mocks\ParserMock.cs">
       <Link>Mocks\ParserMock.cs</Link>
     </Compile>
