@@ -15,7 +15,7 @@ namespace CsvHelper.Tests
 	public class CsvClassMappingAutoMapTests
 	{
 		[TestMethod]
-		public void Test()
+		public void DirectPropertiesTest()
 		{
 			var aMap = new AMap();
 
@@ -26,6 +26,20 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( true, aMap.PropertyMaps[2].Data.Ignore );
 
 			Assert.AreEqual( 1, aMap.ReferenceMaps.Count );
+		}
+
+		[TestMethod]
+		public void InterfacePropertiesTest()
+		{
+			var cMap = new CMap<C>();
+
+			Assert.AreEqual( 3, cMap.PropertyMaps.Count );
+			Assert.AreEqual( 0, cMap.PropertyMaps[0].Data.Index );
+			Assert.AreEqual( 1, cMap.PropertyMaps[1].Data.Index );
+			Assert.AreEqual( 2, cMap.PropertyMaps[2].Data.Index );
+			Assert.AreEqual( true, cMap.PropertyMaps[1].Data.Ignore );
+
+			Assert.AreEqual( 0, cMap.ReferenceMaps.Count );
 		}
 
 		private class A
@@ -48,6 +62,20 @@ namespace CsvHelper.Tests
 			public int Six { get; set; }
 		}
 
+		private interface IC
+		{
+			int Eight { get; set; }
+		}
+
+		private class C : IC
+		{
+			public int Seven { get; set; }
+
+			public int Eight { get; set; }
+
+			public int Nine { get; set; }
+		}
+
 		private sealed class AMap : CsvClassMap<A>
 		{
 			public AMap()
@@ -59,6 +87,15 @@ namespace CsvHelper.Tests
 
 		private sealed class BMap : CsvClassMap<B>
 		{
+		}
+
+		private sealed class CMap<T> : CsvClassMap<T> where T : IC
+		{
+			public CMap()
+			{
+				AutoMap();
+				Map( m => m.Eight ).Ignore();
+			}
 		}
 	}
 }

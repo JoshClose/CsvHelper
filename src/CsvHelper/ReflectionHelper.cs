@@ -56,6 +56,114 @@ namespace CsvHelper
 #endif
 		}
 
+		/// <summary>
+		/// Checks for equality of two <see cref="PropertyInfo"/>.
+		/// </summary>
+		/// <param name="propInfoA">The first <see cref="PropertyInfo"/> to compare.</param>
+		/// <param name="propInfoB">The second <see cref="PropertyInfo"/> to compare.</param>
+		/// <returns>true if the two <see cref="PropertyInfo"/> are considered equal; otherwise, false.</returns>
+		public static bool PropertyInfoAreEqual( PropertyInfo propInfoA, PropertyInfo propInfoB )
+		{
+			// Based on code from http://blogs.msdn.com/b/kingces/archive/2005/08/17/452774.aspx
+			// And discussion here http://stackoverflow.com/questions/13615927/equality-for-net-propertyinfos
+			// And code here http://stackoverflow.com/questions/4640709/how-do-i-compare-two-propertyinfos-or-methods-reliably
+			if( propInfoA == propInfoB )
+			{
+				return true;
+			}
+
+			if( propInfoA == null || propInfoB == null )
+			{
+				return false;
+			}
+
+			if( MetaDataAreEqual( propInfoA, propInfoB ) && propInfoA.DeclaringType.Equals( propInfoB.DeclaringType ) )
+			{
+				return true;
+			}
+
+			//For interfaces
+			var implA = InterfacePropertyInfoFromImplementingPropertyInfo( propInfoA );
+			if( MetaDataAreEqual( implA, propInfoB ) )
+				return true;
+
+			var implB = InterfacePropertyInfoFromImplementingPropertyInfo( propInfoB );
+			if( MetaDataAreEqual( implB, propInfoA ) )
+				return true;
+
+			return false;
+		}
+
+		/// <summary>
+		/// Gets the <see cref="PropertyInfo"/> for an interface that implements provided <see cref="PropertyInfo"/>.
+		/// </summary>
+		/// <param name="implementingPropertyInfo">The implementing <see cref="PropertyInfo"/>.</param>
+		/// <returns>The <see cref="PropetyInfo"/> for the interface property implemented by provided <see cref="PropertyInfo"/>.</returns>
+		private static PropertyInfo InterfacePropertyInfoFromImplementingPropertyInfo( PropertyInfo implementingPropertyInfo )
+		{
+			var type = implementingPropertyInfo.DeclaringType;
+			foreach( var iface in type.GetInterfaces() )
+			{
+				var map = type.GetInterfaceMap( iface );
+				for( int i = 0; i < map.InterfaceMethods.Length; i++ )
+				{
+					var ifaceMethod = map.InterfaceMethods[i];
+					var targetMethod = map.TargetMethods[i];
+
+					if( MetaDataAreEqual( targetMethod, implementingPropertyInfo.GetGetMethod() ) || MetaDataAreEqual( targetMethod, implementingPropertyInfo.GetSetMethod() ) )
+						return PropertyInfoFromGetterSetterMethodInfo( ifaceMethod );
+				}
+			}
+
+			return implementingPropertyInfo;
+		}
+
+		/// <summary>
+		/// Gets the <see cref="PropertyInfo"/> for a given Getter/Setter <see cref="MethodInfo"/>.
+		/// </summary>
+		/// <param name="method">The Getter/Setter method.</param>
+		/// <returns>The <see cref="PropertyInfo"/> for the given Getter/Setter method.</returns>
+		private static PropertyInfo PropertyInfoFromGetterSetterMethodInfo( MethodInfo method )
+		{
+			//From http://stackoverflow.com/questions/520138/finding-the-hosting-propertyinfo-from-the-methodinfo-of-getter-setter
+			bool takesArg = method.GetParameters().Length == 1;
+			bool hasReturn = method.ReturnType != typeof( void );
+			if( takesArg == hasReturn )
+				return null;
+			if( takesArg )
+			{
+				return method.DeclaringType.GetProperties()
+					.Where( prop => prop.GetSetMethod() == method ).FirstOrDefault();
+			}
+			else
+			{
+				return method.DeclaringType.GetProperties()
+					.Where( prop => prop.GetGetMethod() == method ).FirstOrDefault();
+			}
+		}
+
+		/// <summary>
+		/// Compares two <see cref="PropertyInfo"/> instances by metadata.
+		/// </summary>
+		/// <param name="propInfoA">The first <see cref="PropertyInfo"/> to compare.</param>
+		/// <param name="propInfoB">The second <see cref="PropertyInfo"/> to compare.</param>
+		/// <returns>true if the two <see cref="PropertyInfo"/> are meta-data-equal; otherwise false.</returns>
+		private static bool MetaDataAreEqual( PropertyInfo propInfoA, PropertyInfo propInfoB )
+		{
+			return (propInfoA.MetadataToken == propInfoB.MetadataToken && propInfoA.Module == propInfoB.Module);
+		}
+
+		/// <summary>
+		/// Compares two <see cref="MethodInfo"/> instances by metadata.
+		/// </summary>
+		/// <param name="methodInfoA">The first <see cref="MethodInfo"/> to compare.</param>
+		/// <param name="methodInfoB">The second <see cref="MethodInfo"/> to compare.</param>
+		/// <returns>true if the two <see cref="MethodInfo"/> are meta-data-equal; otherwise false.</returns>
+		private static bool MetaDataAreEqual( MethodInfo methodInfoA, MethodInfo methodInfoB )
+		{
+			return (methodInfoA.MetadataToken == methodInfoB.MetadataToken && methodInfoA.Module == methodInfoB.Module);
+		}
+
 #if !NET_2_0
 		/// <summary>
 		/// Gets the first attribute of type T on property.
