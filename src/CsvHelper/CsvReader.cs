@@ -950,11 +950,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <returns>An <see cref="IList{Object}" /> of records.</returns>
-		public virtual IEnumerable<object> GetRecords( Type type )
+		public virtual IEnumerable GetRecords( Type type )
 		{
 			CheckDisposed();
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
+			
+			Type listType = typeof(List<>).MakeGenericType(type);
+			IList list = (IList)Activator.CreateInstance(listType);
 
 			while( Read() )
 			{
@@ -962,6 +965,7 @@ namespace CsvHelper
 				try
 				{
 					record = CreateRecord( type );
+					list.Add(record);
 				}
 				catch( Exception ex )
 				{
@@ -981,9 +985,9 @@ namespace CsvHelper
 
 					throw;
 				}
-
-				yield return record;
 			}
+			
+			return list;
 		}
 
 		/// <summary>
