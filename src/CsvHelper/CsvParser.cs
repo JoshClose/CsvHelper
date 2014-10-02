@@ -187,7 +187,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="recordPosition">The record position to add the field to.</param>
 		/// <param name="field">The field to add.</param>
-		protected virtual void AddFieldToRecord( ref int recordPosition, string field )
+		protected virtual void AddFieldToRecord( ref int recordPosition, string field, ref bool fieldIsBad )
 		{
 			if( record.Length < recordPosition + 1 )
 			{
@@ -204,6 +204,18 @@ namespace CsvHelper
 					FieldCount = record.Length;
 				}
 			}
+
+			if( configuration.ThrowOnBadData )
+			{
+				throw new CsvBadDataException( string.Format( "Field: '{0}'", field ) );
+			}
+
+			if( fieldIsBad && configuration.BadDataCallback != null )
+			{
+				configuration.BadDataCallback( field );
+			}
+
+			fieldIsBad = false;
 
 			record[recordPosition] = field;
 			recordPosition++;
@@ -244,6 +256,7 @@ namespace CsvHelper
 			var rawFieldStartPosition = readerBufferPosition;
 			var inQuotes = false;
 			var fieldIsEscaped = false;
+			var fieldIsBad = false;
 			var inComment = false;
 			var inDelimiter = false;
 			var delimiterPosition = 0;
@@ -261,7 +274,7 @@ namespace CsvHelper
 				}
 
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter );
 				if( !read )
 				{
 					break;
@@ -280,6 +293,8 @@ namespace CsvHelper
 
 					if( !fieldIsEscaped )
 					{
+						fieldIsBad = true;
+
 						// If the field isn't escaped, the quote
 						// is like any other char and we should
 						// just ignore it.
@@ -301,9 +316,9 @@ namespace CsvHelper
 						if( inQuotes || cPrev == configuration.Quote || readerBufferPosition == 1 )
 						{
 							// The quote will be uncounted and needs to be catered for if:
-                            // 1. It's the opening quote
-                            // 2. It's the closing quote on an empty field ("")
-                            // 3. It's the closing quote and has appeared as the first character in the buffer
+							// 1. It's the opening quote
+							// 2. It's the closing quote on an empty field ("")
+							// 3. It's the closing quote and has appeared as the first character in the buffer
 							UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 						}
 
@@ -326,6 +341,11 @@ namespace CsvHelper
 
 				if( cPrev == configuration.Quote && !configuration.IgnoreQuotes )
 				{
+					if( c != configuration.Delimiter[0] && c != '\r' && c != '\n' )
+					{
+						fieldIsBad = true;
+					}
+
 					// If we're not in quotes and the
 					// previous char was a quote, the
 					// field is no longer escaped.
@@ -347,7 +367,7 @@ namespace CsvHelper
 						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						// Include the comma in the byte count.
 						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
-						AddFieldToRecord( ref recordPosition, field );
+						AddFieldToRecord( ref recordPosition, field, ref fieldIsBad );
 						fieldStartPosition = readerBufferPosition;
 						field = null;
 
@@ -376,7 +396,7 @@ namespace CsvHelper
 					if( c == '\r' )
 					{
 						char cNext;
-						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, true );
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, true );
 						if( cNext == '\n' )
 						{
 							readerBufferPosition++;
@@ -407,7 +427,7 @@ namespace CsvHelper
 					AppendField( ref field, fieldStartPosition, fieldLength );
 					// Include the \r or \n in the byte count.
 					UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
-					AddFieldToRecord( ref recordPosition, field );
+					AddFieldToRecord( ref recordPosition, field, ref fieldIsBad );
 					break;
 				}
 				else if( configuration.AllowComments && c == configuration.Comment && ( cPrev == '\r' || cPrev == '\n' || cPrev == null ) )
@@ -439,7 +459,7 @@ namespace CsvHelper
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
 		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
-		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool isPeek = false )
+		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, ref bool fieldIsBad, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool isPeek = false )
 		{
 			if( readerBufferPosition == charsRead )
 			{
@@ -482,7 +502,7 @@ namespace CsvHelper
 							field = "";
 						}
 
-						AddFieldToRecord( ref recordPosition, field );
+						AddFieldToRecord( ref recordPosition, field, ref fieldIsBad );
 					}
 					else
 					{

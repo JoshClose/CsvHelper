@@ -378,9 +378,22 @@ namespace CsvHelper.Configuration
 		/// Gets or sets a value indicating if headers of reference
 		/// properties should get prefixed by the parent property name 
 		/// when automapping.
-		/// True to prefix, otherwise false, Default is false.
+		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool PrefixReferenceHeaders { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if an exception should
+		/// be thrown when bad field data is detected.
+		/// True to throw, otherwise false. Default is false.
+		/// </summary>
+		public virtual bool ThrowOnBadData { get; set; }
+
+		/// <summary>
+		/// Gets or sets a method that gets called when bad
+		/// data is detected.
+		/// </summary>
+		public virtual Action<string> BadDataCallback { get; set; }
 
 #if !NET_2_0
 		/// <summary>
@@ -400,7 +413,7 @@ namespace CsvHelper.Configuration
 		/// calling <see cref="ICsvReaderRow.GetRecords{T}"/>.
 		/// </summary>
 		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
-
+		
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
 		/// When using a class map, no properties are mapped by default.
