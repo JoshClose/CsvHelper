@@ -19,18 +19,18 @@ namespace CsvHelper.Example
 
 		static void Main( string[] args )
 		{
-			ReadRawFieldsByIndex();
-			//ReadRawFieldsByName();
-			//ReadFieldsByIndex();
-			//ReadRecordsNoAttributes();
-			//ReadRecordsWithAttributes();
-			//ReadAllRecords();
+            ReadRawFieldsByIndex();
+            //ReadRawFieldsByName();
+            ReadFieldsByIndex();
+            //ReadRecordsNoAttributes();
+            ReadRecordsWithAttributes();
+            //ReadAllRecords();
 
-			//WriteRawFields();
-			//WriteFields();
-			//WriteRecordsNoAttributes();
-			//WriteRecordsWithAttributes();
-			//WriteAllRecords();
+            WriteRawFields();
+            WriteFields();
+            WriteRecordsNoAttributes();
+            WriteRecordsWithAttributes();
+            WriteAllRecords();
 
 			Console.ReadKey();
 		}
@@ -155,6 +155,8 @@ namespace CsvHelper.Example
 				writer.WriteField( ( new CustomType { First = 1, Second = 2, Third = 3 } ).ToString() );
 				writer.NextRecord();
 
+                streamWriter.Flush();
+
 				memoryStream.Position = 0;
 
 				Console.WriteLine( streamReader.ReadToEnd() );
@@ -182,6 +184,8 @@ namespace CsvHelper.Example
 				writer.WriteField( Guid.NewGuid() );
 				writer.WriteField( new CustomType { First = 1, Second = 2, Third = 3 } );
 				writer.NextRecord();
+
+                streamWriter.Flush();
 
 				memoryStream.Position = 0;
 
@@ -227,10 +231,14 @@ namespace CsvHelper.Example
 			using( var streamReader = new StreamReader( memoryStream ) )
 			using( var writer = new CsvWriter( streamWriter ) )
 			{
+                writer.WriteHeader<CustomObject>();
+
 				foreach( var record in records )
 				{
 					writer.WriteRecord( record );
 				}
+
+                streamWriter.Flush();
 
 				memoryStream.Position = 0;
 
@@ -276,10 +284,16 @@ namespace CsvHelper.Example
 			using( var streamReader = new StreamReader( memoryStream ) )
 			using( var writer = new CsvWriter( streamWriter ) )
 			{
+                writer.Configuration.RegisterClassMap<CustomObjectWithMappingMap>();
+
+                writer.WriteHeader<CustomObjectWithMapping>();
+
 				foreach( var record in records )
 				{
 					writer.WriteRecord( record );
 				}
+
+                streamWriter.Flush();
 
 				memoryStream.Position = 0;
 
@@ -327,6 +341,8 @@ namespace CsvHelper.Example
 			{
 				writer.Configuration.RegisterClassMap<CustomObjectWithMappingMap>();
 				writer.WriteRecords( records );
+
+                streamWriter.Flush();
 
 				memoryStream.Position = 0;
 
@@ -393,12 +409,12 @@ namespace CsvHelper.Example
 
 			public bool CanConvertFrom( Type type )
 			{
-				throw new NotImplementedException();
+                return type == typeof(string);
 			}
 
 			public bool CanConvertTo( Type type )
 			{
-				throw new NotImplementedException();
+                return type == typeof(string);
 			}
 		}
 
