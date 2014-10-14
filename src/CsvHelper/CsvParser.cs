@@ -205,7 +205,7 @@ namespace CsvHelper
 				}
 			}
 
-			if( configuration.ThrowOnBadData )
+			if( fieldIsBad && configuration.ThrowOnBadData )
 			{
 				throw new CsvBadDataException( string.Format( "Field: '{0}'", field ) );
 			}

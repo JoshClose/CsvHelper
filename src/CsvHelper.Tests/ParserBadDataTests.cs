@@ -50,11 +50,13 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
+				writer.WriteLine( "1,2" );
 				writer.WriteLine( " a\"bc\",d" );
 				writer.Flush();
 				stream.Position = 0;
 
 				parser.Configuration.ThrowOnBadData = true;
+				parser.Read();
 				try
 				{
 					parser.Read();
