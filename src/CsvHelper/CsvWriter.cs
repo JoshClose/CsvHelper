@@ -378,6 +378,30 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Writes the record to the CSV file.
+		/// </summary>
+		/// <param name="type">The type of the record.</param>
+		/// <param name="record">The record to write.</param>
+		public virtual void WriteRecord( Type type, object record )
+		{
+			CheckDisposed();
+
+			try
+			{
+				GetWriteRecordAction( type ).DynamicInvoke( record );
+			}
+			catch( Exception ex )
+			{
+				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
+				throw;
+			}
+
+			hasRecordBeenWritten = true;
+
+			NextRecord();
+		}
+
+		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>
