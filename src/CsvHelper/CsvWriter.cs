@@ -168,12 +168,13 @@ namespace CsvHelper
 		/// <see cref="ICsvWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
-		/// <param name="type">The type of the field.</param>
+		/// <typeparam name="T">The type of the field.</typeparam>
 		/// <param name="field">The field to write.</param>
-		public virtual void WriteField( Type type, object field )
+		public virtual void WriteField<T>( T field )
 		{
 			CheckDisposed();
 
+			var type = typeof( T );
 			if( type == typeof( string ) )
 			{
 				WriteField( field as string );
@@ -181,46 +182,8 @@ namespace CsvHelper
 			else
 			{
 				var converter = TypeConverterFactory.GetConverter( type );
-				WriteField( type, field, converter );
+				WriteField( field, converter );
 			}
-		}
-
-		/// <summary>
-		/// Writes the field to the CSV file.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
-		/// <param name="field">The field to write.</param>
-		public virtual void WriteField<T>( T field )
-		{
-			CheckDisposed();
-
-			WriteField( typeof( T ), field );
-		}
-
-		/// <summary>
-		/// Writes the field to the CSV file.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <param name="type">The type of the field.</param>
-		/// <param name="field">The field to write.</param>
-		/// <param name="converter">The converter used to convert the field into a string.</param>
-		public virtual void WriteField( Type type, object field, ITypeConverter converter )
-		{
-			CheckDisposed();
-
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
-			if( typeConverterOptions.CultureInfo == null )
-			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
-
-			var fieldString = converter.ConvertToString( typeConverterOptions, field );
-			WriteField( fieldString );
 		}
 
 		/// <summary>
@@ -236,7 +199,14 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( typeof( T ), field, converter );
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions<T>();
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			WriteField( fieldString );
 		}
 
 		/// <summary>
@@ -356,37 +326,25 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
-		/// <param name="type">The type of the record.</typeparam>
-		/// <param name="record">The record to write.</param>
-		public virtual void WriteRecord( Type type, object record )
-		{
-			CheckDisposed();
-
-			try
-			{
-				GetWriteRecordAction( type ).DynamicInvoke( record );
-			}
-			catch( Exception ex )
-			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
-				throw;
-			}
-
-			hasRecordBeenWritten = true;
-
-			NextRecord();
-		}
-
-		/// <summary>
-		/// Writes the record to the CSV file.
-		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
 		public virtual void WriteRecord<T>( T record )
 		{
 			CheckDisposed();
 
-			WriteRecord( typeof( T ), record );
+			try
+			{
+				GetWriteRecordAction<T>()( record );
+			}
+			catch( Exception ex )
+			{
+				ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
+				throw;
+			}
+
+			hasRecordBeenWritten = true;
+
+			NextRecord();
 		}
 
 		/// <summary>
