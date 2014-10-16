@@ -174,16 +174,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var type = typeof( T );
-			if( type == typeof( string ) )
-			{
-				WriteField( field as string );
-			}
-			else
-			{
-				var converter = TypeConverterFactory.GetConverter( type );
-				WriteField( field, converter );
-			}
+			WriteField( typeof( T ), field );
 		}
 
 		/// <summary>
@@ -199,14 +190,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions<T>();
-			if( typeConverterOptions.CultureInfo == null )
-			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
-
-			var fieldString = converter.ConvertToString( typeConverterOptions, field );
-			WriteField( fieldString );
+			WriteField( typeof( T ), field, converter );
 		}
 
 		/// <summary>
@@ -225,6 +209,52 @@ namespace CsvHelper
 
 			var converter = TypeConverterFactory.GetConverter<TConverter>();
 			WriteField( field, converter );
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="field">The field to write.</param>
+		public virtual void WriteField( Type type, object field )
+		{
+			CheckDisposed();
+
+			if( type == typeof( string ) )
+			{
+				WriteField( field as string );
+			}
+			else
+			{
+				var converter = TypeConverterFactory.GetConverter( type );
+				WriteField( type, field, converter );
+			}
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="field">The field to write.</param>
+		/// <param name="converter">The converter used to convert the field into a string.</param>
+		public virtual void WriteField( Type type, object field, ITypeConverter converter )
+		{
+			CheckDisposed();
+
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			WriteField( fieldString );
 		}
 
 		/// <summary>
