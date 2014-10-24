@@ -435,7 +435,7 @@ namespace CsvHelper
 			CheckHasBeenRead();
 
 			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
-			if( typeConverterOptions.CultureInfo == null )
+            if ( typeConverterOptions.CultureInfo != configuration.CultureInfo )
 			{
 				typeConverterOptions.CultureInfo = configuration.CultureInfo;
 			}
@@ -1350,7 +1350,7 @@ namespace CsvHelper
 
 			var typeConverter = TypeConverterFactory.GetConverter( recordType );
 			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( recordType );
-			if( typeConverterOptions.CultureInfo == null )
+			if( typeConverterOptions.CultureInfo != configuration.CultureInfo )
 			{
 				typeConverterOptions.CultureInfo = configuration.CultureInfo;
 			}
@@ -1458,7 +1458,7 @@ namespace CsvHelper
 
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+				if( propertyMap.Data.TypeConverterOptions.CultureInfo != configuration.CultureInfo )
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}

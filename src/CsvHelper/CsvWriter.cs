@@ -200,7 +200,7 @@ namespace CsvHelper
 			CheckDisposed();
 
 			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions<T>();
-			if( typeConverterOptions.CultureInfo == null )
+			if( typeConverterOptions.CultureInfo != configuration.CultureInfo )
 			{
 				typeConverterOptions.CultureInfo = configuration.CultureInfo;
 			}
@@ -627,7 +627,7 @@ namespace CsvHelper
 				var fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
 
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+				if( propertyMap.Data.TypeConverterOptions.CultureInfo != configuration.CultureInfo)
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
@@ -669,7 +669,7 @@ namespace CsvHelper
 			var method = typeConverter.GetType().GetMethod( "ConvertToString" );
 
 			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
-			if( typeConverterOptions.CultureInfo == null )
+			if( typeConverterOptions.CultureInfo != configuration.CultureInfo )
 			{
 				typeConverterOptions.CultureInfo = configuration.CultureInfo;
 			}
