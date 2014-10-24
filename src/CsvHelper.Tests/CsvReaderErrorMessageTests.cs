@@ -5,13 +5,13 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Globalization;
 #endif
 
 namespace CsvHelper.Tests
