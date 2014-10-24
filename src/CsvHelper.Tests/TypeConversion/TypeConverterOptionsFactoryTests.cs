@@ -45,7 +45,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using( var csvReader = new CsvReader( reader, new CsvConfiguration { CultureInfo = CultureInfo.InvariantCulture }  ) )
 			{
 				writer.WriteLine( "\"1,234\",\"5,678\"" );
 				writer.Flush();
@@ -67,7 +67,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using( var csvReader = new CsvReader( reader, new CsvConfiguration { CultureInfo = CultureInfo.InvariantCulture } ) )
 			{
 				writer.WriteLine( "\"1,234\",\"5,678\"" );
 				writer.Flush();
@@ -83,11 +83,12 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var config = new CsvConfiguration { CultureInfo = CultureInfo.GetCultureInfo("en-US") };
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using( var csvReader = new CsvReader( reader, config ) )
 			{
 				writer.WriteLine( "\"1,234\",\"$5,678\"" );
 				writer.Flush();
@@ -104,11 +105,12 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var options = new TypeConverterOptions { Format = "c" };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var config = new CsvConfiguration { CultureInfo = CultureInfo.GetCultureInfo("en-US") };
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csvWriter = new CsvWriter( writer ) )
+			using( var csvWriter = new CsvWriter( writer, config ) )
 			{
 				csvWriter.WriteField( 1234 );
 				csvWriter.NextRecord();
@@ -125,11 +127,11 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var options = new TypeConverterOptions { Format = "c" };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
-
+            var config = new CsvConfiguration { CultureInfo = CultureInfo.GetCultureInfo("en-US") };
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csvWriter = new CsvWriter( writer ) )
+            using( var csvWriter = new CsvWriter( writer, config ) )
 			{
 				var list = new List<Test>
 				{
@@ -150,11 +152,12 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var options = new TypeConverterOptions { Format = "c" };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var config = new CsvConfiguration { CultureInfo = CultureInfo.GetCultureInfo("en-US") };
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csvWriter = new CsvWriter( writer ) )
+			using( var csvWriter = new CsvWriter( writer, config ) )
 			{
 				var list = new List<Test>
 				{
