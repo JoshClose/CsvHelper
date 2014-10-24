@@ -58,6 +58,57 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
+        [TestMethod]
+        public void GetFieldFromTwoOrMoreDifferentStreamsUsingTwoOrMoreCulturesTest() {
+            var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+            TypeConverterOptionsFactory.AddOptions<int>(options);
+            // en-GB culture
+            var britishCI = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
+            var frenchCI = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
+            var greekCI = System.Globalization.CultureInfo.GetCultureInfo("el-GR");
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvReader = new CsvReader(reader, new CsvConfiguration { CultureInfo = britishCI, Delimiter = ","  })) {
+                writer.WriteLine("\"1,234.32\",\"5,678.44\"");
+                writer.Flush();
+                stream.Position = 0;
+
+                csvReader.Configuration.HasHeaderRecord = false;
+                csvReader.Read();
+                Assert.AreEqual(1234.32M, csvReader.GetField<decimal>(0));
+                Assert.AreEqual(5678.44M, csvReader.GetField(typeof(decimal), 1));
+            }
+            // fr-FR culture
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvReader = new CsvReader(reader, new CsvConfiguration { CultureInfo = frenchCI, Delimiter = ";" })) {
+                writer.WriteLine("\"1 234,32\";\"5678,44\"");
+                writer.Flush();
+                stream.Position = 0;
+
+                csvReader.Configuration.HasHeaderRecord = false;
+                csvReader.Read();
+                Assert.AreEqual(1234.32M, csvReader.GetField<decimal>(0));
+                Assert.AreEqual(5678.44M, csvReader.GetField(typeof(decimal), 1));
+            }
+            // el-GR culture
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvReader = new CsvReader(reader, new CsvConfiguration { CultureInfo = greekCI, Delimiter = ";" })) {
+                writer.WriteLine("\"1.234,32\";\"5678,44\"");
+                writer.Flush();
+                stream.Position = 0;
+
+                csvReader.Configuration.HasHeaderRecord = false;
+                csvReader.Read();
+                Assert.AreEqual(1234.32M, csvReader.GetField<decimal>(0));
+                Assert.AreEqual(5678.44M, csvReader.GetField(typeof(decimal), 1));
+            }
+        }
+
 		[TestMethod]
 		public void GetRecordsTest()
 		{
