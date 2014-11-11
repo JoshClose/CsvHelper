@@ -302,6 +302,11 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
+			if( type == typeof( Object ) )
+			{
+				return;
+			}
+
 			if( configuration.Maps[type] == null )
 			{
 				configuration.Maps.Add( configuration.AutoMap( type ) );
@@ -351,7 +356,7 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords( IEnumerable records )
+		public virtual void WriteRecords<T>( IEnumerable<T> records )
 		{
 			CheckDisposed();
 
@@ -361,11 +366,21 @@ namespace CsvHelper
 				hasExcelSeperatorBeenRead = true;
 			}
 
+			// Write the header. If records is a List<dynamic>, the header won't be written.
+			// This is because typeof( T ) = Object.
+			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !typeof( T ).IsPrimitive )
+			{
+				WriteHeader<T>();
+			}
+
 			foreach( var record in records )
 			{
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !record.GetType().IsPrimitive )
+				// If records is a List<dynamic>, the header hasn't been written yet.
+				// Write the header based on the record type.
+				var type = record.GetType();
+				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
 				{
-					WriteHeader( record.GetType() );
+					WriteHeader( type );
 				}
 
 				try

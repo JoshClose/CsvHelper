@@ -678,6 +678,24 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteEmptyListTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<TestRecord>();
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var data = reader.ReadToEnd();
+				Assert.IsFalse( string.IsNullOrWhiteSpace( data ) );
+			}
+		}
+
 #if !PCL
 		[TestMethod]
 		public void WriteDynamicListTest()
