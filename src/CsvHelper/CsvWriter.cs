@@ -356,7 +356,7 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords<T>( IEnumerable<T> records )
+		public virtual void WriteRecords( IEnumerable records )
 		{
 			CheckDisposed();
 
@@ -368,9 +368,13 @@ namespace CsvHelper
 
 			// Write the header. If records is a List<dynamic>, the header won't be written.
 			// This is because typeof( T ) = Object.
-			if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !typeof( T ).IsPrimitive )
+			if( records.GetType().IsGenericType )
 			{
-				WriteHeader<T>();
+				var type = records.GetType().GetGenericArguments().First();
+				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
+				{
+					WriteHeader( type );
+				}
 			}
 
 			foreach( var record in records )
