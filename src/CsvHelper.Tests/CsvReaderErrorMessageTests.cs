@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
@@ -181,7 +182,7 @@ namespace CsvHelper.Tests
 			using( var stream = new MemoryStream() )
 			using( var writer = new StreamWriter( stream ) )
 			using( var reader = new StreamReader( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using( var csvReader = new CsvReader( reader, new CsvConfiguration { CultureInfo = CultureInfo.InvariantCulture } ) )
 			{
 				writer.WriteLine("1,9/24/2012");
 				writer.Flush();

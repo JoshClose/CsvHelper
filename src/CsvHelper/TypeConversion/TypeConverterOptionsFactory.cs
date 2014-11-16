@@ -96,7 +96,7 @@ namespace CsvHelper.TypeConversion
 					typeConverterOptions.Add( type, options );
 				}
 
-				return options;
+                return TypeConverterOptions.Merge( options );
 			}
 		}
 

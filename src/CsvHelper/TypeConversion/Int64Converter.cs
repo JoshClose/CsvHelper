@@ -19,7 +19,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
-			var numberStyle = options.NumberStyle ?? NumberStyles.Integer;
+			var numberStyle = options.NumberStyle ?? ( NumberStyles.Integer | NumberStyles.AllowThousands );
 
 			long l;
 			if( long.TryParse( text, numberStyle, options.CultureInfo, out l ) )
