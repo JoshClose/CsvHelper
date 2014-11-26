@@ -11,6 +11,7 @@ using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 #endif
 
 namespace CsvHelper.Tests
@@ -191,6 +192,7 @@ namespace CsvHelper.Tests
 				{
 					csvReader.Configuration.HasHeaderRecord = false;
 					csvReader.Configuration.RegisterClassMap<Test3Map>();
+                    csvReader.Configuration.CultureInfo = new CultureInfo("EN-US");
 					var records = csvReader.GetRecords<Test3>().ToList();
 				}
 				catch( CsvReaderException )
