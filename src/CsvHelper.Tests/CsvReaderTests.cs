@@ -798,6 +798,35 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void SkipEmptyRecordsObeysTrimFieldsIsEnabledTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue(new[] { "1", "2", "3" });
+			queue.Enqueue(new[] { " ", "", "" });
+			queue.Enqueue(new[] { "4", "5", "6" });
+			queue.Enqueue(null);
+
+			var parserMock = new ParserMock(queue);
+
+			var reader = new CsvReader(parserMock);
+			reader.Configuration.HasHeaderRecord = false;
+			reader.Configuration.TrimFields = true;
+			reader.Configuration.SkipEmptyRecords = true;
+
+			reader.Read();
+			Assert.AreEqual("1", reader.CurrentRecord[0]);
+			Assert.AreEqual("2", reader.CurrentRecord[1]);
+			Assert.AreEqual("3", reader.CurrentRecord[2]);
+
+			reader.Read();
+			Assert.AreEqual("4", reader.CurrentRecord[0]);
+			Assert.AreEqual("5", reader.CurrentRecord[1]);
+			Assert.AreEqual("6", reader.CurrentRecord[2]);
+
+			Assert.IsFalse(reader.Read());
+		}
+
+		[TestMethod]
 		public void MultipleGetRecordsCalls()
 		{
 			using( var stream = new MemoryStream() )
