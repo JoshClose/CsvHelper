@@ -78,6 +78,27 @@ namespace CsvHelper
 		void WriteField<T, TConverter>( T field );
 
 		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="field">The field to write.</param>
+		void WriteField( Type type, object field );
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="field">The field to write.</param>
+		/// <param name="converter">The converter used to convert the field into a string.</param>
+		void WriteField( Type type, object field, ITypeConverter converter );
+
+		/// <summary>
 		/// Ends writing of the current record
 		/// and starts a new record. This is used
 		/// when manually writing records with <see cref="WriteField{T}( T )"/>
@@ -108,6 +129,13 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
 		void WriteRecord<T>( T record );
+
+		/// <summary>
+		/// Writes the record to the CSV file.
+		/// </summary>
+		/// <param name="type">The type of the record.</param>
+		/// <param name="record">The record to write.</param>
+		void WriteRecord( Type type, object record );
 
 		/// <summary>
 		/// Writes the list of records to the CSV file.
