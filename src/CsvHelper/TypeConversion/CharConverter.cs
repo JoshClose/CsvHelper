@@ -19,7 +19,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( TypeConverterOptions options, string text )
 		{
-			if( text != null )
+			if( text != null && text.Length > 1 )
 			{
 				text = text.Trim();
 			}

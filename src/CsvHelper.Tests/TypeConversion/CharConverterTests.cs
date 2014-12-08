@@ -41,6 +41,7 @@ namespace CsvHelper.Tests.TypeConversion
 			};
 			Assert.AreEqual( 'a', converter.ConvertFromString( typeConverterOptions, "a" ) );
 			Assert.AreEqual( 'a', converter.ConvertFromString( typeConverterOptions, " a " ) );
+			Assert.AreEqual( ' ', converter.ConvertFromString( typeConverterOptions, " " ) );
 
 			try
 			{
