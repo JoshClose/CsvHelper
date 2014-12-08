@@ -1110,18 +1110,18 @@ namespace CsvHelper
 			}
 
 #if NET_2_0
-			return EnumerableHelper.All( currentRecord, GetEmtpyStringFunc() );
+			return EnumerableHelper.All( currentRecord, GetEmtpyStringMethod() );
 #else
-			return currentRecord.All( GetEmtpyStringFunc() ) ;
+			return currentRecord.All( GetEmtpyStringMethod() );
 #endif
 		}
 
 		/// <summary>
-		/// Returns a function to test for an empty record.
-		/// Will check <see cref="Configuration" />.TrimFields when making its decision.
+		/// Gets a function to test for an empty string.
+		/// Will check <see cref="CsvConfiguration.TrimFields" /> when making its decision.
 		/// </summary>
-		/// <returns></returns>
-		protected virtual Func<string, bool> GetEmtpyStringFunc()
+		/// <returns>The function to test for an empty string.</returns>
+		protected virtual Func<string, bool> GetEmtpyStringMethod()
 		{ 
 			if( !Configuration.TrimFields )
 			{
