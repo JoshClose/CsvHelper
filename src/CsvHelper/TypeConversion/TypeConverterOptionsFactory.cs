@@ -99,15 +99,5 @@ namespace CsvHelper.TypeConversion
 				return options;
 			}
 		}
-
-		/// <summary>
-		/// Get the <see cref="TypeConverterOptions"/> for the given <see cref="Type"/>.
-		/// </summary>
-		/// <typeparam name="T">The type the options are for.</typeparam>
-		/// <returns>The options for the given type.</returns>
-		public static TypeConverterOptions GetOptions<T>()
-		{
-			return GetOptions( typeof( T ) );
-		}
 	}
 }

@@ -148,7 +148,48 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( expected, csvFile );
 		}
 
-		[TestMethod]
+        // TODO: Decide how to validate Dictionary6
+        [Ignore]
+        [TestMethod]
+        public void WriteRecordsFromDictionaryTest()
+        {
+            var records = new Dictionary<int,TestRecord>
+            {
+                {1, new TestRecord
+                {
+                    IntColumn = 1,
+                    StringColumn = "string column",
+                    IgnoredColumn = "ignored column",
+                    FirstColumn = "first column",
+                } },
+                {2, new TestRecord
+                {
+                    IntColumn = 2,
+                    StringColumn = "string column 2",
+                    IgnoredColumn = "ignored column 2",
+                    FirstColumn = "first column 2",
+                } },
+            };
+
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream) { AutoFlush = true };
+            var csv = new CsvWriter(writer);
+            csv.Configuration.RegisterClassMap<TestRecordMap>();
+
+            csv.WriteRecords(records);
+
+            stream.Position = 0;
+            var reader = new StreamReader(stream);
+            var csvFile = reader.ReadToEnd();
+            var expected = "Key,FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+            expected += "first column,1,string column,test\r\n";
+            expected += "first column 2,2,string column 2,test\r\n";
+
+            Assert.AreEqual(expected, csvFile);
+        }
+
+
+        [TestMethod]
 		public void WriteRecordsCalledWithTwoParametersTest()
 		{
 			var records = new List<object>
@@ -179,8 +220,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 			var csvFile = reader.ReadToEnd();
-			var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = "first column,1,string column,test\r\n";
 			expected += "first column 2,2,string column 2,test\r\n";
 
 			Assert.AreEqual( expected, csvFile );
@@ -713,7 +753,7 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();
-				Assert.AreEqual( "Id,Name\r\n1,one\r\n", text );
+				Assert.AreEqual( "1,one\r\n", text );
 			}
 		}
 

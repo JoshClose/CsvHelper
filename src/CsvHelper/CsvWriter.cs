@@ -96,15 +96,16 @@ namespace CsvHelper
 			configuration = serializer.Configuration;
 		}
 
-		/// <summary>
-		/// Writes the field to the CSV file. The field
-		/// may get quotes added to it.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <param name="field">The field to write.</param>
-		public virtual void WriteField( string field )
+        /// <summary>
+        /// Writes the field to the CSV file. The field
+        /// may get quotes added to it.
+        /// When all fields are written for a record,
+        /// <see cref="ICsvWriter.NextRecord" /> must be called
+        /// to complete writing of the current record.
+        /// </summary>
+        /// <param name="field">The field to write.</param>
+        /// <remarks>Pass null as a <paramref name="field"/> value to write empty field.</remarks>
+        public virtual void WriteField( string field )
 		{
 			CheckDisposed();
 
@@ -138,23 +139,24 @@ namespace CsvHelper
 			WriteField( field, shouldQuote );
 		}
 
-		/// <summary>
-		/// Writes the field to the CSV file. This will
-		/// ignore any need to quote and ignore the
-		/// <see cref="CsvConfiguration.QuoteAllFields"/>
-		/// and just quote based on the shouldQuote
-		/// parameter.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <param name="field">The field to write.</param>
-		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
-		public virtual void WriteField( string field, bool shouldQuote )
+        /// <summary>
+        /// Writes the field to the CSV file. This will
+        /// ignore any need to quote and ignore the
+        /// <see cref="CsvConfiguration.QuoteAllFields"/>
+        /// and just quote based on the shouldQuote
+        /// parameter.
+        /// When all fields are written for a record,
+        /// <see cref="ICsvWriter.NextRecord" /> must be called
+        /// to complete writing of the current record.
+        /// </summary>
+        /// <param name="field">The field to write.</param>
+        /// <param name="shouldQuote">True to quote the field, otherwise false.</param>
+        /// <remarks>Pass null as a <paramref name="field"/> value to write empty field.</remarks>
+        public virtual void WriteField( string field, bool shouldQuote )
 		{
 			CheckDisposed();
 
-			if( shouldQuote )
+            if( field != null && shouldQuote )
 			{
 				field = configuration.Quote + field + configuration.Quote;
 			}
@@ -162,64 +164,74 @@ namespace CsvHelper
 			currentRecord.Add( field );
 		}
 
-		/// <summary>
-		/// Writes the field to the CSV file.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
-		/// <param name="field">The field to write.</param>
-		public virtual void WriteField<T>( T field )
+        /// <summary>
+        /// Writes the field to the CSV file.
+        /// When all fields are written for a record,
+        /// <see cref="ICsvWriter.NextRecord" /> must be called
+        /// to complete writing of the current record.
+        /// </summary>
+        /// <param name="field">The field to write.</param>
+        /// <remarks>Pass null as a <paramref name="field"/> value to write empty field.</remarks>
+        public virtual void WriteField( object field )
 		{
 			CheckDisposed();
 
-			var type = typeof( T );
-			if( type == typeof( string ) )
-			{
-				WriteField( field as string );
-			}
-			else
-			{
-				var converter = TypeConverterFactory.GetConverter( type );
-				WriteField( field, converter );
-			}
+            if( field == null )
+                WriteField( string.Empty, false );
+            else
+            {
+                var type = field.GetType();
+			    if( type == typeof( string ) )
+			    {
+			    	WriteField( field as string );
+			    }
+			    else
+			    {
+			    	var converter = TypeConverterFactory.GetConverter( type );
+			    	WriteField( field, converter );
+			    }
+            }
 		}
 
-		/// <summary>
-		/// Writes the field to the CSV file.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
-		/// <param name="field">The field to write.</param>
-		/// <param name="converter">The converter used to convert the field into a string.</param>
-		public virtual void WriteField<T>( T field, ITypeConverter converter )
+        /// <summary>
+        /// Writes the field to the CSV file.
+        /// When all fields are written for a record,
+        /// <see cref="ICsvWriter.NextRecord" /> must be called
+        /// to complete writing of the current record.
+        /// </summary>
+        /// <param name="field">The field to write.</param>
+        /// <param name="converter">The converter used to convert the field into a string.</param>
+        /// <remarks>Pass null as a <paramref name="field"/> value to write empty field.</remarks>
+        public virtual void WriteField( object field, ITypeConverter converter )
 		{
 			CheckDisposed();
 
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions<T>();
-			if( typeConverterOptions.CultureInfo == null )
-			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
+            if( field == null )
+                WriteField( string.Empty, false );
+            else
+            {
+			    var typeConverterOptions = TypeConverterOptionsFactory.GetOptions(field.GetType());
+			    if( typeConverterOptions.CultureInfo == null )
+			    {
+			    	typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			    }
 
-			var fieldString = converter.ConvertToString( typeConverterOptions, field );
-			WriteField( fieldString );
+			    var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			    WriteField( fieldString );
+            }
 		}
 
-		/// <summary>
-		/// Writes the field to the CSV file
-		/// using the given <see cref="ITypeConverter"/>.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <typeparam name="T">The type of the field.</typeparam>
-		/// <typeparam name="TConverter">The type of the converter.</typeparam>
-		/// <param name="field">The field to write.</param>
-		public virtual void WriteField<T, TConverter>( T field )
+        /// <summary>
+        /// Writes the field to the CSV file
+        /// using the given <see cref="ITypeConverter"/>.
+        /// When all fields are written for a record,
+        /// <see cref="ICsvWriter.NextRecord" /> must be called
+        /// to complete writing of the current record.
+        /// </summary>
+        /// <typeparam name="TConverter">The type of the converter.</typeparam>
+        /// <param name="field">The field to write.</param>
+        /// <remarks>Pass null as field value to write empty field.</remarks>
+        public virtual void WriteField<TConverter>( object field )
 		{
 			CheckDisposed();
 
@@ -274,11 +286,15 @@ namespace CsvHelper
 			WriteHeader( typeof( T ) );
 		}
 
-		/// <summary>
-		/// Writes the header record from the given properties.
-		/// </summary>
-		/// <param name="type">The type of the record.</param>
-		public virtual void WriteHeader( Type type )
+        /// <summary>
+        /// Writes the header record from the given properties.
+        /// </summary>
+        /// <param name="type">The type of the record.</param>
+        /// <remarks>
+        /// Pass null as a <paramref name="type"/> value to denote
+        /// that you have already written a header row values.
+        /// </remarks>
+        public virtual void WriteHeader( Type type )
 		{
 			CheckDisposed();
 
@@ -302,26 +318,25 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
-			if( type == typeof( Object ) )
-			{
-				return;
-			}
+            if (type != typeof(Object))
+            {
 
-			if( configuration.Maps[type] == null )
-			{
-				configuration.Maps.Add( configuration.AutoMap( type ) );
-			}
+                if (configuration.Maps[type] == null)
+                {
+                    configuration.Maps.Add(configuration.AutoMap(type));
+                }
 
-			var properties = new CsvPropertyMapCollection();
-			AddProperties( properties, configuration.Maps[type] );
+                var properties = new CsvPropertyMapCollection();
+                AddProperties(properties, configuration.Maps[type]);
 
-			foreach( var property in properties )
-			{
-				if( CanWrite( property ) )
-				{
-					WriteField( property.Data.Names.FirstOrDefault() );
-				}
-			}
+                foreach (var property in properties)
+                {
+                    if (CanWrite(property))
+                    {
+                        WriteField(property.Data.Names.FirstOrDefault());
+                    }
+                }
+            }
 
 			NextRecord();
 
@@ -366,27 +381,8 @@ namespace CsvHelper
 				hasExcelSeperatorBeenRead = true;
 			}
 
-			// Write the header. If records is a List<dynamic>, the header won't be written.
-			// This is because typeof( T ) = Object.
-			if( records.GetType().IsGenericType )
-			{
-				var type = records.GetType().GetGenericArguments().First();
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
-				{
-					WriteHeader( type );
-				}
-			}
-
 			foreach( var record in records )
 			{
-				// If records is a List<dynamic>, the header hasn't been written yet.
-				// Write the header based on the record type.
-				var type = record.GetType();
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
-				{
-					WriteHeader( type );
-				}
-
 				try
 				{
 					GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
@@ -401,15 +397,62 @@ namespace CsvHelper
 			}
 		}
 
-		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ICsvWriter.ClearRecordCache{T}"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		/// <typeparam name="T">The record type.</typeparam>
-		public virtual void ClearRecordCache<T>()
+        /// <summary>
+        /// Writes the list of records to the CSV file.
+        /// </summary>
+        /// <typeparam name="T">The type of the record.</typeparam>
+        /// <param name="records">The list of records to write.</param>
+        public void WriteRecords<T>(IEnumerable<T> records)
+        {
+            var type = typeof(T);
+            if (type == typeof(object))
+            {
+                WriteRecords(records as IEnumerable);
+                return;
+            }
+
+            CheckDisposed();
+
+            if (configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead)
+            {
+                WriteExcelSeparator();
+                hasExcelSeperatorBeenRead = true;
+            }
+
+            var recordAction = GetWriteRecordAction(type);
+            // If records is a List<dynamic>, the header hasn't been written yet.
+            // Write the header based on the record type.
+            if (configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive)
+            {
+                WriteHeader(type);
+            }
+
+            foreach (var record in records)
+            {
+                try
+                {
+                    recordAction.DynamicInvoke(record);
+                }
+                catch (Exception ex)
+                {
+                    ExceptionHelper.AddExceptionDataMessage(ex, null, record.GetType(), null, null, null);
+                    throw;
+                }
+
+                NextRecord();
+            }
+
+        }
+
+        /// <summary>
+        /// Clears the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+        /// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
+        /// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
+        /// changes, <see cref="ICsvWriter.ClearRecordCache{T}"/> needs to be called to update the
+        /// record cache.
+        /// </summary>
+        /// <typeparam name="T">The record type.</typeparam>
+        public virtual void ClearRecordCache<T>()
 		{
 			CheckDisposed();
 

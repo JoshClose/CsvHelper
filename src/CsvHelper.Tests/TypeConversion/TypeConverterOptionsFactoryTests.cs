@@ -25,13 +25,13 @@ namespace CsvHelper.Tests.TypeConversion
 				Format = "custom",
 			};
 			TypeConverterOptionsFactory.AddOptions<string>( customOptions );
-			var options = TypeConverterOptionsFactory.GetOptions<string>();
+			var options = TypeConverterOptionsFactory.GetOptions(typeof(string));
 
 			Assert.AreEqual( customOptions.Format, options.Format );
 
 			TypeConverterOptionsFactory.RemoveOptions<string>();
 
-			options = TypeConverterOptionsFactory.GetOptions<string>();
+			options = TypeConverterOptionsFactory.GetOptions(typeof(string));
 
 			Assert.AreNotEqual( customOptions.Format, options.Format );
 		}
@@ -39,8 +39,12 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetFieldTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
-			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var options = new TypeConverterOptions
+            {
+                NumberStyle = NumberStyles.AllowThousands,
+                CultureInfo = new CultureInfo("EN-US")
+            };
+            TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
@@ -61,7 +65,11 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetRecordsTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+			var options = new TypeConverterOptions
+            {
+                NumberStyle = NumberStyles.AllowThousands,
+                CultureInfo = new CultureInfo("EN-US")
+            };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -81,8 +89,12 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetRecordsAppliedWhenMappedTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
-			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var options = new TypeConverterOptions
+            {
+                NumberStyle = NumberStyles.AllowThousands,
+                CultureInfo = new CultureInfo("EN-US")
+            };
+            TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
@@ -102,8 +114,12 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteFieldTest()
 		{
-			var options = new TypeConverterOptions { Format = "c" };
-			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var options = new TypeConverterOptions
+            {
+                Format = "c",
+                CultureInfo = new CultureInfo("EN-US")
+            };
+            TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
@@ -123,7 +139,11 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteRecordsTest()
 		{
-			var options = new TypeConverterOptions { Format = "c" };
+            var options = new TypeConverterOptions
+            {
+                Format = "c",
+                CultureInfo = new CultureInfo("EN-US")
+            };
 			TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
@@ -148,8 +168,12 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteRecordsAppliedWhenMappedTest()
 		{
-			var options = new TypeConverterOptions { Format = "c" };
-			TypeConverterOptionsFactory.AddOptions<int>( options );
+            var options = new TypeConverterOptions
+            {
+                Format = "c",
+                CultureInfo = new CultureInfo("EN-US")
+            };
+            TypeConverterOptionsFactory.AddOptions<int>( options );
 
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
