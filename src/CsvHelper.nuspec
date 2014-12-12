@@ -18,6 +18,6 @@
 		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net40-client\" />
 		<file src="CsvHelper20\bin\Release\CsvHelper.*" target="lib\net20\" />
 		<file src="CsvHelper35\bin\Release\CsvHelper.*" target="lib\net35-client\" />
-		<file src="CsvHelperPcl\bin\Release\CsvHelper.*" target="lib\portable-sl4+wp71+windows8+net40\" />
+		<file src="CsvHelperPcl\bin\Release\CsvHelper.*" target="lib\portable-net40+sl50+win+wpa81+wp80+MonoAndroid10+MonoTouch10\" />
 	</files>
 </package>
