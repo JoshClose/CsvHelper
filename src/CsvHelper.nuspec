@@ -4,7 +4,7 @@
 		<id>CsvHelper</id>
 		<version>2.10.0</version>
 		<authors>Josh Close</authors>
-		<licenseUrl>http://www.opensource.org/licenses/ms-pl.html</licenseUrl>
+		<licenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</licenseUrl>
 		<projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>
 		<iconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</iconUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>

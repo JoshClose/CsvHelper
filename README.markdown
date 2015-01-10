@@ -18,6 +18,12 @@ http://joshclose.github.io/CsvHelper/
 License
 =======
 
-Microsoft Public License (Ms-PL)
+Dual licensed
+
+Microsoft Public License (MS-PL)
 
 http://www.opensource.org/licenses/MS-PL
+
+Apache License, Version 2.0
+
+http://opensource.org/licenses/Apache-2.0
