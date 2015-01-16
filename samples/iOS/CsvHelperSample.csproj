@@ -87,7 +87,6 @@
     <Compile Include="SampleObjects.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
-    <Compile Include="SampleReadLogic.cs" />
     <Compile Include="SampleViewController.cs" />
     <None Include="Info.plist" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -6,10 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
-#if NET_2_0
+#if NET_2_0 && !PCL
 using CsvHelper.MissingFrom20;
-#endif
-#if !NET_2_0
+#else
 using System.Linq;
 #endif
 
@@ -117,7 +116,7 @@ namespace CsvHelper
 				if( configuration.DetectColumnCountChanges && row != null )
 				{
 					if( FieldCount > 0 && ( FieldCount != row.Length || 
-#if NET_2_0
+#if NET_2_0 && !PCL
 						EnumerableHelper.Any( row, field => field == null )
 #else
 						row.Any( field => field == null ) 

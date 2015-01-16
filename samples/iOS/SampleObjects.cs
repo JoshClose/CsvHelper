@@ -4,16 +4,6 @@ using CsvHelper.TypeConversion;
 namespace CsvHelperSample
 {
 	/// <summary>
-	/// The object that represents a record in the CSV file.
-	/// </summary>
-	public class CustomObject
-	{
-		public string StringColumn { get; set; }
-		public int NumberColumn { get; set; }
-		public CustomType CustomTypeColumn { get; set; }
-	}
-
-	/// <summary>
 	/// The type converter that can be used to read a column value into an object.
 	/// </summary>
 	public class CustomTypeTypeConverter : ITypeConverter

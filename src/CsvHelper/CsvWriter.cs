@@ -7,16 +7,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-#if !NET_2_0
-using System.Linq;
-using System.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-#if NET_2_0
+#if NET_2_0 && !PCL
 using CsvHelper.MissingFrom20;
+#else
+using System.Linq;
+using System.Linq.Expressions;
 #endif
 
 namespace CsvHelper
@@ -113,7 +112,7 @@ namespace CsvHelper
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
-#if NET_2_0
+#if NET_2_0 && !PCL
 				if( EnumerableHelper.Contains( field, configuration.Quote ) )
 #else
 				if( field.Contains( configuration.QuoteString ) )

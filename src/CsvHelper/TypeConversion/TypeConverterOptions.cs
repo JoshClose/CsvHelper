@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-#if NET_2_0
+#if NET_2_0 && !PCL
 using CsvHelper.MissingFrom20;
 #else
 using System.Linq;
@@ -109,7 +109,7 @@ namespace CsvHelper.TypeConversion
 					options.Format = source.Format;
 				}
 
-#if NET_2_0
+#if NET_2_0 && !PCL
 				if( !EnumerableHelper.SequenceEqual( options.booleanTrueValues, source.booleanTrueValues ) )
 #else
 				if( !options.booleanTrueValues.SequenceEqual( source.booleanTrueValues ) )
@@ -119,7 +119,7 @@ namespace CsvHelper.TypeConversion
 					options.booleanTrueValues.AddRange( source.booleanTrueValues );
 				}
 
-#if NET_2_0
+#if NET_2_0 && !PCL
 				if( !EnumerableHelper.SequenceEqual( options.booleanFalseValues, source.booleanFalseValues ) )
 #else
 				if( !options.booleanFalseValues.SequenceEqual( source.booleanFalseValues ) )
