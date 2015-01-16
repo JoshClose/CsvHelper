@@ -1,0 +1,37 @@
+%YAML 1.2
+---
+
+# package info
+id: csv-helper
+version: 2.10.0
+name: CSV Helper
+publisher: Josh Close
+summary: A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.
+publisher-url: http://joshclose.github.io/CsvHelper
+src-url: https://github.com/JoshClose/CsvHelper
+
+# images
+screenshots: 
+  - screenshots/screenshot1.png
+icons: 
+  - ../logo/csv-helper_128x128.png
+  - ../logo/csv-helper_512x512.png
+
+# samples
+samples: 
+  iOS Unified Sample: ../samples/iOS/CsvHelperSample.sln
+  Android Sample: ../samples/Android/CsvHelperSample.sln
+  Windows Phone Sample: ../samples/WindowsPhone/CsvHelperSample.sln
+
+# docs
+license: ../docs/License.md
+getting-started: ../docs/GettingStarted.md
+details: ../docs/Details.md
+
+# package dependencies
+no_build: true
+is_shell: true
+packages:
+  mobile: CsvHelper, Version=2.10
+
+...
