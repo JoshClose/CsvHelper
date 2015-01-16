@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 
 using CoreFoundation;
+using CoreGraphics;
 using UIKit;
 using Foundation;
 using System.IO;
@@ -30,6 +31,10 @@ namespace CsvHelperSample
 
 			// Perform any additional setup after loading the view
 
+			View.BackgroundColor = UIColor.White;
+			var textView = new UITextView(View.Bounds.Inset(24, 24));
+			View.AddSubview(textView);
+
 			var path = Path.Combine(NSBundle.MainBundle.ResourcePath, "Sample.csv");
 
 			var converter = new CustomTypeTypeConverter();
@@ -45,7 +50,7 @@ namespace CsvHelperSample
 					var num = csv.GetField<int>("NumberColumn");
 					var cust = csv.GetField<CustomType>("CustomTypeColumn", converter);
 
-					Console.WriteLine("{0} ({1}) = {2}", str, num, cust);
+					textView.Text += string.Format("{0} ({1}) = {2}\n", str, num, cust);
 				}
 			}
 		}
