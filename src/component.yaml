@@ -11,17 +11,17 @@ publisher-url: http://joshclose.github.io/CsvHelper
 src-url: https://github.com/JoshClose/CsvHelper
 
 # images
-screenshots: 
-  - screenshots/screenshot1.png
+#screenshots: 
+#  - screenshots/screenshot1.png
 icons: 
   - ../logo/csv-helper_128x128.png
   - ../logo/csv-helper_512x512.png
 
 # samples
 samples: 
-  iOS Unified Sample: ../samples/iOS/CsvHelperSample.sln
-  Android Sample: ../samples/Android/CsvHelperSample.sln
-  Windows Phone Sample: ../samples/WindowsPhone/CsvHelperSample.sln
+  iOS Unified Sample: ../samples/iOS/CsvHelperSample-ios.sln
+  Android Sample: ../samples/Android/CsvHelperSample-android.sln
+  Windows Phone Sample: ../samples/WindowsPhone/CsvHelperSample-wp.sln
 
 # docs
 license: ../docs/License.md
