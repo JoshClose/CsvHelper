@@ -123,6 +123,12 @@ namespace CsvHelper
 		/// <param name="type">The type of the record.</param>
 		void WriteHeader( Type type );
 
+        /// <summary>
+        /// Writes the header record from the given properties.
+        /// </summary>
+        /// <param name="headers">The enumerable of headers of the record.</param>
+        void WriteHeader(IEnumerable<string> headers);
+
 		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
