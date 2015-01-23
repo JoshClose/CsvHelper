@@ -26,20 +26,21 @@ namespace CsvHelper.Configuration
 			Constructor = ReflectionHelper.GetConstructor( expression );
 		}
 
-		/// <summary>
-		/// Maps a property to a CSV field.
-		/// </summary>
-		/// <param name="expression">The property to map.</param>
-		/// <returns>The property mapping.</returns>
-		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
+	    /// <summary>
+	    /// Maps a property to a CSV field.
+	    /// </summary>
+	    /// <param name="expression">The property to map.</param>
+	    /// <param name="ignoreExistingMap">If true then a new map will be created, even if the property has already been mapped.</param>
+	    /// <returns>The property mapping.</returns>
+	    protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression, bool ignoreExistingMap = false )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 
-			var existingMap = PropertyMaps.SingleOrDefault( m =>
+			var existingMap = PropertyMaps.FirstOrDefault( m =>
 				m.Data.Property == property
 				|| m.Data.Property.Name == property.Name
 				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
-			if( existingMap != null )
+			if( existingMap != null && !ignoreExistingMap )
 			{
 				return existingMap;
 			}

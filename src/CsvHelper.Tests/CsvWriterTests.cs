@@ -89,6 +89,62 @@ namespace CsvHelper.Tests
         }
 
         [TestMethod]
+        public void WriteRecordWithInternalTest()
+        {
+            var record = new TestRecord
+            {
+                IntColumn = 1,
+                StringColumn = "string column",
+                IgnoredColumn = "ignored column",
+                FirstColumn = "first column",
+                InternalColumn = "internal column"
+            };
+
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream) { AutoFlush = true })
+            using (var csv = new CsvWriter(writer))
+            {
+                csv.Configuration.RegisterClassMap<TestRecordMap>();
+                csv.Configuration.IgnorePrivateAccessor = true;
+
+                csv.WriteRecord(record);
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream))
+                {
+                    var csvFile = reader.ReadToEnd();
+                    var expected = "first column,1,string column,test,internal column\r\n";
+
+                    Assert.AreEqual(expected, csvFile);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void WriteRecordWithMultiMapTest()
+        {
+            var record = new TestRecord { StringColumn = "string column" };
+
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream) { AutoFlush = true })
+            using (var csv = new CsvWriter(writer))
+            {
+                csv.Configuration.RegisterClassMap<TestRecordMultiMap>();
+
+                csv.WriteRecords(new [] { record });
+
+                stream.Position = 0;
+                using (var reader = new StreamReader(stream))
+                {
+                    var csvFile = reader.ReadToEnd();
+                    var expected = "First,Second\r\nstring column,string column\r\n";
+
+                    Assert.AreEqual(expected, csvFile);
+                }
+            }
+        }
+
+        [TestMethod]
         public void WriteRecordNoIndexesTest()
         {
             var record = new TestRecordNoIndexes
@@ -801,6 +857,8 @@ namespace CsvHelper.Tests
             public string FirstColumn { get; set; }
 
             public string TypeConvertedColumn { get; set; }
+
+            internal string InternalColumn { get; set; }
         }
 
         private sealed class TestRecordMap : CsvClassMap<TestRecord>
@@ -811,6 +869,16 @@ namespace CsvHelper.Tests
                 Map(m => m.StringColumn);
                 Map(m => m.FirstColumn).Index(0);
                 Map(m => m.TypeConvertedColumn).TypeConverter<TestTypeConverter>();
+                Map(m => m.InternalColumn);
+            }
+        }
+
+        private sealed class TestRecordMultiMap : CsvClassMap<TestRecord>
+        {
+            public TestRecordMultiMap()
+            {
+                Map(m => m.StringColumn).Name("First");
+                Map(m => m.StringColumn, ignoreExistingMap: true).Name("Second");
             }
         }
 
