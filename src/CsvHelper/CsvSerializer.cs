@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
+using System.Text.RegularExpressions;
 
 namespace CsvHelper
 {
@@ -60,6 +61,17 @@ namespace CsvHelper
 		public void Write( string[] record )
 		{
 			CheckDisposed();
+
+            if (configuration.UseExcelNumericPrefix)
+            {
+                for (var i = 0; i < record.Length; i++ )
+                {
+                    if (Regex.IsMatch(record[i], "^[0-9]+$"))
+                    {
+                        record[i] = string.Format("=\"{0}\"", record[i]);
+                    }
+                }
+            }
 
 			var recordString = string.Join( configuration.Delimiter, record );
 			writer.WriteLine( recordString );

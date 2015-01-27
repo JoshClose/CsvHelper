@@ -303,11 +303,49 @@ namespace CsvHelper.Tests
 			}
 		}
 
+        [TestMethod]
+        public void WriteNumericPrefixTest()
+        {
+            using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+            using (var writer = new StreamWriter(stream))
+            using (var csv = new CsvWriter(writer))
+            {
+                csv.Configuration.UseExcelNumericPrefix = true;
+
+                var record = new SimpleWithPostal
+                {
+                    Id = 1,
+                    Name = "one",
+                    Postal = "09010"
+                };
+
+                csv.Configuration.Delimiter = ";";
+                csv.Configuration.HasExcelSeparator = true;
+                csv.WriteExcelSeparator();
+                csv.WriteHeader<SimpleWithPostal>();
+                csv.WriteRecord(record);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                var text = reader.ReadToEnd();
+                Assert.IsTrue(true);
+            }
+        }
+
 		private class Simple
 		{
 			public int Id { get; set; }
 
 			public string Name { get; set; }
 		}
+
+        private class SimpleWithPostal
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Postal { get; set; }
+        }
 	}
 }
