@@ -127,11 +127,11 @@ namespace CsvHelper
 				}
 
 				if( shouldQuote
-				    || hasQuote
-				    || field[0] == ' '
-				    || field[field.Length - 1] == ' '
-				    || field.IndexOfAny( configuration.QuoteRequiredChars ) > -1
-				    || ( configuration.Delimiter.Length > 1 && field.Contains( configuration.Delimiter ) ) )
+					|| hasQuote
+					|| field[0] == ' '
+					|| field[field.Length - 1] == ' '
+					|| field.IndexOfAny( configuration.QuoteRequiredChars ) > -1
+					|| ( configuration.Delimiter.Length > 1 && field.Contains( configuration.Delimiter ) ) )
 				{
 					shouldQuote = true;
 				}
@@ -156,13 +156,16 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.UseExcelLeadingZerosFormatForNumerics && field[0] == '0' && field.All( Char.IsDigit ) )
+			if (!string.IsNullOrEmpty(field))
 			{
-				field = "=" + configuration.Quote + field + configuration.Quote;
-			}
-			else if( shouldQuote )
-			{
-				field = configuration.Quote + field + configuration.Quote;
+				if (configuration.UseExcelLeadingZerosFormatForNumerics && field[0] == '0' && field.All(Char.IsDigit))
+				{
+					field = "=" + configuration.Quote + field + configuration.Quote;
+				}
+				else if (shouldQuote)
+				{
+					field = configuration.Quote + field + configuration.Quote;
+				}
 			}
 
 			currentRecord.Add( field );
