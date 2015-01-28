@@ -1318,18 +1318,21 @@ namespace CsvHelper
 				return;
 			}
 
-			if( configuration.Maps[recordType] == null )
+			lock( configuration )
 			{
-				configuration.Maps.Add( configuration.AutoMap( recordType ) );
-			}
+				if( configuration.Maps[recordType] == null )
+				{
+					configuration.Maps.Add( configuration.AutoMap( recordType ) );
+				}
 
-			if( recordType.IsPrimitive )
-			{
-				CreateFuncForPrimitive( recordType );
-			}
-			else
-			{
-				CreateFuncForObject( recordType );
+				if( recordType.IsPrimitive )
+				{
+					CreateFuncForPrimitive( recordType );
+				}
+				else
+				{
+					CreateFuncForObject( recordType );
+				}
 			}
 		}
 
