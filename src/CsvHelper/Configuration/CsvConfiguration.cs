@@ -36,7 +36,6 @@ namespace CsvHelper.Configuration
 		private bool quoteAllFields;
 		private bool quoteNoFields;
 		private bool ignoreBlankLines = true;
-        private bool useExcelNumericPrefix = false;
 #if !NET_2_0
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
 #endif
@@ -376,15 +375,11 @@ namespace CsvHelper.Configuration
 		}
 
         /// <summary>
-        /// Gets or sets a value indicating if an Excel-specific
-        /// prefix (=) should be used when writing fields containing
-        /// numeric values only (e.g. 00001)
+        /// Gets or sets a value indicating if an Excel specific
+        /// format should be used when writing fields containing
+        /// numeric values. e.g. 00001 -> ="00001"
         /// </summary>
-        public virtual bool UseExcelNumericPrefix
-        {
-            get { return useExcelNumericPrefix; }
-            set { useExcelNumericPrefix = value; }
-        }
+		public virtual bool UseExcelLeadingZerosFormatForNumerics { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference

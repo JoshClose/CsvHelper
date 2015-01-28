@@ -8,9 +8,9 @@ using System.Collections.Generic;
 
 namespace CsvHelper.MissingFrom20
 {
-	internal static class EnumerableHelper
+	internal static class EnumerableExtensions
 	{
-		public static bool Contains<T>( IEnumerable<T> enumerable, T value )
+		public static bool Contains<T>( this IEnumerable<T> enumerable, T value )
 		{
 			foreach( var item in enumerable )
 			{
@@ -22,7 +22,7 @@ namespace CsvHelper.MissingFrom20
 			return false;
 		}
 
-		public static bool Any<TSource>( IEnumerable<TSource> enumerable, Func<TSource, bool> predicate )
+		public static bool Any<TSource>( this IEnumerable<TSource> enumerable, Func<TSource, bool> predicate )
 		{
 			foreach( var item in enumerable )
 			{
@@ -35,7 +35,7 @@ namespace CsvHelper.MissingFrom20
 			return false;
 		}
 
-		public static bool All<TSource>( IEnumerable<TSource> enumerable, Func<TSource, bool> predicate )
+		public static bool All<TSource>( this IEnumerable<TSource> enumerable, Func<TSource, bool> predicate )
 		{
 			foreach( var item in enumerable )
 			{
@@ -48,7 +48,7 @@ namespace CsvHelper.MissingFrom20
 			return true;
 		}
 
-		public static bool SequenceEqual( IEnumerable x, IEnumerable y )
+		public static bool SequenceEqual( this IEnumerable x, IEnumerable y )
 		{
 			if( x == null )
 			{

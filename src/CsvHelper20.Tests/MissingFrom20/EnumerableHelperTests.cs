@@ -19,20 +19,20 @@ namespace CsvHelper20.Tests.MissingFrom20
 			var listA = new List<int> { 1, 2, 3 };
 			var listB = new List<int?> { 1, 2 };
 
-			Assert.IsFalse( EnumerableHelper.SequenceEqual( listA, listB ) );
+			Assert.IsFalse( listA.SequenceEqual( listB ) );
 
 			listB.Add( 4 );
 
-			Assert.IsFalse( EnumerableHelper.SequenceEqual( listA, listB ) );
+			Assert.IsFalse( listA.SequenceEqual( listB ) );
 
 			listB[2] = null;
 
-			Assert.IsFalse( EnumerableHelper.SequenceEqual( listA, listB ) );
+			Assert.IsFalse( listA.SequenceEqual( listB ) );
 
 
 			listB[2] = 3;
 
-			Assert.IsTrue( EnumerableHelper.SequenceEqual( listA, listB ) );
+			Assert.IsTrue( listA.SequenceEqual( listB ) );
 		}
 	}
 }

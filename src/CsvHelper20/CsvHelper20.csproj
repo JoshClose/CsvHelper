@@ -182,8 +182,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\UInt64Converter.cs">
       <Link>TypeConversion\UInt64Converter.cs</Link>
     </Compile>
-    <Compile Include="MissingFrom20\EnumerableHelper.cs" />
+    <Compile Include="MissingFrom20\EnumerableExtensions.cs" />
     <Compile Include="MissingFrom20\Delegates.cs" />
+    <Compile Include="MissingFrom20\ExtensionAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

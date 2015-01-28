@@ -116,13 +116,7 @@ namespace CsvHelper
 
 				if( configuration.DetectColumnCountChanges && row != null )
 				{
-					if( FieldCount > 0 && ( FieldCount != row.Length || 
-#if NET_2_0
-						EnumerableHelper.Any( row, field => field == null )
-#else
-						row.Any( field => field == null ) 
-#endif
-						) )
+					if( FieldCount > 0 && ( FieldCount != row.Length || row.Any( field => field == null ) ) )
 					{
 						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
 					}

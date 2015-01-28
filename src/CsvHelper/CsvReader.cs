@@ -1109,11 +1109,7 @@ namespace CsvHelper
 				return false;
 			}
 
-#if NET_2_0
-			return EnumerableHelper.All( currentRecord, GetEmtpyStringMethod() );
-#else
 			return currentRecord.All( GetEmtpyStringMethod() );
-#endif
 		}
 
 		/// <summary>

@@ -303,36 +303,31 @@ namespace CsvHelper.Tests
 			}
 		}
 
-        [TestMethod]
-        public void WriteNumericPrefixTest()
-        {
-            using( var stream = new MemoryStream() )
+		[TestMethod]
+		public void UseExcelLeadingZerosFormatForNumericsTest()
+		{
+			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
-            using (var writer = new StreamWriter(stream))
-            using (var csv = new CsvWriter(writer))
-            {
-                csv.Configuration.UseExcelNumericPrefix = true;
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
 
-                var record = new SimpleWithPostal
-                {
-                    Id = 1,
-                    Name = "one",
-                    Postal = "09010"
-                };
+				var record = new Simple
+				{
+					Id = 1,
+					Name = "09010",
+				};
 
-                csv.Configuration.Delimiter = ";";
-                csv.Configuration.HasExcelSeparator = true;
-                csv.WriteExcelSeparator();
-                csv.WriteHeader<SimpleWithPostal>();
-                csv.WriteRecord(record);
+				csv.WriteRecord( record );
 
-                writer.Flush();
-                stream.Position = 0;
+				writer.Flush();
+				stream.Position = 0;
 
-                var text = reader.ReadToEnd();
-                Assert.IsTrue(true);
-            }
-        }
+				var text = reader.ReadToEnd();
+				Assert.AreEqual( "1,=\"09010\"\r\n", text );
+			}
+		}
 
 		private class Simple
 		{
@@ -340,12 +335,5 @@ namespace CsvHelper.Tests
 
 			public string Name { get; set; }
 		}
-
-        private class SimpleWithPostal
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-            public string Postal { get; set; }
-        }
 	}
 }

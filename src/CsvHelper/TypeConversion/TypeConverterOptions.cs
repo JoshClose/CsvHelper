@@ -109,21 +109,13 @@ namespace CsvHelper.TypeConversion
 					options.Format = source.Format;
 				}
 
-#if NET_2_0
-				if( !EnumerableHelper.SequenceEqual( options.booleanTrueValues, source.booleanTrueValues ) )
-#else
 				if( !options.booleanTrueValues.SequenceEqual( source.booleanTrueValues ) )
-#endif
 				{
 					options.booleanTrueValues.Clear();
 					options.booleanTrueValues.AddRange( source.booleanTrueValues );
 				}
 
-#if NET_2_0
-				if( !EnumerableHelper.SequenceEqual( options.booleanFalseValues, source.booleanFalseValues ) )
-#else
 				if( !options.booleanFalseValues.SequenceEqual( source.booleanFalseValues ) )
-#endif
 				{
 					options.booleanFalseValues.Clear();
 					options.booleanFalseValues.AddRange( source.booleanFalseValues );

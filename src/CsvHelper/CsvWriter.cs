@@ -7,16 +7,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-#if !NET_2_0
-using System.Linq;
-using System.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+
+#if !NET_2_0
+using System.Linq;
+using System.Linq.Expressions;
+#endif
+
 #if NET_2_0
 using CsvHelper.MissingFrom20;
+#endif
+
+#if PCL
+using CsvHelper.MissingFromPcl;
 #endif
 
 namespace CsvHelper
@@ -113,11 +119,7 @@ namespace CsvHelper
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
-#if NET_2_0
-				if( EnumerableHelper.Contains( field, configuration.Quote ) )
-#else
 				if( field.Contains( configuration.QuoteString ) )
-#endif
 				{
 					// All quotes must be doubled.
 					field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
@@ -154,7 +156,11 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( shouldQuote )
+			if( configuration.UseExcelLeadingZerosFormatForNumerics && field[0] == '0' && field.All( Char.IsDigit ) )
+			{
+				field = "=" + configuration.Quote + field + configuration.Quote;
+			}
+			else if( shouldQuote )
 			{
 				field = configuration.Quote + field + configuration.Quote;
 			}
