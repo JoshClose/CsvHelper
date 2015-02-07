@@ -42,6 +42,30 @@ namespace CsvHelper35.Tests
 			}
 		}
 
+		[TestMethod]
+		public void WriteSelectIteratorTest()
+		{
+			string csv;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvWriter = new CsvWriter(writer))
+			{
+				var array = new[] { new { a = "a", b = "b" } };
+
+				csvWriter.Configuration.HasHeaderRecord = true;
+				csvWriter.WriteRecords(array.Select(a => new { x = a.a, y = a.b, z = a.a + a.b }));
+
+				writer.Flush();
+				stream.Position = 0;
+
+				csv = reader.ReadToEnd();
+			}
+
+			const string expected = "x,y,z\r\na,b,ab\r\n";
+			Assert.AreEqual(expected, csv);
+		}
+
 		private class Test
 		{
 			public int Id { get; set; }
