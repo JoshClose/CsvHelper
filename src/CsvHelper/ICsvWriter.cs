@@ -4,7 +4,6 @@
 // http://csvhelper.com
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 

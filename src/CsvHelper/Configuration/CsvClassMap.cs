@@ -7,7 +7,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -140,7 +139,7 @@ namespace CsvHelper.Configuration
 			var type = map.GetType().BaseType.GetGenericArguments()[0];
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
-				throw new CsvConfigurationException( "Types that inhererit IEnumerable cannot be auto mapped. " +
+				throw new CsvConfigurationException( "Types that inherit IEnumerable cannot be auto mapped. " +
 													 "Did you accidentally call GetRecord or WriteRecord which " +
 													 "acts on a single record instead of calling GetRecords or " +
 													 "WriteRecords which acts on a list of records?" );
