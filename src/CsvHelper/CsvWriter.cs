@@ -323,6 +323,33 @@ namespace CsvHelper
 				throw new ArgumentNullException( "type" );
 			}
 
+			if( type == typeof( Object ) )
+			{
+				return;
+			}
+
+			if( configuration.Maps[type] == null )
+			{
+				configuration.Maps.Add( configuration.AutoMap( type ) );
+			}
+
+			var properties = new CsvPropertyMapCollection();
+			AddProperties( properties, configuration.Maps[type] );
+		    var headers = properties
+                .Where( CanWrite )
+                .Select( propertyMap => propertyMap.Data.Names.FirstOrDefault());
+
+		    WriteHeader( headers );
+		}
+
+		/// <summary>
+		/// Writes the header record from the given properties.
+		/// </summary>
+        /// <param name="headers">The enumerable of headers of the record.</param>
+        public virtual void WriteHeader(IEnumerable<string> headers)
+		{
+			CheckDisposed();
+
 			if( !configuration.HasHeaderRecord )
 			{
 				throw new CsvWriterException( "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
@@ -338,25 +365,9 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
-			if( type == typeof( Object ) )
+            foreach (var header in headers)
 			{
-				return;
-			}
-
-			if( configuration.Maps[type] == null )
-			{
-				configuration.Maps.Add( configuration.AutoMap( type ) );
-			}
-
-			var properties = new CsvPropertyMapCollection();
-			AddProperties( properties, configuration.Maps[type] );
-
-			foreach( var property in properties )
-			{
-				if( CanWrite( property ) )
-				{
-					WriteField( property.Data.Names.FirstOrDefault() );
-				}
+				WriteField( header );
 			}
 
 			NextRecord();
