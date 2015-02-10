@@ -459,6 +459,38 @@ namespace CsvHelper.Tests
 			}
 		}
 
+        [TestMethod]
+        public void GetRecordsMultipleHeadersTest()
+        {
+            var headerData = new[]
+            {
+                "Two",
+                "String",
+                "Guid"
+            };
+            var guid = Guid.NewGuid();
+            var queue = new Queue<string[]>();
+            queue.Enqueue(headerData);
+            queue.Enqueue(new[] { "1", "string column 1", guid.ToString() });
+            queue.Enqueue(new[] { "2", "string column 2", guid.ToString() });
+            queue.Enqueue(null);
+            var csvParserMock = new ParserMock(queue);
+
+            var csv = new CsvReader(csvParserMock);
+            csv.Configuration.WillThrowOnMissingField = false;
+            csv.Configuration.RegisterClassMap<TestRecordMultiNameMap>();
+            var records = csv.GetRecords(typeof(TestRecord)).ToList();
+
+            Assert.AreEqual(2, records.Count);
+
+            for (var i = 1; i <= records.Count; i++)
+            {
+                var record = (TestRecord)records[i - 1];
+                Assert.AreEqual("string column " + i, record.StringColumn);
+                Assert.AreEqual(i, record.FirstColumn);
+            }
+        }
+
 		[TestMethod]
 		public void GetRecordsWithDuplicateHeaderNames()
 		{
@@ -1087,6 +1119,27 @@ namespace CsvHelper.Tests
 			}
 		}
 
+	    [TestMethod]
+	    public void DuplicatePropertiesTest()
+	    {
+	        using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using (var csv = new CsvReader(reader))
+			{
+			    csv.Configuration.WillThrowOnMissingField = false;
+                csv.Configuration.RegisterClassMap<TestRecordDuplicateColumnMap>();
+
+                writer.WriteLine("First,Second");
+                writer.WriteLine("one,two");
+                writer.Flush();
+                stream.Position = 0;
+
+			    var records = csv.GetRecords<TestRecord>().ToList();
+                Assert.IsNotNull( records );
+                Assert.AreEqual( "one", records[0].StringColumn );
+			}
+	    }
 
 #if !NET_3_5 && !PCL
 		[TestMethod]
@@ -1258,6 +1311,15 @@ namespace CsvHelper.Tests
 			}
 		}
 
+	    private sealed class TestRecordMultiNameMap : CsvClassMap<TestRecord>
+	    {
+	        public TestRecordMultiNameMap()
+	        {
+	            Map( r => r.FirstColumn ).Name( "One", "Two", "Three" );
+	            Map( r => r.StringColumn ).Name( "String" );
+	        }
+	    }
+
 		private class TestRecordDuplicateHeaderNames
 		{
 			public string Column1 { get; set; }
@@ -1289,5 +1351,17 @@ namespace CsvHelper.Tests
 				return type == typeof( string );
 			}
 		}
+
+	    private sealed class TestRecordDuplicateColumnMap : CsvClassMap<TestRecord>
+	    {
+	        public TestRecordDuplicateColumnMap()
+	        {
+	            Map( m => m.StringColumn, 0 )
+	                .Name( "First" );
+
+                Map( m => m.StringColumn, 1 )
+                    .Name( "Second" );
+	        }
+	    }
 	}
 }

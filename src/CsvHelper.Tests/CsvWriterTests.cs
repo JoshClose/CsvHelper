@@ -865,11 +865,11 @@ namespace CsvHelper.Tests
         {
             public TestRecordMap()
             {
-                Map(m => m.IntColumn).Name("Int Column").Index(1).TypeConverter<Int32Converter>();
-                Map(m => m.StringColumn);
-                Map(m => m.FirstColumn).Index(0);
-                Map(m => m.TypeConvertedColumn).TypeConverter<TestTypeConverter>();
-                Map(m => m.InternalColumn);
+                Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverter<Int32Converter>();
+                Map( m => m.StringColumn );
+                Map( m => m.FirstColumn ).Index( 0 );
+                Map( m => m.TypeConvertedColumn ).TypeConverter<TestTypeConverter>();
+                Map( m => m.InternalColumn );
             }
         }
 
@@ -877,8 +877,8 @@ namespace CsvHelper.Tests
         {
             public TestRecordMultiMap()
             {
-                Map(m => m.StringColumn).Name("First");
-                Map(m => m.StringColumn, ignoreExistingMap: true).Name("Second");
+                Map( m => m.StringColumn, 0 ).Name( "First" );
+                Map( m => m.StringColumn, 1 ).Name( "Second" );
             }
         }
 
