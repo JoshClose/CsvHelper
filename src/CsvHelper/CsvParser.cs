@@ -6,10 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
-#if NET_2_0
+#if NET_2_0 && !PCL
 using CsvHelper.MissingFrom20;
-#endif
-#if !NET_2_0
+#else
 using System.Linq;
 #endif
 
