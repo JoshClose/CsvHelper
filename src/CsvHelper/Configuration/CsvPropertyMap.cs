@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.ComponentModel.DataAnnotations;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -39,7 +40,11 @@ namespace CsvHelper.Configuration
 				// Set some defaults.
 				TypeConverter = TypeConverterFactory.GetConverter( property.PropertyType )
 			};
-			data.Names.Add( property.Name );
+			var displayAttributes = property.GetCustomAttributes(typeof(DisplayAttribute), true);
+			if(displayAttributes != null && displayAttributes.Length == 1)
+				data.Names.Add( ((DisplayAttribute)displayAttributes[0]).Name );
+			else
+				data.Names.Add( property.Name );
 		}
 
 		/// <summary>
