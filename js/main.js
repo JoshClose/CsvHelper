@@ -3,7 +3,7 @@ $(function(){
 		var mode = $(this).data("code") || "text/x-csharp";
 		CodeMirror.fromTextArea(this, {
 			mode: mode,
-			readOnly: "nocursor",
+			readOnly: true,
 			lineNumbers: true,
 			lineWrapping: true,
 			viewportMargin: Infinity
