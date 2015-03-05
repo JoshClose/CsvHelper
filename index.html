@@ -109,6 +109,7 @@
 						<a href="#" class="dropdown-toggle" data-toggle="dropdown">Misc <b class="caret"></b></a>
 						<ul class="dropdown-menu">
 							<li><a href="#change-log">Change Log</a></li>
+							<li><a href="#culture-specifics">Culture Specifics</a></li>
 						</ul>
 					</li>
 				</ul>
@@ -693,6 +694,14 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 	<!-- Miscellaneous -->
 	<section>
 	<h2>Miscellaneous</h2>
+
+	<h3 id="culture-specifics">Culture Specifics</h3>
+
+	<h4>Delimiter</h4>
+
+	<p>Even though a culture has a specific list separator denoted by <code>CultureInfo.TextInfo.ListSeparator</code>,
+		CSV files use a <code>,</code> as a separator per RFC 4180. If you have a file that uses a different delimiter,
+		you can change the <a href="#configuration-delimiter">Configuration.Delimiter</a>.</p>
 
 	<h3 id="change-log">Change Log</h3>
 
