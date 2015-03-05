@@ -156,6 +156,26 @@ namespace CsvHelper.Tests
         }
 
         [TestMethod]
+        public void WriteEmptyArrayTest()
+        {
+            var records = new TestRecord[] { };
+
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream) { AutoFlush = true };
+            var csv = new CsvWriter(writer);
+            csv.Configuration.RegisterClassMap<TestRecordMap>();
+
+            csv.WriteRecords(records);
+
+            stream.Position = 0;
+            var reader = new StreamReader(stream);
+            var csvFile = reader.ReadToEnd();
+            var expected = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+
+            Assert.AreEqual(expected, csvFile);
+        }
+
+        [TestMethod]
         public void WriteRecordsCalledWithTwoParametersTest()
         {
             var records = new List<object>
