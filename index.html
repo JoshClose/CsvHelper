@@ -696,6 +696,96 @@ csv.Configuration.WillThrowOnMissingField = true;</textarea></p>
 
 	<h3 id="change-log">Change Log</h3>
 
+	<h4>2.11.1.1</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue with writing an array of records.</li>
+	</ul>
+
+	<h4>2.11</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Allow preservation of numeric strings for Excel.</li>
+	</ul>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed writing issue with anonymous objects outputting wrong headers.</li>
+	</ul>
+
+	<h4>2.10</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Updated writer methods to match reader methods.</li>
+	</ul>
+
+	<h4>2.9.1</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue where char converter would trim a single space string.</li>
+	</ul>
+
+	<h4>2.9</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Added support to ignore whitespace when determining a record is empty.</li>
+	</ul>
+
+	<h4>2.8.4</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed breaking change to not break.</li>
+	</ul>
+
+	<h4>2.8.3</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue where header wasn't written when there were no records in the IEnumerable on WriteRecords( IEnumerable ).</li>
+	</ul>
+
+	<h4>2.8.2</h4>
+
+	<h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue where an exception was always thrown if Configuration.ThrowOnBadData is on.</li>
+	</ul>
+
+	<h4>2.8</h4>
+
+	<h5>Features</h5>
+
+	<ul>
+		<li>Added configurations for a callback when a bad field is detected. Added configuration to throw an exception
+			when a bad field is detected.</li>
+		<li>Made mapping with interfaces not duplicate property maps.</li>
+	</ul>
+
+    <h4>2.7.1</h4>
+
+    <h5>Bug Fixes</h5>
+
+	<ul>
+		<li>Fixed issue with mappings overwriting an explicitly set index when re-indexing.</li>
+		<li>Auto mapping will ignore Enumerable properties instead of throwing an exception. Exceptions will still be
+			thrown if an Enumerable is used outside of auto mapping.</li>
+	</ul>
+
 	<h4>2.7</h4>
 
 	<h5>Bug Fixes</h5>
