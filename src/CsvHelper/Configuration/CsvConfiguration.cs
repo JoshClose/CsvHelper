@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Globalization;
 #if !NET_2_0
 using System.Linq;
+#else
+using CsvHelper.MissingFrom20;
 #endif
 using System.Reflection;
 using System.Text;
@@ -347,6 +349,14 @@ namespace CsvHelper.Configuration
 		///   <c>true</c> if [skip empty rows]; otherwise, <c>false</c>.
 		/// </value>
 		public virtual bool SkipEmptyRecords { get; set; }
+
+		/// <summary>
+		/// Gets or sets the callback that will be called to
+		/// determine whether to skip the given record or not.
+		/// This will will not be called for empty records if
+		/// <see cref="SkipEmptyRecords"/> is set to <c>true</c>.
+		/// </summary>
+		public virtual Func<string[], bool> SkipRecordCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if quotes should be

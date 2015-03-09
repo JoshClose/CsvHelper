@@ -178,7 +178,7 @@ namespace CsvHelper
 			{
 				currentRecord = parser.Read();
 			} 
-			while( configuration.SkipEmptyRecords && IsRecordEmpty( false ) );
+			while( ShouldSkipRecord() );
 
 			currentIndex = -1;
 			hasBeenRead = true;
@@ -1232,6 +1232,33 @@ namespace CsvHelper
 					namedIndexes[name] = new List<int> { i };
 				}
 			}
+		}
+
+		/// <summary>
+		/// Checks if the current record should be skipped or not.
+		/// </summary>
+		/// <returns><c>true</c> if the current record should be skipped, <c>false</c> otherwise.</returns>
+		protected virtual bool ShouldSkipRecord()
+		{
+			CheckDisposed();
+
+			if( currentRecord == null )
+			{
+				return false;
+			}
+
+			if( configuration.SkipEmptyRecords && IsRecordEmpty( false ) )
+			{
+				return true;
+			}
+
+			var callback = configuration.SkipRecordCallback;
+			if( callback != null )
+			{
+				return callback( currentRecord );
+			}
+
+			return false;
 		}
 
 #if !NET_2_0
