@@ -26,5 +26,6 @@ $(function(){
 		url: "markdown.txt"
 	}).done(function(data){
 		$("#markdown-output").html(marked(data));
+		$("body").scrollspy({ offset: 40 });
 	});
 });
