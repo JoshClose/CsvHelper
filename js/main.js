@@ -1,16 +1,30 @@
 $(function(){
-	$("textarea").each(function(){
-		var mode = $(this).data("code") || "text/x-csharp";
-		CodeMirror.fromTextArea(this, {
-			mode: mode,
-			readOnly: true,
-			lineNumbers: true,
-			lineWrapping: true,
-			viewportMargin: Infinity
-		});
+	var renderer = new marked.Renderer();
+	renderer.heading = function(text, level, raw){
+		return "<h"
+			+ level
+			+ " id='"
+			+ this.options.headerPrefix
+			+ raw.toLowerCase().replace(/\[(.*?)\]/g, "$1").replace(/[^\w]+/g, "-")
+			+ "'>"
+			+ text.replace(/\[(.*?)\]/g, "")
+			+ "</h"
+			+ level
+			+ ">\n";
+	};
+
+	marked.setOptions({
+		highlight: function(code, language, callback){
+			return prettyPrintOne(code, language);
+		},
+		renderer: renderer
 	});
 
-	$("header .nav a[href!=#]").each(function(){
-		$($(this).attr("href")).css("padding-top", "40px").prev().css("margin-bottom", "-40px");
+	$.ajax({
+		contentType: "text/plain",
+		dataType: "text",
+		url: "markdown.txt"
+	}).done(function(data){
+		$("#markdown-output").html(marked(data));
 	});
 });
