@@ -1,11 +1,6 @@
 body
 {
-	padding-top: 40px;
-}
-
-.home-link
-{
-	margin-top: 6px;
+	padding-top: 70px;
 }
 
 h1
@@ -16,14 +11,15 @@ h1
 	width: 612px;
 }
 
-h2
+h1, h2, h3, h4, h5, h6
 {
-	margin-bottom: 20px;
-	line-height: 60px;
-	border-bottom: 1px solid #e5e5e5;
+	margin-top: -50px;
+	padding-top: 50px;
 }
 
-.CodeMirror
+.navbar-brand img
 {
-	height: auto;
+	margin-top: -5px;
+	height: 30px;
+	width: 30px;
 }
