@@ -20,11 +20,7 @@ $(function(){
 		renderer: renderer
 	});
 
-	$.ajax({
-		contentType: "text/plain",
-		dataType: "text",
-		url: "markdown.txt"
-	}).done(function(data){
+	$.get("index.md").done(function(data){
 		$("#markdown-output").html(marked(data));
 		$("body").scrollspy();
 		if(location.hash){
