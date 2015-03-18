@@ -428,7 +428,7 @@ namespace CsvHelper
 
 			// Write the header. If records is a List<dynamic>, the header won't be written.
 			// This is because typeof( T ) = Object.
-			var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
+			var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
 			if( genericEnumerable != null )
 			{
 				var type = genericEnumerable.GetGenericArguments().Single();
