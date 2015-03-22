@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -145,7 +146,7 @@ namespace CsvHelper.Configuration
 													 "WriteRecords which acts on a list of records?" );
 			}
 
-			var properties = type.GetProperties();
+			var properties = type.GetProperties( BindingFlags.Instance | BindingFlags.Public );
 			foreach( var property in properties )
 			{
 				var typeConverterType = TypeConverterFactory.GetConverter( property.PropertyType ).GetType();
