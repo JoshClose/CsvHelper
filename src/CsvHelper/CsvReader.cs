@@ -1489,7 +1489,13 @@ namespace CsvHelper
 					// Create default value expression.
 					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
 
-					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( fieldExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
+					// If null, use string.Empty.
+					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
+
+					// Check if the field is an empty string.
+					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( coalesceExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
+
+					// Use a default value if the field is an empty string.
 					fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
 				}
 				else

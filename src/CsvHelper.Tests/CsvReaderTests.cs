@@ -707,33 +707,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void DefaultValueTest()
-		{
-			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
-
-			writer.WriteLine( "IntColumn,StringColumn" );
-			writer.WriteLine( "," );
-			writer.WriteLine( "2,two" );
-			writer.Flush();
-			stream.Position = 0;
-
-			var reader = new StreamReader( stream );
-			var csvReader = new CsvReader( reader );
-			csvReader.Configuration.RegisterClassMap<TestDefaultValuesMap>();
-
-			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
-
-			var record = records[0];
-			Assert.AreEqual( -1, record.IntColumn );
-			Assert.AreEqual( null, record.StringColumn );
-
-			record = records[1];
-			Assert.AreEqual( 2, record.IntColumn );
-			Assert.AreEqual( "two", record.StringColumn );
-		}
-
-		[TestMethod]
 		public void BooleanTypeConverterTest()
 		{
 			var stream = new MemoryStream();

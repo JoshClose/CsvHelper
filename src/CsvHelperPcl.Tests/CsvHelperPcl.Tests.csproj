@@ -80,6 +80,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvReaderConstructorTests.cs">
       <Link>CsvReaderConstructorTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderDefaultValueTests.cs">
+      <Link>CsvReaderDefaultValueTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvReaderErrorMessageTests.cs">
       <Link>CsvReaderErrorMessageTests.cs</Link>
     </Compile>
