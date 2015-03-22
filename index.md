@@ -560,6 +560,21 @@ Type converters are the way CsvHelper converts strings into .NET types, and .NET
 
 Even though a culture has a specific list separator denoted by `CultureInfo.TextInfo.ListSeparator`, CSV files use a , as a separator per RFC 4180. If you have a file that uses a different delimiter, you can change the `Configuration.Delimiter`.
 
+### [misc] FAQ
+
+#### I got an exception. How do I tell what line the exception was on?
+
+There is a lot of information held in `Exception.Data["CsvHelper"]`.
+
+ex:
+```txt
+Row: '3' (1 based)
+Type: 'CsvHelper.Tests.CsvReaderTests+TestBoolean'
+Field Index: '0' (0 based)
+Field Name: 'BoolColumn'
+Field Value: 'two'
+```
+
 ### [misc] Change Log
 
 #### 2.11.1.1
