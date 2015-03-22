@@ -575,6 +575,69 @@ Field Name: 'BoolColumn'
 Field Value: 'two'
 ```
 
+#### How can I use a DataReader or DataTable with CsvHelper?
+
+Writing to a CSV using a DataReader:
+
+```cs
+var hasHeaderBeenWritten = false;
+while( dataReader.Read() )
+{
+	if( !hasHeaderBeenWritten )
+	{
+		for( var i = 0; i < dataReader.FieldCount; i++ )
+		{
+			csv.WriteField( dataReader.GetName( i ) );
+		}
+		csv.NextRecord();
+		hasHeaderBeenWritten = true;
+	}
+
+	for( var i = 0; i < dataReader.FieldCount; i++ )
+	{
+		csv.WriteField( dataReader[i] );
+	}
+	csv.NextRecord();
+}
+```
+
+Writing to a CSV using a DataTable:
+
+```cs
+using( var dt = new DataTable() )
+{
+	dt.Load( dataReader );
+	foreach( DataColumn column in dt.Columns )
+	{
+		csv.WriteField( column.ColumnName );
+	}
+	csv.NextRecord();
+
+	foreach( DataRow row in dt.Rows )
+	{
+		for( var i = 0; i < dt.Columns.Count; i++ )
+		{
+			csv.WriteField( row[i] );
+		}
+		csv.NextRecord();
+	}
+}
+```
+
+Reading from a CSV into a DataTable:
+
+```cs
+while( csv.Read() )
+{
+	var row = dt.NewRow();
+	foreach( DataColumn column in dt.Columns )
+	{
+		row[column.ColumnName] = csv.GetField( column.DataType, column.ColumnName );
+	}
+	dt.Rows.Add( row );
+}
+```
+
 ### [misc] Change Log
 
 #### 2.11.1.1
