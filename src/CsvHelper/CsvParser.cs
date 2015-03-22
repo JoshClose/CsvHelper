@@ -268,7 +268,7 @@ namespace CsvHelper
 				}
 
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, false );
 				if( !read )
 				{
 					break;
@@ -390,7 +390,7 @@ namespace CsvHelper
 					if( c == '\r' )
 					{
 						char cNext;
-						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, true );
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, true );
 						if( cNext == '\n' )
 						{
 							readerBufferPosition++;
@@ -453,7 +453,7 @@ namespace CsvHelper
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
 		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
-		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, ref bool fieldIsBad, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool isPeek = false )
+		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, ref bool fieldIsBad, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool inQuotes, bool isPeek )
 		{
 			if( readerBufferPosition == charsRead )
 			{
@@ -488,8 +488,11 @@ namespace CsvHelper
 						return false;
 					}
 
-					if( c != '\r' && c != '\n' && c != '\0' && !inComment )
+					if( ( c != '\r' && c != '\n' && c != '\0' && !inComment ) || inQuotes )
 					{
+						// If we're in quotes and have reached the end of the file, record the
+						// rest of the record and field.
+
 						if( prevCharWasDelimiter )
 						{
 							// Handle an empty field at the end of the row.

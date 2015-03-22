@@ -329,6 +329,27 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void ParseFieldMissingQuoteGoesToEndOfFileTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "a,b,\"c" );
+				writer.WriteLine( "d,e,f" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+				Assert.IsNotNull( row );
+				Assert.AreEqual( "a", row[0] );
+				Assert.AreEqual( "b", row[1] );
+				Assert.AreEqual( "c\r\nd,e,f\r\n", row[2] );
+			}
+		}
+
 		private class Simple
 		{
 			public int Id { get; set; }
