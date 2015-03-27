@@ -116,6 +116,11 @@ namespace CsvHelper
 
 			var shouldQuote = configuration.QuoteAllFields;
 
+            if (configuration.TrimFields)
+            {
+                field = field.Trim();
+            }
+
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
 				var hasQuote = false;
