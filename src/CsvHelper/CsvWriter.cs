@@ -230,6 +230,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the field.</param>
 		/// <param name="field">The field to write.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field ) instead.", false )]
 		public virtual void WriteField( Type type, object field )
 		{
 			CheckDisposed();
@@ -254,6 +255,7 @@ namespace CsvHelper
 		/// <param name="type">The type of the field.</param>
 		/// <param name="field">The field to write.</param>
 		/// <param name="converter">The converter used to convert the field into a string.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field, ITypeConverter converter ) instead.", false )]
 		public virtual void WriteField( Type type, object field, ITypeConverter converter )
 		{
 			CheckDisposed();
@@ -396,6 +398,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="record">The record to write.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecord<T>( T record ) instead.", false )]
 		public virtual void WriteRecord( Type type, object record )
 		{
 			CheckDisposed();
