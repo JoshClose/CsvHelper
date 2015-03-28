@@ -2,20 +2,14 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Text;
-using CsvHelper.Configuration;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
-namespace CsvHelper.Tests
+namespace CsvHelper.Tests.Exceptions
 {
 	[TestClass]
 	public class ExceptionTests
@@ -44,7 +38,7 @@ namespace CsvHelper.Tests
 					var data = ex.Data["CsvHelper"];
 					var expected = new StringBuilder();
 					expected.AppendLine( "Row: '2' (1 based)" );
-					expected.AppendLine( "Type: 'CsvHelper.Tests.ExceptionTests+NoDefaultConstructor'" );
+					expected.AppendLine( "Type: 'CsvHelper.Tests.Exceptions.ExceptionTests+NoDefaultConstructor'" );
 					expected.AppendLine( "Field Index: '-1' (0 based)" );
 
 					Assert.IsNotNull( data );

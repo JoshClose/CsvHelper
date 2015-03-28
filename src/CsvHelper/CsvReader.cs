@@ -259,7 +259,9 @@ namespace CsvHelper
 			{
 				if( configuration.WillThrowOnMissingField )
 				{
-					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					var ex = new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					ExceptionHelper.AddExceptionDataMessage( ex, Parser, typeof( string ), namedIndexes, index, currentRecord );
+					throw ex;
 				}
 
 				return default( string );
@@ -544,7 +546,9 @@ namespace CsvHelper
 			{
 				if( configuration.WillThrowOnMissingField )
 				{
-					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					var ex = new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					ExceptionHelper.AddExceptionDataMessage( ex, Parser, typeof( T ), namedIndexes, index, currentRecord );
+					throw ex;
 				}
 
 				return default( T );
@@ -894,8 +898,15 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
+				if( ex is System.Reflection.TargetInvocationException )
+				{
+					ex = ex.InnerException;
+				}
+
 				ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
-				throw;
+
+				// ReSharper disable once PossibleIntendedRethrow
+				throw ex;
 			}
 			return record;
 		}
@@ -965,6 +976,11 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
+					if( ex is System.Reflection.TargetInvocationException )
+					{
+						ex = ex.InnerException;
+					}
+
 					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
 
 					if( configuration.IgnoreReadingExceptions )
@@ -979,7 +995,8 @@ namespace CsvHelper
 						continue;
 					}
 
-					throw;
+					// ReSharper disable once PossibleIntendedRethrow
+					throw ex;
 				}
 
 				yield return record;
@@ -1196,7 +1213,9 @@ namespace CsvHelper
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
 					var namesJoined = string.Format( "'{0}'", string.Join( "', '", names ) );
-					throw new CsvMissingFieldException( string.Format( "Fields {0} do not exist in the CSV file.", namesJoined ) );
+					var ex = new CsvMissingFieldException( string.Format( "Fields {0} do not exist in the CSV file.", namesJoined ) );
+					ExceptionHelper.AddExceptionDataMessage( ex, Parser, null, namedIndexes, currentIndex, currentRecord );
+					throw ex;
 				}
 
 				return -1;

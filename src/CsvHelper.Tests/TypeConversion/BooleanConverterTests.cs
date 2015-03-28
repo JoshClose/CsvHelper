@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.TypeConversion
 				converter.ConvertFromString( typeConverterOptions, null );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException )
+			catch( CsvTypeConverterException ex )
 			{
 			}
 		}

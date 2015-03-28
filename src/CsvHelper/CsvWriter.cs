@@ -381,16 +381,14 @@ namespace CsvHelper
 			try
 			{
 				GetWriteRecordAction<T>()( record );
+				hasRecordBeenWritten = true;
+				NextRecord();
 			}
 			catch( Exception ex )
 			{
 				ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
 				throw;
 			}
-
-			hasRecordBeenWritten = true;
-
-			NextRecord();
 		}
 
 		/// <summary>
@@ -405,16 +403,14 @@ namespace CsvHelper
 			try
 			{
 				GetWriteRecordAction( type ).DynamicInvoke( record );
+				hasRecordBeenWritten = true;
+				NextRecord();
 			}
 			catch( Exception ex )
 			{
 				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
 				throw;
 			}
-
-			hasRecordBeenWritten = true;
-
-			NextRecord();
 		}
 
 		/// <summary>
@@ -425,45 +421,45 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
+			Type recordType = null;
+			try
 			{
-				WriteExcelSeparator();
-				hasExcelSeperatorBeenRead = true;
-			}
-
-			// Write the header. If records is a List<dynamic>, the header won't be written.
-			// This is because typeof( T ) = Object.
-			var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
-			if( genericEnumerable != null )
-			{
-				var type = genericEnumerable.GetGenericArguments().Single();
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
+				if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
 				{
-					WriteHeader( type );
-				}
-			}
-
-			foreach( var record in records )
-			{
-				// If records is a List<dynamic>, the header hasn't been written yet.
-				// Write the header based on the record type.
-				var type = record.GetType();
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
-				{
-					WriteHeader( type );
+					WriteExcelSeparator();
+					hasExcelSeperatorBeenRead = true;
 				}
 
-				try
+				// Write the header. If records is a List<dynamic>, the header won't be written.
+				// This is because typeof( T ) = Object.
+				var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
+				if( genericEnumerable != null )
 				{
+					recordType = genericEnumerable.GetGenericArguments().Single();
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					{
+						WriteHeader( recordType );
+					}
+				}
+
+				foreach( var record in records )
+				{
+					// If records is a List<dynamic>, the header hasn't been written yet.
+					// Write the header based on the record type.
+					recordType = record.GetType();
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					{
+						WriteHeader( recordType );
+					}
+
 					GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
+					NextRecord();
 				}
-				catch( Exception ex )
-				{
-					ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
-					throw;
-				}
-
-				NextRecord();
+			}
+			catch( Exception ex )
+			{
+				ExceptionHelper.AddExceptionDataMessage( ex, null, recordType, null, null, null );
+				throw;
 			}
 		}
 
