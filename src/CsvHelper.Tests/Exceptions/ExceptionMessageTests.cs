@@ -6,7 +6,6 @@ using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace CsvHelper.Tests.Exceptions
 {
@@ -208,11 +207,8 @@ namespace CsvHelper.Tests.Exceptions
 		[TestMethod]
 		public void WriteRecordGenericTest()
 		{
-			var serializerMock = new Mock<ICsvSerializer>();
-			serializerMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			serializerMock.Setup( m => m.Write( It.IsAny<string[]>() ) ).Throws( new Exception( "test exception" ) );
-
-			var writer = new CsvWriter( serializerMock.Object );
+			var serializer = new SerializerMock( true );
+			var writer = new CsvWriter( serializer );
 			try
 			{
 				writer.WriteRecord( new Simple() );
@@ -228,11 +224,8 @@ namespace CsvHelper.Tests.Exceptions
 		[TestMethod]
 		public void WriteRecordTest()
 		{
-			var serializerMock = new Mock<ICsvSerializer>();
-			serializerMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			serializerMock.Setup( m => m.Write( It.IsAny<string[]>() ) ).Throws( new Exception( "test exception" ) );
-
-			var writer = new CsvWriter( serializerMock.Object );
+			var serializer = new SerializerMock( true );
+			var writer = new CsvWriter( serializer );
 			try
 			{
 				writer.WriteRecord( typeof( Simple ), new Simple() );
@@ -248,11 +241,8 @@ namespace CsvHelper.Tests.Exceptions
 		[TestMethod]
 		public void WriteRecordsGenericTest()
 		{
-			var serializerMock = new Mock<ICsvSerializer>();
-			serializerMock.Setup( m => m.Configuration ).Returns( new CsvConfiguration() );
-			serializerMock.Setup( m => m.Write( It.IsAny<string[]>() ) ).Throws( new Exception( "test exception" ) );
-
-			var writer = new CsvWriter( serializerMock.Object );
+			var serializer = new SerializerMock( true );
+			var writer = new CsvWriter( serializer );
 			try
 			{
 				writer.WriteRecords( new List<Simple> { new Simple() } );
