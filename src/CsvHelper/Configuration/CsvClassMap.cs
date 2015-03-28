@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.TypeConversion;
+using CsvHelper.Attributes;
 
 namespace CsvHelper.Configuration
 {
@@ -138,6 +139,8 @@ namespace CsvHelper.Configuration
 		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 			var type = map.GetType().BaseType.GetGenericArguments()[0];
+            var attributes = type.GetCustomAttributes(true);
+            var isCsvClassMappedWithAttributes = attributes.Any(attr => attr is CsvClassAttribute);
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
 				throw new CsvConfigurationException( "Types that inherit IEnumerable cannot be auto mapped. " +
@@ -158,6 +161,27 @@ namespace CsvHelper.Configuration
 
 				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
 				var hasDefaultConstructor = property.PropertyType.GetConstructor( new Type[0] ) != null;
+
+                var csvPropertyAttribute = GetForCsvPropertyAttribute(property);
+
+                if (csvPropertyAttribute != null)
+                {
+                    if (!isCsvClassMappedWithAttributes)
+                    {
+                        //Turn Csv attributes mode on 
+                        isCsvClassMappedWithAttributes = true;
+                        map.ReferenceMaps.Clear();
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                else if (isCsvClassMappedWithAttributes)
+                {
+                    continue;
+                }
+
 				if( isDefaultConverter && hasDefaultConstructor )
 				{
 					if( ignoreReferences )
@@ -176,6 +200,7 @@ namespace CsvHelper.Configuration
 					mapParents.AddLast( type );
 					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
 					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
+
 					AutoMapInternal( refMap, false, prefixReferenceHeaders, mapParents, map.GetMaxIndex() + 1 );
 
 					if( prefixReferenceHeaders )
@@ -198,6 +223,12 @@ namespace CsvHelper.Configuration
 				{
 					var propertyMap = new CsvPropertyMap( property );
 					propertyMap.Data.Index = map.GetMaxIndex() + 1;
+
+                    if (csvPropertyAttribute != null && csvPropertyAttribute.HasDifferentNames)
+                    {
+                        propertyMap.Name(csvPropertyAttribute.ColumnToMapNames);
+                    }
+
 					if( propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) ||
 						propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
 					{
@@ -211,6 +242,16 @@ namespace CsvHelper.Configuration
 
 			map.ReIndex( indexStart );
 		}
+
+        /// <summary>
+        /// Get CsvPropertyAttribute data for current property
+        /// </summary>
+        /// <param name="type">Type of property to check the attribute</param>
+        /// <returns>CsvPropertyAttribute object if it's found, or null if attribute wasn't set.</returns>
+        private static CsvPropertyAttribute GetForCsvPropertyAttribute(PropertyInfo property)
+        {
+            return property.PropertyType.GetCustomAttributes(true).FirstOrDefault(attr => attr is CsvPropertyAttribute) as CsvPropertyAttribute;
+        }
 
 		/// <summary>
 		/// Checks for circular references.
