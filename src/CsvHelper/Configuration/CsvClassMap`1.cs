@@ -56,10 +56,11 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
 		/// <param name="expression">The expression.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the property.</returns>
-		protected virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<T, object>> expression ) where TClassMap : CsvClassMap
+		protected virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<T, object>> expression, params object[] constructorArgs ) where TClassMap : CsvClassMap
 		{
-			return References( typeof( TClassMap ), expression );
+			return References( typeof( TClassMap ), expression, constructorArgs );
 		}
 
 		/// <summary>
@@ -67,11 +68,12 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type.</param>
 		/// <param name="expression">The expression.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the property</returns>
-		protected virtual CsvPropertyReferenceMap References( Type type, Expression<Func<T, object>> expression )
+		protected virtual CsvPropertyReferenceMap References( Type type, Expression<Func<T, object>> expression, params object[] constructorArgs )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-			var map = (CsvClassMap)ReflectionHelper.CreateInstance( type );
+			var map = (CsvClassMap)ReflectionHelper.CreateInstance( type, constructorArgs );
 			map.CreateMap();
 			map.ReIndex( GetMaxIndex() + 1 );
 			var reference = new CsvPropertyReferenceMap( property, map );

@@ -131,6 +131,9 @@
     <Compile Include="..\CsvHelper.Tests\MappingInheritedClassTests.cs">
       <Link>MappingInheritedClassTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\Mappings\ReferenceConstructorArgsTests.cs">
+      <Link>Mappings\ReferenceConstructorArgsTests.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper.tests\mocks\ParserMock.cs">
       <Link>Mocks\ParserMock.cs</Link>
     </Compile>
