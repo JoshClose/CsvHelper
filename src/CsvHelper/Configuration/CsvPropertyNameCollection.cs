@@ -32,6 +32,15 @@ namespace CsvHelper.Configuration
 		public string Prefix { get; set; }
 
 		/// <summary>
+		/// Gets the raw list of names without
+		/// the prefix being prepended.
+		/// </summary>
+		public List<string> Names
+		{
+			get { return names; }
+		}
+
+		/// <summary>
 		/// Gets the count.
 		/// </summary>
 		public int Count
