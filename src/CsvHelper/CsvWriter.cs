@@ -185,7 +185,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( typeof( T ), field );
+			WriteField( field.GetType(), field );
 		}
 
 		/// <summary>
@@ -201,7 +201,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( typeof( T ), field, converter );
+			WriteField( field.GetType(), field, converter );
 		}
 
 		/// <summary>
@@ -388,7 +388,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
+				ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
 				throw;
 			}
 		}
