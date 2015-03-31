@@ -538,7 +538,7 @@ namespace CsvHelper
 			properties.AddRange( mapping.PropertyMaps );
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				AddProperties( properties, refMap.Mapping );
+				AddProperties( properties, refMap.Data.Mapping );
 			}
 		}
 
@@ -563,14 +563,14 @@ namespace CsvHelper
 			// We need to search down through the reference maps.
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				var wrapped = Expression.Property( recordExpression, refMap.Property );
-				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Mapping, propertyMap );
+				var wrapped = Expression.Property( recordExpression, refMap.Data.Property );
+				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Data.Mapping, propertyMap );
 				if( propertyExpression == null )
 				{
 					continue;
 				}
 
-				var isReferenceValueType = refMap.Property.PropertyType.IsValueType;
+				var isReferenceValueType = refMap.Data.Property.PropertyType.IsValueType;
 				if( isReferenceValueType )
 				{
 					return propertyExpression;

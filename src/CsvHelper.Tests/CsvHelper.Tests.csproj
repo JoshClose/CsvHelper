@@ -57,6 +57,8 @@
     <Compile Include="CsvClassMappingAutoMapTests.cs" />
     <Compile Include="CsvParserDelimiterTests.cs" />
     <Compile Include="CsvReaderDefaultValueTests.cs" />
+    <Compile Include="CsvReaderReferenceMappingPrefixTests.cs" />
+    <Compile Include="CsvWriterReferenceMappingPrefixTests.cs" />
     <Compile Include="DynamicProxyTests.cs" />
     <Compile Include="ExcelCompatibleTests.cs" />
     <Compile Include="CsvParserRawRecordTests.cs" />

@@ -1414,9 +1414,9 @@ namespace CsvHelper
 				}
 
 				var referenceBindings = new List<MemberBinding>();
-				CreatePropertyBindingsForMapping( referenceMap.Mapping, referenceMap.Property.PropertyType, referenceBindings );
-				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
-				bindings.Add( Expression.Bind( referenceMap.Property, referenceBody ) );
+				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Property.PropertyType, referenceBindings );
+				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+				bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
 			}
 		}
 
@@ -1556,9 +1556,9 @@ namespace CsvHelper
 			var cantRead =
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyReferenceMap.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
 				// Properties that don't have a setter at all.
-				propertyReferenceMap.Property.GetSetMethod( true ) == null;
+				propertyReferenceMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;
 		}
 #endif

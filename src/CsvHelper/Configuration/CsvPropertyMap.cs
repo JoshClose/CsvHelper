@@ -22,7 +22,7 @@ namespace CsvHelper.Configuration
 		private readonly CsvPropertyMapData data;
 
 		/// <summary>
-		/// Property map data.
+		/// Gets the property map data.
 		/// </summary>
 		public CsvPropertyMapData Data
 		{

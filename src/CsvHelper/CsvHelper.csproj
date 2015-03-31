@@ -69,6 +69,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CsvPropertyNameCollection.cs" />
+    <Compile Include="Configuration\CsvPropertyReferenceMapData.cs" />
     <Compile Include="Configuration\DefaultCsvClassMap`1.cs" />
     <Compile Include="Configuration\CsvClassMap`1.cs" />
     <Compile Include="Configuration\CsvConfigurationException.cs" />

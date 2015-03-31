@@ -104,7 +104,7 @@ namespace CsvHelper.Configuration
 
 			foreach( var referenceMap in ReferenceMaps )
 			{
-				indexStart = referenceMap.Mapping.ReIndex( indexStart );
+				indexStart = referenceMap.Data.Mapping.ReIndex( indexStart );
 			}
 
 			return indexStart;
@@ -178,20 +178,15 @@ namespace CsvHelper.Configuration
 					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
 					AutoMapInternal( refMap, false, prefixReferenceHeaders, mapParents, map.GetMaxIndex() + 1 );
 
-					if( prefixReferenceHeaders )
-					{
-						foreach( var propertyMap in refMap.PropertyMaps )
-						{
-							for( var i = 0; i < propertyMap.Data.Names.Count; i++ )
-							{
-								propertyMap.Data.Names[i] = string.Format( "{0}.{1}", property.Name, propertyMap.Data.Names[i] );
-							}
-						}
-					}
-
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
-						map.ReferenceMaps.Add( new CsvPropertyReferenceMap( property, refMap ) );
+						var referenceMap = new CsvPropertyReferenceMap( property, refMap );
+						if( prefixReferenceHeaders )
+						{
+							referenceMap.Prefix();
+						}
+
+						map.ReferenceMaps.Add( referenceMap );
 					}
 				}
 				else
