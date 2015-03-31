@@ -161,7 +161,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.UseExcelLeadingZerosFormatForNumerics && field.Length > 0 && field[0] == '0' && field.All( Char.IsDigit ) )
+			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
 			{
 				field = "=" + configuration.Quote + field + configuration.Quote;
 			}
