@@ -353,10 +353,9 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the callback that will be called to
 		/// determine whether to skip the given record or not.
-		/// This will will not be called for empty records if
-		/// <see cref="SkipEmptyRecords"/> is set to <c>true</c>.
+		/// This overrides the <see cref="SkipEmptyRecords"/> setting.
 		/// </summary>
-		public virtual Func<string[], bool> SkipRecordCallback { get; set; }
+		public virtual Func<string[], bool> ShouldSkipRecord { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if quotes should be
