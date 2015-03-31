@@ -185,7 +185,16 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( field.GetType(), field );
+			var type = field.GetType();
+			if( type == typeof( string ) )
+			{
+				WriteField( field as string );
+			}
+			else
+			{
+				var converter = TypeConverterFactory.GetConverter( type );
+				WriteField( field, converter );
+			}
 		}
 
 		/// <summary>
@@ -201,7 +210,14 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( field.GetType(), field, converter );
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( field.GetType() );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			WriteField( fieldString );
 		}
 
 		/// <summary>
