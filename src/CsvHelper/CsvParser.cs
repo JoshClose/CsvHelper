@@ -412,6 +412,9 @@ namespace CsvHelper
 							break;
 						}
 
+						// If blank lines are being ignored, we need to add
+						// to the row count because we're skipping the row
+						// and it won't get added normally.
 						currentRow++;
 
 						continue;

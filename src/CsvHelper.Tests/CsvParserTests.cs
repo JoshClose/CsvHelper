@@ -777,41 +777,63 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void RowWithBlanksAndEmptyDontSkipBlankAndEmptyTest()
+		public void IgnoreBlankLinesRowCountTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var writer = new StreamWriter( stream ) )
 			using( var reader = new StreamReader( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using( var parser = new CsvParser( reader ) )
 			{
-				csvReader.Configuration.IgnoreBlankLines = false;
-				csvReader.Configuration.SkipEmptyRecords = false;
-				writer.WriteLine( "StringColumn,IntColumn" );
-				writer.WriteLine( "s,2" );
-				writer.WriteLine( "," );
-				writer.WriteLine( "s,4" );
+				parser.Configuration.HasHeaderRecord = false;
+				parser.Configuration.IgnoreBlankLines = true;
+				writer.WriteLine( "1,a" );
 				writer.WriteLine();
-				writer.WriteLine( "s,6" );
+				writer.WriteLine( "3,c" );
 				writer.Flush();
 				stream.Position = 0;
 
-				csvReader.Read();
-				Assert.AreEqual( 2, csvReader.Row );
-				Assert.AreEqual( 2, csvReader.GetField<int>( 1 ) );
+				var row = parser.Read();
 
-				csvReader.Read();
-				Assert.AreEqual( 3, csvReader.Row );
+				Assert.AreEqual( 1, parser.Row );
+				Assert.AreEqual( "1", row[0] );
 
-				csvReader.Read();
-				Assert.AreEqual( 4, csvReader.Row );
-				Assert.AreEqual( 4, csvReader.GetField<int>( 1 ) );
+				row = parser.Read();
 
-				csvReader.Read();
-				Assert.AreEqual( 5, csvReader.Row );
+				Assert.AreEqual( 3, parser.Row );
+				Assert.AreEqual( "3", row[0] );
+			}
+		}
 
-				csvReader.Read();
-				Assert.AreEqual( 6, csvReader.Row );
-				Assert.AreEqual( 6, csvReader.GetField<int>( 1 ) );
+		[TestMethod]
+		public void DoNotIgnoreBlankLinesRowCountTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.HasHeaderRecord = false;
+				parser.Configuration.IgnoreBlankLines = false;
+				writer.WriteLine( "1,a" );
+				writer.WriteLine();
+				writer.WriteLine( "3,c" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+
+				Assert.AreEqual( 1, parser.Row );
+				Assert.AreEqual( "1", row[0] );
+
+				row = parser.Read();
+
+				Assert.AreEqual( 2, parser.Row );
+				Assert.IsNull( row[0] );
+
+				row = parser.Read();
+
+				Assert.AreEqual( 3, parser.Row );
+				Assert.AreEqual( "3", row[0] );
 			}
 		}
 
