@@ -864,6 +864,53 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void RowRawTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "1,\"2" );
+				writer.WriteLine( "2 continued" );
+				writer.WriteLine( "end of 2\",3" );
+				writer.WriteLine( "4,5,6" );
+				writer.WriteLine( "7,\"8" );
+				writer.WriteLine( "8 continued" );
+				writer.WriteLine( "end of 8\",9" );
+				writer.WriteLine( "10,11,12" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.HasHeaderRecord = false;
+
+				var row = parser.Read();
+				Assert.AreEqual( "1", row[0] );
+				Assert.AreEqual( "2\r\n2 continued\r\nend of 2", row[1] );
+				Assert.AreEqual( "3", row[2] );
+				Assert.AreEqual( 3, parser.RawRow );
+
+				row = parser.Read();
+				Assert.AreEqual( "4", row[0] );
+				Assert.AreEqual( "5", row[1] );
+				Assert.AreEqual( "6", row[2] );
+				Assert.AreEqual( 4, parser.RawRow );
+
+				row = parser.Read();
+				Assert.AreEqual( "7", row[0] );
+				Assert.AreEqual( "8\r\n8 continued\r\nend of 8", row[1] );
+				Assert.AreEqual( "9", row[2] );
+				Assert.AreEqual( 7, parser.RawRow );
+
+				row = parser.Read();
+				Assert.AreEqual( "10", row[0] );
+				Assert.AreEqual( "11", row[1] );
+				Assert.AreEqual( "12", row[2] );
+				Assert.AreEqual( 8, parser.RawRow );
+			}
+		}
+
+		[TestMethod]
 		public void ByteCountTest()
 		{
 			using( var stream = new MemoryStream() )

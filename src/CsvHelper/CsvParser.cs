@@ -27,6 +27,7 @@ namespace CsvHelper
 		private int charsRead;
 		private string[] record;
 		private int currentRow;
+		private int currentRawRow;
 		private readonly CsvConfiguration configuration;
 		private char? cPrev;
 		private char c = '\0';
@@ -58,8 +59,15 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Gets the row of the CSV file that the parser is currently on.
+		/// This is the logical CSV row.
 		/// </summary>
 		public virtual int Row { get { return currentRow; } }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// This is the actual file row.
+		/// </summary>
+		public virtual int RawRow { get { return currentRawRow; } }
 
 		/// <summary>
 		/// Gets the raw row for the current record that was parsed.
@@ -259,6 +267,7 @@ namespace CsvHelper
 			record = new string[FieldCount];
 			RawRecord = string.Empty;
 			currentRow++;
+			currentRawRow++;
 
 			while( true )
 			{
@@ -328,6 +337,11 @@ namespace CsvHelper
 
 				if( fieldIsEscaped && inQuotes )
 				{
+					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
+					{
+						currentRawRow++;
+					}
+
 					// While inside an escaped field,
 					// all chars are ignored.
 					continue;
