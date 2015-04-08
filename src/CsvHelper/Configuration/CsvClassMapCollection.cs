@@ -84,7 +84,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type to traverse.</param>
 		/// <returns>The type that is CsvClassMap{}.</returns>
-		protected virtual Type GetGenericCsvClassMapType( Type type )
+		private Type GetGenericCsvClassMapType( Type type )
 		{
 			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{
