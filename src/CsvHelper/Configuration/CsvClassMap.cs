@@ -56,13 +56,42 @@ namespace CsvHelper.Configuration
 		/// Gets the property map for the given property expression.
 		/// </summary>
 		/// <typeparam name="T">The type of the class the property belongs to.</typeparam>
-		/// <param name="propertyExpression">The property expression.</param>
+		/// <param name="expression">The property expression.</param>
 		/// <returns>The CsvPropertyMap for the given expression.</returns>
-		public virtual CsvPropertyMap PropertyMap<T>( Expression<Func<T, object>> propertyExpression )
+		[Obsolete( "This method is deprecated and will be removed in the next major release.", false )]
+		public virtual CsvPropertyMap PropertyMap<T>( Expression<Func<T, object>> expression )
 		{
-			var property = ReflectionHelper.GetProperty( propertyExpression );
-			var propertyMap = propertyMaps.Single( pm => pm.Data.Property == property );
+			var property = ReflectionHelper.GetProperty( expression );
+
+			var existingMap = PropertyMaps.SingleOrDefault( m =>
+				m.Data.Property == property
+				|| m.Data.Property.Name == property.Name
+				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
+			if( existingMap != null )
+			{
+				return existingMap;
+			}
+
+			var propertyMap = new CsvPropertyMap( property );
+			propertyMap.Data.Index = GetMaxIndex() + 1;
+			PropertyMaps.Add( propertyMap );
+
 			return propertyMap;
+		}
+
+		/// <summary>
+		/// Auto maps all properties for the given type. If a property
+		/// is mapped again it will override the existing map.
+		/// </summary>
+		/// <param name="ignoreReferences">A value indicating if references should be ignored when auto mapping. 
+		/// True to ignore references, otherwise false.</param>
+		/// <param name="prefixReferenceHeaders">A value indicating if headers of reference properties should
+		/// get prefixed by the parent property name.
+		/// True to prefix, otherwise false.</param>
+		public virtual void AutoMap( bool ignoreReferences = false, bool prefixReferenceHeaders = false )
+		{
+			var mapParents = new LinkedList<Type>();
+			AutoMapInternal( this, ignoreReferences, prefixReferenceHeaders, mapParents );
 		}
 
 		/// <summary>
@@ -108,21 +137,6 @@ namespace CsvHelper.Configuration
 			}
 
 			return indexStart;
-		}
-
-		/// <summary>
-		/// Auto maps all properties for the given type. If a property
-		/// is mapped again it will override the existing map.
-		/// </summary>
-		/// <param name="ignoreReferences">A value indicating if references should be ignored when auto mapping. 
-		/// True to ignore references, otherwise false.</param>
-		/// <param name="prefixReferenceHeaders">A value indicating if headers of reference properties should
-		/// get prefixed by the parent property name.
-		/// True to prefix, otherwise false.</param>
-		public virtual void AutoMap( bool ignoreReferences = false, bool prefixReferenceHeaders = false )
-		{
-			var mapParents = new LinkedList<Type>();
-			AutoMapInternal( this, ignoreReferences, prefixReferenceHeaders, mapParents );
 		}
 
 		/// <summary>

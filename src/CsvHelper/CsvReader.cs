@@ -15,6 +15,7 @@ using CsvHelper.MissingFrom20;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 #endif
 #if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
@@ -898,16 +899,10 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				if( ex is System.Reflection.TargetInvocationException )
-				{
-					ex = ex.InnerException;
-				}
-
 				ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
-
-				// ReSharper disable once PossibleIntendedRethrow
-				throw ex;
+				throw;
 			}
+
 			return record;
 		}
 
@@ -976,11 +971,6 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					if( ex is System.Reflection.TargetInvocationException )
-					{
-						ex = ex.InnerException;
-					}
-
 					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
 
 					if( configuration.IgnoreReadingExceptions )
@@ -995,8 +985,7 @@ namespace CsvHelper
 						continue;
 					}
 
-					// ReSharper disable once PossibleIntendedRethrow
-					throw ex;
+					throw;
 				}
 
 				yield return record;
@@ -1311,7 +1300,14 @@ namespace CsvHelper
 			}
 #endif
 
-			return GetReadRecordFunc( type ).DynamicInvoke();
+			try
+			{
+				return GetReadRecordFunc( type ).DynamicInvoke();
+			}
+			catch( TargetInvocationException ex )
+			{
+				throw ex.InnerException;
+			}
 		}
 
 		/// <summary>
@@ -1514,6 +1510,7 @@ namespace CsvHelper
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
+
 				var typeConverterOptions = TypeConverterOptions.Merge( TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
 				var typeConverterOptionsExpression = Expression.Constant( typeConverterOptions );
 

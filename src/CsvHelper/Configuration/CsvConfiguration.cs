@@ -435,10 +435,12 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual void RegisterClassMap<TMap>() where TMap : CsvClassMap
+		public virtual TMap RegisterClassMap<TMap>() where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
 			RegisterClassMap( map );
+
+			return map;
 		}
 
 		/// <summary>
@@ -447,7 +449,7 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
-		public virtual void RegisterClassMap( Type classMapType )
+		public virtual CsvClassMap RegisterClassMap( Type classMapType )
 		{
 			if( !typeof( CsvClassMap ).IsAssignableFrom( classMapType ) )
 			{
@@ -456,6 +458,8 @@ namespace CsvHelper.Configuration
 
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( classMapType );
 			RegisterClassMap( map );
+
+			return map;
 		}
 
 		/// <summary>
@@ -478,7 +482,7 @@ namespace CsvHelper.Configuration
 		/// Unregisters the class map.
 		/// </summary>
 		/// <typeparam name="TMap">The map type to unregister.</typeparam>
-		public virtual void UnregisterClassMap<TMap>()
+		public virtual void UnregisterClassMap<TMap>() 
 			where TMap : CsvClassMap
 		{
 			UnregisterClassMap( typeof( TMap ) );

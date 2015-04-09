@@ -421,7 +421,15 @@ namespace CsvHelper
 
 			try
 			{
-				GetWriteRecordAction( type ).DynamicInvoke( record );
+				try
+				{
+					GetWriteRecordAction( type ).DynamicInvoke( record );
+				}
+				catch( TargetInvocationException ex )
+				{
+					throw ex.InnerException;
+				}
+
 				hasRecordBeenWritten = true;
 				NextRecord();
 			}
@@ -471,7 +479,15 @@ namespace CsvHelper
 						WriteHeader( recordType );
 					}
 
-					GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
+					try
+					{
+						GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
+					}
+					catch( TargetInvocationException ex )
+					{
+						throw ex.InnerException;
+					}
+
 					NextRecord();
 				}
 			}

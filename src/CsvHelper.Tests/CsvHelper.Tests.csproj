@@ -91,6 +91,7 @@
     <Compile Include="ReferenceMappingClassMapTests.cs" />
     <Compile Include="ReferenceMappingIndexTests.cs" />
     <Compile Include="ReflectionHelperTests.cs" />
+    <Compile Include="Tests.cs" />
     <Compile Include="TypeConversion\BooleanConverterTests.cs" />
     <Compile Include="TypeConversion\ByteConverterTests.cs" />
     <Compile Include="TypeConversion\CharConverterTests.cs" />
