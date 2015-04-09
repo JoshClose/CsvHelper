@@ -156,10 +156,10 @@ namespace CsvHelper
 			CheckDisposed();
 
             // All quotes must be doubled.       
-            if (shouldQuote && !string.IsNullOrEmpty(field))
-            {
-                field = field.Replace(configuration.QuoteString, configuration.DoubleQuoteString);
-            }
+			if( shouldQuote && !string.IsNullOrEmpty( field ) )
+			{
+				field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
+			}
 
 			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
 			{
