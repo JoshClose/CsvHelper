@@ -123,15 +123,9 @@ namespace CsvHelper
 
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
-				var hasQuote = false;
-				if( field.Contains( configuration.QuoteString ) )
-				{
-					// All quotes must be doubled.
-					field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
-					hasQuote = true;
-				}
-
-				if( shouldQuote
+			    var hasQuote = field.Contains( configuration.QuoteString );
+				
+                if( shouldQuote
 				    || hasQuote
 				    || field[0] == ' '
 				    || field[field.Length - 1] == ' '
@@ -161,14 +155,20 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
+            // All quotes must be doubled.       
+            if (shouldQuote && !string.IsNullOrEmpty(field))
+            {
+                field = field.Replace(configuration.QuoteString, configuration.DoubleQuoteString);
+            }
+
 			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
 			{
 				field = "=" + configuration.Quote + field + configuration.Quote;
 			}
-			else if( shouldQuote )
-			{
-				field = configuration.Quote + field + configuration.Quote;
-			}
+            else if (shouldQuote)
+            {
+                field = configuration.Quote + field + configuration.Quote;
+            }
 
 			currentRecord.Add( field );
 		}

@@ -74,6 +74,43 @@ namespace CsvHelper.Tests
 		    Assert.AreEqual( expected, csvFile );
 	    }
 
+        [TestMethod]
+        public void WriteFieldShouldQuoteNoTest()
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream) { AutoFlush = true };
+            var csv = new CsvWriter(writer);
+
+            csv.WriteField("a \"b\" c",false);
+            csv.NextRecord();
+     
+            stream.Position = 0;
+            var reader = new StreamReader(stream);
+            var csvFile = reader.ReadToEnd();
+            var expected = "a \"b\" c\r\n";
+
+            Assert.AreEqual(expected, csvFile);
+        }
+
+
+        [TestMethod]
+        public void WriteFieldShouldQuoteYesTest()
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream) { AutoFlush = true };
+            var csv = new CsvWriter(writer);
+
+            csv.WriteField("a \"b\" c", true);
+            csv.NextRecord();
+
+            stream.Position = 0;
+            var reader = new StreamReader(stream);
+            var csvFile = reader.ReadToEnd();
+            var expected = "\"a \"\"b\"\" c\"\r\n";
+
+            Assert.AreEqual(expected, csvFile);
+        }
+
 	    [TestMethod]
 		public void WriteRecordWithReferencesTest()
 		{
