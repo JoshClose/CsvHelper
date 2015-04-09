@@ -17,85 +17,174 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+    [TestClass]
 	public class LocalCultureTests
 	{
-		// In 'uk-UA' decimal separator is the ','
-		// For 'Invariant' and many other cultures decimal separator is '.'
+	    private static readonly CultureTestCase[] TestCases =
+	    {
+            new CultureTestCase( "en-US", "12.5;10/25/2000 12:00:00 AM" ), 
+	        new CultureTestCase( "en-GB", "12.5;25/10/2000 00:00:00" ), 
+            new CultureTestCase( "uk-UA", "12,5;25.10.2000 0:00:00" )
+	    };
 
-		[TestMethod]
-		public void ReadRecordsTest()
-		{
-			RunTestInSpecificCulture( ReadRecordsTestBody, "uk-UA" );
-		}
+        [TestMethod]
+        public void ReadSpecifiedCultureRecords()
+        {
+            foreach (var testCase in TestCases)
+            {
+                var configuration = new CsvConfiguration
+                {
+                    Delimiter = testCase.Delimiter,
+                    CultureInfo = testCase.Culture
+                };
+                ReadRecordsTestBody( testCase, configuration );
+            }
+        }
 
-		[TestMethod]
-		public void WriteRecordsTest()
-		{
-			RunTestInSpecificCulture( WriteRecordsTestBody, "uk-UA" );
-		}
+        [TestMethod]
+        public void ReadThreadCultureRecords()
+        {
+            foreach (var cultureTestCase in TestCases)
+            {
+                RunTestInSpecificCulture( c => ReadRecordsTestBody(c), cultureTestCase);
+            }
+        }
 
-		private static void RunTestInSpecificCulture( Action action, string cultureName )
-		{
-			var originalCulture = Thread.CurrentThread.CurrentCulture;
-			try
-			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo( cultureName );
-				action();
-			}
-			finally
-			{
-				Thread.CurrentThread.CurrentCulture = originalCulture;
-			}
-		}
+        [TestMethod]
+        public void ReadTypeConverterOptionsCultureRecords()
+        {
+            foreach (var testCase in TestCases)
+            {
+                var configuration = new CsvConfiguration { Delimiter = testCase.Delimiter };
+                configuration.RegisterClassMap(testCase.ClassMap);
+                ReadRecordsTestBody(testCase, configuration);
+            }
+        }
 
-		private static void ReadRecordsTestBody()
-		{
-			const string source = "DateTimeColumn;DecimalColumn\r\n" +
-								  "11.11.2010;12,0\r\n";
+        private static void ReadRecordsTestBody( CultureTestCase testCase, CsvConfiguration configuration = null )
+        {
+            configuration = configuration ?? new CsvConfiguration { Delimiter = testCase.Delimiter };
+            var reader = new CsvReader( new CsvParser( new StringReader( testCase.Csv ), configuration ) );
 
-			var configuration = new CsvConfiguration
-			{
-				Delimiter = ";",
-			};
-			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ) );
+            var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
 
-			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
+            Assert.AreEqual( 1, records.Count() );
+            var record = records.First();
+            Assert.AreEqual( testCase.Number, record.DecimalColumn );
+            Assert.AreEqual( testCase.Date, record.DateTimeColumn );
+        }
 
-			Assert.AreEqual( 1, records.Count() );
-			var record = records.First();
-			Assert.AreEqual( 12.0m, record.DecimalColumn );
-			Assert.AreEqual( new DateTime( 2010, 11, 11 ), record.DateTimeColumn );
-		}
+        [TestMethod]
+        public void WriteSpecifiedCultureRecords()
+        {
+            foreach (var testCase in TestCases)
+            {
+                var configuration = new CsvConfiguration
+                {
+                    Delimiter = testCase.Delimiter,
+                    CultureInfo = testCase.Culture
+                };
+                WriteRecordsTestBody( testCase, configuration );
+            }
+        }
 
-		private static void WriteRecordsTestBody()
-		{
-			var records = new List<TestRecordWithDecimal>
+        [TestMethod]
+        public void WriteThreadCultureRecords()
+        {
+            foreach (var cultureTestCase in TestCases)
+            {
+                RunTestInSpecificCulture( c => WriteRecordsTestBody(c), cultureTestCase );
+            }
+        }
+
+        [TestMethod]
+        public void WriteTypeConverterOptionsCultureRecords()
+        {
+            foreach (var testCase in TestCases)
+            {
+                var configuration = new CsvConfiguration { Delimiter = testCase.Delimiter };
+                configuration.RegisterClassMap(testCase.ClassMap);
+                WriteRecordsTestBody(testCase, configuration);
+            }
+        }
+
+        private static void WriteRecordsTestBody( CultureTestCase testCase, CsvConfiguration configuration = null )
+        {
+            configuration = configuration ?? new CsvConfiguration { Delimiter = testCase.Delimiter };
+            var records = new List<TestRecordWithDecimal>
 			{
 				new TestRecordWithDecimal
 				{
-					DecimalColumn = 12.0m,
-					DateTimeColumn = new DateTime( 2010, 11, 11 )
+					DecimalColumn = testCase.Number,
+					DateTimeColumn = testCase.Date
 				}
 			};
 
-			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvConfiguration { Delimiter = ";" } );
+            var writer = new StringWriter();
+            var csv = new CsvWriter( writer, configuration );
 
-			csv.WriteRecords( records );
+            csv.WriteRecords( records );
 
-			var csvFile = writer.ToString();
+            var csvFile = writer.ToString();
 
-			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
-									"12,0;11.11.2010 0:00:00\r\n";
+            Assert.AreEqual( testCase.Csv, csvFile );
+        }
 
-			Assert.AreEqual( expected, csvFile );
-		}
+        private static void RunTestInSpecificCulture(Action<CultureTestCase> action, CultureTestCase testCase)
+        {
+            var originalCulture = Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = testCase.Culture;
+                action(testCase);
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = originalCulture;
+            }
+        }
 
 		private class TestRecordWithDecimal
 		{
 			public decimal DecimalColumn { get; set; }
 			public DateTime DateTimeColumn { get; set; }
 		}
+
+        private sealed class CultureTestCase
+        {
+            private const decimal DecimalValue = 12.5m;
+            private static readonly DateTime DateValue = new DateTime(2000, 10, 25);
+
+            public CultureTestCase(string cultureName, string csv)
+            {
+                Culture = new CultureInfo(cultureName);
+                Number = DecimalValue;
+                Date = DateValue;
+                Csv = String.Format("DecimalColumn;DateTimeColumn\r\n{0}\r\n", csv);
+                Delimiter = ";";
+                ClassMap = new TestClassMap( Culture );
+            }
+
+            public CultureInfo Culture { get; private set; }
+
+            public decimal Number { get; private set; }
+
+            public DateTime Date { get; private set; }
+
+            public string Csv { get; private set; }
+
+            public string Delimiter { get; private set; }
+
+            public CsvClassMap<TestRecordWithDecimal> ClassMap { get; private set; }
+
+            private class TestClassMap : CsvClassMap<TestRecordWithDecimal>
+            {
+                public TestClassMap(CultureInfo culture)
+                {
+                    Map( m => m.DecimalColumn ).TypeConverterOption( culture );
+                    Map( m => m.DateTimeColumn ).TypeConverterOption( culture );
+                }
+            }
+        }
 	}
 }

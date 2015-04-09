@@ -1445,7 +1445,7 @@ namespace CsvHelper
 		/// <param name="bindings">The bindings that will be added to from the properties.</param>
 		protected virtual void AddPropertyBindings( CsvPropertyMapCollection properties, List<MemberBinding> bindings )
 		{
-			foreach( var propertyMap in properties )
+			foreach( var propertyMap in properties.Where( m =>  m.MapIndex == 0 ) )
 			{
 				if( propertyMap.Data.ConvertExpression != null )
 				{

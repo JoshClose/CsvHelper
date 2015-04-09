@@ -145,6 +145,22 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( true, config.Maps[typeof( A )].PropertyMaps[0].Data.Ignore );
 		}
 
+	    [TestMethod]
+	    public void DuplicatePropertyMapTest()
+	    {
+	        var map = new TestMappingDuplicateProperties();
+
+            Assert.AreEqual(2, map.PropertyMaps.Count);
+
+            Assert.AreEqual( 1, map.PropertyMaps[0].Data.Names.Count );
+            Assert.AreEqual( "First", map.PropertyMaps[0].Data.Names[0] );
+            Assert.AreEqual( 0, map.PropertyMaps[0].MapIndex );
+
+            Assert.AreEqual( 1, map.PropertyMaps[1].Data.Names.Count );
+            Assert.AreEqual( "Second", map.PropertyMaps[1].Data.Names[0] );
+            Assert.AreEqual( 1, map.PropertyMaps[1].MapIndex );
+	    }
+
 		private class A
 		{
 			public int AId { get; set; }
@@ -253,5 +269,14 @@ namespace CsvHelper.Tests
 				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
 			}
 		}
+
+	    private sealed class TestMappingDuplicateProperties : CsvClassMap<TestClass>
+	    {
+	        public TestMappingDuplicateProperties()
+	        {
+	            Map( m => m.StringColumn, 0 ).Name( "First" );
+                Map( m => m.StringColumn, 1 ).Name( "Second" );
+	        }
+	    }
 	}
 }

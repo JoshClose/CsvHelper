@@ -26,25 +26,30 @@ namespace CsvHelper.Configuration
 			Constructor = ReflectionHelper.GetConstructor( expression );
 		}
 
-		/// <summary>
-		/// Maps a property to a CSV field.
-		/// </summary>
-		/// <param name="expression">The property to map.</param>
-		/// <returns>The property mapping.</returns>
-		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
+	    /// <summary>
+	    /// Maps a property to a CSV field.
+	    /// </summary>
+	    /// <param name="expression">The property to map.</param>
+	    /// <param name="mapIndex">
+	    /// When specifying multiple maps on the same property, you can specify an index, which will stop the preceding map(s) being overwritten and allow you to retrieve specific maps by index.
+	    /// When reading, only the map at index 0 will be used.
+	    /// </param>
+	    /// <returns>The property mapping.</returns>
+	    protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression, int mapIndex = 0 )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 
 			var existingMap = PropertyMaps.SingleOrDefault( m =>
-				m.Data.Property == property
-				|| m.Data.Property.Name == property.Name
+				(m.Data.Property == property
+				|| m.Data.Property.Name == property.Name)
+                && m.MapIndex == mapIndex
 				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
 			if( existingMap != null )
 			{
 				return existingMap;
 			}
 
-			var propertyMap = new CsvPropertyMap( property );
+			var propertyMap = new CsvPropertyMap( property ) { MapIndex = mapIndex };
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
 

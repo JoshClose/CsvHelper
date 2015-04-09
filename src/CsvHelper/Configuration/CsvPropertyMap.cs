@@ -42,6 +42,8 @@ namespace CsvHelper.Configuration
 			data.Names.Add( property.Name );
 		}
 
+        internal int MapIndex { get; set; }
+
 		/// <summary>
 		/// When reading, is used to get the field
 		/// at the index of the name if there was a
