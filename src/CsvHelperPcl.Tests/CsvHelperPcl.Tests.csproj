@@ -161,6 +161,9 @@
     <Compile Include="..\csvhelper.tests\typeconversion\DateTimeConverterTests.cs">
       <Link>TypeConversion\DateTimeConverterTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeOffsetConverterTests.cs">
+      <Link>TypeConversion\DateTimeOffsetConverterTests.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper.tests\typeconversion\EnumConverterTests.cs">
       <Link>TypeConversion\EnumConverterTests.cs</Link>
     </Compile>

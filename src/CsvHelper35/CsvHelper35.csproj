@@ -156,6 +156,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\DateTimeConverter.cs">
       <Link>TypeConversion\DateTimeConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DateTimeOffsetConverter.cs">
+      <Link>TypeConversion\DateTimeOffsetConverter.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\DecimalConverter.cs">
       <Link>TypeConversion\DecimalConverter.cs</Link>
     </Compile>

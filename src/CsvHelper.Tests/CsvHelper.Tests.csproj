@@ -94,6 +94,7 @@
     <Compile Include="TypeConversion\BooleanConverterTests.cs" />
     <Compile Include="TypeConversion\ByteConverterTests.cs" />
     <Compile Include="TypeConversion\CharConverterTests.cs" />
+    <Compile Include="TypeConversion\DateTimeOffsetConverterTests.cs" />
     <Compile Include="TypeConversion\EnumConverterTests.cs" />
     <Compile Include="TypeConversion\DateTimeConverterTests.cs" />
     <Compile Include="TypeConversion\EnumerableConverterTests.cs" />
