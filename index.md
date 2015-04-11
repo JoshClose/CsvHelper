@@ -640,6 +640,29 @@ while( csv.Read() )
 
 ### [misc] Change Log
 
+#### 2.12
+
+##### Features
+
+- Added ability to set a prefix for reference maps. i.e. `Prefix( string prefix = null)`
+- Added callback to use to determine if a record should be skipped when reading.
+- Excel leading zeros number formatting. This allows you to read and write numbers that will preserve the zeros on the front. i.e. `="0001"`
+- Use default value when a field is null because of a missing field in the row.
+- Added `TrimFields` to CsvWriter.
+- ability to specify constructor arguments when referencing another map within a mapping.
+- Added `Names` property on `CsvPropertyNameCollection` to get raw list of property names.
+- Added raw file line number to parser.
+- Mapping methods on `CsvClassMap<T>` are now public to more easily allow mapping during runtime.
+- Added `DateTimeOffset` converter.
+
+##### Bug Fixes
+
+- Fixed exception that was occuring when fields were empty and `UseExcelLeadingZerosFormatForNumerics = true`.
+- Excel compatibility fix. If a field starts with a quote but never ends and the end of the file is reached, the field would be null. The field will now contain everything.
+- Don't get static properties when automapping.
+- Made all exceptions thrown contain Exception.Data["CsvHelper"].
+- Fixed missing support writing the double quotes for inner quotes on a quoted field. This used to be there and was removed at some point. A unit test is now in place so this doesn't happen again.
+
 #### 2.11.1.1
 
 ##### Bug Fixes
