@@ -644,6 +644,7 @@ while( csv.Read() )
 
 ##### Features
 
+- Added Windows Phone 8.1 support to the PCL assembly.
 - Added ability to set a prefix for reference maps. i.e. `Prefix( string prefix = null)`
 - Added callback to use to determine if a record should be skipped when reading.
 - Excel leading zeros number formatting. This allows you to read and write numbers that will preserve the zeros on the front. i.e. `="0001"`
