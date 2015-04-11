@@ -4,11 +4,8 @@
 // http://csvhelper.com
 using System.Collections.Generic;
 using System.IO;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
+using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests
 {
@@ -300,32 +297,6 @@ namespace CsvHelper.Tests
 				var text = reader.ReadToEnd();
 
 				Assert.AreEqual( "sep=;\r\nId;Name\r\n1;one\r\n", text );
-			}
-		}
-
-		[TestMethod]
-		public void UseExcelLeadingZerosFormatForNumericsTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
-			{
-				csv.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-
-				var record = new Simple
-				{
-					Id = 1,
-					Name = "09010",
-				};
-
-				csv.WriteRecord( record );
-
-				writer.Flush();
-				stream.Position = 0;
-
-				var text = reader.ReadToEnd();
-				Assert.AreEqual( "1,=\"09010\"\r\n", text );
 			}
 		}
 

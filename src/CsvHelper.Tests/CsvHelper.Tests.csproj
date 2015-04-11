@@ -60,6 +60,7 @@
     <Compile Include="CsvReaderReferenceMappingPrefixTests.cs" />
     <Compile Include="CsvWriterReferenceMappingPrefixTests.cs" />
     <Compile Include="DynamicProxyTests.cs" />
+    <Compile Include="ExcelCompatibility\LeadingZeroTests.cs" />
     <Compile Include="ExcelCompatibleTests.cs" />
     <Compile Include="CsvParserRawRecordTests.cs" />
     <Compile Include="CsvReaderErrorMessageTests.cs" />

@@ -261,6 +261,7 @@ namespace CsvHelper
 			var fieldIsBad = false;
 			var inComment = false;
 			var inDelimiter = false;
+			var inExcelLeadingZerosFormat = false;
 			var delimiterPosition = 0;
 			var prevCharWasDelimiter = false;
 			var recordPosition = 0;
@@ -277,13 +278,70 @@ namespace CsvHelper
 				}
 
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, false );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, 
+					prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, false );
 				if( !read )
 				{
 					break;
 				}
 				readerBufferPosition++;
 				CharPosition++;
+
+				#region Use Excel Leading Zeros Format for Numerics
+				// This needs to get in the way and parse things completely different
+				// from how a normal CSV field works. This horribly ugly.
+				if( configuration.UseExcelLeadingZerosFormatForNumerics )
+				{
+					if( c == '=' && !inExcelLeadingZerosFormat && ( prevCharWasDelimiter || cPrev == '\r' || cPrev == '\n' || cPrev == null ) )
+					{
+						// The start of the leading zeros format has been hit.
+
+						fieldLength = readerBufferPosition - fieldStartPosition;
+						char cNext;
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, 
+							prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, true );
+						if( cNext == '"' )
+						{
+							inExcelLeadingZerosFormat = true;
+							continue;
+						}
+					}
+					else if( inExcelLeadingZerosFormat )
+					{
+						if( c == '"' && cPrev == '=' || char.IsDigit( c ) )
+						{
+							// Inside of the field.
+						}
+						else if( c == '"' )
+						{
+							// The end of the field has been hit.
+
+							char cNext;
+							var peekRead = GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, true );
+							if( cNext == configuration.Delimiter[0] || cNext == '\r' || cNext == '\n' || cNext == '\0' )
+							{
+								AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+								UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+								field = field.Trim( '=', '"' );
+								fieldStartPosition = readerBufferPosition;
+
+								if( !peekRead )
+								{
+									AddFieldToRecord( ref recordPosition, field, ref fieldIsBad );
+								}
+
+								inExcelLeadingZerosFormat = false;
+							}
+						}
+						else
+						{
+							inExcelLeadingZerosFormat = false;
+						}
+
+						continue;
+					}
+				}
+				#endregion
 
 				if( c == configuration.Quote && !configuration.IgnoreQuotes )
 				{
@@ -314,6 +372,7 @@ namespace CsvHelper
 						// Include the quote in the byte count.
 						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					}
+
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
 						if( inQuotes || cPrev == configuration.Quote || readerBufferPosition == 1 )
@@ -329,6 +388,8 @@ namespace CsvHelper
 						// the char after the quote.
 						fieldStartPosition = readerBufferPosition;
 					}
+
+					prevCharWasDelimiter = false;
 
 					continue;
 				}
