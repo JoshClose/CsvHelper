@@ -108,6 +108,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvWriterSubClassingTests.cs">
       <Link>CsvWriterSubClassingTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\Defaults\WritingDefaultsTests.cs">
+      <Link>Defaults\WritingDefaultsTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\ExcelCompatibleTests.cs">
       <Link>ExcelCompatibleTests.cs</Link>
     </Compile>
