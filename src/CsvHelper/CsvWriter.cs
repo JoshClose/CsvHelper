@@ -595,9 +595,21 @@ namespace CsvHelper
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
 				var isValueType = propertyMap.Data.Property.PropertyType.IsValueType;
-				var defaultValueExpression = isValueType
-					? (Expression)Expression.New( propertyMap.Data.Property.PropertyType )
-					: Expression.Constant( null, propertyMap.Data.Property.PropertyType );
+				var isGenericType = isValueType && propertyMap.Data.Property.PropertyType.IsGenericType;
+				Type propertyType;
+				if( isValueType && !isGenericType && !configuration.UseNewObjectForNullReferenceProperties )
+				{
+					propertyType = typeof( Nullable<> ).MakeGenericType( propertyMap.Data.Property.PropertyType );
+					propertyExpression = Expression.Convert( propertyExpression, propertyType );
+				}
+				else
+				{
+					propertyType = propertyMap.Data.Property.PropertyType;
+				}
+
+				var defaultValueExpression = isValueType && !isGenericType
+					? (Expression)Expression.New( propertyType )
+					: Expression.Constant( null, propertyType );
 				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, propertyExpression );
 				return conditionExpression;
 			}

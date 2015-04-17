@@ -38,6 +38,7 @@ namespace CsvHelper.Configuration
 		private bool quoteNoFields;
 		private bool ignoreBlankLines = true;
 #if !NET_2_0
+		private bool useNewObjectForNullReferenceProperties = true;
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
 #endif
 
@@ -428,6 +429,19 @@ namespace CsvHelper.Configuration
 		/// calling <see cref="ICsvReaderRow.GetRecords{T}"/>.
 		/// </summary>
 		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating that during writing if a new 
+		/// object should be created when a reference property is null.
+		/// True to create a new object and use it's defaults for the
+		/// fields, or false to leave the fields empty for all the
+		/// reference property's properties.
+		/// </summary>
+		public virtual bool UseNewObjectForNullReferenceProperties
+		{
+			get { return useNewObjectForNullReferenceProperties; }
+			set { useNewObjectForNullReferenceProperties = value; }
+		}
 		
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
