@@ -15,7 +15,7 @@ $(function(){
 
 	marked.setOptions({
 		highlight: function(code, language, callback){
-			code = code.replace("<", "&lt;").replace(">", "&gt;");
+			code = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 			return prettyPrintOne(code, language);
 		},
 		renderer: renderer
