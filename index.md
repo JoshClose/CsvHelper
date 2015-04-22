@@ -163,7 +163,7 @@ public sealed class PersonMap : CsvClassMap<Person>
 	public PersonMap()
 	{
 		Map( m => m.Id );
-		Map( m = > m.Name );
+		Map( m => m.Name );
 		References<AddressMap>( m => m.Address );
 	}
 }
