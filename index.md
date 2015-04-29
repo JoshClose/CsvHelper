@@ -301,6 +301,32 @@ public sealed class MyClassMap : CsvClassMap<MyClass>
 }
 ```
 
+#### [mapping] Runtime Mapping
+
+Maps can be created at runtime. In fact the auto map feature does everything dynamically. You can look at the following link for some inspiration: https://github.com/JoshClose/CsvHelper/blob/master/src/CsvHelper/Configuration/CsvClassMap.cs#L91
+
+Another simple example is shown below:
+
+```cs
+var customerMap = new DefaultCsvClassMap();
+
+ // mapping holds the Property - csv column mapping 
+ foreach (string key in mapping.Keys)
+{
+    var columnName = mapping[key].ToString();
+
+    if (!String.IsNullOrEmpty(columnName))
+    {
+         var propertyInfo = typeof(Customer).GetType().GetProperty(key);
+         var newMap = new CsvPropertyMap(propertyInfo);
+         newMap.Name(columnName);
+         customerMap.PropertyMaps.Add(newMap);
+     }
+}
+
+csv.Configuration.RegisterClassMap(CustomerMap);
+```
+
 ## Configuration
 
 ### [configuration] Allow Comments
