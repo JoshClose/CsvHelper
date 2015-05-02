@@ -310,18 +310,18 @@ Another simple example is shown below:
 ```cs
 var customerMap = new DefaultCsvClassMap();
 
- // mapping holds the Property - csv column mapping 
- foreach (string key in mapping.Keys)
+// mapping holds the Property - csv column mapping 
+foreach( string key in mapping.Keys )
 {
-    var columnName = mapping[key].ToString();
-
-    if (!String.IsNullOrEmpty(columnName))
-    {
-         var propertyInfo = typeof(Customer).GetType().GetProperty(key);
-         var newMap = new CsvPropertyMap(propertyInfo);
-         newMap.Name(columnName);
-         customerMap.PropertyMaps.Add(newMap);
-     }
+	var columnName = mapping[key].ToString();
+	
+	if( !String.IsNullOrEmpty( columnName ) )
+	{
+		var propertyInfo = typeof( Customer ).GetType().GetProperty( key );
+		var newMap = new CsvPropertyMap( propertyInfo );
+		newMap.Name( columnName );
+		customerMap.PropertyMaps.Add( newMap );
+	}
 }
 
 csv.Configuration.RegisterClassMap(CustomerMap);
