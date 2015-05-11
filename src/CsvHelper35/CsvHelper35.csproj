@@ -87,6 +87,9 @@
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\CsvFactory.cs">
+      <Link>CsvFactory.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\CsvHelperException.cs">
       <Link>CsvHelperException.cs</Link>
     </Compile>
@@ -116,6 +119,9 @@
     </Compile>
     <Compile Include="..\CsvHelper\ExceptionHelper.cs">
       <Link>ExceptionHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\ICsvFactory.cs">
+      <Link>ICsvFactory.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\ICsvParser.cs">
       <Link>ICsvParser.cs</Link>
