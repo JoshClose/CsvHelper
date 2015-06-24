@@ -116,17 +116,16 @@ namespace CsvHelper
 
 			var shouldQuote = configuration.QuoteAllFields;
 
+			if( configuration.TrimFields )
+			{
+				field = field.Trim();
+			}
+
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
-				var hasQuote = false;
-				if( field.Contains( configuration.QuoteString ) )
-				{
-					// All quotes must be doubled.
-					field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
-					hasQuote = true;
-				}
-
-				if( shouldQuote
+			    var hasQuote = field.Contains( configuration.QuoteString );
+				
+                if( shouldQuote
 				    || hasQuote
 				    || field[0] == ' '
 				    || field[field.Length - 1] == ' '
@@ -156,14 +155,20 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.UseExcelLeadingZerosFormatForNumerics && field[0] == '0' && field.All( Char.IsDigit ) )
+            // All quotes must be doubled.       
+			if( shouldQuote && !string.IsNullOrEmpty( field ) )
+			{
+				field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
+			}
+
+			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
 			{
 				field = "=" + configuration.Quote + field + configuration.Quote;
 			}
-			else if( shouldQuote )
-			{
-				field = configuration.Quote + field + configuration.Quote;
-			}
+            else if (shouldQuote)
+            {
+                field = configuration.Quote + field + configuration.Quote;
+            }
 
 			currentRecord.Add( field );
 		}
@@ -180,7 +185,16 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( typeof( T ), field );
+			var type = field.GetType();
+			if( type == typeof( string ) )
+			{
+				WriteField( field as string );
+			}
+			else
+			{
+				var converter = TypeConverterFactory.GetConverter( type );
+				WriteField( field, converter );
+			}
 		}
 
 		/// <summary>
@@ -196,7 +210,14 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			WriteField( typeof( T ), field, converter );
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( field.GetType() );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			WriteField( fieldString );
 		}
 
 		/// <summary>
@@ -225,6 +246,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the field.</param>
 		/// <param name="field">The field to write.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field ) instead.", false )]
 		public virtual void WriteField( Type type, object field )
 		{
 			CheckDisposed();
@@ -249,6 +271,7 @@ namespace CsvHelper
 		/// <param name="type">The type of the field.</param>
 		/// <param name="field">The field to write.</param>
 		/// <param name="converter">The converter used to convert the field into a string.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field, ITypeConverter converter ) instead.", false )]
 		public virtual void WriteField( Type type, object field, ITypeConverter converter )
 		{
 			CheckDisposed();
@@ -376,16 +399,14 @@ namespace CsvHelper
 			try
 			{
 				GetWriteRecordAction<T>()( record );
+				hasRecordBeenWritten = true;
+				NextRecord();
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
+				ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
 				throw;
 			}
-
-			hasRecordBeenWritten = true;
-
-			NextRecord();
 		}
 
 		/// <summary>
@@ -393,23 +414,30 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		/// <param name="record">The record to write.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecord<T>( T record ) instead.", false )]
 		public virtual void WriteRecord( Type type, object record )
 		{
 			CheckDisposed();
 
 			try
 			{
-				GetWriteRecordAction( type ).DynamicInvoke( record );
+				try
+				{
+					GetWriteRecordAction( type ).DynamicInvoke( record );
+				}
+				catch( TargetInvocationException ex )
+				{
+					throw ex.InnerException;
+				}
+
+				hasRecordBeenWritten = true;
+				NextRecord();
 			}
 			catch( Exception ex )
 			{
 				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
 				throw;
 			}
-
-			hasRecordBeenWritten = true;
-
-			NextRecord();
 		}
 
 		/// <summary>
@@ -420,45 +448,53 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
+			Type recordType = null;
+			try
 			{
-				WriteExcelSeparator();
-				hasExcelSeperatorBeenRead = true;
+				if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
+				{
+					WriteExcelSeparator();
+					hasExcelSeperatorBeenRead = true;
+				}
+
+				// Write the header. If records is a List<dynamic>, the header won't be written.
+				// This is because typeof( T ) = Object.
+				var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
+				if( genericEnumerable != null )
+				{
+					recordType = genericEnumerable.GetGenericArguments().Single();
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					{
+						WriteHeader( recordType );
+					}
+				}
+
+				foreach( var record in records )
+				{
+					// If records is a List<dynamic>, the header hasn't been written yet.
+					// Write the header based on the record type.
+					recordType = record.GetType();
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					{
+						WriteHeader( recordType );
+					}
+
+					try
+					{
+						GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
+					}
+					catch( TargetInvocationException ex )
+					{
+						throw ex.InnerException;
+					}
+
+					NextRecord();
+				}
 			}
-
-			// Write the header. If records is a List<dynamic>, the header won't be written.
-			// This is because typeof( T ) = Object.
-			var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
-			if( genericEnumerable != null )
+			catch( Exception ex )
 			{
-				var type = genericEnumerable.GetGenericArguments().Single();
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
-				{
-					WriteHeader( type );
-				}
-			}
-
-			foreach( var record in records )
-			{
-				// If records is a List<dynamic>, the header hasn't been written yet.
-				// Write the header based on the record type.
-				var type = record.GetType();
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !type.IsPrimitive )
-				{
-					WriteHeader( type );
-				}
-
-				try
-				{
-					GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
-				}
-				catch( Exception ex )
-				{
-					ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
-					throw;
-				}
-
-				NextRecord();
+				ExceptionHelper.AddExceptionDataMessage( ex, null, recordType, null, null, null );
+				throw;
 			}
 		}
 
@@ -518,7 +554,7 @@ namespace CsvHelper
 			properties.AddRange( mapping.PropertyMaps );
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				AddProperties( properties, refMap.Mapping );
+				AddProperties( properties, refMap.Data.Mapping );
 			}
 		}
 
@@ -543,14 +579,14 @@ namespace CsvHelper
 			// We need to search down through the reference maps.
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				var wrapped = Expression.Property( recordExpression, refMap.Property );
-				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Mapping, propertyMap );
+				var wrapped = Expression.Property( recordExpression, refMap.Data.Property );
+				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Data.Mapping, propertyMap );
 				if( propertyExpression == null )
 				{
 					continue;
 				}
 
-				var isReferenceValueType = refMap.Property.PropertyType.IsValueType;
+				var isReferenceValueType = refMap.Data.Property.PropertyType.IsValueType;
 				if( isReferenceValueType )
 				{
 					return propertyExpression;
@@ -559,9 +595,21 @@ namespace CsvHelper
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
 				var isValueType = propertyMap.Data.Property.PropertyType.IsValueType;
-				var defaultValueExpression = isValueType
-					? (Expression)Expression.New( propertyMap.Data.Property.PropertyType )
-					: Expression.Constant( null, propertyMap.Data.Property.PropertyType );
+				var isGenericType = isValueType && propertyMap.Data.Property.PropertyType.IsGenericType;
+				Type propertyType;
+				if( isValueType && !isGenericType && !configuration.UseNewObjectForNullReferenceProperties )
+				{
+					propertyType = typeof( Nullable<> ).MakeGenericType( propertyMap.Data.Property.PropertyType );
+					propertyExpression = Expression.Convert( propertyExpression, propertyType );
+				}
+				else
+				{
+					propertyType = propertyMap.Data.Property.PropertyType;
+				}
+
+				var defaultValueExpression = isValueType && !isGenericType
+					? (Expression)Expression.New( propertyType )
+					: Expression.Constant( null, propertyType );
 				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, propertyExpression );
 				return conditionExpression;
 			}

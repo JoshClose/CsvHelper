@@ -36,6 +36,16 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Finds the <see cref="CsvClassMap"/> for the specified record type.
+		/// </summary>
+		/// <typeparam name="T">The record type.</typeparam>
+		/// <returns>The <see cref="CsvClassMap"/> for the specified record type.</returns>
+		public virtual CsvClassMap<T> Find<T>()
+		{
+			return (CsvClassMap<T>)this[typeof( T )];
+		}
+
+		/// <summary>
 		/// Adds the specified map for it's record type. If a map
 		/// already exists for the record type, the specified
 		/// map will replace it.
@@ -84,7 +94,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type to traverse.</param>
 		/// <returns>The type that is CsvClassMap{}.</returns>
-		protected virtual Type GetGenericCsvClassMapType( Type type )
+		private Type GetGenericCsvClassMapType( Type type )
 		{
 			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{

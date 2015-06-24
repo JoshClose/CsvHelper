@@ -150,6 +150,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter( typeof( byte ), new ByteConverter() );
 			AddConverter( typeof( char ), new CharConverter() );
 			AddConverter( typeof( DateTime ), new DateTimeConverter() );
+			AddConverter( typeof( DateTimeOffset ), new DateTimeOffsetConverter() );
 			AddConverter( typeof( decimal ), new DecimalConverter() );
 			AddConverter( typeof( double ), new DoubleConverter() );
 			AddConverter( typeof( float ), new SingleConverter() );

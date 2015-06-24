@@ -4,11 +4,8 @@
 // http://csvhelper.com
 using System.Collections.Generic;
 using System.IO;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
+using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests
 {
@@ -304,28 +301,23 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void UseExcelLeadingZerosFormatForNumericsTest()
+		public void ParseFieldMissingQuoteGoesToEndOfFileTest()
 		{
 			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
 			{
-				csv.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-
-				var record = new Simple
-				{
-					Id = 1,
-					Name = "09010",
-				};
-
-				csv.WriteRecord( record );
-
+				writer.WriteLine( "a,b,\"c" );
+				writer.WriteLine( "d,e,f" );
 				writer.Flush();
 				stream.Position = 0;
 
-				var text = reader.ReadToEnd();
-				Assert.AreEqual( "1,=\"09010\"\r\n", text );
+				var row = parser.Read();
+				Assert.IsNotNull( row );
+				Assert.AreEqual( "a", row[0] );
+				Assert.AreEqual( "b", row[1] );
+				Assert.AreEqual( "c\r\nd,e,f\r\n", row[2] );
 			}
 		}
 

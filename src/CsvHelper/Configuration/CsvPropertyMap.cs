@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration
 		private readonly CsvPropertyMapData data;
 
 		/// <summary>
-		/// Property map data.
+		/// Gets the property map data.
 		/// </summary>
 		public CsvPropertyMapData Data
 		{
@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 			if(displayAttributes != null && displayAttributes.Length == 1)
 				data.Names.Add( ((DisplayAttribute)displayAttributes[0]).Name );
 			else
-				data.Names.Add( property.Name );
+			data.Names.Add( property.Name );
 		}
 
 		/// <summary>

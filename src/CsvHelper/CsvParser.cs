@@ -27,6 +27,7 @@ namespace CsvHelper
 		private int charsRead;
 		private string[] record;
 		private int currentRow;
+		private int currentRawRow;
 		private readonly CsvConfiguration configuration;
 		private char? cPrev;
 		private char c = '\0';
@@ -58,8 +59,15 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Gets the row of the CSV file that the parser is currently on.
+		/// This is the logical CSV row.
 		/// </summary>
 		public virtual int Row { get { return currentRow; } }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// This is the actual file row.
+		/// </summary>
+		public virtual int RawRow { get { return currentRawRow; } }
 
 		/// <summary>
 		/// Gets the raw row for the current record that was parsed.
@@ -253,12 +261,14 @@ namespace CsvHelper
 			var fieldIsBad = false;
 			var inComment = false;
 			var inDelimiter = false;
+			var inExcelLeadingZerosFormat = false;
 			var delimiterPosition = 0;
 			var prevCharWasDelimiter = false;
 			var recordPosition = 0;
 			record = new string[FieldCount];
 			RawRecord = string.Empty;
 			currentRow++;
+			currentRawRow++;
 
 			while( true )
 			{
@@ -268,13 +278,70 @@ namespace CsvHelper
 				}
 
 				var fieldLength = readerBufferPosition - fieldStartPosition;
-				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter );
+				read = GetChar( out c, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, 
+					prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, false );
 				if( !read )
 				{
 					break;
 				}
 				readerBufferPosition++;
 				CharPosition++;
+
+				#region Use Excel Leading Zeros Format for Numerics
+				// This needs to get in the way and parse things completely different
+				// from how a normal CSV field works. This horribly ugly.
+				if( configuration.UseExcelLeadingZerosFormatForNumerics )
+				{
+					if( c == '=' && !inExcelLeadingZerosFormat && ( prevCharWasDelimiter || cPrev == '\r' || cPrev == '\n' || cPrev == null ) )
+					{
+						// The start of the leading zeros format has been hit.
+
+						fieldLength = readerBufferPosition - fieldStartPosition;
+						char cNext;
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, 
+							prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, true );
+						if( cNext == '"' )
+						{
+							inExcelLeadingZerosFormat = true;
+							continue;
+						}
+					}
+					else if( inExcelLeadingZerosFormat )
+					{
+						if( c == '"' && cPrev == '=' || char.IsDigit( c ) )
+						{
+							// Inside of the field.
+						}
+						else if( c == '"' )
+						{
+							// The end of the field has been hit.
+
+							char cNext;
+							var peekRead = GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, true );
+							if( cNext == configuration.Delimiter[0] || cNext == '\r' || cNext == '\n' || cNext == '\0' )
+							{
+								AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition );
+								UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
+								field = field.Trim( '=', '"' );
+								fieldStartPosition = readerBufferPosition;
+
+								if( !peekRead )
+								{
+									AddFieldToRecord( ref recordPosition, field, ref fieldIsBad );
+								}
+
+								inExcelLeadingZerosFormat = false;
+							}
+						}
+						else
+						{
+							inExcelLeadingZerosFormat = false;
+						}
+
+						continue;
+					}
+				}
+				#endregion
 
 				if( c == configuration.Quote && !configuration.IgnoreQuotes )
 				{
@@ -305,6 +372,7 @@ namespace CsvHelper
 						// Include the quote in the byte count.
 						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 					}
+
 					if( cPrev != configuration.Quote || !inQuotes )
 					{
 						if( inQuotes || cPrev == configuration.Quote || readerBufferPosition == 1 )
@@ -321,6 +389,8 @@ namespace CsvHelper
 						fieldStartPosition = readerBufferPosition;
 					}
 
+					prevCharWasDelimiter = false;
+
 					continue;
 				}
 
@@ -328,6 +398,11 @@ namespace CsvHelper
 
 				if( fieldIsEscaped && inQuotes )
 				{
+					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
+					{
+						currentRawRow++;
+					}
+
 					// While inside an escaped field,
 					// all chars are ignored.
 					continue;
@@ -390,7 +465,7 @@ namespace CsvHelper
 					if( c == '\r' )
 					{
 						char cNext;
-						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, true );
+						GetChar( out cNext, ref fieldStartPosition, ref rawFieldStartPosition, ref field, ref fieldIsBad, prevCharWasDelimiter, ref recordPosition, ref fieldLength, inComment, inDelimiter, inQuotes, true );
 						if( cNext == '\n' )
 						{
 							readerBufferPosition++;
@@ -406,12 +481,16 @@ namespace CsvHelper
 
 						fieldStartPosition = readerBufferPosition;
 						inComment = false;
-						currentRow++;
 
 						if( !configuration.IgnoreBlankLines )
 						{
 							break;
 						}
+
+						// If blank lines are being ignored, we need to add
+						// to the row count because we're skipping the row
+						// and it won't get added normally.
+						currentRow++;
 
 						continue;
 					}
@@ -453,7 +532,7 @@ namespace CsvHelper
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
 		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
-		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, ref bool fieldIsBad, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool isPeek = false )
+		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, ref bool fieldIsBad, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool inQuotes, bool isPeek )
 		{
 			if( readerBufferPosition == charsRead )
 			{
@@ -488,8 +567,11 @@ namespace CsvHelper
 						return false;
 					}
 
-					if( c != '\r' && c != '\n' && c != '\0' && !inComment )
+					if( ( c != '\r' && c != '\n' && c != '\0' && !inComment ) || inQuotes )
 					{
+						// If we're in quotes and have reached the end of the file, record the
+						// rest of the record and field.
+
 						if( prevCharWasDelimiter )
 						{
 							// Handle an empty field at the end of the row.

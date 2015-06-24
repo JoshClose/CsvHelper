@@ -34,9 +34,7 @@ namespace CsvHelper.Tests
 				reader.GetField<int>( 0 );
 				Assert.Fail();
 			}
-			catch( CsvReaderException )
-			{
-			}
+			catch( CsvReaderException ) {}
 		}
 
 		[TestMethod]
@@ -302,9 +300,7 @@ namespace CsvHelper.Tests
 				reader.GetField<int>( "One" );
 				Assert.Fail();
 			}
-			catch( CsvReaderException )
-			{
-			}
+			catch( CsvReaderException ) {}
 		}
 
 		[TestMethod]
@@ -325,17 +321,17 @@ namespace CsvHelper.Tests
 		public void GetRecordGenericTest()
 		{
 			var headerData = new[]
-            {
-                "IntColumn",
-                "String Column",
-                "GuidColumn",
-            };
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
 			var recordData = new[]
-            {
-                "1",
-                "string column",
+			{
+				"1",
+				"string column",
 				Guid.NewGuid().ToString(),
-            };
+			};
 			var queue = new Queue<string[]>();
 			queue.Enqueue( headerData );
 			queue.Enqueue( recordData );
@@ -359,17 +355,17 @@ namespace CsvHelper.Tests
 		public void GetRecordTest()
 		{
 			var headerData = new[]
-            {
-                "IntColumn",
-                "String Column",
-                "GuidColumn",
-            };
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
 			var recordData = new[]
-            {
-                "1",
-                "string column",
+			{
+				"1",
+				"string column",
 				Guid.NewGuid().ToString(),
-            };
+			};
 			var queue = new Queue<string[]>();
 			queue.Enqueue( headerData );
 			queue.Enqueue( recordData );
@@ -380,7 +376,7 @@ namespace CsvHelper.Tests
 			csv.Configuration.WillThrowOnMissingField = false;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
-			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ));
+			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ) );
 
 			Assert.AreEqual( Convert.ToInt32( recordData[0] ), record.IntColumn );
 			Assert.AreEqual( recordData[1], record.StringColumn );
@@ -393,11 +389,11 @@ namespace CsvHelper.Tests
 		public void GetRecordsGenericTest()
 		{
 			var headerData = new[]
-            {
-                "IntColumn",
-                "String Column",
-                "GuidColumn",
-            };
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
 			var guid = Guid.NewGuid();
 			var queue = new Queue<string[]>();
 			queue.Enqueue( headerData );
@@ -416,7 +412,7 @@ namespace CsvHelper.Tests
 			for( var i = 1; i <= records.Count; i++ )
 			{
 				var record = records[i - 1];
-				Assert.AreEqual( i , record.IntColumn );
+				Assert.AreEqual( i, record.IntColumn );
 				Assert.AreEqual( "string column " + i, record.StringColumn );
 				Assert.AreEqual( "test", record.TypeConvertedColumn );
 				Assert.AreEqual( i, record.FirstColumn );
@@ -428,11 +424,11 @@ namespace CsvHelper.Tests
 		public void GetRecordsTest()
 		{
 			var headerData = new[]
-            {
-                "IntColumn",
-                "String Column",
-                "GuidColumn",
-            };
+			{
+				"IntColumn",
+				"String Column",
+				"GuidColumn",
+			};
 			var guid = Guid.NewGuid();
 			var queue = new Queue<string[]>();
 			queue.Enqueue( headerData );
@@ -464,10 +460,10 @@ namespace CsvHelper.Tests
 		{
 			var headerData = new[]
 			{
-                "Column",
-                "Column",
-                "Column"
-            };
+				"Column",
+				"Column",
+				"Column"
+			};
 
 			var queue = new Queue<string[]>();
 			queue.Enqueue( headerData );
@@ -505,9 +501,7 @@ namespace CsvHelper.Tests
 				csvReader.Read();
 				Assert.Fail();
 			}
-			catch( CsvReaderException )
-			{
-			}
+			catch( CsvReaderException ) {}
 		}
 
 		[TestMethod]
@@ -707,33 +701,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void DefaultValueTest()
-		{
-			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
-
-			writer.WriteLine( "IntColumn,StringColumn" );
-			writer.WriteLine( "," );
-			writer.WriteLine( "2,two" );
-			writer.Flush();
-			stream.Position = 0;
-
-			var reader = new StreamReader( stream );
-			var csvReader = new CsvReader( reader );
-			csvReader.Configuration.RegisterClassMap<TestDefaultValuesMap>();
-
-			var records = csvReader.GetRecords<TestDefaultValues>().ToList();
-
-			var record = records[0];
-			Assert.AreEqual( -1, record.IntColumn );
-			Assert.AreEqual( null, record.StringColumn );
-
-			record = records[1];
-			Assert.AreEqual( 2, record.IntColumn );
-			Assert.AreEqual( "two", record.StringColumn );
-		}
-
-		[TestMethod]
 		public void BooleanTypeConverterTest()
 		{
 			var stream = new MemoryStream();
@@ -756,13 +723,13 @@ namespace CsvHelper.Tests
 			var records = csvReader.GetRecords<TestBoolean>().ToList();
 
 			Assert.IsTrue( records[0].BoolColumn );
-			Assert.IsTrue( records[0].BoolNullableColumn);
-			Assert.IsTrue( records[1].BoolColumn);
+			Assert.IsTrue( records[0].BoolNullableColumn );
+			Assert.IsTrue( records[1].BoolColumn );
 			Assert.IsTrue( records[1].BoolNullableColumn );
 			Assert.IsTrue( records[2].BoolColumn );
 			Assert.IsTrue( records[2].BoolNullableColumn );
 			Assert.IsFalse( records[3].BoolColumn );
-			Assert.IsFalse( records[3].BoolNullableColumn);
+			Assert.IsFalse( records[3].BoolNullableColumn );
 			Assert.IsFalse( records[4].BoolColumn );
 			Assert.IsFalse( records[4].BoolNullableColumn );
 			Assert.IsFalse( records[5].BoolColumn );
@@ -785,9 +752,9 @@ namespace CsvHelper.Tests
 			reader.Configuration.SkipEmptyRecords = true;
 
 			reader.Read();
-			Assert.AreEqual( "1",  reader.CurrentRecord[0] );
-			Assert.AreEqual( "2",  reader.CurrentRecord[1] );
-			Assert.AreEqual( "3",  reader.CurrentRecord[2] );
+			Assert.AreEqual( "1", reader.CurrentRecord[0] );
+			Assert.AreEqual( "2", reader.CurrentRecord[1] );
+			Assert.AreEqual( "3", reader.CurrentRecord[2] );
 
 			reader.Read();
 			Assert.AreEqual( "4", reader.CurrentRecord[0] );
@@ -801,29 +768,57 @@ namespace CsvHelper.Tests
 		public void SkipEmptyRecordsObeysTrimFieldsIsEnabledTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue(new[] { "1", "2", "3" });
-			queue.Enqueue(new[] { " ", "", "" });
-			queue.Enqueue(new[] { "4", "5", "6" });
-			queue.Enqueue(null);
+			queue.Enqueue( new[] { "1", "2", "3" } );
+			queue.Enqueue( new[] { " ", "", "" } );
+			queue.Enqueue( new[] { "4", "5", "6" } );
+			queue.Enqueue( null );
 
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader(parserMock);
+			var reader = new CsvReader( parserMock );
 			reader.Configuration.HasHeaderRecord = false;
 			reader.Configuration.TrimFields = true;
 			reader.Configuration.SkipEmptyRecords = true;
 
 			reader.Read();
-			Assert.AreEqual("1", reader.CurrentRecord[0]);
-			Assert.AreEqual("2", reader.CurrentRecord[1]);
-			Assert.AreEqual("3", reader.CurrentRecord[2]);
+			Assert.AreEqual( "1", reader.CurrentRecord[0] );
+			Assert.AreEqual( "2", reader.CurrentRecord[1] );
+			Assert.AreEqual( "3", reader.CurrentRecord[2] );
 
 			reader.Read();
-			Assert.AreEqual("4", reader.CurrentRecord[0]);
-			Assert.AreEqual("5", reader.CurrentRecord[1]);
-			Assert.AreEqual("6", reader.CurrentRecord[2]);
+			Assert.AreEqual( "4", reader.CurrentRecord[0] );
+			Assert.AreEqual( "5", reader.CurrentRecord[1] );
+			Assert.AreEqual( "6", reader.CurrentRecord[2] );
 
-			Assert.IsFalse(reader.Read());
+			Assert.IsFalse( reader.Read() );
+		}
+
+		[TestMethod]
+		public void SkipRecordCallbackTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new[] { "1", "2", "3" } );
+			queue.Enqueue( new[] { " ", "", "" } );
+			queue.Enqueue( new[] { "4", "5", "6" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.HasHeaderRecord = false;
+			reader.Configuration.ShouldSkipRecord = row => row[1] == "2";
+
+			reader.Read();
+			Assert.AreEqual( " ", reader.CurrentRecord[0] );
+			Assert.AreEqual( "", reader.CurrentRecord[1] );
+			Assert.AreEqual( "", reader.CurrentRecord[2] );
+
+			reader.Read();
+			Assert.AreEqual( "4", reader.CurrentRecord[0] );
+			Assert.AreEqual( "5", reader.CurrentRecord[1] );
+			Assert.AreEqual( "6", reader.CurrentRecord[2] );
+
+			Assert.IsFalse( reader.Read() );
 		}
 
 		[TestMethod]
@@ -872,9 +867,7 @@ namespace CsvHelper.Tests
 				reader.GetRecords<OnlyFields>().ToList();
 				Assert.Fail();
 			}
-			catch( CsvConfigurationException )
-			{
-			}
+			catch( CsvConfigurationException ) {}
 		}
 
 		[TestMethod]

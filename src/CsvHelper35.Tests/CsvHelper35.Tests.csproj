@@ -75,6 +75,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvReaderConstructorTests.cs">
       <Link>CsvReaderConstructorTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderDefaultValueTests.cs">
+      <Link>CsvReaderDefaultValueTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvReaderErrorMessageTests.cs">
       <Link>CsvReaderErrorMessageTests.cs</Link>
     </Compile>
@@ -105,6 +108,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvWriterSubClassingTests.cs">
       <Link>CsvWriterSubClassingTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\Defaults\WritingDefaultsTests.cs">
+      <Link>Defaults\WritingDefaultsTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\ExcelCompatibleTests.cs">
       <Link>ExcelCompatibleTests.cs</Link>
     </Compile>
@@ -134,6 +140,9 @@
     </Compile>
     <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeConverterTests.cs">
       <Link>TypeConversion\DateTimeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeOffsetConverterTests.cs">
+      <Link>TypeConversion\DateTimeOffsetConverterTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\TypeConversion\EnumConverterTests.cs">
       <Link>TypeConversion\EnumConverterTests.cs</Link>

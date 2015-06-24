@@ -46,7 +46,71 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( expected, csvFile );
 		}
 
-		[TestMethod]
+	    [TestMethod]
+	    public void WriteFieldTrimTest()
+	    {
+		    var record = new TestRecord
+		    {
+			    IntColumn = 1,
+			    DateColumn = new DateTime( 2012, 10, 1, 12, 12, 12 ),
+			    DecimalColumn = 150.99m,
+			    FirstColumn = "first column ",
+		    };
+
+		    var config = new CsvConfiguration { CultureInfo = new CultureInfo( "en-US" ), TrimFields = true };
+		    config.RegisterClassMap<TestRecordMap>();
+
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
+		    var csv = new CsvWriter( writer, config );
+
+		    csv.WriteRecord( record );
+
+		    stream.Position = 0;
+		    var reader = new StreamReader( stream );
+		    var csvFile = reader.ReadToEnd();
+		    var expected = "first column,0001,10/1/2012,$150.99\r\n";
+
+		    Assert.AreEqual( expected, csvFile );
+	    }
+
+	    [TestMethod]
+	    public void WriteFieldShouldQuoteNoTest()
+	    {
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
+		    var csv = new CsvWriter( writer );
+
+		    csv.WriteField( "a \"b\" c", false );
+		    csv.NextRecord();
+
+		    stream.Position = 0;
+		    var reader = new StreamReader( stream );
+		    var csvFile = reader.ReadToEnd();
+		    var expected = "a \"b\" c\r\n";
+
+		    Assert.AreEqual( expected, csvFile );
+	    }
+
+	    [TestMethod]
+	    public void WriteFieldShouldQuoteYesTest()
+	    {
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
+		    var csv = new CsvWriter( writer );
+
+		    csv.WriteField( "a \"b\" c", true );
+		    csv.NextRecord();
+
+		    stream.Position = 0;
+		    var reader = new StreamReader( stream );
+		    var csvFile = reader.ReadToEnd();
+		    var expected = "\"a \"\"b\"\" c\"\r\n";
+
+		    Assert.AreEqual( expected, csvFile );
+	    }
+
+	    [TestMethod]
 		public void WriteRecordWithReferencesTest()
 		{
 			var record = new Person

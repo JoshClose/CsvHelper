@@ -62,6 +62,19 @@ namespace CsvHelper.Tests
             Assert.AreEqual("one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,1,1,1,1," + guid + "\r\n", data);
         }
 
+		[TestMethod]
+	    public void WriteEmptyFieldWithExcelLeadingZerosTest()
+	    {
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
+				csv.WriteField( string.Empty );
+			}
+	    }
+
         [TestMethod]
         public void WriteRecordTest()
         {
@@ -723,6 +736,50 @@ namespace CsvHelper.Tests
             }
         }
 
+		[TestMethod]
+	    public void ClassWithStaticAutoMappingTest()
+	    {
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				TestWithStatic.Name = "one";
+				var records = new List<TestWithStatic>
+				{
+					new TestWithStatic
+					{
+						Id = 1
+					},
+				};
+
+				csv.WriteRecords( records );
+			}
+	    }
+
+		[TestMethod]
+		public void ClassWithStaticUsingMappingTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.RegisterClassMap<TestWithStaticMap>();
+
+				TestWithStatic.Name = "one";
+				var records = new List<TestWithStatic>
+				{
+					new TestWithStatic
+					{
+						Id = 1
+					},
+				};
+
+				csv.WriteRecords( records );
+			}
+		}
+
 #if !PCL
 		[TestMethod]
 		public void WriteDynamicListTest()
@@ -768,6 +825,21 @@ namespace CsvHelper.Tests
 			}
 		}
 #endif
+
+	    private class TestWithStatic
+	    {
+			public int Id { get; set; }
+
+			public static string Name { get; set; }
+	    }
+
+	    private sealed class TestWithStaticMap : CsvClassMap<TestWithStatic>
+	    {
+		    public TestWithStaticMap()
+		    {
+			    Map( m => m.Id );
+		    }
+	    }
 
         private class TestStructParent
         {

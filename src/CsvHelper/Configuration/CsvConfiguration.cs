@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Globalization;
 #if !NET_2_0
 using System.Linq;
+#else
+using CsvHelper.MissingFrom20;
 #endif
 using System.Reflection;
 using System.Text;
@@ -36,6 +38,7 @@ namespace CsvHelper.Configuration
 		private bool quoteNoFields;
 		private bool ignoreBlankLines = true;
 #if !NET_2_0
+		private bool useNewObjectForNullReferenceProperties = true;
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
 #endif
 
@@ -349,6 +352,13 @@ namespace CsvHelper.Configuration
 		public virtual bool SkipEmptyRecords { get; set; }
 
 		/// <summary>
+		/// Gets or sets the callback that will be called to
+		/// determine whether to skip the given record or not.
+		/// This overrides the <see cref="SkipEmptyRecords"/> setting.
+		/// </summary>
+		public virtual Func<string[], bool> ShouldSkipRecord { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if quotes should be
 		/// ingored when parsing and treated like any other character.
 		/// </summary>
@@ -419,6 +429,19 @@ namespace CsvHelper.Configuration
 		/// calling <see cref="ICsvReaderRow.GetRecords{T}"/>.
 		/// </summary>
 		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating that during writing if a new 
+		/// object should be created when a reference property is null.
+		/// True to create a new object and use it's defaults for the
+		/// fields, or false to leave the fields empty for all the
+		/// reference property's properties.
+		/// </summary>
+		public virtual bool UseNewObjectForNullReferenceProperties
+		{
+			get { return useNewObjectForNullReferenceProperties; }
+			set { useNewObjectForNullReferenceProperties = value; }
+		}
 		
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
@@ -426,10 +449,12 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual void RegisterClassMap<TMap>() where TMap : CsvClassMap
+		public virtual TMap RegisterClassMap<TMap>() where TMap : CsvClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
 			RegisterClassMap( map );
+
+			return map;
 		}
 
 		/// <summary>
@@ -438,7 +463,7 @@ namespace CsvHelper.Configuration
 		/// Only properties specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
-		public virtual void RegisterClassMap( Type classMapType )
+		public virtual CsvClassMap RegisterClassMap( Type classMapType )
 		{
 			if( !typeof( CsvClassMap ).IsAssignableFrom( classMapType ) )
 			{
@@ -447,6 +472,8 @@ namespace CsvHelper.Configuration
 
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( classMapType );
 			RegisterClassMap( map );
+
+			return map;
 		}
 
 		/// <summary>
@@ -469,7 +496,7 @@ namespace CsvHelper.Configuration
 		/// Unregisters the class map.
 		/// </summary>
 		/// <typeparam name="TMap">The map type to unregister.</typeparam>
-		public virtual void UnregisterClassMap<TMap>()
+		public virtual void UnregisterClassMap<TMap>() 
 			where TMap : CsvClassMap
 		{
 			UnregisterClassMap( typeof( TMap ) );

@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration
 		/// Constructs the row object using the given expression.
 		/// </summary>
 		/// <param name="expression">The expression.</param>
-		protected virtual void ConstructUsing( Expression<Func<T>> expression )
+		public virtual void ConstructUsing( Expression<Func<T>> expression )
 		{
 			Constructor = ReflectionHelper.GetConstructor( expression );
 		}
@@ -31,7 +31,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="expression">The property to map.</param>
 		/// <returns>The property mapping.</returns>
-		protected virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
+		public virtual CsvPropertyMap Map( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
 
@@ -56,10 +56,28 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
 		/// <param name="expression">The expression.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the property.</returns>
-		protected virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<T, object>> expression ) where TClassMap : CsvClassMap
+		public virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<T, object>> expression, params object[] constructorArgs ) where TClassMap : CsvClassMap
 		{
-			return References( typeof( TClassMap ), expression );
+			var property = ReflectionHelper.GetProperty( expression );
+
+			var existingMap = ReferenceMaps.SingleOrDefault( m =>
+				m.Data.Property == property
+				|| m.Data.Property.Name == property.Name
+				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
+			if( existingMap != null )
+			{
+				return existingMap;
+			}
+
+			var map = ReflectionHelper.CreateInstance<TClassMap>( constructorArgs );
+			map.CreateMap();
+			map.ReIndex( GetMaxIndex() + 1 );
+			var reference = new CsvPropertyReferenceMap( property, map );
+			ReferenceMaps.Add( reference );
+
+			return reference;
 		}
 
 		/// <summary>
@@ -67,15 +85,27 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type.</param>
 		/// <param name="expression">The expression.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the property</returns>
-		protected virtual CsvPropertyReferenceMap References( Type type, Expression<Func<T, object>> expression )
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use References<TClassMap>( Expression<Func<T, object>> expression, params object[] constructorArgs ) instead.", false )]
+		protected virtual CsvPropertyReferenceMap References( Type type, Expression<Func<T, object>> expression, params object[] constructorArgs )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
-			var map = (CsvClassMap)ReflectionHelper.CreateInstance( type );
+			var existingMap = ReferenceMaps.SingleOrDefault( m =>
+				m.Data.Property == property
+				|| m.Data.Property.Name == property.Name
+				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
+			if( existingMap != null )
+			{
+				return existingMap;
+			}
+
+			var map = (CsvClassMap)ReflectionHelper.CreateInstance( type, constructorArgs );
 			map.CreateMap();
 			map.ReIndex( GetMaxIndex() + 1 );
 			var reference = new CsvPropertyReferenceMap( property, map );
 			ReferenceMaps.Add( reference );
+
 			return reference;
 		}
 	}

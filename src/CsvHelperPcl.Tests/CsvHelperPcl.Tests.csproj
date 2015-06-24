@@ -11,7 +11,7 @@
     <RootNamespace>CsvHelperPcl.Tests</RootNamespace>
     <AssemblyName>CsvHelperPcl.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile136</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile328</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <SignAssembly>true</SignAssembly>
@@ -80,6 +80,9 @@
     <Compile Include="..\CsvHelper.Tests\CsvReaderConstructorTests.cs">
       <Link>CsvReaderConstructorTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\CsvReaderDefaultValueTests.cs">
+      <Link>CsvReaderDefaultValueTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\CsvReaderErrorMessageTests.cs">
       <Link>CsvReaderErrorMessageTests.cs</Link>
     </Compile>
@@ -113,11 +116,17 @@
     <Compile Include="..\CsvHelper.Tests\CsvWriterTests.cs">
       <Link>CsvWriterTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\Defaults\WritingDefaultsTests.cs">
+      <Link>Defaults\WritingDefaultsTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\ExcelCompatibleTests.cs">
       <Link>ExcelCompatibleTests.cs</Link>
     </Compile>
-    <Compile Include="..\CsvHelper.Tests\ExceptionTests.cs">
-      <Link>ExceptionTests.cs</Link>
+    <Compile Include="..\CsvHelper.Tests\Exceptions\ExceptionMessageTests.cs">
+      <Link>Exceptions\ExceptionMessageTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\Exceptions\ExceptionTests.cs">
+      <Link>Exceptions\ExceptionTests.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\LocalCultureTests.cs">
       <Link>LocalCultureTests.cs</Link>
@@ -125,8 +134,14 @@
     <Compile Include="..\CsvHelper.Tests\MappingInheritedClassTests.cs">
       <Link>MappingInheritedClassTests.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\Mappings\ReferenceConstructorArgsTests.cs">
+      <Link>Mappings\ReferenceConstructorArgsTests.cs</Link>
+    </Compile>
     <Compile Include="..\csvhelper.tests\mocks\ParserMock.cs">
       <Link>Mocks\ParserMock.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\Mocks\SerializerMock.cs">
+      <Link>Mocks\SerializerMock.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
       <Link>ReferenceMappingClassMapTests.cs</Link>
@@ -148,6 +163,9 @@
     </Compile>
     <Compile Include="..\csvhelper.tests\typeconversion\DateTimeConverterTests.cs">
       <Link>TypeConversion\DateTimeConverterTests.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper.Tests\TypeConversion\DateTimeOffsetConverterTests.cs">
+      <Link>TypeConversion\DateTimeOffsetConverterTests.cs</Link>
     </Compile>
     <Compile Include="..\csvhelper.tests\typeconversion\EnumConverterTests.cs">
       <Link>TypeConversion\EnumConverterTests.cs</Link>

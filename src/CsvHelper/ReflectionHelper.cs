@@ -22,16 +22,14 @@ namespace CsvHelper
 		/// Creates an instance of type T.
 		/// </summary>
 		/// <typeparam name="T">The type of instance to create.</typeparam>
+		/// <param name="args">The constructor arguments.</param>
 		/// <returns>A new instance of type T.</returns>
-		public static T CreateInstance<T>()
+		public static T CreateInstance<T>( params object[] args )
 		{
 #if NET_2_0
 			return Activator.CreateInstance<T>();
 #else
-
-			var constructor = Expression.New( typeof( T ) );
-			var compiled = (Func<T>)Expression.Lambda( constructor ).Compile();
-			return compiled();
+			return (T)CreateInstance( typeof( T ), args );
 #endif
 		}
 
@@ -52,7 +50,14 @@ namespace CsvHelper
 			var constructorInfo = type.GetConstructor( argumentTypes );
 			var constructor = Expression.New( constructorInfo, argumentExpressions );
 			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
-			return compiled.DynamicInvoke( args );
+			try
+			{
+				return compiled.DynamicInvoke( args );
+			}
+			catch( TargetInvocationException ex )
+			{
+				throw ex.InnerException;
+			}
 #endif
 		}
 
