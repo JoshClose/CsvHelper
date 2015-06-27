@@ -143,6 +143,9 @@
     <Compile Include="..\CsvHelper.Tests\Mocks\SerializerMock.cs">
       <Link>Mocks\SerializerMock.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper.Tests\Reading\TryGetTests.cs">
+      <Link>Reading\TryGetTests.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper.Tests\ReferenceMappingClassMapTests.cs">
       <Link>ReferenceMappingClassMapTests.cs</Link>
     </Compile>

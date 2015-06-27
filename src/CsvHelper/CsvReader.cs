@@ -785,7 +785,7 @@ namespace CsvHelper
 				return false;
 			}
 
-			return TryGetField( index, converter, out field );
+			return TryGetField( fieldIndex, converter, out field );
 		}
 
 		/// <summary>
