@@ -47,5 +47,12 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
 		string[] Read();
+
+		/// <summary>
+		/// Ignore no of line(s) in reader
+		/// </summary>
+		/// <param name="noOfLine"></param>
+		/// <returns>string in ignored line(s)</returns>
+		string IgnoreLines(int noOfLine);
 	}
 }

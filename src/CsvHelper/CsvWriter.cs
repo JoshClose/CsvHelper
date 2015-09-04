@@ -35,6 +35,7 @@ namespace CsvHelper
 		private bool disposed;
 		private readonly List<string> currentRecord = new List<string>();
 		private ICsvSerializer serializer;
+        private bool hasHeaderCommentBeenWritten;
 		private bool hasHeaderBeenWritten;
 		private bool hasRecordBeenWritten;
 #if !NET_2_0
@@ -346,6 +347,11 @@ namespace CsvHelper
 				throw new ArgumentNullException( "type" );
 			}
 
+            if (hasHeaderCommentBeenWritten)
+            {
+                throw new CsvWriterException("The headercomment has already been written. You can't write it more than once.");
+            }
+
 			if( !configuration.HasHeaderRecord )
 			{
 				throw new CsvWriterException( "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
@@ -386,6 +392,44 @@ namespace CsvHelper
 
 			hasHeaderBeenWritten = true;
 		}
+
+        /// <summary>
+        /// Writes the header comment from the given properties.
+        /// </summary>
+        /// <param name="headerComment">the string of header comment</param>
+        public virtual void WriteHeaderComment(string headerComment)
+        {
+            CheckDisposed();
+
+            if (headerComment == null)
+            {
+                throw new ArgumentNullException("headerComment");
+            }
+
+            if (configuration.NoOfHeaderCommentRow <= 0)
+            {
+                throw new CsvWriterException("Configuration.NoOfHeaderCommentRow is smaller than zero. This will need to be large than zero.");
+            }
+
+            if (hasHeaderCommentBeenWritten)
+            {
+                throw new CsvWriterException("The headercomment has already been written. You can't write it more than once.");
+            }
+
+            if (hasHeaderBeenWritten)
+            {
+                throw new CsvWriterException("The header record has already been written. You can't write it more than once.");
+            }
+
+            if (hasRecordBeenWritten)
+            {
+                throw new CsvWriterException("Records have already been written. You can't write the header after writing records has started.");
+            }
+
+            serializer.Write(headerComment);
+
+            hasHeaderCommentBeenWritten = true;
+        }
 
 		/// <summary>
 		/// Writes the record to the CSV file.
@@ -468,6 +512,8 @@ namespace CsvHelper
 						WriteHeader( recordType );
 					}
 				}
+
+                // Write the 
 
 				foreach( var record in records )
 				{

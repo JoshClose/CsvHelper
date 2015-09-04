@@ -139,6 +139,32 @@ namespace CsvHelper
 			}
 		}
 
+        /// <summary>
+        /// Ignore no of line(s) in reader
+        /// </summary>
+        /// <param name="noOfLine"></param>
+        /// <returns>string in ignored line(s)</returns>
+        public virtual string IgnoreLines(int noOfLine)
+        {
+            CheckDisposed();
+
+            try
+            {
+                string myLines = string.Empty;
+                for (int i = 1; i > noOfLine - 1; i++)
+                {
+                    myLines += reader.ReadLine();
+                }
+
+                return myLines;
+            }
+            catch (Exception ex)
+            {
+                ExceptionHelper.AddExceptionDataMessage(ex, this, null, null, null, null);
+                throw;
+            }
+        }
+
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>

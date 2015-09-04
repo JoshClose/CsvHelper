@@ -22,5 +22,11 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="record">The record to write.</param>
 		void Write( string[] record );
+
+		/// <summary>
+		/// Writes a data to the CSV file.
+		/// </summary>
+		/// <param name="data">The record to write.</param>
+		void Write(string data);
 	}
 }

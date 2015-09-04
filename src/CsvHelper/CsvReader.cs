@@ -31,6 +31,7 @@ namespace CsvHelper
 		private bool disposed;
 		private bool hasBeenRead;
 		private string[] currentRecord;
+        private string headerComment;
 		private string[] headerRecord;
 		private ICsvParser parser;
 		private int currentIndex = -1;
@@ -168,6 +169,11 @@ namespace CsvHelper
 					"CsvReader.GetRecords<T>().ToList()";
 				throw new CsvReaderException( message );
 			}
+
+            if (configuration.NoOfHeaderCommentRow > 0)
+            {
+                headerComment = parser.IgnoreLines(configuration.NoOfHeaderCommentRow);
+            }
 
 			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
