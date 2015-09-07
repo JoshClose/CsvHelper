@@ -37,5 +37,31 @@ namespace CsvHelper.Tests.Mocks
 		public void Dispose()
 		{
 		}
-	}
+
+
+        public void Write(string data)
+        {
+            throw new NotImplementedException();
+        }
+
+        CsvConfiguration ICsvSerializer.Configuration
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        void ICsvSerializer.Write(string[] record)
+        {
+            throw new NotImplementedException();
+        }
+
+        void ICsvSerializer.Write(string data)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IDisposable.Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

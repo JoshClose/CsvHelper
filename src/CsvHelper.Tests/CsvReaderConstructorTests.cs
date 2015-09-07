@@ -99,6 +99,57 @@ namespace CsvHelper.Tests
 			{
 				get { throw new NotImplementedException(); }
 			}
-		}
+
+
+            public string IgnoreLines(int noOfLine)
+            {
+                throw new NotImplementedException();
+            }
+
+            CsvConfiguration ICsvParser.Configuration
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            int ICsvParser.FieldCount
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            long ICsvParser.CharPosition
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            long ICsvParser.BytePosition
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            int ICsvParser.Row
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            string ICsvParser.RawRecord
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            string[] ICsvParser.Read()
+            {
+                throw new NotImplementedException();
+            }
+
+            string ICsvParser.IgnoreLines(int noOfLine)
+            {
+                throw new NotImplementedException();
+            }
+
+            void IDisposable.Dispose()
+            {
+                throw new NotImplementedException();
+            }
+        }
 	}
 }

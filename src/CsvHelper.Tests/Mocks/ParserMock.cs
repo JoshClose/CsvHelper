@@ -39,7 +39,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public string[] Read()
 		{
-		    Row++;
+			Row++;
 			return rows.Dequeue();
 		}
 
@@ -56,6 +56,12 @@ namespace CsvHelper.Tests.Mocks
 		IEnumerator IEnumerable.GetEnumerator()
 		{
 			return GetEnumerator();
+		}
+
+
+		public string IgnoreLines(int noOfLine)
+		{
+			return string.Empty;
 		}
 	}
 }

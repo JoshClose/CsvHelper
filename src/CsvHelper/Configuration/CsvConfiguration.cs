@@ -22,6 +22,7 @@ namespace CsvHelper.Configuration
 	public class CsvConfiguration
 	{
 		private BindingFlags propertyBindingFlags = BindingFlags.Public | BindingFlags.Instance;
+        private int noOfHeaderCommentRow = 0;
 		private bool hasHeaderRecord = true;
 		private bool willThrowOnMissingField = true;
 		private string delimiter = ",";
@@ -62,6 +63,17 @@ namespace CsvHelper.Configuration
 			get { return propertyBindingFlags; }
 			set { propertyBindingFlags = value; }
 		}
+
+        /// <summary>
+        /// Gets or sets a value indicating if the
+        /// CSV file has a header comment row.
+        /// Default is 0.
+        /// </summary>
+        public virtual int NoOfHeaderCommentRow
+        {
+            get { return noOfHeaderCommentRow; }
+            set { noOfHeaderCommentRow = value; }
+        }
 
 		/// <summary>
 		/// Gets or sets a value indicating if the

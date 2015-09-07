@@ -54,6 +54,17 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Writes a data to the CSV file.
+		/// </summary>
+		/// <param name="data">The record to write.</param>
+		public void Write(string data)
+		{
+			CheckDisposed();
+
+			writer.WriteLine(data);
+		}
+
+		/// <summary>
 		/// Writes a record to the CSV file.
 		/// </summary>
 		/// <param name="record">The record to write.</param>
