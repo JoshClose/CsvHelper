@@ -71,7 +71,7 @@ namespace CsvHelper.Configuration
 				return existingMap;
 			}
 
-			var map = ReflectionHelper.CreateInstance<TClassMap>( constructorArgs );
+			var map = ReflectionHelper.CreateInstance<TClassMap>(ContractResolver , constructorArgs );
 			map.CreateMap();
 			map.ReIndex( GetMaxIndex() + 1 );
 			var reference = new CsvPropertyReferenceMap( property, map );
@@ -100,7 +100,7 @@ namespace CsvHelper.Configuration
 				return existingMap;
 			}
 
-			var map = (CsvClassMap)ReflectionHelper.CreateInstance( type, constructorArgs );
+			var map = (CsvClassMap)ReflectionHelper.CreateInstance(ContractResolver , type, constructorArgs );
 			map.CreateMap();
 			map.ReIndex( GetMaxIndex() + 1 );
 			var reference = new CsvPropertyReferenceMap( property, map );

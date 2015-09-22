@@ -9,7 +9,6 @@ using System.Linq.Expressions;
 #endif
 using System.Reflection;
 using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 
 namespace CsvHelper
 {
@@ -24,12 +23,17 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of instance to create.</typeparam>
 		/// <param name="args">The constructor arguments.</param>
 		/// <returns>A new instance of type T.</returns>
-		public static T CreateInstance<T>( params object[] args )
+		public static T CreateInstance<T>( IContractResolver resolver, params object[] args )
 		{
+			if( resolver != null && resolver.CanCreate( typeof( T ) ) )
+			{
+				return (T)resolver.CreateObject( typeof( T ), args );
+			}
+
 #if NET_2_0
 			return Activator.CreateInstance<T>();
 #else
-			return (T)CreateInstance( typeof( T ), args );
+			return (T)CreateInstance(resolver, typeof( T ), args );
 #endif
 		}
 
@@ -39,8 +43,13 @@ namespace CsvHelper
 		/// <param name="type">The type of instance to create.</param>
 		/// <param name="args">The constructor arguments.</param>
 		/// <returns>A new instance of the specified type.</returns>
-		public static object CreateInstance( Type type, params object[] args )
+		public static object CreateInstance( IContractResolver resolver, Type type, params object[] args )
 		{
+			if (resolver != null && resolver.CanCreate(type))
+			{
+				return resolver.CreateObject(type, args);
+			}
+
 #if NET_2_0
 			return Activator.CreateInstance( type, args );
 #else

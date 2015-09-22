@@ -47,6 +47,12 @@
     <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
       <Link>Configuration\CsvConfigurationException.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvContractResolver.cs">
+      <Link>Configuration\CsvContractResolver.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\IContractResolver.cs">
+      <Link>Configuration\IContractResolver.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
     </Compile>

@@ -20,6 +20,8 @@ namespace CsvHelper.Configuration
 		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
 		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
 
+		public virtual IContractResolver ContractResolver { get; set; }
+
 		/// <summary>
 		/// Called to create the mappings.
 		/// </summary>
@@ -91,7 +93,7 @@ namespace CsvHelper.Configuration
 		public virtual void AutoMap( bool ignoreReferences = false, bool prefixReferenceHeaders = false )
 		{
 			var mapParents = new LinkedList<Type>();
-			AutoMapInternal( this, ignoreReferences, prefixReferenceHeaders, mapParents );
+			AutoMapInternal(ContractResolver, this, ignoreReferences, prefixReferenceHeaders, mapParents );
 		}
 
 		/// <summary>
@@ -149,7 +151,7 @@ namespace CsvHelper.Configuration
 		/// get prefixed by the parent property name.
 		/// True to prefix, otherwise false.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
-		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
+		internal static void AutoMapInternal( IContractResolver resolver, CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 			var type = map.GetType().BaseType.GetGenericArguments()[0];
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
@@ -189,8 +191,8 @@ namespace CsvHelper.Configuration
 
 					mapParents.AddLast( type );
 					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
-					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
-					AutoMapInternal( refMap, false, prefixReferenceHeaders, mapParents, map.GetMaxIndex() + 1 );
+					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance(resolver, refMapType );
+					AutoMapInternal(resolver, refMap, false, prefixReferenceHeaders, mapParents, map.GetMaxIndex() + 1 );
 
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{

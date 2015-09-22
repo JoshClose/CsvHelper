@@ -12,4 +12,6 @@ namespace CsvHelper.MissingFrom20
 	/// <param name="arg">The parameter of the method that this delegate encapsulates.</param>
 	/// <returns>The return value of the method that this delegate encapsulates.</returns>
 	public delegate TResult Func<in T, out TResult>( T arg );
+
+	public delegate TResult Func<in T, in T1, out TResult>(T arg, T1 args);
 }
