@@ -60,6 +60,9 @@
     <Compile Include="..\CsvHelper\Configuration\CsvConfigurationException.cs">
       <Link>Configuration\CsvConfigurationException.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvContractResolver.cs">
+      <Link>Configuration\CsvContractResolver.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyMap.cs">
       <Link>Configuration\CsvPropertyMap.cs</Link>
     </Compile>
@@ -83,6 +86,9 @@
     </Compile>
     <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
       <Link>Configuration\DefaultCsvClassMap`1.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\IContractResolver.cs">
+      <Link>Configuration\IContractResolver.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
