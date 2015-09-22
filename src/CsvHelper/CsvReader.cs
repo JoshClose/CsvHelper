@@ -1437,20 +1437,20 @@ namespace CsvHelper
                     continue;
                 }
 
-                Type t = referenceMap.Data.Property.PropertyType;
+                var propertyType = referenceMap.Data.Property.PropertyType;
 
                 if (this.Configuration != null && this.Configuration.ContractResolver != null)
                 {
-                    if (this.Configuration.ContractResolver.CanCreate(t))
+                    if (this.Configuration.ContractResolver.CanCreate(propertyType))
                     {
-                        var tmp = this.Configuration.ContractResolver.Create(t, null);
-                        t = tmp.GetType();
+                        var tmp = this.Configuration.ContractResolver.Create(propertyType, null);
+                        propertyType = tmp.GetType();
                     }
                 }
 
                 var referenceBindings = new List<MemberBinding>();
-                CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, t, referenceBindings );
-                var referenceBody = Expression.MemberInit( Expression.New( t ), referenceBindings );
+                CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, propertyType, referenceBindings );
+                var referenceBody = Expression.MemberInit( Expression.New( propertyType ), referenceBindings );
                 bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
             }
         }
