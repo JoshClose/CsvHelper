@@ -41,7 +41,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CsvContractResolver.cs" />
     <Compile Include="Configuration\CsvPropertyNameCollection.cs" />
     <Compile Include="Configuration\CsvPropertyReferenceMapData.cs" />
     <Compile Include="Configuration\DefaultCsvClassMap`1.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Configuration\CsvPropertyMap.cs" />
     <Compile Include="Configuration\CsvPropertyMapData.cs" />
     <Compile Include="Configuration\CsvPropertyReferenceMap.cs" />
+    <Compile Include="Configuration\IContractResolver.cs" />
     <Compile Include="CsvBadDataException.cs" />
     <Compile Include="CsvFactory.cs" />
     <Compile Include="CsvHelperException.cs" />

@@ -16,12 +16,12 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void CreateInstanceTests()
 		{
-			var test = ReflectionHelper.CreateInstance<Test>();
+			var test = ReflectionHelper.CreateInstance<Test>(null);
 
 			Assert.IsNotNull( test );
 			Assert.AreEqual( "name", test.Name );
 
-			test = (Test)ReflectionHelper.CreateInstance( typeof( Test ) );
+			test = (Test)ReflectionHelper.CreateInstance( null, typeof( Test ) );
 			Assert.IsNotNull( test );
 			Assert.AreEqual( "name", test.Name );
 		}
