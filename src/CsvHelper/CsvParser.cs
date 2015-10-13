@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
+using System.Text;
 #if NET_2_0
 using CsvHelper.MissingFrom20;
 #endif
@@ -33,6 +34,7 @@ namespace CsvHelper
 		private char c = '\0';
 		private bool read;
 		private bool hasExcelSeparatorBeenRead;
+		private StringBuilder rawBuilder = new StringBuilder();
 
 		/// <summary>
 		/// Gets the configuration.
@@ -72,7 +74,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the raw row for the current record that was parsed.
 		/// </summary>
-		public virtual string RawRecord { get; private set; }
+		public virtual string RawRecord { get { return rawBuilder.ToString(); } }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
@@ -194,17 +196,17 @@ namespace CsvHelper
 			if( record.Length < recordPosition + 1 )
 			{
 				// Resize record if it's too small.
-				Array.Resize( ref record, recordPosition + 1 );
+				Array.Resize( ref record, recordPosition + 1000 );
+			}
 
-				// Set the field count. If there is a header
-				// record, then we can go by the number of
-				// headers there is. If there is no header
-				// record, then we can go by the first row.
-				// Either way, we're using the first row.
-				if( currentRow == 1 )
-				{
-					FieldCount = record.Length;
-				}
+			// Set the field count. If there is a header
+			// record, then we can go by the number of
+			// headers there is. If there is no header
+			// record, then we can go by the first row.
+			// Either way, we're using the first row.
+			if (currentRow == 1)
+			{
+				FieldCount = recordPosition;
 			}
 
 			if( fieldIsBad && configuration.ThrowOnBadData )
@@ -266,7 +268,6 @@ namespace CsvHelper
 			var prevCharWasDelimiter = false;
 			var recordPosition = 0;
 			record = new string[FieldCount];
-			RawRecord = string.Empty;
 			currentRow++;
 			currentRawRow++;
 
@@ -511,7 +512,12 @@ namespace CsvHelper
 
 			if( record != null )
 			{
-				RawRecord += new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition );
+				rawBuilder.Append(new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition ));
+
+				if (record.Length != FieldCount)
+				{
+					Array.Resize(ref record, FieldCount + 1);
+				}
 			}
 
 			return record;
@@ -548,7 +554,7 @@ namespace CsvHelper
 				UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 				fieldLength = 0;
 
-				RawRecord += new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition );
+				rawBuilder.Append(new string( readerBuffer, rawFieldStartPosition, readerBufferPosition - rawFieldStartPosition ));
 
 				charsRead = reader.Read( readerBuffer, 0, readerBuffer.Length );
 				readerBufferPosition = 0;
@@ -582,7 +588,7 @@ namespace CsvHelper
 					}
 					else
 					{
-						RawRecord = null;
+						rawBuilder = new StringBuilder();
 						record = null;
 					}
 
