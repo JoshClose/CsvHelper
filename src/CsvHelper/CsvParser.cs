@@ -433,6 +433,7 @@ namespace CsvHelper
 						// If we hit the delimiter, we are
 						// done reading the field and can
 						// add it to the record.
+						delimiterPosition = 0;
 						AppendField( ref field, fieldStartPosition, readerBufferPosition - fieldStartPosition - 1 );
 						// Include the comma in the byte count.
 						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
@@ -451,8 +452,15 @@ namespace CsvHelper
 						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
 						inDelimiter = false;
 						prevCharWasDelimiter = true;
-						delimiterPosition = 0;
 						fieldStartPosition = readerBufferPosition;
+					}
+					else if( configuration.Delimiter[delimiterPosition] != c )
+					{
+						// We're not actually in a delimiter. Reset things back
+						// to the previous field.
+						recordPosition--;
+						fieldStartPosition -= ( delimiterPosition + 1 );
+						inDelimiter = false;
 					}
 					else
 					{
