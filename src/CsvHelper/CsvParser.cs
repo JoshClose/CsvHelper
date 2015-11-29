@@ -546,7 +546,7 @@ namespace CsvHelper
 			{
 				// We need to read more of the stream.
 
-				if( !inDelimiter )
+				if( !inDelimiter && !inComment )
 				{
 					// The buffer ran out. Take the current
 					// text and add it to the field.
