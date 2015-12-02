@@ -185,7 +185,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var type = field.GetType();
+			var type = field == null ? typeof(T) : field.GetType();
 			if( type == typeof( string ) )
 			{
 				WriteField( field as string );
@@ -209,8 +209,8 @@ namespace CsvHelper
 		public virtual void WriteField<T>( T field, ITypeConverter converter )
 		{
 			CheckDisposed();
-
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( field.GetType() );
+            var type = field == null ? typeof(T) : field.GetType();
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
 			if( typeConverterOptions.CultureInfo == null )
 			{
 				typeConverterOptions.CultureInfo = configuration.CultureInfo;
