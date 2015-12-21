@@ -3,6 +3,9 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+#if DOTNET
+using System.Reflection;
+#endif
 
 namespace CsvHelper.TypeConversion
 {

@@ -459,11 +459,11 @@ namespace CsvHelper
 
 				// Write the header. If records is a List<dynamic>, the header won't be written.
 				// This is because typeof( T ) = Object.
-				var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
+				var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.GetIsGenericType() && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
 				if( genericEnumerable != null )
 				{
 					recordType = genericEnumerable.GetGenericArguments().Single();
-					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.GetIsPrimitive() )
 					{
 						WriteHeader( recordType );
 					}
@@ -474,7 +474,7 @@ namespace CsvHelper
 					// If records is a List<dynamic>, the header hasn't been written yet.
 					// Write the header based on the record type.
 					recordType = record.GetType();
-					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.GetIsPrimitive() )
 					{
 						WriteHeader( recordType );
 					}
@@ -586,7 +586,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var isReferenceValueType = refMap.Data.Property.PropertyType.IsValueType;
+				var isReferenceValueType = refMap.Data.Property.PropertyType.GetIsValueType();
 				if( isReferenceValueType )
 				{
 					return propertyExpression;
@@ -594,8 +594,8 @@ namespace CsvHelper
 
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
-				var isValueType = propertyMap.Data.Property.PropertyType.IsValueType;
-				var isGenericType = isValueType && propertyMap.Data.Property.PropertyType.IsGenericType;
+				var isValueType = propertyMap.Data.Property.PropertyType.GetIsValueType();
+				var isGenericType = isValueType && propertyMap.Data.Property.PropertyType.GetIsGenericType();
 				Type propertyType;
 				if( isValueType && !isGenericType && !configuration.UseNewObjectForNullReferenceProperties )
 				{
@@ -709,7 +709,7 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( type ) );
 			}
 
-			if( type.IsPrimitive )
+			if( type.GetIsPrimitive() )
 			{
 				CreateActionForPrimitive( type );
 			}
@@ -767,7 +767,7 @@ namespace CsvHelper
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptionsExpression, fieldExpression );
 
-				if( type.IsClass )
+				if( type.GetIsClass() )
 				{
 					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );

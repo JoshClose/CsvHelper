@@ -1362,7 +1362,7 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( recordType ) );
 			}
 
-			if( recordType.IsPrimitive )
+			if( recordType.GetIsPrimitive() )
 			{
 				CreateFuncForPrimitive( recordType );
 			}

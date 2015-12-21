@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-#if !PCL
+#if !PCL && !DOTNET
 		[TestMethod]
 		public void ComponentModelCompatibilityTest()
 		{

@@ -61,6 +61,76 @@ namespace CsvHelper
 #endif
 		}
 
+		/// <summary>
+		/// A target agnostic way to get the BaseType of a Type. This was moved from the Type to TypeInfo object between 4.0 and 4.5
+		/// </summary>
+		/// <param name="type">Type of instance to get base type</param>
+		/// <returns>Type of base type</returns>
+		public static Type GetBaseType( this Type type )
+		{
+#if DOTNET
+			return type.GetTypeInfo().BaseType;
+#else
+			return type.BaseType;
+#endif
+		}
+
+		/// <summary>
+		/// A target agnostic way to check if a type is a primitive. This was moved from the Type to TypeInfo object between 4.0 and 4.5
+		/// </summary>
+		/// <param name="type">Type to check</param>
+		/// <returns>Whether type is a primitive</returns>
+		public static bool GetIsPrimitive( this Type type )
+		{
+#if DOTNET
+			return type.GetTypeInfo().IsPrimitive;
+#else
+			return type.IsPrimitive;
+#endif
+		}
+		
+		/// <summary>
+		/// A target agnostic way to check if a type is a value type. This was moved from the Type to TypeInfo object between 4.0 and 4.5
+		/// </summary>
+		/// <param name="type">Type to check</param>
+		/// <returns>Whether type is a value type</returns>
+		public static bool GetIsValueType( this Type type )
+		{
+#if DOTNET
+			return type.GetTypeInfo().IsValueType;
+#else
+			return type.IsValueType;
+#endif
+		}
+		
+		/// <summary>
+		/// A target agnostic way to check if a type is a generic type. This was moved from the Type to TypeInfo object between 4.0 and 4.5
+		/// </summary>
+		/// <param name="type">Type to check</param>
+		/// <returns>Whether type is a generic type</returns>
+		public static bool GetIsGenericType( this Type type )
+		{
+#if DOTNET
+			return type.GetTypeInfo().IsGenericType;
+#else
+			return type.IsGenericType;
+#endif
+		}
+		
+		/// <summary>
+		/// A target agnostic way to check if a type is a class. This was moved from the Type to TypeInfo object between 4.0 and 4.5
+		/// </summary>
+		/// <param name="type">Type to check</param>
+		/// <returns>Whether type is a class</returns>
+		public static bool GetIsClass( this Type type )
+		{
+#if DOTNET
+			return type.GetTypeInfo().IsClass;
+#else
+			return type.IsClass;
+#endif
+		}
+
 #if !NET_2_0
 		/// <summary>
 		/// Gets the first attribute of type T on property.

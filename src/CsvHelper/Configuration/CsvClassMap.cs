@@ -151,7 +151,7 @@ namespace CsvHelper.Configuration
 		/// <param name="mapParents">The list of parents for the map.</param>
 		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
-			var type = map.GetType().BaseType.GetGenericArguments()[0];
+			var type = map.GetType().GetBaseType().GetGenericArguments()[0];
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
 				throw new CsvConfigurationException( "Types that inherit IEnumerable cannot be auto mapped. " +
