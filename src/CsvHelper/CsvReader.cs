@@ -171,7 +171,13 @@ namespace CsvHelper
 
 			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
-				headerRecord = parser.Read();
+				do
+				{
+					currentRecord = parser.Read();
+				}
+				while( ShouldSkipRecord() );
+				headerRecord = currentRecord;
+				currentRecord = null;
 				ParseNamedIndexes();
 			}
 
@@ -785,7 +791,7 @@ namespace CsvHelper
 				return false;
 			}
 
-			return TryGetField( index, converter, out field );
+			return TryGetField( fieldIndex, converter, out field );
 		}
 
 		/// <summary>
