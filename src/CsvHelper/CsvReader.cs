@@ -171,7 +171,13 @@ namespace CsvHelper
 
 			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
-				headerRecord = parser.Read();
+				do
+				{
+					currentRecord = parser.Read();
+				}
+				while( ShouldSkipRecord() );
+				headerRecord = currentRecord;
+				currentRecord = null;
 				ParseNamedIndexes();
 			}
 

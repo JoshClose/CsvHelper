@@ -2,7 +2,7 @@
 <package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 		<id>CsvHelper</id>
-		<version>2.13.2.0</version>
+		<version>2.13.5.0</version>
 		<authors>Josh Close</authors>
 		<licenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</licenseUrl>
 		<projectUrl>https://github.com/JoshClose/CsvHelper</projectUrl>

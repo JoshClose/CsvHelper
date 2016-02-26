@@ -89,7 +89,10 @@
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Mocks\SerializerMock.cs" />
     <Compile Include="ParserBadDataTests.cs" />
+    <Compile Include="Parsing\CommentTests.cs" />
+    <Compile Include="Parsing\DelimiterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reading\ShouldSkipRecordTests.cs" />
     <Compile Include="Reading\TryGetTests.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />
     <Compile Include="ReferenceMappingIndexTests.cs" />
