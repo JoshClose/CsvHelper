@@ -1216,7 +1216,24 @@ namespace CsvHelper
 				return -1;
 			}
 
-			return namedIndexes[name][index];
+            try
+            {
+                return namedIndexes[name][index];
+            }
+            catch
+            {
+                if (configuration.WillThrowOnMissingField && !isTryGet)
+                {
+                    // If we're in strict reading mode and the
+                    // named index isn't found, throw an exception.
+                    var namesJoined = string.Format("'{0}'", string.Join("', '", names));
+                    var ex = new CsvMissingFieldException(string.Format("Fields {0} do not exist in the CSV file.", namesJoined));
+                    ExceptionHelper.AddExceptionDataMessage(ex, Parser, null, namedIndexes, currentIndex, currentRecord);
+                    throw ex;
+                }
+            }
+
+            return -1;
 		}
 
 		/// <summary>
