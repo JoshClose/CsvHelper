@@ -11,7 +11,7 @@
     <RootNamespace>CsvHelper</RootNamespace>
     <AssemblyName>CsvHelper</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile136</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile328</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <SignAssembly>true</SignAssembly>
@@ -72,8 +72,14 @@
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyMapData.cs">
       <Link>Configuration\CsvPropertyMapData.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyNameCollection.cs">
+      <Link>Configuration\CsvPropertyNameCollection.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMap.cs">
       <Link>Configuration\CsvPropertyReferenceMap.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMapData.cs">
+      <Link>Configuration\CsvPropertyReferenceMapData.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
       <Link>Configuration\DefaultCsvClassMap`1.cs</Link>
@@ -156,6 +162,9 @@
     <Compile Include="..\CsvHelper\TypeConversion\DateTimeConverter.cs">
       <Link>TypeConversion\DateTimeConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\DateTimeOffsetConverter.cs">
+      <Link>TypeConversion\DateTimeOffsetConverter.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\DecimalConverter.cs">
       <Link>TypeConversion\DecimalConverter.cs</Link>
     </Compile>
@@ -219,6 +228,7 @@
     <Compile Include="..\CsvHelper\TypeConversion\UInt64Converter.cs">
       <Link>TypeConversion\UInt64Converter.cs</Link>
     </Compile>
+    <Compile Include="MissingFromPcl\EnumerableExtensions.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

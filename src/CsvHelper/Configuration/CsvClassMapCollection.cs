@@ -1,6 +1,6 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
@@ -33,6 +33,16 @@ namespace CsvHelper.Configuration
 
 				return map;
 			}
+		}
+
+		/// <summary>
+		/// Finds the <see cref="CsvClassMap"/> for the specified record type.
+		/// </summary>
+		/// <typeparam name="T">The record type.</typeparam>
+		/// <returns>The <see cref="CsvClassMap"/> for the specified record type.</returns>
+		public virtual CsvClassMap<T> Find<T>()
+		{
+			return (CsvClassMap<T>)this[typeof( T )];
 		}
 
 		/// <summary>
@@ -84,7 +94,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type to traverse.</param>
 		/// <returns>The type that is CsvClassMap{}.</returns>
-		protected virtual Type GetGenericCsvClassMapType( Type type )
+		private Type GetGenericCsvClassMapType( Type type )
 		{
 			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{

@@ -1,6 +1,6 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
@@ -15,6 +15,7 @@ using CsvHelper.MissingFrom20;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 #endif
 #if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
@@ -170,7 +171,13 @@ namespace CsvHelper
 
 			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
-				headerRecord = parser.Read();
+				do
+				{
+					currentRecord = parser.Read();
+				}
+				while( ShouldSkipRecord() );
+				headerRecord = currentRecord;
+				currentRecord = null;
 				ParseNamedIndexes();
 			}
 
@@ -178,7 +185,7 @@ namespace CsvHelper
 			{
 				currentRecord = parser.Read();
 			} 
-			while( configuration.SkipEmptyRecords && IsRecordEmpty( false ) );
+			while( ShouldSkipRecord() );
 
 			currentIndex = -1;
 			hasBeenRead = true;
@@ -259,7 +266,9 @@ namespace CsvHelper
 			{
 				if( configuration.WillThrowOnMissingField )
 				{
-					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					var ex = new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					ExceptionHelper.AddExceptionDataMessage( ex, Parser, typeof( string ), namedIndexes, index, currentRecord );
+					throw ex;
 				}
 
 				return default( string );
@@ -544,7 +553,9 @@ namespace CsvHelper
 			{
 				if( configuration.WillThrowOnMissingField )
 				{
-					throw new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					var ex = new CsvMissingFieldException( string.Format( "Field at index '{0}' does not exist.", index ) );
+					ExceptionHelper.AddExceptionDataMessage( ex, Parser, typeof( T ), namedIndexes, index, currentRecord );
+					throw ex;
 				}
 
 				return default( T );
@@ -780,7 +791,7 @@ namespace CsvHelper
 				return false;
 			}
 
-			return TryGetField( index, converter, out field );
+			return TryGetField( fieldIndex, converter, out field );
 		}
 
 		/// <summary>
@@ -897,6 +908,7 @@ namespace CsvHelper
 				ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
 				throw;
 			}
+
 			return record;
 		}
 
@@ -1109,13 +1121,28 @@ namespace CsvHelper
 				return false;
 			}
 
-#if NET_2_0
-			return EnumerableHelper.All( currentRecord, string.IsNullOrEmpty );
-#else
-			return currentRecord.All( string.IsNullOrEmpty );
-#endif
+			return currentRecord.All( GetEmtpyStringMethod() );
 		}
 
+		/// <summary>
+		/// Gets a function to test for an empty string.
+		/// Will check <see cref="CsvConfiguration.TrimFields" /> when making its decision.
+		/// </summary>
+		/// <returns>The function to test for an empty string.</returns>
+		protected virtual Func<string, bool> GetEmtpyStringMethod()
+		{ 
+			if( !Configuration.TrimFields )
+			{
+				return string.IsNullOrEmpty;
+			}
+
+#if NET_2_0 || NET_3_5
+			return StringHelper.IsNullOrWhiteSpace;
+#else
+			return string.IsNullOrWhiteSpace;
+#endif
+		}
+	
 		/// <summary>
 		/// Gets the index of the field at name if found.
 		/// </summary>
@@ -1181,7 +1208,9 @@ namespace CsvHelper
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
 					var namesJoined = string.Format( "'{0}'", string.Join( "', '", names ) );
-					throw new CsvMissingFieldException( string.Format( "Fields {0} do not exist in the CSV file.", namesJoined ) );
+					var ex = new CsvMissingFieldException( string.Format( "Fields {0} do not exist in the CSV file.", namesJoined ) );
+					ExceptionHelper.AddExceptionDataMessage( ex, Parser, null, namedIndexes, currentIndex, currentRecord );
+					throw ex;
 				}
 
 				return -1;
@@ -1217,6 +1246,24 @@ namespace CsvHelper
 					namedIndexes[name] = new List<int> { i };
 				}
 			}
+		}
+
+		/// <summary>
+		/// Checks if the current record should be skipped or not.
+		/// </summary>
+		/// <returns><c>true</c> if the current record should be skipped, <c>false</c> otherwise.</returns>
+		protected virtual bool ShouldSkipRecord()
+		{
+			CheckDisposed();
+
+			if( currentRecord == null )
+			{
+				return false;
+			}
+
+			return configuration.ShouldSkipRecord != null 
+				? configuration.ShouldSkipRecord( currentRecord ) 
+				: configuration.SkipEmptyRecords && IsRecordEmpty( false );
 		}
 
 #if !NET_2_0
@@ -1259,7 +1306,14 @@ namespace CsvHelper
 			}
 #endif
 
-			return GetReadRecordFunc( type ).DynamicInvoke();
+			try
+			{
+				return GetReadRecordFunc( type ).DynamicInvoke();
+			}
+			catch( TargetInvocationException ex )
+			{
+				throw ex.InnerException;
+			}
 		}
 
 		/// <summary>
@@ -1380,9 +1434,9 @@ namespace CsvHelper
 				}
 
 				var referenceBindings = new List<MemberBinding>();
-				CreatePropertyBindingsForMapping( referenceMap.Mapping, referenceMap.Property.PropertyType, referenceBindings );
-				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Property.PropertyType ), referenceBindings );
-				bindings.Add( Expression.Bind( referenceMap.Property, referenceBody ) );
+				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Property.PropertyType, referenceBindings );
+				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+				bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
 			}
 		}
 
@@ -1462,6 +1516,7 @@ namespace CsvHelper
 				{
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
+
 				var typeConverterOptions = TypeConverterOptions.Merge( TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
 				var typeConverterOptionsExpression = Expression.Constant( typeConverterOptions );
 
@@ -1474,7 +1529,13 @@ namespace CsvHelper
 					// Create default value expression.
 					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
 
-					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( fieldExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
+					// If null, use string.Empty.
+					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
+
+					// Check if the field is an empty string.
+					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( coalesceExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
+
+					// Use a default value if the field is an empty string.
 					fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
 				}
 				else
@@ -1516,9 +1577,9 @@ namespace CsvHelper
 			var cantRead =
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyReferenceMap.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
 				// Properties that don't have a setter at all.
-				propertyReferenceMap.Property.GetSetMethod( true ) == null;
+				propertyReferenceMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;
 		}
 #endif

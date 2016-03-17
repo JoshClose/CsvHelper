@@ -1,6 +1,6 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 using System.IO;
@@ -777,6 +777,67 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void IgnoreBlankLinesRowCountTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.HasHeaderRecord = false;
+				parser.Configuration.IgnoreBlankLines = true;
+				writer.WriteLine( "1,a" );
+				writer.WriteLine();
+				writer.WriteLine( "3,c" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+
+				Assert.AreEqual( 1, parser.Row );
+				Assert.AreEqual( "1", row[0] );
+
+				row = parser.Read();
+
+				Assert.AreEqual( 3, parser.Row );
+				Assert.AreEqual( "3", row[0] );
+			}
+		}
+
+		[TestMethod]
+		public void DoNotIgnoreBlankLinesRowCountTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				parser.Configuration.HasHeaderRecord = false;
+				parser.Configuration.IgnoreBlankLines = false;
+				writer.WriteLine( "1,a" );
+				writer.WriteLine();
+				writer.WriteLine( "3,c" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+
+				Assert.AreEqual( 1, parser.Row );
+				Assert.AreEqual( "1", row[0] );
+
+				row = parser.Read();
+
+				Assert.AreEqual( 2, parser.Row );
+				Assert.IsNull( row[0] );
+
+				row = parser.Read();
+
+				Assert.AreEqual( 3, parser.Row );
+				Assert.AreEqual( "3", row[0] );
+			}
+		}
+
+		[TestMethod]
 		public void RowCommentLinesTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -799,6 +860,53 @@ namespace CsvHelper.Tests
 					Assert.AreEqual( rowCount, parser.Row );
 					rowCount += 2;
 				}
+			}
+		}
+
+		[TestMethod]
+		public void RowRawTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "1,\"2" );
+				writer.WriteLine( "2 continued" );
+				writer.WriteLine( "end of 2\",3" );
+				writer.WriteLine( "4,5,6" );
+				writer.WriteLine( "7,\"8" );
+				writer.WriteLine( "8 continued" );
+				writer.WriteLine( "end of 8\",9" );
+				writer.WriteLine( "10,11,12" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.HasHeaderRecord = false;
+
+				var row = parser.Read();
+				Assert.AreEqual( "1", row[0] );
+				Assert.AreEqual( "2\r\n2 continued\r\nend of 2", row[1] );
+				Assert.AreEqual( "3", row[2] );
+				Assert.AreEqual( 3, parser.RawRow );
+
+				row = parser.Read();
+				Assert.AreEqual( "4", row[0] );
+				Assert.AreEqual( "5", row[1] );
+				Assert.AreEqual( "6", row[2] );
+				Assert.AreEqual( 4, parser.RawRow );
+
+				row = parser.Read();
+				Assert.AreEqual( "7", row[0] );
+				Assert.AreEqual( "8\r\n8 continued\r\nend of 8", row[1] );
+				Assert.AreEqual( "9", row[2] );
+				Assert.AreEqual( 7, parser.RawRow );
+
+				row = parser.Read();
+				Assert.AreEqual( "10", row[0] );
+				Assert.AreEqual( "11", row[1] );
+				Assert.AreEqual( "12", row[2] );
+				Assert.AreEqual( 8, parser.RawRow );
 			}
 		}
 

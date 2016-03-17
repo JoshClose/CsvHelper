@@ -1,12 +1,13 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
@@ -19,6 +20,12 @@ namespace CsvHelper.Tests
 	[TestClass]
 	public class AutoMappingTests
 	{
+		[TestInitialize]
+		public void TestInitialize()
+		{
+			Thread.CurrentThread.CurrentCulture = new CultureInfo( "en-US" );
+		}
+
 		[TestMethod]
 		public void ReaderSimpleTest()
 		{
@@ -191,9 +198,7 @@ namespace CsvHelper.Tests
 				config.AutoMap( typeof( List<string> ) );
 				Assert.Fail();
 			}
-			catch( CsvConfigurationException )
-			{
-			}
+			catch( CsvConfigurationException ) {}
 		}
 
 		[TestMethod]
@@ -219,7 +224,7 @@ namespace CsvHelper.Tests
 			// Since Simple is a reference on the anonymous object, the type won't
 			// be re-used. Types which are created from automapping aren't added
 			// to the list of registered maps either.
-			Assert.IsNotInstanceOfType( map.ReferenceMaps[0].Mapping, typeof( SimpleMap ) );
+			Assert.IsNotInstanceOfType( map.ReferenceMaps[0].Data.Mapping, typeof( SimpleMap ) );
 		}
 
 		[TestMethod]
@@ -230,8 +235,8 @@ namespace CsvHelper.Tests
 			Assert.IsNotNull( map );
 			Assert.AreEqual( 1, map.PropertyMaps.Count );
 			Assert.AreEqual( 1, map.ReferenceMaps.Count );
-			Assert.AreEqual( 1, map.ReferenceMaps[0].Mapping.PropertyMaps.Count );
-			Assert.AreEqual( 0, map.ReferenceMaps[0].Mapping.ReferenceMaps.Count );
+			Assert.AreEqual( 1, map.ReferenceMaps[0].Data.Mapping.PropertyMaps.Count );
+			Assert.AreEqual( 0, map.ReferenceMaps[0].Data.Mapping.ReferenceMaps.Count );
 		}
 
 		[TestMethod]
@@ -242,10 +247,10 @@ namespace CsvHelper.Tests
 				PrefixReferenceHeaders = true,
 			};
 			var map = config.AutoMap<Nested>();
-			Assert.AreEqual( "Simple1.Id", map.ReferenceMaps[0].Mapping.PropertyMaps[0].Data.Names[0] );
-			Assert.AreEqual( "Simple1.Name", map.ReferenceMaps[0].Mapping.PropertyMaps[1].Data.Names[0] );
-			Assert.AreEqual( "Simple2.Id", map.ReferenceMaps[1].Mapping.PropertyMaps[0].Data.Names[0] );
-			Assert.AreEqual( "Simple2.Name", map.ReferenceMaps[1].Mapping.PropertyMaps[1].Data.Names[0] );
+			Assert.AreEqual( "Simple1.Id", map.ReferenceMaps[0].Data.Mapping.PropertyMaps[0].Data.Names[0] );
+			Assert.AreEqual( "Simple1.Name", map.ReferenceMaps[0].Data.Mapping.PropertyMaps[1].Data.Names[0] );
+			Assert.AreEqual( "Simple2.Id", map.ReferenceMaps[1].Data.Mapping.PropertyMaps[0].Data.Names[0] );
+			Assert.AreEqual( "Simple2.Name", map.ReferenceMaps[1].Data.Mapping.PropertyMaps[1].Data.Names[0] );
 		}
 
 		private class Nested

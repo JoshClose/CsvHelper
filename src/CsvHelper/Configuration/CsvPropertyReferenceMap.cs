@@ -1,6 +1,6 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 using System.Reflection;
@@ -12,20 +12,33 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvPropertyReferenceMap
 	{
-		private readonly PropertyInfo property;
+		private readonly CsvPropertyReferenceMapData data;
 
 		/// <summary>
 		/// Gets the property.
 		/// </summary>
+		[Obsolete( "This property is deprecated and will be removed in the next major release. Use Data.Property instead.", false )]
 		public PropertyInfo Property
 		{
-			get { return property; }
+			get { return data.Property; }
 		}
 
 		/// <summary>
 		/// Gets the mapping.
 		/// </summary>
-		public CsvClassMap Mapping { get; protected set; }
+		[Obsolete( "This property is deprecated and will be removed in the next major release. Use Data.Mapping instead.", false )]
+		public CsvClassMap Mapping
+		{
+			get { return data.Mapping; }
+		}
+
+		/// <summary>
+		/// Gets the property reference map data.
+		/// </summary>
+		public CsvPropertyReferenceMapData Data
+		{
+			get { return data; }
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
@@ -39,8 +52,24 @@ namespace CsvHelper.Configuration
 				throw new ArgumentNullException( "mapping" );
 			}
 
-			this.property = property;
-			Mapping = mapping;
+			data = new CsvPropertyReferenceMapData( property, mapping );
+		}
+
+		/// <summary>
+		/// Appends a prefix to the header of each field of the reference property
+		/// </summary>
+		/// <param name="prefix">The prefix to be prepended to headers of each reference property</param>
+		/// <returns>The current <see cref="CsvPropertyReferenceMap" /></returns>
+		public CsvPropertyReferenceMap Prefix( string prefix = null )
+		{
+			if( string.IsNullOrEmpty( prefix ) )
+			{
+				prefix = data.Property.Name + ".";
+			}
+
+			data.Prefix = prefix;
+
+			return this;
 		}
 
 		/// <summary>
@@ -50,7 +79,7 @@ namespace CsvHelper.Configuration
 		/// <returns>The max index.</returns>
 		internal int GetMaxIndex()
 		{
-			return Mapping.GetMaxIndex();
+			return data.Mapping.GetMaxIndex();
 		}
 	}
 }

@@ -1,22 +1,28 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-#if !NET_2_0
-using System.Linq;
-using System.Linq.Expressions;
-#endif
 using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+
+#if !NET_2_0
+using System.Linq;
+using System.Linq.Expressions;
+#endif
+
 #if NET_2_0
 using CsvHelper.MissingFrom20;
+#endif
+
+#if PCL
+using CsvHelper.MissingFromPcl;
 #endif
 
 namespace CsvHelper
@@ -110,21 +116,16 @@ namespace CsvHelper
 
 			var shouldQuote = configuration.QuoteAllFields;
 
+			if( configuration.TrimFields )
+			{
+				field = field.Trim();
+			}
+
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
-				var hasQuote = false;
-#if NET_2_0
-				if( EnumerableHelper.Contains( field, configuration.Quote ) )
-#else
-				if( field.Contains( configuration.QuoteString ) )
-#endif
-				{
-					// All quotes must be doubled.
-					field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
-					hasQuote = true;
-				}
-
-				if( shouldQuote
+			    var hasQuote = field.Contains( configuration.QuoteString );
+				
+                if( shouldQuote
 				    || hasQuote
 				    || field[0] == ' '
 				    || field[field.Length - 1] == ' '
@@ -154,10 +155,20 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( shouldQuote )
+            // All quotes must be doubled.       
+			if( shouldQuote && !string.IsNullOrEmpty( field ) )
 			{
-				field = configuration.Quote + field + configuration.Quote;
+				field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
 			}
+
+			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
+			{
+				field = "=" + configuration.Quote + field + configuration.Quote;
+			}
+            else if (shouldQuote)
+            {
+                field = configuration.Quote + field + configuration.Quote;
+            }
 
 			currentRecord.Add( field );
 		}
@@ -174,7 +185,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var type = typeof( T );
+			var type = field.GetType();
 			if( type == typeof( string ) )
 			{
 				WriteField( field as string );
@@ -199,7 +210,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions<T>();
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( field.GetType() );
 			if( typeConverterOptions.CultureInfo == null )
 			{
 				typeConverterOptions.CultureInfo = configuration.CultureInfo;
@@ -225,6 +236,54 @@ namespace CsvHelper
 
 			var converter = TypeConverterFactory.GetConverter<TConverter>();
 			WriteField( field, converter );
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="field">The field to write.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field ) instead.", false )]
+		public virtual void WriteField( Type type, object field )
+		{
+			CheckDisposed();
+
+			if( type == typeof( string ) )
+			{
+				WriteField( field as string );
+			}
+			else
+			{
+				var converter = TypeConverterFactory.GetConverter( type );
+				WriteField( type, field, converter );
+			}
+		}
+
+		/// <summary>
+		/// Writes the field to the CSV file.
+		/// When all fields are written for a record,
+		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// to complete writing of the current record.
+		/// </summary>
+		/// <param name="type">The type of the field.</param>
+		/// <param name="field">The field to write.</param>
+		/// <param name="converter">The converter used to convert the field into a string.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field, ITypeConverter converter ) instead.", false )]
+		public virtual void WriteField( Type type, object field, ITypeConverter converter )
+		{
+			CheckDisposed();
+
+			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
+			if( typeConverterOptions.CultureInfo == null )
+			{
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+			}
+
+			var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			WriteField( fieldString );
 		}
 
 		/// <summary>
@@ -302,6 +361,11 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
+			if( type == typeof( Object ) )
+			{
+				return;
+			}
+
 			if( configuration.Maps[type] == null )
 			{
 				configuration.Maps.Add( configuration.AutoMap( type ) );
@@ -335,16 +399,45 @@ namespace CsvHelper
 			try
 			{
 				GetWriteRecordAction<T>()( record );
+				hasRecordBeenWritten = true;
+				NextRecord();
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, typeof( T ), null, null, null );
+				ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
 				throw;
 			}
+		}
 
-			hasRecordBeenWritten = true;
+		/// <summary>
+		/// Writes the record to the CSV file.
+		/// </summary>
+		/// <param name="type">The type of the record.</param>
+		/// <param name="record">The record to write.</param>
+		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecord<T>( T record ) instead.", false )]
+		public virtual void WriteRecord( Type type, object record )
+		{
+			CheckDisposed();
 
-			NextRecord();
+			try
+			{
+				try
+				{
+					GetWriteRecordAction( type ).DynamicInvoke( record );
+				}
+				catch( TargetInvocationException ex )
+				{
+					throw ex.InnerException;
+				}
+
+				hasRecordBeenWritten = true;
+				NextRecord();
+			}
+			catch( Exception ex )
+			{
+				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
+				throw;
+			}
 		}
 
 		/// <summary>
@@ -355,30 +448,53 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
+			Type recordType = null;
+			try
 			{
-				WriteExcelSeparator();
-				hasExcelSeperatorBeenRead = true;
+				if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
+				{
+					WriteExcelSeparator();
+					hasExcelSeperatorBeenRead = true;
+				}
+
+				// Write the header. If records is a List<dynamic>, the header won't be written.
+				// This is because typeof( T ) = Object.
+				var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
+				if( genericEnumerable != null )
+				{
+					recordType = genericEnumerable.GetGenericArguments().Single();
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					{
+						WriteHeader( recordType );
+					}
+				}
+
+				foreach( var record in records )
+				{
+					// If records is a List<dynamic>, the header hasn't been written yet.
+					// Write the header based on the record type.
+					recordType = record.GetType();
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !recordType.IsPrimitive )
+					{
+						WriteHeader( recordType );
+					}
+
+					try
+					{
+						GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
+					}
+					catch( TargetInvocationException ex )
+					{
+						throw ex.InnerException;
+					}
+
+					NextRecord();
+				}
 			}
-
-			foreach( var record in records )
+			catch( Exception ex )
 			{
-				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !record.GetType().IsPrimitive )
-				{
-					WriteHeader( record.GetType() );
-				}
-
-				try
-				{
-					GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
-				}
-				catch( Exception ex )
-				{
-					ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
-					throw;
-				}
-
-				NextRecord();
+				ExceptionHelper.AddExceptionDataMessage( ex, null, recordType, null, null, null );
+				throw;
 			}
 		}
 
@@ -438,7 +554,7 @@ namespace CsvHelper
 			properties.AddRange( mapping.PropertyMaps );
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				AddProperties( properties, refMap.Mapping );
+				AddProperties( properties, refMap.Data.Mapping );
 			}
 		}
 
@@ -463,14 +579,14 @@ namespace CsvHelper
 			// We need to search down through the reference maps.
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				var wrapped = Expression.Property( recordExpression, refMap.Property );
-				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Mapping, propertyMap );
+				var wrapped = Expression.Property( recordExpression, refMap.Data.Property );
+				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Data.Mapping, propertyMap );
 				if( propertyExpression == null )
 				{
 					continue;
 				}
 
-				var isReferenceValueType = refMap.Property.PropertyType.IsValueType;
+				var isReferenceValueType = refMap.Data.Property.PropertyType.IsValueType;
 				if( isReferenceValueType )
 				{
 					return propertyExpression;
@@ -479,9 +595,21 @@ namespace CsvHelper
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
 				var isValueType = propertyMap.Data.Property.PropertyType.IsValueType;
-				var defaultValueExpression = isValueType
-					? (Expression)Expression.New( propertyMap.Data.Property.PropertyType )
-					: Expression.Constant( null, propertyMap.Data.Property.PropertyType );
+				var isGenericType = isValueType && propertyMap.Data.Property.PropertyType.IsGenericType;
+				Type propertyType;
+				if( isValueType && !isGenericType && !configuration.UseNewObjectForNullReferenceProperties )
+				{
+					propertyType = typeof( Nullable<> ).MakeGenericType( propertyMap.Data.Property.PropertyType );
+					propertyExpression = Expression.Convert( propertyExpression, propertyType );
+				}
+				else
+				{
+					propertyType = propertyMap.Data.Property.PropertyType;
+				}
+
+				var defaultValueExpression = isValueType && !isGenericType
+					? (Expression)Expression.New( propertyType )
+					: Expression.Constant( null, propertyType );
 				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, propertyExpression );
 				return conditionExpression;
 			}

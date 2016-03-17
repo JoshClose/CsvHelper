@@ -1,15 +1,11 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-
 using System.Collections.Generic;
 using System.IO;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
+using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests
 {
@@ -301,6 +297,27 @@ namespace CsvHelper.Tests
 				var text = reader.ReadToEnd();
 
 				Assert.AreEqual( "sep=;\r\nId;Name\r\n1;one\r\n", text );
+			}
+		}
+
+		[TestMethod]
+		public void ParseFieldMissingQuoteGoesToEndOfFileTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "a,b,\"c" );
+				writer.WriteLine( "d,e,f" );
+				writer.Flush();
+				stream.Position = 0;
+
+				var row = parser.Read();
+				Assert.IsNotNull( row );
+				Assert.AreEqual( "a", row[0] );
+				Assert.AreEqual( "b", row[1] );
+				Assert.AreEqual( "c\r\nd,e,f\r\n", row[2] );
 			}
 		}
 

@@ -1,9 +1,7 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.TypeConversion;
@@ -15,7 +13,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvPropertyMapData
 	{
-		private readonly List<string> names = new List<string>();
+		private readonly CsvPropertyNameCollection names = new CsvPropertyNameCollection();
 		private int index = -1;
 		private object defaultValue;
 		private readonly TypeConverterOptions typeConverterOptions = new TypeConverterOptions();
@@ -24,15 +22,12 @@ namespace CsvHelper.Configuration
 		/// Gets the <see cref="PropertyInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual PropertyInfo Property
-		{
-			get; private set;
-		}
+		public virtual PropertyInfo Property { get; private set; }
 
 		/// <summary>
 		/// Gets the list of column names.
 		/// </summary>
-		public virtual List<string> Names
+		public virtual CsvPropertyNameCollection Names
 		{
 			get { return names; }
 		}

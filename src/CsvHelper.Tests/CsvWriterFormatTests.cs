@@ -1,6 +1,6 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 using System.Globalization;
@@ -46,7 +46,71 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( expected, csvFile );
 		}
 
-		[TestMethod]
+	    [TestMethod]
+	    public void WriteFieldTrimTest()
+	    {
+		    var record = new TestRecord
+		    {
+			    IntColumn = 1,
+			    DateColumn = new DateTime( 2012, 10, 1, 12, 12, 12 ),
+			    DecimalColumn = 150.99m,
+			    FirstColumn = "first column ",
+		    };
+
+		    var config = new CsvConfiguration { CultureInfo = new CultureInfo( "en-US" ), TrimFields = true };
+		    config.RegisterClassMap<TestRecordMap>();
+
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
+		    var csv = new CsvWriter( writer, config );
+
+		    csv.WriteRecord( record );
+
+		    stream.Position = 0;
+		    var reader = new StreamReader( stream );
+		    var csvFile = reader.ReadToEnd();
+		    var expected = "first column,0001,10/1/2012,$150.99\r\n";
+
+		    Assert.AreEqual( expected, csvFile );
+	    }
+
+	    [TestMethod]
+	    public void WriteFieldShouldQuoteNoTest()
+	    {
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
+		    var csv = new CsvWriter( writer );
+
+		    csv.WriteField( "a \"b\" c", false );
+		    csv.NextRecord();
+
+		    stream.Position = 0;
+		    var reader = new StreamReader( stream );
+		    var csvFile = reader.ReadToEnd();
+		    var expected = "a \"b\" c\r\n";
+
+		    Assert.AreEqual( expected, csvFile );
+	    }
+
+	    [TestMethod]
+	    public void WriteFieldShouldQuoteYesTest()
+	    {
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
+		    var csv = new CsvWriter( writer );
+
+		    csv.WriteField( "a \"b\" c", true );
+		    csv.NextRecord();
+
+		    stream.Position = 0;
+		    var reader = new StreamReader( stream );
+		    var csvFile = reader.ReadToEnd();
+		    var expected = "\"a \"\"b\"\" c\"\r\n";
+
+		    Assert.AreEqual( expected, csvFile );
+	    }
+
+	    [TestMethod]
 		public void WriteRecordWithReferencesTest()
 		{
 			var record = new Person

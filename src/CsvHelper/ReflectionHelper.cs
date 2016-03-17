@@ -1,6 +1,6 @@
-﻿// Copyright 2009-2014 Josh Close and Contributors
-// This file is a part of CsvHelper and is licensed under the MS-PL
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html
+﻿// Copyright 2009-2015 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
 #if !NET_2_0
@@ -22,16 +22,14 @@ namespace CsvHelper
 		/// Creates an instance of type T.
 		/// </summary>
 		/// <typeparam name="T">The type of instance to create.</typeparam>
+		/// <param name="args">The constructor arguments.</param>
 		/// <returns>A new instance of type T.</returns>
-		public static T CreateInstance<T>()
+		public static T CreateInstance<T>( params object[] args )
 		{
 #if NET_2_0
 			return Activator.CreateInstance<T>();
 #else
-
-			var constructor = Expression.New( typeof( T ) );
-			var compiled = (Func<T>)Expression.Lambda( constructor ).Compile();
-			return compiled();
+			return (T)CreateInstance( typeof( T ), args );
 #endif
 		}
 
@@ -52,7 +50,14 @@ namespace CsvHelper
 			var constructorInfo = type.GetConstructor( argumentTypes );
 			var constructor = Expression.New( constructorInfo, argumentExpressions );
 			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
-			return compiled.DynamicInvoke( args );
+			try
+			{
+				return compiled.DynamicInvoke( args );
+			}
+			catch( TargetInvocationException ex )
+			{
+				throw ex.InnerException;
+			}
 #endif
 		}
 
