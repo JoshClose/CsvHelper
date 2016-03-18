@@ -1527,7 +1527,18 @@ namespace CsvHelper
 				if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
-					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
+				    Expression defaultValueExpression;
+
+				    if(false == propertyMap.Data.ShouldDefaultUseConverter)
+                    {
+                        defaultValueExpression = Expression.Convert(Expression.Constant(propertyMap.Data.Default), propertyMap.Data.Property.PropertyType);
+				    }
+                    else
+				    {
+                        defaultValueExpression = Expression.Call(typeConverterExpression, "ConvertFromString", null, typeConverterOptionsExpression, Expression.Constant(propertyMap.Data.Default));
+                        defaultValueExpression = Expression.Convert(defaultValueExpression, propertyMap.Data.Property.PropertyType);
+				    }
+
 
 					// If null, use string.Empty.
 					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
