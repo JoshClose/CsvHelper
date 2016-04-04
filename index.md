@@ -491,7 +491,7 @@ csv.Configuration.Quote = '"';
 
 ### [configuration] Quote All Fields
 
-A flag that tells the writer whether all fields written should have quotes around them; regardless if the field contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same time. Setting one to true will set the other to false.
+A flag that tells the writer whether all fields written should have quotes around them; regardless if the field contains anything that should be escaped. Both QuoteAllFields and QuoteNoFields cannot be true at the same time. Setting one to true will set the other to false.
 
 ```cs
 // Default value
@@ -500,11 +500,11 @@ csv.Configuration.QuoteAllFields = false;
 
 ### [configuration] Quote No Fields
 
-A flag that tell the writer whether all fields written should not have quotes around them; regardless if the field contains anything that should be escaped. Both QuoteAllFields and QuoteNotFields cannot be true at the same time. Setting one to true will set the other to false.
+A flag that tell the writer whether all fields written should not have quotes around them; regardless if the field contains anything that should be escaped. Both QuoteAllFields and QuoteNoFields cannot be true at the same time. Setting one to true will set the other to false.
 
 ```cs
 // Default value
-csv.Configuration.QuoteAllFields = false;
+csv.Configuration.QuoteNoFields = false;
 ```
 
 ### [configuration] Reading Exception Callback
