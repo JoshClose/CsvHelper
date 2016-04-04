@@ -504,7 +504,7 @@ A flag that tell the writer whether all fields written should not have quotes ar
 
 ```cs
 // Default value
-csv.Configuration.QuoteAllFields = false;
+csv.Configuration.QuoteNoFields = false;
 ```
 
 ### [configuration] Reading Exception Callback
