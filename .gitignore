@@ -14,3 +14,7 @@ docs/Help
 NuGet/lib/
 NuGet/*.nupkg
 *crunch*
+project.lock.json
+.vs/
+*.nuget.targets
+*.nuget.props

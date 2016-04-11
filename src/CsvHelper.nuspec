@@ -1,6 +1,6 @@
-﻿<?xml version="1.0"?>
-<package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<metadata>
 		<id>CsvHelper</id>
 		<version>2.13.5.0</version>
 		<authors>Josh Close</authors>
@@ -13,11 +13,39 @@
 		<releaseNotes>
 			http://joshclose.github.io/CsvHelper/#change-log
 		</releaseNotes>
+		<dependencies>
+			<group targetFramework="net40-client" />
+			<group targetFramework="net45" />
+			<group targetFramework="net20" />
+			<group targetFramework="net35-client" />
+			<group targetFramework="portable-net40+sl5+win8+wpa+wp8" />
+			<group targetFramework="dotnet">
+				<dependency id="Microsoft.CSharp" version="4.0.0" />
+				<dependency id="System.Collections" version="4.0.10" />
+				<dependency id="System.Diagnostics.Debug" version="4.0.10" />
+				<dependency id="System.Dynamic.Runtime" version="4.0.10" />
+				<dependency id="System.Globalization" version="4.0.10" />
+				<dependency id="System.IO" version="4.0.10" />
+				<dependency id="System.Linq" version="4.0.0" />
+				<dependency id="System.Linq.Expressions" version="4.0.10" />
+				<dependency id="System.Reflection" version="4.0.10" />
+				<dependency id="System.Reflection.Extensions" version="4.0.0" />
+				<dependency id="System.Reflection.TypeExtensions" version="4.0.0" />
+				<dependency id="System.Runtime" version="4.0.20" />
+				<dependency id="System.Runtime.Extensions" version="4.0.10" />
+				<dependency id="System.Runtime.InteropServices" version="4.0.20" />
+				<dependency id="System.Text.Encoding" version="4.0.10" />
+				<dependency id="System.Text.RegularExpressions" version="4.0.10" />
+				<dependency id="System.Threading" version="4.0.10" />
+			</group>
+		</dependencies>
 	</metadata>
 	<files>
 		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net40-client\" />
+		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net45\" />
 		<file src="CsvHelper20\bin\Release\CsvHelper.*" target="lib\net20\" />
 		<file src="CsvHelper35\bin\Release\CsvHelper.*" target="lib\net35-client\" />
 		<file src="CsvHelperPcl\bin\Release\CsvHelper.*" target="lib\portable-net40+sl5+win8+wpa+wp8\" />
+		<file src="CsvHelperDotNet\bin\Release\CsvHelper.*" target="lib\dotnet\" />
 	</files>
 </package>

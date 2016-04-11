@@ -124,7 +124,7 @@ namespace CsvHelper.TypeConversion
 				return GetConverter( type );
 			}
 
-			var isGenericType = type.IsGenericType;
+			var isGenericType = type.GetIsGenericType();
 			if( isGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
 			{
 				AddConverter( type, new NullableConverter( type ) );

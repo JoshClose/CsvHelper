@@ -33,7 +33,7 @@ namespace CsvHelper.Configuration
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
 		public CsvConfigurationException( string message, Exception innerException ) : base( message, innerException ) { }
 
-#if !PCL
+#if !PCL && !DOTNET
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfigurationException"/> class
 		/// with serialized data.

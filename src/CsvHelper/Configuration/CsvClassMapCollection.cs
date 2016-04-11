@@ -5,6 +5,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#if DOTNET
+using System.Reflection;
+#endif
 
 namespace CsvHelper.Configuration
 {
@@ -96,12 +99,12 @@ namespace CsvHelper.Configuration
 		/// <returns>The type that is CsvClassMap{}.</returns>
 		private Type GetGenericCsvClassMapType( Type type )
 		{
-			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
+			if( type.GetIsGenericType() && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{
 				return type;
 			}
 
-			return GetGenericCsvClassMapType( type.BaseType );
+			return GetGenericCsvClassMapType( type.GetBaseType() );
 		}
 	}
 }
