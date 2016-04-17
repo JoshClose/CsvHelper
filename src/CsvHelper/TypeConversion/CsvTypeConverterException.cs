@@ -3,7 +3,9 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+#if !COREFX
 using System.Runtime.Serialization;
+#endif
 
 namespace CsvHelper.TypeConversion
 {
@@ -33,7 +35,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
 		public CsvTypeConverterException( string message, Exception innerException ) : base( message, innerException ) { }
 
-#if !PCL
+#if !PCL && !COREFX
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class
 		/// with serialized data.

@@ -20,6 +20,9 @@ using System.Reflection;
 #if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
 #endif
+#if !COREFX
+using CsvHelper.CoreFxCompatibility;
+#endif
 
 namespace CsvHelper
 {
@@ -1362,7 +1365,7 @@ namespace CsvHelper
 				configuration.Maps.Add( configuration.AutoMap( recordType ) );
 			}
 
-			if( recordType.IsPrimitive )
+			if( recordType.GetTypeInfo().IsPrimitive )
 			{
 				CreateFuncForPrimitive( recordType );
 			}
@@ -1615,5 +1618,5 @@ namespace CsvHelper
 			return obj;
 		}
 #endif
-	}
+		}
 }
