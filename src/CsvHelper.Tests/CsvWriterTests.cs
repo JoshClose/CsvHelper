@@ -32,37 +32,37 @@ namespace CsvHelper.Tests
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
         }
 
-        [TestMethod]
-        public void WriteFieldTest()
-        {
-            var stream = new MemoryStream();
-            var writer = new StreamWriter(stream) { AutoFlush = true };
+	    [TestMethod]
+	    public void WriteFieldTest()
+	    {
+		    var stream = new MemoryStream();
+		    var writer = new StreamWriter( stream ) { AutoFlush = true };
 
-            var csv = new CsvWriter(writer);
+		    var csv = new CsvWriter( writer );
 
-            var date = DateTime.Now.ToString();
-            var guid = Guid.NewGuid().ToString();
-            csv.WriteField("one");
-            csv.WriteField("one, two");
-            csv.WriteField("one \"two\" three");
-            csv.WriteField(" one ");
-            csv.WriteField(date);
-            csv.WriteField((short)1);
-            csv.WriteField(1);
-            csv.WriteField((long)1);
-            csv.WriteField((float)1);
-            csv.WriteField((double)1);
-            csv.WriteField(guid);
-            csv.NextRecord();
+		    var date = DateTime.Now.ToString();
+		    var guid = Guid.NewGuid().ToString();
+		    csv.WriteField( "one" );
+		    csv.WriteField( "one, two" );
+		    csv.WriteField( "one \"two\" three" );
+		    csv.WriteField( " one " );
+		    csv.WriteField( date );
+		    csv.WriteField( (short)1 );
+		    csv.WriteField( 2 );
+		    csv.WriteField( (long)3 );
+		    csv.WriteField( (float)4 );
+		    csv.WriteField( (double)5 );
+		    csv.WriteField( guid );
+		    csv.NextRecord();
 
-            var reader = new StreamReader(stream);
-            stream.Position = 0;
-            var data = reader.ReadToEnd();
+		    var reader = new StreamReader( stream );
+		    stream.Position = 0;
+		    var data = reader.ReadToEnd();
 
-            Assert.AreEqual("one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,1,1,1,1," + guid + "\r\n", data);
-        }
+		    Assert.AreEqual( "one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,2,3,4,5," + guid + "\r\n", data );
+	    }
 
-		[TestMethod]
+	    [TestMethod]
 	    public void WriteEmptyFieldWithExcelLeadingZerosTest()
 	    {
 			using( var stream = new MemoryStream() )

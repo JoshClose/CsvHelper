@@ -105,7 +105,7 @@ namespace CsvHelper
 			var newExpression = expression.Body as NewExpression;
 			if( newExpression == null )
 			{
-				throw new ArgumentException( "Not a constructor expression.", "expression" );
+				throw new ArgumentException( "Not a constructor expression.", nameof( expression ) );
 			}
 
 			return newExpression;
@@ -123,7 +123,7 @@ namespace CsvHelper
 			var property = member as PropertyInfo;
 			if( property == null )
 			{
-				throw new CsvConfigurationException( string.Format( "'{0}' is not a property. Did you try to map a field by accident?", member.Name ) );
+				throw new CsvConfigurationException( $"'{member.Name}' is not a property. Did you try to map a field by accident?" );
 			}
 
 			return property;
@@ -138,9 +138,6 @@ namespace CsvHelper
 		/// <returns></returns>
 		private static MemberExpression GetMemberExpression<TModel, T>( Expression<Func<TModel, T>> expression )
 		{
-			// This method was taken from FluentNHibernate.Utils.ReflectionHelper.cs and modified.
-			// http://fluentnhibernate.org/
-
 			MemberExpression memberExpression = null;
 			if( expression.Body.NodeType == ExpressionType.Convert )
 			{
@@ -154,7 +151,7 @@ namespace CsvHelper
 
 			if( memberExpression == null )
 			{
-				throw new ArgumentException( "Not a member access", "expression" );
+				throw new ArgumentException( "Not a member access", nameof( expression ) );
 			}
 
 			return memberExpression;
