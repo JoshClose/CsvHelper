@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CsvHelper.MissingFromPcl
+namespace System.Linq
 {
 	internal static class EnumerableExtensions
 	{

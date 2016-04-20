@@ -10,9 +10,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.TypeConversion;
-#if !COREFX
-using CsvHelper.CoreFxCompatibility;
-#endif
 
 namespace CsvHelper.Configuration
 {

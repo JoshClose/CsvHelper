@@ -4,9 +4,6 @@
 // http://csvhelper.com
 using System;
 using System.Reflection;
-#if !COREFX
-using CsvHelper.CoreFxCompatibility;
-#endif
 
 namespace CsvHelper.TypeConversion
 {

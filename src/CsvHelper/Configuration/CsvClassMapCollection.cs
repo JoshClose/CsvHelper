@@ -7,9 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-#if !COREFX
-using CsvHelper.CoreFxCompatibility;
-#endif
 
 namespace CsvHelper.Configuration
 {

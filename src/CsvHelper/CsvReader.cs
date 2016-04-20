@@ -9,19 +9,13 @@ using System.IO;
 using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-#if NET_2_0
-using CsvHelper.MissingFrom20;
-#endif
-#if !NET_2_0
 using System.Linq;
+#if !NET_2_0
 using System.Linq.Expressions;
 using System.Reflection;
 #endif
 #if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
-#endif
-#if !COREFX
-using CsvHelper.CoreFxCompatibility;
 #endif
 
 namespace CsvHelper

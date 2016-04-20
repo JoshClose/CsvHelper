@@ -11,22 +11,9 @@ using System.Reflection;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-
-#if !NET_2_0
 using System.Linq;
+#if !NET_2_0
 using System.Linq.Expressions;
-#endif
-
-#if NET_2_0
-using CsvHelper.MissingFrom20;
-#endif
-
-#if PCL
-using CsvHelper.MissingFromPcl;
-#endif
-
-#if !COREFX
-using CsvHelper.CoreFxCompatibility;
 #endif
 
 namespace CsvHelper

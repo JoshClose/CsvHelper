@@ -5,11 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-#if NET_2_0
-using CsvHelper.MissingFrom20;
-#else
 using System.Linq;
-#endif
 
 namespace CsvHelper.TypeConversion
 {

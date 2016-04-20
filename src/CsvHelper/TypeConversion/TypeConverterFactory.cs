@@ -6,9 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-#if !COREFX
-using CsvHelper.CoreFxCompatibility;
-#endif
 
 namespace CsvHelper.TypeConversion
 {

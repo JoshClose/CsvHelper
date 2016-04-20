@@ -1,7 +1,7 @@
 ﻿#if !COREFX
 using System;
 
-namespace CsvHelper.CoreFxCompatibility
+namespace System.Reflection
 {
     public static class TypeExtensions
     {
