@@ -1,4 +1,4 @@
-﻿#if !COREFX
+﻿#if !COREFX && !NET_4_5
 using System;
 
 namespace System.Reflection
@@ -11,4 +11,4 @@ namespace System.Reflection
 		}
     }
 }
-#endif // !COREFX
+#endif // !COREFX && !NET_4_5
