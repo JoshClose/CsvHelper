@@ -33,3 +33,14 @@ Want to contribute? Great! Here are a few guidelines.
 3. All code should a unit test. If you make a feature, there should be significant tests around the feature. If you do a bug fix, there should be a test specific to that bug so it doesn't happen again.
 4. Pull requests should have a single commit. If you have multiple commits, squash them into a single commit before requesting a pull.
 5. Try and follow the code styling already in place. If you have ReSharper there is a dotsettings file included and things should automatically be formatted for you.
+
+## Gifts <sup>*</sup>
+
+Several people have asked me to give them a way to gift money for working on the project, so I have made a public Amazon wish list.
+In the future I may add a way to gift money through paypal or something similar, but for now I'd rather not recieve cash gifts.
+Any gifts are greatly appreciated and I'm still very shocked that people are asking for this. I'm just glad CsvHelper has helped
+make working with CSV files easier for people. 
+
+[Amazon Wish List](https://amzn.com/w/36WDXJGN8KQO6)
+
+<sub>* Disclaimer: All gifts go directly to Josh Close and are not considered compensation in any form.</sub>
