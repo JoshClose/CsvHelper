@@ -1,54 +1,46 @@
 {
 	"title": "CsvHelper",
-	"version": "2.14.2.0",
+	"version": "2.14.3.0",
 	"authors": [ "Josh Close" ],
-	"owners": [ "josh.close" ],
 	"copyright": "Copyright © 2009-2016 Josh Close and Contributors",
-	"projectUrl": "https://github.com/JoshClose/CsvHelper",
-	"licenseUrl": "https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt",
-	"requireLicenseAcceptance": true,
-	"iconUrl": "https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png",
 	"description": "A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.",
-	"tags": [ "csv", "csvhelper", "comma", "separated", "value", "delimited" ],
-	"releaseNotes": "http://joshclose.github.io/CsvHelper/#change-log",
-	"compilationOptions": {
-		"keyFile": "CsvHelper.snk"
+	"packOptions": {
+		"owners": [ "josh.close" ],
+		"projectUrl": "https://github.com/JoshClose/CsvHelper",
+		"licenseUrl": "https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt",
+		"iconUrl": "https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png",
+		"releaseNotes": "http://joshclose.github.io/CsvHelper/#change-log",
+		"requireLicenseAcceptance": true,
+		"tags": [ "csv", "csvhelper", "comma", "separated", "value", "delimited" ]
 	},
-	"configurations": {
-		"debug": {
-			"compilationOptions": {
-				"define": [ "DEBUG" ]
-			}
-		},
-		"release": {
-			"compilationOptions": {
-				"define": [ "RELEASE" ]
-			}
-		}
+	"buildOptions": {
+		"debugType": "portable",
+		"keyFile": "CsvHelper.snk",
+		"xmlDoc": true
 	},
 	"frameworks": {
 		"net20": {
-			"compilationOptions": {
+			"buildOptions": {
 				"define": [ "NET_2_0" ]
 			}
 		},
 		"net35": {
-			"compilationOptions": {
+			"buildOptions": {
 				"define": [ "NET_3_5" ]
 			}
 		},
 		"net40": {
-			"compilationOptions": {
+			"buildOptions": {
 				"define": [ "NET_4_0" ]
 			}
 		},
 		"net45": {
-			"compilationOptions": {
+			"buildOptions": {
 				"define": [ "NET_4_5" ]
 			}
 		},
 		".NETPortable,Version=4.0,Profile=Profile328": {
-			"compilationOptions": {
+			"buildOptions": {
 				"define": [ "PCL" ]
 			},
 			"frameworkAssemblies": {
@@ -57,17 +49,14 @@
 				"System": ""
 			}
 		},
-		"dotnet5.4": {
-			"compilationOptions": {
+		"netstandard1.3": {
+			"buildOptions": {
 				"define": [ "COREFX" ]
 			},
 			"dependencies": {
-				"Microsoft.CSharp": "4.0.1-beta-23516",
-				"System.Collections": "4.0.11-beta-23516",
-				"System.Linq": "4.0.1-beta-23516",
-				"System.Reflection.TypeExtensions": "4.1.0-beta-23516",
-				"System.Runtime": "4.0.21-beta-23516",
-				"System.Text.RegularExpressions": "4.0.11-beta-23516"
+				"NETStandard.Library": "1.5.0-rc2-24027",
+				"Microsoft.CSharp": "4.0.1-rc2-24027",
+				"System.Reflection.TypeExtensions": "4.1.0-rc2-24027"
 			}
 		}
 	}

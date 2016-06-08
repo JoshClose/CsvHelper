@@ -1,3 +1,3 @@
-.\src\.nuget\NuGet.exe push .\NuGet\release\CsvHelper.*.nupkg
+.\src\.nuget\NuGet.exe push .\NuGet\CsvHelper.*.symbols.nupkg -Source nuget.org
 
 pause

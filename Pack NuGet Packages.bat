@@ -1,5 +1,5 @@
 rmdir /S /Q NuGet
 
-dnu pack src\CsvHelper --configuration release --out NuGet
+dotnet pack src\CsvHelper --configuration release --output NuGet
 
 pause

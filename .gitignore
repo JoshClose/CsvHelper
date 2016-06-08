@@ -14,3 +14,4 @@ docs/Help
 NuGet/
 *crunch*
 *project.lock.json
+.vs/
