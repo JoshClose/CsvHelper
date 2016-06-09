@@ -12,6 +12,9 @@ namespace CsvHelper
 	/// <summary>
 	/// Represents errors that occur due to bad data.
 	/// </summary>
+#if !COREFX && !PCL
+	[Serializable]
+#endif
 	public class CsvBadDataException : CsvHelperException
 	{
 		/// <summary>

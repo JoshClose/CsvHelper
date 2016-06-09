@@ -13,6 +13,9 @@ namespace CsvHelper
 	/// Represents an error caused because a field is missing
 	/// in the header while reading a CSV file.
 	/// </summary>
+#if !COREFX && !PCL
+	[Serializable]
+#endif
 	public class CsvMissingFieldException : CsvReaderException
 	{
 		/// <summary>

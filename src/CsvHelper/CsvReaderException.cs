@@ -12,6 +12,9 @@ namespace CsvHelper
 	/// <summary>
 	/// Represents errors that occur while reading a CSV file.
 	/// </summary>
+#if !COREFX && !PCL
+	[Serializable]
+#endif
 	public class CsvReaderException : CsvHelperException
 	{
 		/// <summary>
