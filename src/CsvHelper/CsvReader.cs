@@ -62,9 +62,13 @@ namespace CsvHelper
 			get
 			{
 				CheckDisposed();
-				CheckHasBeenRead();
 
-				return headerRecord;
+                if ( headerRecord == null )
+                {
+                    throw new CsvReaderException("You must call Read or ReadHeader on the reader before accessing its header data.");
+                }
+
+                return headerRecord;
 			}
 		}
 
@@ -144,6 +148,21 @@ namespace CsvHelper
 			this.parser = parser;
 			configuration = parser.Configuration;
 		}
+
+        /// <summary>
+        /// If HasHeaderRecord is true (true by default), the first record of
+        /// the CSV file will be automatically read in as the header record
+        /// </summary>
+        public virtual void ReadHeader()
+        {
+            CheckDisposed();
+
+            if (configuration.HasHeaderRecord && headerRecord == null)
+            {
+                headerRecord = parser.Read();
+                ParseNamedIndexes();
+            }
+        }
 
 		/// <summary>
 		/// Advances the reader to the next record.
@@ -1083,6 +1102,8 @@ namespace CsvHelper
 				throw new ObjectDisposedException( GetType().ToString() );
 			}
 		}
+
+
 
 		/// <summary>
 		/// Checks if the reader has been read yet.

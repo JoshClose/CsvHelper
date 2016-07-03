@@ -57,6 +57,25 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( 0 ) );
 			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( 1 ) );
 		}
+        
+        [TestMethod]
+        public void ReadHeaderTest()
+        {
+            var data1 = new[] { "One", "Two" };
+            var data2 = new[] { "1", "2" };
+            var queue = new Queue<string[]>();
+            queue.Enqueue(data1);
+            queue.Enqueue(data2);
+
+            var parserMock = new ParserMock( queue );
+
+            var reader = new CsvReader( parserMock );
+            reader.ReadHeader();
+
+            
+            Assert.AreEqual( reader.FieldHeaders[0], "One" );
+            Assert.AreEqual( reader.FieldHeaders[1], "Two" );
+        }
 
 		[TestMethod]
 		public void GetTypeTest()

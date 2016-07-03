@@ -27,6 +27,11 @@ namespace CsvHelper
 		/// Gets the field headers.
 		/// </summary>
 		string[] FieldHeaders { get; }
+        
+        /// <summary>
+        /// Allows you to manually populate the field headers where applicable
+        /// </summary>
+        void ReadHeader();
 
 		/// <summary>
 		/// Advances the reader to the next record.
