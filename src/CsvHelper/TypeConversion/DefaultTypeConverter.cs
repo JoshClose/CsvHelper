@@ -42,7 +42,8 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public virtual object ConvertFromString( TypeConverterOptions options, string text )
 		{
-			throw new CsvTypeConverterException( "The conversion cannot be performed." );
+			throw new CsvTypeConverterException( string.Format( "The conversion cannot be performed. Converter: {0}, text: \"{1}\"",
+                GetType().FullName, text ) );
 		}
 
 		/// <summary>

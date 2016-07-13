@@ -70,6 +70,26 @@ namespace CsvHelper.Tests.TypeConversion
         }
 
         [TestMethod]
+        public void GetFieldSwitchCulturesTest()
+        {
+            GetFieldForCultureTest("\"1234,32\",\"5678,44\"", "fr-FR", 1234.32M, 5678.44M);
+            GetFieldForCultureTest("\"9876.54\",\"3210.98\"", "en-GB", 9876.54M, 3210.98M);
+            GetFieldForCultureTest("\"4455,6677\",\"9988,77\"", "el-GR", 4455.6677M, 9988.77M);
+        }
+
+        private static void GetFieldForCultureTest(string csvText, string culture, decimal expected1, decimal expected2)
+        {
+            using (var reader = new StringReader(csvText))
+            using (var csvReader = new CsvReader(reader, new CsvConfiguration { CultureInfo = CultureInfo.GetCultureInfo(culture) }))
+            {
+                csvReader.Configuration.HasHeaderRecord = false;
+                csvReader.Read();
+                Assert.AreEqual(expected1, csvReader.GetField<decimal>(0));
+                Assert.AreEqual(expected2, csvReader.GetField(typeof(decimal), 1));
+            }
+        }
+
+        [TestMethod]
         public void GetRecordsTest()
         {
             var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };

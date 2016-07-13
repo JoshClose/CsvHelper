@@ -93,7 +93,6 @@ namespace CsvHelper.TypeConversion
 				if( !typeConverterOptions.TryGetValue( type, out options ) )
 				{
 					options = new TypeConverterOptions();
-					typeConverterOptions.Add( type, options );
 				}
 
 				return options;
