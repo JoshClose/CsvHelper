@@ -38,6 +38,13 @@ namespace CsvHelper
 #endif
 		private readonly CsvConfiguration configuration;
 
+		private const string DoneReadingExceptionMessage =
+			"The reader has already exhausted all records. " +
+			"If you would like to iterate the records more than " +
+			"once, store the records in memory. i.e. Use " +
+			"CsvReader.GetRecords<T>().ToList()";
+
+
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
@@ -62,7 +69,11 @@ namespace CsvHelper
 			get
 			{
 				CheckDisposed();
-				CheckHasBeenRead();
+
+				if( headerRecord == null )
+				{
+					throw new CsvReaderException( "You must call ReadHeader or Read before accessing the field headers." );
+				}
 
 				return headerRecord;
 			}
@@ -146,6 +157,41 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Reads the header field without reading the first row.
+		/// </summary>
+		/// <returns>True if there are more records, otherwise false.</returns>
+		public virtual bool ReadHeader()
+		{
+			CheckDisposed();
+
+			if( doneReading )
+			{
+				throw new CsvReaderException( DoneReadingExceptionMessage );
+			}
+
+			if( !configuration.HasHeaderRecord )
+			{
+				throw new CsvReaderException( "Configuration.HasHeaderRecord is false." );
+			}
+
+			if( headerRecord != null )
+			{
+				throw new CsvReaderException( "Header record has already been read." );
+			}
+
+			do
+			{
+				currentRecord = parser.Read();
+			}
+			while( ShouldSkipRecord() );
+			headerRecord = currentRecord;
+			currentRecord = null;
+			ParseNamedIndexes();
+
+			return headerRecord != null;
+		}
+
+		/// <summary>
 		/// Advances the reader to the next record.
 		/// If HasHeaderRecord is true (true by default), the first record of
 		/// the CSV file will be automatically read in as the header record
@@ -158,24 +204,12 @@ namespace CsvHelper
 
 			if( doneReading )
 			{
-				const string message =
-					"The reader has already exhausted all records. " +
-					"If you would like to iterate the records more than " +
-					"once, store the records in memory. i.e. Use " +
-					"CsvReader.GetRecords<T>().ToList()";
-				throw new CsvReaderException( message );
+				throw new CsvReaderException( DoneReadingExceptionMessage );
 			}
 
 			if( configuration.HasHeaderRecord && headerRecord == null )
 			{
-				do
-				{
-					currentRecord = parser.Read();
-				}
-				while( ShouldSkipRecord() );
-				headerRecord = currentRecord;
-				currentRecord = null;
-				ParseNamedIndexes();
+				ReadHeader();
 			}
 
 			do

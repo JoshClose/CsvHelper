@@ -29,7 +29,14 @@ namespace CsvHelper
 		string[] FieldHeaders { get; }
 
 		/// <summary>
-		/// Advances the reader to the next record.
+		/// Reads the header field without reading the first row.
+		/// </summary>
+		/// <returns>True if there are more records, otherwise false.</returns>
+		bool ReadHeader();
+
+		/// <summary>
+		/// Advances the reader to the next record. If the header hasn't been read
+		/// yet, it'll automatically be read along with the first record.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
 		bool Read();
