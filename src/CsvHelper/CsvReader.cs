@@ -108,6 +108,17 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Returns whether any data has successfully been read.
+		/// </summary>
+		public bool HasBeenRead
+		{
+			get
+			{
+				return hasBeenRead;
+			}
+		}
+
+		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
 		/// <see cref="CsvParser"/> as the default parser.
 		/// </summary>
