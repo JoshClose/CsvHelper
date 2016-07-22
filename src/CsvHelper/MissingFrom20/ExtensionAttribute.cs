@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿#if NET_2_0
 namespace System.Runtime.CompilerServices
 {
 	/// <summary>
@@ -12,3 +9,4 @@ namespace System.Runtime.CompilerServices
 	{
 	}
 }
+#endif

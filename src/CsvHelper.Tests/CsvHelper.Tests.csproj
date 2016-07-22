@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AutoMappingTests.cs" />
     <Compile Include="ClassMapOrderingTests.cs" />
     <Compile Include="CsvClassMappingAutoMapTests.cs" />
@@ -91,7 +92,7 @@
     <Compile Include="ParserBadDataTests.cs" />
     <Compile Include="Parsing\CommentTests.cs" />
     <Compile Include="Parsing\DelimiterTests.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reading\ReadHeaderTests.cs" />
     <Compile Include="Reading\ShouldSkipRecordTests.cs" />
     <Compile Include="Reading\TryGetTests.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />
@@ -114,13 +115,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CsvHelper\CsvHelper.csproj">
-      <Project>{968A4E7C-B1E9-457E-B1F9-A774E68926C6}</Project>
-      <Name>CsvHelper</Name>
-    </ProjectReference>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+    <ProjectReference Include="..\CsvHelperNCrunch\CsvHelperNCrunch.csproj">
+      <Project>{d65bcb4c-18cf-4aac-8790-cb0bb2ee0088}</Project>
+      <Name>CsvHelperNCrunch</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

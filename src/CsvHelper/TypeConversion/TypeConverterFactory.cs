@@ -34,12 +34,12 @@ namespace CsvHelper.TypeConversion
 		{
 			if( type == null )
 			{
-				throw new ArgumentNullException( "type" );
+				throw new ArgumentNullException( nameof( type ) );
 			}
 
 			if( typeConverter == null )
 			{
-				throw new ArgumentNullException( "typeConverter" );
+				throw new ArgumentNullException( nameof( typeConverter ) );
 			}
 
 			lock( locker )
@@ -57,7 +57,7 @@ namespace CsvHelper.TypeConversion
 		{
 			if( typeConverter == null )
 			{
-				throw new ArgumentNullException( "typeConverter" );
+				throw new ArgumentNullException( nameof( typeConverter ) );
 			}
 
 			lock( locker )
@@ -74,7 +74,7 @@ namespace CsvHelper.TypeConversion
 		{
 			if( type == null )
 			{
-				throw new ArgumentNullException( "type" );
+				throw new ArgumentNullException( nameof( type ) );
 			}
 
 			lock( locker )
@@ -101,7 +101,7 @@ namespace CsvHelper.TypeConversion
 		{
 			if( type == null )
 			{
-				throw new ArgumentNullException( "type" );
+				throw new ArgumentNullException( nameof( type ) );
 			}
 
 			lock( locker )
@@ -124,8 +124,7 @@ namespace CsvHelper.TypeConversion
 				return GetConverter( type );
 			}
 
-			var isGenericType = type.IsGenericType;
-			if( isGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
 			{
 				AddConverter( type, new NullableConverter( type ) );
 				return GetConverter( type );

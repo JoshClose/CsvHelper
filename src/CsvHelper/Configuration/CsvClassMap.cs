@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+#if !NET_2_0
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -151,7 +152,7 @@ namespace CsvHelper.Configuration
 		/// <param name="mapParents">The list of parents for the map.</param>
 		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
-			var type = map.GetType().BaseType.GetGenericArguments()[0];
+			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
 			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
 			{
 				throw new CsvConfigurationException( "Types that inherit IEnumerable cannot be auto mapped. " +
@@ -254,3 +255,4 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
+#endif // !NET_2_0

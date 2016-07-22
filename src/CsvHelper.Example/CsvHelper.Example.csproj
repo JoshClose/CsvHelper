@@ -96,8 +96,8 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CsvHelper\CsvHelper.csproj">
-      <Project>{968A4E7C-B1E9-457E-B1F9-A774E68926C6}</Project>
+    <ProjectReference Include="..\CsvHelper\CsvHelper.xproj">
+      <Project>{ecf9e2a8-3592-4da4-9fab-bfa56ad44b9c}</Project>
       <Name>CsvHelper</Name>
     </ProjectReference>
   </ItemGroup>

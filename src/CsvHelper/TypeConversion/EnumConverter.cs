@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+using System.Reflection;
 
 namespace CsvHelper.TypeConversion
 {
@@ -19,9 +20,10 @@ namespace CsvHelper.TypeConversion
 		/// <param name="type">The type of the Enum.</param>
 		public EnumConverter( Type type )
 		{
+			var isAssignableFrom = typeof( Enum ).GetTypeInfo().IsAssignableFrom( type.GetTypeInfo() );
 			if( !typeof( Enum ).IsAssignableFrom( type ) )
 			{
-				throw new ArgumentException( string.Format( "'{0}' is not an Enum.", type.FullName ) );
+				throw new ArgumentException( $"'{type.FullName}' is not an Enum." );
 			}
 
 			this.type = type;

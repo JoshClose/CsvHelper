@@ -2,7 +2,8 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-namespace CsvHelper.MissingFrom20
+#if NET_2_0
+namespace System
 {
 	/// <summary>
 	/// Encapsulates a method that has one parameter and returns a value of the type specified by the TResult parameter.
@@ -13,3 +14,4 @@ namespace CsvHelper.MissingFrom20
 	/// <returns>The return value of the method that this delegate encapsulates.</returns>
 	public delegate TResult Func<in T, out TResult>( T arg );
 }
+#endif

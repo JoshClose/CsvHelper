@@ -6,12 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
-#if NET_2_0
-using CsvHelper.MissingFrom20;
-#endif
-#if !NET_2_0
 using System.Linq;
-#endif
 
 namespace CsvHelper
 {

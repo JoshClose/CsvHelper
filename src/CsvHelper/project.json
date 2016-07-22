@@ -1,0 +1,68 @@
+{
+	"title": "CsvHelper",
+	"version": "2.16.0.0",
+	"authors": [ "Josh Close" ],
+	"copyright": "Copyright © 2009-2016 Josh Close and Contributors",
+	"description": "A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.",
+	"packOptions": {
+		"owners": [ "josh.close" ],
+		"projectUrl": "https://github.com/JoshClose/CsvHelper",
+		"licenseUrl": "https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt",
+		"iconUrl": "https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png",
+		"releaseNotes": "http://joshclose.github.io/CsvHelper/#change-log",
+		"requireLicenseAcceptance": true,
+		"tags": [ "csv", "csvhelper", "comma", "separated", "value", "delimited" ]
+	},
+	"buildOptions": {
+		"keyFile": "CsvHelper.snk",
+		"xmlDoc": true
+	},
+	"frameworks": {
+		"net20": {
+			"buildOptions": {
+				"debugType": "full",
+				"define": [ "NET_2_0" ]
+			}
+		},
+		"net35": {
+			"buildOptions": {
+				"debugType": "full",
+				"define": [ "NET_3_5" ]
+			}
+		},
+		"net40": {
+			"buildOptions": {
+				"debugType": "full",
+				"define": [ "NET_4_0" ]
+			}
+		},
+		"net45": {
+			"buildOptions": {
+				"debugType": "full",
+				"define": [ "NET_4_5" ]
+			}
+		},
+		".NETPortable,Version=4.0,Profile=Profile328": {
+			"buildOptions": {
+				"debugType": "portable",
+				"define": [ "PCL" ]
+			},
+			"frameworkAssemblies": {
+				"mscorlib": "",
+				"System.Core": "",
+				"System": ""
+			}
+		},
+		"netstandard1.3": {
+			"buildOptions": {
+				"debugType": "portable",
+				"define": [ "COREFX" ]
+			},
+			"dependencies": {
+				"NETStandard.Library": "1.6.0",
+				"Microsoft.CSharp": "4.0.1",
+				"System.Reflection.TypeExtensions": "4.1.0" 
+			}
+		}
+	}
+}

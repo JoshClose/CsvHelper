@@ -2,11 +2,13 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+#if !NET_2_0
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -38,7 +40,7 @@ namespace CsvHelper.Configuration
 			var existingMap = PropertyMaps.SingleOrDefault( m =>
 				m.Data.Property == property
 				|| m.Data.Property.Name == property.Name
-				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
+				&& ( m.Data.Property.DeclaringType.GetTypeInfo().IsAssignableFrom( property.DeclaringType.GetTypeInfo() ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
 			if( existingMap != null )
 			{
 				return existingMap;
@@ -110,3 +112,4 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
+#endif // !NET_2_0
