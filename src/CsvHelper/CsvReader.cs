@@ -87,7 +87,6 @@ namespace CsvHelper
 			get
 			{
 				CheckDisposed();
-				CheckHasBeenRead();
 
 				return currentRecord;
 			}
@@ -101,20 +100,8 @@ namespace CsvHelper
 			get
 			{
 				CheckDisposed();
-				CheckHasBeenRead();
 
 				return parser.Row;
-			}
-		}
-
-		/// <summary>
-		/// Returns whether any data has successfully been read.
-		/// </summary>
-		public bool HasBeenRead
-		{
-			get
-			{
-				return hasBeenRead;
 			}
 		}
 
