@@ -86,6 +86,7 @@
     <Compile Include="ClearRecordsCacheTests.cs" />
     <Compile Include="LocalCultureTests.cs" />
     <Compile Include="MappingInheritedClassTests.cs" />
+    <Compile Include="Mappings\ReferenceClassMapTests.cs" />
     <Compile Include="Mappings\ReferenceConstructorArgsTests.cs" />
     <Compile Include="Mocks\ParserMock.cs" />
     <Compile Include="Mocks\SerializerMock.cs" />
