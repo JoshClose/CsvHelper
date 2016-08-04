@@ -162,6 +162,23 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 1, records.Count );
 		}
 
+	    [TestMethod]
+	    public void MapperWithPrivateConstructorTest()
+	    {
+	        using (var stringReader = new StringReader("int\r\n1\r\n2"))
+	        using( var csv = new CsvReader( stringReader ) )
+	        {
+	            csv.Configuration.RegisterClassMap<MappingWithPrivateConstructorClassMap>();
+
+	            var records = csv.GetRecords<TestClass>().ToArray();
+
+	            Assert.IsNotNull( records );
+	            Assert.AreEqual( 2, records.Length );
+	            Assert.AreEqual( 1, records[0].IntColumn );
+	            Assert.AreEqual( 2, records[1].IntColumn );
+	        }
+	    }
+
 		private class CovarianceClass
 		{
 			public int? Id { get; set; }
@@ -264,5 +281,13 @@ namespace CsvHelper.Tests
 				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
 			}
 		}
+
+	    private sealed class MappingWithPrivateConstructorClassMap : CsvClassMap<TestClass>
+	    {
+	        private MappingWithPrivateConstructorClassMap()
+	        {
+	            Map( m => m.IntColumn ).Index( 0 );
+	        }
+	    }
 	}
 }
