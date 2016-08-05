@@ -116,9 +116,11 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual CsvPropertyMap Default( object defaultValue )
+        /// <param name="useConverter">Specified if the value should be converted.</param>
+		public virtual CsvPropertyMap Default( object defaultValue, bool useConverter = false )
 		{
 			data.Default = defaultValue;
+		    data.ShouldDefaultUseConverter = useConverter;
 			return this;
 		}
 

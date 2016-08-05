@@ -101,7 +101,14 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IsDefaultSet { get; set; }
 
-		/// <summary>
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is default value should use a converter.
+        /// the default value was explicitly set to use the converter. True if it was
+        /// explicitly set, otherwise false.
+        /// </summary>
+	    public virtual bool ShouldDefaultUseConverter { get; set; }
+
+	    /// <summary>
 		/// Gets or sets the expression used to convert data in the
 		/// row to the property.
 		/// </summary>

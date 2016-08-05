@@ -31,9 +31,9 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var csvReader = new CsvReader( reader ) )
 			{
-				writer.WriteLine( "Id,Name,Order" );
-				writer.WriteLine( ",," );
-				writer.WriteLine( "2,two,2" );
+				writer.WriteLine( "Id,Name,Order,Money,Value" );
+				writer.WriteLine( ",,,," );
+				writer.WriteLine( "2,two,2,1.23,2" );
 				writer.WriteLine( ",three" );
 				writer.Flush();
 				stream.Position = 0;
@@ -43,13 +43,19 @@ namespace CsvHelper.Tests
 				var records = csvReader.GetRecords<Test>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual( -1, record.Id );
-				Assert.AreEqual( null, record.Name );
-				Assert.AreEqual( -2, record.Order );
+				Assert.AreEqual( TestMap.DefaultId, record.Id );
+				Assert.AreEqual( TestMap.DefaultName, record.Name );
+                Assert.AreEqual(TestMap.DefaultOrder, record.Order);
+                Assert.AreEqual(TestMap.DefaultMoney, record.Money);
+                Assert.AreEqual(TestMap.DefaultValue, record.Value);
+
 
 				record = records[1];
 				Assert.AreEqual( 2, record.Id );
-				Assert.AreEqual( "two", record.Name );
+                Assert.AreEqual("two", record.Name);
+                Assert.AreEqual(2, record.Order);
+                Assert.AreEqual(1.23m, record.Money);
+                Assert.AreEqual(2, record.Value);
 			}
 		}
 
@@ -60,15 +66,28 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 
 			public int Order { get; set; }
+
+		    public decimal Money { get; set; }
+
+		    public int Value { get; set; }
 		}
 
+        
 		private sealed class TestMap : CsvClassMap<Test>
 		{
+		    public static readonly int DefaultId = -1;
+            public static readonly string DefaultName = null;
+            public static readonly int DefaultOrder = -2;
+            public static readonly decimal DefaultMoney = 2.34m;
+            public static readonly int DefaultValue = 12;
+
 			public TestMap()
 			{
-				Map( m => m.Id ).Default( -1 );
-				Map( m => m.Name ).Default( null );
-				Map( m => m.Order ).Default( -2 );
+                Map(m => m.Id).Default(DefaultId);
+                Map(m => m.Name).Default(DefaultName);
+                Map(m => m.Order).Default(DefaultOrder);
+                Map(m => m.Money).Default(DefaultMoney.ToString(), true);
+                Map(m => m.Value).Default(DefaultValue.ToString(), true);
 			}
 		}
 	}
