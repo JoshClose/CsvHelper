@@ -222,23 +222,6 @@ namespace CsvHelper.Tests.Exceptions
 		}
 
 		[TestMethod]
-		public void WriteRecordTest()
-		{
-			var serializer = new SerializerMock( true );
-			var writer = new CsvWriter( serializer );
-			try
-			{
-				writer.WriteRecord( typeof( Simple ), new Simple() );
-				Assert.Fail();
-			}
-			catch( Exception ex )
-			{
-				var expected = "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
-			}
-		}
-
-		[TestMethod]
 		public void WriteRecordsGenericTest()
 		{
 			var serializer = new SerializerMock( true );

@@ -3,9 +3,13 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 #if !NET_2_0
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -198,6 +202,22 @@ namespace CsvHelper.Configuration
 		{
 			get { return list[index]; }
 			set { list[index] = value; }
+		}
+
+		/// <summary>
+		/// Finds the <see cref="CsvPropertyMap"/> using the given property expression.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="Type"/> the property is on.</typeparam>
+		/// <param name="expression">The property expression.</param>
+		/// <returns>The <see cref="CsvPropertyMap"/> for the given expression, or null if not found.</returns>
+		public virtual CsvPropertyMap Find<T>( Expression<Func<T, object>> expression )
+		{
+			var property = ReflectionHelper.GetProperty( expression );
+
+			var existingMap = list.SingleOrDefault( m => m.Data.Property == property ||
+				m.Data.Property.Name == property.Name && ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
+
+			return existingMap;
 		}
 	}
 }

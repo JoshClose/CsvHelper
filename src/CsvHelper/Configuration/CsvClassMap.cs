@@ -22,12 +22,6 @@ namespace CsvHelper.Configuration
 		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
 
 		/// <summary>
-		/// Called to create the mappings.
-		/// </summary>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Specify your mappings in the constructor instead.", false )]
-		public virtual void CreateMap() {}
-
-		/// <summary>
 		/// Gets the constructor expression.
 		/// </summary>
 		public virtual NewExpression Constructor { get; protected set; } 
@@ -52,33 +46,6 @@ namespace CsvHelper.Configuration
 		/// Allow only internal creation of CsvClassMap.
 		/// </summary>
 		internal CsvClassMap() {}
-
-		/// <summary>
-		/// Gets the property map for the given property expression.
-		/// </summary>
-		/// <typeparam name="T">The type of the class the property belongs to.</typeparam>
-		/// <param name="expression">The property expression.</param>
-		/// <returns>The CsvPropertyMap for the given expression.</returns>
-		[Obsolete( "This method is deprecated and will be removed in the next major release.", false )]
-		public virtual CsvPropertyMap PropertyMap<T>( Expression<Func<T, object>> expression )
-		{
-			var property = ReflectionHelper.GetProperty( expression );
-
-			var existingMap = PropertyMaps.SingleOrDefault( m =>
-				m.Data.Property == property
-				|| m.Data.Property.Name == property.Name
-				&& ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
-			if( existingMap != null )
-			{
-				return existingMap;
-			}
-
-			var propertyMap = new CsvPropertyMap( property );
-			propertyMap.Data.Index = GetMaxIndex() + 1;
-			PropertyMaps.Add( propertyMap );
-
-			return propertyMap;
-		}
 
 		/// <summary>
 		/// Auto maps all properties for the given type. If a property

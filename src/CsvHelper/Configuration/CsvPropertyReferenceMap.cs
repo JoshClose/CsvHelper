@@ -16,24 +16,6 @@ namespace CsvHelper.Configuration
 		private readonly CsvPropertyReferenceMapData data;
 
 		/// <summary>
-		/// Gets the property.
-		/// </summary>
-		[Obsolete( "This property is deprecated and will be removed in the next major release. Use Data.Property instead.", false )]
-		public PropertyInfo Property
-		{
-			get { return data.Property; }
-		}
-
-		/// <summary>
-		/// Gets the mapping.
-		/// </summary>
-		[Obsolete( "This property is deprecated and will be removed in the next major release. Use Data.Mapping instead.", false )]
-		public CsvClassMap Mapping
-		{
-			get { return data.Mapping; }
-		}
-
-		/// <summary>
 		/// Gets the property reference map data.
 		/// </summary>
 		public CsvPropertyReferenceMapData Data

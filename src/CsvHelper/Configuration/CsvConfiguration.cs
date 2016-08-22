@@ -478,8 +478,6 @@ namespace CsvHelper.Configuration
 		/// <param name="map">The class map to register.</param>
 		public virtual void RegisterClassMap( CsvClassMap map )
 		{
-			map.CreateMap();
-
 			if( map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
 			{
 				throw new CsvConfigurationException( "No mappings were specified in the CsvClassMap." );

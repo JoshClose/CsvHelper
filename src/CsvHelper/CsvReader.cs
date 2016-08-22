@@ -359,63 +359,6 @@ namespace CsvHelper
 		/// Gets the field converted to <see cref="Object"/> using
 		/// the specified <see cref="ITypeConverter"/>.
 		/// </summary>
-		/// <param name="index">The index of the field.</param>
-		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
-		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use GetField( Type, int, ITypeConverter ) instead.", false )]
-		public virtual object GetField( int index, ITypeConverter converter )
-		{
-			CheckDisposed();
-			CheckHasBeenRead();
-
-			var typeConverterOptions = new TypeConverterOptions
-			{
-				CultureInfo = configuration.CultureInfo
-			};
-
-			var field = GetField( index );
-			return converter.ConvertFromString( typeConverterOptions, field );
-		}
-
-		/// <summary>
-		/// Gets the field converted to <see cref="Object"/> using
-		/// the specified <see cref="ITypeConverter"/>.
-		/// </summary>
-		/// <param name="name">The named index of the field.</param>
-		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
-		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use GetField( Type, string, ITypeConverter ) instead.", false )]
-		public virtual object GetField( string name, ITypeConverter converter )
-		{
-			CheckDisposed();
-			CheckHasBeenRead();
-
-			var index = GetFieldIndex( name );
-			return GetField( index, converter );
-		}
-
-		/// <summary>
-		/// Gets the field converted to <see cref="Object"/> using
-		/// the specified <see cref="ITypeConverter"/>.
-		/// </summary>
-		/// <param name="name">The named index of the field.</param>
-		/// <param name="index">The zero based index of the instance of the field.</param>
-		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
-		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use GetField( Type, string, int, ITypeConverter ) instead.", false )]
-		public virtual object GetField( string name, int index, ITypeConverter converter )
-		{
-			CheckDisposed();
-			CheckHasBeenRead();
-
-			var fieldIndex = GetFieldIndex( name, index );
-			return GetField( fieldIndex, converter );
-		}
-
-		/// <summary>
-		/// Gets the field converted to <see cref="Object"/> using
-		/// the specified <see cref="ITypeConverter"/>.
-		/// </summary>
 		/// <param name="type">The type of the field.</param>
 		/// <param name="index">The index of the field.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>

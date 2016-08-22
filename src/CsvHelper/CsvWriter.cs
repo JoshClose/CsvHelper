@@ -230,54 +230,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Writes the field to the CSV file.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <param name="type">The type of the field.</param>
-		/// <param name="field">The field to write.</param>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field ) instead.", false )]
-		public virtual void WriteField( Type type, object field )
-		{
-			CheckDisposed();
-
-			if( type == typeof( string ) )
-			{
-				WriteField( field as string );
-			}
-			else
-			{
-				var converter = TypeConverterFactory.GetConverter( type );
-				WriteField( type, field, converter );
-			}
-		}
-
-		/// <summary>
-		/// Writes the field to the CSV file.
-		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
-		/// to complete writing of the current record.
-		/// </summary>
-		/// <param name="type">The type of the field.</param>
-		/// <param name="field">The field to write.</param>
-		/// <param name="converter">The converter used to convert the field into a string.</param>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteField<T>( T field, ITypeConverter converter ) instead.", false )]
-		public virtual void WriteField( Type type, object field, ITypeConverter converter )
-		{
-			CheckDisposed();
-
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
-			if( typeConverterOptions.CultureInfo == null )
-			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
-
-			var fieldString = converter.ConvertToString( typeConverterOptions, field );
-			WriteField( fieldString );
-		}
-
-		/// <summary>
 		/// Ends writing of the current record
 		/// and starts a new record. This is used
 		/// when manually writing records with WriteField.
@@ -396,37 +348,6 @@ namespace CsvHelper
 			catch( Exception ex )
 			{
 				ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Writes the record to the CSV file.
-		/// </summary>
-		/// <param name="type">The type of the record.</param>
-		/// <param name="record">The record to write.</param>
-		[Obsolete( "This method is deprecated and will be removed in the next major release. Use WriteRecord<T>( T record ) instead.", false )]
-		public virtual void WriteRecord( Type type, object record )
-		{
-			CheckDisposed();
-
-			try
-			{
-				try
-				{
-					GetWriteRecordAction( type ).DynamicInvoke( record );
-				}
-				catch( TargetInvocationException ex )
-				{
-					throw ex.InnerException;
-				}
-
-				hasRecordBeenWritten = true;
-				NextRecord();
-			}
-			catch( Exception ex )
-			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, type, null, null, null );
 				throw;
 			}
 		}

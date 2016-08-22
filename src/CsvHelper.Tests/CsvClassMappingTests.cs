@@ -140,7 +140,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration();
 			config.RegisterClassMap<AMap>();
-			config.Maps[typeof( A )].PropertyMap<A>( m => m.AId ).Ignore();
+			config.Maps.Find<A>().Map( m => m.AId ).Ignore();
 
 			Assert.AreEqual( true, config.Maps[typeof( A )].PropertyMaps[0].Data.Ignore );
 		}
