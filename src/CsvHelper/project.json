@@ -1,6 +1,6 @@
 {
 	"title": "CsvHelper",
-	"version": "2.16.0.0",
+	"version": "3.0.0-beta1",
 	"authors": [ "Josh Close" ],
 	"copyright": "Copyright © 2009-2016 Josh Close and Contributors",
 	"description": "A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.",
