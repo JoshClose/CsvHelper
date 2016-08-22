@@ -46,14 +46,7 @@ namespace CsvHelper.Tests.Reading
 			var csv = new CsvReader( parser );
 			csv.ReadHeader();
 
-			try
-			{
-				var x = csv.CurrentRecord;
-				Assert.Fail();
-			}
-			catch( CsvReaderException )
-			{
-			}
+			Assert.IsNull( csv.CurrentRecord );
 		}
 
 		[TestMethod]
