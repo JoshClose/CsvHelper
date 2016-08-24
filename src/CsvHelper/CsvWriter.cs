@@ -176,7 +176,7 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var type = field.GetType();
+			var type = typeof(T);
 			if( type == typeof( string ) )
 			{
 				WriteField( field as string );
