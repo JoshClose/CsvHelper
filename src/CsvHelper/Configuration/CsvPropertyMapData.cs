@@ -2,10 +2,11 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-#if !NET_2_0
-using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.TypeConversion;
+#if !NET_2_0
+using System.Linq.Expressions;
+#endif
 
 namespace CsvHelper.Configuration
 {
@@ -14,10 +15,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvPropertyMapData
 	{
-		private readonly CsvPropertyNameCollection names = new CsvPropertyNameCollection();
-		private int index = -1;
 		private object defaultValue;
-		private readonly TypeConverterOptions typeConverterOptions = new TypeConverterOptions();
 
 		/// <summary>
 		/// Gets the <see cref="PropertyInfo"/> that the data
@@ -28,10 +26,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the list of column names.
 		/// </summary>
-		public virtual CsvPropertyNameCollection Names
-		{
-			get { return names; }
-		}
+		public virtual CsvPropertyNameCollection Names { get; } = new CsvPropertyNameCollection();
 
 		/// <summary>
 		/// Gets or sets the index of the name.
@@ -50,11 +45,14 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the column index.
 		/// </summary>
-		public virtual int Index
-		{
-			get { return index; }
-			set { index = value; }
-		}
+		public virtual int Index { get; set; } = -1;
+
+		/// <summary>
+		/// Gets or sets the index end. The Index end is used to specify a range for use
+		/// with a collection property. Index is used as the start of the range, and IndexEnd
+		/// is the end of the range.
+		/// </summary>
+		public virtual int IndexEnd { get; set; } = -1;
 
 		/// <summary>
 		/// Gets or sets a value indicating if the index was
@@ -71,10 +69,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the type converter options.
 		/// </summary>
-		public virtual TypeConverterOptions TypeConverterOptions
-		{
-			get { return typeConverterOptions; }
-		}
+		public virtual TypeConverterOptions TypeConverterOptions { get; set; } = new TypeConverterOptions();
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the field should be ignored.
@@ -101,11 +96,15 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IsDefaultSet { get; set; }
 
+#if !NET_2_0
+
 		/// <summary>
 		/// Gets or sets the expression used to convert data in the
 		/// row to the property.
 		/// </summary>
 		public virtual Expression ConvertExpression { get; set; }
+
+#endif
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyMapData"/> class.
@@ -117,4 +116,3 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
-#endif // !NET_2_0

@@ -3,31 +3,33 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts an Int16 to and from a string.
+	/// Converts a <see cref="short"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class Int16Converter : DefaultTypeConverter
 	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var numberStyle = options.NumberStyle ?? NumberStyles.Integer;
+			var numberStyle = propertyMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Integer;
 
 			short s;
-			if( short.TryParse( text, numberStyle, options.CultureInfo, out s ) )
+			if( short.TryParse( text, numberStyle, propertyMapData.TypeConverterOptions.CultureInfo, out s ) )
 			{
 				return s;
 			}
 
-			return base.ConvertFromString( options, text );
+			return base.ConvertFromString( text, row, propertyMapData );
 		}
 
 		/// <summary>

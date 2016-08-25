@@ -4,11 +4,12 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts a Nullable to and from a string.
+	/// Converts a <see cref="Nullable{T}"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class NullableConverter : DefaultTypeConverter
 	{
@@ -56,28 +57,30 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			if( string.IsNullOrEmpty( text ) )
 			{
 				return null;
 			}
 
-			return UnderlyingTypeConverter.ConvertFromString( options, text );
+			return UnderlyingTypeConverter.ConvertFromString( text, row, propertyMapData );
 		}
 
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="value">The object to convert to a string.</param>
+		/// <param name="row"></param>
+		/// <param name="propertyMapData"></param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( TypeConverterOptions options, object value )
+		public override string ConvertToString( object value, ICsvWriterRow row, CsvPropertyMapData propertyMapData )
 		{
-			return UnderlyingTypeConverter.ConvertToString( options, value );
+			return UnderlyingTypeConverter.ConvertToString( value, row, propertyMapData );
 		}
 
 		/// <summary>

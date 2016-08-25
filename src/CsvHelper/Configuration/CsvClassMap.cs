@@ -132,6 +132,7 @@ namespace CsvHelper.Configuration
 			foreach( var property in properties )
 			{
 				var typeConverterType = TypeConverterFactory.GetConverter( property.PropertyType ).GetType();
+
 				if( typeConverterType == typeof( EnumerableConverter ) )
 				{
 					// The IEnumerable converter just throws an exception so skip it.

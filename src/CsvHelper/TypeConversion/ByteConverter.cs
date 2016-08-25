@@ -4,31 +4,33 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts a Byte to and from a string.
+	/// Converts a <see cref="byte"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class ByteConverter : DefaultTypeConverter
 	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var numberStyle = options.NumberStyle ?? NumberStyles.Integer;
+			var numberStyle = propertyMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Integer;
 
 			byte b;
-			if( byte.TryParse( text, numberStyle, options.CultureInfo, out b ) )
+			if( byte.TryParse( text, numberStyle, propertyMapData.TypeConverterOptions.CultureInfo, out b ) )
 			{
 				return b;
 			}
 
-			return base.ConvertFromString( options, text );
+			return base.ConvertFromString( text, row, propertyMapData );
 		}
 
 		/// <summary>

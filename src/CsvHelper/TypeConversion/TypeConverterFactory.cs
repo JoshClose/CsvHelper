@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 
 namespace CsvHelper.TypeConversion
@@ -113,11 +114,6 @@ namespace CsvHelper.TypeConversion
 				}
 			}
 
-			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
-			{
-				return GetConverter( typeof( IEnumerable ) );
-			}
-
 			if( typeof( Enum ).IsAssignableFrom( type ) )
 			{
 				AddConverter( type, new EnumConverter( type ) );
@@ -128,6 +124,48 @@ namespace CsvHelper.TypeConversion
 			{
 				AddConverter( type, new NullableConverter( type ) );
 				return GetConverter( type );
+			}
+
+			if( type.IsArray )
+			{
+				AddConverter( type, new ArrayConverter() );
+				return GetConverter( type );
+			}
+
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( List<> ) )
+			{
+				AddConverter( type, new CollectionGenericConverter() );
+				return GetConverter( type );
+			}
+
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( Collection<> ) )
+			{
+				AddConverter( type, new CollectionGenericConverter() );
+				return GetConverter( type );
+			}
+
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( IList<> ) )
+			{
+				AddConverter( type, new IEnumerableGenericConverter() );
+				return GetConverter( type );
+			}
+
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( ICollection<> ) )
+			{
+				AddConverter( type, new IEnumerableGenericConverter() );
+				return GetConverter( type );
+			}
+
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( IEnumerable<> ) )
+			{
+				AddConverter( type, new IEnumerableGenericConverter() );
+				return GetConverter( type );
+			}
+
+			// A specific IEnumerable converter doesn't exist.
+			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
+			{
+				return new EnumerableConverter();
 			}
 
 			return new DefaultTypeConverter();
@@ -163,7 +201,12 @@ namespace CsvHelper.TypeConversion
 			AddConverter( typeof( ushort ), new UInt16Converter() );
 			AddConverter( typeof( uint ), new UInt32Converter() );
 			AddConverter( typeof( ulong ), new UInt64Converter() );
-			AddConverter( typeof( IEnumerable ), new EnumerableConverter() );
+			AddConverter( typeof( IList ), new IEnumerableConverter() );
+			AddConverter( typeof( ICollection ), new IEnumerableConverter() );
+			AddConverter( typeof( IEnumerable ), new IEnumerableConverter() );
+#if !PCL && !COREFX
+			AddConverter( typeof( ArrayList ), new ArrayListConverter() );
+#endif
 		} 
 	}
 }

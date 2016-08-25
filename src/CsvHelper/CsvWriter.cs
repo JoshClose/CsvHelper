@@ -107,7 +107,7 @@ namespace CsvHelper
 
 			var shouldQuote = configuration.QuoteAllFields;
 
-			if( configuration.TrimFields )
+			if( field != null && configuration.TrimFields )
 			{
 				field = field.Trim();
 			}
@@ -146,6 +146,15 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
+			// Instead of throwing an exception or making it
+			// a string.Empty, don't write the field. This
+			// allow for converters to return null if they
+			// already wrote to the row.
+			if( field == null )
+			{
+				return;
+			}
+
             // All quotes must be doubled.       
 			if( shouldQuote && !string.IsNullOrEmpty( field ) )
 			{
@@ -176,13 +185,13 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var type = field.GetType();
-			if( type == typeof( string ) )
+			if( field == null || field is string )
 			{
 				WriteField( field as string );
 			}
 			else
 			{
+				var type = field.GetType();
 				var converter = TypeConverterFactory.GetConverter( type );
 				WriteField( field, converter );
 			}
@@ -201,13 +210,20 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( field.GetType() );
-			if( typeConverterOptions.CultureInfo == null )
+			if( field == null )
 			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+				WriteField( null );
+				return;
 			}
 
-			var fieldString = converter.ConvertToString( typeConverterOptions, field );
+			var propertyMapData = new CsvPropertyMapData( null )
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+			};
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( field.GetType() ) );
+
+			var fieldString = converter.ConvertToString( field, this, propertyMapData );
 			WriteField( fieldString );
 		}
 
@@ -531,7 +547,7 @@ namespace CsvHelper
 		}
 #endif
 
-				/// <summary>
+		/// <summary>
 				/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 				/// </summary>
 				/// <filterpriority>2</filterpriority>
@@ -647,7 +663,7 @@ namespace CsvHelper
 
 			if( properties.Count == 0 )
 			{
-				throw new CsvWriterException( string.Format( "No properties are mapped for type '{0}'.", type.FullName ) );
+				throw new CsvWriterException( $"No properties are mapped for type '{type.FullName}'." );
 			}
 
 			var delegates = new List<Delegate>();
@@ -673,12 +689,11 @@ namespace CsvHelper
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
 
-				var typeConverterOptions = TypeConverterOptions.Merge( TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
-				var typeConverterOptionsExpression = Expression.Constant( typeConverterOptions );
+				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
 
 				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
 				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				fieldExpression = Expression.Call( typeConverterExpression, method, typeConverterOptionsExpression, fieldExpression );
+				fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 
 				if( type.GetTypeInfo().IsClass )
 				{
@@ -709,14 +724,15 @@ namespace CsvHelper
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeConverter.GetType().GetMethod( "ConvertToString" );
 
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
-			if( typeConverterOptions.CultureInfo == null )
+			var propertyMapData = new CsvPropertyMapData( null )
 			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
+				Index = 0,
+				TypeConverter = typeConverter,
+				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+			};
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( type ) );
 
-			fieldExpression = Expression.Call( typeConverterExpression, method, Expression.Constant( typeConverterOptions ), fieldExpression );
-
+			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
 
 			var actionType = typeof( Action<> ).MakeGenericType( type );

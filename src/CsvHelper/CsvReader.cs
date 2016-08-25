@@ -415,14 +415,16 @@ namespace CsvHelper
 			CheckDisposed();
 			CheckHasBeenRead();
 
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( type );
-			if( typeConverterOptions.CultureInfo == null )
+			var propertyMapData = new CsvPropertyMapData( null )
 			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
+				Index = index,
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+			};
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( type ) );
 
 			var field = GetField( index );
-			return converter.ConvertFromString( typeConverterOptions, field );
+			return converter.ConvertFromString( field, this, propertyMapData );
 		}
 
 		/// <summary>
@@ -837,6 +839,7 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
+
 		/// <summary>
 		/// Gets the record converted into <see cref="Type"/> T.
 		/// </summary>
@@ -1012,6 +1015,7 @@ namespace CsvHelper
 
 			recordFuncs.Clear();
 		}
+
 #endif
 
 		/// <summary>
@@ -1239,6 +1243,7 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
+
 		/// <summary>
 		/// Creates the record for the given type.
 		/// </summary>
@@ -1356,7 +1361,7 @@ namespace CsvHelper
 
 			if( bindings.Count == 0 )
 			{
-				throw new CsvReaderException( string.Format( string.Format( "No properties are mapped for type '{0}'.", recordType.FullName ) ) );
+				throw new CsvReaderException( $"No properties are mapped for type '{recordType.FullName}'." );
 			}
 
 			var constructorExpression = configuration.Maps[recordType].Constructor ?? Expression.New( recordType );
@@ -1374,14 +1379,15 @@ namespace CsvHelper
 			var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
 
-			var typeConverter = TypeConverterFactory.GetConverter( recordType );
-			var typeConverterOptions = TypeConverterOptionsFactory.GetOptions( recordType );
-			if( typeConverterOptions.CultureInfo == null )
+			var propertyMapData = new CsvPropertyMapData( null )
 			{
-				typeConverterOptions.CultureInfo = configuration.CultureInfo;
-			}
+				Index = 0,
+				TypeConverter = TypeConverterFactory.GetConverter( recordType ),
+				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+			};
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( recordType ) );
 
-			fieldExpression = Expression.Call( Expression.Constant( typeConverter ), "ConvertFromString", null, Expression.Constant( typeConverterOptions ), fieldExpression );
+			fieldExpression = Expression.Call( Expression.Constant( propertyMapData.TypeConverter ), "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
 			fieldExpression = Expression.Convert( fieldExpression, recordType );
 	
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
@@ -1489,11 +1495,10 @@ namespace CsvHelper
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
 
-				var typeConverterOptions = TypeConverterOptions.Merge( TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
-				var typeConverterOptionsExpression = Expression.Constant( typeConverterOptions );
-
+				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+				
 				// Create type converter expression.
-				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, typeConverterOptionsExpression, fieldExpression );
+				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
 
 				if( propertyMap.Data.IsDefaultSet )
@@ -1554,9 +1559,11 @@ namespace CsvHelper
 				propertyReferenceMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;
 		}
+
 #endif
 
 #if !NET_2_0 && !NET_3_5 && !PCL
+
 		/// <summary>
 		/// Creates a dynamic object from the current record.
 		/// </summary>
@@ -1586,6 +1593,7 @@ namespace CsvHelper
 
 			return obj;
 		}
+
 #endif
 		}
 }

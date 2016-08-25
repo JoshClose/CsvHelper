@@ -4,21 +4,23 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts an object to and from a string.
+	/// Converts an <see cref="object"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class DefaultTypeConverter : ITypeConverter
 	{
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="value">The object to convert to a string.</param>
+		/// <param name="row">The <see cref="ICsvWriterRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		public virtual string ConvertToString( TypeConverterOptions options, object value )
+		public virtual string ConvertToString( object value, ICsvWriterRow row, CsvPropertyMapData propertyMapData )
 		{
 			if( value == null )
 			{
@@ -28,7 +30,7 @@ namespace CsvHelper.TypeConversion
 			var formattable = value as IFormattable;
 			if( formattable != null )
 			{
-				return formattable.ToString( options.Format, options.CultureInfo );
+				return formattable.ToString( propertyMapData.TypeConverterOptions.Format, propertyMapData.TypeConverterOptions.CultureInfo );
 			}
 
 			return value.ToString();
@@ -37,10 +39,11 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public virtual object ConvertFromString( TypeConverterOptions options, string text )
+		public virtual object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			throw new CsvTypeConverterException( "The conversion cannot be performed." );
 		}

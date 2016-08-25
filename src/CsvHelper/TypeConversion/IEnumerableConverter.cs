@@ -1,33 +1,37 @@
-﻿// Copyright 2009-2015 Josh Close and Contributors
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// http://csvhelper.com
-using System;
-using System.Reflection;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts an <see cref="Enum"/> to and from a <see cref="string"/>.
+	/// Converts an <see cref="IEnumerable"/> to and from a <see cref="string"/>.
 	/// </summary>
-	public class EnumConverter : DefaultTypeConverter
-	{
-		private readonly Type type;
-
+    public class IEnumerableConverter : DefaultTypeConverter
+    {
 		/// <summary>
-		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="Type"/>.
+		/// Converts the object to a string.
 		/// </summary>
-		/// <param name="type">The type of the Enum.</param>
-		public EnumConverter( Type type )
+		/// <param name="value">The object to convert to a string.</param>
+		/// <param name="row"></param>
+		/// <param name="propertyMapData"></param>
+		/// <returns>The string representation of the object.</returns>
+		public override string ConvertToString( object value, ICsvWriterRow row, CsvPropertyMapData propertyMapData )
 		{
-			var isAssignableFrom = typeof( Enum ).GetTypeInfo().IsAssignableFrom( type.GetTypeInfo() );
-			if( !typeof( Enum ).IsAssignableFrom( type ) )
+			var list = value as IEnumerable;
+			if( list == null )
 			{
-				throw new ArgumentException( $"'{type.FullName}' is not an Enum." );
+				return base.ConvertToString( value, row, propertyMapData );
 			}
 
-			this.type = type;
+			foreach( var item in list )
+			{
+				row.WriteField( item.ToString() );
+			}
+
+			return null;
 		}
 
 		/// <summary>
@@ -39,14 +43,17 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			try
+			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+				? row.CurrentRecord.Length - 1
+				: propertyMapData.IndexEnd;
+
+			var list = new List<string>();
+			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 			{
-				return Enum.Parse( type, text, true );
+				list.Add( row.GetField( i ) );
 			}
-			catch
-			{
-				return base.ConvertFromString( text, row, propertyMapData );
-			}
+
+			return list;
 		}
 
 		/// <summary>

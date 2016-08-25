@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+using System.Collections.Generic;
 #if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,6 +19,8 @@ namespace CsvHelper
 	/// </summary>
 	internal static class ReflectionHelper
 	{
+		private static readonly Dictionary<int, Dictionary<Type, Delegate>> funcArgCache = new Dictionary<int, Dictionary<Type, Delegate>>();
+
 		/// <summary>
 		/// Creates an instance of type T.
 		/// </summary>
@@ -29,6 +32,7 @@ namespace CsvHelper
 #if NET_2_0
 			return Activator.CreateInstance<T>();
 #else
+
 			return (T)CreateInstance( typeof( T ), args );
 #endif
 		}
@@ -45,14 +49,21 @@ namespace CsvHelper
 			return Activator.CreateInstance( type, args );
 #else
 
-			var argumentTypes = args.Select( a => a.GetType() ).ToArray();
-			var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
-			var constructorInfo = type.GetConstructor( argumentTypes );
-			var constructor = Expression.New( constructorInfo, argumentExpressions );
-			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
+			Dictionary<Type, Delegate> funcCache;
+			if( !funcArgCache.TryGetValue( args.Length, out funcCache ) )
+			{
+				funcArgCache[args.Length] = funcCache = new Dictionary<Type, Delegate>();
+			}
+			
+			Delegate func;
+			if( !funcCache.TryGetValue( type, out func ) )
+			{
+				funcCache[type] = func = CreateInstanceDelegate( type, args );
+			}
+
 			try
 			{
-				return compiled.DynamicInvoke( args );
+				return func.DynamicInvoke( args );
 			}
 			catch( TargetInvocationException ex )
 			{
@@ -62,6 +73,18 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
+
+		private static Delegate CreateInstanceDelegate( Type type, params object[] args )
+		{
+			var argumentTypes = args.Select( a => a.GetType() ).ToArray();
+			var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
+			var constructorInfo = type.GetConstructor( argumentTypes );
+			var constructor = Expression.New( constructorInfo, argumentExpressions );
+			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
+
+			return compiled;
+		}
+
 		/// <summary>
 		/// Gets the first attribute of type T on property.
 		/// </summary>
@@ -156,6 +179,7 @@ namespace CsvHelper
 
 			return memberExpression;
 		}
+
 #endif
 	}
 }

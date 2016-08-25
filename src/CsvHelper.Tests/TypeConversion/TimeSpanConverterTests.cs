@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -20,20 +21,21 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new TimeSpanConverter();
-			var typeConverterOptions = new TypeConverterOptions
+			var propertyMapData = new CsvPropertyMapData( null )
 			{
-				CultureInfo = CultureInfo.CurrentCulture
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
 			var dateTime = DateTime.Now;
 			var timeSpan = new TimeSpan( dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond );
 
 			// Valid conversions.
-			Assert.AreEqual( timeSpan.ToString(), converter.ConvertToString( typeConverterOptions, timeSpan ) );
+			Assert.AreEqual( timeSpan.ToString(), converter.ConvertToString( timeSpan, null, propertyMapData ) );
 
 			// Invalid conversions.
-			Assert.AreEqual( "1", converter.ConvertToString( typeConverterOptions, 1 ) );
-			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( 1, null, propertyMapData ) );
+			Assert.AreEqual( "", converter.ConvertToString( null, null, propertyMapData ) );
 		}
 		
 		[TestMethod]
@@ -42,10 +44,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var converter = new TimeSpanConverter();
 			var cmConverter = new System.ComponentModel.TimeSpanConverter();
 
-			var typeConverterOptions = new TypeConverterOptions
-			{
-				CultureInfo = CultureInfo.CurrentCulture
-			};
+			var propertyMapData = new CsvPropertyMapData( null );
+			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			try
 			{
@@ -56,7 +56,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				var val = (DateTime)converter.ConvertFromString( typeConverterOptions, "" );
+				var val = (DateTime)converter.ConvertFromString( "", null, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException ) {}
@@ -70,7 +70,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				converter.ConvertFromString( typeConverterOptions, null );
+				converter.ConvertFromString( null, null, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException ) { }

@@ -4,21 +4,23 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts a Boolean to and from a string.
+	/// Converts a <see cref="bool"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class BooleanConverter : DefaultTypeConverter
 	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			bool b;
 			if( bool.TryParse( text, out b ) )
@@ -40,23 +42,23 @@ namespace CsvHelper.TypeConversion
 			}
 
 			var t = ( text ?? string.Empty ).Trim();
-			foreach( var trueValue in options.BooleanTrueValues )
+			foreach( var trueValue in propertyMapData.TypeConverterOptions.BooleanTrueValues )
 			{
-				if( options.CultureInfo.CompareInfo.Compare( trueValue, t, CompareOptions.IgnoreCase ) == 0 )
+				if( propertyMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( trueValue, t, CompareOptions.IgnoreCase ) == 0 )
 				{
 					return true;
 				}
 			}
 
-			foreach( var falseValue in options.BooleanFalseValues )
+			foreach( var falseValue in propertyMapData.TypeConverterOptions.BooleanFalseValues )
 			{
-				if( options.CultureInfo.CompareInfo.Compare( falseValue, t, CompareOptions.IgnoreCase ) == 0 )
+				if( propertyMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( falseValue, t, CompareOptions.IgnoreCase ) == 0 )
 				{
 					return false;
 				}
 			}
 
-			return base.ConvertFromString( options, text );
+			return base.ConvertFromString( text, row, propertyMapData );
 		}
 
 		/// <summary>
