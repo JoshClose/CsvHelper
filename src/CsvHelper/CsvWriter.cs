@@ -94,6 +94,25 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Writes a field that has already been converted to a
+		/// <see cref="string"/> from an <see cref="ITypeConverter"/>.
+		/// If the field is null, it won't get written. A type converter 
+		/// will always return a string, even if field is null. If the 
+		/// converter returns a null, it means that the converter has already
+		/// written data, and the returned value should not be written.
+		/// </summary>
+		/// <param name="field">The converted field to write.</param>
+		public virtual void WriteConvertedField( string field )
+		{
+			if( field == null )
+			{
+				return;
+			}
+
+			WriteField( field );
+		}
+
+		/// <summary>
 		/// Writes the field to the CSV file. The field
 		/// may get quotes added to it.
 		/// When all fields are written for a record,
@@ -146,15 +165,6 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			// Instead of throwing an exception or making it
-			// a string.Empty, don't write the field. This
-			// allow for converters to return null if they
-			// already wrote to the row.
-			if( field == null )
-			{
-				return;
-			}
-
             // All quotes must be doubled.       
 			if( shouldQuote && !string.IsNullOrEmpty( field ) )
 			{
@@ -185,16 +195,9 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( field == null || field is string )
-			{
-				WriteField( field as string );
-			}
-			else
-			{
-				var type = field.GetType();
-				var converter = TypeConverterFactory.GetConverter( type );
-				WriteField( field, converter );
-			}
+			var type = field == null ? typeof( string ) : field.GetType();
+			var converter = TypeConverterFactory.GetConverter( type );
+			WriteField( field, converter );
 		}
 
 		/// <summary>
@@ -210,21 +213,16 @@ namespace CsvHelper
 		{
 			CheckDisposed();
 
-			if( field == null )
-			{
-				WriteField( null );
-				return;
-			}
-
+			var type = field == null ? typeof( string ) : field.GetType();
 			var propertyMapData = new CsvPropertyMapData( null )
 			{
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( field.GetType() ) );
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( type ) );
 
 			var fieldString = converter.ConvertToString( field, this, propertyMapData );
-			WriteField( fieldString );
+			WriteConvertedField( fieldString );
 		}
 
 		/// <summary>
@@ -281,6 +279,7 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
+
 		/// <summary>
 		/// Writes the header record from the given properties.
 		/// </summary>
@@ -545,6 +544,7 @@ namespace CsvHelper
 
 			return null;
 		}
+
 #endif
 
 		/// <summary>
@@ -593,6 +593,7 @@ namespace CsvHelper
 		}
 
 #if !NET_2_0
+
 		/// <summary>
 		/// Gets the action delegate used to write the custom
 		/// class object to the writer.
@@ -701,7 +702,7 @@ namespace CsvHelper
 					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 				}
 
-				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
+				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
 
 				var actionType = typeof( Action<> ).MakeGenericType( type );
 				delegates.Add( Expression.Lambda( actionType, writeFieldMethodCall, recordParameter ).Compile() );
@@ -733,7 +734,7 @@ namespace CsvHelper
 			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, TypeConverterOptionsFactory.GetOptions( type ) );
 
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
-			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( string ) }, fieldExpression );
+			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
 
 			var actionType = typeof( Action<> ).MakeGenericType( type );
 			typeActions[type] = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
@@ -769,6 +770,8 @@ namespace CsvHelper
 				propertyMap.Data.Property.GetGetMethod( true ) == null;
 			return !cantWrite;
 		}
+
 #endif
-			}
+
+	}
 }

@@ -65,6 +65,31 @@ namespace CsvHelper.Tests.TypeConversion
 		}
 
 		[TestMethod]
+		public void FullReadTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "1,2,3" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.RegisterClassMap<TestMap>();
+				var records = csv.GetRecords<Test>().ToList();
+
+				var list = records[0].List.Cast<string>().ToList();
+
+				Assert.AreEqual( 3, list.Count );
+				Assert.AreEqual( "1", list[0] );
+				Assert.AreEqual( "2", list[1] );
+				Assert.AreEqual( "3", list[2] );
+			}
+		}
+
+		[TestMethod]
 		public void FullWriteTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -90,6 +115,14 @@ namespace CsvHelper.Tests.TypeConversion
 		private class Test
 		{
 			public IEnumerable List { get; set; }
+		}
+
+		private sealed class TestMap : CsvClassMap<Test>
+		{
+			public TestMap()
+			{
+				Map( m => m.List ).Index( 0 );
+			}
 		}
 	}
 }

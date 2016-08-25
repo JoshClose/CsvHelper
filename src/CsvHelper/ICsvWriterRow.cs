@@ -4,8 +4,22 @@ using CsvHelper.TypeConversion;
 
 namespace CsvHelper
 {
+	/// <summary>
+	/// Defines methods used to write a CSV row.
+	/// </summary>
     public interface ICsvWriterRow
-    {
+	{
+		/// <summary>
+		/// Writes a field that has already been converted to a
+		/// <see cref="string"/> from an <see cref="ITypeConverter"/>.
+		/// If the field is null, it won't get written. A type converter 
+		/// will always return a string, even if field is null. If the 
+		/// converter returns a null, it means that the converter has already
+		/// written data, and the returned value should not be written.
+		/// </summary>
+		/// <param name="field">The converted field to write.</param>
+		void WriteConvertedField( string field );
+
 		/// <summary>
 		/// Writes the field to the CSV file. The field
 		/// may get quotes added to it.
