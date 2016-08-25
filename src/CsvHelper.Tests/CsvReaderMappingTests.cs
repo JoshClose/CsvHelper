@@ -101,6 +101,28 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void ConvertUsingContravarianceTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue( new string[] { "1", "2" } );
+			queue.Enqueue( null );
+
+			var parserMock = new ParserMock( queue );
+
+			var csvReader = new CsvReader( parserMock );
+			csvReader.Configuration.HasHeaderRecord = false;
+
+			try
+			{
+				csvReader.Configuration.RegisterClassMap<ContravarianceClassMap>();
+				Assert.Fail();
+			}
+			catch( CsvConfigurationException )
+			{
+			}
+		}
+
+		[TestMethod]
 		public void ConvertUsingBlockTest()
 		{
 			var queue = new Queue<string[]>();
@@ -172,6 +194,19 @@ namespace CsvHelper.Tests
 			public CovarianceClassMap()
 			{
 				Map( m => m.Id ).ConvertUsing( row => row.GetField<int>( 0 ) );
+			}
+		}
+
+		private class ContravarianceClass
+		{
+			public int Id { get; set; }
+		}
+
+		private sealed class ContravarianceClassMap : CsvClassMap<ContravarianceClass>
+		{
+			public ContravarianceClassMap()
+			{
+				Map( m => m.Id ).ConvertUsing( row => row.GetField<int?>( 0 ) );
 			}
 		}
 

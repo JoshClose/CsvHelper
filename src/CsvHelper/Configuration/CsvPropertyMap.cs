@@ -149,6 +149,12 @@ namespace CsvHelper.Configuration
 		/// <param name="convertExpression">The convert expression.</param>
 		public virtual CsvPropertyMap ConvertUsing<T>( Func<ICsvReaderRow, T> convertExpression )
 		{
+			var returnType = typeof( T );
+			if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+			{
+				throw new CsvConfigurationException( $"ConvertUsing return type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+			}
+
 			Data.ConvertExpression = (Expression<Func<ICsvReaderRow, T>>)( x => convertExpression( x ) );
 			return this;
 		}
