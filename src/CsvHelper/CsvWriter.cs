@@ -12,9 +12,15 @@ using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
+using System.Runtime.CompilerServices;
 #if !NET_2_0
 using System.Linq.Expressions;
 #endif
+#if !NET_2_0 && !NET_3_5 && !PCL
+using System.Dynamic;
+using Microsoft.CSharp.RuntimeBinder;
+#endif
+
 #pragma warning disable 649
 #pragma warning disable 169
 
@@ -303,7 +309,7 @@ namespace CsvHelper
 
 			if( type == null )
 			{
-				throw new ArgumentNullException( "type" );
+				throw new ArgumentNullException( nameof( type ) );
 			}
 
 			if( !configuration.HasHeaderRecord )
@@ -347,6 +353,51 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
+#if !NET_2_0 && !NET_3_5 && !PCL
+
+		/// <summary>
+		/// Writes the header record for the given dynamic object.
+		/// </summary>
+		/// <param name="record">The dynamic record to write.</param>
+		public virtual void WriteDynamicHeader( IDynamicMetaObjectProvider record )
+		{
+			CheckDisposed();
+
+			if( record == null )
+			{
+				throw new ArgumentNullException( nameof( record ) );
+			}
+
+			if( !configuration.HasHeaderRecord )
+			{
+				throw new CsvWriterException( "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
+			}
+
+			if( hasHeaderBeenWritten )
+			{
+				throw new CsvWriterException( "The header record has already been written. You can't write it more than once." );
+			}
+
+			if( hasRecordBeenWritten )
+			{
+				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
+			}
+
+			var provider = (IDynamicMetaObjectProvider)record;
+			var metaObject = provider.GetMetaObject( Expression.Constant( provider ) );
+			var names = metaObject.GetDynamicMemberNames();
+			foreach( var name in names )
+			{
+				WriteField( name );
+			}
+
+			NextRecord();
+
+			hasHeaderBeenWritten = true;
+		}
+
+#endif
+
 		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
@@ -355,6 +406,22 @@ namespace CsvHelper
 		public virtual void WriteRecord<T>( T record )
 		{
 			CheckDisposed();
+
+#if !NET_2_0 && !NET_3_5 && !PCL
+			var dynamicRecord = record as IDynamicMetaObjectProvider;
+			if( dynamicRecord != null )
+			{
+				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
+				{
+					WriteDynamicHeader( dynamicRecord );
+				}
+
+				if( !typeActions.ContainsKey( dynamicRecord.GetType() ) )
+				{
+					CreateActionForDynamic( dynamicRecord );
+				}
+			}
+#endif
 
 			try
 			{
@@ -401,14 +468,35 @@ namespace CsvHelper
 
 				foreach( var record in records )
 				{
-					// If records is a List<dynamic>, the header hasn't been written yet.
-					// Write the header based on the record type.
 					recordType = record.GetType();
-					var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
-					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive )
+
+#if !NET_2_0 && !NET_3_5 && !PCL
+					var dynamicObject = record as IDynamicMetaObjectProvider;
+					if( dynamicObject != null )
 					{
-						WriteHeader( recordType );
+						if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
+						{
+							WriteDynamicHeader( dynamicObject );
+						}
+
+						if( !typeActions.ContainsKey( recordType ) )
+						{
+							CreateActionForDynamic( dynamicObject );
+						}
 					}
+					else
+					{
+#endif
+						// If records is a List<dynamic>, the header hasn't been written yet.
+						// Write the header based on the record type.
+						var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
+						if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive )
+						{
+							WriteHeader( recordType );
+						}
+#if !NET_2_0 && !NET_3_5 && !PCL
+					}
+#endif
 
 					try
 					{
@@ -550,9 +638,9 @@ namespace CsvHelper
 #endif
 
 		/// <summary>
-				/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-				/// </summary>
-				/// <filterpriority>2</filterpriority>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
 			Dispose( true );
@@ -605,7 +693,10 @@ namespace CsvHelper
 		protected virtual Action<T> GetWriteRecordAction<T>()
 		{
 			var type = typeof( T );
-			CreateWriteRecordAction( type );
+			if( !typeActions.ContainsKey( type ) )
+			{
+				CreateWriteRecordAction( type );
+			}
 
 			return (Action<T>)typeActions[type];
 		}
@@ -618,7 +709,10 @@ namespace CsvHelper
 		/// <returns>The action delegate.</returns>
 		protected virtual Delegate GetWriteRecordAction( Type type )
 		{
-			CreateWriteRecordAction( type );
+			if( !typeActions.ContainsKey( type ) )
+			{
+				CreateWriteRecordAction( type );
+			}
 
 			return typeActions[type];
 		}
@@ -630,11 +724,6 @@ namespace CsvHelper
 		/// <param name="type">The type of the custom class being written.</param>
 		protected virtual void CreateWriteRecordAction( Type type )
 		{
-			if( typeActions.ContainsKey( type ) )
-			{
-				return;
-			}
-
 			if( configuration.Maps[type] == null )
 			{
 				// We need to check again in case the header was not written.
@@ -741,6 +830,36 @@ namespace CsvHelper
 			var actionType = typeof( Action<> ).MakeGenericType( type );
 			typeActions[type] = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
 		}
+
+#if !NET_2_0 && !NET_3_5 && !PCL
+
+		/// <summary>
+		/// Creates the action for a dynamic object.
+		/// </summary>
+		/// <param name="provider">The dynamic object.</param>
+		protected virtual void CreateActionForDynamic( IDynamicMetaObjectProvider provider )
+		{
+			var type = provider.GetType();
+			var parameterExpression = Expression.Parameter( typeof( object ), "record" );
+
+			var metaObject = provider.GetMetaObject( parameterExpression );
+			var propertyNames = metaObject.GetDynamicMemberNames();
+
+			var delegates = new List<Delegate>();
+			foreach( var propertyName in propertyNames )
+			{
+				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
+				var getMemberMetaObject = metaObject.BindGetMember( getMemberBinder );
+				var fieldExpression = Expression.Block( Expression.Label( CallSiteBinder.UpdateLabel ), getMemberMetaObject.Expression );
+				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( object ) }, fieldExpression );
+				var lambda = Expression.Lambda( writeFieldMethodCall, parameterExpression );
+				delegates.Add( lambda.Compile() );
+			}
+
+			typeActions[type] = CombineDelegates( delegates );
+		}
+
+#endif
 
 		/// <summary>
 		/// Combines the delegates into a single multicast delegate.

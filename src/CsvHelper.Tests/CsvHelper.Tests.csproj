@@ -122,6 +122,7 @@
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterOptionsFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterTests.cs" />
+    <Compile Include="Writing\DynamicTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CsvHelper.snk" />
@@ -136,9 +137,7 @@
       <Name>CsvHelperNCrunch</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Writing\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
