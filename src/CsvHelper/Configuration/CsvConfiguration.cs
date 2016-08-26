@@ -414,7 +414,7 @@ namespace CsvHelper.Configuration
 		/// should be ignored. True to ignore exceptions,
 		/// otherwise false. Default is false.
 		/// This is only applicable when during
-		/// <see cref="ICsvReaderRow.GetRecords{T}"/>.
+		/// <see cref="ICsvReader.GetRecords{T}"/>.
 		/// </summary>
 		public virtual bool IgnoreReadingExceptions { get; set; }
 
@@ -422,7 +422,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the callback that is called when a reading
 		/// exception occurs. This will only happen when
 		/// <see cref="IgnoreReadingExceptions"/> is true, and when
-		/// calling <see cref="ICsvReaderRow.GetRecords{T}"/>.
+		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
 		/// </summary>
 		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
 

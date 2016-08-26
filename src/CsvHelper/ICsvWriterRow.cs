@@ -24,7 +24,7 @@ namespace CsvHelper
 		/// Writes the field to the CSV file. The field
 		/// may get quotes added to it.
 		/// When all fields are written for a record,
-		/// <see cref="NextRecord()" /> must be called
+		/// <see cref="ICsvWriter.NextRecord()" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
@@ -37,7 +37,7 @@ namespace CsvHelper
 		/// and just quote based on the shouldQuote
 		/// parameter.
 		/// When all fields are written for a record,
-		/// <see cref="NextRecord()" /> must be called
+		/// <see cref="ICsvWriter.NextRecord()" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
@@ -47,7 +47,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the field to the CSV file.
 		/// When all fields are written for a record,
-		/// <see cref="NextRecord()" /> must be called
+		/// <see cref="ICsvWriter.NextRecord()" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>
@@ -69,7 +69,7 @@ namespace CsvHelper
 		/// Writes the field to the CSV file
 		/// using the given <see cref="ITypeConverter"/>.
 		/// When all fields are written for a record,
-		/// <see cref="NextRecord()" /> must be called
+		/// <see cref="ICsvWriter.NextRecord()" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>

@@ -119,7 +119,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the constructor <see cref="NewExpression"/> from the give <see cref="Expression"/>.
 		/// </summary>
-		/// <typeparam name="T">The <see cref="Type"/> of the object that will be constructed.</typeparam>
+		/// <typeparam name="T">The <see cref="System.Type"/> of the object that will be constructed.</typeparam>
 		/// <param name="expression">The constructor <see cref="Expression"/>.</param>
 		/// <returns>A constructor <see cref="NewExpression"/>.</returns>
 		/// <exception cref="System.ArgumentException">Not a constructor expression.;expression</exception>

@@ -15,6 +15,8 @@ using System.Linq;
 #if !NET_2_0
 using System.Linq.Expressions;
 #endif
+#pragma warning disable 649
+#pragma warning disable 169
 
 namespace CsvHelper
 {
@@ -428,7 +430,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ICsvWriter.ClearRecordCache{T}"/> needs to be called to update the
@@ -443,7 +445,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ICsvWriter.ClearRecordCache(System.Type)"/> needs to be called to update the
@@ -458,7 +460,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Clears the record cache for all types. After <see cref="ICsvWriter.WriteRecord{T}"/> is called the
+		/// Clears the record cache for all types. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ICsvWriter.ClearRecordCache()"/> needs to be called to update the

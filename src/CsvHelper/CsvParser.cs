@@ -184,6 +184,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="recordPosition">The record position to add the field to.</param>
 		/// <param name="field">The field to add.</param>
+		/// <param name="fieldIsBad">A value indicating if the field is bad.</param>
 		protected virtual void AddFieldToRecord( ref int recordPosition, string field, ref bool fieldIsBad )
 		{
 			if( record.Length < recordPosition + 1 )
@@ -528,12 +529,15 @@ namespace CsvHelper
 		/// <param name="fieldStartPosition">The start position of the current field.</param>
 		/// <param name="rawFieldStartPosition">The start position of the raw field.</param>
 		/// <param name="field">The field.</param>
+		/// <param name="fieldIsBad">A value indicating if the field is bad.</param>
 		/// <param name="prevCharWasDelimiter">A value indicating if the previous char read was a delimiter.</param>
 		/// <param name="recordPosition">The position in the record we are currently at.</param>
 		/// <param name="fieldLength">The length of the field in the buffer.</param>
 		/// <param name="inComment">A value indicating if the row is current a comment row.</param>
+		/// <param name="inQuotes">A value indicating if the parser is currently inside quotes.</param>
 		/// <param name="isPeek">A value indicating if this call is a peek. If true and the end of the record was found
 		/// no record handling will be done.</param>
+		/// <param name="inDelimiter">A value indicating if the parser is currently in a delimiter.</param>
 		/// <returns>A value indicating if read a char was read. True if a char was read, otherwise false.</returns>
 		protected bool GetChar( out char ch, ref int fieldStartPosition, ref int rawFieldStartPosition, ref string field, ref bool fieldIsBad, bool prevCharWasDelimiter, ref int recordPosition, ref int fieldLength, bool inComment, bool inDelimiter, bool inQuotes, bool isPeek )
 		{

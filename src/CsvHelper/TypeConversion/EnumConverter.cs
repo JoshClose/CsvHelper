@@ -16,7 +16,7 @@ namespace CsvHelper.TypeConversion
 		private readonly Type type;
 
 		/// <summary>
-		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="Type"/>.
+		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type of the Enum.</param>
 		public EnumConverter( Type type )

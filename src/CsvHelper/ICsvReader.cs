@@ -63,7 +63,7 @@ namespace CsvHelper
 		IEnumerable<object> GetRecords( Type type );
 
 		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="GetRecord{T}"/> is called the
+		/// Clears the record cache for the given type. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
 		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
 		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
 		/// changes, <see cref="ClearRecordCache{T}"/> needs to be called to update the

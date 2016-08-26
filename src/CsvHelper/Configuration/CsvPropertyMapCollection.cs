@@ -207,7 +207,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Finds the <see cref="CsvPropertyMap"/> using the given property expression.
 		/// </summary>
-		/// <typeparam name="T">The <see cref="Type"/> the property is on.</typeparam>
+		/// <typeparam name="T">The <see cref="System.Type"/> the property is on.</typeparam>
 		/// <param name="expression">The property expression.</param>
 		/// <returns>The <see cref="CsvPropertyMap"/> for the given expression, or null if not found.</returns>
 		public virtual CsvPropertyMap Find<T>( Expression<Func<T, object>> expression )

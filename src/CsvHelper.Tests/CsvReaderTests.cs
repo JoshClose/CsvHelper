@@ -16,6 +16,7 @@ using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#pragma warning disable 649
 #endif
 
 namespace CsvHelper.Tests

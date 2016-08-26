@@ -27,7 +27,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type the converter converts.</param>
 		/// <param name="typeConverter">The type converter that converts the type.</param>
@@ -50,7 +50,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <typeparam name="T">The type the converter converts.</typeparam>
 		/// <param name="typeConverter">The type converter that converts the type.</param>
@@ -68,7 +68,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type to remove the converter for.</param>
 		public static void RemoveConverter( Type type )
@@ -85,7 +85,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="Type"/>.
+		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <typeparam name="T">The type to remove the converter for.</typeparam>
 		public static void RemoveConverter<T>()
@@ -94,10 +94,10 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Gets the converter for the given <see cref="Type"/>.
+		/// Gets the converter for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type to get the converter for.</param>
-		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="Type"/>.</returns>
+		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.</returns>
 		public static ITypeConverter GetConverter( Type type )
 		{
 			if( type == null )
@@ -172,10 +172,10 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Gets the converter for the given <see cref="Type"/>.
+		/// Gets the converter for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <typeparam name="T">The type to get the converter for.</typeparam>
-		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="Type"/>.</returns>
+		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.</returns>
 		public static ITypeConverter GetConverter<T>()
 		{
 			return GetConverter( typeof( T ) );

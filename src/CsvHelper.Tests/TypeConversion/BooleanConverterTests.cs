@@ -74,7 +74,7 @@ namespace CsvHelper.Tests.TypeConversion
 				converter.ConvertFromString( null, null, propertyMapData );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ex )
+			catch( CsvTypeConverterException )
 			{
 			}
 		}

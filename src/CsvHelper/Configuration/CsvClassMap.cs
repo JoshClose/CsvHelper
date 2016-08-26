@@ -117,6 +117,7 @@ namespace CsvHelper.Configuration
 		/// get prefixed by the parent property name.
 		/// True to prefix, otherwise false.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
+		/// <param name="indexStart">The index starting point.</param>
 		internal static void AutoMapInternal( CsvClassMap map, bool ignoreReferences, bool prefixReferenceHeaders, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];

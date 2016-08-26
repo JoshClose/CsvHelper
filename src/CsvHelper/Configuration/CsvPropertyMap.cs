@@ -4,6 +4,7 @@
 // http://csvhelper.com
 #if !NET_2_0
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -80,6 +81,7 @@ namespace CsvHelper.Configuration
 		/// indexes.
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
+		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property.</param>
 		public virtual CsvPropertyMap Index( int index, int indexEnd = -1 )
 		{
 			Data.Index = index;
@@ -133,7 +135,7 @@ namespace CsvHelper.Configuration
 		/// Specifies the <see cref="TypeConverter"/> to use
 		/// when converting the property to and from a CSV field.
 		/// </summary>
-		/// <typeparam name="T">The <see cref="Type"/> of the 
+		/// <typeparam name="T">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
 		public virtual CsvPropertyMap TypeConverter<T>() where T : ITypeConverter
 		{
