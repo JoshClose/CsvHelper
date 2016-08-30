@@ -23,6 +23,22 @@ namespace CsvHelper.Configuration
 		private readonly IComparer<CsvPropertyMap> comparer;
 
 		/// <summary>
+		/// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </summary>
+		/// <returns>
+		/// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+		/// </returns>
+		public virtual int Count => list.Count;
+
+		/// <summary>
+		/// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
+		/// </summary>
+		/// <returns>
+		/// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
+		/// </returns>
+		public virtual bool IsReadOnly => false;
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyMapCollection"/> class.
 		/// </summary>
 		public CsvPropertyMapCollection() : this( new CsvPropertyMapComparer() ) {}
@@ -129,28 +145,6 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
-		/// </summary>
-		/// <returns>
-		/// The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
-		/// </returns>
-		public virtual int Count
-		{
-			get { return list.Count; }
-		}
-
-		/// <summary>
-		/// Gets a value indicating whether the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
-		/// </summary>
-		/// <returns>
-		/// true if the <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only; otherwise, false.
-		/// </returns>
-		public virtual bool IsReadOnly
-		{
-			get { return false; }
-		}
-
-		/// <summary>
 		/// Determines the index of a specific item in the <see cref="T:System.Collections.Generic.IList`1"/>.
 		/// </summary>
 		/// <returns>
@@ -213,9 +207,24 @@ namespace CsvHelper.Configuration
 		public virtual CsvPropertyMap Find<T>( Expression<Func<T, object>> expression )
 		{
 			var property = ReflectionHelper.GetProperty( expression );
+			return Find( property );
+		}
 
-			var existingMap = list.SingleOrDefault( m => m.Data.Property == property ||
-				m.Data.Property.Name == property.Name && ( m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) || property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType ) ) );
+		/// <summary>
+		/// Finds the <see cref="CsvPropertyMap"/> using the given property.
+		/// </summary>
+		/// <param name="property">The property.</param>
+		/// <returns>The <see cref="CsvPropertyMap"/> for the given expression, or null if not found.</returns>
+		public virtual CsvPropertyMap Find( PropertyInfo property )
+		{
+			var existingMap = list.SingleOrDefault( m =>
+				m.Data.Property == property ||
+				m.Data.Property.Name == property.Name &&
+				(
+					m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) ||
+					property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType )
+				)
+			);
 
 			return existingMap;
 		}

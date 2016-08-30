@@ -142,7 +142,7 @@ namespace CsvHelper
 		/// <returns>The <see cref="PropertyInfo"/> for the expression.</returns>
 		public static PropertyInfo GetProperty<TModel>( Expression<Func<TModel, object>> expression )
 		{
-			var member = GetMemberExpression( expression ).Member;
+			var member = GetMemberExpression( expression.Body ).Member;
 			var property = member as PropertyInfo;
 			if( property == null )
 			{
@@ -152,34 +152,53 @@ namespace CsvHelper
 			return property;
 		}
 
+		public static Stack<PropertyInfo> GetProperties<TModel>( Expression<Func<TModel, object>> expression )
+		{
+			var stack = new Stack<PropertyInfo>();
+
+			var currentExpression = expression.Body;
+			while( true )
+			{
+				var memberExpression = GetMemberExpression( currentExpression );
+				if( memberExpression == null )
+				{
+					break;
+				}
+
+				var propertyInfo = memberExpression.Member as PropertyInfo;
+				if( propertyInfo == null )
+				{
+					throw new CsvConfigurationException( $"Member '{memberExpression.Member.Name}' is not a Property." );
+				}
+
+				stack.Push( propertyInfo );
+				currentExpression = memberExpression.Expression;
+			}
+
+			return stack;
+		}
+
 		/// <summary>
 		/// Gets the member expression.
 		/// </summary>
-		/// <typeparam name="TModel">The type of the model.</typeparam>
-		/// <typeparam name="T"></typeparam>
 		/// <param name="expression">The expression.</param>
 		/// <returns></returns>
-		private static MemberExpression GetMemberExpression<TModel, T>( Expression<Func<TModel, T>> expression )
+		private static MemberExpression GetMemberExpression( Expression expression )
 		{
 			MemberExpression memberExpression = null;
-			if( expression.Body.NodeType == ExpressionType.Convert )
+			if( expression.NodeType == ExpressionType.Convert )
 			{
-				var body = (UnaryExpression)expression.Body;
+				var body = (UnaryExpression)expression;
 				memberExpression = body.Operand as MemberExpression;
 			}
-			else if( expression.Body.NodeType == ExpressionType.MemberAccess )
+			else if( expression.NodeType == ExpressionType.MemberAccess )
 			{
-				memberExpression = expression.Body as MemberExpression;
-			}
-
-			if( memberExpression == null )
-			{
-				throw new ArgumentException( "Not a member access", nameof( expression ) );
+				memberExpression = expression as MemberExpression;
 			}
 
 			return memberExpression;
 		}
-
+		
 #endif
 	}
 }

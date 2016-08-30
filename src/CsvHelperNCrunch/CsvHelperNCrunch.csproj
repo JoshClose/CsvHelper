@@ -78,6 +78,9 @@
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMap.cs">
       <Link>Configuration\CsvPropertyReferenceMap.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMapCollection.cs">
+      <Link>Configuration\CsvPropertyReferenceMapCollection.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvPropertyReferenceMapData.cs">
       <Link>Configuration\CsvPropertyReferenceMapData.cs</Link>
     </Compile>

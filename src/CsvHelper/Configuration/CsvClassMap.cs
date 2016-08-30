@@ -18,9 +18,6 @@ namespace CsvHelper.Configuration
 	///</summary>
 	public abstract class CsvClassMap
 	{
-		private readonly CsvPropertyMapCollection propertyMaps = new CsvPropertyMapCollection();
-		private readonly List<CsvPropertyReferenceMap> referenceMaps = new List<CsvPropertyReferenceMap>();
-
 		/// <summary>
 		/// Gets the constructor expression.
 		/// </summary>
@@ -29,23 +26,66 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// The class property mappings.
 		/// </summary>
-		public virtual CsvPropertyMapCollection PropertyMaps
-		{
-			get { return propertyMaps; }
-		}
+		public virtual CsvPropertyMapCollection PropertyMaps { get; } = new CsvPropertyMapCollection();
 
 		/// <summary>
 		/// The class property reference mappings.
 		/// </summary>
-		public virtual List<CsvPropertyReferenceMap> ReferenceMaps
-		{
-			get { return referenceMaps; }
-		}
+		public virtual CsvPropertyReferenceMapCollection ReferenceMaps { get; } = new CsvPropertyReferenceMapCollection();
 
 		/// <summary>
 		/// Allow only internal creation of CsvClassMap.
 		/// </summary>
 		internal CsvClassMap() {}
+
+		/// <summary>
+		/// Maps a property to a CSV field.
+		/// </summary>
+		/// <param name="property">The property to map.</param>
+		/// <returns>The property mapping.</returns>
+		public virtual CsvPropertyMap Map( PropertyInfo property )
+		{
+			var existingMap = PropertyMaps.Find( property );
+			if( existingMap != null )
+			{
+				return existingMap;
+			}
+
+			var propertyMap = new CsvPropertyMap( property );
+			propertyMap.Data.Index = GetMaxIndex() + 1;
+			PropertyMaps.Add( propertyMap );
+
+			return propertyMap;
+		}
+
+		/// <summary>
+		/// Maps a property to another class map.
+		/// </summary>
+		/// <param name="classMapType">The type of the class map.</param>
+		/// <param name="property">The property.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
+		/// <returns>The reference mapping for the property.</returns>
+		public virtual CsvPropertyReferenceMap References( Type classMapType, PropertyInfo property, params object[] constructorArgs )
+		{
+			if( !typeof( CsvClassMap ).IsAssignableFrom( classMapType ) )
+			{
+				throw new InvalidOperationException( $"Argument {nameof( classMapType )} is not a CsvClassMap." );
+			}
+
+			var existingMap = ReferenceMaps.Find( property );
+
+			if( existingMap != null )
+			{
+				return existingMap;
+			}
+
+			var map = (CsvClassMap)ReflectionHelper.CreateInstance( classMapType, constructorArgs );
+			map.ReIndex( GetMaxIndex() + 1 );
+			var reference = new CsvPropertyReferenceMap( property, map );
+			ReferenceMaps.Add( reference );
+
+			return reference;
+		}
 
 		/// <summary>
 		/// Auto maps all properties for the given type. If a property
