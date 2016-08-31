@@ -1,6 +1,6 @@
 {
 	"title": "CsvHelper",
-	"version": "2.16.0.0",
+	"version": "2.16.1.0",
 	"authors": [ "Josh Close" ],
 	"copyright": "Copyright © 2009-2016 Josh Close and Contributors",
 	"description": "A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.",
@@ -20,31 +20,26 @@
 	"frameworks": {
 		"net20": {
 			"buildOptions": {
-				"debugType": "full",
 				"define": [ "NET_2_0" ]
 			}
 		},
 		"net35": {
 			"buildOptions": {
-				"debugType": "full",
 				"define": [ "NET_3_5" ]
 			}
 		},
 		"net40": {
 			"buildOptions": {
-				"debugType": "full",
 				"define": [ "NET_4_0" ]
 			}
 		},
 		"net45": {
 			"buildOptions": {
-				"debugType": "full",
 				"define": [ "NET_4_5" ]
 			}
 		},
 		".NETPortable,Version=4.0,Profile=Profile328": {
 			"buildOptions": {
-				"debugType": "portable",
 				"define": [ "PCL" ]
 			},
 			"frameworkAssemblies": {
@@ -55,7 +50,6 @@
 		},
 		"netstandard1.3": {
 			"buildOptions": {
-				"debugType": "portable",
 				"define": [ "COREFX" ]
 			},
 			"dependencies": {
