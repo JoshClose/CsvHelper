@@ -439,25 +439,28 @@ namespace CsvHelper
 
 						inDelimiter = true;
 					}
-					
-					if( delimiterPosition == configuration.Delimiter.Length - 1 )
-					{
-						// We are done reading the delimeter.
 
-						// Include the delimiter in the byte count.
-						UpdateBytePosition( fieldStartPosition, readerBufferPosition - fieldStartPosition );
-						inDelimiter = false;
-						prevCharWasDelimiter = true;
-						fieldStartPosition = readerBufferPosition;
-					}
-					else if( configuration.Delimiter[delimiterPosition] != c )
-					{
-						// We're not actually in a delimiter. Reset things back
-						// to the previous field.
-						recordPosition--;
-						fieldStartPosition -= ( delimiterPosition + 1 );
-						inDelimiter = false;
-					}
+                    if (configuration.Delimiter[delimiterPosition] != c)
+                    {
+                        // We're not actually in a delimiter. Reset things back
+                        // to the previous field.
+                        recordPosition--;
+
+                        //rewind correctly to start of field
+                        fieldStartPosition -= (1 + record[recordPosition].Length);
+                        inDelimiter = false;
+                    }
+
+                    else if (delimiterPosition == configuration.Delimiter.Length - 1)
+                    {
+                        // We are done reading the delimeter.
+
+                        // Include the delimiter in the byte count.
+                        UpdateBytePosition(fieldStartPosition, readerBufferPosition - fieldStartPosition);
+                        inDelimiter = false;
+                        prevCharWasDelimiter = true;
+                        fieldStartPosition = readerBufferPosition;
+                    }
 					else
 					{
 						delimiterPosition++;

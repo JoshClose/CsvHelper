@@ -122,6 +122,40 @@ namespace CsvHelper.Tests
 			}
 		}
 
+        [TestMethod]
+        public void MultipleCharDelimiterSameCharacterTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new CsvParser(reader))
+            {
+                writer.WriteLine("1|||2||||3");
+                writer.WriteLine("4||5|||6");
+                writer.Flush();
+                stream.Position = 0;
+
+                parser.Configuration.Delimiter = "|||";
+                parser.Configuration.HasHeaderRecord = false;
+
+                var row = parser.Read();
+                Assert.IsNotNull(row);
+                Assert.AreEqual(3, row.Length);
+                Assert.AreEqual("1", row[0]);
+                Assert.AreEqual("2", row[1]);
+                Assert.AreEqual("|3", row[2]);
+
+                row = parser.Read();
+                Assert.IsNotNull(row);
+                Assert.AreEqual(3, row.Length);
+                Assert.AreEqual("4||5", row[0]);
+                Assert.AreEqual("6", row[1]);
+
+                row = parser.Read();
+                Assert.IsNull(row);
+            }
+        }
+
 		[TestMethod]
 		public void AllFieldsEmptyTest()
 		{
