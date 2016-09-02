@@ -44,29 +44,5 @@ namespace CsvHelper.TypeConversion
 												 "If you want to do this, create your own ITypeConverter and register " +
 												 "it in the TypeConverterFactory by calling AddConverter." );
 		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( Type type )
-		{
-			return true;
-		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert to] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert to] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertTo( Type type )
-		{
-			return true;
-		}
 	}
 }

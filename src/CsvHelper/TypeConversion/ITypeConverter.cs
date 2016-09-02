@@ -30,23 +30,5 @@ namespace CsvHelper.TypeConversion
 		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
 		/// <returns>The object created from the string.</returns>
 		object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData );
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		bool CanConvertFrom( Type type );
-
-		/// <summary>
-		/// Determines whether this instance [can convert to] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert to] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		bool CanConvertTo( Type type );
 	}
 }

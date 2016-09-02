@@ -767,7 +767,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( propertyMap.Data.TypeConverter == null || !propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) )
+				if( propertyMap.Data.TypeConverter == null )
 				{
 					// Skip if the type isn't convertible.
 					continue;

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -55,19 +52,6 @@ namespace CsvHelper.TypeConversion
 			}
 
 			return dictionary;
-		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( Type type )
-		{
-			// We only care about strings.
-			return type == typeof( string );
 		}
 	}
 }

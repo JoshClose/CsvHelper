@@ -1158,11 +1158,6 @@ namespace CsvHelper.Tests
 			{
 				return "test";
 			}
-
-			public override bool CanConvertFrom( Type type )
-			{
-				return type == typeof( string );
-			}
 		}
 	}
 }

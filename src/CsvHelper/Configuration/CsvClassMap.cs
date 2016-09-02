@@ -217,8 +217,7 @@ namespace CsvHelper.Configuration
 				{
 					var propertyMap = new CsvPropertyMap( property );
 					propertyMap.Data.Index = map.GetMaxIndex() + 1;
-					if( propertyMap.Data.TypeConverter.CanConvertFrom( typeof( string ) ) ||
-						propertyMap.Data.TypeConverter.CanConvertTo( typeof( string ) ) && !isDefaultConverter )
+					if( !isDefaultConverter )
 					{
 						// Only add the property map if it can be converted later on.
 						// If the property will use the default converter, don't add it because

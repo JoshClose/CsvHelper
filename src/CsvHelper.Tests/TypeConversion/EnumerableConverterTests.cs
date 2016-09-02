@@ -28,8 +28,6 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			Assert.IsTrue( converter.CanConvertFrom( typeof( string ) ) );
-			Assert.IsTrue( converter.CanConvertTo( typeof( string ) ) );
 			try
 			{
 				converter.ConvertFromString( "", null, propertyMapData );

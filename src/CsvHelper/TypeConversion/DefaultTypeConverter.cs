@@ -47,32 +47,5 @@ namespace CsvHelper.TypeConversion
 		{
 			throw new CsvTypeConverterException( "The conversion cannot be performed." );
 		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public virtual bool CanConvertFrom( Type type )
-		{
-			// The default convert doesn't know how to
-			// convert from any type.
-			return false;
-		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert to] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert to] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public virtual bool CanConvertTo( Type type )
-		{
-			// We only care about strings.
-			return type == typeof( string );
-		}
 	}
 }

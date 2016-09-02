@@ -28,18 +28,5 @@ namespace CsvHelper.TypeConversion
 
 			return text;
 		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( System.Type type )
-		{
-			// We only care about strings.
-			return type == typeof( string );
-		}
 	}
 }
