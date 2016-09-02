@@ -204,6 +204,12 @@
     <Compile Include="..\CsvHelper\TypeConversion\GuidConverter.cs">
       <Link>TypeConversion\GuidConverter.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\IDictionaryConverter.cs">
+      <Link>TypeConversion\IDictionaryConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\TypeConversion\IDictionaryGenericConverter.cs">
+      <Link>TypeConversion\IDictionaryGenericConverter.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\TypeConversion\IEnumerableConverter.cs">
       <Link>TypeConversion\IEnumerableConverter.cs</Link>
     </Compile>

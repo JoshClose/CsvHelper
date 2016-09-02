@@ -183,19 +183,6 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.IsInstanceOfType( converter, typeof( EnumConverter ) );
 		}
 
-		[TestMethod]
-		public void GetConverterForEnumerableTypesTest()
-		{
-			var converter = TypeConverterFactory.GetConverter( typeof( IDictionary ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( Dictionary<int, string> ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( Array ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-		}
-
 		private class TestListConverter : DefaultTypeConverter
 		{
 		}

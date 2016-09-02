@@ -132,6 +132,18 @@ namespace CsvHelper.TypeConversion
 				return GetConverter( type );
 			}
 
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( Dictionary<,> ) )
+			{
+				AddConverter( type, new IDictionaryGenericConverter() );
+				return GetConverter( type );
+			}
+
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( IDictionary<,> ) )
+			{
+				AddConverter( type, new IDictionaryGenericConverter() );
+				return GetConverter( type );
+			}
+
 			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( List<> ) )
 			{
 				AddConverter( type, new CollectionGenericConverter() );
@@ -204,6 +216,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter( typeof( IList ), new IEnumerableConverter() );
 			AddConverter( typeof( ICollection ), new IEnumerableConverter() );
 			AddConverter( typeof( IEnumerable ), new IEnumerableConverter() );
+			AddConverter( typeof( IDictionary ), new IDictionaryConverter() );
 #if !PCL && !COREFX
 			AddConverter( typeof( ArrayList ), new ArrayListConverter() );
 #endif

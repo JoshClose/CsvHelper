@@ -117,6 +117,8 @@
     <Compile Include="TypeConversion\EnumConverterTests.cs" />
     <Compile Include="TypeConversion\DateTimeConverterTests.cs" />
     <Compile Include="TypeConversion\EnumerableConverterTests.cs" />
+    <Compile Include="TypeConversion\IDictionaryConverterTests.cs" />
+    <Compile Include="TypeConversion\IDictionaryGenericConverterTests.cs" />
     <Compile Include="TypeConversion\IEnumerableConverterTests.cs" />
     <Compile Include="TypeConversion\IEnumerableGenericConverterTests.cs" />
     <Compile Include="TypeConversion\CollectionGenericConverterTests.cs" />

@@ -16,9 +16,14 @@ namespace CsvHelper
 	public interface ICsvReaderRow
 	{
 		/// <summary>
+		/// Gets the field headers.
+		/// </summary>
+		string[] FieldHeaders { get; }
+
+		/// <summary>
 		/// Get the current record;
 		/// </summary>
-        string[] CurrentRecord { get; }
+		string[] CurrentRecord { get; }
 
         /// <summary>
         /// Gets the current row.

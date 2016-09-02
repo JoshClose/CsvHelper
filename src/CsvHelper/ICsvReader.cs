@@ -25,11 +25,6 @@ namespace CsvHelper
 		ICsvParser Parser { get; }
 
 		/// <summary>
-		/// Gets the field headers.
-		/// </summary>
-		string[] FieldHeaders { get; }
-
-		/// <summary>
 		/// Reads the header field without reading the first row.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
