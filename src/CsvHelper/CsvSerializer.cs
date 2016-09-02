@@ -60,9 +60,16 @@ namespace CsvHelper
 		public void Write( string[] record )
 		{
 			CheckDisposed();
-
-			var recordString = string.Join( configuration.Delimiter, record );
-			writer.WriteLine( recordString );
+			string delimeter = configuration.Delimiter;
+			for (int i = 0; i < record.Length; i++)
+			{
+				if (i != 0)
+				{
+					writer.Write(delimeter);
+				}
+				writer.Write(record[i]);
+			}
+			writer.WriteLine();
 		}
 
 		/// <summary>
