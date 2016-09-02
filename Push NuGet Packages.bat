@@ -10,6 +10,8 @@ goto DONE
 
 :USAGE
 
-@echo Usage: %0 ^<package.nupkg^>
+cmd
+::@echo Usage: %0 ^<package.nupkg^>
+::pause
 
 :DONE
