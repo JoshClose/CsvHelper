@@ -105,12 +105,27 @@ namespace CsvHelper
 			}
 		}
 
-		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
-		/// <see cref="CsvParser"/> as the default parser.
+        /// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+	    /// This is the actual file row.
 		/// </summary>
-		/// <param name="reader">The reader.</param>
-		public CsvReader( TextReader reader ) : this( reader, new CsvConfiguration() ) {}
+		public int RawRow
+        {
+            get
+            {
+                CheckDisposed();
+                CheckHasBeenRead();
+
+                return parser.RawRow;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new CSV reader using the given <see cref="TextReader"/> and
+        /// <see cref="CsvParser"/> as the default parser.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        public CsvReader( TextReader reader ) : this( reader, new CsvConfiguration() ) {}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and

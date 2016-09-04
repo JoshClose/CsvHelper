@@ -42,7 +42,13 @@ namespace CsvHelper
 		/// </summary>
 		string RawRecord { get; }
 
-		/// <summary>
+	    /// <summary>
+	    /// Gets the row of the CSV file that the parser is currently on.
+	    /// This is the actual file row.
+	    /// </summary>
+	    int RawRow { get; }
+
+	    /// <summary>
 		/// Reads a record from the CSV file.
 		/// </summary>
 		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
