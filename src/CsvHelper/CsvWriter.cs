@@ -45,10 +45,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration
-		{
-			get { return configuration; }
-		}
+		public virtual CsvConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter" />,
@@ -69,12 +66,12 @@ namespace CsvHelper
 		{
 			if( writer == null )
 			{
-				throw new ArgumentNullException( "writer" );
+				throw new ArgumentNullException( nameof( writer ) );
 			}
 
 			if( configuration == null )
 			{
-				throw new ArgumentNullException( "configuration" );
+				throw new ArgumentNullException( nameof( configuration ) );
 			}
 
 			this.configuration = configuration;
@@ -89,7 +86,7 @@ namespace CsvHelper
 		{
 			if( serializer == null )
 			{
-				throw new ArgumentNullException( "serializer" );
+				throw new ArgumentNullException( nameof( serializer ) );
 			}
 
 			if( serializer.Configuration == null )
@@ -130,8 +127,6 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField( string field )
 		{
-			CheckDisposed();
-
 			var shouldQuote = configuration.QuoteAllFields;
 
 			if( field != null && configuration.TrimFields )
@@ -171,8 +166,6 @@ namespace CsvHelper
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
 		public virtual void WriteField( string field, bool shouldQuote )
 		{
-			CheckDisposed();
-
             // All quotes must be doubled.       
 			if( shouldQuote && !string.IsNullOrEmpty( field ) )
 			{
@@ -201,8 +194,6 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField<T>( T field )
 		{
-			CheckDisposed();
-
 			var type = field == null ? typeof( string ) : field.GetType();
 			var converter = TypeConverterFactory.GetConverter( type );
 			WriteField( field, converter );
@@ -219,8 +210,6 @@ namespace CsvHelper
 		/// <param name="converter">The converter used to convert the field into a string.</param>
 		public virtual void WriteField<T>( T field, ITypeConverter converter )
 		{
-			CheckDisposed();
-
 			var type = field == null ? typeof( string ) : field.GetType();
 			var propertyMapData = new CsvPropertyMapData( null )
 			{
@@ -245,8 +234,6 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField<T, TConverter>( T field )
 		{
-			CheckDisposed();
-
 			var converter = TypeConverterFactory.GetConverter<TConverter>();
 			WriteField( field, converter );
 		}
@@ -258,8 +245,6 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void NextRecord()
 		{
-			CheckDisposed();
-
 			serializer.Write( currentRecord.ToArray() );
 			currentRecord.Clear();
 		}
@@ -269,8 +254,6 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void WriteExcelSeparator()
 		{
-			CheckDisposed();
-
 			if( hasHeaderBeenWritten )
 			{
 				throw new CsvWriterException( "The Excel seperator record must be the first record written in the file." );
@@ -294,8 +277,6 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		public virtual void WriteHeader<T>()
 		{
-			CheckDisposed();
-
 			WriteHeader( typeof( T ) );
 		}
 
@@ -305,8 +286,6 @@ namespace CsvHelper
 		/// <param name="type">The type of the record.</param>
 		public virtual void WriteHeader( Type type )
 		{
-			CheckDisposed();
-
 			if( type == null )
 			{
 				throw new ArgumentNullException( nameof( type ) );
@@ -361,8 +340,6 @@ namespace CsvHelper
 		/// <param name="record">The dynamic record to write.</param>
 		public virtual void WriteDynamicHeader( IDynamicMetaObjectProvider record )
 		{
-			CheckDisposed();
-
 			if( record == null )
 			{
 				throw new ArgumentNullException( nameof( record ) );
@@ -405,8 +382,6 @@ namespace CsvHelper
 		/// <param name="record">The record to write.</param>
 		public virtual void WriteRecord<T>( T record )
 		{
-			CheckDisposed();
-
 #if !NET_2_0 && !NET_3_5 && !PCL
 			var dynamicRecord = record as IDynamicMetaObjectProvider;
 			if( dynamicRecord != null )
@@ -442,8 +417,6 @@ namespace CsvHelper
 		/// <param name="records">The list of records to write.</param>
 		public virtual void WriteRecords( IEnumerable records )
 		{
-			CheckDisposed();
-
 			Type recordType = null;
 			try
 			{
@@ -527,8 +500,6 @@ namespace CsvHelper
 		/// <typeparam name="T">The record type.</typeparam>
 		public virtual void ClearRecordCache<T>()
 		{
-			CheckDisposed();
-
 			ClearRecordCache( typeof( T ) );
 		}
 
@@ -542,8 +513,6 @@ namespace CsvHelper
 		/// <param name="type">The record type.</param>
 		public virtual void ClearRecordCache( Type type )
 		{
-			CheckDisposed();
-
 			typeActions.Remove( type );
 		}
 
@@ -556,8 +525,6 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void ClearRecordCache()
 		{
-			CheckDisposed();
-
 			typeActions.Clear();
 		}
 
@@ -660,26 +627,11 @@ namespace CsvHelper
 
 			if( disposing )
 			{
-				if( serializer != null )
-				{
-					serializer.Dispose();
-				}
+				serializer?.Dispose();
 			}
 
 			disposed = true;
 			serializer = null;
-		}
-
-		/// <summary>
-		/// Checks if the instance has been disposed of.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException" />
-		protected virtual void CheckDisposed()
-		{
-			if( disposed )
-			{
-				throw new ObjectDisposedException( GetType().ToString() );
-			}
 		}
 
 #if !NET_2_0

@@ -34,7 +34,7 @@ namespace CsvHelper.Tests
 				writer.WriteLine( "Id,Name,Order" );
 				writer.WriteLine( ",," );
 				writer.WriteLine( "2,two,2" );
-				writer.WriteLine( ",three" );
+				writer.WriteLine( ",three," );
 				writer.Flush();
 				stream.Position = 0;
 

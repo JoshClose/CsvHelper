@@ -18,11 +18,6 @@ namespace CsvHelper
 		CsvConfiguration Configuration { get; }
 
 		/// <summary>
-		/// Gets the field count.
-		/// </summary>
-		int FieldCount { get; }
-
-		/// <summary>
 		/// Gets the character position that the parser is currently on.
 		/// </summary>
 		long CharPosition { get; }
@@ -36,6 +31,12 @@ namespace CsvHelper
 		/// Gets the row of the CSV file that the parser is currently on.
 		/// </summary>
 		int Row { get; }
+
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// This is the actual file row.
+		/// </summary>
+		int RawRow { get; }
 
 		/// <summary>
 		/// Gets the raw row for the current record that was parsed.

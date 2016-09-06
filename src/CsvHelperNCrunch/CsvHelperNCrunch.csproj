@@ -129,6 +129,9 @@
     <Compile Include="..\CsvHelper\ExceptionHelper.cs">
       <Link>ExceptionHelper.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\FieldReader.cs">
+      <Link>FieldReader.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\ICsvFactory.cs">
       <Link>ICsvFactory.cs</Link>
     </Compile>
@@ -152,6 +155,9 @@
     </Compile>
     <Compile Include="..\CsvHelper\Properties\AssemblyInfo.cs">
       <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\RecordBuilder.cs">
+      <Link>RecordBuilder.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\ReflectionHelper.cs">
       <Link>ReflectionHelper.cs</Link>

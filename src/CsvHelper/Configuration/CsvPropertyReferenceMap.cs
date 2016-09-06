@@ -18,10 +18,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the property reference map data.
 		/// </summary>
-		public CsvPropertyReferenceMapData Data
-		{
-			get { return data; }
-		}
+		public CsvPropertyReferenceMapData Data => data;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMap"/> class.
@@ -32,7 +29,7 @@ namespace CsvHelper.Configuration
 		{
 			if( mapping == null )
 			{
-				throw new ArgumentNullException( "mapping" );
+				throw new ArgumentNullException( nameof( mapping ) );
 			}
 
 			data = new CsvPropertyReferenceMapData( property, mapping );

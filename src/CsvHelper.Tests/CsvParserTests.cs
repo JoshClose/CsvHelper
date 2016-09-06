@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Text;
+using CsvHelper.Configuration;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
@@ -125,7 +126,8 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader ) { Configuration = { BufferSize = 2000 } };
+			var config = new CsvConfiguration { BufferSize = 2000 };
+			var parser = new CsvParser( reader, config );
 
 			var record = parser.Read();
 			Assert.AreEqual( "one", record[0] );
@@ -152,7 +154,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var parser = new CsvParser( reader ) { Configuration = { BufferSize = 2 } };
+			var parser = new CsvParser( reader );
 
 			var record = parser.Read();
 			Assert.AreEqual( " one ", record[0] );
@@ -828,7 +830,7 @@ namespace CsvHelper.Tests
 				row = parser.Read();
 
 				Assert.AreEqual( 2, parser.Row );
-				Assert.IsNull( row[0] );
+				Assert.AreEqual( 0, row.Length );
 
 				row = parser.Read();
 
@@ -1364,19 +1366,18 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void RawRecordCorruptionTest()
 		{
-			var val = new string( 'a', 2038 ) + ",b\r\n";
-			val += "test1,test2";
+			var row1 = new string( 'a', 2038 ) + ",b\r\n";
+			var row2 = "test1,test2";
+			var val = row1 + row2;
 
 			using( var reader = new StringReader( val ) )
 			using( var parser = new CsvParser( reader ) )
 			{
-				var originalRows = val.Split( new[] { '\n' } );
-				var rowNumber = 0;
-				while( ( parser.Read() ) != null )
-				{
-					var originalRowData = originalRows[rowNumber++];
-					Assert.AreEqual( originalRowData.TrimEnd(), parser.RawRecord.TrimEnd() );
-				}
+				parser.Read();
+				Assert.AreEqual( row1, parser.RawRecord );
+
+				parser.Read();
+				Assert.AreEqual( row2, parser.RawRecord );
 			}
 		}
 
@@ -1471,9 +1472,7 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "", row[2] );
 
 				row = parser.Read();
-				Assert.AreEqual( null, row[0] );
-				Assert.AreEqual( null, row[1] );
-				Assert.AreEqual( null, row[2] );
+				Assert.AreEqual( 0, row.Length );
 
 				row = parser.Read();
 				Assert.AreEqual( "4", row[0] );

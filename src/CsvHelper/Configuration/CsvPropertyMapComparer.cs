@@ -62,11 +62,11 @@ namespace CsvHelper.Configuration
 		{
 			if( x == null )
 			{
-				throw new ArgumentNullException( "x" );
+				throw new ArgumentNullException( nameof( x ) );
 			}
 			if( y == null )
 			{
-				throw new ArgumentNullException( "y" );
+				throw new ArgumentNullException( nameof( y ) );
 			}
 
 			return x.Data.Index.CompareTo( y.Data.Index );

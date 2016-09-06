@@ -20,10 +20,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public CsvConfiguration Configuration
-		{
-			get { return configuration; }
-		}
+		public CsvConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
@@ -41,12 +38,12 @@ namespace CsvHelper
 		{
 			if( writer == null )
 			{
-				throw new ArgumentNullException( "writer" );
+				throw new ArgumentNullException( nameof( writer ) );
 			}
 
 			if( configuration == null )
 			{
-				throw new ArgumentNullException( "configuration" );
+				throw new ArgumentNullException( nameof( configuration ) );
 			}
 
 			this.writer = writer;
@@ -59,8 +56,6 @@ namespace CsvHelper
 		/// <param name="record">The record to write.</param>
 		public void Write( string[] record )
 		{
-			CheckDisposed();
-
 			var recordString = string.Join( configuration.Delimiter, record );
 			writer.WriteLine( recordString );
 		}
@@ -88,26 +83,11 @@ namespace CsvHelper
 
 			if( disposing )
 			{
-				if( writer != null )
-				{
-					writer.Dispose();
-				}
+				writer?.Dispose();
 			}
 
 			disposed = true;
 			writer = null;
-		}
-
-		/// <summary>
-		/// Checks if the instance has been disposed of.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException" />
-		protected virtual void CheckDisposed()
-		{
-			if( disposed )
-			{
-				throw new ObjectDisposedException( GetType().ToString() );
-			}
 		}
 	}
 }

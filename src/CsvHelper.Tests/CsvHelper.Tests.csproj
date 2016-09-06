@@ -104,6 +104,7 @@
     <Compile Include="Reading\ReadHeaderTests.cs" />
     <Compile Include="Reading\ShouldSkipRecordTests.cs" />
     <Compile Include="Reading\TryGetTests.cs" />
+    <Compile Include="RecordBuilderTests.cs" />
     <Compile Include="ReferenceMappingClassMapTests.cs" />
     <Compile Include="ReferenceMappingIndexTests.cs" />
     <Compile Include="Reflection\CreateInstanceTests.cs" />

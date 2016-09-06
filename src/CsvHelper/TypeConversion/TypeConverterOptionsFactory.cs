@@ -24,12 +24,12 @@ namespace CsvHelper.TypeConversion
 		{
 			if( type == null )
 			{
-				throw new ArgumentNullException( "type" );
+				throw new ArgumentNullException( nameof( type ) );
 			}
 
 			if( options == null )
 			{
-				throw new ArgumentNullException( "options" );
+				throw new ArgumentNullException( nameof( options ) );
 			}
 
 			lock( locker )
@@ -56,7 +56,7 @@ namespace CsvHelper.TypeConversion
 		{
 			if( type == null )
 			{
-				throw new ArgumentNullException( "type" );
+				throw new ArgumentNullException( nameof( type ) );
 			}
 
 			lock( locker )

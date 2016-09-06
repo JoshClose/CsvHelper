@@ -81,6 +81,8 @@ namespace CsvHelper.Tests
 				get { throw new NotImplementedException(); }
 			}
 
+			public int RawRow { get; private set; }
+
 			public string RawRecord { get; private set; }
 
 			public string[] Read()
