@@ -74,8 +74,17 @@ namespace CsvHelper
 		/// <param name="record">The record to write.</param>
 		public void Write( string[] record )
 		{
-			var recordString = string.Join( configuration.Delimiter, record );
-			writer.WriteLine( recordString );
+			for( var i = 0; i < record.Length; i++ )
+			{
+				if( i > 0 )
+				{
+					writer.Write( configuration.Delimiter );
+				}
+
+				writer.Write( record[i] );
+			}
+
+			writer.WriteLine();
 		}
 
 		/// <summary>
