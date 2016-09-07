@@ -3,7 +3,7 @@ using System;
 
 namespace System.Reflection
 {
-    public static class TypeExtensions
+    internal static class TypeExtensions
     {
 		public static TypeInfo GetTypeInfo( this Type type )
 		{

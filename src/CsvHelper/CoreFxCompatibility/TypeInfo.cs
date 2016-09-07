@@ -3,7 +3,7 @@ using System;
 
 namespace System.Reflection
 {
-    public class TypeInfo
+    internal class TypeInfo
     {
 	    private readonly Type type;
 
