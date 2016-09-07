@@ -25,6 +25,7 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvReader : ICsvReader
 	{
+		private readonly bool leaveOpen;
 		private bool disposed;
 		private bool hasBeenRead;
 		private string[] currentRecord;
@@ -82,11 +83,17 @@ namespace CsvHelper
 		public int Row => parser.Row;
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
-		/// <see cref="CsvParser"/> as the default parser.
+		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public CsvReader( TextReader reader ) : this( reader, new CsvConfiguration() ) {}
+		public CsvReader( TextReader reader ) : this( new CsvParser( reader, new CsvConfiguration() ), false ) { }
+
+		/// <summary>
+		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// </summary>
+		/// <param name="reader">The reader.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvReader( TextReader reader, bool leaveOpen ) : this( new CsvParser( reader, new CsvConfiguration() ), leaveOpen ) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
@@ -94,27 +101,28 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvReader( TextReader reader, CsvConfiguration configuration )
-		{
-			if( reader == null )
-			{
-				throw new ArgumentNullException( nameof( reader ) );
-			}
+		public CsvReader( TextReader reader, CsvConfiguration configuration ) : this( new CsvParser( reader, configuration ), false ) { }
 
-			if( configuration == null )
-			{
-				throw new ArgumentNullException( nameof( configuration ) );
-			}
-
-			parser = new CsvParser( reader, configuration );
-			this.configuration = configuration;
-		}
+		/// <summary>
+		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// </summary>
+		/// <param name="reader">The reader.</param>
+		/// <param name="configuration">The configuration.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvReader( TextReader reader, CsvConfiguration configuration, bool leaveOpen ) : this( new CsvParser( reader, configuration ), leaveOpen ) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		public CsvReader( ICsvParser parser )
+		public CsvReader( ICsvParser parser ) : this( parser, false ) { }
+
+		/// <summary>
+		/// Creates a new CSV reader using the given <see cref="ICsvParser"/>.
+		/// </summary>
+		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvReader( ICsvParser parser, bool leaveOpen )
 		{
 			if( parser == null )
 			{
@@ -128,6 +136,7 @@ namespace CsvHelper
 
 			this.parser = parser;
 			configuration = parser.Configuration;
+			this.leaveOpen = leaveOpen;
 		}
 
 		/// <summary>
@@ -949,7 +958,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( true );
+			Dispose( !leaveOpen );
 			GC.SuppressFinalize( this );
 		}
 

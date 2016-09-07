@@ -13,6 +13,7 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvSerializer : ICsvSerializer
 	{
+		private readonly bool leaveOpen;
 		private bool disposed;
 		private readonly CsvConfiguration configuration;
 		private TextWriter writer;
@@ -26,7 +27,14 @@ namespace CsvHelper
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
-		public CsvSerializer( TextWriter writer ) : this( writer, new CsvConfiguration() ) {}
+		public CsvSerializer( TextWriter writer ) : this( writer, new CsvConfiguration(), false ) { }
+
+		/// <summary>
+		/// Creates a new serializer using the given <see cref="TextWriter"/>.
+		/// </summary>
+		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvSerializer( TextWriter writer, bool leaveOpen ) : this( writer, new CsvConfiguration(), leaveOpen ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
@@ -34,7 +42,16 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration )
+		public CsvSerializer( TextWriter writer, CsvConfiguration configuration ) : this( writer, configuration, false ) { }
+
+		/// <summary>
+		/// Creates a new serializer using the given <see cref="TextWriter"/>
+		/// and <see cref="CsvConfiguration"/>.
+		/// </summary>
+		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
+		/// <param name="configuration">The configuration.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvSerializer( TextWriter writer, CsvConfiguration configuration, bool leaveOpen )
 		{
 			if( writer == null )
 			{
@@ -48,6 +65,7 @@ namespace CsvHelper
 
 			this.writer = writer;
 			this.configuration = configuration;
+			this.leaveOpen = leaveOpen;
 		}
 
 		/// <summary>
@@ -66,7 +84,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( true );
+			Dispose( !leaveOpen );
 			GC.SuppressFinalize( this );
 		}
 
