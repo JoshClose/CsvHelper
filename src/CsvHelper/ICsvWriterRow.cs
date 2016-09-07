@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
@@ -9,6 +10,16 @@ namespace CsvHelper
 	/// </summary>
     public interface ICsvWriterRow
 	{
+		/// <summary>
+		/// Gets the current row.
+		/// </summary>
+		int Row { get; }
+
+		/// <summary>
+		/// Get the current record;
+		/// </summary>
+		List<string> CurrentRecord { get; }
+
 		/// <summary>
 		/// Writes a field that has already been converted to a
 		/// <see cref="string"/> from an <see cref="ITypeConverter"/>.

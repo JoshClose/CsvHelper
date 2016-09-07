@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+using System.Collections.Generic;
 #if !COREFX
 using System.Runtime.Serialization;
 #endif
@@ -17,6 +18,31 @@ namespace CsvHelper
 #endif
 	public class CsvHelperException : Exception
 	{
+		/// <summary>
+		/// The current row number.
+		/// </summary>
+		public int Row { get; set; }
+
+		/// <summary>
+		/// The property type of the current field.
+		/// </summary>
+		public Type Type { get; set; }
+
+		/// <summary>
+		/// The index of the current field.
+		/// </summary>
+		public int FieldIndex { get; set; }
+
+		/// <summary>
+		/// The field name.
+		/// </summary>
+		public string FieldName { get; set; }
+
+		/// <summary>
+		/// The field value.
+		/// </summary>
+		public string FieldValue { get; set; }
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvHelperException"/> class.
 		/// </summary>

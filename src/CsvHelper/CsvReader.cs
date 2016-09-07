@@ -273,7 +273,8 @@ namespace CsvHelper
 				if( configuration.WillThrowOnMissingField && configuration.IgnoreBlankLines )
 				{
 					var ex = new CsvMissingFieldException( $"Field at index '{index}' does not exist." );
-					ExceptionHelper.AddExceptionDataMessage( ex, Parser, typeof( string ), namedIndexes, index, currentRecord );
+					ExceptionHelper.AddExceptionData( ex, Row, null, index, namedIndexes, currentRecord );
+
 					throw ex;
 				}
 
@@ -493,7 +494,8 @@ namespace CsvHelper
 				if( configuration.WillThrowOnMissingField )
 				{
 					var ex = new CsvMissingFieldException( $"Field at index '{index}' does not exist." );
-					ExceptionHelper.AddExceptionDataMessage( ex, Parser, typeof( T ), namedIndexes, index, currentRecord );
+					ExceptionHelper.AddExceptionData( ex, Row, typeof( T ), index, namedIndexes, currentRecord );
+
 					throw ex;
 				}
 
@@ -806,9 +808,12 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
-				throw;
+				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				ExceptionHelper.AddExceptionData( csvHelperException, Row, typeof( T ), currentIndex, namedIndexes, currentRecord );
+
+				throw csvHelperException;
 			}
+
 			return record;
 		}
 
@@ -828,8 +833,10 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
-				throw;
+				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				ExceptionHelper.AddExceptionData( csvHelperException, Row, type, currentIndex, namedIndexes, currentRecord );
+
+				throw csvHelperException;
 			}
 
 			return record;
@@ -856,12 +863,13 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					ExceptionHelper.AddExceptionDataMessage( ex, parser, typeof( T ), namedIndexes, currentIndex, currentRecord );
+					var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+					ExceptionHelper.AddExceptionData( csvHelperException, Row, typeof( T ), currentIndex, namedIndexes, currentRecord );
 
 					if( configuration.IgnoreReadingExceptions )
 					{
 #if !NET_2_0
-						configuration.ReadingExceptionCallback?.Invoke( ex, this );
+						configuration.ReadingExceptionCallback?.Invoke( csvHelperException, this );
 #endif
 
 						continue;
@@ -895,12 +903,13 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					ExceptionHelper.AddExceptionDataMessage( ex, parser, type, namedIndexes, currentIndex, currentRecord );
+					var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+					ExceptionHelper.AddExceptionData( csvHelperException, Row, type, currentIndex, namedIndexes, currentRecord );
 
 					if( configuration.IgnoreReadingExceptions )
 					{
 #if !NET_2_0
-						configuration.ReadingExceptionCallback?.Invoke( ex, this );
+						configuration.ReadingExceptionCallback?.Invoke( csvHelperException, this );
 #endif
 
 						continue;
@@ -1103,7 +1112,8 @@ namespace CsvHelper
 					// named index isn't found, throw an exception.
 					var namesJoined = $"'{string.Join( "', '", names )}'";
 					var ex = new CsvMissingFieldException( $"Fields {namesJoined} do not exist in the CSV file." );
-					ExceptionHelper.AddExceptionDataMessage( ex, Parser, null, namedIndexes, currentIndex, currentRecord );
+					ExceptionHelper.AddExceptionData( ex, Row, null, currentIndex, namedIndexes, currentRecord );
+
 					throw ex;
 				}
 

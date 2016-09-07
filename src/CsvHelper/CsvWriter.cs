@@ -42,6 +42,17 @@ namespace CsvHelper
 #endif
 		private readonly CsvConfiguration configuration;
 		private bool hasExcelSeperatorBeenRead;
+		private int row = 1;
+
+		/// <summary>
+		/// Gets the current row.
+		/// </summary>
+		public virtual int Row => row;
+
+		/// <summary>
+		/// Get the current record;
+		/// </summary>
+		public virtual List<string> CurrentRecord => currentRecord;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -245,6 +256,7 @@ namespace CsvHelper
 		{
 			serializer.Write( currentRecord.ToArray() );
 			currentRecord.Clear();
+			row++;
 		}
 
 		/// <summary>
@@ -404,8 +416,10 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, record.GetType(), null, null, null );
-				throw;
+				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected exception occurred.", ex );
+				ExceptionHelper.AddExceptionData( csvHelperException, Row, record.GetType(), null, null, currentRecord.ToArray() );
+
+				throw csvHelperException;
 			}
 		}
 
@@ -483,8 +497,10 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, null, recordType, null, null, null );
-				throw;
+				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				ExceptionHelper.AddExceptionData( csvHelperException, Row, recordType, null, null, currentRecord.ToArray() );
+
+				throw csvHelperException;
 			}
 		}
 

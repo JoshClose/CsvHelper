@@ -128,8 +128,10 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				ExceptionHelper.AddExceptionDataMessage( ex, this, null, null, null, null );
-				throw;
+				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected exception occurred.", ex );
+				ExceptionHelper.AddExceptionData( csvHelperException, Row, null, null, null, record.ToArray() );
+
+				throw csvHelperException;
 			}
 		}
 
