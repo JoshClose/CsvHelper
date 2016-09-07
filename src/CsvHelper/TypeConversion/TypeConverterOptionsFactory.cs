@@ -10,17 +10,16 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Creates <see cref="TypeConverterOptions"/>.
 	/// </summary>
-	public static class TypeConverterOptionsFactory
+	public class TypeConverterOptionsFactory
 	{
-		private static readonly Dictionary<Type, TypeConverterOptions> typeConverterOptions = new Dictionary<Type, TypeConverterOptions>();
-		private static readonly object locker = new object();
+		private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptions = new Dictionary<Type, TypeConverterOptions>();
 
 		/// <summary>
 		/// Adds the <see cref="TypeConverterOptions"/> for the given <see cref="Type"/>.
 		/// </summary>
 		/// <param name="type">The type the options are for.</param>
 		/// <param name="options">The options.</param>
-		public static void AddOptions( Type type, TypeConverterOptions options )
+		public void AddOptions( Type type, TypeConverterOptions options )
 		{
 			if( type == null )
 			{
@@ -32,10 +31,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException( nameof( options ) );
 			}
 
-			lock( locker )
-			{
-				typeConverterOptions[type] = options;
-			}
+			typeConverterOptions[type] = options;
 		}
 
 		/// <summary>
@@ -43,7 +39,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <typeparam name="T">The type the options are for.</typeparam>
 		/// <param name="options">The options.</param>
-		public static void AddOptions<T>( TypeConverterOptions options )
+		public void AddOptions<T>( TypeConverterOptions options )
 		{
 			AddOptions( typeof( T ), options );
 		}
@@ -52,24 +48,21 @@ namespace CsvHelper.TypeConversion
 		/// Removes the <see cref="TypeConverterOptions"/> for the given type.
 		/// </summary>
 		/// <param name="type">The type to remove the options for.</param>
-		public static void RemoveOptions( Type type )
+		public void RemoveOptions( Type type )
 		{
 			if( type == null )
 			{
 				throw new ArgumentNullException( nameof( type ) );
 			}
 
-			lock( locker )
-			{
-				typeConverterOptions.Remove( type );
-			}
+			typeConverterOptions.Remove( type );
 		}
 
 		/// <summary>
 		/// Removes the <see cref="TypeConverterOptions"/> for the given type.
 		/// </summary>
 		/// <typeparam name="T">The type to remove the options for.</typeparam>
-		public static void RemoveOptions<T>()
+		public void RemoveOptions<T>()
 		{
 			RemoveOptions( typeof( T ) );
 		}
@@ -79,25 +72,22 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="type">The type the options are for.</param>
 		/// <returns>The options for the given type.</returns>
-		public static TypeConverterOptions GetOptions( Type type )
+		public TypeConverterOptions GetOptions( Type type )
 		{
 			if( type == null )
 			{
 				throw new ArgumentNullException();
 			}
 
-			lock( locker )
+			TypeConverterOptions options;
+
+			if( !typeConverterOptions.TryGetValue( type, out options ) )
 			{
-				TypeConverterOptions options;
-
-				if( !typeConverterOptions.TryGetValue( type, out options ) )
-				{
-					options = new TypeConverterOptions();
-					typeConverterOptions.Add( type, options );
-				}
-
-				return options;
+				options = new TypeConverterOptions();
+				typeConverterOptions.Add( type, options );
 			}
+
+			return options;
 		}
 
 		/// <summary>
@@ -105,7 +95,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <typeparam name="T">The type the options are for.</typeparam>
 		/// <returns>The options for the given type.</returns>
-		public static TypeConverterOptions GetOptions<T>()
+		public TypeConverterOptions GetOptions<T>()
 		{
 			return GetOptions( typeof( T ) );
 		}

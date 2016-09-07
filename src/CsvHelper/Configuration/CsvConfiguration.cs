@@ -37,6 +37,11 @@ namespace CsvHelper.Configuration
 #endif
 
 		/// <summary>
+		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
+		/// </summary>
+		public virtual TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
+
+		/// <summary>
 		/// Gets or sets the property binding flags.
 		/// This determines what properties on the custom
 		/// class are used. Default is Public | Instance.
