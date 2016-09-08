@@ -10,7 +10,7 @@ namespace CsvHelper
 	internal static class StringHelper
 	{
 		/// <summary>
-		/// Tests is a string is null or whitespace.
+		/// Tests if a string is null or whitespace.
 		/// </summary>
 		/// <param name="s">The string to test.</param>
 		/// <returns>True if the string is null or whitespace, otherwise false.</returns>

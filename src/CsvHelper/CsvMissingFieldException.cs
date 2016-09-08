@@ -3,18 +3,18 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
-#if !COREFX
+#if !NETSTANDARD
 using System.Runtime.Serialization;
 #endif
 
 namespace CsvHelper
 {
-	/// <summary>
-	/// Represents an error caused because a field is missing
-	/// in the header while reading a CSV file.
-	/// </summary>
-#if !COREFX && !PCL
-	[Serializable]
+    /// <summary>
+    /// Represents an error caused because a field is missing
+    /// in the header while reading a CSV file.
+    /// </summary>
+#if !NETSTANDARD && !PCL
+    [Serializable]
 #endif
 	public class CsvMissingFieldException : CsvReaderException
 	{
@@ -39,14 +39,14 @@ namespace CsvHelper
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
 		public CsvMissingFieldException( string message, Exception innerException ) : base( message, innerException ) { }
 
-#if !PCL && !COREFX
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvMissingFieldException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-		/// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-		public CsvMissingFieldException( SerializationInfo info, StreamingContext context ) : base( info, context ) { }
+#if !PCL && !NETSTANDARD
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CsvMissingFieldException"/> class
+        /// with serialized data.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
+        public CsvMissingFieldException( SerializationInfo info, StreamingContext context ) : base( info, context ) { }
 #endif
 	}
 }

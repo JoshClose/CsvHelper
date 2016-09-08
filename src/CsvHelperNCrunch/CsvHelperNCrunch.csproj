@@ -45,6 +45,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CsvHelper\Compatibility\NETSTANDARD\TypeExtensions.cs">
+      <Link>Compatibility\NETSTANDARD\TypeExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\NETSTANDARD\TypeInfo.cs">
+      <Link>Compatibility\NETSTANDARD\TypeInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\NET_2_0\Delegates.cs">
+      <Link>Compatibility\NET_2_0\Delegates.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\NET_2_0\EnumerableExtensions.cs">
+      <Link>Compatibility\NET_2_0\EnumerableExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\NET_2_0\ExtensionAttribute.cs">
+      <Link>Compatibility\NET_2_0\ExtensionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\NET_2_0\StringExtensions.cs">
+      <Link>Compatibility\NET_2_0\StringExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\PCL\EnumerableExtensions.cs">
+      <Link>Compatibility\PCL\EnumerableExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>
@@ -86,12 +107,6 @@
     </Compile>
     <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
       <Link>Configuration\DefaultCsvClassMap`1.cs</Link>
-    </Compile>
-    <Compile Include="..\CsvHelper\CoreFxCompatibility\TypeExtensions.cs">
-      <Link>CoreFxCompatibility\TypeExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\CsvHelper\CoreFxCompatibility\TypeInfo.cs">
-      <Link>CoreFxCompatibility\TypeInfo.cs</Link>
     </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>

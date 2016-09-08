@@ -217,8 +217,8 @@ namespace CsvHelper.TypeConversion
 			AddConverter( typeof( ICollection ), new IEnumerableConverter() );
 			AddConverter( typeof( IEnumerable ), new IEnumerableConverter() );
 			AddConverter( typeof( IDictionary ), new IDictionaryConverter() );
-#if !PCL && !COREFX
-			AddConverter( typeof( ArrayList ), new ArrayListConverter() );
+#if !PCL && !NETSTANDARD
+            AddConverter( typeof( ArrayList ), new ArrayListConverter() );
 #endif
 		} 
 	}

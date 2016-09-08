@@ -1,4 +1,4 @@
-﻿#if !PCL && !COREFX
+﻿#if !PCL && !NETSTANDARD
 using System;
 using System.Collections;
 using CsvHelper.Configuration;

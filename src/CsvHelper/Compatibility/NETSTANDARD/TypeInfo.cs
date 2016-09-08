@@ -1,4 +1,4 @@
-﻿#if !COREFX && !NET_4_5
+﻿#if !NETSTANDARD && !NET_4_5 && !NET_4_5_1
 using System;
 
 namespace System.Reflection
@@ -8,7 +8,7 @@ namespace System.Reflection
 	/// array types, value types,  enumeration types, type parameters, 
 	/// generic type definitions, and open or closed constructed generic types.
 	/// </summary>
-	public class TypeInfo
+	internal class TypeInfo
     {
 	    private readonly Type type;
 
@@ -57,4 +57,4 @@ namespace System.Reflection
 	    }
     }
 }
-#endif // !COREFX && !NET_4_5
+#endif

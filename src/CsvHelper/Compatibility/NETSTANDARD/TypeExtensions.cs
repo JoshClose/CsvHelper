@@ -1,4 +1,4 @@
-﻿#if !COREFX && !NET_4_5
+﻿#if !NETSTANDARD && !NET_4_5 && !NET_4_5_1
 using System;
 
 namespace System.Reflection
@@ -6,7 +6,7 @@ namespace System.Reflection
 	/// <summary>
 	/// Type extensions for compatibility.
 	/// </summary>
-    public static class TypeExtensions
+	internal static class TypeExtensions
     {
 		/// <summary>
 		/// Gets the <see cref="TypeInfo"/> for the given <see cref="System.Type"/>.
@@ -19,4 +19,4 @@ namespace System.Reflection
 		}
     }
 }
-#endif // !COREFX && !NET_4_5
+#endif
