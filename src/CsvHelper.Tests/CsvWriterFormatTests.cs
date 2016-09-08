@@ -37,6 +37,7 @@ namespace CsvHelper.Tests
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
 			csv.WriteRecord( record );
+		    csv.NextRecord();
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
@@ -65,6 +66,7 @@ namespace CsvHelper.Tests
 		    var csv = new CsvWriter( writer, config );
 
 		    csv.WriteRecord( record );
+	        csv.NextRecord();
 
 		    stream.Position = 0;
 		    var reader = new StreamReader( stream );
@@ -140,6 +142,7 @@ namespace CsvHelper.Tests
 			csv.Configuration.RegisterClassMap<PersonMap>();
 
 			csv.WriteRecord( record );
+	        csv.NextRecord();
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );

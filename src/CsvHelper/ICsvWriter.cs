@@ -20,24 +20,18 @@ namespace CsvHelper
 		CsvConfiguration Configuration { get; }
 
 		/// <summary>
-		/// Ends writing of the current record
-		/// and starts a new record. This is used
-		/// when manually writing records with <see cref="ICsvWriterRow.WriteField{T}( T )"/>
+		/// Ends writing of the current record and starts a new record. 
+		/// This needs to be called to serialize the row to the writer.
 		/// </summary>
 		void NextRecord();
 
-		/// <summary>
-		/// Write the Excel seperator record.
-		/// </summary>
-		void WriteExcelSeparator();
-
 #if !NET_2_0
 
-		/// <summary>
-		/// Writes the list of records to the CSV file.
-		/// </summary>
-		/// <param name="records">The list of records to write.</param>
-		void WriteRecords( IEnumerable records );
+        /// <summary>
+        /// Writes the list of records to the CSV file.
+        /// </summary>
+        /// <param name="records">The list of records to write.</param>
+        void WriteRecords( IEnumerable records );
 
 		/// <summary>
 		/// Clears the record cache for the given type. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the

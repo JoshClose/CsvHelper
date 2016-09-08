@@ -262,7 +262,7 @@ namespace CsvHelper.Tests.ExcelCompatibility
 					},
 				};
 				csv.WriteRecords( list );
-				writer.Flush();
+                writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();
@@ -288,10 +288,13 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				csv.Configuration.Delimiter = ";";
 				csv.Configuration.HasExcelSeparator = true;
 				csv.WriteExcelSeparator();
-				csv.WriteHeader<Simple>();
-				csv.WriteRecord( record );
+                csv.NextRecord();
+                csv.WriteHeader<Simple>();
+                csv.NextRecord();
+                csv.WriteRecord( record );
+                csv.NextRecord();
 
-				writer.Flush();
+                writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();

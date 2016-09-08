@@ -49,7 +49,8 @@ namespace CsvHelper.Tests.Writing
 				obj.Name = "one";
 
 				csv.WriteRecord( obj );
-				writer.Flush();
+                csv.NextRecord();
+                writer.Flush();
 				stream.Position = 0;
 
 				var expected = "Id,Name\r\n";

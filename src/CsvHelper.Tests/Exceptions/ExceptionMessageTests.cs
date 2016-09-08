@@ -198,11 +198,12 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				writer.WriteRecord( new Simple() );
-				Assert.Fail();
+                writer.NextRecord();
+                Assert.Fail();
 			}
 			catch( CsvHelperException ex )
 			{
-				Assert.AreEqual( typeof( Simple ), ex.Type );
+				Assert.AreEqual( 1, ex.Row );
 			}
 		}
 

@@ -92,6 +92,7 @@ namespace CsvHelper.Tests
             csv.Configuration.RegisterClassMap<TestRecordMap>();
 
             csv.WriteRecord(record);
+            csv.NextRecord();
 
             stream.Position = 0;
             var reader = new StreamReader(stream);
@@ -119,6 +120,7 @@ namespace CsvHelper.Tests
                 csv.Configuration.RegisterClassMap<TestRecordNoIndexesMap>();
 
                 csv.WriteRecord(record);
+                csv.NextRecord();
 
                 stream.Position = 0;
                 var reader = new StreamReader(stream);
@@ -234,6 +236,7 @@ namespace CsvHelper.Tests
             var csv = new CsvWriter(writer) { Configuration = { HasHeaderRecord = false } };
             csv.Configuration.RegisterClassMap<TestRecordMap>();
             csv.WriteRecord(new TestRecord());
+            csv.NextRecord();
 
             stream.Position = 0;
             var reader = new StreamReader(stream);
@@ -259,8 +262,11 @@ namespace CsvHelper.Tests
             csv.Configuration.RegisterClassMap<TestRecordMap>();
 
             csv.WriteRecord(record);
+            csv.NextRecord();
             csv.WriteRecord((TestRecord)null);
+            csv.NextRecord();
             csv.WriteRecord(record);
+            csv.NextRecord();
 
             stream.Position = 0;
             var reader = new StreamReader(stream);
@@ -301,6 +307,7 @@ namespace CsvHelper.Tests
             csv.Configuration.RegisterClassMap<PersonMap>();
 
             csv.WriteRecord(record);
+            csv.NextRecord();
 
             stream.Position = 0;
             var reader = new StreamReader(stream);
@@ -331,6 +338,7 @@ namespace CsvHelper.Tests
                 csvWriter.Configuration.QuoteAllFields = true;
                 csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
                 csvWriter.WriteRecord(record);
+                csvWriter.NextRecord();
 
                 writer.Flush();
                 stream.Position = 0;
@@ -363,6 +371,7 @@ namespace CsvHelper.Tests
                 csvWriter.Configuration.QuoteNoFields = true;
                 csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
                 csvWriter.WriteRecord(record);
+                csvWriter.NextRecord();
 
                 writer.Flush();
                 stream.Position = 0;
@@ -387,6 +396,7 @@ namespace CsvHelper.Tests
                 csvWriter.Configuration.HasHeaderRecord = true;
                 csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
                 csvWriter.WriteHeader(typeof(TestRecord));
+                csvWriter.NextRecord();
 
                 writer.Flush();
                 stream.Position = 0;
@@ -431,6 +441,7 @@ namespace CsvHelper.Tests
                     Name = "one,two"
                 };
                 csv.WriteRecord(record);
+                csv.NextRecord();
                 writer.Flush();
                 stream.Position = 0;
 
@@ -453,6 +464,7 @@ namespace CsvHelper.Tests
                     Name = "one\"two"
                 };
                 csv.WriteRecord(record);
+                csv.NextRecord();
                 writer.Flush();
                 stream.Position = 0;
 
@@ -476,6 +488,7 @@ namespace CsvHelper.Tests
                     Name = "one,two"
                 };
                 csv.WriteRecord(record);
+                csv.NextRecord();
                 writer.Flush();
                 stream.Position = 0;
 
@@ -499,6 +512,7 @@ namespace CsvHelper.Tests
                     Name = "one\"two"
                 };
                 csv.WriteRecord(record);
+                csv.NextRecord();
                 writer.Flush();
                 stream.Position = 0;
 
@@ -573,6 +587,7 @@ namespace CsvHelper.Tests
             using (var csv = new CsvWriter(writer))
             {
                 csv.WriteRecord(new { Id = 1, Name = "one" });
+                csv.NextRecord();
                 writer.Flush();
                 stream.Position = 0;
 

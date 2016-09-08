@@ -30,8 +30,9 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				};
 
 				csv.WriteRecord( record );
+                csv.NextRecord();
 
-				writer.Flush();
+                writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();

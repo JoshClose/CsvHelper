@@ -247,22 +247,30 @@ namespace CsvHelper
 			WriteField( field, converter );
 		}
 
-		/// <summary>
-		/// Ends writing of the current record
-		/// and starts a new record. This is used
-		/// when manually writing records with WriteField.
-		/// </summary>
-		public virtual void NextRecord()
+	    /// <summary>
+	    /// Ends writing of the current record and starts a new record. 
+	    /// This needs to be called to serialize the row to the writer.
+	    /// </summary>
+	    public virtual void NextRecord()
 		{
-			serializer.Write( currentRecord.ToArray() );
-			currentRecord.Clear();
-			row++;
+	        try
+	        {
+	            serializer.Write( currentRecord.ToArray() );
+	            currentRecord.Clear();
+	            row++;
+	        }
+	        catch( Exception ex )
+	        {
+	            var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+	            ExceptionHelper.AddExceptionData( csvHelperException, Row, null, null, null, currentRecord.ToArray() );
+	            throw csvHelperException;
+	        }
 		}
 
-		/// <summary>
-		/// Write the Excel seperator record.
-		/// </summary>
-		public virtual void WriteExcelSeparator()
+        /// <summary>
+        /// Write the Excel seperator record.
+        /// </summary>
+        public virtual void WriteExcelSeparator()
 		{
 			if( hasHeaderBeenWritten )
 			{
@@ -275,17 +283,24 @@ namespace CsvHelper
 			}
 
 			WriteField( "sep=" + configuration.Delimiter, false );
-
-			NextRecord();
 		}
+
+	    /// <summary>
+	    /// Writes a comment.
+	    /// </summary>
+	    /// <param name="comment">The comment to write.</param>
+	    public virtual void WriteComment( string comment )
+	    {
+	        WriteField( configuration.Comment + comment );
+	    }
 
 #if !NET_2_0
 
-		/// <summary>
-		/// Writes the header record from the given properties.
-		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		public virtual void WriteHeader<T>()
+        /// <summary>
+        /// Writes the header record from the given properties.
+        /// </summary>
+        /// <typeparam name="T">The type of the record.</typeparam>
+        public virtual void WriteHeader<T>()
 		{
 			WriteHeader( typeof( T ) );
 		}
@@ -337,8 +352,6 @@ namespace CsvHelper
 				}
 			}
 
-			NextRecord();
-
 			hasHeaderBeenWritten = true;
 		}
 
@@ -378,8 +391,6 @@ namespace CsvHelper
 				WriteField( name );
 			}
 
-			NextRecord();
-
 			hasHeaderBeenWritten = true;
 		}
 
@@ -399,6 +410,7 @@ namespace CsvHelper
 				if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
 				{
 					WriteDynamicHeader( dynamicRecord );
+				    NextRecord();
 				}
 
 				if( !typeActions.ContainsKey( dynamicRecord.GetType() ) )
@@ -411,12 +423,11 @@ namespace CsvHelper
 			try
 			{
 				GetWriteRecordAction<T>()( record );
-				hasRecordBeenWritten = true;
-				NextRecord();
-			}
-			catch( Exception ex )
+                hasRecordBeenWritten = true;
+            }
+            catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected exception occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
 				ExceptionHelper.AddExceptionData( csvHelperException, Row, record.GetType(), null, null, currentRecord.ToArray() );
 
 				throw csvHelperException;
@@ -435,7 +446,8 @@ namespace CsvHelper
 				if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
 				{
 					WriteExcelSeparator();
-					hasExcelSeperatorBeenRead = true;
+                    NextRecord();
+                    hasExcelSeperatorBeenRead = true;
 				}
 
 				// Write the header. If records is a List<dynamic>, the header won't be written.
@@ -448,6 +460,10 @@ namespace CsvHelper
 					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive )
 					{
 						WriteHeader( recordType );
+                        if( hasHeaderBeenWritten )
+                        {
+                            NextRecord();
+                        }
 					}
 				}
 
@@ -462,6 +478,7 @@ namespace CsvHelper
 						if( configuration.HasHeaderRecord && !hasHeaderBeenWritten )
 						{
 							WriteDynamicHeader( dynamicObject );
+                            NextRecord();
 						}
 
 						if( !typeActions.ContainsKey( recordType ) )
@@ -478,16 +495,17 @@ namespace CsvHelper
 						if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive )
 						{
 							WriteHeader( recordType );
+                            NextRecord();
 						}
 #if !NET_2_0 && !NET_3_5 && !PCL
 					}
 #endif
 
-					try
+                    try
 					{
 						GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
-					}
-					catch( TargetInvocationException ex )
+                    }
+                    catch( TargetInvocationException ex )
 					{
 						throw ex.InnerException;
 					}
