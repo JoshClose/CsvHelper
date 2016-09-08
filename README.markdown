@@ -1,5 +1,7 @@
 # CsvHelper
 
+[![Join the chat at https://gitter.im/CsvHelper/Lobby](https://badges.gitter.im/CsvHelper/Lobby.svg)](https://gitter.im/CsvHelper/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.
 
 ## Install
