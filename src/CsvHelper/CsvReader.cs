@@ -34,8 +34,9 @@ namespace CsvHelper
 		private int currentIndex = -1;
 		private bool doneReading;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
+	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
 #if !NET_2_0
-		private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
+        private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
 #endif
 		private readonly CsvConfiguration configuration;
 
@@ -1081,6 +1082,14 @@ namespace CsvHelper
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
 
+            // Caching the named index speeds up mappings that use ConvertUsing tremendously.
+		    var nameKey = string.Join( "_", names ) + index;
+		    if( namedIndexCache.ContainsKey( nameKey ) )
+		    {
+		        var tuple = namedIndexCache[nameKey];
+		        return namedIndexes[tuple.Item1][tuple.Item2];
+		    }
+
 			var compareOptions = !Configuration.IsHeaderCaseSensitive ? CompareOptions.IgnoreCase : CompareOptions.None;
 			string name = null;
 			foreach( var pair in namedIndexes )
@@ -1119,6 +1128,8 @@ namespace CsvHelper
 
 				return -1;
 			}
+
+		    namedIndexCache.Add( nameKey, new Tuple<string, int>( name, index ) );
 
 			return namedIndexes[name][index];
 		}

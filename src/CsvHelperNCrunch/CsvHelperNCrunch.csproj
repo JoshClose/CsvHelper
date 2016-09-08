@@ -63,6 +63,9 @@
     <Compile Include="..\CsvHelper\Compatibility\NET_2_0\StringExtensions.cs">
       <Link>Compatibility\NET_2_0\StringExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Compatibility\NET_3_5\Tuple`2.cs">
+      <Link>Compatibility\NET_3_5\Tuple`2.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Compatibility\PCL\EnumerableExtensions.cs">
       <Link>Compatibility\PCL\EnumerableExtensions.cs</Link>
     </Compile>
