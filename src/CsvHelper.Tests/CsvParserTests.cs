@@ -1011,7 +1011,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ByteCountTestWithQuotedFieldsClosingQuoteAtStartOfBuffer()
 		{
-			var config = new Configuration.CsvConfiguration()
+			var config = new CsvConfiguration()
 			{
 				CountBytes = true,
 				BufferSize = 4
@@ -1040,7 +1040,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ByteCountTestWithQuotedFieldsEscapedQuoteAtStartOfBuffer()
 		{
-			var config = new Configuration.CsvConfiguration()
+			var config = new CsvConfiguration()
 			{
 				CountBytes = true,
 				BufferSize = 4
