@@ -29,11 +29,23 @@ namespace CsvHelper.Configuration
 		{
 			get
 			{
-				var map = data.Keys
-					.Where( k => k.IsAssignableFrom( type ) )
-					.Select( k => data[k] ).FirstOrDefault();
+				// Go up the inheritance tree to find the matching type.
+				// We can't use IsAssignableFrom because both a child
+				// and it's parent/grandparent/etc could be mapped.
+				var currentType = type;
+				while( true )
+				{
+					if( currentType == type  )
+					{
+						return data.ContainsKey( currentType ) ? data[currentType] : null;
+					}
 
-				return map;
+					currentType = type.GetTypeInfo().BaseType;
+					if( currentType == null )
+					{
+						return null;
+					}
+				}
 			}
 		}
 
