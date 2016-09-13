@@ -1400,6 +1400,14 @@ namespace CsvHelper
 					// If an index was explicity set, use it.
 					index = propertyMap.Data.Index;
 				}
+                else if (propertyMap.Data.IsDefaultSet)
+                {
+                    // Default used on it's own without index or name set always sets to default
+
+                    bindings.Add(Expression.Bind(propertyMap.Data.Property, Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType )));
+
+                    continue;
+                }
 				else
 				{
 					// Fallback to defaults.
@@ -1441,7 +1449,7 @@ namespace CsvHelper
 				if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
-					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
+					    Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
 
 					// If null, use string.Empty.
 					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
