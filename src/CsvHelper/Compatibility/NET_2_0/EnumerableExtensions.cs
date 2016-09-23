@@ -49,6 +49,19 @@ namespace System.Linq
 			return true;
 		}
 
+		public static TSource FirstOrDefault<TSource>( this IEnumerable<TSource> enumerable, Func<TSource, bool> predicate = null )
+		{
+			foreach( var item in enumerable )
+			{
+				if( predicate == null || predicate( item ) )
+				{
+					return item;
+				}
+			}
+
+			return default( TSource );
+		}
+
 		public static bool SequenceEqual( this IEnumerable x, IEnumerable y )
 		{
 			if( x == null )

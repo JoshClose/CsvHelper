@@ -15,11 +15,6 @@ namespace CsvHelper
 	public interface ICsvReader : ICsvReaderRow, IDisposable
 	{
 		/// <summary>
-		/// Gets or sets the configuration.
-		/// </summary>
-		CsvConfiguration Configuration { get; }
-
-		/// <summary>
 		/// Gets the parser.
 		/// </summary>
 		ICsvParser Parser { get; }

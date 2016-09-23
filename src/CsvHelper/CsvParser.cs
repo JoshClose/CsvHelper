@@ -128,7 +128,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new CsvParserException( "An unexpected error occurred.", ex );
 				ExceptionHelper.AddExceptionData( csvHelperException, Row, null, null, null, record.ToArray() );
 
 				throw csvHelperException;

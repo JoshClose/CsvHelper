@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -18,20 +20,47 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
-				: propertyMapData.IndexEnd;
-
-			var arraySize = indexEnd - propertyMapData.Index + 1;
-
-			var array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Property.PropertyType, arraySize );
-
+			Array array;
 			var type = propertyMapData.Property.PropertyType.GetElementType();
-			var arrayIndex = 0;
-			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+
+			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
 			{
-				array.SetValue( row.GetField( type, i ), arrayIndex );
-				arrayIndex++;
+				// Use the name.
+				var list = new List<object>();
+				var nameIndex = 0;
+				while( true )
+				{
+					object field;
+					if( !row.TryGetField( type, propertyMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+					{
+						break;
+					}
+
+					list.Add( field );
+					nameIndex++;
+				}
+
+				array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Property.PropertyType, list.Count );
+				for( var i = 0; i < list.Count; i++ )
+				{
+					array.SetValue( list[i], i );
+				}
+			}
+			else
+			{
+				// Use the index.
+				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+					? row.CurrentRecord.Length - 1
+					: propertyMapData.IndexEnd;
+
+				var arraySize = indexEnd - propertyMapData.Index + 1;
+				array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Property.PropertyType, arraySize );
+				var arrayIndex = 0;
+				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+				{
+					array.SetValue( row.GetField( type, i ), arrayIndex );
+					arrayIndex++;
+				}
 			}
 
 			return array;

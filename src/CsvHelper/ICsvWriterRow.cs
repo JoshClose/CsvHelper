@@ -11,6 +11,11 @@ namespace CsvHelper
     public interface ICsvWriterRow
 	{
 		/// <summary>
+		/// Gets or sets the configuration.
+		/// </summary>
+		CsvConfiguration Configuration { get; }
+
+		/// <summary>
 		/// Gets the current row.
 		/// </summary>
 		int Row { get; }

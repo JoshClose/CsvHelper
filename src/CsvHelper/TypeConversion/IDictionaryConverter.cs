@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -41,14 +42,37 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
-				: propertyMapData.IndexEnd;
-
 			var dictionary = new Dictionary<string, string>();
-			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+
+			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
 			{
-				dictionary.Add( row.FieldHeaders[i], row.GetField( i ) );
+				// Use the name.
+				var nameIndex = 0;
+				while( true )
+				{
+					string field;
+					var name = propertyMapData.Names.FirstOrDefault() ?? string.Empty;
+					row.TryGetField( name, nameIndex, out field );
+					if( field == null )
+					{
+						break;
+					}
+
+					dictionary.Add( name, field );
+					nameIndex++;
+				}
+			}
+			else
+			{
+				// Use the index.
+				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+					? row.CurrentRecord.Length - 1
+					: propertyMapData.IndexEnd;
+
+				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+				{
+					dictionary.Add( row.FieldHeaders[i], row.GetField( i ) );
+				}
 			}
 
 			return dictionary;

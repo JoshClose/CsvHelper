@@ -16,6 +16,11 @@ namespace CsvHelper
 	public interface ICsvReaderRow
 	{
 		/// <summary>
+		/// Gets or sets the configuration.
+		/// </summary>
+		CsvConfiguration Configuration { get; }
+
+		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
 		string[] FieldHeaders { get; }
@@ -225,6 +230,70 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <returns>The field converted to <see cref="Type"/> T.</returns>
 		T GetField<T, TConverter>( string name, int index ) where TConverter : ITypeConverter;
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) index.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="index">The zero based index of the field.</param>
+		/// <param name="field">The field converted to type T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( Type type, int index, out object field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) name.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( Type type, string name, out object field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position 
+		/// (column) name and the index instance of that field. The index 
+		/// is used when there are multiple columns with the same header name.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( Type type, string name, int index, out object field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) index
+		/// using the specified <see cref="ITypeConverter" />.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="index">The zero based index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( Type type, int index, ITypeConverter converter, out object field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) name
+		/// using the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( Type type, string name, ITypeConverter converter, out object field );
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) name
+		/// using the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		bool TryGetField( Type type, string name, int index, ITypeConverter converter, out object field );
 
 		/// <summary>
 		/// Gets the field converted to <see cref="Type"/> T at position (column) index.

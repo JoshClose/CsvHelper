@@ -72,15 +72,30 @@ namespace CsvHelper
 #endif
 		}
 
+		private static T Default<T>()
+		{
+			return default( T );
+		}
+
 #if !NET_2_0
 
 		private static Delegate CreateInstanceDelegate( Type type, params object[] args )
 		{
-			var argumentTypes = args.Select( a => a.GetType() ).ToArray();
-			var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
-			var constructorInfo = type.GetConstructor( argumentTypes );
-			var constructor = Expression.New( constructorInfo, argumentExpressions );
-			var compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
+			Delegate compiled;
+			if( type.GetTypeInfo().IsValueType )
+			{
+				var method = typeof( ReflectionHelper ).GetMethod( "Default", BindingFlags.Static | BindingFlags.NonPublic );
+				method = method.MakeGenericMethod( type );
+				compiled = Expression.Lambda( Expression.Call( method ) ).Compile();
+			}
+			else
+			{
+				var argumentTypes = args.Select( a => a.GetType() ).ToArray();
+				var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
+				var constructorInfo = type.GetConstructor( argumentTypes );
+				var constructor = Expression.New( constructorInfo, argumentExpressions );
+				compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
+			}
 
 			return compiled;
 		}

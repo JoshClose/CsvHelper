@@ -261,7 +261,7 @@ namespace CsvHelper
 	        }
 	        catch( Exception ex )
 	        {
-	            var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+	            var csvHelperException = ex as CsvHelperException ?? new CsvWriterException( "An unexpected error occurred.", ex );
 	            ExceptionHelper.AddExceptionData( csvHelperException, Row, null, null, null, currentRecord.ToArray() );
 	            throw csvHelperException;
 	        }
@@ -348,7 +348,18 @@ namespace CsvHelper
 			{
 				if( CanWrite( property ) )
 				{
-					WriteField( property.Data.Names.FirstOrDefault() );
+					if( property.Data.IndexEnd >= property.Data.Index )
+					{
+						var count = property.Data.IndexEnd - property.Data.Index + 1;
+						for( var i = 1; i <= count; i++ )
+						{
+							WriteField( property.Data.Names.FirstOrDefault() + i );
+						}
+					}
+					else
+					{
+						WriteField( property.Data.Names.FirstOrDefault() );
+					}
 				}
 			}
 
@@ -427,7 +438,7 @@ namespace CsvHelper
             }
             catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new CsvWriterException( "An unexpected error occurred.", ex );
 				ExceptionHelper.AddExceptionData( csvHelperException, Row, record.GetType(), null, null, currentRecord.ToArray() );
 
 				throw csvHelperException;
@@ -471,7 +482,7 @@ namespace CsvHelper
 				{
 					recordType = record.GetType();
 
-#if !NET_2_0 && !NET_3_5 && !PCL
+#if !NET_3_5 && !PCL
 					var dynamicObject = record as IDynamicMetaObjectProvider;
 					if( dynamicObject != null )
 					{
@@ -497,7 +508,7 @@ namespace CsvHelper
 							WriteHeader( recordType );
                             NextRecord();
 						}
-#if !NET_2_0 && !NET_3_5 && !PCL
+#if !NET_3_5 && !PCL
 					}
 #endif
 
@@ -515,7 +526,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new CsvWriterException( "An unexpected error occurred.", ex );
 				ExceptionHelper.AddExceptionData( csvHelperException, Row, recordType, null, null, currentRecord.ToArray() );
 
 				throw csvHelperException;

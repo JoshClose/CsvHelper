@@ -1,6 +1,7 @@
 ﻿#if !PCL && !NETSTANDARD
 using System;
 using System.Collections;
+using System.Linq;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -19,14 +20,36 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
-				: propertyMapData.IndexEnd;
+			var list = new ArrayList();
 
-			var list = new System.Collections.ArrayList();
-			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
 			{
-				list.Add( row.GetField( i ) );
+				// Use the name.
+				var nameIndex = 0;
+				while( true )
+				{
+					string field;
+					row.TryGetField( propertyMapData.Names.FirstOrDefault(), nameIndex, out field );
+					if( field == null )
+					{
+						break;
+					}
+
+					list.Add( field );
+					nameIndex++;
+				}
+			}
+			else
+			{
+				// Use the index.
+				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+					? row.CurrentRecord.Length - 1
+					: propertyMapData.IndexEnd;
+
+				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+				{
+					list.Add( row.GetField( i ) );
+				}
 			}
 
 			return list;

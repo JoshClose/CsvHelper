@@ -10,9 +10,9 @@ using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
+using System.Reflection;
 #if !NET_2_0
 using System.Linq.Expressions;
-using System.Reflection;
 #endif
 #if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
@@ -593,6 +593,141 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the field converted to <see cref="System.Type"/> T at position (column) index.
 		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="index">The zero based index of the field.</param>
+		/// <param name="field">The field converted to type T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		public virtual bool TryGetField( Type type, int index, out object field )
+		{
+			CheckHasBeenRead();
+
+			var converter = TypeConverterFactory.GetConverter( type );
+			return TryGetField( type, index, converter, out field );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) name.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		public virtual bool TryGetField( Type type, string name, out object field )
+		{
+			CheckHasBeenRead();
+
+			var converter = TypeConverterFactory.GetConverter( type );
+			return TryGetField( type, name, converter, out field );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position 
+		/// (column) name and the index instance of that field. The index 
+		/// is used when there are multiple columns with the same header name.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		public virtual bool TryGetField( Type type, string name, int index, out object field )
+		{
+			CheckHasBeenRead();
+
+			var converter = TypeConverterFactory.GetConverter( type );
+			return TryGetField( type, name, index, converter, out field );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) index
+		/// using the specified <see cref="ITypeConverter" />.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="index">The zero based index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		public virtual bool TryGetField( Type type, int index, ITypeConverter converter, out object field )
+		{
+			CheckHasBeenRead();
+
+			// DateTimeConverter.ConvertFrom will successfully convert
+			// a white space string to a DateTime.MinValue instead of
+			// returning null, so we need to handle this special case.
+			if( converter is DateTimeConverter )
+			{
+				if( StringHelper.IsNullOrWhiteSpace( currentRecord[index] ) )
+				{
+					field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+					return false;
+				}
+			}
+
+			// TypeConverter.IsValid() just wraps a
+			// ConvertFrom() call in a try/catch, so lets not
+			// do it twice and just do it ourselves.
+			try
+			{
+				field = GetField( type, index, converter );
+				return true;
+			}
+			catch
+			{
+				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) name
+		/// using the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		public virtual bool TryGetField( Type type, string name, ITypeConverter converter, out object field )
+		{
+			CheckHasBeenRead();
+
+			var index = GetFieldIndex( name, isTryGet: true );
+			if( index == -1 )
+			{
+				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+				return false;
+			}
+
+			return TryGetField( type, index, converter, out field );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) name
+		/// using the specified <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+		/// <param name="name">The named index of the field.</param>
+		/// <param name="index">The zero based index of the instance of the field.</param>
+		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
+		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+		/// <returns>A value indicating if the get was successful.</returns>
+		public virtual bool TryGetField( Type type, string name, int index, ITypeConverter converter, out object field )
+		{
+			CheckHasBeenRead();
+
+			var fieldIndex = GetFieldIndex( name, index, true );
+			if( fieldIndex == -1 )
+			{
+				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+				return false;
+			}
+
+			return TryGetField( type, fieldIndex, converter, out field );
+		}
+
+		/// <summary>
+		/// Gets the field converted to <see cref="System.Type"/> T at position (column) index.
+		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the field.</typeparam>
 		/// <param name="index">The zero based index of the field.</param>
 		/// <param name="field">The field converted to type T.</param>
@@ -809,7 +944,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
 				ExceptionHelper.AddExceptionData( csvHelperException, Row, typeof( T ), currentIndex, namedIndexes, currentRecord );
 
 				throw csvHelperException;
@@ -834,7 +969,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
 				ExceptionHelper.AddExceptionData( csvHelperException, Row, type, currentIndex, namedIndexes, currentRecord );
 
 				throw csvHelperException;
@@ -864,7 +999,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
 					ExceptionHelper.AddExceptionData( csvHelperException, Row, typeof( T ), currentIndex, namedIndexes, currentRecord );
 
 					if( configuration.IgnoreReadingExceptions )
@@ -876,7 +1011,7 @@ namespace CsvHelper
 						continue;
 					}
 
-					throw;
+					throw csvHelperException;
 				}
 
 				yield return record;
@@ -904,7 +1039,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					var csvHelperException = ex as CsvHelperException ?? new CsvHelperException( "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
 					ExceptionHelper.AddExceptionData( csvHelperException, Row, type, currentIndex, namedIndexes, currentRecord );
 
 					if( configuration.IgnoreReadingExceptions )
@@ -916,7 +1051,7 @@ namespace CsvHelper
 						continue;
 					}
 
-					throw;
+					throw csvHelperException;
 				}
 
 				yield return record;
@@ -1113,7 +1248,7 @@ namespace CsvHelper
 				}
 			}
 
-			if( name == null )
+			if( name == null || index >= namedIndexes[name].Count )
 			{
 				if( configuration.WillThrowOnMissingField && !isTryGet )
 				{
@@ -1385,9 +1520,9 @@ namespace CsvHelper
 				}
 
 				var index = -1;
-				if( propertyMap.Data.IsNameSet )
+				if( propertyMap.Data.IsNameSet || configuration.HasHeaderRecord && !propertyMap.Data.IsIndexSet )
 				{
-					// If a name was explicitly set, use it.
+					// Use the name.
 					index = GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex );
 					if( index == -1 )
 					{
@@ -1395,30 +1530,10 @@ namespace CsvHelper
 						continue;
 					}
 				}
-				else if( propertyMap.Data.IsIndexSet )
-				{
-					// If an index was explicity set, use it.
-					index = propertyMap.Data.Index;
-				}
 				else
 				{
-					// Fallback to defaults.
-
-					if( configuration.HasHeaderRecord )
-					{
-						// Fallback to the default name.
-						index = GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex );
-						if( index == -1 )
-						{
-							// Skip if the index was not found.
-							continue;
-						}
-					}
-					else if( index == -1 )
-					{
-						// Fallback to the default index.
-						index = propertyMap.Data.Index;
-					}
+					// Use the index.
+					index = propertyMap.Data.Index;
 				}
 
 				// Get the field using the field index.

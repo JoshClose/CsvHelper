@@ -15,11 +15,6 @@ namespace CsvHelper
 	public interface ICsvWriter : ICsvWriterRow, IDisposable
 	{
 		/// <summary>
-		/// Gets or sets the configuration.
-		/// </summary>
-		CsvConfiguration Configuration { get; }
-
-		/// <summary>
 		/// Ends writing of the current record and starts a new record. 
 		/// This needs to be called to serialize the row to the writer.
 		/// </summary>
