@@ -394,8 +394,7 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
-			var provider = (IDynamicMetaObjectProvider)record;
-			var metaObject = provider.GetMetaObject( Expression.Constant( provider ) );
+			var metaObject = record.GetMetaObject( Expression.Constant( record ) );
 			var names = metaObject.GetDynamicMemberNames();
 			foreach( var name in names )
 			{
@@ -483,6 +482,7 @@ namespace CsvHelper
 					recordType = record.GetType();
 
 #if !NET_3_5 && !PCL
+
 					var dynamicObject = record as IDynamicMetaObjectProvider;
 					if( dynamicObject != null )
 					{
@@ -834,6 +834,8 @@ namespace CsvHelper
 		/// <param name="provider">The dynamic object.</param>
 		protected virtual void CreateActionForDynamic( IDynamicMetaObjectProvider provider )
 		{
+			// http://stackoverflow.com/a/14011692/68499
+
 			var type = provider.GetType();
 			var parameterExpression = Expression.Parameter( typeof( object ), "record" );
 
@@ -845,9 +847,10 @@ namespace CsvHelper
 			{
 				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
 				var getMemberMetaObject = metaObject.BindGetMember( getMemberBinder );
-				var fieldExpression = Expression.Block( Expression.Label( CallSiteBinder.UpdateLabel ), getMemberMetaObject.Expression );
-				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( object ) }, fieldExpression );
-				var lambda = Expression.Lambda( writeFieldMethodCall, parameterExpression );
+				var fieldExpression = getMemberMetaObject.Expression;
+				fieldExpression = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( object ) }, fieldExpression );
+				fieldExpression = Expression.Block( fieldExpression, Expression.Label( CallSiteBinder.UpdateLabel ) );
+				var lambda = Expression.Lambda( fieldExpression, parameterExpression );
 				delegates.Add( lambda.Compile() );
 			}
 
