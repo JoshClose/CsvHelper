@@ -1626,10 +1626,11 @@ namespace CsvHelper
 			var dict = obj as IDictionary<string, object>;
 			if( headerRecord != null )
 			{
-				for( var i = 0; i < headerRecord.Length; i++ )
+				var length = Math.Min( headerRecord.Length, currentRecord.Length );
+				for( var i = 0; i < length; i++ )
 				{
 					var header = headerRecord[i];
-					var field = currentRecord[i];
+					var field = GetField( i );
 					dict.Add( header, field );
 				}
 			}
@@ -1638,7 +1639,7 @@ namespace CsvHelper
 				for( var i = 0; i < currentRecord.Length; i++ )
 				{
 					var propertyName = "Field" + ( i + 1 );
-					var field = currentRecord[i];
+					var field = GetField( i );
 					dict.Add( propertyName, field );
 				}
 			}

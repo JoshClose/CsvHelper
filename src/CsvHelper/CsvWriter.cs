@@ -331,7 +331,7 @@ namespace CsvHelper
 				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
 			}
 
-			if( type == typeof( Object ) )
+			if( type == typeof( object ) )
 			{
 				return;
 			}
@@ -422,17 +422,12 @@ namespace CsvHelper
 					WriteDynamicHeader( dynamicRecord );
 				    NextRecord();
 				}
-
-				if( !typeActions.ContainsKey( dynamicRecord.GetType() ) )
-				{
-					CreateActionForDynamic( dynamicRecord );
-				}
 			}
 #endif
 
 			try
 			{
-				GetWriteRecordAction<T>()( record );
+				GetWriteRecordAction( record ).DynamicInvoke( record );
                 hasRecordBeenWritten = true;
             }
             catch( Exception ex )
@@ -467,7 +462,7 @@ namespace CsvHelper
 				{
 					recordType = genericEnumerable.GetGenericArguments().Single();
 					var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
-					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive )
+					if( configuration.HasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive && recordType != typeof( object ) )
 					{
 						WriteHeader( recordType );
                         if( hasHeaderBeenWritten )
@@ -491,11 +486,6 @@ namespace CsvHelper
 							WriteDynamicHeader( dynamicObject );
                             NextRecord();
 						}
-
-						if( !typeActions.ContainsKey( recordType ) )
-						{
-							CreateActionForDynamic( dynamicObject );
-						}
 					}
 					else
 					{
@@ -514,7 +504,7 @@ namespace CsvHelper
 
                     try
 					{
-						GetWriteRecordAction( record.GetType() ).DynamicInvoke( record );
+						GetWriteRecordAction( record ).DynamicInvoke( record );
                     }
                     catch( TargetInvocationException ex )
 					{
@@ -684,32 +674,23 @@ namespace CsvHelper
 		/// class object to the writer.
 		/// </summary>
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
+		/// <param name="record"></param>
 		/// <returns>The action delegate.</returns>
-		protected virtual Action<T> GetWriteRecordAction<T>()
+		protected virtual Delegate GetWriteRecordAction<T>( T record )
 		{
 			var type = typeof( T );
-			if( !typeActions.ContainsKey( type ) )
+			if( type == typeof( object ) )
 			{
-				CreateWriteRecordAction( type );
+				type = record.GetType();
 			}
 
-			return (Action<T>)typeActions[type];
-		}
-
-		/// <summary>
-		/// Gets the action delegate used to write the custom
-		/// class object to the writer.
-		/// </summary>
-		/// <param name="type">The type of the custom class being written.</param>
-		/// <returns>The action delegate.</returns>
-		protected virtual Delegate GetWriteRecordAction( Type type )
-		{
-			if( !typeActions.ContainsKey( type ) )
+			Delegate action;
+			if( !typeActions.TryGetValue( type, out action ) )
 			{
-				CreateWriteRecordAction( type );
+				action = CreateWriteRecordAction( type, record );
 			}
 
-			return typeActions[type];
+			return action;
 		}
 
 		/// <summary>
@@ -717,8 +698,25 @@ namespace CsvHelper
 		/// doesn't already exist.
 		/// </summary>
 		/// <param name="type">The type of the custom class being written.</param>
-		protected virtual void CreateWriteRecordAction( Type type )
+		/// <param name="record">The record that will be written.</param>
+		protected virtual Delegate CreateWriteRecordAction<T>( Type type, T record )
 		{
+#if !NET_3_5 && !PCL
+
+			var expandoObject = record as ExpandoObject;
+			if( expandoObject != null )
+			{
+				return CreateActionForExpandoObject( expandoObject );
+			}
+			
+			var dynamicObject = record as IDynamicMetaObjectProvider;
+			if( dynamicObject != null )
+			{
+				return CreateActionForDynamic( dynamicObject );
+			}
+
+#endif
+
 			if( configuration.Maps[type] == null )
 			{
 				// We need to check again in case the header was not written.
@@ -727,19 +725,17 @@ namespace CsvHelper
 
 			if( type.GetTypeInfo().IsPrimitive )
 			{
-				CreateActionForPrimitive( type );
+				return CreateActionForPrimitive( type );
 			}
-			else
-			{
-				CreateActionForObject( type );
-			}
+
+			return CreateActionForObject( type );
 		}
 
 		/// <summary>
 		/// Creates the action for an object.
 		/// </summary>
 		/// <param name="type">The type of object to create the action for.</param>
-		protected virtual void CreateActionForObject( Type type )
+		protected virtual Delegate CreateActionForObject( Type type )
 		{
 			var recordParameter = Expression.Parameter( type, "record" );
 
@@ -794,14 +790,17 @@ namespace CsvHelper
 				delegates.Add( Expression.Lambda( actionType, writeFieldMethodCall, recordParameter ).Compile() );
 			}
 
-			typeActions[type] = CombineDelegates( delegates );
+			var action = CombineDelegates( delegates );
+			typeActions[type] = action;
+
+			return action;
 		}
 
 		/// <summary>
 		/// Creates the action for a primitive.
 		/// </summary>
 		/// <param name="type">The type of primitive to create the action for.</param>
-		protected virtual void CreateActionForPrimitive( Type type )
+		protected virtual Delegate CreateActionForPrimitive( Type type )
 		{
 			var recordParameter = Expression.Parameter( type, "record" );
 
@@ -823,16 +822,42 @@ namespace CsvHelper
 			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
 
 			var actionType = typeof( Action<> ).MakeGenericType( type );
-			typeActions[type] = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
+			var action = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
+			typeActions[type] = action;
+
+			return action;
 		}
 
 #if !NET_2_0 && !NET_3_5 && !PCL
 
 		/// <summary>
+		/// Creates an action for an ExpandoObject. This needs to be separate
+		/// from other dynamic objects due to what seems to be an issue in ExpandoObject
+		/// where expandos with the same properties sometimes test as not equal.
+		/// </summary>
+		/// <param name="obj">The ExpandoObject.</param>
+		/// <returns></returns>
+		protected virtual Delegate CreateActionForExpandoObject( ExpandoObject obj )
+		{
+			Action<object> action = record =>
+			{
+				var dict = (IDictionary<string, object>)record;
+				foreach( var val in dict.Values )
+				{
+					WriteField( val );
+				}
+			};
+
+			typeActions[typeof( ExpandoObject )] = action;
+
+			return action;
+		}
+
+		/// <summary>
 		/// Creates the action for a dynamic object.
 		/// </summary>
 		/// <param name="provider">The dynamic object.</param>
-		protected virtual void CreateActionForDynamic( IDynamicMetaObjectProvider provider )
+		protected virtual Delegate CreateActionForDynamic( IDynamicMetaObjectProvider provider )
 		{
 			// http://stackoverflow.com/a/14011692/68499
 
@@ -854,7 +879,11 @@ namespace CsvHelper
 				delegates.Add( lambda.Compile() );
 			}
 
-			typeActions[type] = CombineDelegates( delegates );
+			var action = CombineDelegates( delegates );
+
+			typeActions[type] = action;
+
+			return action;
 		}
 
 #endif
