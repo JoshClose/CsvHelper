@@ -25,12 +25,18 @@ namespace CsvHelper.Tests.Writing
 				obj.Name = "one";
 				list.Add( obj );
 
+				obj = new ExpandoObject();
+				obj.Id = 2;
+				obj.Name = "two";
+				list.Add( obj );
+
 				csv.WriteRecords( list );
 				writer.Flush();
 				stream.Position = 0;
 
 				var expected = "Id,Name\r\n";
 				expected += "1,one\r\n";
+				expected += "2,two\r\n";
 
 				Assert.AreEqual( expected, reader.ReadToEnd() );
 			}
@@ -50,11 +56,20 @@ namespace CsvHelper.Tests.Writing
 
 				csv.WriteRecord( obj );
                 csv.NextRecord();
+
+				obj = new ExpandoObject();
+				obj.Id = 2;
+				obj.Name = "two";
+
+				csv.WriteRecord( obj );
+				csv.NextRecord();
+
                 writer.Flush();
 				stream.Position = 0;
 
 				var expected = "Id,Name\r\n";
 				expected += "1,one\r\n";
+				expected += "2,two\r\n";
 
 				Assert.AreEqual( expected, reader.ReadToEnd() );
 			}
