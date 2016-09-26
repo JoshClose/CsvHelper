@@ -4,6 +4,10 @@
 // http://csvhelper.com
 using System.IO;
 using CsvHelper.Configuration;
+#if !NET_2_0
+using System;
+using System.Linq.Expressions;
+#endif
 
 namespace CsvHelper
 {
@@ -83,6 +87,14 @@ namespace CsvHelper
 		public virtual ICsvWriter CreateWriter( TextWriter writer )
 		{
 			return new CsvWriter( writer );
-		}
-	}
+        }
+#if !NET_2_0
+        public ClassMapBuilder<T> Map<T>(Expression<Func<T,object>> map)
+	    {
+	        var toRet = new ClassMapBuilder<T>();
+            toRet.Map(map);
+            return toRet;
+	    }
+#endif
+    }
 }
