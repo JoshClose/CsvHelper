@@ -1089,7 +1089,7 @@ namespace CsvHelper.Tests
 			public TestDefaultValuesMap()
 			{
 				Map( m => m.IntColumn ).Default( -1 );
-				Map( m => m.StringColumn ).Default( null );
+				Map( m => m.StringColumn ).Default( (string)null );
 			}
 		}
 

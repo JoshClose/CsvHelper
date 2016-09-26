@@ -102,6 +102,7 @@
     <Compile Include="ParserBadDataTests.cs" />
     <Compile Include="Parsing\CommentTests.cs" />
     <Compile Include="Parsing\DelimiterTests.cs" />
+    <Compile Include="Reading\ConstantTests.cs" />
     <Compile Include="Reading\ReadHeaderTests.cs" />
     <Compile Include="Reading\ShouldSkipRecordTests.cs" />
     <Compile Include="Reading\TryGetTests.cs" />
@@ -128,6 +129,7 @@
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterOptionsFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterTests.cs" />
+    <Compile Include="Writing\ConstantTests.cs" />
     <Compile Include="Writing\DynamicTests.cs" />
   </ItemGroup>
   <ItemGroup>

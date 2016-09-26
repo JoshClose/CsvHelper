@@ -114,9 +114,39 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual CsvPropertyMap Default( object defaultValue )
+		public virtual CsvPropertyMap Default<T>( T defaultValue )
 		{
+			var returnType = typeof( T );
+			if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+			{
+				throw new CsvConfigurationException( $"Default type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+			}
+
 			Data.Default = defaultValue;
+			Data.IsDefaultSet = true;
+
+			return this;
+		}
+
+		/// <summary>
+		/// The constant value that will be used when reading.
+		/// This value will always be used no matter what other
+		/// mapping configurations are specified.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="constantValue"></param>
+		/// <returns></returns>
+		public virtual CsvPropertyMap Constant<T>( T constantValue )
+		{
+			var returnType = typeof( T );
+			if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+			{
+				throw new CsvConfigurationException( $"Constant type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+			}
+
+			Data.Constant = constantValue;
+			Data.IsConstantSet = true;
+
 			return this;
 		}
 

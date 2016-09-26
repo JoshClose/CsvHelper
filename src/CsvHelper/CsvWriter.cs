@@ -758,30 +758,39 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( propertyMap.Data.TypeConverter == null )
+				Expression fieldExpression;
+
+				if( propertyMap.Data.IsConstantSet )
 				{
-					// Skip if the type isn't convertible.
-					continue;
+					fieldExpression = Expression.Constant( propertyMap.Data.Constant );
 				}
-
-				var fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
-
-				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+				else
 				{
-					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
-				}
+					if( propertyMap.Data.TypeConverter == null )
+					{
+						// Skip if the type isn't convertible.
+						continue;
+					}
 
-				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+					fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
 
-				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
-				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+					var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
+					if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+					{
+						propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
+					}
 
-				if( type.GetTypeInfo().IsClass )
-				{
-					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+
+					var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
+					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+
+					if( type.GetTypeInfo().IsClass )
+					{
+						var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+						fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+					}
 				}
 
 				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );

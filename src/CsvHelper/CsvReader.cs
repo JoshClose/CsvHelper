@@ -1519,7 +1519,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = -1;
+				int index;
 				if( propertyMap.Data.IsNameSet || configuration.HasHeaderRecord && !propertyMap.Data.IsIndexSet )
 				{
 					// Use the name.
@@ -1553,7 +1553,11 @@ namespace CsvHelper
 				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
 
-				if( propertyMap.Data.IsDefaultSet )
+				if( propertyMap.Data.IsConstantSet )
+				{
+					fieldExpression = Expression.Constant( propertyMap.Data.Constant );
+				}
+				else if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
 					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );

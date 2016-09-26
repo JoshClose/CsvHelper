@@ -79,15 +79,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the default value used when a CSV field is empty.
 		/// </summary>
-		public virtual object Default
-		{
-			get { return defaultValue; }
-			set
-			{
-				defaultValue = value;
-				IsDefaultSet = true;
-			}
-		}
+		public virtual object Default { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether this instance is default value set.
@@ -95,6 +87,10 @@ namespace CsvHelper.Configuration
 		/// explicitly set, otherwise false.
 		/// </summary>
 		public virtual bool IsDefaultSet { get; set; }
+
+		public virtual object Constant { get; set; }
+
+		public virtual bool IsConstantSet { get; set; }
 
 #if !NET_2_0
 
