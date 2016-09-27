@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 #if !NET_2_0
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -113,6 +114,7 @@ namespace CsvHelper.Configuration
 		/// The default value that will be used when reading when
 		/// the CSV field is empty.
 		/// </summary>
+		/// <typeparam name="T">The default type.</typeparam>
 		/// <param name="defaultValue">The default value.</param>
 		public virtual CsvPropertyMap Default<T>( T defaultValue )
 		{
@@ -129,13 +131,12 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// The constant value that will be used when reading.
-		/// This value will always be used no matter what other
-		/// mapping configurations are specified.
+		/// The constant value that will be used for every record when 
+		/// reading and writing. This value will always be used no matter 
+		/// what other mapping configurations are specified.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="constantValue"></param>
-		/// <returns></returns>
+		/// <typeparam name="T">The constant type.</typeparam>
+		/// <param name="constantValue">The constant value.</param>
 		public virtual CsvPropertyMap Constant<T>( T constantValue )
 		{
 			var returnType = typeof( T );
@@ -273,4 +274,5 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
+
 #endif // !NET_2_0
