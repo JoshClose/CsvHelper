@@ -1593,7 +1593,7 @@ namespace CsvHelper
 				propertyMap.Data.Ignore ||
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyMap.Data.Property.GetSetMethod() == null && !configuration.IncludePrivateProperties ||
 				// Properties that don't have a setter at all.
 				propertyMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;
@@ -1610,7 +1610,7 @@ namespace CsvHelper
 			var cantRead =
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IncludePrivateProperties ||
 				// Properties that don't have a setter at all.
 				propertyReferenceMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;

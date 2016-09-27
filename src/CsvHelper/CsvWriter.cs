@@ -926,7 +926,7 @@ namespace CsvHelper
 				cantWrite = cantWrite ||
 				// Properties that don't have a public getter
 				// and we are honoring the accessor modifier.
-				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IncludePrivateProperties ||
 				// Properties that don't have a getter at all.
 				propertyMap.Data.Property.GetGetMethod( true ) == null;
 			}

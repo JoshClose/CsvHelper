@@ -318,11 +318,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// get and set property accessors should be
-		/// ignored when reading and writing.
-		/// True to ignore, otherwise false. Default is false.
+		/// properties should be read from and written to.
+		/// True to include private properties, otherwise false. Default is false.
 		/// </summary>
-		public virtual bool IgnorePrivateAccessor { get; set; }
+		public virtual bool IncludePrivateProperties { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if blank lines
