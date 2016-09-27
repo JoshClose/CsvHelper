@@ -919,12 +919,18 @@ namespace CsvHelper
 		{
 			var cantWrite =
 				// Ignored properties.
-				propertyMap.Data.Ignore ||
+				propertyMap.Data.Ignore;
+
+			if( propertyMap.Data.Property != null )
+			{
+				cantWrite = cantWrite ||
 				// Properties that don't have a public getter
 				// and we are honoring the accessor modifier.
 				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IgnorePrivateAccessor ||
 				// Properties that don't have a getter at all.
 				propertyMap.Data.Property.GetGetMethod( true ) == null;
+			}
+
 			return !cantWrite;
 		}
 

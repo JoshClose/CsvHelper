@@ -32,11 +32,14 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public CsvPropertyMap( PropertyInfo property )
 		{
-			Data = new CsvPropertyMapData( property )
+			Data = new CsvPropertyMapData( property );
+			if( property == null )
 			{
-				// Set some defaults.
-				TypeConverter = TypeConverterFactory.GetConverter( property.PropertyType )
-			};
+				return;
+			}
+
+			// Set some defaults.
+			Data.TypeConverter = TypeConverterFactory.GetConverter( property.PropertyType );
 			Data.Names.Add( property.Name );
 		}
 
@@ -139,10 +142,13 @@ namespace CsvHelper.Configuration
 		/// <param name="constantValue">The constant value.</param>
 		public virtual CsvPropertyMap Constant<T>( T constantValue )
 		{
-			var returnType = typeof( T );
-			if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+			if( Data.Property != null )
 			{
-				throw new CsvConfigurationException( $"Constant type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+				var returnType = typeof( T );
+				if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+				{
+					throw new CsvConfigurationException( $"Constant type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+				}
 			}
 
 			Data.Constant = constantValue;
