@@ -1230,6 +1230,12 @@ namespace CsvHelper
 			foreach( var pair in namedIndexes )
 			{
 				var namedIndex = pair.Key;
+
+				if ( configuration.IgnoreHeaderUnderscores )
+				{
+					namedIndex = namedIndex.Replace( "_", string.Empty );
+				}
+
 				if( configuration.IgnoreHeaderWhiteSpace )
 				{
 					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
