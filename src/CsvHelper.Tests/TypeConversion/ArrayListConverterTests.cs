@@ -19,54 +19,6 @@ namespace CsvHelper.Tests.TypeConversion
 	public class ArrayListConverterTests
 	{
 		[TestMethod]
-		public void ConvertNoIndexEndTest()
-		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
-			var currentRecord = new[] { "1", "one", "1", "2", "3" };
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.CurrentRecord ).Returns( currentRecord );
-			rowMock.Setup( m => m.GetField( It.IsAny<int>() ) ).Returns<int>( index => currentRecord[index] );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "List" ) )
-			{
-				Index = 2
-			};
-			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
-
-			var converter = new ArrayListConverter();
-			var list = (ArrayList)converter.ConvertFromString( "1", rowMock.Object, data );
-
-			Assert.AreEqual( 3, list.Count );
-			Assert.AreEqual( "1", list[0] );
-			Assert.AreEqual( "2", list[1] );
-			Assert.AreEqual( "3", list[2] );
-		}
-
-		[TestMethod]
-		public void ConvertWithIndexEndTest()
-		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
-			var currentRecord = new[] { "1", "one", "1", "2", "3" };
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.CurrentRecord ).Returns( currentRecord );
-			rowMock.Setup( m => m.GetField( It.IsAny<int>() ) ).Returns<int>( index => currentRecord[index] );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "List" ) )
-			{
-				Index = 2,
-				IndexEnd = 3
-			};
-			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
-
-			var converter = new ArrayListConverter();
-			var list = (ArrayList)converter.ConvertFromString( "1", rowMock.Object, data );
-
-			Assert.AreEqual( 2, list.Count );
-			Assert.AreEqual( "1", list[0] );
-			Assert.AreEqual( "2", list[1] );
-		}
-
-		[TestMethod]
 		public void FullWriteTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -86,6 +38,70 @@ namespace CsvHelper.Tests.TypeConversion
 				var result = reader.ReadToEnd();
 
 				Assert.AreEqual( ",1,2,3,\r\n", result );
+			}
+		}
+
+		[TestMethod]
+		public void ReadNoIndexEndTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "1,2,3,4,5" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Read();
+
+				var data = new CsvPropertyMapData( null )
+				{
+					Index = 1,
+					IsIndexSet = true
+				};
+
+				var converter = new ArrayListConverter();
+				var list = (ArrayList)converter.ConvertFromString( null, csv, data );
+
+				Assert.AreEqual( 4, list.Count );
+				Assert.AreEqual( "2", list[0] );
+				Assert.AreEqual( "3", list[1] );
+				Assert.AreEqual( "4", list[2] );
+				Assert.AreEqual( "5", list[3] );
+			}
+		}
+
+		[TestMethod]
+		public void ReadIndexEndTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "1,2,3,4,5" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Read();
+
+				var data = new CsvPropertyMapData( null )
+				{
+					Index = 1,
+					IsIndexSet = true,
+					IndexEnd = 3
+				};
+
+				var converter = new ArrayListConverter();
+				var list = (ArrayList)converter.ConvertFromString( null, csv, data );
+
+				Assert.AreEqual( 3, list.Count );
+				Assert.AreEqual( "2", list[0] );
+				Assert.AreEqual( "3", list[1] );
+				Assert.AreEqual( "4", list[2] );
 			}
 		}
 
@@ -215,6 +231,57 @@ namespace CsvHelper.Tests.TypeConversion
 				Assert.AreEqual( "2", list[0] );
 				Assert.AreEqual( "4", list[1] );
 				Assert.AreEqual( "6", list[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ReadNullValuesNameTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "Before,List,List,List,After" );
+				writer.WriteLine( "1,null,NULL,4,5" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.HasHeaderRecord = true;
+				csv.Configuration.RegisterClassMap<TestNamedMap>();
+				var records = csv.GetRecords<Test>().ToList();
+
+				var list = records[0].List;
+
+				Assert.AreEqual( 3, list.Count );
+				Assert.AreEqual( null, list[0] );
+				Assert.AreEqual( null, list[1] );
+				Assert.AreEqual( "4", list[2] );
+			}
+		}
+
+		[TestMethod]
+		public void ReadNullValuesIndexTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "1,null,NULL,4,5" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.RegisterClassMap<TestIndexMap>();
+				var records = csv.GetRecords<Test>().ToList();
+
+				var list = records[0].List;
+
+				Assert.AreEqual( 3, list.Count );
+				Assert.AreEqual( null, list[0] );
+				Assert.AreEqual( null, list[1] );
+				Assert.AreEqual( "4", list[2] );
 			}
 		}
 

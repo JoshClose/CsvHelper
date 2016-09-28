@@ -111,6 +111,9 @@
     <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
       <Link>Configuration\DefaultCsvClassMap`1.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\MapTypeConverterOption.cs">
+      <Link>Configuration\MapTypeConverterOption.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
     </Compile>

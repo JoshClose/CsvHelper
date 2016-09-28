@@ -51,6 +51,11 @@ namespace CsvHelper.TypeConversion
 		public List<string> BooleanFalseValues { get; } = new List<string> { "no", "n" };
 
 		/// <summary>
+		/// Gets the list of values that can be used to represent a null value.
+		/// </summary>
+		public List<string> NullValues { get; } = new List<string> { "null", "NULL" };
+
+		/// <summary>
 		/// Gets or sets the string format.
 		/// </summary>
 		public string Format { get; set; }

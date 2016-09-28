@@ -26,6 +26,14 @@ namespace CsvHelper.TypeConversion
 				return string.Empty;
 			}
 
+			foreach( var nullValue in propertyMapData.TypeConverterOptions.NullValues )
+			{
+				if( text == nullValue )
+				{
+					return null;
+				}
+			}
+
 			return text;
 		}
 	}

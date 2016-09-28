@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using CsvHelper.Configuration;
 
@@ -19,19 +20,21 @@ namespace CsvHelper.TypeConversion
 	    /// <returns>The object created from the string.</returns>
 	    public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
-				: propertyMapData.IndexEnd;
-
 			var keyType = propertyMapData.Property.PropertyType.GetGenericArguments()[0];
 			var valueType = propertyMapData.Property.PropertyType.GetGenericArguments()[1];
 			var dictionaryType = typeof( Dictionary<,> );
 			dictionaryType = dictionaryType.MakeGenericType( keyType, valueType );
-		    var dictionary = (IDictionary)ReflectionHelper.CreateInstance( dictionaryType );
+			var dictionary = (IDictionary)ReflectionHelper.CreateInstance( dictionaryType );
+
+			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+				? row.CurrentRecord.Length - 1
+				: propertyMapData.IndexEnd;
 
 			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 			{
-				dictionary.Add( row.FieldHeaders[i], row.GetField( valueType, i ) );
+				var field = row.GetField( valueType, i );
+
+				dictionary.Add( row.FieldHeaders[i], field );
 			}
 
 			return dictionary;

@@ -191,12 +191,12 @@ namespace CsvHelper.Tests.TypeConversion
             public int NumberOverridenInMap { get; set; }
         }
 
-        private class TestMap : CsvClassMap<Test>
+        private sealed class TestMap : CsvClassMap<Test>
         {
             public TestMap()
             {
-                Map(m => m.Number);
-                Map(m => m.NumberOverridenInMap).TypeConverterOption(NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol).TypeConverterOption("N");
+	            Map( m => m.Number );
+	            Map( m => m.NumberOverridenInMap ).TypeConverterOption.NumberStyles( NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol ).TypeConverterOption.Format( "N" );
             }
         }
     }
