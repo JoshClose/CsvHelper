@@ -26,6 +26,7 @@ namespace CsvHelper.Tests.Reading
 			var parser = new ParserMock( rows );
 
 			var csv = new CsvReader( parser );
+			csv.Read();
 			csv.ReadHeader();
 
 			Assert.IsNotNull( csv.FieldHeaders );
@@ -44,6 +45,7 @@ namespace CsvHelper.Tests.Reading
 			var parser = new ParserMock( rows );
 
 			var csv = new CsvReader( parser );
+			csv.Read();
 			csv.ReadHeader();
 
 			Assert.IsNull( csv.CurrentRecord );
@@ -129,6 +131,7 @@ namespace CsvHelper.Tests.Reading
 			var parser = new ParserMock( rows );
 
 			var csv = new CsvReader( parser );
+			csv.Read();
 			csv.ReadHeader();
 
 			try

@@ -28,6 +28,8 @@ namespace CsvHelper.Tests.Reading
 			csv.Configuration.ShouldSkipRecord = row => row.All( string.IsNullOrWhiteSpace );
 
 			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
 			Assert.AreEqual( "1", csv.GetField( 0 ) );
 			Assert.AreEqual( "2", csv.GetField( 1 ) );
 		}
@@ -44,6 +46,8 @@ namespace CsvHelper.Tests.Reading
 			var csv = new CsvReader( parser );
 			csv.Configuration.ShouldSkipRecord = row => row.All( string.IsNullOrWhiteSpace );
 
+			csv.Read();
+			csv.ReadHeader();
 			csv.Read();
 			Assert.AreEqual( "1", csv.GetField( 0 ) );
 			Assert.AreEqual( "2", csv.GetField( 1 ) );

@@ -24,6 +24,7 @@ namespace CsvHelper.Tests.Exceptions
 
 			var reader = new CsvReader( parser );
 			reader.Read();
+			reader.Read();
 			try
 			{
 				reader.GetField( 2 );
@@ -47,6 +48,7 @@ namespace CsvHelper.Tests.Exceptions
 			};
 
 			var reader = new CsvReader( parser );
+			reader.Read();
 			reader.Read();
 			try
 			{
@@ -177,6 +179,8 @@ namespace CsvHelper.Tests.Exceptions
 			};
 
 			var reader = new CsvReader( parser );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 			try
 			{

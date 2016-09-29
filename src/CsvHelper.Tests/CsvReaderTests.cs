@@ -51,6 +51,8 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
 
 			// Check to see if the header record and first record are set properly.
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
@@ -143,6 +145,8 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
 			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
@@ -159,6 +163,8 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One", 0 ) );
@@ -500,6 +506,8 @@ namespace CsvHelper.Tests
 			try
 			{
 				csvReader.Read();
+				csvReader.ReadHeader();
+				csvReader.Read();
 				Assert.Fail();
 			}
 			catch( CsvReaderException ) {}
@@ -557,6 +565,8 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				csv.Configuration.IsHeaderCaseSensitive = false;
+				csv.Read();
+				csv.ReadHeader();
 				csv.Read();
 
 				Assert.AreEqual( "1", csv.GetField( "one" ) );
@@ -866,6 +876,8 @@ namespace CsvHelper.Tests
 			parserMock.Configuration.TrimHeaders = true;
 			parserMock.Configuration.WillThrowOnMissingField = false;
 			var reader = new CsvReader( parserMock );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 			Assert.AreEqual( "1", reader.GetField( "one" ) );
 			Assert.AreEqual( "2", reader.GetField( "two three" ) );

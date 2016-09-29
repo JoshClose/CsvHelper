@@ -156,16 +156,6 @@ namespace CsvHelper
 				throw new CsvReaderException( "Configuration.HasHeaderRecord is false." );
 			}
 
-			if( headerRecord != null )
-			{
-				throw new CsvReaderException( "Header record has already been read." );
-			}
-
-			do
-			{
-				currentRecord = parser.Read();
-			}
-			while( ShouldSkipRecord() );
 			headerRecord = currentRecord;
 			currentRecord = null;
 			ParseNamedIndexes();
@@ -185,11 +175,6 @@ namespace CsvHelper
 			if( doneReading )
 			{
 				throw new CsvReaderException( DoneReadingExceptionMessage );
-			}
-
-			if( configuration.HasHeaderRecord && headerRecord == null )
-			{
-				ReadHeader();
 			}
 
 			do
@@ -937,6 +922,16 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
+			if( headerRecord == null && configuration.HasHeaderRecord )
+			{
+				ReadHeader();
+
+				if( !Read() )
+				{
+					return default( T );
+				}
+			}
+
 			T record;
 			try
 			{
@@ -961,6 +956,16 @@ namespace CsvHelper
 		public virtual object GetRecord( Type type )
 		{
 			CheckHasBeenRead();
+
+			if( headerRecord == null && configuration.HasHeaderRecord )
+			{
+				ReadHeader();
+
+				if( !Read() )
+				{
+					return null;
+				}
+			}
 
 			object record;
 			try
@@ -989,6 +994,16 @@ namespace CsvHelper
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
+
+			if( configuration.HasHeaderRecord && headerRecord == null )
+			{
+				if( !Read() )
+				{
+					yield break;
+				}
+
+				ReadHeader();
+			}
 
 			while( Read() )
 			{
@@ -1029,6 +1044,16 @@ namespace CsvHelper
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
+
+			if( configuration.HasHeaderRecord && headerRecord == null )
+			{
+				if( !Read() )
+				{
+					yield break;
+				}
+
+				ReadHeader();
+			}
 
 			while( Read() )
 			{

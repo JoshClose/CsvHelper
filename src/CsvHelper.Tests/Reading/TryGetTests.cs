@@ -63,6 +63,8 @@ namespace CsvHelper.Tests.Reading
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
 
 			int field;
 			var got = reader.TryGetField( 0, out field );
@@ -82,6 +84,8 @@ namespace CsvHelper.Tests.Reading
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = true } };
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			int field;
@@ -138,6 +142,8 @@ namespace CsvHelper.Tests.Reading
 				{ "1", "2", "3" }
 			};
 			var reader = new CsvReader( parserMock );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			int field;
