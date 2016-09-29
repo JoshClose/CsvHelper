@@ -375,7 +375,7 @@ namespace CsvHelper.Configuration
 		/// <see cref="IgnoreReadingExceptions"/> is true, and when
 		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
 		/// </summary>
-		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
+		public virtual Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating that during writing if a new 
