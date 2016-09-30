@@ -11,18 +11,20 @@ namespace CsvHelper
     public class FieldReader : IDisposable
     {
 	    private readonly char[] buffer;
+		// ReSharper disable once FieldCanBeMadeReadOnly.Local
+		private StringBuilder rawRecord = new StringBuilder();
+		// ReSharper disable once FieldCanBeMadeReadOnly.Local
 		private StringBuilder field = new StringBuilder();
-	    private int bufferPosition;
+		private int bufferPosition;
 	    private int fieldStartPosition;
 	    private int fieldEndPosition;
 	    private int rawRecordStartPosition;
 	    private int rawRecordEndPosition;
 	    private int charsRead;
 	    private bool disposed;
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvParserConfiguration configuration;
 		private long charPosition;
 		private long bytePosition;
-		private StringBuilder rawRecord = new StringBuilder();
 		private TextReader reader;
 		private bool isFieldBad;
 
@@ -50,7 +52,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public CsvConfiguration Configuration => configuration;
+		public ICsvParserConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Gets or sets a value indicating if the field is bad.
@@ -68,7 +70,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader"></param>
 		/// <param name="configuration"></param>
-	    public FieldReader( TextReader reader, CsvConfiguration configuration )
+	    public FieldReader( TextReader reader, ICsvParserConfiguration configuration )
 	    {
 			this.reader = reader;
 		    buffer = new char[configuration.BufferSize];

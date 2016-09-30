@@ -21,7 +21,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		CsvConfiguration Configuration { get; }
+		ICsvParserConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the character position that the parser is currently on.

@@ -13,7 +13,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
-		CsvConfiguration Configuration { get; }
+		ICsvWriterConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the current row.

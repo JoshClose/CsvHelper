@@ -38,7 +38,7 @@ namespace CsvHelper
 #if !NET_2_0
         private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
 #endif
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvReaderConfiguration configuration;
 
 		private const string DoneReadingExceptionMessage =
 			"The reader has already exhausted all records. " +
@@ -50,7 +50,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration => configuration;
+		public virtual ICsvReaderConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Gets the parser.
@@ -135,8 +135,13 @@ namespace CsvHelper
 				throw new CsvConfigurationException( "The given parser has no configuration." );
 			}
 
+			if( !( parser.Configuration is ICsvReaderConfiguration ) )
+			{
+				throw new CsvConfigurationException( "The given parser does not have a configuration that works with the reader." );
+			}
+
 			this.parser = parser;
-			configuration = parser.Configuration;
+			configuration = (ICsvReaderConfiguration)parser.Configuration;
 			this.leaveOpen = leaveOpen;
 		}
 

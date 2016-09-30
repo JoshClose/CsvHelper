@@ -75,7 +75,8 @@ namespace CsvHelper.Tests
 			}
 
 			public TextReader TextReader { get; }
-			public CsvConfiguration Configuration { get; private set; }
+
+			public ICsvParserConfiguration Configuration { get; private set; }
 
 			public int FieldCount
 			{

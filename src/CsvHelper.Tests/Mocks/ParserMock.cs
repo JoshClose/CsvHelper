@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Mocks
 		}
 
 		public TextReader TextReader { get; }
-		public CsvConfiguration Configuration { get; private set; }
+		public ICsvParserConfiguration Configuration { get; private set; }
 		public int FieldCount { get; private set; }
 		public long CharPosition { get; private set; }
 		public long BytePosition { get; private set; }

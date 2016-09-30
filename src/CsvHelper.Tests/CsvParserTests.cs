@@ -565,7 +565,6 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 
 			var parser = new CsvParser( reader );
-			parser.Configuration.HasHeaderRecord = false;
 
 			var record = parser.Read();
 
@@ -786,7 +785,6 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.IgnoreBlankLines = true;
 				writer.WriteLine( "1,a" );
 				writer.WriteLine();
@@ -814,7 +812,6 @@ namespace CsvHelper.Tests
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.IgnoreBlankLines = false;
 				writer.WriteLine( "1,a" );
 				writer.WriteLine();
@@ -883,8 +880,6 @@ namespace CsvHelper.Tests
 				writer.WriteLine( "10,11,12" );
 				writer.Flush();
 				stream.Position = 0;
-
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.AreEqual( "1", row[0] );

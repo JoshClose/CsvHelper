@@ -40,7 +40,7 @@ namespace CsvHelper
 #if !NET_2_0
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 #endif
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvWriterConfiguration configuration;
 		private bool hasExcelSeperatorBeenRead;
 		private int row = 1;
 
@@ -62,7 +62,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration => configuration;
+		public virtual ICsvWriterConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter" />.
@@ -82,7 +82,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvWriter( TextWriter writer, CsvConfiguration configuration ) : this( new CsvSerializer( writer, configuration ), false ) { }
+		public CsvWriter( TextWriter writer, ICsvWriterConfiguration configuration ) : this( new CsvSerializer( writer, configuration ), false ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="ICsvSerializer"/>.
@@ -107,8 +107,13 @@ namespace CsvHelper
 				throw new CsvConfigurationException( "The given serializer has no configuration." );
 			}
 
+			if( !( serializer.Configuration is ICsvWriterConfiguration ) )
+			{
+				throw new CsvConfigurationException( "The given serializer does not have a configuration that works with the writer." );
+			}
+
 			this.serializer = serializer;
-			configuration = serializer.Configuration;
+			configuration = (ICsvWriterConfiguration)serializer.Configuration;
 			this.leaveOpen = leaveOpen;
 		}
 

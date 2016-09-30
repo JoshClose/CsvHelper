@@ -18,7 +18,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
-		CsvConfiguration Configuration { get; }
+		ICsvReaderConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the field headers.

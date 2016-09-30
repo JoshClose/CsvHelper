@@ -53,7 +53,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -73,7 +72,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -93,7 +91,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -114,7 +111,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -136,7 +132,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -161,7 +156,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -186,7 +180,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -213,7 +206,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -239,7 +231,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "=01", row[0] );
@@ -260,7 +251,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "=\"01\"", row[0] );
@@ -280,7 +270,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( " =\"01\"", row[0] );
@@ -300,7 +289,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "0a1", row[0] );
@@ -321,7 +309,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 				var row = parser.Read();
 
@@ -343,7 +330,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 				var row = parser.Read();
 
@@ -366,7 +352,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 				
 				parser.Read();
@@ -400,9 +385,7 @@ namespace CsvHelper.Tests.ExcelCompatibility
 					stream.Position = 0;
 
 					parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-					parser.Configuration.HasHeaderRecord = false;
 					parser.Configuration.CountBytes = true;
-					parser.Configuration.CultureInfo = Thread.CurrentThread.CurrentCulture;
 
 					parser.Read();
 

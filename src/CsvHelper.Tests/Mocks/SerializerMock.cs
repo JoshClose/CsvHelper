@@ -14,7 +14,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public TextWriter TextWriter { get; }
 
-		public CsvConfiguration Configuration { get; private set; }
+		public ICsvSerializerConfiguration Configuration { get; private set; }
 
 		public List<string[]> Records
 		{

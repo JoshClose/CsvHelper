@@ -15,7 +15,7 @@ namespace CsvHelper
 	{
 		private readonly bool leaveOpen;
 		private bool disposed;
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvSerializerConfiguration configuration;
 		private TextWriter writer;
 
 		/// <summary>
@@ -26,7 +26,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration => configuration;
+		public virtual ICsvSerializerConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
@@ -47,7 +47,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration ) : this( writer, configuration, false ) { }
+		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration ) : this( writer, configuration, false ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
@@ -56,7 +56,7 @@ namespace CsvHelper
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration, bool leaveOpen )
+		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration, bool leaveOpen )
 		{
 			if( writer == null )
 			{

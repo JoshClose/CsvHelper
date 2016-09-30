@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for reading and writing CSV data.
 	/// </summary>
-	public class CsvConfiguration
+	public class CsvConfiguration : ICsvReaderConfiguration, ICsvParserConfiguration, ICsvWriterConfiguration, ICsvSerializerConfiguration
 	{
 		private string delimiter = ",";
 		private char quote = '"';
@@ -27,13 +27,6 @@ namespace CsvHelper.Configuration
 		private bool quoteNoFields;
 #if !NET_2_0
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
-#endif
-
-#if !NET_2_0
-		/// <summary>
-		/// The configured <see cref="CsvClassMap"/>s.
-		/// </summary>
-		public virtual CsvClassMapCollection Maps => maps;
 #endif
 
 		/// <summary>
@@ -345,7 +338,31 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual Action<string> BadDataCallback { get; set; }
 
+		/// <summary>
+		/// Creates a new CsvConfiguration.
+		/// </summary>
+		public CsvConfiguration()
+		{
+			BuildRequiredQuoteChars();
+		}
+
+		/// <summary>
+		/// Builds the values for the RequiredQuoteChars property.
+		/// </summary>
+		private void BuildRequiredQuoteChars()
+		{
+			quoteRequiredChars = delimiter.Length > 1 ?
+				new[] { '\r', '\n' } :
+				new[] { '\r', '\n', delimiter[0] };
+		}
+
 #if !NET_2_0
+
+		/// <summary>
+		/// The configured <see cref="CsvClassMap"/>s.
+		/// </summary>
+		public virtual CsvClassMapCollection Maps => maps;
+
 		/// <summary>
 		/// Gets or sets a value indicating whether
 		/// exceptions that occur duruing reading
@@ -470,24 +487,8 @@ namespace CsvHelper.Configuration
 
 			return map;
 		}
+
 #endif
 
-		/// <summary>
-		/// Creates a new CsvConfiguration.
-		/// </summary>
-		public CsvConfiguration()
-		{
-			BuildRequiredQuoteChars();
-		}
-
-		/// <summary>
-		/// Builds the values for the RequiredQuoteChars property.
-		/// </summary>
-		private void BuildRequiredQuoteChars()
-		{
-			quoteRequiredChars = delimiter.Length > 1 ? 
-				new[] { '\r', '\n' } : 
-				new[] { '\r', '\n', delimiter[0] };
-		}
 	}
 }
