@@ -133,6 +133,7 @@
     <Compile Include="TypeConversion\TypeConverterTests.cs" />
     <Compile Include="Writing\ConstantTests.cs" />
     <Compile Include="Writing\DynamicTests.cs" />
+    <Compile Include="MapPropertyMultipleTimesTests.cs" />
     <Compile Include="Writing\NoPropertyMappingTests.cs" />
   </ItemGroup>
   <ItemGroup>

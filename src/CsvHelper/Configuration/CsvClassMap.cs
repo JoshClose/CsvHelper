@@ -44,13 +44,18 @@ namespace CsvHelper.Configuration
 		/// Maps a property to a CSV field.
 		/// </summary>
 		/// <param name="property">The property to map.</param>
+		/// <param name="useExistingMap">If true, an existing map will be used if available.
+		/// If false, a new map is created for the same property.</param>
 		/// <returns>The property mapping.</returns>
-		public virtual CsvPropertyMap Map( PropertyInfo property )
+		public virtual CsvPropertyMap Map( PropertyInfo property, bool useExistingMap = true )
 		{
-			var existingMap = PropertyMaps.Find( property );
-			if( existingMap != null )
+			if( useExistingMap )
 			{
-				return existingMap;
+				var existingMap = PropertyMaps.Find( property );
+				if( existingMap != null )
+				{
+					return existingMap;
+				}
 			}
 
 			var propertyMap = new CsvPropertyMap( property );
