@@ -24,6 +24,11 @@ namespace CsvHelper
 		private readonly CsvConfiguration configuration;
 
 		/// <summary>
+		/// Gets the <see cref="ICsvParser.TextReader"/>.
+		/// </summary>
+		public virtual TextReader TextReader => reader.Reader;
+
+		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
 		public virtual CsvConfiguration Configuration => configuration;

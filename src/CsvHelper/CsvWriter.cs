@@ -45,6 +45,11 @@ namespace CsvHelper
 		private int row = 1;
 
 		/// <summary>
+		/// Gets the serializer.
+		/// </summary>
+		public virtual ICsvSerializer Serializer => serializer;
+
+		/// <summary>
 		/// Gets the current row.
 		/// </summary>
 		public virtual int Row => row;

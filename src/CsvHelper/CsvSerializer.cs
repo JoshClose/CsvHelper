@@ -19,9 +19,14 @@ namespace CsvHelper
 		private TextWriter writer;
 
 		/// <summary>
+		/// Gets the <see cref="ICsvSerializer.TextWriter"/>.
+		/// </summary>
+		public virtual TextWriter TextWriter => writer;
+
+		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public CsvConfiguration Configuration => configuration;
+		public virtual CsvConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
@@ -72,7 +77,7 @@ namespace CsvHelper
 		/// Writes a record to the CSV file.
 		/// </summary>
 		/// <param name="record">The record to write.</param>
-		public void Write( string[] record )
+		public virtual void Write( string[] record )
 		{
 			for( var i = 0; i < record.Length; i++ )
 			{
@@ -91,7 +96,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Dispose( !leaveOpen );
 			GC.SuppressFinalize( this );

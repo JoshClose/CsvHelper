@@ -74,6 +74,7 @@ namespace CsvHelper.Tests
 				throw new NotImplementedException();
 			}
 
+			public TextReader TextReader { get; }
 			public CsvConfiguration Configuration { get; private set; }
 
 			public int FieldCount

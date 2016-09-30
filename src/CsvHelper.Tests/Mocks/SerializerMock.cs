@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper.Configuration;
@@ -10,6 +11,8 @@ namespace CsvHelper.Tests.Mocks
 	{
 		private readonly List<string[]> records = new List<string[]>();
 		private readonly bool throwExceptionOnWrite;
+
+		public TextWriter TextWriter { get; }
 
 		public CsvConfiguration Configuration { get; private set; }
 
