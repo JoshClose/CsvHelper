@@ -81,18 +81,12 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether matching header
-		/// column names is case sensitive. True for case sensitive
-		/// matching, otherwise false. Default is true.
+		/// Prepares the header field for matching against a property name.
+		/// The header field and the property name are both ran through this function.
+		/// You should do things like trimming, removing whitespace, removing underscores,
+		/// and making casing changes to ignore case.
 		/// </summary>
-		public virtual bool IsHeaderCaseSensitive { get; set; } = true;
-
-		/// <summary>
-		/// Gets or sets a value indicating whether matcher header
-		/// column names will ignore white space. True to ignore
-		/// white space, otherwise false. Default is false.
-		/// </summary>
-		public virtual bool IgnoreHeaderWhiteSpace { get; set; }
+		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = header => header;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether references
@@ -100,13 +94,6 @@ namespace CsvHelper.Configuration
 		/// references, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool IgnoreReferences { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating whether headers
-		/// should be trimmed. True to trim headers,
-		/// otherwise false. Default is false.
-		/// </summary>
-		public virtual bool TrimHeaders { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether fields

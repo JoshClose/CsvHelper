@@ -33,7 +33,6 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private int currentIndex = -1;
 		private bool doneReading;
-		private Regex whiteSpaceRegex = new Regex( @"\s" );
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
 #if !NET_2_0
@@ -1251,33 +1250,14 @@ namespace CsvHelper
 		        return namedIndexes[tuple.Item1][tuple.Item2];
 		    }
 
-			var compareOptions = !Configuration.IsHeaderCaseSensitive ? CompareOptions.IgnoreCase : CompareOptions.None;
 			string name = null;
 			foreach( var pair in namedIndexes )
 			{
-				var namedIndex = pair.Key;
-				if( configuration.IgnoreHeaderWhiteSpace )
-				{
-					namedIndex = whiteSpaceRegex.Replace( namedIndex, string.Empty );
-				}
-				else if( configuration.TrimHeaders )
-				{
-					namedIndex = namedIndex?.Trim();
-				}
-
+				var propertyName = configuration.PrepareHeaderForMatch( pair.Key );
 				foreach( var n in names )
 				{
-					var fieldName = n;
-					if( configuration.IgnoreHeaderWhiteSpace )
-					{
-						fieldName = whiteSpaceRegex.Replace( fieldName, string.Empty );
-					}
-					else if( configuration.TrimHeaders )
-					{
-						fieldName = fieldName?.Trim();
-					}
-
-					if( Configuration.CultureInfo.CompareInfo.Compare( namedIndex, fieldName, compareOptions ) == 0 )
+					var fieldName = configuration.PrepareHeaderForMatch( n );
+					if( Configuration.CultureInfo.CompareInfo.Compare( propertyName, fieldName, CompareOptions.None ) == 0 )
 					{
 						name = pair.Key;
 					}
@@ -1318,11 +1298,6 @@ namespace CsvHelper
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];
-				if( !Configuration.IsHeaderCaseSensitive )
-				{
-					name = name.ToLower();
-				}
-
 				if( namedIndexes.ContainsKey( name ) )
 				{
 					namedIndexes[name].Add( i );

@@ -25,7 +25,6 @@ namespace CsvHelper.Tests.Mappings
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.IgnoreHeaderWhiteSpace = true;
 				csv.Configuration.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 

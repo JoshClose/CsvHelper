@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
@@ -564,7 +565,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.IsHeaderCaseSensitive = false;
+				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
@@ -584,7 +585,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue( null );
 			var parserMock = new ParserMock( queue );
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.IgnoreHeaderWhiteSpace = true;
+			reader.Configuration.PrepareHeaderForMatch = header => Regex.Replace( header, @"\s", string.Empty );
 			var data = reader.GetRecords<TestDefaultValues>().ToList();
 			Assert.IsNotNull( data );
 			Assert.AreEqual( 1, data.Count );
@@ -873,9 +874,9 @@ namespace CsvHelper.Tests
 			queue.Enqueue( new[] { " one ", " two three " } );
 			queue.Enqueue( new[] { "1", "2" } );
 			var parserMock = new ParserMock( queue );
-			parserMock.Configuration.TrimHeaders = true;
 			parserMock.Configuration.WillThrowOnMissingField = false;
 			var reader = new CsvReader( parserMock );
+			reader.Configuration.PrepareHeaderForMatch = header => header.Trim();
 			reader.Read();
 			reader.ReadHeader();
 			reader.Read();
