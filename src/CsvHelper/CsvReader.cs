@@ -33,6 +33,7 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private int currentIndex = -1;
 		private bool doneReading;
+		private Regex whiteSpaceRegex = new Regex( @"\s" );
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
 #if !NET_2_0
@@ -1257,7 +1258,7 @@ namespace CsvHelper
 				var namedIndex = pair.Key;
 				if( configuration.IgnoreHeaderWhiteSpace )
 				{
-					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
+					namedIndex = whiteSpaceRegex.Replace( namedIndex, string.Empty );
 				}
 				else if( configuration.TrimHeaders )
 				{
@@ -1266,7 +1267,17 @@ namespace CsvHelper
 
 				foreach( var n in names )
 				{
-					if( Configuration.CultureInfo.CompareInfo.Compare( namedIndex, n, compareOptions ) == 0 )
+					var fieldName = n;
+					if( configuration.IgnoreHeaderWhiteSpace )
+					{
+						fieldName = whiteSpaceRegex.Replace( fieldName, string.Empty );
+					}
+					else if( configuration.TrimHeaders )
+					{
+						fieldName = fieldName?.Trim();
+					}
+
+					if( Configuration.CultureInfo.CompareInfo.Compare( namedIndex, fieldName, compareOptions ) == 0 )
 					{
 						name = pair.Key;
 					}

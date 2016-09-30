@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\CsvClassMapCollectionTests.cs" />
+    <Compile Include="Mappings\IgnoreHeaderWhiteSpaceTests.cs" />
     <Compile Include="Mappings\MapConstructorTests.cs" />
     <Compile Include="Mappings\SubPropertyMappingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
