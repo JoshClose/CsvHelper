@@ -1325,9 +1325,9 @@ namespace CsvHelper
 				return false;
 			}
 
-            return configuration.ShouldSkipRecord != null
-                ? configuration.ShouldSkipRecord(currentRecord) || (configuration.SkipEmptyRecords && IsRecordEmpty(false))
-                : configuration.SkipEmptyRecords && IsRecordEmpty(false);
+			return configuration.ShouldSkipRecord != null
+				? configuration.ShouldSkipRecord( currentRecord ) || ( configuration.SkipEmptyRecords && IsRecordEmpty( false ) )
+				: configuration.SkipEmptyRecords && IsRecordEmpty( false );
 		}
 
 #if !NET_2_0
