@@ -105,6 +105,7 @@
     <Compile Include="Parsing\CommentTests.cs" />
     <Compile Include="Parsing\DelimiterTests.cs" />
     <Compile Include="Reading\ConstantTests.cs" />
+    <Compile Include="Reading\DetectColumnCountChangesTests.cs" />
     <Compile Include="Reading\EmptyTextReaderTests.cs" />
     <Compile Include="Reading\MultipleHeadersTests.cs" />
     <Compile Include="Reading\ReadHeaderTests.cs" />

@@ -20,7 +20,6 @@ namespace CsvHelper
 	    private int currentRawRow;
 	    private int c = -1;
 	    private bool hasExcelSeparatorBeenRead;
-	    private int columnCount;
 		private readonly ICsvParserConfiguration configuration;
 
 		/// <summary>
@@ -118,16 +117,6 @@ namespace CsvHelper
 				reader.ClearRawRecord();
 
 				var row = ReadLine();
-
-				if( configuration.DetectColumnCountChanges && row != null )
-				{
-					if( columnCount > 0 && columnCount != row.Length )
-					{
-						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
-					}
-
-					columnCount = row.Length;
-				}
 
 				return row;
 			}

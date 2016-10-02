@@ -46,16 +46,6 @@ namespace CsvHelper.Configuration
 		bool HasExcelSeparator { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether changes in the column
-		/// count should be detected. If true, a <see cref="CsvBadDataException"/>
-		/// will be thrown if a different column count is detected.
-		/// </summary>
-		/// <value>
-		/// <c>true</c> if [detect column count changes]; otherwise, <c>false</c>.
-		/// </value>
-		bool DetectColumnCountChanges { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating if an Excel specific
 		/// format should be used when writing fields containing
 		/// numeric values. e.g. 00001 -> ="00001"

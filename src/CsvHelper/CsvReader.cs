@@ -33,6 +33,7 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private int currentIndex = -1;
 		private bool doneReading;
+		private int columnCount;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
 #if !NET_2_0
@@ -190,6 +191,28 @@ namespace CsvHelper
 
 			currentIndex = -1;
 			hasBeenRead = true;
+
+			if( configuration.DetectColumnCountChanges && currentRecord != null )
+			{
+				if( columnCount > 0 && columnCount != currentRecord.Length )
+				{
+					var csvException = new CsvBadDataException( "An inconsistent number of columns has been detected." );
+					ExceptionHelper.AddExceptionData( csvException, Row, null, currentIndex, namedIndexes, currentRecord );
+
+					if( configuration.IgnoreReadingExceptions )
+					{
+#if !NET_2_0
+						configuration.ReadingExceptionCallback?.Invoke( csvException, this );
+#endif
+					}
+					else
+					{
+						throw csvException;
+					}
+				}
+
+				columnCount = currentRecord.Length;
+			}
 
 			if( currentRecord == null )
 			{

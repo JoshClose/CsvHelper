@@ -1165,80 +1165,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void ConsistentColumnsWithDetectColumnChangesTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader ) )
-			{
-				writer.WriteLine( "Column 1,Column 2" );
-				writer.WriteLine( "1,2" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.DetectColumnCountChanges = true;
-				while( parser.Read() != null )
-				{
-				}
-			}
-		}
-
-		[TestMethod]
-		public void InconsistentColumnsTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader ) )
-			{
-				writer.WriteLine( "Column 1,Column 2" );
-				writer.WriteLine( "1,2,3" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.DetectColumnCountChanges = true;
-				parser.Read();
-
-				try
-				{
-					parser.Read();
-					Assert.Fail();
-				}
-				catch( CsvBadDataException )
-				{
-				}
-			}
-		}
-
-		[TestMethod]
-		public void InconsistentColumnsSmallerTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader ) )
-			{
-				writer.WriteLine( "1,2,3,4" );
-				writer.WriteLine( "5,6,7" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.DetectColumnCountChanges = true;
-				parser.Read();
-
-				try
-				{
-					parser.Read();
-					Assert.Fail();
-				}
-				catch( CsvBadDataException )
-				{
-				}
-			}
-		}
-
-		[TestMethod]
 		public void SimulateSeekingTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -1293,48 +1219,6 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "aaa", row[0] );
 				Assert.AreEqual( "bbb", row[1] );
 				Assert.AreEqual( "ccc", row[2] );
-			}
-		}
-
-		[TestMethod]
-		public void InconsistentColumnsMultipleRowsTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader ) )
-			{
-				writer.WriteLine( "Column 1,Column 2" );
-				writer.WriteLine( "1,2" ); // Valid
-				writer.WriteLine( "1,2,3" ); // Error - too many fields
-				writer.WriteLine( "1,2" ); // Valid
-				writer.WriteLine( "1" ); // Error - not enough fields
-				writer.WriteLine( "1,2,3,4" ); // Error - too many fields
-				writer.WriteLine( "1,2" ); // Valid
-				writer.WriteLine( "1,2" ); // Valid
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.DetectColumnCountChanges = true;
-				var failCount = 0;
-
-				while( true )
-				{
-					try
-					{
-						if( parser.Read() == null )
-						{
-							break;
-						}
-					}
-					catch( CsvBadDataException )
-					{
-						failCount++;
-					}
-				}
-
-				// Expect only 3 errors
-				Assert.AreEqual<int>( 3, failCount );
 			}
 		}
 
