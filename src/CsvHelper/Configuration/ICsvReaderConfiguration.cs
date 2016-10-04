@@ -4,6 +4,9 @@ using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
+	/// <summary>
+	/// Configuration used for the <see cref="ICsvReader"/>.
+	/// </summary>
     public interface ICsvReaderConfiguration : ICsvParserConfiguration
     {
 		/// <summary>
@@ -87,25 +90,22 @@ namespace CsvHelper.Configuration
 		/// </value>
 		bool DetectColumnCountChanges { get; set; }
 
-#if !NET_2_0
-
 		/// <summary>
 		/// Gets or sets a value indicating whether
 		/// exceptions that occur duruing reading
 		/// should be ignored. True to ignore exceptions,
 		/// otherwise false. Default is false.
-		/// This is only applicable when during
-		/// <see cref="ICsvReader.GetRecords{T}"/>.
 		/// </summary>
 		bool IgnoreReadingExceptions { get; set; }
 
 		/// <summary>
 		/// Gets or sets the callback that is called when a reading
 		/// exception occurs. This will only happen when
-		/// <see cref="IgnoreReadingExceptions"/> is true, and when
-		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
+		/// <see cref="IgnoreReadingExceptions"/> is true.
 		/// </summary>
 		Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
+
+#if !NET_2_0
 
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.

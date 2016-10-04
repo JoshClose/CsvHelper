@@ -4,6 +4,9 @@ using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
+	/// <summary>
+	/// Configuration used for the <see cref="ICsvWriter"/>.
+	/// </summary>
     public interface ICsvWriterConfiguration : ICsvSerializerConfiguration
     {
 		/// <summary>

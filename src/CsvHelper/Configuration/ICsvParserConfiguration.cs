@@ -3,6 +3,9 @@ using System.Text;
 
 namespace CsvHelper.Configuration
 {
+	/// <summary>
+	/// Configuration used for the <see cref="ICsvParser"/>.
+	/// </summary>
     public interface ICsvParserConfiguration
     {
 		/// <summary>

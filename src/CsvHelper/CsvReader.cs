@@ -201,9 +201,7 @@ namespace CsvHelper
 
 					if( configuration.IgnoreReadingExceptions )
 					{
-#if !NET_2_0
 						configuration.ReadingExceptionCallback?.Invoke( csvException, this );
-#endif
 					}
 					else
 					{

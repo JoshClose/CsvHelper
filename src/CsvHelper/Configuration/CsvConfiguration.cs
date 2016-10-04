@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for reading and writing CSV data.
 	/// </summary>
-	public class CsvConfiguration : ICsvReaderConfiguration, ICsvParserConfiguration, ICsvWriterConfiguration, ICsvSerializerConfiguration
+	public class CsvConfiguration : ICsvReaderConfiguration, ICsvWriterConfiguration
 	{
 		private string delimiter = ",";
 		private char quote = '"';
@@ -347,6 +347,21 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Gets or sets a value indicating whether
+		/// exceptions that occur duruing reading
+		/// should be ignored. True to ignore exceptions,
+		/// otherwise false. Default is false.
+		/// </summary>
+		public virtual bool IgnoreReadingExceptions { get; set; }
+
+		/// <summary>
+		/// Gets or sets the callback that is called when a reading
+		/// exception occurs. This will only happen when
+		/// <see cref="IgnoreReadingExceptions"/> is true.
+		/// </summary>
+		public virtual Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
+
+		/// <summary>
 		/// Builds the values for the RequiredQuoteChars property.
 		/// </summary>
 		private void BuildRequiredQuoteChars()
@@ -355,31 +370,13 @@ namespace CsvHelper.Configuration
 				new[] { '\r', '\n' } :
 				new[] { '\r', '\n', delimiter[0] };
 		}
-
+		
 #if !NET_2_0
 
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.
 		/// </summary>
 		public virtual CsvClassMapCollection Maps => maps;
-
-		/// <summary>
-		/// Gets or sets a value indicating whether
-		/// exceptions that occur duruing reading
-		/// should be ignored. True to ignore exceptions,
-		/// otherwise false. Default is false.
-		/// This is only applicable when during
-		/// <see cref="ICsvReader.GetRecords{T}"/>.
-		/// </summary>
-		public virtual bool IgnoreReadingExceptions { get; set; }
-
-		/// <summary>
-		/// Gets or sets the callback that is called when a reading
-		/// exception occurs. This will only happen when
-		/// <see cref="IgnoreReadingExceptions"/> is true, and when
-		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
-		/// </summary>
-		public virtual Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating that during writing if a new 
