@@ -40,5 +40,85 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual( "4", line[1] );
 			}
 		}
+
+		[TestMethod]
+		public void WriteCommentCharInFieldWithCommentsOffTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.AllowComments = false;
+				csv.WriteField( "#no comment" );
+				csv.NextRecord();
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+
+				Assert.AreEqual( "#no comment\r\n", result );
+			}
+		}
+
+		[TestMethod]
+		public void WriteCommentCharInFieldWithCommentsOnTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.AllowComments = true;
+				csv.WriteField( "#no comment" );
+				csv.NextRecord();
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+
+				Assert.AreEqual( "\"#no comment\"\r\n", result );
+			}
+		}
+
+		[TestMethod]
+		public void WriteCommentWithCommentsOffTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.AllowComments = false;
+				csv.WriteComment( "comment\"has\" quote" );
+				csv.NextRecord();
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+
+				Assert.AreEqual( "#comment\"has\" quote\r\n", result );
+			}
+		}
+
+		[TestMethod]
+		public void WriteCommentWithCommentsOnTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				csv.Configuration.AllowComments = true;
+				csv.WriteComment( "comment\"has\" quote" );
+				csv.NextRecord();
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+
+				Assert.AreEqual( "#comment\"has\" quote\r\n", result );
+			}
+		}
 	}
 }

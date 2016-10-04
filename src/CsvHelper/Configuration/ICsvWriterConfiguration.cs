@@ -80,6 +80,12 @@ namespace CsvHelper.Configuration
 		TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if comments are allowed.
+		/// True to allow commented out lines, otherwise false.
+		/// </summary>
+		bool AllowComments { get; set; }
+
+		/// <summary>
 		/// Gets or sets the character used to denote
 		/// a line that is commented out. Default is '#'.
 		/// </summary>

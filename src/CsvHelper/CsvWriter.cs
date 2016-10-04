@@ -155,14 +155,13 @@ namespace CsvHelper
 
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
-			    var hasQuote = field.Contains( configuration.QuoteString );
-				
-                if( shouldQuote
-				    || hasQuote
-				    || field[0] == ' '
-				    || field[field.Length - 1] == ' '
-				    || field.IndexOfAny( configuration.QuoteRequiredChars ) > -1
-				    || ( configuration.Delimiter.Length > 1 && field.Contains( configuration.Delimiter ) ) )
+                if( shouldQuote // Quote all fields
+				    || field.Contains( configuration.QuoteString ) // Contains quote
+					|| field[0] == ' ' // Starts with a space
+				    || field[field.Length - 1] == ' ' // Ends with a space
+				    || field.IndexOfAny( configuration.QuoteRequiredChars ) > -1 // Contains chars that require quotes
+				    || ( configuration.Delimiter.Length > 0 && field.Contains( configuration.Delimiter ) ) // Contains delimiter
+					|| configuration.AllowComments && currentRecord.Count == 0 && field[0] == configuration.Comment ) // Comments are on first field starts with comment char
 				{
 					shouldQuote = true;
 				}
@@ -301,7 +300,7 @@ namespace CsvHelper
 	    /// <param name="comment">The comment to write.</param>
 	    public virtual void WriteComment( string comment )
 	    {
-	        WriteField( configuration.Comment + comment );
+	        WriteField( configuration.Comment + comment, false );
 	    }
 
 #if !NET_2_0
