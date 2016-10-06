@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\CsvClassMapCollectionTests.cs" />
+    <Compile Include="Mappings\ConstructUsingTests.cs" />
     <Compile Include="Mappings\IgnoreHeaderWhiteSpaceTests.cs" />
     <Compile Include="Mappings\MapConstructorTests.cs" />
     <Compile Include="Mappings\SubPropertyMappingTests.cs" />
@@ -85,7 +86,7 @@
     <Compile Include="CsvWriterMappingTests.cs" />
     <Compile Include="CsvWriterReferenceMappingTests.cs" />
     <Compile Include="CsvWriterSubClassingTests.cs" />
-    <Compile Include="CsvClassMappingTests.cs" />
+    <Compile Include="Mappings\CsvClassMappingTests.cs" />
     <Compile Include="CsvConfigurationTests.cs" />
     <Compile Include="CsvParserConstructorTests.cs" />
     <Compile Include="CsvParserTests.cs" />

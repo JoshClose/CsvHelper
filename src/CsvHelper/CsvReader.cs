@@ -1510,7 +1510,8 @@ namespace CsvHelper
 
 				var referenceBindings = new List<MemberBinding>();
 				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Property.PropertyType, referenceBindings );
-				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+				var constructorExpression = referenceMap.Data.Mapping.Constructor ?? Expression.New( referenceMap.Data.Property.PropertyType );
+				var referenceBody = Expression.MemberInit( constructorExpression, referenceBindings );
 				bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
 			}
 		}
