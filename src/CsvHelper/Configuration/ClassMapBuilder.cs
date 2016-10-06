@@ -11,11 +11,171 @@ using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
-    public class ClassMapBuilder<T>
+    
+    /// <summary>
+    /// Entry point for fluently mapping a property
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <remarks>Node 1</remarks>
+    public interface IMappable<T> : IBuildable<T>
     {
-        private CsvPropertyMap currMap;
+        IMappedOptions<T> Map(Expression<Func<T, object>> expression);
+    }
 
-        private CsvClassMap<T> currClassMap;
+    /// <summary>
+    /// Options after initial property map.
+    /// </summary>
+    /// <typeparam name="T">Type to Map</typeparam>
+    /// <remarks>Edges from Node 1 => 1,2,3,4,6,7</remarks>
+    public interface IMappedOptions<T> 
+        : IMappable<T>, //1
+        ITypeConvertible<T>, //2
+        IIndexable<T>, //3
+        INameable<T>, //4
+        IConvertUsingable<T>, //6
+        IDefaultable<T> //7 
+    { }
+
+    /// <summary>
+    /// Node to represent ability to call <see cref="TypeConvert(ITypeConverter)"/> 
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Node 2</remarks>
+    public interface ITypeConvertible<T> : IBuildable<T>
+    {
+        /// <summary>
+        /// Applys a <see cref="ITypeConverter"/> to this property mapping
+        /// </summary>
+        /// <param name="t">the <see cref="ITypeConverter"/> to apply </param>
+        /// <returns>Remaining available options</returns>
+        ITypeConvertedOptions<T> TypeConvert(ITypeConverter t);
+    }
+
+
+    /// <summary>
+    /// Options available after calling <see cref="ITypeConvertible{T}.TypeConvert(ITypeConverter)"/> .
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Edges from Node 2 => 1,7</remarks>
+    public interface ITypeConvertedOptions<T> : 
+        IMappable<T>, //1
+        IDefaultable<T> //7
+    { }
+
+    /// <summary>
+    /// Node to represent ability to call <see cref="Index(int)"/> 
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Node 3</remarks>
+    public interface IIndexable<T> : IBuildable<T>
+    {
+        IIndexedOptions<T> Index(int i);
+    }
+
+    /// <summary>
+    /// Options available after calling <see cref="IIndexable{T}.Index(int)"/> .
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Edges from Node 3=>1,2,7</remarks>
+    public interface IIndexedOptions<T> :
+        IMappable<T>, //1
+        ITypeConvertible<T>, //2
+        IDefaultable<T> //7
+    { }
+
+    /// <summary>
+    /// Node to represent ability to call <see cref="Name(string)"/> 
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Node 4</remarks>
+    public interface INameable<T> : IBuildable<T>
+    {
+        INamedOptions<T> Name(string n);
+    }
+
+    /// <summary>
+    /// Options available after calling <see cref="INameable{T}.Name(string)"/> .
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Edges from Node 4=>1,2,5,7</remarks>
+    public interface INamedOptions<T> :
+        IMappable<T>, //1
+        ITypeConvertible<T>, //2
+        INameIndexable<T>, //5
+        IDefaultable<T> //7
+    { }
+
+
+    /// <summary>
+    /// Node to represent ability to call <see cref="NameIndex(int)"/> 
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Node 5</remarks>
+    public interface INameIndexable<T> : IBuildable<T>
+    {
+        INameIndexedOptions<T> NameIndex(int ni);
+    }
+
+    /// <summary>
+    /// Options available after calling <see cref="INameIndexable{T}.NameIndex(int)"/> .
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Edges from Node 5=>1,2,7</remarks>
+    public interface INameIndexedOptions<T> :
+        IMappable<T>, //1
+        ITypeConvertible<T>, //2
+        IDefaultable<T> //7
+    { }
+
+    /// <summary>
+    /// Node to represent ability to call <see cref="ConvertUsing(Func{ICsvReaderRow, T})"/> 
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Node 6</remarks>
+    public interface IConvertUsingable<T> : IBuildable<T>
+    {
+        IMappable<T> ConvertUsing(Func<ICsvReaderRow, T> t);
+    }
+
+    /// <summary>
+    /// Node to represent ability to call <see cref="Default(T)"/> 
+    /// </summary>
+    /// <typeparam name="T">Type being Mapped</typeparam>
+    /// <remarks>Node 7</remarks>
+    public interface IDefaultable<T> : IBuildable<T>
+    {
+        IMappable<T> Default(T d);
+    }
+
+    public interface INameIndexableAndTypeConvertible<T> : INameIndexable<T>, ITypeConvertible<T>{ }
+
+    
+
+    public interface IBuildable<T>
+    {
+        CsvClassMap<T> Build();
+    }
+
+    public interface IAllable<T> :
+        IMappable<T>, //1
+        IMappedOptions<T>, //1 result
+        ITypeConvertible<T>, //2
+        ITypeConvertedOptions<T>,//2 result
+        IIndexable<T>, //3
+        IIndexedOptions<T>, //3 result
+        INameable<T>, //4
+        INamedOptions<T>, //4 result
+        INameIndexable<T>, //5
+        INameIndexedOptions<T>, //5 result
+        IConvertUsingable<T>, //6 - goes back to 1
+        IDefaultable<T> //7 - goes back to 1
+    { }
+
+    internal class ClassMapBuilder<T> : IAllable<T>
+    {
+        private CsvPropertyMap currPropertyMap;
+
+        private readonly CsvClassMap<T> currClassMap;
 
         public ClassMapBuilder()
         {
@@ -24,45 +184,45 @@ namespace CsvHelper.Configuration
 
         private sealed class BuilderClassMap<T> : CsvClassMap<T>{}
 
-        public ClassMapBuilder<T> Map(Expression<Func<T, object>> expression)
+        public IMappedOptions<T> Map(Expression<Func<T, object>> expression)
         {
-            currMap = currClassMap.Map(expression);
+            currPropertyMap = currClassMap.Map(expression);
             return this;   
         }
 
-        public ClassMapBuilder<T> TypeConvert(ITypeConverter t)
+        public ITypeConvertedOptions<T> TypeConvert(ITypeConverter t)
         {
-            currMap.TypeConverter( t );
+            currPropertyMap.TypeConverter( t );
             return this;
         }
 
-        public ClassMapBuilder<T> Index(int i)
+        public IIndexedOptions<T> Index(int i)
         {
-            currMap.NameIndex(i);
+            currPropertyMap.NameIndex(i);
             return this;
         }
 
-        public ClassMapBuilder<T> Name(string n)
+        public INamedOptions<T> Name(string n)
         {
-            currMap.Name( n );
+            currPropertyMap.Name( n );
             return this;
         }
 
-        public ClassMapBuilder<T> NameIndex(int ni)
+        public INameIndexedOptions<T> NameIndex(int ni)
         {
-            currMap.NameIndex(ni);
+            currPropertyMap.NameIndex(ni);
             return this;
         }
 
-        public ClassMapBuilder<T> ConvertUsing(Func<ICsvReaderRow,T> t)
+        public IMappable<T> ConvertUsing(Func<ICsvReaderRow,T> t)
         {
-            currMap.ConvertUsing( t );
+            currPropertyMap.ConvertUsing( t );
             return this;
         }
 
-        public ClassMapBuilder<T> Default(T d)
+        public IMappable<T> Default(T d)
         {
-            currMap.Default( d );
+            currPropertyMap.Default( d );
             return this;
         }
 
@@ -71,5 +231,7 @@ namespace CsvHelper.Configuration
             return currClassMap;
         }
     }
+
+    
 }
 #endif

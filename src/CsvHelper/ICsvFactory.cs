@@ -70,7 +70,7 @@ namespace CsvHelper
 		ICsvWriter CreateWriter( TextWriter writer );
 
 #if !NET_2_0
-        ClassMapBuilder<T> Map<T>(Expression<Func<T, object>> map);
+        IMappedOptions<T> Map<T>(Expression<Func<T, object>> map);
         #endif
     }
 }
