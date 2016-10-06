@@ -68,6 +68,14 @@ namespace CsvHelper.TypeConversion
 				return null;
 			}
 
+			foreach( var nullValue in propertyMapData.TypeConverterOptions.NullValues )
+			{
+				if( text == nullValue )
+				{
+					return null;
+				}
+			}
+
 			return UnderlyingTypeConverter.ConvertFromString( text, row, propertyMapData );
 		}
 

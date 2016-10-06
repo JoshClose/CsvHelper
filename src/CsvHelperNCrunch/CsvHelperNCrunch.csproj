@@ -114,6 +114,21 @@
     <Compile Include="..\CsvHelper\Configuration\DefaultCsvClassMap`1.cs">
       <Link>Configuration\DefaultCsvClassMap`1.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\ICsvParserConfiguration.cs">
+      <Link>Configuration\ICsvParserConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\ICsvReaderConfiguration.cs">
+      <Link>Configuration\ICsvReaderConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\ICsvSerializerConfiguration.cs">
+      <Link>Configuration\ICsvSerializerConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\ICsvWriterConfiguration.cs">
+      <Link>Configuration\ICsvWriterConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\CsvHelper\Configuration\MapTypeConverterOption.cs">
+      <Link>Configuration\MapTypeConverterOption.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\CsvBadDataException.cs">
       <Link>CsvBadDataException.cs</Link>
     </Compile>

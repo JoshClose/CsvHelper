@@ -17,58 +17,6 @@ namespace CsvHelper.Tests.TypeConversion
 	public class IDictionaryConverterTests
 	{
 		[TestMethod]
-		public void ConvertNoIndexEndTest()
-		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
-			var headers = new[] { "Id", "Name", "Prop1", "Prop2", "Prop3" };
-			var currentRecord = new[] { "1", "One", "1", "2", "3" };
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.FieldHeaders ).Returns( headers );
-			rowMock.Setup( m => m.CurrentRecord ).Returns( currentRecord );
-			rowMock.Setup( m => m.GetField( It.IsAny<int>() ) ).Returns<int>( index => currentRecord[index] );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "Dictionary" ) )
-			{
-				Index = 2
-			};
-			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
-
-			var converter = new IDictionaryConverter();
-			var dictionary = (IDictionary)converter.ConvertFromString( "1", rowMock.Object, data );
-
-			Assert.AreEqual( 3, dictionary.Count );
-			Assert.AreEqual( "1", dictionary["Prop1"] );
-			Assert.AreEqual( "2", dictionary["Prop2"] );
-			Assert.AreEqual( "3", dictionary["Prop3"] );
-		}
-
-		[TestMethod]
-		public void ConvertWithIndexEndTest()
-		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
-			var headers = new[] { "Id", "Name", "Prop1", "Prop2", "Prop3" };
-			var currentRecord = new[] { "1", "One", "1", "2", "3" };
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.FieldHeaders ).Returns( headers );
-			rowMock.Setup( m => m.CurrentRecord ).Returns( currentRecord );
-			rowMock.Setup( m => m.GetField( It.IsAny<int>() ) ).Returns<int>( index => currentRecord[index] );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "Dictionary" ) )
-			{
-				Index = 2,
-				IndexEnd = 3
-			};
-			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
-
-			var converter = new IDictionaryConverter();
-			var dictionary = (IDictionary)converter.ConvertFromString( "1", rowMock.Object, data );
-
-			Assert.AreEqual( 2, dictionary.Count );
-			Assert.AreEqual( "1", dictionary["Prop1"] );
-			Assert.AreEqual( "2", dictionary["Prop2"] );
-		}
-
-		[TestMethod]
 		public void FullWriteTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -301,6 +249,31 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					// Header's can't have the same name.
 				}
+			}
+		}
+
+		[TestMethod]
+		public void ReadNullValuesIndexTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "Before,D1,D2,D3,After" );
+				writer.WriteLine( "1,null,NULL,4,5" );
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Configuration.HasHeaderRecord = true;
+				csv.Configuration.RegisterClassMap<TestIndexMap>();
+				var records = csv.GetRecords<Test>().ToList();
+				var list = records[0].Dictionary;
+
+				Assert.AreEqual( 3, list.Count );
+				Assert.AreEqual( null, list["D1"] );
+				Assert.AreEqual( null, list["D2"] );
+				Assert.AreEqual( "4", list["D3"] );
 			}
 		}
 

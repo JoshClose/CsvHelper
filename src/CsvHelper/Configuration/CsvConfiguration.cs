@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for reading and writing CSV data.
 	/// </summary>
-	public class CsvConfiguration
+	public class CsvConfiguration : ICsvReaderConfiguration, ICsvWriterConfiguration
 	{
 		private string delimiter = ",";
 		private char quote = '"';
@@ -27,13 +27,6 @@ namespace CsvHelper.Configuration
 		private bool quoteNoFields;
 #if !NET_2_0
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
-#endif
-
-#if !NET_2_0
-		/// <summary>
-		/// The configured <see cref="CsvClassMap"/>s.
-		/// </summary>
-		public virtual CsvClassMapCollection Maps => maps;
 #endif
 
 		/// <summary>
@@ -81,18 +74,12 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether matching header
-		/// column names is case sensitive. True for case sensitive
-		/// matching, otherwise false. Default is true.
+		/// Prepares the header field for matching against a property name.
+		/// The header field and the property name are both ran through this function.
+		/// You should do things like trimming, removing whitespace, removing underscores,
+		/// and making casing changes to ignore case.
 		/// </summary>
-		public virtual bool IsHeaderCaseSensitive { get; set; } = true;
-
-		/// <summary>
-		/// Gets or sets a value indicating whether matcher header
-		/// column names will ignore white space. True to ignore
-		/// white space, otherwise false. Default is false.
-		/// </summary>
-		public virtual bool IgnoreHeaderWhiteSpace { get; set; }
+		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = header => header;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether references
@@ -100,13 +87,6 @@ namespace CsvHelper.Configuration
 		/// references, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool IgnoreReferences { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating whether headers
-		/// should be trimmed. True to trim headers,
-		/// otherwise false. Default is false.
-		/// </summary>
-		public virtual bool TrimHeaders { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether fields
@@ -318,11 +298,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// get and set property accessors should be
-		/// ignored when reading and writing.
-		/// True to ignore, otherwise false. Default is false.
+		/// properties should be read from and written to.
+		/// True to include private properties, otherwise false. Default is false.
 		/// </summary>
-		public virtual bool IgnorePrivateAccessor { get; set; }
+		public virtual bool IncludePrivateProperties { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if blank lines
@@ -359,24 +338,45 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual Action<string> BadDataCallback { get; set; }
 
-#if !NET_2_0
+		/// <summary>
+		/// Creates a new CsvConfiguration.
+		/// </summary>
+		public CsvConfiguration()
+		{
+			BuildRequiredQuoteChars();
+		}
+
 		/// <summary>
 		/// Gets or sets a value indicating whether
 		/// exceptions that occur duruing reading
 		/// should be ignored. True to ignore exceptions,
 		/// otherwise false. Default is false.
-		/// This is only applicable when during
-		/// <see cref="ICsvReader.GetRecords{T}"/>.
 		/// </summary>
 		public virtual bool IgnoreReadingExceptions { get; set; }
 
 		/// <summary>
 		/// Gets or sets the callback that is called when a reading
 		/// exception occurs. This will only happen when
-		/// <see cref="IgnoreReadingExceptions"/> is true, and when
-		/// calling <see cref="ICsvReader.GetRecords{T}"/>.
+		/// <see cref="IgnoreReadingExceptions"/> is true.
 		/// </summary>
-		public virtual Action<Exception, ICsvReader> ReadingExceptionCallback { get; set; }
+		public virtual Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
+
+		/// <summary>
+		/// Builds the values for the RequiredQuoteChars property.
+		/// </summary>
+		private void BuildRequiredQuoteChars()
+		{
+			quoteRequiredChars = delimiter.Length > 1 ?
+				new[] { '\r', '\n' } :
+				new[] { '\r', '\n', delimiter[0] };
+		}
+		
+#if !NET_2_0
+
+		/// <summary>
+		/// The configured <see cref="CsvClassMap"/>s.
+		/// </summary>
+		public virtual CsvClassMapCollection Maps => maps;
 
 		/// <summary>
 		/// Gets or sets a value indicating that during writing if a new 
@@ -484,24 +484,8 @@ namespace CsvHelper.Configuration
 
 			return map;
 		}
+
 #endif
 
-		/// <summary>
-		/// Creates a new CsvConfiguration.
-		/// </summary>
-		public CsvConfiguration()
-		{
-			BuildRequiredQuoteChars();
-		}
-
-		/// <summary>
-		/// Builds the values for the RequiredQuoteChars property.
-		/// </summary>
-		private void BuildRequiredQuoteChars()
-		{
-			quoteRequiredChars = delimiter.Length > 1 ? 
-				new[] { '\r', '\n' } : 
-				new[] { '\r', '\n', delimiter[0] };
-		}
 	}
 }

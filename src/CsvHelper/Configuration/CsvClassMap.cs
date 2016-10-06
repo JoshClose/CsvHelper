@@ -2,7 +2,9 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+
 #if !NET_2_0
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,7 +23,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the constructor expression.
 		/// </summary>
-		public virtual NewExpression Constructor { get; protected set; } 
+		public virtual Expression Constructor { get; protected set; } 
 
 		/// <summary>
 		/// The class property mappings.
@@ -42,16 +44,35 @@ namespace CsvHelper.Configuration
 		/// Maps a property to a CSV field.
 		/// </summary>
 		/// <param name="property">The property to map.</param>
+		/// <param name="useExistingMap">If true, an existing map will be used if available.
+		/// If false, a new map is created for the same property.</param>
 		/// <returns>The property mapping.</returns>
-		public virtual CsvPropertyMap Map( PropertyInfo property )
+		public virtual CsvPropertyMap Map( PropertyInfo property, bool useExistingMap = true )
 		{
-			var existingMap = PropertyMaps.Find( property );
-			if( existingMap != null )
+			if( useExistingMap )
 			{
-				return existingMap;
+				var existingMap = PropertyMaps.Find( property );
+				if( existingMap != null )
+				{
+					return existingMap;
+				}
 			}
 
 			var propertyMap = new CsvPropertyMap( property );
+			propertyMap.Data.Index = GetMaxIndex() + 1;
+			PropertyMaps.Add( propertyMap );
+
+			return propertyMap;
+		}
+
+		/// <summary>
+		/// Maps a non-property to a CSV field. This allows for writing
+		/// data that isn't mapped to a class property.
+		/// </summary>
+		/// <returns>The property mapping.</returns>
+		public virtual CsvPropertyMap Map()
+		{
+			var propertyMap = new CsvPropertyMap( null );
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
 
@@ -263,4 +284,5 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
+
 #endif // !NET_2_0

@@ -40,9 +40,14 @@ namespace CsvHelper
 #if !NET_2_0
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 #endif
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvWriterConfiguration configuration;
 		private bool hasExcelSeperatorBeenRead;
 		private int row = 1;
+
+		/// <summary>
+		/// Gets the serializer.
+		/// </summary>
+		public virtual ICsvSerializer Serializer => serializer;
 
 		/// <summary>
 		/// Gets the current row.
@@ -57,7 +62,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration => configuration;
+		public virtual ICsvWriterConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter" />.
@@ -77,7 +82,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvWriter( TextWriter writer, CsvConfiguration configuration ) : this( new CsvSerializer( writer, configuration ), false ) { }
+		public CsvWriter( TextWriter writer, ICsvWriterConfiguration configuration ) : this( new CsvSerializer( writer, configuration ), false ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="ICsvSerializer"/>.
@@ -102,8 +107,13 @@ namespace CsvHelper
 				throw new CsvConfigurationException( "The given serializer has no configuration." );
 			}
 
+			if( !( serializer.Configuration is ICsvWriterConfiguration ) )
+			{
+				throw new CsvConfigurationException( "The given serializer does not have a configuration that works with the writer." );
+			}
+
 			this.serializer = serializer;
-			configuration = serializer.Configuration;
+			configuration = (ICsvWriterConfiguration)serializer.Configuration;
 			this.leaveOpen = leaveOpen;
 		}
 
@@ -145,14 +155,13 @@ namespace CsvHelper
 
 			if( !configuration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
-			    var hasQuote = field.Contains( configuration.QuoteString );
-				
-                if( shouldQuote
-				    || hasQuote
-				    || field[0] == ' '
-				    || field[field.Length - 1] == ' '
-				    || field.IndexOfAny( configuration.QuoteRequiredChars ) > -1
-				    || ( configuration.Delimiter.Length > 1 && field.Contains( configuration.Delimiter ) ) )
+                if( shouldQuote // Quote all fields
+				    || field.Contains( configuration.QuoteString ) // Contains quote
+					|| field[0] == ' ' // Starts with a space
+				    || field[field.Length - 1] == ' ' // Ends with a space
+				    || field.IndexOfAny( configuration.QuoteRequiredChars ) > -1 // Contains chars that require quotes
+				    || ( configuration.Delimiter.Length > 0 && field.Contains( configuration.Delimiter ) ) // Contains delimiter
+					|| configuration.AllowComments && currentRecord.Count == 0 && field[0] == configuration.Comment ) // Comments are on first field starts with comment char
 				{
 					shouldQuote = true;
 				}
@@ -291,7 +300,7 @@ namespace CsvHelper
 	    /// <param name="comment">The comment to write.</param>
 	    public virtual void WriteComment( string comment )
 	    {
-	        WriteField( configuration.Comment + comment );
+	        WriteField( configuration.Comment + comment, false );
 	    }
 
 #if !NET_2_0
@@ -758,30 +767,39 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( propertyMap.Data.TypeConverter == null )
+				Expression fieldExpression;
+
+				if( propertyMap.Data.IsConstantSet )
 				{
-					// Skip if the type isn't convertible.
-					continue;
+					fieldExpression = Expression.Constant( propertyMap.Data.Constant );
 				}
-
-				var fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
-
-				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+				else
 				{
-					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
-				}
+					if( propertyMap.Data.TypeConverter == null )
+					{
+						// Skip if the type isn't convertible.
+						continue;
+					}
 
-				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+					fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
 
-				var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
-				fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-				fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+					var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
+					if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
+					{
+						propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
+					}
 
-				if( type.GetTypeInfo().IsClass )
-				{
-					var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
-					fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+
+					var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
+					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+
+					if( type.GetTypeInfo().IsClass )
+					{
+						var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+						fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+					}
 				}
 
 				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
@@ -910,12 +928,18 @@ namespace CsvHelper
 		{
 			var cantWrite =
 				// Ignored properties.
-				propertyMap.Data.Ignore ||
+				propertyMap.Data.Ignore;
+
+			if( propertyMap.Data.Property != null )
+			{
+				cantWrite = cantWrite ||
 				// Properties that don't have a public getter
 				// and we are honoring the accessor modifier.
-				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IncludePrivateProperties ||
 				// Properties that don't have a getter at all.
 				propertyMap.Data.Property.GetGetMethod( true ) == null;
+			}
+
 			return !cantWrite;
 		}
 

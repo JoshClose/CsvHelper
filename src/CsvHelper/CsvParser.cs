@@ -20,13 +20,17 @@ namespace CsvHelper
 	    private int currentRawRow;
 	    private int c = -1;
 	    private bool hasExcelSeparatorBeenRead;
-	    private int columnCount;
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvParserConfiguration configuration;
+
+		/// <summary>
+		/// Gets the <see cref="ICsvParser.TextReader"/>.
+		/// </summary>
+		public virtual TextReader TextReader => reader.Reader;
 
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration => configuration;
+		public virtual ICsvParserConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Gets the character position that the parser is currently on.
@@ -72,7 +76,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser( TextReader reader, CsvConfiguration configuration ) : this( reader, configuration, false ) { }
+		public CsvParser( TextReader reader, ICsvParserConfiguration configuration ) : this( reader, configuration, false ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
@@ -80,7 +84,7 @@ namespace CsvHelper
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, CsvConfiguration configuration, bool leaveOpen )
+		public CsvParser( TextReader reader, ICsvParserConfiguration configuration, bool leaveOpen )
 		{
 			if( reader == null )
 			{
@@ -113,16 +117,6 @@ namespace CsvHelper
 				reader.ClearRawRecord();
 
 				var row = ReadLine();
-
-				if( configuration.DetectColumnCountChanges && row != null )
-				{
-					if( columnCount > 0 && columnCount != row.Length )
-					{
-						throw new CsvBadDataException( "An inconsistent number of columns has been detected." );
-					}
-
-					columnCount = row.Length;
-				}
 
 				return row;
 			}

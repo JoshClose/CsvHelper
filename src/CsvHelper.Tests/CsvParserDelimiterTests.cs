@@ -31,7 +31,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = "\t";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -66,7 +65,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = "``";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -101,7 +99,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = "`\t`";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -136,7 +133,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = ";;";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -171,7 +167,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = ";;";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -206,7 +201,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = ";;";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -241,7 +235,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = ";;";
-				parser.Configuration.HasHeaderRecord = false;
 
 				var row = parser.Read();
 				Assert.IsNotNull( row );
@@ -276,7 +269,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = ";;";
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 
 				parser.Read();
@@ -303,7 +295,6 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = ";;;";
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 
 				parser.Read();

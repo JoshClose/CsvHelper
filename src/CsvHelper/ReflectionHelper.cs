@@ -93,6 +93,11 @@ namespace CsvHelper
 				var argumentTypes = args.Select( a => a.GetType() ).ToArray();
 				var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
 				var constructorInfo = type.GetConstructor( argumentTypes );
+				if( constructorInfo == null )
+				{
+					throw new InvalidOperationException( "No public parameterless constructor found." );
+				}
+
 				var constructor = Expression.New( constructorInfo, argumentExpressions );
 				compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
 			}

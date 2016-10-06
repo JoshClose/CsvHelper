@@ -15,13 +15,18 @@ namespace CsvHelper
 	{
 		private readonly bool leaveOpen;
 		private bool disposed;
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvSerializerConfiguration configuration;
 		private TextWriter writer;
+
+		/// <summary>
+		/// Gets the <see cref="ICsvSerializer.TextWriter"/>.
+		/// </summary>
+		public virtual TextWriter TextWriter => writer;
 
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public CsvConfiguration Configuration => configuration;
+		public virtual ICsvSerializerConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
@@ -42,7 +47,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration ) : this( writer, configuration, false ) { }
+		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration ) : this( writer, configuration, false ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
@@ -51,7 +56,7 @@ namespace CsvHelper
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration, bool leaveOpen )
+		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration, bool leaveOpen )
 		{
 			if( writer == null )
 			{
@@ -72,7 +77,7 @@ namespace CsvHelper
 		/// Writes a record to the CSV file.
 		/// </summary>
 		/// <param name="record">The record to write.</param>
-		public void Write( string[] record )
+		public virtual void Write( string[] record )
 		{
 			for( var i = 0; i < record.Length; i++ )
 			{
@@ -91,7 +96,7 @@ namespace CsvHelper
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Dispose( !leaveOpen );
 			GC.SuppressFinalize( this );

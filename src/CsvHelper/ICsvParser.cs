@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+using System.IO;
 using CsvHelper.Configuration;
 
 namespace CsvHelper
@@ -13,9 +14,14 @@ namespace CsvHelper
 	public interface ICsvParser : IDisposable
 	{
 		/// <summary>
+		/// Gets the <see cref="TextReader"/>.
+		/// </summary>
+		TextReader TextReader { get; }
+
+		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		CsvConfiguration Configuration { get; }
+		ICsvParserConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the character position that the parser is currently on.

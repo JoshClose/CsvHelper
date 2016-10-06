@@ -28,6 +28,8 @@ namespace CsvHelper.Tests.Reading
 			csv.Configuration.ShouldSkipRecord = row => row.All( string.IsNullOrWhiteSpace );
 
 			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
 			Assert.AreEqual( "1", csv.GetField( 0 ) );
 			Assert.AreEqual( "2", csv.GetField( 1 ) );
 		}
@@ -44,6 +46,29 @@ namespace CsvHelper.Tests.Reading
 			var csv = new CsvReader( parser );
 			csv.Configuration.ShouldSkipRecord = row => row.All( string.IsNullOrWhiteSpace );
 
+			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
+			Assert.AreEqual( "1", csv.GetField( 0 ) );
+			Assert.AreEqual( "2", csv.GetField( 1 ) );
+		}
+
+		[TestMethod]
+		public void ShouldSkipWithEmptyRows()
+		{
+			var rows = new Queue<string[]>();
+			rows.Enqueue( new[] { "First,Second" } );
+			rows.Enqueue( new[] { "skipme," } );
+			rows.Enqueue( new[] { "" } );
+			rows.Enqueue( new[] { "1", "2" } );
+
+			var parser = new ParserMock( rows );
+
+			var csv = new CsvReader( parser );
+			csv.Configuration.ShouldSkipRecord = row => row[0].StartsWith( "skipme" );
+			csv.Configuration.SkipEmptyRecords = true;
+
+			csv.Read();
 			csv.Read();
 			Assert.AreEqual( "1", csv.GetField( 0 ) );
 			Assert.AreEqual( "2", csv.GetField( 1 ) );

@@ -28,11 +28,6 @@ namespace CsvHelper.TypeConversion
 				return base.ConvertFromString( null, row, propertyMapData );
 			}
 
-			if( text.Trim().Length == 0 )
-			{
-				return DateTimeOffset.MinValue;
-			}
-
 			var formatProvider = (IFormatProvider)propertyMapData.TypeConverterOptions.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? propertyMapData.TypeConverterOptions.CultureInfo;
 			var dateTimeStyle = propertyMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
 

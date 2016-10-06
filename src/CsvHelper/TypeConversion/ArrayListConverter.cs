@@ -29,8 +29,7 @@ namespace CsvHelper.TypeConversion
 				while( true )
 				{
 					string field;
-					row.TryGetField( propertyMapData.Names.FirstOrDefault(), nameIndex, out field );
-					if( field == null )
+					if( !row.TryGetField( propertyMapData.Names.FirstOrDefault(), nameIndex, out field ) )
 					{
 						break;
 					}
@@ -48,7 +47,11 @@ namespace CsvHelper.TypeConversion
 
 				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 				{
-					list.Add( row.GetField( i ) );
+					string field;
+					if( row.TryGetField( i, out field ) )
+					{
+						list.Add( field );
+					}
 				}
 			}
 

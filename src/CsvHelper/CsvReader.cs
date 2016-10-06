@@ -33,12 +33,13 @@ namespace CsvHelper
 		private ICsvParser parser;
 		private int currentIndex = -1;
 		private bool doneReading;
+		private int columnCount;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
 #if !NET_2_0
         private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
 #endif
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvReaderConfiguration configuration;
 
 		private const string DoneReadingExceptionMessage =
 			"The reader has already exhausted all records. " +
@@ -50,7 +51,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual CsvConfiguration Configuration => configuration;
+		public virtual ICsvReaderConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Gets the parser.
@@ -135,8 +136,13 @@ namespace CsvHelper
 				throw new CsvConfigurationException( "The given parser has no configuration." );
 			}
 
+			if( !( parser.Configuration is ICsvReaderConfiguration ) )
+			{
+				throw new CsvConfigurationException( "The given parser does not have a configuration that works with the reader." );
+			}
+
 			this.parser = parser;
-			configuration = parser.Configuration;
+			configuration = (ICsvReaderConfiguration)parser.Configuration;
 			this.leaveOpen = leaveOpen;
 		}
 
@@ -156,16 +162,6 @@ namespace CsvHelper
 				throw new CsvReaderException( "Configuration.HasHeaderRecord is false." );
 			}
 
-			if( headerRecord != null )
-			{
-				throw new CsvReaderException( "Header record has already been read." );
-			}
-
-			do
-			{
-				currentRecord = parser.Read();
-			}
-			while( ShouldSkipRecord() );
 			headerRecord = currentRecord;
 			currentRecord = null;
 			ParseNamedIndexes();
@@ -187,11 +183,6 @@ namespace CsvHelper
 				throw new CsvReaderException( DoneReadingExceptionMessage );
 			}
 
-			if( configuration.HasHeaderRecord && headerRecord == null )
-			{
-				ReadHeader();
-			}
-
 			do
 			{
 				currentRecord = parser.Read();
@@ -200,6 +191,26 @@ namespace CsvHelper
 
 			currentIndex = -1;
 			hasBeenRead = true;
+
+			if( configuration.DetectColumnCountChanges && currentRecord != null )
+			{
+				if( columnCount > 0 && columnCount != currentRecord.Length )
+				{
+					var csvException = new CsvBadDataException( "An inconsistent number of columns has been detected." );
+					ExceptionHelper.AddExceptionData( csvException, Row, null, currentIndex, namedIndexes, currentRecord );
+
+					if( configuration.IgnoreReadingExceptions )
+					{
+						configuration.ReadingExceptionCallback?.Invoke( csvException, this );
+					}
+					else
+					{
+						throw csvException;
+					}
+				}
+
+				columnCount = currentRecord.Length;
+			}
 
 			if( currentRecord == null )
 			{
@@ -786,20 +797,8 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			// DateTimeConverter.ConvertFrom will successfully convert
-			// a white space string to a DateTime.MinValue instead of
-			// returning null, so we need to handle this special case.
-			if( converter is DateTimeConverter )
-			{
-				if( StringHelper.IsNullOrWhiteSpace( currentRecord[index] ) )
-				{
-					field = default( T );
-					return false;
-				}
-			}
-
 			// TypeConverter.IsValid() just wraps a
- 			// ConvertFrom() call in a try/catch, so lets not
+			// ConvertFrom() call in a try/catch, so lets not
 			// do it twice and just do it ourselves.
 			try
 			{
@@ -937,6 +936,16 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
+			if( headerRecord == null && configuration.HasHeaderRecord )
+			{
+				ReadHeader();
+
+				if( !Read() )
+				{
+					return default( T );
+				}
+			}
+
 			T record;
 			try
 			{
@@ -961,6 +970,16 @@ namespace CsvHelper
 		public virtual object GetRecord( Type type )
 		{
 			CheckHasBeenRead();
+
+			if( headerRecord == null && configuration.HasHeaderRecord )
+			{
+				ReadHeader();
+
+				if( !Read() )
+				{
+					return null;
+				}
+			}
 
 			object record;
 			try
@@ -989,6 +1008,16 @@ namespace CsvHelper
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
+
+			if( configuration.HasHeaderRecord && headerRecord == null )
+			{
+				if( !Read() )
+				{
+					yield break;
+				}
+
+				ReadHeader();
+			}
 
 			while( Read() )
 			{
@@ -1029,6 +1058,16 @@ namespace CsvHelper
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
+
+			if( configuration.HasHeaderRecord && headerRecord == null )
+			{
+				if( !Read() )
+				{
+					yield break;
+				}
+
+				ReadHeader();
+			}
 
 			while( Read() )
 			{
@@ -1225,23 +1264,14 @@ namespace CsvHelper
 		        return namedIndexes[tuple.Item1][tuple.Item2];
 		    }
 
-			var compareOptions = !Configuration.IsHeaderCaseSensitive ? CompareOptions.IgnoreCase : CompareOptions.None;
 			string name = null;
 			foreach( var pair in namedIndexes )
 			{
-				var namedIndex = pair.Key;
-				if( configuration.IgnoreHeaderWhiteSpace )
-				{
-					namedIndex = Regex.Replace( namedIndex, "\\s", string.Empty );
-				}
-				else if( configuration.TrimHeaders )
-				{
-					namedIndex = namedIndex?.Trim();
-				}
-
+				var propertyName = configuration.PrepareHeaderForMatch( pair.Key );
 				foreach( var n in names )
 				{
-					if( Configuration.CultureInfo.CompareInfo.Compare( namedIndex, n, compareOptions ) == 0 )
+					var fieldName = configuration.PrepareHeaderForMatch( n );
+					if( Configuration.CultureInfo.CompareInfo.Compare( propertyName, fieldName, CompareOptions.None ) == 0 )
 					{
 						name = pair.Key;
 					}
@@ -1282,11 +1312,6 @@ namespace CsvHelper
 			for( var i = 0; i < headerRecord.Length; i++ )
 			{
 				var name = headerRecord[i];
-				if( !Configuration.IsHeaderCaseSensitive )
-				{
-					name = name.ToLower();
-				}
-
 				if( namedIndexes.ContainsKey( name ) )
 				{
 					namedIndexes[name].Add( i );
@@ -1309,8 +1334,8 @@ namespace CsvHelper
 				return false;
 			}
 
-			return configuration.ShouldSkipRecord != null 
-				? configuration.ShouldSkipRecord( currentRecord ) 
+			return configuration.ShouldSkipRecord != null
+				? configuration.ShouldSkipRecord( currentRecord ) || ( configuration.SkipEmptyRecords && IsRecordEmpty( false ) )
 				: configuration.SkipEmptyRecords && IsRecordEmpty( false );
 		}
 
@@ -1436,8 +1461,24 @@ namespace CsvHelper
 				throw new CsvReaderException( $"No properties are mapped for type '{recordType.FullName}'." );
 			}
 
-			var constructorExpression = configuration.Maps[recordType].Constructor ?? Expression.New( recordType );
-			var body = Expression.MemberInit( constructorExpression, bindings );
+			Expression body;
+			var constructorExpression = configuration.Maps[recordType].Constructor;
+			if( constructorExpression is NewExpression )
+			{
+				body = Expression.MemberInit( (NewExpression)constructorExpression, bindings );
+			}
+			else if( constructorExpression is MemberInitExpression )
+			{
+				var memberInitExpression = (MemberInitExpression)constructorExpression;
+				var defaultBindings = memberInitExpression.Bindings.ToList();
+				defaultBindings.AddRange( bindings );
+				body = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+			}
+			else
+			{
+				body = Expression.MemberInit( Expression.New( recordType ), bindings );
+			}
+
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
 			recordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
 		}
@@ -1485,7 +1526,25 @@ namespace CsvHelper
 
 				var referenceBindings = new List<MemberBinding>();
 				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Property.PropertyType, referenceBindings );
-				var referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+
+				Expression referenceBody;
+				var constructorExpression = referenceMap.Data.Mapping.Constructor;
+				if( constructorExpression is NewExpression )
+				{
+					referenceBody = Expression.MemberInit( (NewExpression)constructorExpression, referenceBindings );
+				}
+				else if( constructorExpression is MemberInitExpression )
+				{
+					var memberInitExpression = (MemberInitExpression)constructorExpression;
+					var defaultBindings = memberInitExpression.Bindings.ToList();
+					defaultBindings.AddRange( referenceBindings );
+					referenceBody = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+				}
+				else
+				{
+					referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+				}
+
 				bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
 			}
 		}
@@ -1519,7 +1578,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = -1;
+				int index;
 				if( propertyMap.Data.IsNameSet || configuration.HasHeaderRecord && !propertyMap.Data.IsIndexSet )
 				{
 					// Use the name.
@@ -1553,7 +1612,11 @@ namespace CsvHelper
 				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
 
-				if( propertyMap.Data.IsDefaultSet )
+				if( propertyMap.Data.IsConstantSet )
+				{
+					fieldExpression = Expression.Constant( propertyMap.Data.Constant );
+				}
+				else if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
 					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
@@ -1589,7 +1652,7 @@ namespace CsvHelper
 				propertyMap.Data.Ignore ||
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyMap.Data.Property.GetSetMethod() == null && !configuration.IncludePrivateProperties ||
 				// Properties that don't have a setter at all.
 				propertyMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;
@@ -1606,7 +1669,7 @@ namespace CsvHelper
 			var cantRead =
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IgnorePrivateAccessor ||
+				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IncludePrivateProperties ||
 				// Properties that don't have a setter at all.
 				propertyReferenceMap.Data.Property.GetSetMethod( true ) == null;
 			return !cantRead;

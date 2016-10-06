@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
@@ -50,6 +51,8 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			// Check to see if the header record and first record are set properly.
@@ -143,6 +146,8 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One" ) );
 			Assert.AreEqual( Convert.ToInt32( data2[1] ), reader.GetField<int>( "Two" ) );
@@ -159,6 +164,8 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			Assert.AreEqual( Convert.ToInt32( data2[0] ), reader.GetField<int>( "One", 0 ) );
@@ -500,6 +507,8 @@ namespace CsvHelper.Tests
 			try
 			{
 				csvReader.Read();
+				csvReader.ReadHeader();
+				csvReader.Read();
 				Assert.Fail();
 			}
 			catch( CsvReaderException ) {}
@@ -556,7 +565,9 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.IsHeaderCaseSensitive = false;
+				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
+				csv.Read();
+				csv.ReadHeader();
 				csv.Read();
 
 				Assert.AreEqual( "1", csv.GetField( "one" ) );
@@ -574,7 +585,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue( null );
 			var parserMock = new ParserMock( queue );
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.IgnoreHeaderWhiteSpace = true;
+			reader.Configuration.PrepareHeaderForMatch = header => Regex.Replace( header, @"\s", string.Empty );
 			var data = reader.GetRecords<TestDefaultValues>().ToList();
 			Assert.IsNotNull( data );
 			Assert.AreEqual( 1, data.Count );
@@ -863,9 +874,11 @@ namespace CsvHelper.Tests
 			queue.Enqueue( new[] { " one ", " two three " } );
 			queue.Enqueue( new[] { "1", "2" } );
 			var parserMock = new ParserMock( queue );
-			parserMock.Configuration.TrimHeaders = true;
-			parserMock.Configuration.WillThrowOnMissingField = false;
 			var reader = new CsvReader( parserMock );
+			reader.Configuration.WillThrowOnMissingField = false;
+			reader.Configuration.PrepareHeaderForMatch = header => header.Trim();
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 			Assert.AreEqual( "1", reader.GetField( "one" ) );
 			Assert.AreEqual( "2", reader.GetField( "two three" ) );
@@ -878,10 +891,10 @@ namespace CsvHelper.Tests
 			var queue = new Queue<string[]>();
 			queue.Enqueue( new[] { " 1 " } );
 			var parserMock = new ParserMock( queue );
-			parserMock.Configuration.HasHeaderRecord = false;
-			parserMock.Configuration.TrimFields = true;
-			parserMock.Configuration.WillThrowOnMissingField = false;
 			var reader = new CsvReader( parserMock );
+			reader.Configuration.HasHeaderRecord = false;
+			reader.Configuration.TrimFields = true;
+			reader.Configuration.WillThrowOnMissingField = false;
 			reader.Read();
 			Assert.AreEqual( "1", reader.GetField( 0 ) );
 			Assert.AreEqual( null, reader.GetField( 1 ) );
@@ -896,9 +909,9 @@ namespace CsvHelper.Tests
 			queue.Enqueue( new[] { "2", "two" } );
 
 			var parserMock = new ParserMock( queue );
-			parserMock.Configuration.HasHeaderRecord = false;
 
 			var csv = new CsvReader( parserMock );
+			csv.Configuration.HasHeaderRecord = false;
 
 			csv.Read();
 			Assert.AreEqual( 1, csv.Row );
@@ -1089,7 +1102,7 @@ namespace CsvHelper.Tests
 			public TestDefaultValuesMap()
 			{
 				Map( m => m.IntColumn ).Default( -1 );
-				Map( m => m.StringColumn ).Default( null );
+				Map( m => m.StringColumn ).Default( (string)null );
 			}
 		}
 

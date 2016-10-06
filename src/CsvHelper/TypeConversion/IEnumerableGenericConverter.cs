@@ -51,7 +51,9 @@ namespace CsvHelper.TypeConversion
 
 				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 				{
-					list.Add( row.GetField( type, i ) );
+					var field = row.GetField( type, i );
+
+					list.Add( field );
 				}
 			}
 

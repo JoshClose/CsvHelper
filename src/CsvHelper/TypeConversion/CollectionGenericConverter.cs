@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
 using CsvHelper.Configuration;
 
@@ -20,18 +21,40 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
-				: propertyMapData.IndexEnd;
-
 			// Since we're using the PropertyType here, this converter can be used for multiple types
 			// as long as they implement IList.
 			var list = (IList)ReflectionHelper.CreateInstance( propertyMapData.Property.PropertyType );
-
 			var type = propertyMapData.Property.PropertyType.GetGenericArguments()[0];
-			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+
+			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
 			{
-				list.Add( row.GetField( type, i ) );
+				// Use the name.
+				var nameIndex = 0;
+				while( true )
+				{
+					object field;
+					if( !row.TryGetField( type, propertyMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+					{
+						break;
+					}
+
+					list.Add( field );
+					nameIndex++;
+				}
+			}
+			else
+			{
+				// Use the index.
+				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+					? row.CurrentRecord.Length - 1
+					: propertyMapData.IndexEnd;
+
+				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+				{
+					var field = row.GetField( type, i );
+
+					list.Add( field );
+				}
 			}
 
 			return list;

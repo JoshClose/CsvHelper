@@ -44,34 +44,16 @@ namespace CsvHelper.TypeConversion
 		{
 			var dictionary = new Dictionary<string, string>();
 
-			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
-			{
-				// Use the name.
-				var nameIndex = 0;
-				while( true )
-				{
-					string field;
-					var name = propertyMapData.Names.FirstOrDefault() ?? string.Empty;
-					row.TryGetField( name, nameIndex, out field );
-					if( field == null )
-					{
-						break;
-					}
+			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+				? row.CurrentRecord.Length - 1
+				: propertyMapData.IndexEnd;
 
-					dictionary.Add( name, field );
-					nameIndex++;
-				}
-			}
-			else
+			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 			{
-				// Use the index.
-				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-					? row.CurrentRecord.Length - 1
-					: propertyMapData.IndexEnd;
-
-				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+				string field;
+				if( row.TryGetField( i, out field ) )
 				{
-					dictionary.Add( row.FieldHeaders[i], row.GetField( i ) );
+					dictionary.Add( row.FieldHeaders[i], field );
 				}
 			}
 
