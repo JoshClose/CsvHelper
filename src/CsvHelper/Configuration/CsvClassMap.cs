@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the constructor expression.
 		/// </summary>
-		public virtual NewExpression Constructor { get; protected set; } 
+		public virtual Expression Constructor { get; protected set; } 
 
 		/// <summary>
 		/// The class property mappings.

@@ -1461,8 +1461,24 @@ namespace CsvHelper
 				throw new CsvReaderException( $"No properties are mapped for type '{recordType.FullName}'." );
 			}
 
-			var constructorExpression = configuration.Maps[recordType].Constructor ?? Expression.New( recordType );
-			var body = Expression.MemberInit( constructorExpression, bindings );
+			Expression body;
+			var constructorExpression = configuration.Maps[recordType].Constructor;
+			if( constructorExpression is NewExpression )
+			{
+				body = Expression.MemberInit( (NewExpression)constructorExpression, bindings );
+			}
+			else if( constructorExpression is MemberInitExpression )
+			{
+				var memberInitExpression = (MemberInitExpression)constructorExpression;
+				var defaultBindings = memberInitExpression.Bindings.ToList();
+				defaultBindings.AddRange( bindings );
+				body = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+			}
+			else
+			{
+				body = Expression.MemberInit( Expression.New( recordType ), bindings );
+			}
+
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
 			recordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
 		}
@@ -1510,8 +1526,25 @@ namespace CsvHelper
 
 				var referenceBindings = new List<MemberBinding>();
 				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Property.PropertyType, referenceBindings );
-				var constructorExpression = referenceMap.Data.Mapping.Constructor ?? Expression.New( referenceMap.Data.Property.PropertyType );
-				var referenceBody = Expression.MemberInit( constructorExpression, referenceBindings );
+
+				Expression referenceBody;
+				var constructorExpression = referenceMap.Data.Mapping.Constructor;
+				if( constructorExpression is NewExpression )
+				{
+					referenceBody = Expression.MemberInit( (NewExpression)constructorExpression, referenceBindings );
+				}
+				else if( constructorExpression is MemberInitExpression )
+				{
+					var memberInitExpression = (MemberInitExpression)constructorExpression;
+					var defaultBindings = memberInitExpression.Bindings.ToList();
+					defaultBindings.AddRange( referenceBindings );
+					referenceBody = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+				}
+				else
+				{
+					referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+				}
+
 				bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
 			}
 		}

@@ -25,7 +25,12 @@ namespace CsvHelper.Configuration
 		/// <param name="expression">The expression.</param>
 		public virtual void ConstructUsing( Expression<Func<T>> expression )
 		{
-			Constructor = ReflectionHelper.GetConstructor( expression );
+			if( !( expression.Body is NewExpression ) && !( expression.Body is MemberInitExpression ) )
+			{
+				throw new ArgumentException( "Not a constructor expression.", nameof( expression ) );
+			}
+
+			Constructor = expression.Body;
 		}
 
 		/// <summary>
