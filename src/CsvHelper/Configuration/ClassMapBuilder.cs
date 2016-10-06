@@ -130,11 +130,11 @@ namespace CsvHelper.Configuration
         /// <param name="names">The possible names of the CSV field.</param>
         /// <returns>Remaining available options</returns>
         /// <remarks><see cref="CsvPropertyMap.Name(string[])"/></remarks>
-        INamedOptions<T> Name(string[] names);
+        INamedOptions<T> Name(params string[] names);
     }
 
     /// <summary>
-    /// Options available after calling <see cref="INameable{T}.Name(string)"/> .
+    /// Options available after calling <see cref="INameable{T}.Name(string[])"/> .
     /// </summary>
     /// <typeparam name="T">Type being Mapped</typeparam>
     /// <remarks>Edges from Node 4=>1,2,5,7</remarks>
@@ -176,7 +176,7 @@ namespace CsvHelper.Configuration
     { }
 
     /// <summary>
-    /// Node to represent ability to call <see cref="ConvertUsing(Func{ICsvReaderRow, T})"/> 
+    /// Node to represent ability to call <see cref="ConvertUsing{TProperty}(Func{ICsvReaderRow, TProperty})"/> 
     /// </summary>
     /// <typeparam name="T">Type being Mapped</typeparam>
     /// <remarks>Node 6</remarks>
@@ -186,15 +186,15 @@ namespace CsvHelper.Configuration
         /// Specifies an expression to be used to convert data in the
         /// row to the property.
         /// </summary>
-        /// <typeparam name="T">The type of the property that will be set.</typeparam>
+        /// <typeparam name="TProperty">The type of the property that will be set.</typeparam>
         /// <param name="convertExpression">The convert expression.</param>
         /// <returns>Remaining available options</returns>
         /// <remarks><see cref="CsvPropertyMap.ConvertUsing{T}(Func{ICsvReaderRow, T})"/></remarks>
-        IMappable<T> ConvertUsing(Func<ICsvReaderRow, T> convertExpression);
+        IMappable<T> ConvertUsing<TProperty>(Func<ICsvReaderRow, TProperty> convertExpression);
     }
 
     /// <summary>
-    /// Node to represent ability to call <see cref="Default(T)"/> 
+    /// Node to represent ability to call <see cref="Default{TProperty}(TProperty)"/> 
     /// </summary>
     /// <typeparam name="T">Type being Mapped</typeparam>
     /// <remarks>Node 7</remarks>
@@ -204,11 +204,11 @@ namespace CsvHelper.Configuration
         /// The default value that will be used when reading when
         /// the CSV field is empty.
         /// </summary>
-        /// <typeparam name="T">The default type.</typeparam>
+        /// <typeparam name="TProperty">The default type.</typeparam>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>Remaining available options</returns>
         /// <remarks><seealso cref="CsvPropertyMap.Default{T}(T)"/></remarks>
-        IMappable<T> Default(T defaultValue);
+        IMappable<T> Default<TProperty>(TProperty defaultValue);
     }
 
     /// <summary>
@@ -240,68 +240,68 @@ namespace CsvHelper.Configuration
         IDefaultable<T> //7 - goes back to 1 only
     { }
 
-    internal class ClassMapBuilder<T> : IAllable<T>
+    internal class ClassMapBuilder<TClass> : IAllable<TClass>
     {
         private CsvPropertyMap currPropertyMap;
 
-        private readonly CsvClassMap<T> currClassMap;
+        private readonly CsvClassMap<TClass> currClassMap;
 
         public ClassMapBuilder()
         {
-            currClassMap = new BuilderClassMap<T>();
+            currClassMap = new BuilderClassMap<TClass>();
         }
 
         private sealed class BuilderClassMap<T> : CsvClassMap<T>{}
 
-        public IMappedOptions<T> Map(Expression<Func<T, object>> expression, bool useExistingMap = true)
+        public IMappedOptions<TClass> Map(Expression<Func<TClass, object>> expression, bool useExistingMap = true)
         {
             currPropertyMap = currClassMap.Map(expression, useExistingMap);
             return this;   
         }
 
-        public ITypeConvertedOptions<T> TypeConvert(ITypeConverter typeConverter)
+        public ITypeConvertedOptions<TClass> TypeConvert(ITypeConverter typeConverter)
         {
             currPropertyMap.TypeConverter( typeConverter );
             return this;
         }
 
-        public ITypeConvertedOptions<T> TypeConvert<TConverter>() where TConverter : ITypeConverter
+        public ITypeConvertedOptions<TClass> TypeConvert<TConverter>() where TConverter : ITypeConverter
         {
             currPropertyMap.TypeConverter<TConverter>();
             return this;
         }
 
-        public IIndexedOptions<T> Index(int i)
+        public IIndexedOptions<TClass> Index(int i)
         {
             currPropertyMap.NameIndex(i);
             return this;
         }
 
-        public INamedOptions<T> Name(string[] n)
+        public INamedOptions<TClass> Name(params string[] n)
         {
             currPropertyMap.Name( n );
             return this;
         }
 
-        public INameIndexedOptions<T> NameIndex(int ni)
+        public INameIndexedOptions<TClass> NameIndex(int ni)
         {
             currPropertyMap.NameIndex(ni);
             return this;
         }
 
-        public IMappable<T> ConvertUsing(Func<ICsvReaderRow,T> t)
+        public IMappable<TClass> ConvertUsing<TProperty>(Func<ICsvReaderRow, TProperty> t)
         {
             currPropertyMap.ConvertUsing( t );
             return this;
         }
 
-        public IMappable<T> Default(T defaultValue)
+        public IMappable<TClass> Default<TProperty>(TProperty defaultValue)
         {
             currPropertyMap.Default( defaultValue );
             return this;
         }
 
-        public CsvClassMap<T> Build()
+        public CsvClassMap<TClass> Build()
         {
             return currClassMap;
         }

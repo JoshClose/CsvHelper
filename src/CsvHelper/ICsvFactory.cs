@@ -70,6 +70,12 @@ namespace CsvHelper
 		ICsvWriter CreateWriter( TextWriter writer );
 
 #if !NET_2_0
+        /// <summary>
+        /// Provides a fluent interface for dynamically creating <see cref="CsvClassMap{T}"/>s 
+        /// </summary>
+        /// <typeparam name="T">Type of class to map</typeparam>
+        /// <param name="map">Expression for first property to map</param>
+        /// <returns>Next available options</returns>
         IMappedOptions<T> Map<T>(Expression<Func<T, object>> map);
         #endif
     }
