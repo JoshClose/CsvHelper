@@ -73,12 +73,6 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var val = (DateTime)cmConverter.ConvertFromString( "" );
-			Assert.AreEqual( DateTime.MinValue, val );
-
-			val = (DateTime)converter.ConvertFromString( "", null, propertyMapData );
-			Assert.AreEqual( DateTime.MinValue, val );
-
 			try
 			{
 				cmConverter.ConvertFromString( null );
