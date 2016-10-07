@@ -4,6 +4,10 @@
 // http://csvhelper.com
 using System.IO;
 using CsvHelper.Configuration;
+#if !NET_2_0
+using System;
+using System.Linq.Expressions;
+#endif
 
 namespace CsvHelper
 {
@@ -83,6 +87,19 @@ namespace CsvHelper
 		public virtual ICsvWriter CreateWriter( TextWriter writer )
 		{
 			return new CsvWriter( writer );
-		}
-	}
+        }
+
+#if !NET_2_0
+        /// <summary>
+        /// Access point for fluent interface to dynamically build a <see cref="CsvClassMap{T}"/>
+        /// </summary>
+        /// <typeparam name="T">Type you will be making a class map for</typeparam>
+        /// <param name="map">First property of <typeparamref name="T"/> you will be mapping</param>
+        /// <returns>Options to further configure the <see cref="CsvClassMap{T}"/></returns>
+        public IMappedOptions<T> Map<T>(Expression<Func<T,object>> map)
+	    {
+	        return new ClassMapBuilder<T>().Map(map);
+	    }
+#endif
+    }
 }

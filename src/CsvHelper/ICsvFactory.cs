@@ -4,6 +4,10 @@
 // http://csvhelper.com
 using System.IO;
 using CsvHelper.Configuration;
+#if !NET_2_0
+using System.Linq.Expressions;
+using System;
+#endif
 
 namespace CsvHelper
 {
@@ -64,5 +68,15 @@ namespace CsvHelper
 		/// <param name="writer">The text writer to use for the csv writer.</param>
 		/// <returns>The created writer.</returns>
 		ICsvWriter CreateWriter( TextWriter writer );
-	}
+
+#if !NET_2_0
+        /// <summary>
+        /// Provides a fluent interface for dynamically creating <see cref="CsvClassMap{T}"/>s 
+        /// </summary>
+        /// <typeparam name="T">Type of class to map</typeparam>
+        /// <param name="map">Expression for first property to map</param>
+        /// <returns>Next available options</returns>
+        IMappedOptions<T> Map<T>(Expression<Func<T, object>> map);
+        #endif
+    }
 }
