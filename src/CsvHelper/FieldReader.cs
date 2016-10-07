@@ -108,7 +108,16 @@ namespace CsvHelper
 				charsRead = Reader.Read( buffer, 0, buffer.Length );
 			    if( charsRead == 0 )
 			    {
-				    return -1;
+					// End of file.
+
+					// Clear out the buffer in case the stream
+					// is written to again and we need to read some more.
+				    for( var i = 0; i < buffer.Length; i++ )
+				    {
+					    buffer[i] = '\0';
+				    }
+
+					return -1;
 			    }
 		    }
 

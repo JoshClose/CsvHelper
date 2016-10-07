@@ -732,12 +732,7 @@ namespace CsvHelper.Tests
 				csvReader.Configuration.RegisterClassMap<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual( 2, records.Count() );
-				try
-				{
-					records.Count();
-					Assert.Fail();
-				}
-				catch( CsvReaderException ) {}
+				Assert.AreEqual( 0, records.Count() );
 			}
 		}
 
