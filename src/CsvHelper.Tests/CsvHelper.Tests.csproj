@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ClassMapBuilderTests.cs" />
     <Compile Include="Configuration\CsvClassMapCollectionTests.cs" />
     <Compile Include="Mappings\ConstructUsingTests.cs" />
     <Compile Include="Mappings\IgnoreHeaderWhiteSpaceTests.cs" />
