@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
@@ -37,6 +38,11 @@ namespace CsvHelper.Configuration
 		public MemberTypes MemberTypes { get; set; } = MemberTypes.Properties;
 
 		/// <summary>
+		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
+		/// </summary>
+		public TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
+
+		/// <summary>
 		/// Create options using the defaults.
 		/// </summary>
 		public AutoMapOptions() { }
@@ -51,6 +57,7 @@ namespace CsvHelper.Configuration
 		    PrefixReferenceHeaders = configuration.PrefixReferenceHeaders;
 		    IncludePrivateProperties = configuration.IncludePrivateMembers;
 		    MemberTypes = configuration.MemberTypes;
+			TypeConverterOptionsFactory = configuration.TypeConverterOptionsFactory;
 	    }
 
 		/// <summary>

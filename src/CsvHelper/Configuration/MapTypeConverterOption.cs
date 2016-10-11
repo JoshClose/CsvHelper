@@ -104,10 +104,20 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// The string values used to represent null when converting.
 		/// </summary>
+		/// <param name="nullValues">The values that represent null.</param>
+		/// <returns></returns>
+		public virtual CsvPropertyMap NullValues( params string[] nullValues )
+		{
+			return NullValues( true, nullValues );
+		}
+
+		/// <summary>
+		/// The string values used to represent null when converting.
+		/// </summary>
 		/// <param name="clearValues">A value indication if the current values should be cleared before adding the new ones.</param>
 		/// <param name="nullValues">The values that represent null.</param>
 		/// <returns></returns>
-		public virtual CsvPropertyMap NullValues( bool clearValues = true, params string[] nullValues )
+		public virtual CsvPropertyMap NullValues( bool clearValues, params string[] nullValues )
 		{
 			if( clearValues )
 			{

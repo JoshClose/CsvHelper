@@ -136,6 +136,7 @@
     <Compile Include="TypeConversion\TimeSpanConverterTests.cs" />
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterOptionsFactoryTests.cs" />
+    <Compile Include="TypeConversion\TypeConverterOptionsTests.cs" />
     <Compile Include="TypeConversion\TypeConverterTests.cs" />
     <Compile Include="Writing\ConstantTests.cs" />
     <Compile Include="Writing\DynamicTests.cs" />
