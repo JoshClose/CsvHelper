@@ -24,7 +24,7 @@ namespace CsvHelper
 		public int Row { get; set; }
 
 		/// <summary>
-		/// The property type of the current field.
+		/// The property/field type of the current field.
 		/// </summary>
 		public Type Type { get; set; }
 

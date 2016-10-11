@@ -1485,7 +1485,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates the property bindings for the given <see cref="CsvClassMap"/>.
+		/// Creates the property/field bindings for the given <see cref="CsvClassMap"/>.
 		/// </summary>
 		/// <param name="mapping">The mapping to create the bindings for.</param>
 		/// <param name="recordType">The type of record.</param>
@@ -1502,7 +1502,7 @@ namespace CsvHelper
 				}
 
 				var referenceBindings = new List<MemberBinding>();
-				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Property.PropertyType, referenceBindings );
+				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
 
 				Expression referenceBody;
 				var constructorExpression = referenceMap.Data.Mapping.Constructor;
@@ -1519,28 +1519,28 @@ namespace CsvHelper
 				}
 				else
 				{
-					referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Property.PropertyType ), referenceBindings );
+					referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Member.MemberType() ), referenceBindings );
 				}
 
-				bindings.Add( Expression.Bind( referenceMap.Data.Property, referenceBody ) );
+				bindings.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
 			}
 		}
 
 		/// <summary>
-		/// Adds a <see cref="MemberBinding"/> for each property for it's field.
+		/// Adds a <see cref="MemberBinding"/> for each property/field for it's field.
 		/// </summary>
-		/// <param name="properties">The properties to add bindings for.</param>
+		/// <param name="members">The properties/fields to add bindings for.</param>
 		/// <param name="bindings">The bindings that will be added to from the properties.</param>
-		protected virtual void AddPropertyBindings( CsvPropertyMapCollection properties, List<MemberBinding> bindings )
+		protected virtual void AddPropertyBindings( CsvPropertyMapCollection members, List<MemberBinding> bindings )
 		{
-			foreach( var propertyMap in properties )
+			foreach( var propertyMap in members )
 			{
 				if( propertyMap.Data.ConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
 					Expression exp = Expression.Invoke( propertyMap.Data.ConvertExpression, Expression.Constant( this ) );
-					exp = Expression.Convert( exp, propertyMap.Data.Property.PropertyType );
-					bindings.Add( Expression.Bind( propertyMap.Data.Property, exp ) );
+					exp = Expression.Convert( exp, propertyMap.Data.Member.MemberType() );
+					bindings.Add( Expression.Bind( propertyMap.Data.Member, exp ) );
 					continue;
 				}
 
@@ -1583,11 +1583,11 @@ namespace CsvHelper
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 				}
 
-				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
 				
 				// Create type converter expression.
 				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
-				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Property.PropertyType );
+				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Member.MemberType() );
 
 				if( propertyMap.Data.IsConstantSet )
 				{
@@ -1596,7 +1596,7 @@ namespace CsvHelper
 				else if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
-					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Property.PropertyType );
+					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Member.MemberType() );
 
 					// If null, use string.Empty.
 					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
@@ -1612,43 +1612,57 @@ namespace CsvHelper
 					fieldExpression = typeConverterFieldExpression;
 				}
 
-				bindings.Add( Expression.Bind( propertyMap.Data.Property, fieldExpression ) );
+				bindings.Add( Expression.Bind( propertyMap.Data.Member, fieldExpression ) );
 			}
 		}
 
 		/// <summary>
-		/// Determines if the property for the <see cref="CsvPropertyMap"/>
+		/// Determines if the property/field for the <see cref="CsvPropertyMap"/>
 		/// can be read.
 		/// </summary>
-		/// <param name="propertyMap">The property map.</param>
-		/// <returns>A value indicating of the property can be read. True if it can, otherwise false.</returns>
+		/// <param name="propertyMap">The property/field map.</param>
+		/// <returns>A value indicating of the property/field can be read. True if it can, otherwise false.</returns>
 		protected virtual bool CanRead( CsvPropertyMap propertyMap )
 		{
 			var cantRead =
-				// Ignored properties.
-				propertyMap.Data.Ignore ||
+				// Ignored property/field;
+				propertyMap.Data.Ignore;
+
+			var property = propertyMap.Data.Member as PropertyInfo;
+			if( property != null )
+			{
+				cantRead = cantRead ||
 				// Properties that don't have a public setter
 				// and we are honoring the accessor modifier.
-				propertyMap.Data.Property.GetSetMethod() == null && !configuration.IncludePrivateProperties ||
+				property.GetSetMethod() == null && !configuration.IncludePrivateMembers ||
 				// Properties that don't have a setter at all.
-				propertyMap.Data.Property.GetSetMethod( true ) == null;
+				property.GetSetMethod( true ) == null;
+			}
+
 			return !cantRead;
 		}
 
 		/// <summary>
-		/// Determines if the property for the <see cref="CsvPropertyReferenceMap"/>
+		/// Determines if the property/field for the <see cref="CsvPropertyReferenceMap"/>
 		/// can be read.
 		/// </summary>
 		/// <param name="propertyReferenceMap">The reference map.</param>
-		/// <returns>A value indicating of the property can be read. True if it can, otherwise false.</returns>
+		/// <returns>A value indicating of the property/field can be read. True if it can, otherwise false.</returns>
 		protected virtual bool CanRead( CsvPropertyReferenceMap propertyReferenceMap )
 		{
-			var cantRead =
-				// Properties that don't have a public setter
-				// and we are honoring the accessor modifier.
-				propertyReferenceMap.Data.Property.GetSetMethod() == null && !configuration.IncludePrivateProperties ||
-				// Properties that don't have a setter at all.
-				propertyReferenceMap.Data.Property.GetSetMethod( true ) == null;
+			var cantRead = false;
+
+			var property = propertyReferenceMap.Data.Member as PropertyInfo;
+			if( property != null )
+			{
+				cantRead =
+					// Properties that don't have a public setter
+					// and we are honoring the accessor modifier.
+					property.GetSetMethod() == null && !configuration.IncludePrivateMembers ||
+					// Properties that don't have a setter at all.
+					property.GetSetMethod( true ) == null;
+			}
+
 			return !cantRead;
 		}
 

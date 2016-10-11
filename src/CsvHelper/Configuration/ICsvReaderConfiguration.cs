@@ -42,8 +42,8 @@ namespace CsvHelper.Configuration
 		TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; }
 
 		/// <summary>
-		/// Prepares the header field for matching against a property name.
-		/// The header field and the property name are both ran through this function.
+		/// Prepares the header field for matching against a property/field name.
+		/// The header field and the property/field name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
@@ -67,14 +67,14 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// properties should be read from and written to.
-		/// True to include private properties, otherwise false. Default is false.
+		/// properties/fields should be read from and written to.
+		/// True to include private properties/fields, otherwise false. Default is false.
 		/// </summary>
-		bool IncludePrivateProperties { get; set; }
+		bool IncludePrivateMembers { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
-		/// properties should get prefixed by the parent property name 
+		/// properties/fields should get prefixed by the parent property/field name 
 		/// when automapping.
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
@@ -105,6 +105,13 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
 
+		/// <summary>
+		/// Gets or sets the member types that are used when auto mapping.
+		/// MemberTypes are flags, so you can choose more than one.
+		/// Default is Properties.
+		/// </summary>
+		MemberTypes MemberTypes { get; set; }
+
 #if !NET_2_0
 
 		/// <summary>
@@ -114,16 +121,16 @@ namespace CsvHelper.Configuration
 
 	    /// <summary>
 	    /// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
-	    /// When using a class map, no properties are mapped by default.
-	    /// Only properties specified in the mapping are used.
+	    /// When using a class map, no properties/fields are mapped by default.
+	    /// Only properties/fields specified in the mapping are used.
 	    /// </summary>
 	    /// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 	    TMap RegisterClassMap<TMap>() where TMap : CsvClassMap;
 
 	    /// <summary>
 	    /// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
-	    /// When using a class map, no properties are mapped by default.
-	    /// Only properties specified in the mapping are used.
+	    /// When using a class map, no properties/fields are mapped by default.
+	    /// Only properties/fields specified in the mapping are used.
 	    /// </summary>
 	    /// <param name="classMapType">The type of mapping class to use.</param>
 	    CsvClassMap RegisterClassMap( Type classMapType );

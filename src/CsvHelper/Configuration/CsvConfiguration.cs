@@ -35,8 +35,8 @@ namespace CsvHelper.Configuration
 		public virtual TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
 
 		/// <summary>
-		/// Gets or sets the property binding flags.
-		/// This determines what properties on the custom
+		/// Gets or sets the property/field binding flags.
+		/// This determines what properties/fields on the custom
 		/// class are used. Default is Public | Instance.
 		/// </summary>
 		public virtual BindingFlags PropertyBindingFlags { get; set; } = BindingFlags.Public | BindingFlags.Instance;
@@ -74,8 +74,8 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <summary>
-		/// Prepares the header field for matching against a property name.
-		/// The header field and the property name are both ran through this function.
+		/// Prepares the header field for matching against a property/field name.
+		/// The header field and the property/field name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
@@ -298,10 +298,17 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// properties should be read from and written to.
-		/// True to include private properties, otherwise false. Default is false.
+		/// properties/fields should be read from and written to.
+		/// True to include private properties/fields, otherwise false. Default is false.
 		/// </summary>
-		public virtual bool IncludePrivateProperties { get; set; }
+		public virtual bool IncludePrivateMembers { get; set; }
+
+		/// <summary>
+		/// Gets or sets the member types that are used when auto mapping.
+		/// MemberTypes are flags, so you can choose more than one.
+		/// Default is Properties.
+		/// </summary>
+		public virtual MemberTypes MemberTypes { get; set; } = MemberTypes.Properties;
 
 		/// <summary>
 		/// Gets or sets a value indicating if blank lines
@@ -319,8 +326,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
-		/// properties should get prefixed by the parent property name 
-		/// when automapping.
+		/// properties/fields should get prefixed by the parent property/field
+		/// name when automapping.
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool PrefixReferenceHeaders { get; set; }
@@ -380,17 +387,17 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating that during writing if a new 
-		/// object should be created when a reference property is null.
+		/// object should be created when a reference property/field is null.
 		/// True to create a new object and use it's defaults for the
 		/// fields, or false to leave the fields empty for all the
-		/// reference property's properties.
+		/// reference property/field's properties/fields.
 		/// </summary>
-		public virtual bool UseNewObjectForNullReferenceProperties { get; set; } = true;
+		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
-		/// When using a class map, no properties are mapped by default.
-		/// Only properties specified in the mapping are used.
+		/// When using a class map, no properties/fields are mapped by default.
+		/// Only properties/fields specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 		public virtual TMap RegisterClassMap<TMap>() where TMap : CsvClassMap
@@ -403,8 +410,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
-		/// When using a class map, no properties are mapped by default.
-		/// Only properties specified in the mapping are used.
+		/// When using a class map, no properties/fields are mapped by default.
+		/// Only properties/fields specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
 		public virtual CsvClassMap RegisterClassMap( Type classMapType )
@@ -480,7 +487,7 @@ namespace CsvHelper.Configuration
 		{
 			var mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( type );
 			var map = (CsvClassMap)ReflectionHelper.CreateInstance( mapType );
-			map.AutoMap( IgnoreReferences, PrefixReferenceHeaders );
+			map.AutoMap( new AutoMapOptions( this ) );
 
 			return map;
 		}

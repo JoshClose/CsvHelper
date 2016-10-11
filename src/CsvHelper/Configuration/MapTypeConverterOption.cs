@@ -8,7 +8,7 @@ using System.Linq;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Sets type converter options on a property map.
+	/// Sets type converter options on a property/field map.
 	/// </summary>
     public class MapTypeConverterOption
     {
@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Creates a new instance using the given <see cref="CsvPropertyMap"/>.
 		/// </summary>
-		/// <param name="propertyMap">The property map the options are being applied to.</param>
+		/// <param name="propertyMap">The property/field map the options are being applied to.</param>
 	    public MapTypeConverterOption( CsvPropertyMap propertyMap )
 	    {
 		    this.propertyMap = propertyMap;

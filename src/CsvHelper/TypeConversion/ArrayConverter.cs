@@ -16,12 +16,12 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property being created.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			Array array;
-			var type = propertyMapData.Property.PropertyType.GetElementType();
+			var type = propertyMapData.Member.MemberType().GetElementType();
 
 			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
 			{
@@ -40,7 +40,7 @@ namespace CsvHelper.TypeConversion
 					nameIndex++;
 				}
 
-				array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Property.PropertyType, list.Count );
+				array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Member.MemberType(), list.Count );
 				for( var i = 0; i < list.Count; i++ )
 				{
 					array.SetValue( list[i], i );
@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 					: propertyMapData.IndexEnd;
 
 				var arraySize = indexEnd - propertyMapData.Index + 1;
-				array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Property.PropertyType, arraySize );
+				array = (Array)ReflectionHelper.CreateInstance( propertyMapData.Member.MemberType(), arraySize );
 				var arrayIndex = 0;
 				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 				{

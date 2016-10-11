@@ -17,32 +17,32 @@ using CsvHelper.TypeConversion;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Mapping info for a property to a CSV field.
+	/// Mapping info for a property/field to a CSV field.
 	/// </summary>
 	[DebuggerDisplay( "Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
 	public class CsvPropertyMap
 	{
 		/// <summary>
-		/// Gets the property map data.
+		/// Gets the property/field map data.
 		/// </summary>
 		public CsvPropertyMapData Data { get; }
 
 		/// <summary>
-		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property.
+		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property/field.
 		/// </summary>
-		public CsvPropertyMap( PropertyInfo property )
+		public CsvPropertyMap( MemberInfo member )
 		{
 			TypeConverterOption = new MapTypeConverterOption( this );
 
-			Data = new CsvPropertyMapData( property );
-			if( property == null )
+			Data = new CsvPropertyMapData( member );
+			if( member == null )
 			{
 				return;
 			}
 
 			// Set some defaults.
-			Data.TypeConverter = TypeConverterFactory.GetConverter( property.PropertyType );
-			Data.Names.Add( property.Name );
+			Data.TypeConverter = TypeConverterFactory.GetConverter( member.MemberType() );
+			Data.Names.Add( member.Name );
 		}
 
 		/// <summary>
@@ -89,7 +89,7 @@ namespace CsvHelper.Configuration
 		/// indexes.
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
-		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property.</param>
+		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property/field.</param>
 		public virtual CsvPropertyMap Index( int index, int indexEnd = -1 )
 		{
 			Data.Index = index;
@@ -100,7 +100,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Ignore the property when reading and writing.
+		/// Ignore the property/field when reading and writing.
 		/// </summary>
 		public virtual CsvPropertyMap Ignore()
 		{
@@ -110,7 +110,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Ignore the property when reading and writing.
+		/// Ignore the property/field when reading and writing.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
 		public virtual CsvPropertyMap Ignore( bool ignore )
@@ -129,9 +129,9 @@ namespace CsvHelper.Configuration
 		public virtual CsvPropertyMap Default<T>( T defaultValue )
 		{
 			var returnType = typeof( T );
-			if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+			if( !Data.Member.MemberType().IsAssignableFrom( returnType ) )
 			{
-				throw new CsvConfigurationException( $"Default type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+				throw new CsvConfigurationException( $"Default type '{returnType.FullName}' cannot be assigned to property/field type '{Data.Member.MemberType().FullName}'." );
 			}
 
 			Data.Default = defaultValue;
@@ -149,12 +149,12 @@ namespace CsvHelper.Configuration
 		/// <param name="constantValue">The constant value.</param>
 		public virtual CsvPropertyMap Constant<T>( T constantValue )
 		{
-			if( Data.Property != null )
+			if( Data.Member != null )
 			{
 				var returnType = typeof( T );
-				if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+				if( !Data.Member.MemberType().IsAssignableFrom( returnType ) )
 				{
-					throw new CsvConfigurationException( $"Constant type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+					throw new CsvConfigurationException( $"Constant type '{returnType.FullName}' cannot be assigned to property/field type '{Data.Member.MemberType().FullName}'." );
 				}
 			}
 
@@ -166,7 +166,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
-		/// when converting the property to and from a CSV field.
+		/// when converting the property/field to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
 		public virtual CsvPropertyMap TypeConverter( ITypeConverter typeConverter )
@@ -178,7 +178,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
-		/// when converting the property to and from a CSV field.
+		/// when converting the property/field to and from a CSV field.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
@@ -191,16 +191,16 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Specifies an expression to be used to convert data in the
-		/// row to the property.
+		/// row to the property/field.
 		/// </summary>
-		/// <typeparam name="T">The type of the property that will be set.</typeparam>
+		/// <typeparam name="T">The type of the property/field that will be set.</typeparam>
 		/// <param name="convertExpression">The convert expression.</param>
 		public virtual CsvPropertyMap ConvertUsing<T>( Func<ICsvReaderRow, T> convertExpression )
 		{
 			var returnType = typeof( T );
-			if( !Data.Property.PropertyType.IsAssignableFrom( returnType ) )
+			if( !Data.Member.MemberType().IsAssignableFrom( returnType ) )
 			{
-				throw new CsvConfigurationException( $"ConvertUsing return type '{returnType.FullName}' cannot be assigned to property type '{Data.Property.PropertyType.FullName}'." );
+				throw new CsvConfigurationException( $"ConvertUsing return type '{returnType.FullName}' cannot be assigned to property/field type '{Data.Member.MemberType().FullName}'." );
 			}
 
 			Data.ConvertExpression = (Expression<Func<ICsvReaderRow, T>>)( x => convertExpression( x ) );

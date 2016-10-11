@@ -13,7 +13,7 @@ namespace CsvHelper.Tests.Reflection
 		[TestMethod]
 		public void FirstLevelTest()
 		{
-			var stack = ReflectionHelper.GetProperties<A>( a => a.P1 );
+			var stack = ReflectionHelper.GetMembers<A>( a => a.P1 );
 
 			Assert.AreEqual( 1, stack.Count );
 			Assert.AreEqual( "P1", stack.Pop().Name );
@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.Reflection
 		[TestMethod]
 		public void LastLevelTest()
 		{
-			var stack = ReflectionHelper.GetProperties<A>( a => a.B.C.D.P4 );
+			var stack = ReflectionHelper.GetMembers<A>( a => a.B.C.D.P4 );
 
 			Assert.AreEqual( 4, stack.Count );
 			Assert.AreEqual( "B", stack.Pop().Name );

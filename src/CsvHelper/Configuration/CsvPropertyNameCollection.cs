@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// A collection that holds property names.
+	/// A collection that holds property/field names.
 	/// </summary>
 	public class CsvPropertyNameCollection : IEnumerable<string>
 	{

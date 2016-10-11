@@ -737,28 +737,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void OnlyFieldsTest()
-		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "Name" } );
-			queue.Enqueue( new[] { "name" } );
-			queue.Enqueue( null );
-
-			var parserMock = new ParserMock( queue );
-
-			var reader = new CsvReader( parserMock );
-
-			try
-			{
-				// This needs a class map because auto mapping only works with properties.
-				reader.Configuration.RegisterClassMap<OnlyFieldsMap>();
-				reader.GetRecords<OnlyFields>().ToList();
-				Assert.Fail();
-			}
-			catch( CsvConfigurationException ) {}
-		}
-
-		[TestMethod]
 		public void IgnoreExceptionsTest()
 		{
 			var queue = new Queue<string[]>();
