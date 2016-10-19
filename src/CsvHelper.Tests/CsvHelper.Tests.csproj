@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\CsvClassMapCollectionTests.cs" />
+    <Compile Include="Culture\TypeConverterOptionsFactoryTests.cs" />
     <Compile Include="Mappings\ConstructUsingTests.cs" />
     <Compile Include="Mappings\FieldMappingTests.cs" />
     <Compile Include="Mappings\IgnoreHeaderWhiteSpaceTests.cs" />
