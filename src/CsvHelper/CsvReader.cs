@@ -64,7 +64,12 @@ namespace CsvHelper
 
 				return headerRecord;
 			}
-		}
+            set
+            {
+                headerRecord = value;
+                ParseNamedIndexes();
+            }
+        }
 
 		/// <summary>
 		/// Get the current record;
@@ -1228,7 +1233,7 @@ namespace CsvHelper
 				throw new ArgumentNullException( nameof( names ) );
 			}
 
-			if( !configuration.HasHeaderRecord )
+			if( !configuration.HasHeaderRecord && FieldHeaders == null )
 			{
 				throw new CsvReaderException( "There is no header record to determine the index by name." );
 			}
