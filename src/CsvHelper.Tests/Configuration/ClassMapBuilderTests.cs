@@ -17,8 +17,8 @@ namespace CsvHelper.Tests.Configuration
 
         private static Func<ICsvReaderRow, FakeInnerClass> ConvertExpression => r => new FakeInnerClass { E = r.GetField(4)};
 
-        private static readonly CsvClassMap<FakeClass> map = csvFactory
-            .Map<FakeClass>(m=>m.A).Name("A1").NameIndex(2).Default("WEW")
+        private static readonly CsvClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
+            .Map(m=>m.A).Name("A1").NameIndex(2).Default("WEW")
             .Map(m=>m.B).Name("B2").Default(2)
             .Map(m=>m.C).Index(2).TypeConvert(new DateTimeConverter())
             .Map(m => m.D).Name("D4").TypeConvert<DoubleConverter>().Default(4d)

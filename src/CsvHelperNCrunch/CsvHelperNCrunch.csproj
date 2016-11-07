@@ -72,6 +72,9 @@
     <Compile Include="..\CsvHelper\Configuration\AutoMapOptions.cs">
       <Link>Configuration\AutoMapOptions.cs</Link>
     </Compile>
+    <Compile Include="..\CsvHelper\Configuration\ClassMapBuilder.cs">
+      <Link>Configuration\ClassMapBuilder.cs</Link>
+    </Compile>
     <Compile Include="..\CsvHelper\Configuration\CsvClassMap.cs">
       <Link>Configuration\CsvClassMap.cs</Link>
     </Compile>

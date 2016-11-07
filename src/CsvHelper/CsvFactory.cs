@@ -96,9 +96,9 @@ namespace CsvHelper
         /// <typeparam name="T">Type you will be making a class map for</typeparam>
         /// <param name="map">First property of <typeparamref name="T"/> you will be mapping</param>
         /// <returns>Options to further configure the <see cref="CsvClassMap{T}"/></returns>
-        public IMappedOptions<T> Map<T>(Expression<Func<T,object>> map)
+        public IMappable<T> CreateClassMapBuilder<T>()
 	    {
-	        return new ClassMapBuilder<T>().Map(map);
+	        return new ClassMapBuilder<T>();
 	    }
 #endif
     }
