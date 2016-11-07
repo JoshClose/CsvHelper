@@ -62,7 +62,9 @@
   <ItemGroup>
     <Compile Include="Configuration\ClassMapBuilderTests.cs" />
     <Compile Include="Configuration\CsvClassMapCollectionTests.cs" />
+    <Compile Include="Culture\TypeConverterOptionsFactoryTests.cs" />
     <Compile Include="Mappings\ConstructUsingTests.cs" />
+    <Compile Include="Mappings\FieldMappingTests.cs" />
     <Compile Include="Mappings\IgnoreHeaderWhiteSpaceTests.cs" />
     <Compile Include="Mappings\MapConstructorTests.cs" />
     <Compile Include="Mappings\SubPropertyMappingTests.cs" />
@@ -136,6 +138,7 @@
     <Compile Include="TypeConversion\TimeSpanConverterTests.cs" />
     <Compile Include="TypeConversion\TypeConverterFactoryTests.cs" />
     <Compile Include="TypeConversion\TypeConverterOptionsFactoryTests.cs" />
+    <Compile Include="TypeConversion\TypeConverterOptionsTests.cs" />
     <Compile Include="TypeConversion\TypeConverterTests.cs" />
     <Compile Include="Writing\ConstantTests.cs" />
     <Compile Include="Writing\DynamicTests.cs" />

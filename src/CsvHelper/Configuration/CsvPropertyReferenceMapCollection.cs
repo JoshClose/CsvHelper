@@ -30,7 +30,7 @@ namespace CsvHelper.Configuration
 		/// <param name="index">The zero-based index of the element to get or set.</param>
 		/// <exception cref="T:System.ArgumentOutOfRangeException">
 		/// <paramref name="index" /> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1" />.</exception>
-		/// <exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
+		/// <exception cref="T:System.NotSupportedException">The property/field is set and the <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
 		public virtual CsvPropertyReferenceMap this[int index]
 		{
 			get { return list[index]; }
@@ -128,30 +128,30 @@ namespace CsvHelper.Configuration
 	    }
 
 		/// <summary>
-		/// Finds the <see cref="CsvPropertyReferenceMap"/> using the given property expression.
+		/// Finds the <see cref="CsvPropertyReferenceMap"/> using the given property/field expression.
 		/// </summary>
-		/// <typeparam name="T">The <see cref="System.Type"/> the property is on.</typeparam>
-		/// <param name="expression">The property expression.</param>
+		/// <typeparam name="T">The <see cref="System.Type"/> the property/field is on.</typeparam>
+		/// <param name="expression">The property/field expression.</param>
 		/// <returns>The <see cref="CsvPropertyReferenceMap"/> for the given expression, or null if not found.</returns>
 		public virtual CsvPropertyReferenceMap Find<T>( Expression<Func<T, object>> expression )
 		{
-			var property = ReflectionHelper.GetProperty( expression );
-			return Find( property );
+			var member = ReflectionHelper.GetMember( expression );
+			return Find( member );
 		}
 
 		/// <summary>
-		/// Finds the <see cref="CsvPropertyReferenceMap"/> using the given property.
+		/// Finds the <see cref="CsvPropertyReferenceMap"/> using the given property/field.
 		/// </summary>
-		/// <param name="property">The property.</param>
+		/// <param name="member">The property/field.</param>
 		/// <returns>The <see cref="CsvPropertyReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual CsvPropertyReferenceMap Find( PropertyInfo property )
+		public virtual CsvPropertyReferenceMap Find( MemberInfo member )
 	    {
 			var existingMap = list.SingleOrDefault( m =>
-				m.Data.Property == property ||
-				m.Data.Property.Name == property.Name &&
+				m.Data.Member == member ||
+				m.Data.Member.Name == member.Name &&
 				(
-					m.Data.Property.DeclaringType.IsAssignableFrom( property.DeclaringType ) ||
-					property.DeclaringType.IsAssignableFrom( m.Data.Property.DeclaringType )
+					m.Data.Member.DeclaringType.IsAssignableFrom( member.DeclaringType ) ||
+					member.DeclaringType.IsAssignableFrom( m.Data.Member.DeclaringType )
 				)
 			);
 

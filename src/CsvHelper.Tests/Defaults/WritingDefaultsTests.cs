@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.Defaults
 					},
 				};
 
-				csv.Configuration.UseNewObjectForNullReferenceProperties = false;
+				csv.Configuration.UseNewObjectForNullReferenceMembers = false;
 				csv.Configuration.RegisterClassMap<AMap>();
 				csv.WriteRecords( records );
 

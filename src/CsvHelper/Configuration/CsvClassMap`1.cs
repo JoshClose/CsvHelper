@@ -14,7 +14,7 @@ using CsvHelper.TypeConversion;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Maps class properties to CSV fields.
+	/// Maps class properties/fields to CSV fields.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="System.Type"/> of class to map.</typeparam>
 	public abstract class CsvClassMap<T> : CsvClassMap
@@ -34,51 +34,66 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Maps a property to a CSV field.
+		/// Maps a property/field to a CSV field.
 		/// </summary>
-		/// <param name="expression">The property to map.</param>
+		/// <param name="expression">The property/field to map.</param>
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
-		/// If false, a new map is created for the same property.</param>
-		/// <returns>The property mapping.</returns>
+		/// If false, a new map is created for the same property/field.</param>
+		/// <returns>The property/field mapping.</returns>
 		public virtual CsvPropertyMap Map( Expression<Func<T, object>> expression, bool useExistingMap = true )
 		{
-			var stack = ReflectionHelper.GetProperties( expression );
+			var stack = ReflectionHelper.GetMembers( expression );
 			if( stack.Count == 0 )
 			{
-				throw new InvalidOperationException( "No properties were found in expression '{expression}'." );
+				throw new InvalidOperationException( "No properties/fields were found in expression '{expression}'." );
 			}
 
 			CsvClassMap currentClassMap = this;
-			PropertyInfo property;
+			MemberInfo member;
 
 			if( stack.Count > 1 )
 			{
-				// We need to add a reference map for every sub property.
+				// We need to add a reference map for every sub property/field.
 				while( stack.Count > 1 )
 				{
-					property = stack.Pop();
-					var mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
-					var referenceMap = currentClassMap.References( mapType, property );
+					member = stack.Pop();
+					Type mapType;
+					var property = member as PropertyInfo;
+					var field = member as FieldInfo;
+					if( property != null )
+					{
+						mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( property.PropertyType );
+					}
+					else if( field != null )
+					{
+						mapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( field.FieldType );
+					}
+					else
+					{
+						throw new InvalidOperationException( "The given expression was not a property or a field." );
+					}
+
+					var referenceMap = currentClassMap.References( mapType, member );
 					currentClassMap = referenceMap.Data.Mapping;
 				}
 			}
 
-			// Add the property map to the last reference map.
-			property = stack.Pop();
+			// Add the property/field map to the last reference map.
+			member = stack.Pop();
 
-			return currentClassMap.Map( property, useExistingMap );
+			return currentClassMap.Map( member, useExistingMap );
 		}
 
 		/// <summary>
-		/// Maps a property to another class map.
+		/// Maps a property/field to another class map.
 		/// </summary>
 		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
 		/// <param name="expression">The expression.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
-		/// <returns>The reference mapping for the property.</returns>
+		/// <returns>The reference mapping for the property/field.</returns>
 		public virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<T, object>> expression, params object[] constructorArgs ) where TClassMap : CsvClassMap
 		{
-			var property = ReflectionHelper.GetProperty( expression );
+			var property = ReflectionHelper.GetMember( expression );
 			return References( typeof( TClassMap ), property, constructorArgs );
 		}
 	}

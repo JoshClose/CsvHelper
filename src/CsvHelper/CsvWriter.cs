@@ -234,7 +234,7 @@ namespace CsvHelper
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( type ) );
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( type ), propertyMapData.TypeConverterOptions );
 
 			var fieldString = converter.ConvertToString( field, this, propertyMapData );
 			WriteConvertedField( fieldString );
@@ -306,7 +306,7 @@ namespace CsvHelper
 #if !NET_2_0
 
         /// <summary>
-        /// Writes the header record from the given properties.
+        /// Writes the header record from the given properties/fields.
         /// </summary>
         /// <typeparam name="T">The type of the record.</typeparam>
         public virtual void WriteHeader<T>()
@@ -315,7 +315,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Writes the header record from the given properties.
+		/// Writes the header record from the given properties/fields.
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		public virtual void WriteHeader( Type type )
@@ -571,12 +571,12 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Adds the properties from the mapping. This will recursively
-		/// traverse the mapping tree and add all properties for
+		/// Adds the properties/fields from the mapping. This will recursively
+		/// traverse the mapping tree and add all properties/fields for
 		/// reference maps.
 		/// </summary>
-		/// <param name="properties">The properties to be added to.</param>
-		/// <param name="mapping">The mapping where the properties are added from.</param>
+		/// <param name="properties">The properties/fields to be added to.</param>
+		/// <param name="mapping">The mapping where the properties/fields are added from.</param>
 		protected virtual void AddProperties( CsvPropertyMapCollection properties, CsvClassMap mapping )
 		{
 			properties.AddRange( mapping.PropertyMaps );
@@ -587,51 +587,59 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates a property expression for the given property on the record.
-		/// This will recursively traverse the mapping to find the property
-		/// and create a safe property accessor for each level as it goes.
+		/// Creates a property/field expression for the given property on the record.
+		/// This will recursively traverse the mapping to find the property/field
+		/// and create a safe property/field accessor for each level as it goes.
 		/// </summary>
-		/// <param name="recordExpression">The current property expression.</param>
-		/// <param name="mapping">The mapping to look for the property to map on.</param>
-		/// <param name="propertyMap">The property map to look for on the mapping.</param>
-		/// <returns>An Expression to access the given property.</returns>
+		/// <param name="recordExpression">The current property/field expression.</param>
+		/// <param name="mapping">The mapping to look for the property/field to map on.</param>
+		/// <param name="propertyMap">The property/field map to look for on the mapping.</param>
+		/// <returns>An Expression to access the given property/field.</returns>
 		protected virtual Expression CreatePropertyExpression( Expression recordExpression, CsvClassMap mapping, CsvPropertyMap propertyMap )
 		{
 			if( mapping.PropertyMaps.Any( pm => pm == propertyMap ) )
 			{
-				// The property is on this level.
-				return Expression.Property( recordExpression, propertyMap.Data.Property );
+				// The property/field is on this level.
+				if( propertyMap.Data.Member is PropertyInfo )
+				{
+					return Expression.Property( recordExpression, (PropertyInfo)propertyMap.Data.Member );
+				}
+
+				if( propertyMap.Data.Member is FieldInfo )
+				{
+					return Expression.Field( recordExpression, (FieldInfo)propertyMap.Data.Member );
+				}
 			}
 
-			// The property isn't on this level of the mapping.
+			// The property/field isn't on this level of the mapping.
 			// We need to search down through the reference maps.
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				var wrapped = Expression.Property( recordExpression, refMap.Data.Property );
+				var wrapped = refMap.Data.Member.GetMemberExpression( recordExpression );
 				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Data.Mapping, propertyMap );
 				if( propertyExpression == null )
 				{
 					continue;
 				}
 
-				if( refMap.Data.Property.PropertyType.GetTypeInfo().IsValueType )
+				if( refMap.Data.Member.MemberType().GetTypeInfo().IsValueType )
 				{
 					return propertyExpression;
 				}
 
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
-				var isValueType = propertyMap.Data.Property.PropertyType.GetTypeInfo().IsValueType;
-				var isGenericType = isValueType && propertyMap.Data.Property.PropertyType.GetTypeInfo().IsGenericType;
+				var isValueType = propertyMap.Data.Member.MemberType().GetTypeInfo().IsValueType;
+				var isGenericType = isValueType && propertyMap.Data.Member.MemberType().GetTypeInfo().IsGenericType;
 				Type propertyType;
-				if( isValueType && !isGenericType && !configuration.UseNewObjectForNullReferenceProperties )
+				if( isValueType && !isGenericType && !configuration.UseNewObjectForNullReferenceMembers )
 				{
-					propertyType = typeof( Nullable<> ).MakeGenericType( propertyMap.Data.Property.PropertyType );
+					propertyType = typeof( Nullable<> ).MakeGenericType( propertyMap.Data.Member.MemberType() );
 					propertyExpression = Expression.Convert( propertyExpression, propertyType );
 				}
 				else
 				{
-					propertyType = propertyMap.Data.Property.PropertyType;
+					propertyType = propertyMap.Data.Member.MemberType();
 				}
 
 				var defaultValueExpression = isValueType && !isGenericType
@@ -748,7 +756,7 @@ namespace CsvHelper
 		{
 			var recordParameter = Expression.Parameter( type, "record" );
 
-			// Get a list of all the properties so they will
+			// Get a list of all the properties/fields so they will
 			// be sorted properly.
 			var properties = new CsvPropertyMapCollection();
 			AddProperties( properties, configuration.Maps[type] );
@@ -789,7 +797,7 @@ namespace CsvHelper
 						propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 					}
 
-					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( propertyMap.Data.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Property.PropertyType ), propertyMap.Data.TypeConverterOptions );
+					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
 
 					var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
@@ -834,7 +842,7 @@ namespace CsvHelper
 				TypeConverter = typeConverter,
 				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( propertyMapData.TypeConverterOptions, configuration.TypeConverterOptionsFactory.GetOptions( type ) );
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( type ), propertyMapData.TypeConverterOptions );
 
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
@@ -851,7 +859,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Creates an action for an ExpandoObject. This needs to be separate
 		/// from other dynamic objects due to what seems to be an issue in ExpandoObject
-		/// where expandos with the same properties sometimes test as not equal.
+		/// where expandos with the same properties/fields sometimes test as not equal.
 		/// </summary>
 		/// <param name="obj">The ExpandoObject.</param>
 		/// <returns></returns>
@@ -919,25 +927,26 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Checks if the property can be written.
+		/// Checks if the property/field can be written.
 		/// </summary>
-		/// <param name="propertyMap">The property map that we are checking.</param>
-		/// <returns>A value indicating if the property can be written.
-		/// True if the property can be written, otherwise false.</returns>
+		/// <param name="propertyMap">The property/field map that we are checking.</param>
+		/// <returns>A value indicating if the property/field can be written.
+		/// True if the property/field can be written, otherwise false.</returns>
 		protected virtual bool CanWrite( CsvPropertyMap propertyMap )
 		{
 			var cantWrite =
-				// Ignored properties.
+				// Ignored properties/fields.
 				propertyMap.Data.Ignore;
 
-			if( propertyMap.Data.Property != null )
+			var property = propertyMap.Data.Member as PropertyInfo;
+			if( property != null )
 			{
 				cantWrite = cantWrite ||
 				// Properties that don't have a public getter
 				// and we are honoring the accessor modifier.
-				propertyMap.Data.Property.GetGetMethod() == null && !configuration.IncludePrivateProperties ||
+				property.GetGetMethod() == null && !configuration.IncludePrivateMembers ||
 				// Properties that don't have a getter at all.
-				propertyMap.Data.Property.GetGetMethod( true ) == null;
+				property.GetGetMethod( true ) == null;
 			}
 
 			return !cantWrite;

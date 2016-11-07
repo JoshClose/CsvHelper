@@ -11,15 +11,15 @@ using System.Linq.Expressions;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// The configured data for the property map.
+	/// The configured data for the property/field map.
 	/// </summary>
 	public class CsvPropertyMapData
 	{
 		/// <summary>
-		/// Gets the <see cref="PropertyInfo"/> that the data
+		/// Gets the <see cref="MemberInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual PropertyInfo Property { get; private set; }
+		public virtual MemberInfo Member { get; private set; }
 
 		/// <summary>
 		/// Gets the list of column names.
@@ -47,7 +47,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the index end. The Index end is used to specify a range for use
-		/// with a collection property. Index is used as the start of the range, and IndexEnd
+		/// with a collection property/field. Index is used as the start of the range, and IndexEnd
 		/// is the end of the range.
 		/// </summary>
 		public virtual int IndexEnd { get; set; } = -1;
@@ -100,7 +100,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the expression used to convert data in the
-		/// row to the property.
+		/// row to the property/field.
 		/// </summary>
 		public virtual Expression ConvertExpression { get; set; }
 
@@ -109,10 +109,10 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyMapData"/> class.
 		/// </summary>
-		/// <param name="property">The property.</param>
-		public CsvPropertyMapData( PropertyInfo property )
+		/// <param name="member">The property/field.</param>
+		public CsvPropertyMapData( MemberInfo member )
 		{
-			Property = property;
+			Member = member;
 		}
 	}
 }

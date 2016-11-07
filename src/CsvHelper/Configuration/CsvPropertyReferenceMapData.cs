@@ -31,10 +31,10 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Gets the <see cref="PropertyInfo"/> that the data
+		/// Gets the <see cref="MemberInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual PropertyInfo Property { get; private set; }
+		public virtual MemberInfo Member { get; private set; }
 
 		/// <summary>
 		/// Gets the mapping this is a reference for.
@@ -44,11 +44,11 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyReferenceMapData"/> class.
 		/// </summary>
-		/// <param name="property">The property.</param>
+		/// <param name="member">The property/field.</param>
 		/// <param name="mapping">The mapping this is a reference for.</param>
-		public CsvPropertyReferenceMapData( PropertyInfo property, CsvClassMap mapping )
+		public CsvPropertyReferenceMapData( MemberInfo member, CsvClassMap mapping )
 		{
-			Property = property;
+			Member = member;
 			Mapping = mapping;
 		}
 	}
