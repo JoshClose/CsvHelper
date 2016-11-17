@@ -6,9 +6,10 @@
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 #else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 #endif
 
-namespace CsvHelper.Tests
+namespace CsvHelper.Tests.Reflection
 {
 	[TestClass]
 	public class ReflectionHelperTests

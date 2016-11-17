@@ -2,11 +2,12 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+#if NET_2_0
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace CsvHelper.MissingFrom20
+namespace System.Linq
 {
 	internal static class EnumerableExtensions
 	{
@@ -46,6 +47,19 @@ namespace CsvHelper.MissingFrom20
 			}
 
 			return true;
+		}
+
+		public static TSource FirstOrDefault<TSource>( this IEnumerable<TSource> enumerable, Func<TSource, bool> predicate = null )
+		{
+			foreach( var item in enumerable )
+			{
+				if( predicate == null || predicate( item ) )
+				{
+					return item;
+				}
+			}
+
+			return default( TSource );
 		}
 
 		public static bool SequenceEqual( this IEnumerable x, IEnumerable y )
@@ -99,3 +113,4 @@ namespace CsvHelper.MissingFrom20
 		}
 	}
 }
+#endif

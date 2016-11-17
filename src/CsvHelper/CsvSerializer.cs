@@ -13,23 +13,33 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvSerializer : ICsvSerializer
 	{
+		private readonly bool leaveOpen;
 		private bool disposed;
-		private readonly CsvConfiguration configuration;
+		private readonly ICsvSerializerConfiguration configuration;
 		private TextWriter writer;
+
+		/// <summary>
+		/// Gets the <see cref="ICsvSerializer.TextWriter"/>.
+		/// </summary>
+		public virtual TextWriter TextWriter => writer;
 
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public CsvConfiguration Configuration
-		{
-			get { return configuration; }
-		}
+		public virtual ICsvSerializerConfiguration Configuration => configuration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
-		public CsvSerializer( TextWriter writer ) : this( writer, new CsvConfiguration() ) {}
+		public CsvSerializer( TextWriter writer ) : this( writer, new CsvConfiguration(), false ) { }
+
+		/// <summary>
+		/// Creates a new serializer using the given <see cref="TextWriter"/>.
+		/// </summary>
+		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvSerializer( TextWriter writer, bool leaveOpen ) : this( writer, new CsvConfiguration(), leaveOpen ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
@@ -37,41 +47,58 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration )
+		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration ) : this( writer, configuration, false ) { }
+
+		/// <summary>
+		/// Creates a new serializer using the given <see cref="TextWriter"/>
+		/// and <see cref="CsvConfiguration"/>.
+		/// </summary>
+		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
+		/// <param name="configuration">The configuration.</param>
+		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration, bool leaveOpen )
 		{
 			if( writer == null )
 			{
-				throw new ArgumentNullException( "writer" );
+				throw new ArgumentNullException( nameof( writer ) );
 			}
 
 			if( configuration == null )
 			{
-				throw new ArgumentNullException( "configuration" );
+				throw new ArgumentNullException( nameof( configuration ) );
 			}
 
 			this.writer = writer;
 			this.configuration = configuration;
+			this.leaveOpen = leaveOpen;
 		}
 
 		/// <summary>
 		/// Writes a record to the CSV file.
 		/// </summary>
 		/// <param name="record">The record to write.</param>
-		public void Write( string[] record )
+		public virtual void Write( string[] record )
 		{
-			CheckDisposed();
+			for( var i = 0; i < record.Length; i++ )
+			{
+				if( i > 0 )
+				{
+					writer.Write( configuration.Delimiter );
+				}
 
-			var recordString = string.Join( configuration.Delimiter, record );
-			writer.WriteLine( recordString );
+				writer.Write( record[i] );
+			}
+
+			writer.WriteLine();
 		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
-		public void Dispose()
+		public virtual void Dispose()
 		{
-			Dispose( true );
+			Dispose( !leaveOpen );
 			GC.SuppressFinalize( this );
 		}
 
@@ -88,26 +115,11 @@ namespace CsvHelper
 
 			if( disposing )
 			{
-				if( writer != null )
-				{
-					writer.Dispose();
-				}
+				writer?.Dispose();
 			}
 
 			disposed = true;
 			writer = null;
-		}
-
-		/// <summary>
-		/// Checks if the instance has been disposed of.
-		/// </summary>
-		/// <exception cref="ObjectDisposedException" />
-		protected virtual void CheckDisposed()
-		{
-			if( disposed )
-			{
-				throw new ObjectDisposedException( GetType().ToString() );
-			}
 		}
 	}
 }

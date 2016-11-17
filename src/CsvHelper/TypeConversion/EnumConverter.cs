@@ -3,25 +3,28 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System;
+using System.Reflection;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts an Enum to and from a string.
+	/// Converts an <see cref="Enum"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class EnumConverter : DefaultTypeConverter
 	{
 		private readonly Type type;
 
 		/// <summary>
-		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="Type"/>.
+		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type of the Enum.</param>
 		public EnumConverter( Type type )
 		{
+			var isAssignableFrom = typeof( Enum ).GetTypeInfo().IsAssignableFrom( type.GetTypeInfo() );
 			if( !typeof( Enum ).IsAssignableFrom( type ) )
 			{
-				throw new ArgumentException( string.Format( "'{0}' is not an Enum.", type.FullName ) );
+				throw new ArgumentException( $"'{type.FullName}' is not an Enum." );
 			}
 
 			this.type = type;
@@ -30,10 +33,11 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			try
 			{
@@ -41,21 +45,8 @@ namespace CsvHelper.TypeConversion
 			}
 			catch
 			{
-				return base.ConvertFromString( options, text );
+				return base.ConvertFromString( text, row, propertyMapData );
 			}
-		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( Type type )
-		{
-			// We only care about strings.
-			return type == typeof( string );
 		}
 	}
 }

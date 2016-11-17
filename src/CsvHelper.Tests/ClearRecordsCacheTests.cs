@@ -65,11 +65,13 @@ namespace CsvHelper.Tests
 				csv.Configuration.RegisterClassMap<TestMap1>();
 				var record = new Test { Id = 1, Name = "one" };
 				csv.WriteRecord( record );
+			    csv.NextRecord();
 
 				csv.ClearRecordCache<Test>();
 				csv.Configuration.RegisterClassMap<TestMap2>();
 				record = new Test { Id = 2, Name = "two" };
 				csv.WriteRecord( record );
+			    csv.NextRecord();
 
 				writer.Flush();
 				stream.Position = 0;

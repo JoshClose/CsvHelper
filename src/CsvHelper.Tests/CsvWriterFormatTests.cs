@@ -37,6 +37,7 @@ namespace CsvHelper.Tests
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
 			csv.WriteRecord( record );
+		    csv.NextRecord();
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
@@ -65,6 +66,7 @@ namespace CsvHelper.Tests
 		    var csv = new CsvWriter( writer, config );
 
 		    csv.WriteRecord( record );
+	        csv.NextRecord();
 
 		    stream.Position = 0;
 		    var reader = new StreamReader( stream );
@@ -140,6 +142,7 @@ namespace CsvHelper.Tests
 			csv.Configuration.RegisterClassMap<PersonMap>();
 
 			csv.WriteRecord( record );
+	        csv.NextRecord();
 
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
@@ -165,9 +168,9 @@ namespace CsvHelper.Tests
 		{
 			public TestRecordMap()
 			{
-				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverterOption( "0000" );
-				Map( m => m.DateColumn ).Index( 2 ).TypeConverterOption( "d" );
-				Map( m => m.DecimalColumn ).Index( 3 ).TypeConverterOption( "c" );
+				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverterOption.Format( "0000" );
+				Map( m => m.DateColumn ).Index( 2 ).TypeConverterOption.Format( "d" );
+				Map( m => m.DecimalColumn ).Index( 3 ).TypeConverterOption.Format( "c" );
 				Map( m => m.FirstColumn ).Index( 0 );
 			}
 		}
@@ -202,7 +205,7 @@ namespace CsvHelper.Tests
 			{
 				Map( m => m.FirstName );
 				Map( m => m.LastName );
-				Map( m => m.Updated ).TypeConverterOption( "yyyy-MM-dd HH:mm:ss.fff" );
+				Map( m => m.Updated ).TypeConverterOption.Format( "yyyy-MM-dd HH:mm:ss.fff" );
 				References<HomeAddressMap>( m => m.HomeAddress );
 				References<WorkAddressMap>( m => m.WorkAddress );
 			}
@@ -215,7 +218,7 @@ namespace CsvHelper.Tests
 				Map( m => m.Street ).Name( "HomeStreet" );
 				Map( m => m.City ).Name( "HomeCity" );
 				Map( m => m.State ).Name( "HomeState" );
-				Map( m => m.Zip ).Name( "HomeZip" ).TypeConverterOption( "00000" );
+				Map( m => m.Zip ).Name( "HomeZip" ).TypeConverterOption.Format( "00000" );
 			}
 		}
 
@@ -226,7 +229,7 @@ namespace CsvHelper.Tests
 				Map( m => m.Street ).Name( "WorkStreet" );
 				Map( m => m.City ).Name( "WorkCity" );
 				Map( m => m.State ).Name( "WorkState" );
-				Map( m => m.Zip ).Name( "WorkZip" ).TypeConverterOption( "00000" );
+				Map( m => m.Zip ).Name( "WorkZip" ).TypeConverterOption.Format( "00000" );
 			}
 		}
 

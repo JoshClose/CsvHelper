@@ -33,16 +33,8 @@ namespace CsvHelper.Tests.Exceptions
 					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
 					Assert.Fail();
 				}
-				catch( ArgumentException ex )
+				catch( CsvReaderException )
 				{
-					var data = ex.Data["CsvHelper"];
-					var expected = new StringBuilder();
-					expected.AppendLine( "Row: '2' (1 based)" );
-					expected.AppendLine( "Type: 'CsvHelper.Tests.Exceptions.ExceptionTests+NoDefaultConstructor'" );
-					expected.AppendLine( "Field Index: '-1' (0 based)" );
-
-					Assert.IsNotNull( data );
-					Assert.AreEqual( expected.ToString(), data );
 				}
 			}
 		}

@@ -34,7 +34,7 @@ namespace CsvHelper.Tests
 				writer.WriteLine( "Id,Name,Order" );
 				writer.WriteLine( ",," );
 				writer.WriteLine( "2,two,2" );
-				writer.WriteLine( ",three" );
+				writer.WriteLine( ",three," );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -67,7 +67,7 @@ namespace CsvHelper.Tests
 			public TestMap()
 			{
 				Map( m => m.Id ).Default( -1 );
-				Map( m => m.Name ).Default( null );
+				Map( m => m.Name ).Default( (string)null );
 				Map( m => m.Order ).Default( -2 );
 			}
 		}

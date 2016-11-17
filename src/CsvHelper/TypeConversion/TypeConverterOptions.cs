@@ -5,11 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-#if NET_2_0
-using CsvHelper.MissingFrom20;
-#else
 using System.Linq;
-#endif
 
 namespace CsvHelper.TypeConversion
 {
@@ -18,8 +14,9 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public class TypeConverterOptions
 	{
-		private readonly List<string> booleanTrueValues = new List<string> { "yes", "y" };
-		private readonly List<string> booleanFalseValues = new List<string> { "no", "n" };
+		private static readonly string[] defaultBooleanTrueValues = { "yes", "y" };
+		private static readonly string[] defaultBooleanFalseValues = { "no", "n" };
+		private static readonly string[] defaultNullValues = { "null", "NULL" };
 
 		/// <summary>
 		/// Gets or sets the culture info.
@@ -32,10 +29,12 @@ namespace CsvHelper.TypeConversion
 		public DateTimeStyles? DateTimeStyle { get; set; }
 
 #if !NET_2_0 && !NET_3_5 && !PCL
+
 		/// <summary>
 		/// Gets or sets the time span style.
 		/// </summary>
 		public TimeSpanStyles? TimeSpanStyle { get; set; }
+
 #endif
 
 		/// <summary>
@@ -44,27 +43,26 @@ namespace CsvHelper.TypeConversion
 		public NumberStyles? NumberStyle { get; set; }
 
 		/// <summary>
+		/// Gets or sets the string format.
+		/// </summary>
+		public string Format { get; set; }
+
+		/// <summary>
 		/// Gets the list of values that can be
 		/// used to represent a boolean of true.
 		/// </summary>
-		public List<string> BooleanTrueValues
-		{
-			get { return booleanTrueValues; }
-		}
+		public List<string> BooleanTrueValues { get; } = new List<string>( defaultBooleanTrueValues );
 
 		/// <summary>
 		/// Gets the list of values that can be
 		/// used to represent a boolean of false.
 		/// </summary>
-		public List<string> BooleanFalseValues
-		{
-			get { return booleanFalseValues; }
-		}
+		public List<string> BooleanFalseValues { get; } = new List<string>( defaultBooleanFalseValues );
 
 		/// <summary>
-		/// Gets or sets the string format.
+		/// Gets the list of values that can be used to represent a null value.
 		/// </summary>
-		public string Format { get; set; }
+		public List<string> NullValues { get; } = new List<string>( defaultNullValues );
 
 		/// <summary>
 		/// Merges TypeConverterOptions by applying the values of sources in order to a
@@ -75,6 +73,7 @@ namespace CsvHelper.TypeConversion
 		public static TypeConverterOptions Merge( params TypeConverterOptions[] sources )
 		{
 			var options = new TypeConverterOptions();
+
 			foreach( var source in sources )
 			{
 				if( source == null )
@@ -93,10 +92,12 @@ namespace CsvHelper.TypeConversion
 				}
 
 #if !NET_2_0 && !NET_3_5 && !PCL
+
 				if( source.TimeSpanStyle != null )
 				{
 					options.TimeSpanStyle = source.TimeSpanStyle;
 				}
+
 #endif
 
 				if( source.NumberStyle != null )
@@ -109,16 +110,25 @@ namespace CsvHelper.TypeConversion
 					options.Format = source.Format;
 				}
 
-				if( !options.booleanTrueValues.SequenceEqual( source.booleanTrueValues ) )
+				// Only change the values if they are different than the defaults.
+				// This means there were explicit changes made to the options.
+
+				if( !defaultBooleanTrueValues.SequenceEqual( source.BooleanTrueValues ) )
 				{
-					options.booleanTrueValues.Clear();
-					options.booleanTrueValues.AddRange( source.booleanTrueValues );
+					options.BooleanTrueValues.Clear();
+					options.BooleanTrueValues.AddRange( source.BooleanTrueValues );
 				}
 
-				if( !options.booleanFalseValues.SequenceEqual( source.booleanFalseValues ) )
+				if( !defaultBooleanFalseValues.SequenceEqual( source.BooleanFalseValues ) )
 				{
-					options.booleanFalseValues.Clear();
-					options.booleanFalseValues.AddRange( source.booleanFalseValues );
+					options.BooleanFalseValues.Clear();
+					options.BooleanFalseValues.AddRange( source.BooleanFalseValues );
+				}
+
+				if( !defaultNullValues.SequenceEqual( source.NullValues ) )
+				{
+					options.NullValues.Clear();
+					options.NullValues.AddRange( source.NullValues );
 				}
 			}
 

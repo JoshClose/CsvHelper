@@ -4,51 +4,35 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts a DateTime to and from a string.
+	/// Converts a <see cref="DateTime"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class DateTimeConverter : DefaultTypeConverter
 	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			if( text == null )
 			{
-				return base.ConvertFromString( options, null );
+				return base.ConvertFromString( null, row, propertyMapData );
 			}
 
-			if( text.Trim().Length == 0 )
-			{
-				return DateTime.MinValue;
-			}
+			var formatProvider = (IFormatProvider)propertyMapData.TypeConverterOptions.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? propertyMapData.TypeConverterOptions.CultureInfo;
+			var dateTimeStyle = propertyMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
 
-			var formatProvider = (IFormatProvider)options.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? options.CultureInfo;
-			var dateTimeStyle = options.DateTimeStyle ?? DateTimeStyles.None;
-
-			return string.IsNullOrEmpty( options.Format )
+			return string.IsNullOrEmpty( propertyMapData.TypeConverterOptions.Format )
 				? DateTime.Parse( text, formatProvider, dateTimeStyle )
-				: DateTime.ParseExact( text, options.Format, formatProvider, dateTimeStyle );
-		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( Type type )
-		{
-			// We only care about strings.
-			return type == typeof( string );
+				: DateTime.ParseExact( text, propertyMapData.TypeConverterOptions.Format, formatProvider, dateTimeStyle );
 		}
 	}
 }

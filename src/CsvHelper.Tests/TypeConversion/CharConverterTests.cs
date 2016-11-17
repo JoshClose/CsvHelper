@@ -4,6 +4,7 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 #if WINRT_4_5
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -20,32 +21,34 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new CharConverter();
-			var typeConverterOptions = new TypeConverterOptions
+			var propertyMapData = new CsvPropertyMapData( null )
 			{
-				CultureInfo = CultureInfo.CurrentCulture
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
-			Assert.AreEqual( "a", converter.ConvertToString( typeConverterOptions, 'a' ) );
 
-			Assert.AreEqual( "True", converter.ConvertToString( typeConverterOptions, true ) );
+			Assert.AreEqual( "a", converter.ConvertToString( 'a', null, propertyMapData ) );
 
-			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
+			Assert.AreEqual( "True", converter.ConvertToString( true, null, propertyMapData ) );
+
+			Assert.AreEqual( "", converter.ConvertToString( null, null, propertyMapData ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new CharConverter();
-			var typeConverterOptions = new TypeConverterOptions
-			{
-				CultureInfo = CultureInfo.CurrentCulture
-			};
-			Assert.AreEqual( 'a', converter.ConvertFromString( typeConverterOptions, "a" ) );
-			Assert.AreEqual( 'a', converter.ConvertFromString( typeConverterOptions, " a " ) );
-			Assert.AreEqual( ' ', converter.ConvertFromString( typeConverterOptions, " " ) );
+
+			var propertyMapData = new CsvPropertyMapData( null );
+			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
+
+			Assert.AreEqual( 'a', converter.ConvertFromString( "a", null, propertyMapData ) );
+			Assert.AreEqual( 'a', converter.ConvertFromString( " a ", null, propertyMapData ) );
+			Assert.AreEqual( ' ', converter.ConvertFromString( " ", null, propertyMapData ) );
 
 			try
 			{
-				converter.ConvertFromString( typeConverterOptions, null );
+				converter.ConvertFromString( null, null, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

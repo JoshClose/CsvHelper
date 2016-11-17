@@ -1,7 +1,5 @@
-if not exist NuGet mkdir NuGet
+rmdir /S /Q NuGet
 
-del /Q NuGet\*.*
-
-.\src\.nuget\NuGet.exe pack .\src\CsvHelper.nuspec -OutputDirectory NuGet 
+dotnet pack src\CsvHelper --configuration release --output NuGet
 
 pause

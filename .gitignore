@@ -11,6 +11,7 @@
 packages/
 *[Ll]og.txt
 docs/Help
-NuGet/lib/
-NuGet/*.nupkg
+NuGet/
 *crunch*
+*project.lock.json
+.vs/

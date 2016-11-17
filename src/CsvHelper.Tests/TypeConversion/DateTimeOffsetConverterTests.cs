@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,41 +16,41 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new DateTimeOffsetConverter();
-			var typeConverterOptions = new TypeConverterOptions
+			var propertyMapData = new CsvPropertyMapData( null )
 			{
-				CultureInfo = CultureInfo.CurrentCulture
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
 			var dateTime = DateTimeOffset.Now;
 
 			// Valid conversions.
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( typeConverterOptions, dateTime ) );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertToString( dateTime, null, propertyMapData ) );
 
 			// Invalid conversions.
-			Assert.AreEqual( "1", converter.ConvertToString( typeConverterOptions, 1 ) );
-			Assert.AreEqual( "", converter.ConvertToString( typeConverterOptions, null ) );
+			Assert.AreEqual( "1", converter.ConvertToString( 1, null, propertyMapData ) );
+			Assert.AreEqual( "", converter.ConvertToString( null, null, propertyMapData ) );
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
 			var converter = new DateTimeOffsetConverter();
-			var typeConverterOptions = new TypeConverterOptions
-			{
-				CultureInfo = CultureInfo.CurrentCulture
-			};
+
+			var propertyMapData = new CsvPropertyMapData( null );
+			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var dateTime = DateTimeOffset.Now;
 
 			// Valid conversions.
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( typeConverterOptions, dateTime.ToString() ).ToString() );
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( typeConverterOptions, dateTime.ToString( "o" ) ).ToString() );
-			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( typeConverterOptions, " " + dateTime + " " ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString(), null, propertyMapData ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( dateTime.ToString( "o" ), null, propertyMapData ).ToString() );
+			Assert.AreEqual( dateTime.ToString(), converter.ConvertFromString( " " + dateTime + " ", null, propertyMapData ).ToString() );
 
 			// Invalid conversions.
 			try
 			{
-				converter.ConvertFromString( typeConverterOptions, null );
+				converter.ConvertFromString( null, null, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )
@@ -64,16 +65,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var converter = new DateTimeOffsetConverter();
 			var cmConverter = new System.ComponentModel.DateTimeOffsetConverter();
 
-			var typeConverterOptions = new TypeConverterOptions
-			{
-				CultureInfo = CultureInfo.CurrentCulture
-			};
-
-			var val = (DateTimeOffset)cmConverter.ConvertFromString( "" );
-			Assert.AreEqual( DateTimeOffset.MinValue, val );
-
-			val = (DateTimeOffset)converter.ConvertFromString( typeConverterOptions, "" );
-			Assert.AreEqual( DateTimeOffset.MinValue, val );
+			var propertyMapData = new CsvPropertyMapData( null );
+			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			try
 			{
@@ -84,7 +77,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				converter.ConvertFromString( typeConverterOptions, null );
+				converter.ConvertFromString( null, null, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException ) { }
@@ -98,7 +91,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				converter.ConvertFromString( typeConverterOptions, "blah" );
+				converter.ConvertFromString( "blah", null, propertyMapData );
 			}
 			catch( FormatException ) { }
 		}

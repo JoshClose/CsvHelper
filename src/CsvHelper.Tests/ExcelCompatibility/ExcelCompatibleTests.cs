@@ -2,12 +2,12 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CsvHelper.Configuration;
 
-namespace CsvHelper.Tests
+namespace CsvHelper.Tests.ExcelCompatibility
 {
 	[TestClass]
 	public class ExcelCompatibleTests
@@ -262,7 +262,7 @@ namespace CsvHelper.Tests
 					},
 				};
 				csv.WriteRecords( list );
-				writer.Flush();
+                writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();
@@ -288,10 +288,13 @@ namespace CsvHelper.Tests
 				csv.Configuration.Delimiter = ";";
 				csv.Configuration.HasExcelSeparator = true;
 				csv.WriteExcelSeparator();
-				csv.WriteHeader<Simple>();
-				csv.WriteRecord( record );
+                csv.NextRecord();
+                csv.WriteHeader<Simple>();
+                csv.NextRecord();
+                csv.WriteRecord( record );
+                csv.NextRecord();
 
-				writer.Flush();
+                writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();

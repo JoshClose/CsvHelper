@@ -3,44 +3,33 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts a UInt32 to and from a string.
+	/// Converts a <see cref="uint"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class UInt32Converter : DefaultTypeConverter
 	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var numberStyle = options.NumberStyle ?? NumberStyles.Integer;
+			var numberStyle = propertyMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Integer;
 
 			uint ui;
-			if( uint.TryParse( text, numberStyle, options.CultureInfo, out ui ) )
+			if( uint.TryParse( text, numberStyle, propertyMapData.TypeConverterOptions.CultureInfo, out ui ) )
 			{
 				return ui;
 			}
 
-			return base.ConvertFromString( options, text );
-		}
-
-		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( System.Type type )
-		{
-			// We only care about strings.
-			return type == typeof( string );
+			return base.ConvertFromString( text, row, propertyMapData );
 		}
 	}
 }

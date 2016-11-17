@@ -63,6 +63,8 @@ namespace CsvHelper.Tests.Reading
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
 
 			int field;
 			var got = reader.TryGetField( 0, out field );
@@ -82,6 +84,8 @@ namespace CsvHelper.Tests.Reading
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock ) { Configuration = { WillThrowOnMissingField = true } };
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			int field;
@@ -114,6 +118,29 @@ namespace CsvHelper.Tests.Reading
 		}
 
 		[TestMethod]
+		public void TryGetNullableFieldEmptyDate()
+		{
+			// DateTimeConverter.IsValid() doesn't work correctly
+			// so we need to test and make sure that the conversion
+			// fails for an emptry string for a date.
+			var data = new[] { " " };
+			var queue = new Queue<string[]>();
+			queue.Enqueue( data );
+			queue.Enqueue( null );
+			var parserMock = new ParserMock( queue );
+
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.HasHeaderRecord = false;
+			reader.Read();
+
+			DateTime? field;
+			var got = reader.TryGetField( 0, out field );
+
+			Assert.IsFalse( got );
+			Assert.IsNull( field );
+		}
+
+		[TestMethod]
 		public void TryGetDoesNotThrowWhenWillThrowOnMissingFieldIsEnabled()
 		{
 			var data = new[] { "1" };
@@ -138,6 +165,8 @@ namespace CsvHelper.Tests.Reading
 				{ "1", "2", "3" }
 			};
 			var reader = new CsvReader( parserMock );
+			reader.Read();
+			reader.ReadHeader();
 			reader.Read();
 
 			int field;

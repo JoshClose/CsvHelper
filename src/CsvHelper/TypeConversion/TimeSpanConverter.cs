@@ -4,46 +4,36 @@
 // http://csvhelper.com
 using System;
 using System.Globalization;
+using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Converts a TimeSpan to and from a string.
+	/// Converts a <see cref="TimeSpan"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class TimeSpanConverter : DefaultTypeConverter
 	{
 		/// <summary>
-		/// Determines whether this instance [can convert from] the specified type.
-		/// </summary>
-		/// <param name="type">The type.</param>
-		/// <returns>
-		///   <c>true</c> if this instance [can convert from] the specified type; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool CanConvertFrom( Type type )
-		{
-			return type == typeof( string );
-		}
-
-		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
-		/// <param name="options">The options to use when converting.</param>
 		/// <param name="text">The string to convert to an object.</param>
+		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( TypeConverterOptions options, string text )
+		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			var formatProvider = (IFormatProvider)options.CultureInfo;
+			var formatProvider = (IFormatProvider)propertyMapData.TypeConverterOptions.CultureInfo;
 
 			TimeSpan span;
 
 #if !NET_2_0 && !NET_3_5 && !PCL
-			var timeSpanStyle = options.TimeSpanStyle ?? TimeSpanStyles.None;
-			if( !string.IsNullOrEmpty( options.Format ) && TimeSpan.TryParseExact( text, options.Format, formatProvider, timeSpanStyle, out span ) )
+			var timeSpanStyle = propertyMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
+			if( !string.IsNullOrEmpty( propertyMapData.TypeConverterOptions.Format ) && TimeSpan.TryParseExact( text, propertyMapData.TypeConverterOptions.Format, formatProvider, timeSpanStyle, out span ) )
 			{
 				return span;
 			}
 
-			if( string.IsNullOrEmpty( options.Format ) && TimeSpan.TryParse( text, formatProvider, out span ) )
+			if( string.IsNullOrEmpty( propertyMapData.TypeConverterOptions.Format ) && TimeSpan.TryParse( text, formatProvider, out span ) )
 			{
 				return span;
 			}
@@ -54,7 +44,7 @@ namespace CsvHelper.TypeConversion
 			}
 #endif
 
-			return base.ConvertFromString( options, text );
+			return base.ConvertFromString( text, row, propertyMapData );
 		}
 	}
 }

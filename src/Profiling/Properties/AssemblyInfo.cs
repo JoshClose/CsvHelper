@@ -1,20 +1,16 @@
-﻿// Copyright 2009-2015 Josh Close and Contributors
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// http://csvhelper.com
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle( "CsvHelper.Example" )]
+[assembly: AssemblyTitle( "Profiling" )]
 [assembly: AssemblyDescription( "" )]
 [assembly: AssemblyConfiguration( "" )]
-[assembly: AssemblyCompany( "Microsoft" )]
-[assembly: AssemblyProduct( "CsvHelper.Example" )]
-[assembly: AssemblyCopyright( "Copyright © Microsoft 2010" )]
+[assembly: AssemblyCompany( "" )]
+[assembly: AssemblyProduct( "Profiling" )]
+[assembly: AssemblyCopyright( "Copyright ©  2016" )]
 [assembly: AssemblyTrademark( "" )]
 [assembly: AssemblyCulture( "" )]
 
@@ -24,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible( false )]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid( "3a84ca36-0d70-4dc2-94be-e096afdd2cab" )]
+[assembly: Guid( "58200822-014a-45d6-8002-7f9c3e5f88a2" )]
 
 // Version information for an assembly consists of the following four values:
 //

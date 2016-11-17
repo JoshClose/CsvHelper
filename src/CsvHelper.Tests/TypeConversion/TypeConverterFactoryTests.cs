@@ -183,48 +183,6 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.IsInstanceOfType( converter, typeof( EnumConverter ) );
 		}
 
-		[TestMethod]
-		public void GetConverterForEnumerableTypesTest()
-		{
-			var converter = TypeConverterFactory.GetConverter( typeof( IEnumerable ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( IList ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( List<int> ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( ICollection ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( Collection<int> ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( IDictionary ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( Dictionary<int, string> ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( Array ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-		}
-
-		[TestMethod]
-		public void GetConverterForCustomListConverterThatIsNotEnumerableConverterTest()
-		{
-			TypeConverterFactory.AddConverter<List<string>>( new TestListConverter() );
-			var converter = TypeConverterFactory.GetConverter( typeof( List<string> ) );
-			Assert.IsInstanceOfType( converter, typeof( TestListConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( List<int> ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-
-			converter = TypeConverterFactory.GetConverter( typeof( Array ) );
-			Assert.IsInstanceOfType( converter, typeof( EnumerableConverter ) );
-		}
-
 		private class TestListConverter : DefaultTypeConverter
 		{
 		}

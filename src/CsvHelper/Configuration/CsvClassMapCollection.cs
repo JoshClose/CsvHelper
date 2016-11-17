@@ -2,9 +2,11 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
+#if !NET_2_0
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -27,11 +29,23 @@ namespace CsvHelper.Configuration
 		{
 			get
 			{
-				var map = data.Keys
-					.Where( k => k.IsAssignableFrom( type ) )
-					.Select( k => data[k] ).FirstOrDefault();
+				// Go up the inheritance tree to find the matching type.
+				// We can't use IsAssignableFrom because both a child
+				// and it's parent/grandparent/etc could be mapped.
+				var currentType = type;
+				while( true )
+				{
+					if( currentType == type )
+					{
+						return data.ContainsKey( currentType ) ? data[currentType] : null;
+					}
 
-				return map;
+					currentType = type.GetTypeInfo().BaseType;
+					if( currentType == null )
+					{
+						return null;
+					}
+				}
 			}
 		}
 
@@ -96,12 +110,13 @@ namespace CsvHelper.Configuration
 		/// <returns>The type that is CsvClassMap{}.</returns>
 		private Type GetGenericCsvClassMapType( Type type )
 		{
-			if( type.IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
+			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
 			{
 				return type;
 			}
 
-			return GetGenericCsvClassMapType( type.BaseType );
+			return GetGenericCsvClassMapType( type.GetTypeInfo().BaseType );
 		}
 	}
 }
+#endif // !NET_2_0

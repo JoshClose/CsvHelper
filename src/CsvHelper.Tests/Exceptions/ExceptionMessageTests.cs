@@ -24,6 +24,7 @@ namespace CsvHelper.Tests.Exceptions
 
 			var reader = new CsvReader( parser );
 			reader.Read();
+			reader.Read();
 			try
 			{
 				reader.GetField( 2 );
@@ -31,10 +32,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvMissingFieldException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-				               "Type: 'System.String'\r\n" +
-				               "Field Index: '2' (0 based)\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( 2, ex.FieldIndex );
 			}
 		}
 
@@ -50,6 +49,7 @@ namespace CsvHelper.Tests.Exceptions
 
 			var reader = new CsvReader( parser );
 			reader.Read();
+			reader.Read();
 			try
 			{
 				reader.GetField<int>( 2 );
@@ -57,10 +57,9 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvMissingFieldException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-				               "Type: 'System.Int32'\r\n" +
-				               "Field Index: '2' (0 based)\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( ex.Type, typeof( int ) );
+				Assert.AreEqual( 2, ex.FieldIndex );
 			}
 		}
 
@@ -83,13 +82,16 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvTypeConverterException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-				        "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n" +
-				        "Field Index: '0' (0 based)\r\n" +
-				        "Field Name: 'Id'\r\n" +
-				        "Field Value: 'a'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
+				//var expected = "Row: '2' (1 based)\r\n" +
+				//        "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n" +
+				//        "Field Index: '0' (0 based)\r\n" +
+				//        "Field Name: 'Id'\r\n" +
+				//        "Field Value: 'a'\r\n";
+				//Assert.AreEqual( expected, ex.Data["CsvHelper"] );
 
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( typeof( Simple ), ex.Type );
+				Assert.AreEqual( 0, ex.FieldIndex );
 			}
 		}
 
@@ -112,13 +114,9 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvTypeConverterException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-						"Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n" +
-						"Field Index: '0' (0 based)\r\n" +
-						"Field Name: 'Id'\r\n" +
-						"Field Value: 'a'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
-
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( typeof( Simple ), ex.Type );
+				Assert.AreEqual( 0, ex.FieldIndex );
 			}
 		}
 
@@ -140,13 +138,9 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvTypeConverterException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-							   "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n" +
-							   "Field Index: '0' (0 based)\r\n" +
-							   "Field Name: 'Id'\r\n" +
-							   "Field Value: 'a'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
-
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( typeof( Simple ), ex.Type );
+				Assert.AreEqual( 0, ex.FieldIndex );
 			}
 		}
 
@@ -168,13 +162,9 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvTypeConverterException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-				               "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n" +
-				               "Field Index: '0' (0 based)\r\n" +
-				               "Field Name: 'Id'\r\n" +
-				               "Field Value: 'a'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
-
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( typeof( Simple ), ex.Type );
+				Assert.AreEqual( 0, ex.FieldIndex );
 			}
 		}
 
@@ -190,6 +180,8 @@ namespace CsvHelper.Tests.Exceptions
 
 			var reader = new CsvReader( parser );
 			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
 			try
 			{
 				reader.GetField( "c" );
@@ -197,10 +189,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch( CsvMissingFieldException ex )
 			{
-				var expected = "Row: '2' (1 based)\r\n" +
-				               "Field Index: '-1' (0 based)\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
-
+				Assert.AreEqual( 2, ex.Row );
+				Assert.AreEqual( -1, ex.FieldIndex );
 			}
 		}
 
@@ -212,29 +202,12 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				writer.WriteRecord( new Simple() );
-				Assert.Fail();
+                writer.NextRecord();
+                Assert.Fail();
 			}
-			catch( Exception ex )
+			catch( CsvHelperException ex )
 			{
-				var expected = "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
-			}
-		}
-
-		[TestMethod]
-		public void WriteRecordTest()
-		{
-			var serializer = new SerializerMock( true );
-			var writer = new CsvWriter( serializer );
-			try
-			{
-				writer.WriteRecord( typeof( Simple ), new Simple() );
-				Assert.Fail();
-			}
-			catch( Exception ex )
-			{
-				var expected = "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
+				Assert.AreEqual( 1, ex.Row );
 			}
 		}
 
@@ -248,10 +221,9 @@ namespace CsvHelper.Tests.Exceptions
 				writer.WriteRecords( new List<Simple> { new Simple() } );
 				Assert.Fail();
 			}
-			catch( Exception ex )
+			catch( CsvHelperException ex )
 			{
-				var expected = "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n";
-				Assert.AreEqual( expected, ex.Data["CsvHelper"] );
+				Assert.AreEqual( typeof( Simple ), ex.Type );
 			}
 		}
 

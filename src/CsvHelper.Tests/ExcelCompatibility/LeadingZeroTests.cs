@@ -30,8 +30,9 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				};
 
 				csv.WriteRecord( record );
+                csv.NextRecord();
 
-				writer.Flush();
+                writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();
@@ -52,7 +53,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -72,7 +72,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -92,7 +91,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -113,7 +111,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -135,7 +132,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -160,7 +156,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -185,7 +180,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -212,7 +206,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "01", row[0] );
@@ -238,7 +231,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "=01", row[0] );
@@ -253,12 +245,12 @@ namespace CsvHelper.Tests.ExcelCompatibility
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
 			{
+				// "=""01"""
 				writer.Write( "\"=\"\"01\"\"\"\r\n" );
 				writer.Flush();
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( "=\"01\"", row[0] );
@@ -278,7 +270,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
 				Assert.AreEqual( " =\"01\"", row[0] );
@@ -298,228 +289,9 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				var row = parser.Read();
 
-				Assert.AreEqual( "=\"0a1\"", row[0] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid1FieldBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\"\r\n" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid1FieldNoLineEndingBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\"" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid2FieldsBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\",=\"02\"\r\n" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-				Assert.AreEqual( "02", row[1] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid2FieldsNoLineEndingBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\",=\"02\"" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-				Assert.AreEqual( "02", row[1] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid1Field2RowsBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\"\r\n" );
-				writer.Write( "=\"02\"\r\n" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-
-				row = parser.Read();
-
-				Assert.AreEqual( "02", row[0] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid1Field2RowsNoLineEndingBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\"\r\n" );
-				writer.Write( "=\"02\"" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-
-				row = parser.Read();
-
-				Assert.AreEqual( "02", row[0] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseValid2Fields2RowsNoLineEndingBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=\"01\",=\"02\"\r\n" );
-				writer.Write( "=\"03\",=\"04\"" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "01", row[0] );
-				Assert.AreEqual( "02", row[1] );
-
-				row = parser.Read();
-
-				Assert.AreEqual( "03", row[0] );
-				Assert.AreEqual( "04", row[1] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseInvalid1FieldBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=01\r\n" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "=01", row[0] );
-			}
-		}
-
-		[TestMethod]
-		public void ParseInvalid2FieldBufferOf1Test()
-		{
-			var config = new CsvConfiguration { BufferSize = 1 };
-
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var parser = new CsvParser( reader, config ) )
-			{
-				writer.Write( "=01,=02\r\n" );
-				writer.Flush();
-				stream.Position = 0;
-
-				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
-				var row = parser.Read();
-
-				Assert.AreEqual( "=01", row[0] );
-				Assert.AreEqual( "=02", row[1] );
+				Assert.AreEqual( "0a1", row[0] );
 			}
 		}
 
@@ -537,7 +309,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 				var row = parser.Read();
 
@@ -559,7 +330,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 				var row = parser.Read();
 
@@ -582,7 +352,6 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				stream.Position = 0;
 
 				parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				parser.Configuration.HasHeaderRecord = false;
 				parser.Configuration.CountBytes = true;
 				
 				parser.Read();
@@ -616,9 +385,7 @@ namespace CsvHelper.Tests.ExcelCompatibility
 					stream.Position = 0;
 
 					parser.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-					parser.Configuration.HasHeaderRecord = false;
 					parser.Configuration.CountBytes = true;
-					parser.Configuration.CultureInfo = Thread.CurrentThread.CurrentCulture;
 
 					parser.Read();
 

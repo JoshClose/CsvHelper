@@ -5,6 +5,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
 
@@ -18,11 +19,13 @@ namespace CsvHelper.Tests.Mocks
 		{
 		}
 
-		public CsvConfiguration Configuration { get; private set; }
+		public TextReader TextReader { get; }
+		public ICsvParserConfiguration Configuration { get; private set; }
 		public int FieldCount { get; private set; }
 		public long CharPosition { get; private set; }
 		public long BytePosition { get; private set; }
 		public int Row { get; private set; }
+		public int RawRow { get; private set; }
 		public string RawRecord { get; private set; }
 
 		public ParserMock()

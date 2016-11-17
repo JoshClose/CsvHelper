@@ -35,14 +35,16 @@ namespace CsvHelper.Tests.TypeConversion
             {
                 Format = "custom",
             };
-            TypeConverterOptionsFactory.AddOptions<string>(customOptions);
-            var options = TypeConverterOptionsFactory.GetOptions<string>();
+	        var typeConverterOptionsFactory = new TypeConverterOptionsFactory();
+
+			typeConverterOptionsFactory.AddOptions<string>(customOptions);
+            var options = typeConverterOptionsFactory.GetOptions<string>();
 
             Assert.AreEqual(customOptions.Format, options.Format);
 
-            TypeConverterOptionsFactory.RemoveOptions<string>();
+            typeConverterOptionsFactory.RemoveOptions<string>();
 
-            options = TypeConverterOptionsFactory.GetOptions<string>();
+            options = typeConverterOptionsFactory.GetOptions<string>();
 
             Assert.AreNotEqual(customOptions.Format, options.Format);
         }
@@ -50,8 +52,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void GetFieldTest()
         {
-            var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
-            TypeConverterOptionsFactory.AddOptions<int>(options);
+			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -62,6 +63,7 @@ namespace CsvHelper.Tests.TypeConversion
                 writer.Flush();
                 stream.Position = 0;
 
+	            csvReader.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
                 csvReader.Configuration.HasHeaderRecord = false;
                 csvReader.Read();
                 Assert.AreEqual(1234, csvReader.GetField<int>(0));
@@ -72,8 +74,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void GetRecordsTest()
         {
-            var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
-            TypeConverterOptionsFactory.AddOptions<int>(options);
+			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -84,6 +85,7 @@ namespace CsvHelper.Tests.TypeConversion
                 writer.Flush();
                 stream.Position = 0;
 
+	            csvReader.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
                 csvReader.Configuration.HasHeaderRecord = false;
                 csvReader.GetRecords<Test>().ToList();
             }
@@ -92,8 +94,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void GetRecordsAppliedWhenMappedTest()
         {
-            var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
-            TypeConverterOptionsFactory.AddOptions<int>(options);
+			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -104,6 +105,7 @@ namespace CsvHelper.Tests.TypeConversion
                 writer.Flush();
                 stream.Position = 0;
 
+	            csvReader.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
                 csvReader.Configuration.HasHeaderRecord = false;
                 csvReader.Configuration.RegisterClassMap<TestMap>();
                 csvReader.GetRecords<Test>().ToList();
@@ -113,14 +115,14 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void WriteFieldTest()
         {
-            var options = new TypeConverterOptions { Format = "c" };
-            TypeConverterOptionsFactory.AddOptions<int>(options);
+			var options = new TypeConverterOptions { Format = "c" };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
             using (var csvWriter = new CsvWriter(writer))
             {
+	            csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
                 csvWriter.WriteField(1234);
                 csvWriter.NextRecord();
                 writer.Flush();
@@ -134,8 +136,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void WriteRecordsTest()
         {
-            var options = new TypeConverterOptions { Format = "c" };
-            TypeConverterOptionsFactory.AddOptions<int>(options);
+			var options = new TypeConverterOptions { Format = "c" };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -146,6 +147,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
+	            csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
                 csvWriter.Configuration.HasHeaderRecord = false;
                 csvWriter.WriteRecords(list);
                 writer.Flush();
@@ -159,8 +161,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void WriteRecordsAppliedWhenMappedTest()
         {
-            var options = new TypeConverterOptions { Format = "c" };
-            TypeConverterOptionsFactory.AddOptions<int>(options);
+			var options = new TypeConverterOptions { Format = "c" };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -171,6 +172,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
+	            csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
                 csvWriter.Configuration.HasHeaderRecord = false;
                 csvWriter.Configuration.RegisterClassMap<TestMap>();
                 csvWriter.WriteRecords(list);
@@ -189,12 +191,12 @@ namespace CsvHelper.Tests.TypeConversion
             public int NumberOverridenInMap { get; set; }
         }
 
-        private class TestMap : CsvClassMap<Test>
+        private sealed class TestMap : CsvClassMap<Test>
         {
             public TestMap()
             {
-                Map(m => m.Number);
-                Map(m => m.NumberOverridenInMap).TypeConverterOption(NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol).TypeConverterOption("N");
+	            Map( m => m.Number );
+	            Map( m => m.NumberOverridenInMap ).TypeConverterOption.NumberStyles( NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol ).TypeConverterOption.Format( "N" );
             }
         }
     }
