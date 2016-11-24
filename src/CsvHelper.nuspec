@@ -15,7 +15,7 @@
 		</releaseNotes>
 	</metadata>
 	<files>
-		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net40-client\" />
+		<file src="CsvHelper\bin\Release\CsvHelper.*" target="lib\net40+net40-client\" />
 		<file src="CsvHelper20\bin\Release\CsvHelper.*" target="lib\net20\" />
 		<file src="CsvHelper35\bin\Release\CsvHelper.*" target="lib\net35-client\" />
 		<file src="CsvHelperPcl\bin\Release\CsvHelper.*" target="lib\portable-net40+sl5+win8+wpa+wp8\" />
