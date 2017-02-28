@@ -1365,7 +1365,7 @@ namespace CsvHelper.Tests
 		{
 			using ( var reader = new StringReader( "\"a\r\",b" ) )
 			using ( var parser = new CsvParser( reader ) )
-            {
+			{
 				var row = parser.Read();
 
 				Assert.IsNotNull( row );
@@ -1379,7 +1379,7 @@ namespace CsvHelper.Tests
 		{
 			using ( var reader = new StringReader( "\"a\n\",b" ) )
 			using ( var parser = new CsvParser( reader ) )
-            {
+			{
 				var row = parser.Read();
 
 				Assert.IsNotNull( row );
