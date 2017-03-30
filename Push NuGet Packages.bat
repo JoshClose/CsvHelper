@@ -1,4 +1,4 @@
-:: .\src\.nuget\NuGet.exe push .\NuGet\CsvHelper.*.symbols.nupkg -Source https://www.nuget.org/api/v2/package
+:: .\src\.nuget\NuGet.exe push .\NuGet\CsvHelper.*.nupkg -Source https://www.nuget.org/api/v2/package
 
 @echo off
 
