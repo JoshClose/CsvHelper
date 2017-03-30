@@ -4,10 +4,8 @@
 // http://csvhelper.com
 using System;
 using System.Collections.Generic;
-#if !NET_2_0
 using System.Linq;
 using System.Linq.Expressions;
-#endif
 using System.Reflection;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
@@ -29,12 +27,7 @@ namespace CsvHelper
 		/// <returns>A new instance of type T.</returns>
 		public static T CreateInstance<T>( params object[] args )
 		{
-#if NET_2_0
-			return Activator.CreateInstance<T>();
-#else
-
 			return (T)CreateInstance( typeof( T ), args );
-#endif
 		}
 
 		/// <summary>
@@ -45,10 +38,6 @@ namespace CsvHelper
 		/// <returns>A new instance of the specified type.</returns>
 		public static object CreateInstance( Type type, params object[] args )
 		{
-#if NET_2_0
-			return Activator.CreateInstance( type, args );
-#else
-
 			Dictionary<Type, Delegate> funcCache;
 			if( !funcArgCache.TryGetValue( args.Length, out funcCache ) )
 			{
@@ -69,15 +58,12 @@ namespace CsvHelper
 			{
 				throw ex.InnerException;
 			}
-#endif
 		}
 
 		private static T Default<T>()
 		{
 			return default( T );
 		}
-
-#if !NET_2_0
 
 		private static Delegate CreateInstanceDelegate( Type type, params object[] args )
 		{
@@ -175,7 +161,5 @@ namespace CsvHelper
 
 			return memberExpression;
 		}
-		
-#endif
 	}
 }

@@ -4,11 +4,7 @@
 // http://csvhelper.com
 using System.IO;
 using System.Linq;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests

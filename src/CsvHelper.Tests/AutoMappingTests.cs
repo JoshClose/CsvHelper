@@ -8,12 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 using CsvHelper.Configuration;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests
 {
@@ -23,7 +19,7 @@ namespace CsvHelper.Tests
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			Thread.CurrentThread.CurrentCulture = new CultureInfo( "en-US" );
+			CultureInfo.CurrentCulture = new CultureInfo( "en-US" );
 		}
 
 		[TestMethod]

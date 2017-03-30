@@ -4,9 +4,7 @@
 // http://csvhelper.com
 using System.Reflection;
 using CsvHelper.TypeConversion;
-#if !NET_2_0
 using System.Linq.Expressions;
-#endif
 
 namespace CsvHelper.Configuration
 {
@@ -96,15 +94,11 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IsConstantSet { get; set; }
 
-#if !NET_2_0
-
 		/// <summary>
 		/// Gets or sets the expression used to convert data in the
 		/// row to the property/field.
 		/// </summary>
 		public virtual Expression ConvertExpression { get; set; }
-
-#endif
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyMapData"/> class.

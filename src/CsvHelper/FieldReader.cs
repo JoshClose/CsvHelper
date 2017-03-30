@@ -151,11 +151,7 @@ namespace CsvHelper
 			isFieldBad = false;
 
 			var result = field.ToString();
-#if NET_2_0 || NET_3_5
-		    field = new StringBuilder();
-#else
 			field.Clear();
-#endif
 
 			return result;
 	    }
@@ -226,11 +222,7 @@ namespace CsvHelper
 		/// </summary>
 	    public virtual void ClearRawRecord()
 		{
-#if NET_2_0 || NET_3_5
-			rawRecord = new StringBuilder();
-#else
 			rawRecord.Clear();
-#endif
 		}
 
 		/// <summary>

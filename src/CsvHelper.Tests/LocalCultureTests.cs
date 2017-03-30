@@ -9,11 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using CsvHelper.Configuration;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace CsvHelper.Tests
 {
@@ -37,15 +33,15 @@ namespace CsvHelper.Tests
 
 		private static void RunTestInSpecificCulture( Action action, string cultureName )
 		{
-			var originalCulture = Thread.CurrentThread.CurrentCulture;
+			var originalCulture = CultureInfo.CurrentCulture;
 			try
 			{
-				Thread.CurrentThread.CurrentCulture = new CultureInfo( cultureName );
+				CultureInfo.CurrentCulture = new CultureInfo( cultureName );
 				action();
 			}
 			finally
 			{
-				Thread.CurrentThread.CurrentCulture = originalCulture;
+				CultureInfo.CurrentCulture = originalCulture;
 			}
 		}
 

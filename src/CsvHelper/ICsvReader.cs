@@ -32,8 +32,6 @@ namespace CsvHelper
 		/// <returns>True if there are more records, otherwise false.</returns>
 		bool Read();
 
-#if !NET_2_0
-
 		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
@@ -79,7 +77,5 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		void ClearRecordCache();
-
-#endif
 	}
 }

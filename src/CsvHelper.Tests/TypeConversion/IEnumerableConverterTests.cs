@@ -8,11 +8,7 @@ using Moq;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {

@@ -312,7 +312,7 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				parser.Configuration.CountBytes = true;
 				var row = parser.Read();
 
-				Assert.AreEqual( Encoding.Default.GetByteCount( csv ), parser.BytePosition );
+				Assert.AreEqual( Encoding.GetEncoding( 0 ).GetByteCount( csv ), parser.BytePosition );
 			}
 		}
 
@@ -333,7 +333,7 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				parser.Configuration.CountBytes = true;
 				var row = parser.Read();
 
-				Assert.AreEqual( Encoding.Default.GetByteCount( csv ), parser.BytePosition );
+				Assert.AreEqual( Encoding.GetEncoding( 0 ).GetByteCount( csv ), parser.BytePosition );
 			}
 		}
 
@@ -356,22 +356,22 @@ namespace CsvHelper.Tests.ExcelCompatibility
 				
 				parser.Read();
 
-				Assert.AreEqual( Encoding.Default.GetByteCount( csvRow1 ), parser.BytePosition );
+				Assert.AreEqual( Encoding.GetEncoding( 0 ).GetByteCount( csvRow1 ), parser.BytePosition );
 
 				parser.Read();
 
-				Assert.AreEqual( Encoding.Default.GetByteCount( csvRow1 + csvRow2 ), parser.BytePosition );
+				Assert.AreEqual( Encoding.GetEncoding( 0 ).GetByteCount( csvRow1 + csvRow2 ), parser.BytePosition );
 			}
 		}
 
 		[TestMethod]
 		public void ParseValid2Fields2RowsBytePositionDifferentCultureTest()
 		{
-			var originalCulture = Thread.CurrentThread.CurrentCulture;
+			var originalCulture = CultureInfo.CurrentCulture;
 
 			try
 			{
-				Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo( "uk-UA" );
+				CultureInfo.CurrentCulture = new CultureInfo( "uk-UA" );
 
 				using( var stream = new MemoryStream() )
 				using( var writer = new StreamWriter( stream ) )
@@ -389,16 +389,16 @@ namespace CsvHelper.Tests.ExcelCompatibility
 
 					parser.Read();
 
-					Assert.AreEqual( Encoding.Default.GetByteCount( csvRow1 ), parser.BytePosition );
+					Assert.AreEqual( Encoding.GetEncoding( 0 ).GetByteCount( csvRow1 ), parser.BytePosition );
 
 					parser.Read();
 
-					Assert.AreEqual( Encoding.Default.GetByteCount( csvRow1 + csvRow2 ), parser.BytePosition );
+					Assert.AreEqual( Encoding.GetEncoding( 0 ).GetByteCount( csvRow1 + csvRow2 ), parser.BytePosition );
 				}
 			}
 			finally
 			{
-				Thread.CurrentThread.CurrentCulture = originalCulture;
+				CultureInfo.CurrentCulture = originalCulture;
 			}
 		}
 

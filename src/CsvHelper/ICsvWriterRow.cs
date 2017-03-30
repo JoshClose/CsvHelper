@@ -104,8 +104,6 @@ namespace CsvHelper
         /// <param name="comment">The comment to write.</param>
         void WriteComment( string comment );
 
-#if !NET_2_0
-
         /// <summary>
         /// Writes the header record from the given properties/fields.
         /// </summary>
@@ -124,7 +122,5 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
 		void WriteRecord<T>( T record );
-		
-#endif
 	}
 }

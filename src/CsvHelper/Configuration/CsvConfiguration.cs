@@ -25,21 +25,12 @@ namespace CsvHelper.Configuration
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields;
 		private bool quoteNoFields;
-#if !NET_2_0
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
-#endif
 
 		/// <summary>
 		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
 		/// </summary>
 		public virtual TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
-
-		/// <summary>
-		/// Gets or sets the property/field binding flags.
-		/// This determines what properties/fields on the custom
-		/// class are used. Default is Public | Instance.
-		/// </summary>
-		public virtual BindingFlags PropertyBindingFlags { get; set; } = BindingFlags.Public | BindingFlags.Instance;
 
 		/// <summary>
 		/// Gets or sets a value indicating if the
@@ -377,8 +368,6 @@ namespace CsvHelper.Configuration
 				new[] { '\r', '\n' } :
 				new[] { '\r', '\n', delimiter[0] };
 		}
-		
-#if !NET_2_0
 
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.
@@ -492,7 +481,6 @@ namespace CsvHelper.Configuration
 			return map;
 		}
 
-#endif
 
 	}
 }

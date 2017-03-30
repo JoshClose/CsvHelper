@@ -112,8 +112,6 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		MemberTypes MemberTypes { get; set; }
 
-#if !NET_2_0
-
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.
 		/// </summary>
@@ -171,7 +169,5 @@ namespace CsvHelper.Configuration
 	    /// <param name="type">The type to generate for the map.</param>
 	    /// <returns>The generate map.</returns>
 	    CsvClassMap AutoMap( Type type );
-
-#endif
     }
 }

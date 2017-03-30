@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.Culture
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			Thread.CurrentThread.CurrentCulture = new CultureInfo( "en-US" );
+			CultureInfo.CurrentCulture = new CultureInfo( "en-US" );
 		}
 
 		[TestMethod]
@@ -73,7 +73,7 @@ namespace CsvHelper.Tests.Culture
 		private static void GetFieldForCultureTest( string csvText, string culture, decimal expected1, decimal expected2 )
 		{
 			using( var reader = new StringReader( csvText ) )
-			using( var csvReader = new CsvReader( reader, new CsvConfiguration { CultureInfo = CultureInfo.GetCultureInfo( culture ) } ) )
+			using( var csvReader = new CsvReader( reader, new CsvConfiguration { CultureInfo = new CultureInfo( culture ) } ) )
 			{
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.Read();

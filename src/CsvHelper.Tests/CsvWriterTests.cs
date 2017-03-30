@@ -15,11 +15,7 @@ using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 #if !PCL
 using System.Dynamic;
 #endif
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace CsvHelper.Tests
 {
@@ -29,7 +25,7 @@ namespace CsvHelper.Tests
         [TestInitialize]
         public void TestInitialize()
         {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+			CultureInfo.CurrentCulture = new CultureInfo("en-US");
         }
 
 	    [TestMethod]

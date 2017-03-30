@@ -25,8 +25,6 @@ namespace CsvHelper
 		/// </summary>
 		void NextRecord();
 
-#if !NET_2_0
-
         /// <summary>
         /// Writes the list of records to the CSV file.
         /// </summary>
@@ -61,7 +59,5 @@ namespace CsvHelper
 		/// record cache.
 		/// </summary>
 		void ClearRecordCache();
-
-#endif
 	}
 }

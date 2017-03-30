@@ -6,11 +6,8 @@ using CsvHelper.TypeConversion;
 using Moq;
 using System.Collections.Generic;
 using System.IO;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
+using System.Reflection;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -26,7 +23,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.CurrentRecord ).Returns( currentRecord );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "List" ) )
+			var data = new CsvPropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
 			{
 				Index = 2,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }

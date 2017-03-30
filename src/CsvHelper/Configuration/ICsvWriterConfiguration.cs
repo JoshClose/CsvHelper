@@ -130,8 +130,6 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		MemberTypes MemberTypes { get; set; }
 
-#if !NET_2_0
-
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.
 		/// </summary>
@@ -198,7 +196,5 @@ namespace CsvHelper.Configuration
 		/// reference property/field's properties/fields.
 		/// </summary>
 		bool UseNewObjectForNullReferenceMembers { get; set; }
-
-#endif
 	}
 }

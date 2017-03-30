@@ -13,13 +13,9 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Runtime.CompilerServices;
-#if !NET_2_0
 using System.Linq.Expressions;
-#endif
-#if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
 using Microsoft.CSharp.RuntimeBinder;
-#endif
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -37,9 +33,7 @@ namespace CsvHelper
 		private ICsvSerializer serializer;
 		private bool hasHeaderBeenWritten;
 		private bool hasRecordBeenWritten;
-#if !NET_2_0
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
-#endif
 		private readonly ICsvWriterConfiguration configuration;
 		private bool hasExcelSeperatorBeenRead;
 		private int row = 1;
@@ -303,8 +297,6 @@ namespace CsvHelper
 	        WriteField( configuration.Comment + comment, false );
 	    }
 
-#if !NET_2_0
-
         /// <summary>
         /// Writes the header record from the given properties/fields.
         /// </summary>
@@ -375,8 +367,6 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
-#if !NET_2_0 && !NET_3_5 && !PCL
-
 		/// <summary>
 		/// Writes the header record for the given dynamic object.
 		/// </summary>
@@ -413,8 +403,6 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
-#endif
-
 		/// <summary>
 		/// Writes the record to the CSV file.
 		/// </summary>
@@ -422,7 +410,6 @@ namespace CsvHelper
 		/// <param name="record">The record to write.</param>
 		public virtual void WriteRecord<T>( T record )
 		{
-#if !NET_2_0 && !NET_3_5 && !PCL
 			var dynamicRecord = record as IDynamicMetaObjectProvider;
 			if( dynamicRecord != null )
 			{
@@ -432,7 +419,6 @@ namespace CsvHelper
 				    NextRecord();
 				}
 			}
-#endif
 
 			try
 			{
@@ -485,8 +471,6 @@ namespace CsvHelper
 				{
 					recordType = record.GetType();
 
-#if !NET_3_5 && !PCL
-
 					var dynamicObject = record as IDynamicMetaObjectProvider;
 					if( dynamicObject != null )
 					{
@@ -498,7 +482,6 @@ namespace CsvHelper
 					}
 					else
 					{
-#endif
 						// If records is a List<dynamic>, the header hasn't been written yet.
 						// Write the header based on the record type.
 						var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
@@ -507,9 +490,7 @@ namespace CsvHelper
 							WriteHeader( recordType );
                             NextRecord();
 						}
-#if !NET_3_5 && !PCL
 					}
-#endif
 
                     try
 					{
@@ -652,8 +633,6 @@ namespace CsvHelper
 			return null;
 		}
 
-#endif
-
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
@@ -683,8 +662,6 @@ namespace CsvHelper
 			disposed = true;
 			serializer = null;
 		}
-
-#if !NET_2_0
 
 		/// <summary>
 		/// Gets the action delegate used to write the custom
@@ -718,8 +695,6 @@ namespace CsvHelper
 		/// <param name="record">The record that will be written.</param>
 		protected virtual Delegate CreateWriteRecordAction<T>( Type type, T record )
 		{
-#if !NET_3_5 && !PCL
-
 			var expandoObject = record as ExpandoObject;
 			if( expandoObject != null )
 			{
@@ -731,8 +706,6 @@ namespace CsvHelper
 			{
 				return CreateActionForDynamic( dynamicObject );
 			}
-
-#endif
 
 			if( configuration.Maps[type] == null )
 			{
@@ -854,8 +827,6 @@ namespace CsvHelper
 			return action;
 		}
 
-#if !NET_2_0 && !NET_3_5 && !PCL
-
 		/// <summary>
 		/// Creates an action for an ExpandoObject. This needs to be separate
 		/// from other dynamic objects due to what seems to be an issue in ExpandoObject
@@ -912,8 +883,6 @@ namespace CsvHelper
 			return action;
 		}
 
-#endif
-
 		/// <summary>
 		/// Combines the delegates into a single multicast delegate.
 		/// This is needed because Silverlight doesn't have the
@@ -951,8 +920,5 @@ namespace CsvHelper
 
 			return !cantWrite;
 		}
-
-#endif
-
 	}
 }

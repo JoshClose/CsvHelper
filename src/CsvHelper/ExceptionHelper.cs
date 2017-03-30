@@ -5,9 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-#if !NET_2_0
 using System.Linq;
-#endif
 
 namespace CsvHelper
 {
@@ -22,7 +20,6 @@ namespace CsvHelper
 			exception.Type = type;
 			exception.FieldIndex = currentIndex ?? -1;
 
-#if !NET_2_0
 			if( namedIndexes != null )
 			{
 				var fieldName = ( from pair in namedIndexes
@@ -34,7 +31,6 @@ namespace CsvHelper
 					exception.FieldName = fieldName;
 				}
 			}
-#endif
 
 			if( currentRecord != null && currentIndex > -1 && currentIndex < currentRecord.Length )
 			{
