@@ -184,7 +184,7 @@ namespace CsvHelper
 				field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
 			}
 
-			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
+			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field.All( Char.IsDigit ) )
 			{
 				field = "=" + configuration.Quote + field + configuration.Quote;
 			}
