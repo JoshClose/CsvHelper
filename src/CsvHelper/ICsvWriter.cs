@@ -5,7 +5,6 @@
 using System;
 using System.Collections;
 using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 
 namespace CsvHelper
 {
@@ -15,12 +14,7 @@ namespace CsvHelper
 	public interface ICsvWriter : ICsvWriterRow, IDisposable
 	{
 		/// <summary>
-		/// Gets the serializer.
-		/// </summary>
-		ICsvSerializer Serializer { get; }
-
-		/// <summary>
-		/// Ends writing of the current record and starts a new record. 
+		/// Ends writing of the current record and starts a new record.
 		/// This needs to be called to serialize the row to the writer.
 		/// </summary>
 		void NextRecord();
