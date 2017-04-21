@@ -891,8 +891,6 @@ namespace CsvHelper
 		/// </returns>
 		public virtual bool IsRecordEmpty()
 		{
-			CheckHasBeenRead();
-
 			return IsRecordEmpty( true );
 		}
 
