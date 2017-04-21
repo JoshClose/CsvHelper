@@ -2,24 +2,13 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
 [assembly: AssemblyProduct( "CsvHelper" )]
-//[assembly: AssemblyTitle( "CsvHelper" )]
-//[assembly: AssemblyCompany( "Josh Close" )]
-//[assembly: AssemblyDescription( "A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects." )]
-//[assembly: AssemblyConfiguration( "" )]
-//[assembly: AssemblyCopyright( "Copyright © Josh Close 2009-2016" )]
-//[assembly: AssemblyTrademark( "" )]
-//[assembly: AssemblyCulture( "" )]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -29,20 +18,11 @@ using System.Security;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid( "2bff163b-a135-4068-be75-9a9464f3250f" )]
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers 
-// by using the '*' as shown below:
-
 // DO NOT update this.
-//[assembly: AssemblyVersion( "3.0.0.0" )]
+// This only gets a bump on major releases.
+[assembly: AssemblyVersion( "3.0.0.0" )]
 
-// This is now set from the project.json file.
+// This is now set from the .csproj file.
 // Update this.
 //[assembly: AssemblyFileVersion( "2.16.0.0" )]
 

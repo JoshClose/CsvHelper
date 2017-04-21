@@ -2,12 +2,12 @@
 
 		<PropertyGroup>
 				<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-				<Copyright>Copyright © 2009-2016 Josh Close and Contributors</Copyright>
+				<Copyright>Copyright © 2009-2017 Josh Close and Contributors</Copyright>
 				<AssemblyTitle>CsvHelper</AssemblyTitle>
-				<FileVersion>3.0.0.0</FileVersion>
-				<VersionPrefix>3.0.0</VersionPrefix>
-				<VersionSuffix>beta8</VersionSuffix>
 				<Authors>Josh Close</Authors>
+				<AssemblyVersion>3.0.0.0</AssemblyVersion>
+				<FileVersion>3.0.0.1</FileVersion>
+				<Version>3.0.0-beta10</Version>
 				<TargetFramework>netstandard1.3</TargetFramework>
 				<GenerateDocumentationFile>true</GenerateDocumentationFile>
 				<AssemblyName>CsvHelper</AssemblyName>
