@@ -7,7 +7,7 @@
 				<Authors>Josh Close</Authors>
 				<AssemblyVersion>3.0.0.0</AssemblyVersion>
 				<FileVersion>3.0.0.1</FileVersion>
-				<Version>3.0.0-beta10</Version>
+				<Version>3.0.0-chi01</Version>
 				<TargetFramework>netstandard1.3</TargetFramework>
 				<GenerateDocumentationFile>true</GenerateDocumentationFile>
 				<AssemblyName>CsvHelper</AssemblyName>
