@@ -1,17 +1,3 @@
-:: .\src\.nuget\NuGet.exe push .\NuGet\CsvHelper.*.nupkg -Source https://www.nuget.org/api/v2/package
+dotnet nuget push NuGet
 
-@echo off
-
-if [%1]==[] goto USAGE
-
-.\src\.nuget\NuGet.exe push %1 -source nuget.org
-
-goto DONE
-
-:USAGE
-
-cmd
-::@echo Usage: %0 ^<package.nupkg^>
-::pause
-
-:DONE
+pause
