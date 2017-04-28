@@ -144,7 +144,6 @@ namespace CsvHelper
 			}
 
 			headerRecord = currentRecord;
-			currentRecord = null;
 			ParseNamedIndexes();
 
 			return headerRecord != null;

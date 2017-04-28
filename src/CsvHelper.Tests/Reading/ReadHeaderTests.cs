@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.Reading
 		}
 
 		[TestMethod]
-		public void ReadHeaderDoesNotReadRowTest()
+		public void ReadHeaderDoesNotAffectCurrentRecordTest()
 		{
 			var rows = new Queue<string[]>();
 			rows.Enqueue( new[] { "Id", "Name" } );
@@ -44,7 +44,8 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.IsNull( csv.CurrentRecord );
+			Assert.AreEqual( "Id", csv.CurrentRecord[0] );
+			Assert.AreEqual( "Name", csv.CurrentRecord[1] );
 		}
 
 		[TestMethod]
@@ -117,7 +118,7 @@ namespace CsvHelper.Tests.Reading
 		}
 
 		[TestMethod]
-		public void ReadingHeaderFailsWhenHeaderAlreadyReadTest()
+		public void ReadingHeaderDoesNotFailWhenHeaderAlreadyReadTest()
 		{
 			var rows = new Queue<string[]>();
 			rows.Enqueue( new[] { "Id", "Name" } );
@@ -129,15 +130,7 @@ namespace CsvHelper.Tests.Reading
 			var csv = new CsvReader( parser );
 			csv.Read();
 			csv.ReadHeader();
-
-			try
-			{
-				csv.ReadHeader();
-				Assert.Fail();
-			}
-			catch( CsvReaderException )
-			{
-			}
+			csv.ReadHeader();
 		}
 	}
 }
