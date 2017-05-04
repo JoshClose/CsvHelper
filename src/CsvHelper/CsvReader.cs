@@ -44,6 +44,14 @@ namespace CsvHelper
 		/// </summary>
 		public virtual ICsvParser Parser => parser;
 
+        /// <summary>
+        /// Gets the NamesIndexes 
+        /// </summary>
+        public virtual Dictionary<string, int> NamedIndexes
+        {
+            get { return namedIndexes; }
+        }
+
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>

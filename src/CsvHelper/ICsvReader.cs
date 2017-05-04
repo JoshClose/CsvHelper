@@ -14,6 +14,12 @@ namespace CsvHelper
 	/// </summary>
 	public interface ICsvReader : ICsvReaderRow, IDisposable
 	{
+
+        /// <summary>
+        /// Gets the NamesIndexes 
+        /// </summary>
+	    Dictionary<string, int> NamedIndexes { get; }
+
 		/// <summary>
 		/// Gets the parser.
 		/// </summary>
