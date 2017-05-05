@@ -12,13 +12,8 @@ namespace CsvHelper
 	/// Defines methods used to read parsed data
 	/// from a CSV file.
 	/// </summary>
-	public interface ICsvReader : ICsvReaderRow, IDisposable
+	public interface ICsvReader: ICsvReaderRow, IDisposable
 	{
-		/// <summary>
-		/// Gets the parser.
-		/// </summary>
-		ICsvParser Parser { get; }
-
 		/// <summary>
 		/// Reads the header field without reading the first row.
 		/// </summary>
