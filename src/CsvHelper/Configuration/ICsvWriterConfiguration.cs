@@ -60,13 +60,6 @@ namespace CsvHelper.Configuration
 		string DoubleQuoteString { get; }
 
 		/// <summary>
-		/// Gets or sets a value indicating if an Excel specific
-		/// format should be used when writing fields containing
-		/// numeric values. e.g. 00001 -> ="00001"
-		/// </summary>
-		bool UseExcelLeadingZerosFormatForNumerics { get; set; }
-
-		/// <summary>
 		/// Gets or sets the character used to quote fields.
 		/// Default is '"'.
 		/// </summary>
@@ -100,13 +93,6 @@ namespace CsvHelper.Configuration
 		/// Default is true.
 		/// </summary>
 		bool HasHeaderRecord { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating the if the CSV
-		/// file contains the Excel "sep=delimeter" config
-		/// option in the first row.
-		/// </summary>
-		bool HasExcelSeparator { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if private

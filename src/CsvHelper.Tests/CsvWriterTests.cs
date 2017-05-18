@@ -58,19 +58,6 @@ namespace CsvHelper.Tests
 		    Assert.AreEqual( "one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,2,3,4,5," + guid + "\r\n", data );
 	    }
 
-	    [TestMethod]
-	    public void WriteEmptyFieldWithExcelLeadingZerosTest()
-	    {
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvWriter( writer ) )
-			{
-				csv.Configuration.UseExcelLeadingZerosFormatForNumerics = true;
-				csv.WriteField( string.Empty );
-			}
-	    }
-
         [TestMethod]
         public void WriteRecordTest()
         {

@@ -35,7 +35,6 @@ namespace CsvHelper
 		private bool hasRecordBeenWritten;
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
 		private readonly ICsvWriterConfiguration configuration;
-		private bool hasExcelSeperatorBeenRead;
 		private int row = 1;
 
 		/// <summary>
@@ -184,14 +183,10 @@ namespace CsvHelper
 				field = field.Replace( configuration.QuoteString, configuration.DoubleQuoteString );
 			}
 
-			if( configuration.UseExcelLeadingZerosFormatForNumerics && !string.IsNullOrEmpty( field ) && field[0] == '0' && field.All( Char.IsDigit ) )
+			if( shouldQuote )
 			{
-				field = "=" + configuration.Quote + field + configuration.Quote;
+				field = configuration.Quote + field + configuration.Quote;
 			}
-            else if (shouldQuote)
-            {
-                field = configuration.Quote + field + configuration.Quote;
-            }
 
 			currentRecord.Add( field );
 		}
@@ -268,24 +263,6 @@ namespace CsvHelper
 	            ExceptionHelper.AddExceptionData( csvHelperException, Row, null, null, null, currentRecord.ToArray() );
 	            throw csvHelperException;
 	        }
-		}
-
-        /// <summary>
-        /// Write the Excel seperator record.
-        /// </summary>
-        public virtual void WriteExcelSeparator()
-		{
-			if( hasHeaderBeenWritten )
-			{
-				throw new CsvWriterException( "The Excel seperator record must be the first record written in the file." );
-			}
-
-			if( hasRecordBeenWritten )
-			{
-				throw new CsvWriterException( "The Excel seperator record must be the first record written in the file." );
-			}
-
-			WriteField( "sep=" + configuration.Delimiter, false );
 		}
 
 	    /// <summary>
@@ -443,13 +420,6 @@ namespace CsvHelper
 			Type recordType = null;
 			try
 			{
-				if( configuration.HasExcelSeparator && !hasExcelSeperatorBeenRead )
-				{
-					WriteExcelSeparator();
-                    NextRecord();
-                    hasExcelSeperatorBeenRead = true;
-				}
-
 				// Write the header. If records is a List<dynamic>, the header won't be written.
 				// This is because typeof( T ) = Object.
 				var genericEnumerable = records.GetType().GetInterfaces().FirstOrDefault( t => t.GetTypeInfo().IsGenericType && t.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );

@@ -94,11 +94,6 @@ namespace CsvHelper
 		void WriteField<T, TConverter>( T field );
 
         /// <summary>
-        /// Write the Excel seperator record.
-        /// </summary>
-        void WriteExcelSeparator();
-
-        /// <summary>
         /// Writes a comment.
         /// </summary>
         /// <param name="comment">The comment to write.</param>

@@ -19,7 +19,6 @@ namespace CsvHelper
 	    private int currentRow;
 	    private int currentRawRow;
 	    private int c = -1;
-	    private bool hasExcelSeparatorBeenRead;
 		private readonly ICsvParserConfiguration configuration;
 
 		/// <summary>
@@ -109,11 +108,6 @@ namespace CsvHelper
 		{
 			try
 			{
-				if( configuration.HasExcelSeparator && !hasExcelSeparatorBeenRead )
-				{
-					ReadExcelSeparator();
-				}
-
 				reader.ClearRawRecord();
 
 				var row = ReadLine();
@@ -186,16 +180,6 @@ namespace CsvHelper
 
 					return null;
 			    }
-
-				if( configuration.UseExcelLeadingZerosFormatForNumerics )
-				{
-					if( ReadExcelLeadingZerosField() )
-					{
-						break;
-					}
-
-					continue;
-				}
 
 			    if( record.Length == 0 && ( ( c == configuration.Comment && configuration.AllowComments ) || c == '\r' || c == '\n' ) )
 			    {
@@ -393,34 +377,6 @@ namespace CsvHelper
 			}
 		}
 
-		/// <summary>
-		/// Reads the field using Excel leading zero compatibility.
-		/// i.e. Fields that start with `=`.
-		/// </summary>
-		/// <returns></returns>
-	    protected virtual bool ReadExcelLeadingZerosField()
-	    {
-			if( c == '=' )
-			{
-				c = reader.GetChar();
-				if( c == configuration.Quote && !configuration.IgnoreQuotes )
-				{
-					// This is a valid Excel formula.
-					return ReadQuotedField();
-				}
-			}
-
-			// The format is invalid.
-			// Excel isn't consistent, so just read as normal.
-
-			if( c == configuration.Quote && !configuration.IgnoreQuotes )
-			{
-				return ReadQuotedField();
-			}
-
-			return ReadField();
-	    }
-
 	    /// <summary>
 		/// Reads until the delimeter is done.
 		/// </summary>
@@ -468,21 +424,6 @@ namespace CsvHelper
 		    }
 
 			return fieldStartOffset;
-		}
-
-		/// <summary>
-		/// Reads the Excel seperator and sets it to the delimiter.
-		/// </summary>
-		protected virtual void ReadExcelSeparator()
-		{
-			// sep=delimiter
-			var sepLine = reader.Reader.ReadLine();
-			if( sepLine != null )
-			{
-				configuration.Delimiter = sepLine.Substring( 4 );
-			}
-
-			hasExcelSeparatorBeenRead = true;
 		}
 	}
 }

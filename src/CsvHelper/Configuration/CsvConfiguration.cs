@@ -40,13 +40,6 @@ namespace CsvHelper.Configuration
 		public virtual bool HasHeaderRecord { get; set; } = true;
 
 		/// <summary>
-		/// Gets or sets a value indicating the if the CSV
-		/// file contains the Excel "sep=delimeter" config
-		/// option in the first row.
-		/// </summary>
-		public virtual bool HasExcelSeparator { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating if an exception will be
 		/// thrown if a field defined in a mapping is missing.
 		/// True to throw an exception, otherwise false.
@@ -307,13 +300,6 @@ namespace CsvHelper.Configuration
 		/// True to ignore, otherwise false. Default is true.
 		/// </summary>
 		public virtual bool IgnoreBlankLines { get; set; } = true;
-
-		/// <summary>
-        /// Gets or sets a value indicating if an Excel specific
-        /// format should be used when writing fields containing
-        /// numeric values. e.g. 00001 -> ="00001"
-        /// </summary>
-		public virtual bool UseExcelLeadingZerosFormatForNumerics { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
