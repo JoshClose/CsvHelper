@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
@@ -81,26 +82,36 @@ namespace CsvHelper
 		/// Gets the next char as an <see cref="int"/>.
 		/// </summary>
 		/// <returns></returns>
-	    public virtual int GetChar()
+	    public virtual int GetChar(bool parsingRowDelimiter = false)
 	    {
 		    if( bufferPosition >= charsRead )
 		    {
-				if( configuration.CountBytes )
+		        var recordAppend = new string( buffer, rawRecordStartPosition, bufferPosition - rawRecordStartPosition );
+
+                if (configuration.CountBytes )
 				{
 					bytePosition += configuration.Encoding.GetByteCount( buffer, rawRecordStartPosition, rawRecordEndPosition - rawRecordStartPosition );
 				}
+	            rawRecordStartPosition = 0;
 
-			    rawRecord.Append( new string( buffer, rawRecordStartPosition, bufferPosition - rawRecordStartPosition ) );
-				rawRecordStartPosition = 0;
-
-			    if( fieldEndPosition <= fieldStartPosition )
+			    if(fieldEndPosition <= fieldStartPosition )
 			    {
 					// If the end position hasn't been set yet, use the buffer position instead.
 				    fieldEndPosition = bufferPosition;
 			    }
 
-			    field.Append( new string( buffer, fieldStartPosition, fieldEndPosition - fieldStartPosition ) );
-				bufferPosition = 0;
+		        var fieldAppend = new string(buffer, fieldStartPosition, fieldEndPosition - fieldStartPosition);
+		        var dontAppend = parsingRowDelimiter && recordAppend == "\r" & fieldAppend == "\r";
+                if (!dontAppend)
+                {
+                    rawRecord.Append(recordAppend);
+                    field.Append(fieldAppend);
+		        }
+                else
+                {
+                    Debugger.Break();
+                }
+                bufferPosition = 0;
 			    rawRecordEndPosition = 0;
 				fieldStartPosition = 0;
 			    fieldEndPosition = 0;

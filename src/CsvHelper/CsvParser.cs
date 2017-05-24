@@ -333,8 +333,8 @@ namespace CsvHelper
 				{
 					if( c == '\r' || c == '\n' )
 					{
-						ReadLineEnding();
-						currentRawRow++;
+					    ReadLineEnding();
+					    currentRawRow++;
 					}
 
 					if( c == -1 )
@@ -415,7 +415,7 @@ namespace CsvHelper
 			var fieldStartOffset = 0;
 		    if( c == '\r' )
 		    {
-				c = reader.GetChar();
+				c = reader.GetChar(parsingRowDelimiter: true);
 				if( c != '\n' )
 				{
 					// The start needs to be moved back.
