@@ -11,14 +11,14 @@ namespace CsvHelper
 	/// Parses a CSV file.
 	/// </summary>
 	public class CsvParser : ICsvParser
-    {
+	{
 		private readonly bool leaveOpen;
 		private readonly RecordBuilder record = new RecordBuilder();
 		private FieldReader reader;
 		private bool disposed;
-	    private int currentRow;
-	    private int currentRawRow;
-	    private int c = -1;
+		private int currentRow;
+		private int currentRawRow;
+		private int c = -1;
 		private readonly ICsvParserConfiguration configuration;
 
 		/// <summary>
@@ -41,21 +41,21 @@ namespace CsvHelper
 		/// </summary>
 		public virtual long BytePosition => reader.BytePosition;
 
-	    /// <summary>
-	    /// Gets the row of the CSV file that the parser is currently on.
-	    /// </summary>
-	    public virtual int Row => currentRow;
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// </summary>
+		public virtual int Row => currentRow;
 
-	    /// <summary>
-	    /// Gets the row of the CSV file that the parser is currently on.
-	    /// This is the actual file row.
-	    /// </summary>
-	    public virtual int RawRow => currentRawRow;
+		/// <summary>
+		/// Gets the row of the CSV file that the parser is currently on.
+		/// This is the actual file row.
+		/// </summary>
+		public virtual int RawRow => currentRawRow;
 
-	    /// <summary>
-	    /// Gets the raw row for the current record that was parsed.
-	    /// </summary>
-	    public virtual string RawRecord => reader.RawRecord;
+		/// <summary>
+		/// Gets the raw row for the current record that was parsed.
+		/// </summary>
+		public virtual string RawRecord => reader.RawRecord;
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
@@ -157,21 +157,21 @@ namespace CsvHelper
 		/// Reads a line of the CSV file.
 		/// </summary>
 		/// <returns>The CSV line.</returns>
-	    protected virtual string[] ReadLine()
-	    {
-		    record.Clear();
-		    currentRow++;
-		    currentRawRow++;
+		protected virtual string[] ReadLine()
+		{
+			record.Clear();
+			currentRow++;
+			currentRawRow++;
 
 			while( true )
 			{
 				c = reader.GetChar();
 
-			    if( c == -1 )
-			    {
+				if( c == -1 )
+				{
 					// We have reached the end of the file.
 					if( record.Length > 0 )
-				    {
+					{
 						// There was no line break at the end of the file.
 						// We need to return the last record first.
 						record.Add( reader.GetField() );
@@ -179,76 +179,76 @@ namespace CsvHelper
 					}
 
 					return null;
-			    }
+				}
 
-			    if( record.Length == 0 && ( ( c == configuration.Comment && configuration.AllowComments ) || c == '\r' || c == '\n' ) )
-			    {
-				    ReadBlankLine();
-				    if( !configuration.IgnoreBlankLines )
-				    {
+				if( record.Length == 0 && ( ( c == configuration.Comment && configuration.AllowComments ) || c == '\r' || c == '\n' ) )
+				{
+					ReadBlankLine();
+					if( !configuration.IgnoreBlankLines )
+					{
 						break;
-				    }
+					}
 
-				    continue;
-			    }
+					continue;
+				}
 
 				if( c == configuration.Quote && !configuration.IgnoreQuotes )
-			    {
-				    if( ReadQuotedField() )
-				    {
+				{
+					if( ReadQuotedField() )
+					{
 						break;
-				    }
-			    }
-			    else
-			    {
-				    if( ReadField() )
-				    {
-					    break;
-				    }
-			    }
+					}
+				}
+				else
+				{
+					if( ReadField() )
+					{
+						break;
+					}
+				}
 			}
 
 			return record.ToArray();
-	    }
+		}
 
 		/// <summary>
 		/// Reads a blank line. This accounts for empty lines
 		/// and commented out lines.
 		/// </summary>
-	    protected virtual void ReadBlankLine()
-	    {
+		protected virtual void ReadBlankLine()
+		{
 			if( configuration.IgnoreBlankLines )
 			{
 				currentRow++;
 			}
 
 			while( true )
-		    {
-			    if( c == '\r' || c == '\n' )
-			    {
-				    ReadLineEnding();
-				    reader.SetFieldStart();
+			{
+				if( c == '\r' || c == '\n' )
+				{
+					ReadLineEnding();
+					reader.SetFieldStart();
 					return;
-			    }
+				}
 
-			    if( c == -1 )
-			    {
-				    return;
-			    }
+				if( c == -1 )
+				{
+					return;
+				}
 
 				// If the buffer runs, it appends the current data to the field.
 				// We don't want to capture any data on a blank line, so we
 				// need to set the field start every char.
-			    reader.SetFieldStart();
+				reader.SetFieldStart();
 				c = reader.GetChar();
-		    }
-	    }
+			}
+		}
 
 		/// <summary>
 		/// Reads until a delimiter or line ending is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
-	    protected virtual bool ReadField()
+		protected virtual bool ReadField()
 		{
 			if( c != configuration.Delimiter[0] && c != '\r' && c != '\n' )
 			{
@@ -333,8 +333,8 @@ namespace CsvHelper
 				{
 					if( c == '\r' || c == '\n' )
 					{
-					    ReadLineEnding();
-					    currentRawRow++;
+						ReadLineEnding();
+						currentRawRow++;
 					}
 
 					if( c == -1 )
@@ -377,13 +377,13 @@ namespace CsvHelper
 			}
 		}
 
-	    /// <summary>
+		/// <summary>
 		/// Reads until the delimeter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
-	    protected virtual bool ReadDelimiter()
-	    {
+		protected virtual bool ReadDelimiter()
+		{
 			if( c != configuration.Delimiter[0] )
 			{
 				throw new InvalidOperationException( "Tried reading a delimiter when the first delimiter char didn't match the current char." );
@@ -404,24 +404,24 @@ namespace CsvHelper
 			}
 
 			return true;
-	    }
+		}
 
 		/// <summary>
 		/// Reads until the line ending is done.
 		/// </summary>
 		/// <returns>True if more chars were read, otherwise false.</returns>
-	    protected virtual int ReadLineEnding()
+		protected virtual int ReadLineEnding()
 		{
 			var fieldStartOffset = 0;
-		    if( c == '\r' )
-		    {
-				c = reader.GetChar(parsingRowDelimiter: true);
+			if( c == '\r' )
+			{
+				c = reader.GetChar( true );
 				if( c != '\n' )
 				{
 					// The start needs to be moved back.
 					fieldStartOffset--;
-			    }
-		    }
+				}
+			}
 
 			return fieldStartOffset;
 		}
