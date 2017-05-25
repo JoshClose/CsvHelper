@@ -215,17 +215,17 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ParseLfOnlyTest()
 		{
-			using (var stream = new MemoryStream())
-			using (var reader = new StreamReader(stream))
-			using (var writer = new StreamWriter(stream))
-			using (var parser = new CsvParser(reader))
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var parser = new CsvParser( reader ) )
 			{
-				writer.Write("\n");
+				writer.Write( "\n" );
 				writer.Flush();
 				stream.Position = 0;
 
 				var record = parser.Read();
-				Assert.IsNull(record);
+				Assert.IsNull( record );
 			}
 		}
 
@@ -627,7 +627,7 @@ namespace CsvHelper.Tests
 				// 34 35 36 37 38  39  40
 				// [3][,]["][t][h][r][e][e][,][ ][f][o][u][r]["][\r][\n]
 				// 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55  56  57
-				
+
 				writer.WriteLine( "Id,Name" );
 				writer.WriteLine( "1,one" );
 				writer.WriteLine( "," );
@@ -1184,7 +1184,7 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "6", row[2] );
 			}
 		}
-		
+
 		[TestMethod]
 		public void EndBufferTest()
 		{
@@ -1237,7 +1237,7 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "3", row[2] );
 			}
 		}
-		
+
 		[TestMethod]
 		public void RawRecordCorruptionTest()
 		{
@@ -1359,8 +1359,8 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void QuotedFieldWithCarriageReturnTest()
 		{
-			using ( var reader = new StringReader( "\"a\r\",b" ) )
-			using ( var parser = new CsvParser( reader ) )
+			using( var reader = new StringReader( "\"a\r\",b" ) )
+			using( var parser = new CsvParser( reader ) )
 			{
 				var row = parser.Read();
 
@@ -1373,8 +1373,8 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void QuotedFieldWithLineFeedTest()
 		{
-			using ( var reader = new StringReader( "\"a\n\",b" ) )
-			using ( var parser = new CsvParser( reader ) )
+			using( var reader = new StringReader( "\"a\n\",b" ) )
+			using( var parser = new CsvParser( reader ) )
 			{
 				var row = parser.Read();
 

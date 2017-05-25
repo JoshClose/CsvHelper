@@ -333,7 +333,7 @@ namespace CsvHelper
 				{
 					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
 					{
-						// Inside a quote, \r\n is just another character to absorb
+						// Inside a quote \r\n is just another character to absorb.
 						currentRawRow++;
 					}
 
