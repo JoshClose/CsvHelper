@@ -415,8 +415,8 @@ namespace CsvHelper
 			var fieldStartOffset = 0;
 			if( c == '\r' )
 			{
-				c = reader.GetChar( true );
-				if( c != '\n' )
+				c = reader.GetChar();
+				if( c != '\n' && c != -1 )
 				{
 					// The start needs to be moved back.
 					fieldStartOffset--;

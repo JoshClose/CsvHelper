@@ -11,10 +11,8 @@ namespace CsvHelper
 	/// </summary>
 	public class FieldReader : IDisposable
 	{
-		private readonly char[] buffer;
-		// ReSharper disable once FieldCanBeMadeReadOnly.Local
+		private char[] buffer;
 		private StringBuilder rawRecord = new StringBuilder();
-		// ReSharper disable once FieldCanBeMadeReadOnly.Local
 		private StringBuilder field = new StringBuilder();
 		private int bufferPosition;
 		private int fieldStartPosition;
@@ -74,7 +72,7 @@ namespace CsvHelper
 		public FieldReader( TextReader reader, ICsvParserConfiguration configuration )
 		{
 			this.reader = reader;
-			buffer = new char[configuration.BufferSize];
+			buffer = new char[0];
 			this.configuration = configuration;
 		}
 
@@ -82,49 +80,41 @@ namespace CsvHelper
 		/// Gets the next char as an <see cref="int"/>.
 		/// </summary>
 		/// <returns></returns>
-		public virtual int GetChar( bool parsingRowDelimiter = false )
+		public virtual int GetChar()
 		{
 			if( bufferPosition >= charsRead )
 			{
-				if( configuration.CountBytes )
+				if( buffer.Length == 0 )
 				{
-					bytePosition += configuration.Encoding.GetByteCount( buffer, rawRecordStartPosition, rawRecordEndPosition - rawRecordStartPosition );
+					buffer = new char[configuration.BufferSize];
 				}
 
-				rawRecord.Append( new string( buffer, rawRecordStartPosition, bufferPosition - rawRecordStartPosition ) );
-				rawRecordStartPosition = 0;
-
-				if( fieldEndPosition <= fieldStartPosition )
+				if( charsRead > 0 )
 				{
-					// If the end position hasn't been set yet, use the buffer position instead.
-					fieldEndPosition = bufferPosition;
+					// Create a new buffer with extra room for what is left from
+					// the old buffer. Copy the remaining contents onto the new buffer.
+					var bufferLeft = charsRead - rawRecordStartPosition;
+					var bufferUsed = charsRead - bufferLeft;
+					var tempBuffer = new char[bufferLeft + configuration.BufferSize];
+					Array.Copy( buffer, rawRecordStartPosition, tempBuffer, 0, bufferLeft );
+					buffer = tempBuffer;
+
+					bufferPosition = bufferPosition - bufferUsed;
+					fieldStartPosition = fieldStartPosition - bufferUsed;
+					fieldEndPosition = Math.Max( fieldEndPosition - bufferUsed, 0 );
+					rawRecordStartPosition = rawRecordStartPosition - bufferUsed;
+					rawRecordEndPosition = rawRecordEndPosition - bufferUsed;
 				}
 
-				var fieldToAppend = new string( buffer, fieldStartPosition, fieldEndPosition - fieldStartPosition );
-				if( !( parsingRowDelimiter && fieldToAppend == "\r" ) )
-				{
-					field.Append( fieldToAppend );
-				}
-
-				bufferPosition = 0;
-				rawRecordEndPosition = 0;
-				fieldStartPosition = 0;
-				fieldEndPosition = 0;
-
-				charsRead = Reader.Read( buffer, 0, buffer.Length );
+				charsRead = Reader.Read( buffer, bufferPosition, configuration.BufferSize );
 				if( charsRead == 0 )
 				{
 					// End of file.
-
-					// Clear out the buffer in case the stream
-					// is written to again and we need to read some more.
-					for( var i = 0; i < buffer.Length; i++ )
-					{
-						buffer[i] = '\0';
-					}
-
 					return -1;
 				}
+
+				// Add the char count from the previous buffer that was copied onto this one.
+				charsRead += bufferPosition;
 			}
 
 			var c = buffer[bufferPosition];
