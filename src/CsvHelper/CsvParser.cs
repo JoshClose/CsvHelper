@@ -331,9 +331,9 @@ namespace CsvHelper
 
 				if( inQuotes )
 				{
-					if( c == '\r' || c == '\n' )
+					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
 					{
-						ReadLineEnding();
+						// Inside a quote, \r\n is just another character to absorb
 						currentRawRow++;
 					}
 

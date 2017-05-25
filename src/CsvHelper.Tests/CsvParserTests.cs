@@ -1355,5 +1355,33 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "6", row[2] );
 			}
 		}
+
+		[TestMethod]
+		public void QuotedFieldWithCarriageReturnTest()
+		{
+			using ( var reader = new StringReader( "\"a\r\",b" ) )
+			using ( var parser = new CsvParser( reader ) )
+			{
+				var row = parser.Read();
+
+				Assert.IsNotNull( row );
+				CollectionAssert.AreEqual( new[] { "a\r", "b" }, row );
+				Assert.IsNull( parser.Read() );
+			}
+		}
+
+		[TestMethod]
+		public void QuotedFieldWithLineFeedTest()
+		{
+			using ( var reader = new StringReader( "\"a\n\",b" ) )
+			using ( var parser = new CsvParser( reader ) )
+			{
+				var row = parser.Read();
+
+				Assert.IsNotNull( row );
+				CollectionAssert.AreEqual( new[] { "a\n", "b" }, row );
+				Assert.IsNull( parser.Read() );
+			}
+		}
 	}
 }
