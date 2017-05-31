@@ -226,9 +226,11 @@ namespace CsvHelper.Configuration
 					continue;
 				}
 
+				var memberTypeInfo = member.MemberType().GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
 				var hasDefaultConstructor = member.MemberType().GetConstructor( new Type[0] ) != null;
-				if( isDefaultConverter && hasDefaultConstructor )
+				var isUserDefinedStruct = memberTypeInfo.IsValueType && !memberTypeInfo.IsPrimitive && !memberTypeInfo.IsEnum;
+				if( isDefaultConverter && ( hasDefaultConstructor || isUserDefinedStruct ) )
 				{
 					if( options.IgnoreReferences )
 					{
