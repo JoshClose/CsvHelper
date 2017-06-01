@@ -94,17 +94,10 @@ namespace CsvHelper
 		void WriteField<T, TConverter>( T field );
 
         /// <summary>
-        /// Write the Excel seperator record.
-        /// </summary>
-        void WriteExcelSeparator();
-
-        /// <summary>
         /// Writes a comment.
         /// </summary>
         /// <param name="comment">The comment to write.</param>
         void WriteComment( string comment );
-
-#if !NET_2_0
 
         /// <summary>
         /// Writes the header record from the given properties/fields.
@@ -124,7 +117,5 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to write.</param>
 		void WriteRecord<T>( T record );
-		
-#endif
 	}
 }

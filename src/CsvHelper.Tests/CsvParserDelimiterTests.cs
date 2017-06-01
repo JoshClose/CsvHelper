@@ -5,12 +5,8 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace CsvHelper.Tests
 {

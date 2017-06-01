@@ -42,20 +42,6 @@ namespace CsvHelper.Configuration
 		Action<string> BadDataCallback { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating the if the CSV
-		/// file contains the Excel "sep=delimeter" config
-		/// option in the first row.
-		/// </summary>
-		bool HasExcelSeparator { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating if an Excel specific
-		/// format should be used when writing fields containing
-		/// numeric values. e.g. 00001 -> ="00001"
-		/// </summary>
-		bool UseExcelLeadingZerosFormatForNumerics { get; set; }
-
-		/// <summary>
 		/// Gets or sets the character used to denote
 		/// a line that is commented out. Default is '#'.
 		/// </summary>

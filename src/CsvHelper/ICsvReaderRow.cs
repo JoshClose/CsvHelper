@@ -402,8 +402,6 @@ namespace CsvHelper
 		/// </returns>
 		bool IsRecordEmpty();
 
-#if !NET_2_0
-
 		/// <summary>
 		/// Gets the record converted into <see cref="Type"/> T.
 		/// </summary>
@@ -417,7 +415,5 @@ namespace CsvHelper
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <returns>The record.</returns>
 		object GetRecord( Type type );
-
-#endif
 	}
 }

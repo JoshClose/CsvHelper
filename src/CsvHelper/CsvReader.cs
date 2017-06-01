@@ -11,12 +11,8 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Reflection;
-#if !NET_2_0
 using System.Linq.Expressions;
-#endif
-#if !NET_2_0 && !NET_3_5 && !PCL
 using System.Dynamic;
-#endif
 
 namespace CsvHelper
 {
@@ -35,9 +31,7 @@ namespace CsvHelper
 		private int columnCount;
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
-#if !NET_2_0
         private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
-#endif
 		private readonly ICsvReaderConfiguration configuration;
 
 		/// <summary>
@@ -150,7 +144,6 @@ namespace CsvHelper
 			}
 
 			headerRecord = currentRecord;
-			currentRecord = null;
 			ParseNamedIndexes();
 
 			return headerRecord != null;
@@ -897,12 +890,8 @@ namespace CsvHelper
 		/// </returns>
 		public virtual bool IsRecordEmpty()
 		{
-			CheckHasBeenRead();
-
 			return IsRecordEmpty( true );
 		}
-
-#if !NET_2_0
 
 		/// <summary>
 		/// Gets the record converted into <see cref="System.Type"/> T.
@@ -1010,9 +999,7 @@ namespace CsvHelper
 
 					if( configuration.IgnoreReadingExceptions )
 					{
-#if !NET_2_0
 						configuration.ReadingExceptionCallback?.Invoke( csvHelperException, this );
-#endif
 
 						continue;
 					}
@@ -1060,9 +1047,7 @@ namespace CsvHelper
 
 					if( configuration.IgnoreReadingExceptions )
 					{
-#if !NET_2_0
 						configuration.ReadingExceptionCallback?.Invoke( csvHelperException, this );
-#endif
 
 						continue;
 					}
@@ -1110,8 +1095,6 @@ namespace CsvHelper
 		{
 			recordFuncs.Clear();
 		}
-
-#endif
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -1191,11 +1174,7 @@ namespace CsvHelper
 				return string.IsNullOrEmpty;
 			}
 
-#if NET_2_0 || NET_3_5
-			return StringHelper.IsNullOrWhiteSpace;
-#else
 			return string.IsNullOrWhiteSpace;
-#endif
 		}
 	
 		/// <summary>
@@ -1316,8 +1295,6 @@ namespace CsvHelper
 				: configuration.SkipEmptyRecords && IsRecordEmpty( false );
 		}
 
-#if !NET_2_0
-
 		/// <summary>
 		/// Creates the record for the given type.
 		/// </summary>
@@ -1325,7 +1302,6 @@ namespace CsvHelper
 		/// <returns>The created record.</returns>
 		protected virtual T CreateRecord<T>() 
 		{
-#if !NET_3_5 && !PCL
 			// If the type is an object, a dynamic
 			// object will be created. That is the
 			// only way we can dynamically add properties
@@ -1334,7 +1310,6 @@ namespace CsvHelper
 			{
 				return CreateDynamic();
 			}
-#endif
 
 			return GetReadRecordFunc<T>()();
 		}
@@ -1346,7 +1321,6 @@ namespace CsvHelper
 		/// <returns>The created record.</returns>
 		protected virtual object CreateRecord( Type type )
 		{
-#if !NET_3_5 && !PCL
 			// If the type is an object, a dynamic
 			// object will be created. That is the
 			// only way we can dynamically add properties
@@ -1355,7 +1329,6 @@ namespace CsvHelper
 			{
 				return CreateDynamic();
 			}
-#endif
 
 			try
 			{
@@ -1666,10 +1639,6 @@ namespace CsvHelper
 			return !cantRead;
 		}
 
-#endif
-
-#if !NET_2_0 && !NET_3_5 && !PCL
-
 		/// <summary>
 		/// Creates a dynamic object from the current record.
 		/// </summary>
@@ -1700,7 +1669,5 @@ namespace CsvHelper
 
 			return obj;
 		}
-
-#endif
-		}
+	}
 }

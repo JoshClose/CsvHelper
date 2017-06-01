@@ -7,11 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Tests.TypeConversion

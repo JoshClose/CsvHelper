@@ -10,6 +10,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using System.Reflection;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -27,7 +28,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.FieldHeaders ).Returns( headers );
 			rowMock.Setup( m => m.CurrentRecord ).Returns( currentRecord );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "Dictionary" ) )
+			var data = new CsvPropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "Dictionary" ) )
 			{
 				Index = 2
 			};

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Reflection;
-#if !NET_2_0
 using System.Linq.Expressions;
-#endif
 
 namespace CsvHelper
 {
@@ -33,8 +31,6 @@ namespace CsvHelper
 		    throw new InvalidOperationException( "Member is not a property or a field." );
 	    }
 		
-#if !NET_2_0
-
 		/// <summary>
 		/// Gets a member expression for the property/field.
 		/// </summary>
@@ -57,8 +53,5 @@ namespace CsvHelper
 
 			throw new InvalidOperationException( "Member is not a property or a field." );
 		}
-
-#endif
-
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
@@ -8,20 +9,18 @@ namespace CsvHelper
 	/// <summary>
 	/// Reads fields from a <see cref="TextReader"/>.
 	/// </summary>
-    public class FieldReader : IDisposable
-    {
-	    private readonly char[] buffer;
-		// ReSharper disable once FieldCanBeMadeReadOnly.Local
+	public class FieldReader : IDisposable
+	{
+		private char[] buffer;
 		private StringBuilder rawRecord = new StringBuilder();
-		// ReSharper disable once FieldCanBeMadeReadOnly.Local
 		private StringBuilder field = new StringBuilder();
 		private int bufferPosition;
-	    private int fieldStartPosition;
-	    private int fieldEndPosition;
-	    private int rawRecordStartPosition;
-	    private int rawRecordEndPosition;
-	    private int charsRead;
-	    private bool disposed;
+		private int fieldStartPosition;
+		private int fieldEndPosition;
+		private int rawRecordStartPosition;
+		private int rawRecordEndPosition;
+		private int charsRead;
+		private bool disposed;
 		private readonly ICsvParserConfiguration configuration;
 		private long charPosition;
 		private long bytePosition;
@@ -70,73 +69,70 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader"></param>
 		/// <param name="configuration"></param>
-	    public FieldReader( TextReader reader, ICsvParserConfiguration configuration )
-	    {
+		public FieldReader( TextReader reader, ICsvParserConfiguration configuration )
+		{
 			this.reader = reader;
-		    buffer = new char[configuration.BufferSize];
-		    this.configuration = configuration;
-	    }
+			buffer = new char[0];
+			this.configuration = configuration;
+		}
 
 		/// <summary>
 		/// Gets the next char as an <see cref="int"/>.
 		/// </summary>
 		/// <returns></returns>
-	    public virtual int GetChar()
-	    {
-		    if( bufferPosition >= charsRead )
-		    {
-				if( configuration.CountBytes )
+		public virtual int GetChar()
+		{
+			if( bufferPosition >= charsRead )
+			{
+				if( buffer.Length == 0 )
 				{
-					bytePosition += configuration.Encoding.GetByteCount( buffer, rawRecordStartPosition, rawRecordEndPosition - rawRecordStartPosition );
+					buffer = new char[configuration.BufferSize];
 				}
 
-			    rawRecord.Append( new string( buffer, rawRecordStartPosition, bufferPosition - rawRecordStartPosition ) );
-				rawRecordStartPosition = 0;
+				if( charsRead > 0 )
+				{
+					// Create a new buffer with extra room for what is left from
+					// the old buffer. Copy the remaining contents onto the new buffer.
+					var bufferLeft = charsRead - rawRecordStartPosition;
+					var bufferUsed = charsRead - bufferLeft;
+					var tempBuffer = new char[bufferLeft + configuration.BufferSize];
+					Array.Copy( buffer, rawRecordStartPosition, tempBuffer, 0, bufferLeft );
+					buffer = tempBuffer;
 
-			    if( fieldEndPosition <= fieldStartPosition )
-			    {
-					// If the end position hasn't been set yet, use the buffer position instead.
-				    fieldEndPosition = bufferPosition;
-			    }
+					bufferPosition = bufferPosition - bufferUsed;
+					fieldStartPosition = fieldStartPosition - bufferUsed;
+					fieldEndPosition = Math.Max( fieldEndPosition - bufferUsed, 0 );
+					rawRecordStartPosition = rawRecordStartPosition - bufferUsed;
+					rawRecordEndPosition = rawRecordEndPosition - bufferUsed;
+				}
 
-			    field.Append( new string( buffer, fieldStartPosition, fieldEndPosition - fieldStartPosition ) );
-				bufferPosition = 0;
-			    rawRecordEndPosition = 0;
-				fieldStartPosition = 0;
-			    fieldEndPosition = 0;
-
-				charsRead = Reader.Read( buffer, 0, buffer.Length );
-			    if( charsRead == 0 )
-			    {
+				charsRead = Reader.Read( buffer, bufferPosition, configuration.BufferSize );
+				if( charsRead == 0 )
+				{
 					// End of file.
-
-					// Clear out the buffer in case the stream
-					// is written to again and we need to read some more.
-				    for( var i = 0; i < buffer.Length; i++ )
-				    {
-					    buffer[i] = '\0';
-				    }
-
 					return -1;
-			    }
-		    }
+				}
 
-		    var c = buffer[bufferPosition];
-		    bufferPosition++;
-		    rawRecordEndPosition = bufferPosition;
+				// Add the char count from the previous buffer that was copied onto this one.
+				charsRead += bufferPosition;
+			}
 
-		    charPosition++;
+			var c = buffer[bufferPosition];
+			bufferPosition++;
+			rawRecordEndPosition = bufferPosition;
 
-		    return c;
-	    }
+			charPosition++;
+
+			return c;
+		}
 
 		/// <summary>
 		/// Gets the field. This will append any reading progress.
 		/// </summary>
 		/// <returns>The current field.</returns>
-	    public virtual string GetField()
-	    {
-		    AppendField();
+		public virtual string GetField()
+		{
+			AppendField();
 
 			if( isFieldBad && configuration.ThrowOnBadData )
 			{
@@ -151,33 +147,29 @@ namespace CsvHelper
 			isFieldBad = false;
 
 			var result = field.ToString();
-#if NET_2_0 || NET_3_5
-		    field = new StringBuilder();
-#else
 			field.Clear();
-#endif
 
 			return result;
-	    }
+		}
 
 		/// <summary>
 		/// Appends the current reading progress.
 		/// </summary>
-	    public virtual void AppendField()
-	    {
+		public virtual void AppendField()
+		{
 			if( configuration.CountBytes )
 			{
 				bytePosition += configuration.Encoding.GetByteCount( buffer, rawRecordStartPosition, bufferPosition - rawRecordStartPosition );
 			}
 
 			rawRecord.Append( new string( buffer, rawRecordStartPosition, rawRecordEndPosition - rawRecordStartPosition ) );
-		    rawRecordStartPosition = rawRecordEndPosition;
+			rawRecordStartPosition = rawRecordEndPosition;
 
 			var length = fieldEndPosition - fieldStartPosition;
 			field.Append( new string( buffer, fieldStartPosition, length ) );
 			fieldStartPosition = bufferPosition;
-		    fieldEndPosition = 0;
-	    }
+			fieldEndPosition = 0;
+		}
 
 		/// <summary>
 		/// Sets the start of the field to the current buffer position.
@@ -185,27 +177,27 @@ namespace CsvHelper
 		/// <param name="offset">An offset for the field start.
 		/// The offset should be less than 1.</param>
 		public virtual void SetFieldStart( int offset = 0 )
-	    {
+		{
 			var position = bufferPosition + offset;
 			if( position >= 0 )
 			{
 				fieldStartPosition = position;
 			}
-	    }
+		}
 
 		/// <summary>
 		/// Sets the end of the field to the current buffer position.
 		/// </summary>
 		/// <param name="offset">An offset for the field start.
 		/// The offset should be less than 1.</param>
-	    public virtual void SetFieldEnd( int offset = 0 )
-	    {
-		    var position = bufferPosition + offset;
-		    if( position >= 0 )
-		    {
-			    fieldEndPosition = position;
-		    }
-	    }
+		public virtual void SetFieldEnd( int offset = 0 )
+		{
+			var position = bufferPosition + offset;
+			if( position >= 0 )
+			{
+				fieldEndPosition = position;
+			}
+		}
 
 		/// <summary>
 		/// Sets the raw record end to the current buffer position.
@@ -213,24 +205,20 @@ namespace CsvHelper
 		/// <param name="offset">An offset for the raw record end.
 		/// The offset should be less than 1.</param>
 		public virtual void SetRawRecordEnd( int offset )
-	    {
-		    var position = bufferPosition + offset;
-		    if( position >= 0 )
-		    {
+		{
+			var position = bufferPosition + offset;
+			if( position >= 0 )
+			{
 				rawRecordEndPosition = position;
 			}
-	    }
+		}
 
 		/// <summary>
 		/// Clears the raw record.
 		/// </summary>
-	    public virtual void ClearRawRecord()
+		public virtual void ClearRawRecord()
 		{
-#if NET_2_0 || NET_3_5
-			rawRecord = new StringBuilder();
-#else
 			rawRecord.Clear();
-#endif
 		}
 
 		/// <summary>

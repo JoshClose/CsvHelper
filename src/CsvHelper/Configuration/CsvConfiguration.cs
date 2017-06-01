@@ -25,9 +25,7 @@ namespace CsvHelper.Configuration
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields;
 		private bool quoteNoFields;
-#if !NET_2_0
 		private readonly CsvClassMapCollection maps = new CsvClassMapCollection();
-#endif
 
 		/// <summary>
 		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
@@ -35,25 +33,11 @@ namespace CsvHelper.Configuration
 		public virtual TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
 
 		/// <summary>
-		/// Gets or sets the property/field binding flags.
-		/// This determines what properties/fields on the custom
-		/// class are used. Default is Public | Instance.
-		/// </summary>
-		public virtual BindingFlags PropertyBindingFlags { get; set; } = BindingFlags.Public | BindingFlags.Instance;
-
-		/// <summary>
 		/// Gets or sets a value indicating if the
 		/// CSV file has a header record.
 		/// Default is true.
 		/// </summary>
 		public virtual bool HasHeaderRecord { get; set; } = true;
-
-		/// <summary>
-		/// Gets or sets a value indicating the if the CSV
-		/// file contains the Excel "sep=delimeter" config
-		/// option in the first row.
-		/// </summary>
-		public virtual bool HasExcelSeparator { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if an exception will be
@@ -318,13 +302,6 @@ namespace CsvHelper.Configuration
 		public virtual bool IgnoreBlankLines { get; set; } = true;
 
 		/// <summary>
-        /// Gets or sets a value indicating if an Excel specific
-        /// format should be used when writing fields containing
-        /// numeric values. e.g. 00001 -> ="00001"
-        /// </summary>
-		public virtual bool UseExcelLeadingZerosFormatForNumerics { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
 		/// properties/fields should get prefixed by the parent property/field
 		/// name when automapping.
@@ -377,8 +354,6 @@ namespace CsvHelper.Configuration
 				new[] { '\r', '\n' } :
 				new[] { '\r', '\n', delimiter[0] };
 		}
-		
-#if !NET_2_0
 
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.
@@ -492,7 +467,6 @@ namespace CsvHelper.Configuration
 			return map;
 		}
 
-#endif
 
 	}
 }

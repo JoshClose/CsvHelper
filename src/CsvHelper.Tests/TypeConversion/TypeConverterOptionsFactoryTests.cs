@@ -11,11 +11,7 @@ using System.Text;
 using System.Threading;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -25,7 +21,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestInitialize]
         public void TestInitialize()
         {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+			CultureInfo.CurrentCulture = new CultureInfo("en-US");
         }
 
         [TestMethod]

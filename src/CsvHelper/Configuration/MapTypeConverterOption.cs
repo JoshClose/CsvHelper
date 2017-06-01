@@ -1,6 +1,4 @@
-﻿#if !NET_2_0
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -130,5 +128,3 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
-
-#endif

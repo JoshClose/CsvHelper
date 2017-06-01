@@ -2,9 +2,6 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // http://csvhelper.com
-
-#if !NET_2_0
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -229,9 +226,11 @@ namespace CsvHelper.Configuration
 					continue;
 				}
 
+				var memberTypeInfo = member.MemberType().GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
 				var hasDefaultConstructor = member.MemberType().GetConstructor( new Type[0] ) != null;
-				if( isDefaultConverter && hasDefaultConstructor )
+				var isUserDefinedStruct = memberTypeInfo.IsValueType && !memberTypeInfo.IsPrimitive && !memberTypeInfo.IsEnum;
+				if( isDefaultConverter && ( hasDefaultConstructor || isUserDefinedStruct ) )
 				{
 					if( options.IgnoreReferences )
 					{
@@ -316,5 +315,3 @@ namespace CsvHelper.Configuration
 		}
 	}
 }
-
-#endif // !NET_2_0

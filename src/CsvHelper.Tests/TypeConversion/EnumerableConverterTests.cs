@@ -5,11 +5,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-#if WINRT_4_5
-using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-#else
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
 using System.IO;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
