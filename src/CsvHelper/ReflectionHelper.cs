@@ -18,6 +18,7 @@ namespace CsvHelper
 	internal static class ReflectionHelper
 	{
 		private static readonly Dictionary<int, Dictionary<string, Delegate>> funcArgCache = new Dictionary<int, Dictionary<string, Delegate>>();
+		private static object locker = new object();
 
 		/// <summary>
 		/// Creates an instance of type T.
@@ -39,9 +40,12 @@ namespace CsvHelper
 		public static object CreateInstance( Type type, params object[] args )
 		{
 			Dictionary<string, Delegate> funcCache;
-			if( !funcArgCache.TryGetValue( args.Length, out funcCache ) )
+			lock( locker )
 			{
-				funcArgCache[args.Length] = funcCache = new Dictionary<string, Delegate>();
+				if( !funcArgCache.TryGetValue( args.Length, out funcCache ) )
+				{
+					funcArgCache[args.Length] = funcCache = new Dictionary<string, Delegate>();
+				}
 			}
 
 			var typeNames = new List<string>();
