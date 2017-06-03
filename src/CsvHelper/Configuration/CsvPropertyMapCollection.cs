@@ -218,6 +218,7 @@ namespace CsvHelper.Configuration
 		{
 			var existingMap = list.SingleOrDefault( m =>
 				m.Data.Member == member ||
+				m.Data.Member != null &&
 				m.Data.Member.Name == member.Name &&
 				(
 					m.Data.Member.DeclaringType.IsAssignableFrom( member.DeclaringType ) ||
