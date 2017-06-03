@@ -742,7 +742,7 @@ namespace CsvHelper
 
 					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
 
-					var method = propertyMap.Data.TypeConverter.GetType().GetMethod( "ConvertToString" );
+					var method = typeof( ITypeConverter ).GetMethod( "ConvertToString" );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 
@@ -777,7 +777,7 @@ namespace CsvHelper
 
 			var typeConverter = TypeConverterFactory.GetConverter( type );
 			var typeConverterExpression = Expression.Constant( typeConverter );
-			var method = typeConverter.GetType().GetMethod( "ConvertToString" );
+			var method = typeof( ITypeConverter ).GetMethod( "ConvertToString" );
 
 			var propertyMapData = new CsvPropertyMapData( null )
 			{
