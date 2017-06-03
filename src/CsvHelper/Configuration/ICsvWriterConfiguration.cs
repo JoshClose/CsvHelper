@@ -52,6 +52,11 @@ namespace CsvHelper.Configuration
 		char[] QuoteRequiredChars { get; }
 
 		/// <summary>
+		/// Builds the values for the RequiredQuoteChars property.
+		/// </summary>
+		Func<char[]> BuildRequiredQuoteChars { get; set; }
+
+		/// <summary>
 		/// Gets a string representation of two of the currently configured Quote characters.
 		/// </summary>
 		/// <value>

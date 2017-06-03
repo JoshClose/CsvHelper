@@ -110,7 +110,7 @@ namespace CsvHelper.Configuration
 
 				delimiter = value;
 
-				BuildRequiredQuoteChars();
+				quoteRequiredChars = BuildRequiredQuoteChars();
 			}
 		}
 
@@ -323,14 +323,6 @@ namespace CsvHelper.Configuration
 		public virtual Action<string> BadDataCallback { get; set; }
 
 		/// <summary>
-		/// Creates a new CsvConfiguration.
-		/// </summary>
-		public CsvConfiguration()
-		{
-			BuildRequiredQuoteChars();
-		}
-
-		/// <summary>
 		/// Gets or sets a value indicating whether
 		/// exceptions that occur duruing reading
 		/// should be ignored. True to ignore exceptions,
@@ -348,12 +340,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Builds the values for the RequiredQuoteChars property.
 		/// </summary>
-		private void BuildRequiredQuoteChars()
-		{
-			quoteRequiredChars = delimiter.Length > 1 ?
-				new[] { '\r', '\n' } :
-				new[] { '\r', '\n', delimiter[0] };
-		}
+		public virtual Func<char[]> BuildRequiredQuoteChars { get; set; } 
 
 		/// <summary>
 		/// The configured <see cref="CsvClassMap"/>s.
@@ -368,6 +355,20 @@ namespace CsvHelper.Configuration
 		/// reference property/field's properties/fields.
 		/// </summary>
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
+
+		/// <summary>
+		/// Creates a new CsvConfiguration.
+		/// </summary>
+		public CsvConfiguration()
+		{
+			BuildRequiredQuoteChars = () =>
+			{
+				return delimiter.Length > 1 ?
+					new[] { '\r', '\n' } :
+					new[] { '\r', '\n', delimiter[0] };
+			};
+			quoteRequiredChars = BuildRequiredQuoteChars();
+		}
 
 		/// <summary>
 		/// Use a <see cref="CsvClassMap{T}" /> to configure mappings.
@@ -466,7 +467,5 @@ namespace CsvHelper.Configuration
 
 			return map;
 		}
-
-
 	}
 }
