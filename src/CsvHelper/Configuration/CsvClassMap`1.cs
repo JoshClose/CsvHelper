@@ -39,7 +39,7 @@ namespace CsvHelper.Configuration
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same property/field.</param>
 		/// <returns>The property/field mapping.</returns>
-		public virtual CsvPropertyMap Map( Expression<Func<T, object>> expression, bool useExistingMap = true )
+		public virtual CsvPropertyMap<TProperty> Map<TProperty>( Expression<Func<T, TProperty>> expression, bool useExistingMap = true )
 		{
 			var stack = ReflectionHelper.GetMembers( expression );
 			if( stack.Count == 0 )
@@ -80,7 +80,7 @@ namespace CsvHelper.Configuration
 			// Add the property/field map to the last reference map.
 			member = stack.Pop();
 
-			return currentClassMap.Map( member, useExistingMap );
+			return (CsvPropertyMap<TProperty>)currentClassMap.Map( member, useExistingMap );
 		}
 
 		/// <summary>

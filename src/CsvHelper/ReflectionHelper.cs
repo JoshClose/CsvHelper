@@ -17,7 +17,7 @@ namespace CsvHelper
 	/// </summary>
 	internal static class ReflectionHelper
 	{
-		private static readonly Dictionary<int, Dictionary<Type, Delegate>> funcArgCache = new Dictionary<int, Dictionary<Type, Delegate>>();
+		private static readonly Dictionary<int, Dictionary<string, Delegate>> funcArgCache = new Dictionary<int, Dictionary<string, Delegate>>();
 
 		/// <summary>
 		/// Creates an instance of type T.
@@ -38,16 +38,21 @@ namespace CsvHelper
 		/// <returns>A new instance of the specified type.</returns>
 		public static object CreateInstance( Type type, params object[] args )
 		{
-			Dictionary<Type, Delegate> funcCache;
+			Dictionary<string, Delegate> funcCache;
 			if( !funcArgCache.TryGetValue( args.Length, out funcCache ) )
 			{
-				funcArgCache[args.Length] = funcCache = new Dictionary<Type, Delegate>();
+				funcArgCache[args.Length] = funcCache = new Dictionary<string, Delegate>();
 			}
-			
+
+			var typeNames = new List<string>();
+			typeNames.Add( type.FullName );
+			typeNames.AddRange( args.Select( a => a.GetType().FullName ) );
+			var key = string.Join( "|", typeNames );
+
 			Delegate func;
-			if( !funcCache.TryGetValue( type, out func ) )
+			if( !funcCache.TryGetValue( key, out func ) )
 			{
-				funcCache[type] = func = CreateInstanceDelegate( type, args );
+				funcCache[key] = func = CreateInstanceDelegate( type, args );
 			}
 
 			try
@@ -95,9 +100,10 @@ namespace CsvHelper
 		/// Gets the property from the expression.
 		/// </summary>
 		/// <typeparam name="TModel">The type of the model.</typeparam>
+		/// <typeparam name="TProperty">The type of the property.</typeparam>
 		/// <param name="expression">The expression.</param>
 		/// <returns>The <see cref="PropertyInfo"/> for the expression.</returns>
-		public static MemberInfo GetMember<TModel>( Expression<Func<TModel, object>> expression )
+		public static MemberInfo GetMember<TModel, TProperty>( Expression<Func<TModel, TProperty>> expression )
 		{
 			var member = GetMemberExpression( expression.Body ).Member;
 			var property = member as PropertyInfo;
@@ -118,10 +124,11 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the property/field inheritance chain as a stack.
 		/// </summary>
-		/// <typeparam name="TModel">Type type of the model.</typeparam>
+		/// <typeparam name="TModel">The type of the model.</typeparam>
+		/// <typeparam name="TProperty">The type of the property.</typeparam>
 		/// <param name="expression">The member expression.</param>
 		/// <returns>The inheritance chain for the given member expression as a stack.</returns>
-		public static Stack<MemberInfo> GetMembers<TModel>( Expression<Func<TModel, object>> expression )
+		public static Stack<MemberInfo> GetMembers<TModel, TProperty>( Expression<Func<TModel, TProperty>> expression )
 		{
 			var stack = new Stack<MemberInfo>();
 

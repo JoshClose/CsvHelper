@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq.Expressions;
 
 namespace CsvHelper.Tests.Reflection
 {
@@ -13,7 +14,7 @@ namespace CsvHelper.Tests.Reflection
 		[TestMethod]
 		public void FirstLevelTest()
 		{
-			var stack = ReflectionHelper.GetMembers<A>( a => a.P1 );
+			var stack = ReflectionHelper.GetMembers<A, string>( a => a.P1 );
 
 			Assert.AreEqual( 1, stack.Count );
 			Assert.AreEqual( "P1", stack.Pop().Name );
@@ -22,7 +23,7 @@ namespace CsvHelper.Tests.Reflection
 		[TestMethod]
 		public void LastLevelTest()
 		{
-			var stack = ReflectionHelper.GetMembers<A>( a => a.B.C.D.P4 );
+			var stack = ReflectionHelper.GetMembers<A, string>( a => a.B.C.D.P4 );
 
 			Assert.AreEqual( 4, stack.Count );
 			Assert.AreEqual( "B", stack.Pop().Name );

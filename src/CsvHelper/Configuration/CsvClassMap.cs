@@ -45,7 +45,7 @@ namespace CsvHelper.Configuration
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same property/field.</param>
 		/// <returns>The property/field mapping.</returns>
-		public virtual CsvPropertyMap Map( MemberInfo member, bool useExistingMap = true )
+		public CsvPropertyMap Map( MemberInfo member, bool useExistingMap = true )
 		{
 			if( useExistingMap )
 			{
@@ -56,7 +56,7 @@ namespace CsvHelper.Configuration
 				}
 			}
 
-			var propertyMap = new CsvPropertyMap( member );
+			var propertyMap = CsvPropertyMap.CreateGeneric( member );
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
 
@@ -68,9 +68,9 @@ namespace CsvHelper.Configuration
 		/// data that isn't mapped to a class property/field.
 		/// </summary>
 		/// <returns>The property mapping.</returns>
-		public virtual CsvPropertyMap Map()
+		public virtual CsvPropertyMap<object> Map()
 		{
-			var propertyMap = new CsvPropertyMap( null );
+			var propertyMap = new CsvPropertyMap<object>( null );
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
 
@@ -265,7 +265,7 @@ namespace CsvHelper.Configuration
 				}
 				else
 				{
-					var propertyMap = new CsvPropertyMap( member );
+					var propertyMap = CsvPropertyMap.CreateGeneric( member );
 					// Use global values as the starting point.
 					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( options.TypeConverterOptionsFactory.GetOptions( member.MemberType() ) );
 					propertyMap.Data.Index = map.GetMaxIndex() + 1;
