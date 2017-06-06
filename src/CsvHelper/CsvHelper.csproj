@@ -5,7 +5,7 @@
 				<Copyright>Copyright © 2009-2017 Josh Close and Contributors</Copyright>
 				<AssemblyTitle>CsvHelper</AssemblyTitle>
 				<Authors>Josh Close</Authors>
-				<Version>3.0.0-chi04</Version>
+				<Version>3.0.0-chi05</Version>
 				<TargetFramework>netstandard1.3</TargetFramework>
 				<GenerateDocumentationFile>true</GenerateDocumentationFile>
 				<AssemblyName>CsvHelper</AssemblyName>
