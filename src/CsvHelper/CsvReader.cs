@@ -1560,7 +1560,7 @@ namespace CsvHelper
 				propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
 				// Create type converter expression.
-				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Member.MemberType() );
 
 				if( propertyMap.Data.IsConstantSet )

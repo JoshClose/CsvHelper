@@ -34,8 +34,10 @@ namespace CsvHelper
 		private bool hasHeaderBeenWritten;
 		private bool hasRecordBeenWritten;
 		private readonly Dictionary<Type, Delegate> typeActions = new Dictionary<Type, Delegate>();
+		private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
 		private readonly ICsvWriterConfiguration configuration;
 		private int row = 1;
+		private CsvPropertyMapData reusablePropertyMapData = new CsvPropertyMapData( null );
 
 		/// <summary>
 		/// Gets the serializer.
@@ -218,14 +220,17 @@ namespace CsvHelper
 		public virtual void WriteField<T>( T field, ITypeConverter converter )
 		{
 			var type = field == null ? typeof( string ) : field.GetType();
-			var propertyMapData = new CsvPropertyMapData( null )
+			reusablePropertyMapData.TypeConverter = converter;
+			if( !typeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
 			{
-				TypeConverter = converter,
-				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( type ) )
-			};
-			propertyMapData.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
+				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( type ) );
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+				typeConverterOptionsCache.Add( type, typeConverterOptions );
+			}
 
-			var fieldString = converter.ConvertToString( field, this, propertyMapData );
+			reusablePropertyMapData.TypeConverterOptions = typeConverterOptions;
+
+			var fieldString = converter.ConvertToString( field, this, reusablePropertyMapData );
 			WriteConvertedField( fieldString );
 		}
 
@@ -738,7 +743,7 @@ namespace CsvHelper
 					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
 					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
-					var method = typeof( ITypeConverter ).GetMethod( "ConvertToString" );
+					var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 
@@ -749,7 +754,7 @@ namespace CsvHelper
 					}
 				}
 
-				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
+				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
 
 				var actionType = typeof( Action<> ).MakeGenericType( type );
 				delegates.Add( Expression.Lambda( actionType, writeFieldMethodCall, recordParameter ).Compile() );
@@ -773,7 +778,7 @@ namespace CsvHelper
 
 			var typeConverter = TypeConverterFactory.GetConverter( type );
 			var typeConverterExpression = Expression.Constant( typeConverter );
-			var method = typeof( ITypeConverter ).GetMethod( "ConvertToString" );
+			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 
 			var propertyMapData = new CsvPropertyMapData( null )
 			{
@@ -784,7 +789,7 @@ namespace CsvHelper
 			propertyMapData.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
-			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );
+			fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
 
 			var actionType = typeof( Action<> ).MakeGenericType( type );
 			var action = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
@@ -833,10 +838,10 @@ namespace CsvHelper
 			var delegates = new List<Delegate>();
 			foreach( var propertyName in propertyNames )
 			{
-				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
+				var getMemberBinder = (GetMemberBinder)Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
 				var getMemberMetaObject = metaObject.BindGetMember( getMemberBinder );
 				var fieldExpression = getMemberMetaObject.Expression;
-				fieldExpression = Expression.Call( Expression.Constant( this ), "WriteField", new[] { typeof( object ) }, fieldExpression );
+				fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteField ), new[] { typeof( object ) }, fieldExpression );
 				fieldExpression = Expression.Block( fieldExpression, Expression.Label( CallSiteBinder.UpdateLabel ) );
 				var lambda = Expression.Lambda( fieldExpression, parameterExpression );
 				delegates.Add( lambda.Compile() );

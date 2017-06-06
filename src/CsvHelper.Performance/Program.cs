@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -8,10 +9,14 @@ namespace CsvHelper.Performance
 	{
 		static void Main( string[] args )
 		{
-			Parse();
+			//Parse();
 			//ReadGetField();
 			//ReadGetRecords();
-			//Console.ReadKey();
+
+			//WriteField( 50, 1000000);
+			//WriteRecords( 1000000 );
+
+			Console.ReadKey();
 		}
 
 		static string GetFilePath()
@@ -21,27 +26,110 @@ namespace CsvHelper.Performance
 			return filePath;
 		}
 
-		static void Generate()
+		static void WriteField( int columns = 50, int rows = 2000000 )
 		{
+			Console.WriteLine( "Writing using WriteField" );
+			var stopwatch = new Stopwatch();
+			stopwatch.Start();
+
 			using( var stream = File.Create( GetFilePath() ) )
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				for( var column = 1; column <= 50; column++ )
+				for( var column = 1; column <= columns; column++ )
 				{
 					csv.WriteField( $"Column{column}" );
 				}
 				csv.NextRecord();
 
-				for( var row = 1; row <= 2000000; row++ )
+				for( var row = 1; row <= rows; row++ )
 				{
-					for( var column = 1; column <= 50; column++ )
+					for( var column = 1; column <= columns; column++ )
 					{
 						csv.WriteField( column );
 					}
 					csv.NextRecord();
 				}
 			}
+
+			stopwatch.Stop();
+			Console.WriteLine( stopwatch.Elapsed );
+		}
+
+		static void WriteRecords( int rows = 2000000 )
+		{
+			Console.WriteLine( "Writing using WriteRecords" );
+			var stopwatch = new Stopwatch();
+			stopwatch.Start();
+
+			using( var stream = File.Create( GetFilePath() ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var records = new List<Columns50>();
+				for( var i = 0; i < rows; i++ )
+				{
+					var record = new Columns50
+					{
+						Column1 = 1,
+						Column2 = 2,
+						Column3 = 3,
+						Column4 = 4,
+						Column5 = 5,
+						Column6 = 6,
+						Column7 = 7,
+						Column8 = 8,
+						Column9 = 9,
+						Column10 = 10,
+						Column11 = 11,
+						Column12 = 12,
+						Column13 = 13,
+						Column14 = 14,
+						Column15 = 15,
+						Column16 = 16,
+						Column17 = 17,
+						Column18 = 18,
+						Column19 = 19,
+						Column20 = 20,
+						Column21 = 21,
+						Column22 = 22,
+						Column23 = 23,
+						Column24 = 24,
+						Column25 = 25,
+						Column26 = 26,
+						Column27 = 27,
+						Column28 = 28,
+						Column29 = 29,
+						Column30 = 30,
+						Column31 = 31,
+						Column32 = 32,
+						Column33 = 33,
+						Column34 = 34,
+						Column35 = 35,
+						Column36 = 36,
+						Column37 = 37,
+						Column38 = 38,
+						Column39 = 39,
+						Column40 = 40,
+						Column41 = 41,
+						Column42 = 42,
+						Column43 = 43,
+						Column44 = 44,
+						Column45 = 45,
+						Column46 = 46,
+						Column47 = 47,
+						Column48 = 48,
+						Column49 = 49,
+						Column50 = 50,
+					};
+					records.Add( record );
+				}
+
+				csv.WriteRecords( records );
+			}
+
+			stopwatch.Stop();
+			Console.WriteLine( stopwatch.Elapsed );
 		}
 
 		static void Parse()
@@ -49,6 +137,7 @@ namespace CsvHelper.Performance
 			Console.WriteLine( "Parsing" );
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
+
 			using( var stream = File.OpenRead( GetFilePath() ) )
 			using( var reader = new StreamReader( stream ) )
 			using( var parser = new CsvParser( reader ) )
@@ -58,6 +147,7 @@ namespace CsvHelper.Performance
 				{
 				}
 			}
+
 			stopwatch.Stop();
 			Console.WriteLine( stopwatch.Elapsed );
 		}
@@ -67,6 +157,7 @@ namespace CsvHelper.Performance
 			Console.WriteLine( "Reading using GetField" );
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
+
 			using( var stream = File.OpenRead( GetFilePath() ) )
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvReader( reader ) )
@@ -82,6 +173,7 @@ namespace CsvHelper.Performance
 					}
 				}
 			}
+
 			stopwatch.Stop();
 			Console.WriteLine( stopwatch.Elapsed );
 		}
@@ -91,6 +183,7 @@ namespace CsvHelper.Performance
 			Console.WriteLine( "Reading using GetRecords" );
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
+
 			using( var stream = File.OpenRead( GetFilePath() ) )
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvReader( reader ) )
@@ -100,6 +193,7 @@ namespace CsvHelper.Performance
 				{
 				}
 			}
+
 			stopwatch.Stop();
 			Console.WriteLine( stopwatch.Elapsed );
 		}
