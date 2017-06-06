@@ -32,7 +32,9 @@ namespace CsvHelper
 		private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
 	    private readonly Dictionary<string, Tuple<string, int>> namedIndexCache = new Dictionary<string, Tuple<string, int>>();
         private readonly Dictionary<Type, Delegate> recordFuncs = new Dictionary<Type, Delegate>();
+		private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
 		private readonly ICsvReaderConfiguration configuration;
+		private CsvPropertyMapData reusablePropertyMapData = new CsvPropertyMapData( null );
 
 		/// <summary>
 		/// Gets the configuration.
@@ -369,16 +371,19 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var propertyMapData = new CsvPropertyMapData( null )
+			reusablePropertyMapData.Index = index;
+			reusablePropertyMapData.TypeConverter = converter;
+			if( !typeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
 			{
-				Index = index,
-				TypeConverter = converter,
-				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
-			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( type ), propertyMapData.TypeConverterOptions );
+				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( type ) );
+				typeConverterOptions.CultureInfo = configuration.CultureInfo;
+				typeConverterOptionsCache.Add( type, typeConverterOptions );
+			}
+
+			reusablePropertyMapData.TypeConverterOptions = typeConverterOptions;
 
 			var field = GetField( index );
-			return converter.ConvertFromString( field, this, propertyMapData );
+			return converter.ConvertFromString( field, this, reusablePropertyMapData );
 		}
 
 		/// <summary>
@@ -1445,10 +1450,10 @@ namespace CsvHelper
 			var propertyMapData = new CsvPropertyMapData( null )
 			{
 				Index = 0,
-				TypeConverter = TypeConverterFactory.GetConverter( recordType ),
-				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+				TypeConverter = TypeConverterFactory.GetConverter( recordType )
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( recordType ), propertyMapData.TypeConverterOptions );
+			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( recordType ) );
+			propertyMapData.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
 			fieldExpression = Expression.Call( Expression.Constant( propertyMapData.TypeConverter ), "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
 			fieldExpression = Expression.Convert( fieldExpression, recordType );
@@ -1551,13 +1556,9 @@ namespace CsvHelper
 
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
-				{
-					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
-				}
+				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
+				propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
-				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
-				
 				// Create type converter expression.
 				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
 				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Member.MemberType() );

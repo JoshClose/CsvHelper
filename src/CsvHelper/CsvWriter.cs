@@ -221,9 +221,9 @@ namespace CsvHelper
 			var propertyMapData = new CsvPropertyMapData( null )
 			{
 				TypeConverter = converter,
-				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( type ) )
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( type ), propertyMapData.TypeConverterOptions );
+			propertyMapData.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
 			var fieldString = converter.ConvertToString( field, this, propertyMapData );
 			WriteConvertedField( fieldString );
@@ -735,12 +735,8 @@ namespace CsvHelper
 					fieldExpression = CreatePropertyExpression( recordParameter, configuration.Maps[type], propertyMap );
 
 					var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-					if( propertyMap.Data.TypeConverterOptions.CultureInfo == null )
-					{
-						propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
-					}
-
-					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
+					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
+					propertyMap.Data.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
 					var method = typeof( ITypeConverter ).GetMethod( "ConvertToString" );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
@@ -783,9 +779,9 @@ namespace CsvHelper
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
-				TypeConverterOptions = { CultureInfo = configuration.CultureInfo }
+				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( type ) )
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( configuration.TypeConverterOptionsFactory.GetOptions( type ), propertyMapData.TypeConverterOptions );
+			propertyMapData.TypeConverterOptions.CultureInfo = configuration.CultureInfo;
 
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( this ), "WriteConvertedField", null, fieldExpression );

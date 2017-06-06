@@ -267,7 +267,7 @@ namespace CsvHelper.Configuration
 				{
 					var propertyMap = CsvPropertyMap.CreateGeneric( member );
 					// Use global values as the starting point.
-					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( options.TypeConverterOptionsFactory.GetOptions( member.MemberType() ) );
+					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), options.TypeConverterOptionsFactory.GetOptions( member.MemberType() ), propertyMap.Data.TypeConverterOptions );
 					propertyMap.Data.Index = map.GetMaxIndex() + 1;
 					if( !isDefaultConverter )
 					{

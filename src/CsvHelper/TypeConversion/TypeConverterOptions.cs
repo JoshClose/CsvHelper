@@ -61,17 +61,24 @@ namespace CsvHelper.TypeConversion
 		public List<string> NullValues { get; } = new List<string>( defaultNullValues );
 
 		/// <summary>
-		/// Merges TypeConverterOptions by applying the values of sources in order to a
-		/// new TypeConverterOptions instance.
+		/// Merges TypeConverterOptions by applying the values of sources in order on to each other.
+		/// The first object is the source object.
 		/// </summary>
 		/// <param name="sources">The sources that will be applied.</param>
-		/// <returns>A new instance of TypeConverterOptions with the source applied to it.</returns>
+		/// <returns>The updated source object.</returns>
 		public static TypeConverterOptions Merge( params TypeConverterOptions[] sources )
 		{
-			var options = new TypeConverterOptions();
-
-			foreach( var source in sources )
+			if( sources == null || sources.Length == 0 )
 			{
+				return null;
+			}
+
+			var options = sources[0];
+
+			for( var i = 1; i < sources.Length; i++ )
+			{
+				var source = sources[i];
+
 				if( source == null )
 				{
 					continue;
