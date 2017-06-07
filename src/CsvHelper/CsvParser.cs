@@ -261,7 +261,7 @@ namespace CsvHelper
 
 			while( true )
 			{
-				if( c == configuration.Quote && !configuration.IgnoreQuotes)
+				if( c == configuration.Quote && !configuration.IgnoreQuotes )
 				{
 					reader.IsFieldBad = true;
 				}
