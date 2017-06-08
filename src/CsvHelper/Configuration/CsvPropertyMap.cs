@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a property/field to a CSV field.
 	/// </summary>
-	[DebuggerDisplay( "Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
+	[DebuggerDisplay( "Member = {Data.Member} , Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
 	public abstract class CsvPropertyMap
 	{
 		/// <summary>

@@ -224,18 +224,6 @@ namespace CsvHelper.Tests.AutoMapping
 		}
 
 		[TestMethod]
-		public void AutoMapWithCircularDependencyTest()
-		{
-			var config = new CsvConfiguration();
-			var map = config.AutoMap<ACircular>();
-			Assert.IsNotNull( map );
-			Assert.AreEqual( 1, map.PropertyMaps.Count );
-			Assert.AreEqual( 1, map.ReferenceMaps.Count );
-			Assert.AreEqual( 1, map.ReferenceMaps[0].Data.Mapping.PropertyMaps.Count );
-			Assert.AreEqual( 0, map.ReferenceMaps[0].Data.Mapping.ReferenceMaps.Count );
-		}
-
-		[TestMethod]
 		public void AutoMapWithNestedHeaders()
 		{
 			var config = new CsvConfiguration
@@ -299,20 +287,6 @@ namespace CsvHelper.Tests.AutoMapping
 			{
 				Name = name;
 			}
-		}
-
-		private class ACircular
-		{
-			public string Id { get; set; }
-
-			public BCircular B { get; set; }
-		}
-
-		private class BCircular
-		{
-			public string Id { get; set; }
-
-			public ACircular A { get; set; }
 		}
 	}
 }

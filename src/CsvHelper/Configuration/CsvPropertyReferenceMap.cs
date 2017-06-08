@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace CsvHelper.Configuration
@@ -10,6 +11,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a reference property/field mapping to a class.
 	/// </summary>
+	[DebuggerDisplay( "Member = {Data.Member}, Prefix = {Data.Prefix}" )]
 	public class CsvPropertyReferenceMap
 	{
 		private readonly CsvPropertyReferenceMapData data;

@@ -251,6 +251,7 @@ namespace CsvHelper.Configuration
 					var refOptions = options.Copy();
 					refOptions.IgnoreReferences = false;
 					AutoMapInternal( refMap, options, mapParents, map.GetMaxIndex() + 1 );
+					mapParents.Drop( mapParents.Find( type ) );
 
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
