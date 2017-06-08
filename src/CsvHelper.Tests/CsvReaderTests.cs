@@ -855,22 +855,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void TrimFieldsTest()
-		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { " 1 " } );
-			var parserMock = new ParserMock( queue );
-			var reader = new CsvReader( parserMock );
-			reader.Configuration.HasHeaderRecord = false;
-			reader.Configuration.TrimFields = true;
-			reader.Configuration.WillThrowOnMissingField = false;
-			reader.Read();
-			Assert.AreEqual( "1", reader.GetField( 0 ) );
-			Assert.AreEqual( null, reader.GetField( 1 ) );
-			Assert.AreEqual( 1, reader.GetField<int>( 0 ) );
-		}
-
-		[TestMethod]
 		public void RowTest()
 		{
 			var queue = new Queue<string[]>();
