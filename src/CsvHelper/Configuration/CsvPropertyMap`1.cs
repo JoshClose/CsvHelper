@@ -115,12 +115,6 @@ namespace CsvHelper.Configuration
 		/// <param name="defaultValue">The default value.</param>
 		public virtual CsvPropertyMap<T> Default( T defaultValue )
 		{
-			var returnType = typeof( T );
-			if( !Data.Member.MemberType().IsAssignableFrom( returnType ) )
-			{
-				throw new CsvConfigurationException( $"Default type '{returnType.FullName}' cannot be assigned to property/field type '{Data.Member.MemberType().FullName}'." );
-			}
-
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
 
@@ -135,15 +129,6 @@ namespace CsvHelper.Configuration
 		/// <param name="constantValue">The constant value.</param>
 		public virtual CsvPropertyMap<T> Constant( T constantValue )
 		{
-			if( Data.Member != null )
-			{
-				var returnType = typeof( T );
-				if( !Data.Member.MemberType().IsAssignableFrom( returnType ) )
-				{
-					throw new CsvConfigurationException( $"Constant type '{returnType.FullName}' cannot be assigned to property/field type '{Data.Member.MemberType().FullName}'." );
-				}
-			}
-
 			Data.Constant = constantValue;
 			Data.IsConstantSet = true;
 
