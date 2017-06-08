@@ -23,7 +23,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the field headers.
 		/// </summary>
-		string[] FieldHeaders { get; }
+		string[] FieldHeaders { get; set; }
 
 		/// <summary>
 		/// Get the current record;
