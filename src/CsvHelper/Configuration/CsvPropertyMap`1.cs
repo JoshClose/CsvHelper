@@ -14,7 +14,7 @@ namespace CsvHelper.Configuration
 	/// Mapping info for a property/field to a CSV field.
 	/// </summary>
 	public class CsvPropertyMap<T> : CsvPropertyMap
-    {
+	{
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property/field.
 		/// </summary>
@@ -114,6 +114,21 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
 		public virtual CsvPropertyMap<T> Default( T defaultValue )
+		{
+			Data.Default = defaultValue;
+			Data.IsDefaultSet = true;
+
+			return this;
+		}
+
+		/// <summary>
+		/// The default value that will be used when reading when
+		/// the CSV field is empty. This value is not type checked
+		/// and will use a <see cref="ITypeConverter"/> to convert
+		/// the field. This could potentially have runtime errors.
+		/// </summary>
+		/// <param name="defaultValue">The default value.</param>
+		public virtual CsvPropertyMap<T> Default( string defaultValue )
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;

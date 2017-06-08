@@ -1570,7 +1570,19 @@ namespace CsvHelper
 				else if( propertyMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
-					Expression defaultValueExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Default ), propertyMap.Data.Member.MemberType() );
+					Expression defaultValueExpression;
+					if( propertyMap.Data.Member.MemberType() != typeof( string ) && propertyMap.Data.Default != null && propertyMap.Data.Default.GetType() == typeof( string ) )
+					{
+						// The default is a string but the property type is not. Use a converter.
+						defaultValueExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, Expression.Constant( propertyMap.Data.Default ), Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+					}
+					else
+					{
+						// The property type and default type match.
+						defaultValueExpression = Expression.Constant( propertyMap.Data.Default );
+					}
+
+					defaultValueExpression = Expression.Convert( defaultValueExpression, propertyMap.Data.Member.MemberType() );
 
 					// If null, use string.Empty.
 					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );

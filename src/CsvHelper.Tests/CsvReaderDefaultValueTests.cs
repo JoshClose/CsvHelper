@@ -49,6 +49,36 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void DefaultStringValueTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var csvReader = new CsvReader( reader ) )
+			{
+				writer.WriteLine( "Id,Name,Order" );
+				writer.WriteLine( ",," );
+				writer.WriteLine( "2,two,2" );
+				writer.WriteLine( ",three," );
+				writer.Flush();
+				stream.Position = 0;
+
+				csvReader.Configuration.RegisterClassMap<TestStringMap>();
+
+				var records = csvReader.GetRecords<Test>().ToList();
+
+				var record = records[0];
+				Assert.AreEqual( -1, record.Id );
+				Assert.AreEqual( null, record.Name );
+				Assert.AreEqual( -2, record.Order );
+
+				record = records[1];
+				Assert.AreEqual( 2, record.Id );
+				Assert.AreEqual( "two", record.Name );
+			}
+		}
+
 		private class Test
 		{
 			public int Id { get; set; }
@@ -65,6 +95,16 @@ namespace CsvHelper.Tests
 				Map( m => m.Id ).Default( -1 );
 				Map( m => m.Name ).Default( (string)null );
 				Map( m => m.Order ).Default( -2 );
+			}
+		}
+
+		private sealed class TestStringMap : CsvClassMap<Test>
+		{
+			public TestStringMap()
+			{
+				Map( m => m.Id ).Default( "-1" );
+				Map( m => m.Name ).Default( null );
+				Map( m => m.Order ).Default( "-2" );
 			}
 		}
 	}
