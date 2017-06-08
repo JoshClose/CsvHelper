@@ -642,7 +642,7 @@ namespace CsvHelper
 			// returning null, so we need to handle this special case.
 			if( converter is DateTimeConverter )
 			{
-				if( StringHelper.IsNullOrWhiteSpace( currentRecord[index] ) )
+				if( string.IsNullOrWhiteSpace( currentRecord[index] ) )
 				{
 					field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
 					return false;

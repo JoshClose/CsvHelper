@@ -69,37 +69,6 @@ namespace CsvHelper
 			}
 		}
 
-		private static T Default<T>()
-		{
-			return default( T );
-		}
-
-		private static Delegate CreateInstanceDelegate( Type type, params object[] args )
-		{
-			Delegate compiled;
-			if( type.GetTypeInfo().IsValueType )
-			{
-				var method = typeof( ReflectionHelper ).GetMethod( "Default", BindingFlags.Static | BindingFlags.NonPublic );
-				method = method.MakeGenericMethod( type );
-				compiled = Expression.Lambda( Expression.Call( method ) ).Compile();
-			}
-			else
-			{
-				var argumentTypes = args.Select( a => a.GetType() ).ToArray();
-				var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
-				var constructorInfo = type.GetConstructor( argumentTypes );
-				if( constructorInfo == null )
-				{
-					throw new InvalidOperationException( "No public parameterless constructor found." );
-				}
-
-				var constructor = Expression.New( constructorInfo, argumentExpressions );
-				compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
-			}
-
-			return compiled;
-		}
-
 		/// <summary>
 		/// Gets the property from the expression.
 		/// </summary>
@@ -152,11 +121,6 @@ namespace CsvHelper
 			return stack;
 		}
 
-		/// <summary>
-		/// Gets the member expression.
-		/// </summary>
-		/// <param name="expression">The expression.</param>
-		/// <returns></returns>
 		private static MemberExpression GetMemberExpression( Expression expression )
 		{
 			MemberExpression memberExpression = null;
@@ -171,6 +135,37 @@ namespace CsvHelper
 			}
 
 			return memberExpression;
+		}
+
+		private static T Default<T>()
+		{
+			return default( T );
+		}
+
+		private static Delegate CreateInstanceDelegate( Type type, params object[] args )
+		{
+			Delegate compiled;
+			if( type.GetTypeInfo().IsValueType )
+			{
+				var method = typeof( ReflectionHelper ).GetMethod( "Default", BindingFlags.Static | BindingFlags.NonPublic );
+				method = method.MakeGenericMethod( type );
+				compiled = Expression.Lambda( Expression.Call( method ) ).Compile();
+			}
+			else
+			{
+				var argumentTypes = args.Select( a => a.GetType() ).ToArray();
+				var argumentExpressions = argumentTypes.Select( ( t, i ) => Expression.Parameter( t, "var" + i ) ).ToArray();
+				var constructorInfo = type.GetConstructor( argumentTypes );
+				if( constructorInfo == null )
+				{
+					throw new InvalidOperationException( "No public parameterless constructor found." );
+				}
+
+				var constructor = Expression.New( constructorInfo, argumentExpressions );
+				compiled = Expression.Lambda( constructor, argumentExpressions ).Compile();
+			}
+
+			return compiled;
 		}
 	}
 }
