@@ -1,38 +1,40 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-		<PropertyGroup>
-				<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-				<Copyright>Copyright © 2009-2017 Josh Close and Contributors</Copyright>
-				<AssemblyTitle>CsvHelper</AssemblyTitle>
-				<Authors>Josh Close</Authors>
-				<Version>3.0.0-chi05</Version>
-				<TargetFramework>netstandard1.3</TargetFramework>
-				<GenerateDocumentationFile>true</GenerateDocumentationFile>
-				<AssemblyName>CsvHelper</AssemblyName>
-				<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
-				<SignAssembly>true</SignAssembly>
-				<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-				<PackageId>CsvHelper</PackageId>
-				<PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
-				<PackageReleaseNotes>http://joshclose.github.io/CsvHelper/#change-log</PackageReleaseNotes>
-				<PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
-				<PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
-				<PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
-				<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-				<NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.3' ">1.6.0</NetStandardImplicitPackageVersion>
-				<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-				<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-				<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
-				<RepositoryType>git</RepositoryType>
-		</PropertyGroup>
+	<PropertyGroup>
+		<!-- Assembly -->
+		<AssemblyTitle>CsvHelper</AssemblyTitle>
+		<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
+		<Copyright>Copyright © 2009-2017 Josh Close and Contributors</Copyright>
+		<Authors>Josh Close</Authors>
 
-		<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-				<PackageReference Include="Microsoft.CSharp" Version="4.0.1" />
-				<PackageReference Include="System.Reflection.TypeExtensions" Version="4.1.0" />
-		</ItemGroup>
+		<!-- Build -->
+		<Version>3.0.0-chi05</Version>
+		<FileVersion>3.0.0.0</FileVersion>
+		<AssemblyVersion>3.0.0.0</AssemblyVersion>
+		<TargetFramework>netstandard1.3</TargetFramework>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<AssemblyName>CsvHelper</AssemblyName>
 
-		<PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-				<DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
-		</PropertyGroup>
+		<!-- Sign -->
+		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<SignAssembly>true</SignAssembly>
+		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+
+		<!-- NuGet -->
+		<PackageId>CsvHelper</PackageId>
+		<PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
+		<PackageReleaseNotes>http://joshclose.github.io/CsvHelper/#change-log</PackageReleaseNotes>
+		<PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
+		<PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
+		<PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.0.1" />
+		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.1.0" />
+	</ItemGroup>
 
 </Project>
