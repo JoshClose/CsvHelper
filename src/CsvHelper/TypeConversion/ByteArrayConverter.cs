@@ -10,6 +10,7 @@ namespace CsvHelper.Converters
     {
         private readonly Options options;
         private readonly string HexFormatString;
+        private readonly byte ByteLength;
 
         //Defaults to the literal format used by C# for whole numbers, and SQL Server for binary data
         public ByteArrayConverter(Options options = Options.HexDecimal | Options.HexInclude0x)
@@ -20,6 +21,7 @@ namespace CsvHelper.Converters
                 == Options.HexDashes
                     ? "-X2"
                     : "X2" ;
+            ByteLength = ( options & Options.HexDashes ) == Options.HexDashes ? (byte)3 : (byte)2;
         }
 
         private static void ValidateSetting(Options opt)
@@ -63,8 +65,11 @@ namespace CsvHelper.Converters
             {
                 sb.Append("0x");
             }
-            
-            for (var i = 0; i < b.Length; i++)
+            if( b.Length >= 1 )
+            {
+                sb.Append(b[0].ToString( "X2" ) );
+            }
+            for (var i = 1; i < b.Length; i++)
             {
                 sb.Append(b[i].ToString(HexFormatString));
             }
@@ -75,10 +80,11 @@ namespace CsvHelper.Converters
         {
             var has0x = hex.StartsWith("0x");
 
-            byte[] ba = new byte[has0x ? (hex.Length - 2) / 2 : hex.Length / 2];
-            for (var i = has0x ? 2 : 0; i < hex.Length / 2; i++)
+            byte[] ba = new byte[has0x ? (hex.Length - 1) / ByteLength : hex.Length + 1 / ByteLength];
+            var has0xOffset = has0x ? 1 : 0;
+            for (var stringIndex = has0xOffset * 2; stringIndex < hex.Length; stringIndex += ByteLength)
             {
-                ba[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+                ba[(stringIndex - has0xOffset) /ByteLength ] = Convert.ToByte(hex.Substring(stringIndex, 2), 16);
             }
             return ba;
         }
