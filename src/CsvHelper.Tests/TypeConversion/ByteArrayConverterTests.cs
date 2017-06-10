@@ -79,5 +79,67 @@ namespace CsvHelper.Tests.TypeConversion
                 }
 		    }
 		}
-	}
+	    [TestMethod]
+        public void WhenConverting_FromByteArrayToString_ReturnsCorrectValues()
+	    {
+
+	        var testCases = new[]
+	        {
+	            new
+	            {
+	                Options = Options.HexDecimal | Options.HexInclude0x,
+	                Expected = new[] { "0xDEAD", "0xB33FBEEF", "0xEA5EEA5EEA5E", "0xCA75CA75CA75CA75" },
+	                FieldBytes = new []
+	                {
+	                    new byte[]{0xDE,0xAD},
+	                    new byte[]{0xB3,0x3F,0xBE,0xEF},
+	                    new byte[]{0xEA,0x5E,0xEA,0x5E,0xEA,0x5E},
+	                    new byte[]{0xCA,0x75, 0xCA, 0x75, 0xCA,0x75,0xCA,0x75}
+	                }
+	            },
+	            new
+	            {
+	                Options = Options.HexDecimal | Options.HexDashes,
+	                Expected = new[] { "DE-AD", "B3-3F-BE-EF", "EA-5E-EA-5E-EA-5E", "CA-75-CA-75-CA-75-CA-75" },
+	                FieldBytes = new []
+	                {
+	                    new byte[]{0xDE,0xAD},
+	                    new byte[]{0xB3,0x3F,0xBE,0xEF},
+	                    new byte[]{0xEA,0x5E,0xEA,0x5E,0xEA,0x5E},
+	                    new byte[]{0xCA,0x75, 0xCA, 0x75, 0xCA,0x75,0xCA,0x75}
+	                }
+	            },
+	            new
+	            {
+	                Options = Options.Base64,
+	                Expected = new []
+	                {
+	                    Convert.ToBase64String(new byte[]{0xDE,0xAD}),
+	                    Convert.ToBase64String(new byte[]{0xB3,0x3F,0xBE,0xEF}),
+	                    Convert.ToBase64String(new byte[]{0xEA,0x5E,0xEA,0x5E,0xEA,0x5E}),
+	                    Convert.ToBase64String(new byte[]{0xCA,0x75, 0xCA, 0x75, 0xCA,0x75,0xCA,0x75})
+	                },
+	                FieldBytes = new []
+	                {
+	                    new byte[]{0xDE,0xAD},
+	                    new byte[]{0xB3,0x3F,0xBE,0xEF},
+	                    new byte[]{0xEA,0x5E,0xEA,0x5E,0xEA,0x5E},
+	                    new byte[]{0xCA,0x75, 0xCA, 0x75, 0xCA,0x75,0xCA,0x75}
+	                }
+	            }
+	        };
+
+	        foreach (var t in testCases)
+	        {
+	            var converter = new ByteArrayConverter(t.Options);
+	            foreach (var f in t.Expected.Zip(t.FieldBytes, (expected, test) => new { test, expected }))
+	            {
+	                var actual = converter.ConvertToString(f.test, null, null);
+	                
+	                    Assert.AreEqual(actual, f.expected);
+	                
+	            }
+	        }
+	    }
+    }
 }

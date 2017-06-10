@@ -9,7 +9,7 @@ namespace CsvHelper.Converters
     public class ByteArrayConverter : ITypeConverter
     {
         private readonly Options options;
-        private readonly string HexFormatString;
+        private readonly string HexStringPrefix;
         private readonly byte ByteLength;
 
         //Defaults to the literal format used by C# for whole numbers, and SQL Server for binary data
@@ -17,10 +17,10 @@ namespace CsvHelper.Converters
         {
             this.options = options;
             ValidateSetting(options);
-            HexFormatString = ( options & Options.HexDashes )
+            HexStringPrefix = ( options & Options.HexDashes )
                 == Options.HexDashes
-                    ? "-X2"
-                    : "X2" ;
+                    ? "-"
+                    : "" ;
             ByteLength = ( options & Options.HexDashes ) == Options.HexDashes ? (byte)3 : (byte)2;
         }
 
@@ -71,7 +71,7 @@ namespace CsvHelper.Converters
             }
             for (var i = 1; i < b.Length; i++)
             {
-                sb.Append(b[i].ToString(HexFormatString));
+                sb.Append(HexStringPrefix + b[i].ToString("X2"));
             }
             return sb.ToString();
         }
