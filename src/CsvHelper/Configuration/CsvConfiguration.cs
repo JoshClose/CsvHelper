@@ -287,7 +287,21 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IncludePrivateMembers { get; set; }
 
-		/// <summary>
+	    /// <summary>
+	    /// Gets or sets a value indicating if Excel macros should be escaped
+	    /// to prevent Excel macro injection attacks.
+	    /// Escaped macro characters are '=', '+', '-' and '@'.
+	    /// True to escape, otherwise false. Default is false.
+	    /// </summary>
+        public bool EscapeExcelMacros { get; set; }
+
+	    /// <summary>
+	    /// Gets or sets the character used to escape Excel macros.
+	    /// Default is '.
+	    /// </summary>
+        public char ExcelMacrosEscapeCharacter { get; set; } = '\'';
+
+	    /// <summary>
 		/// Gets or sets the member types that are used when auto mapping.
 		/// MemberTypes are flags, so you can choose more than one.
 		/// Default is Properties.
@@ -309,7 +323,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool PrefixReferenceHeaders { get; set; }
 
-		/// <summary>
+	    /// <summary>
 		/// Gets or sets a value indicating if an exception should
 		/// be thrown when bad field data is detected.
 		/// True to throw, otherwise false. Default is false.

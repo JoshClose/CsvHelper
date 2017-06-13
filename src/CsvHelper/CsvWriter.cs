@@ -37,7 +37,8 @@ namespace CsvHelper
 		private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
 		private readonly ICsvWriterConfiguration configuration;
 		private int row = 1;
-		private CsvPropertyMapData reusablePropertyMapData = new CsvPropertyMapData( null );
+		private readonly CsvPropertyMapData reusablePropertyMapData = new CsvPropertyMapData( null );
+	    private readonly IEnumerable<char> excelMacroCharacters = new[] { '=', '+', '-', '@' };
 
 		/// <summary>
 		/// Gets the serializer.
@@ -179,6 +180,11 @@ namespace CsvHelper
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
 		public virtual void WriteField( string field, bool shouldQuote )
 		{
+		    if( configuration.EscapeExcelMacros && !string.IsNullOrEmpty(field) && excelMacroCharacters.Contains(field.First()) )
+		    {
+		        field = configuration.ExcelMacrosEscapeCharacter + field;
+		    }
+
             // All quotes must be doubled.       
 			if( shouldQuote && !string.IsNullOrEmpty( field ) )
 			{

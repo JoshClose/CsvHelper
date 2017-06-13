@@ -368,6 +368,114 @@ namespace CsvHelper.Tests
         }
 
         [TestMethod]
+        public void WriteRecordsEscapeExcelMacrosTest()
+        {
+            var records = new[]
+            {
+                new TestRecord
+                {
+                    IntColumn = 1,
+                    StringColumn = "=ABS(-1337)"
+                },
+                new TestRecord
+                {
+                    IntColumn = 2,
+                    StringColumn = "+100"
+                },
+                new TestRecord
+                {
+                    IntColumn = 3,
+                    StringColumn = "-100"
+                },
+                new TestRecord
+                {
+                    IntColumn = 4,
+                    StringColumn = "@evil"
+                }
+            };
+
+            var csv = new string[records.Length];
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvWriter = new CsvWriter(writer))
+            {
+                csvWriter.Configuration.HasHeaderRecord = false;
+                csvWriter.Configuration.EscapeExcelMacros = true;
+                csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
+                csvWriter.WriteRecords(records);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                for (var i = 0; i < records.Length; i++)
+                {
+                    csv[i] = reader.ReadLine();
+                }
+            }
+
+            Assert.AreEqual(",1,'=ABS(-1337),test", csv[0]);
+            Assert.AreEqual(",2,'+100,test", csv[1]);
+            Assert.AreEqual(",3,'-100,test", csv[2]);
+            Assert.AreEqual(",4,'@evil,test", csv[3]);
+        }
+
+        [TestMethod]
+        public void WriteRecordsNoEscapeExcelMacrosTest()
+        {
+            var records = new[]
+            {
+                new TestRecord
+                {
+                    IntColumn = 1,
+                    StringColumn = "=ABS(-1337)"
+                },
+                new TestRecord
+                {
+                    IntColumn = 2,
+                    StringColumn = "+100"
+                },
+                new TestRecord
+                {
+                    IntColumn = 3,
+                    StringColumn = "-100"
+                },
+                new TestRecord
+                {
+                    IntColumn = 4,
+                    StringColumn = "@evil"
+                }
+            };
+
+            var csv = new string[records.Length];
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var csvWriter = new CsvWriter(writer))
+            {
+                csvWriter.Configuration.HasHeaderRecord = false;
+                csvWriter.Configuration.EscapeExcelMacros = false;
+                csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
+                csvWriter.WriteRecords(records);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                for (var i = 0; i < records.Length; i++)
+                {
+                    csv[i] = reader.ReadLine();
+                }
+            }
+
+            Assert.AreEqual(",1,=ABS(-1337),test", csv[0]);
+            Assert.AreEqual(",2,+100,test", csv[1]);
+            Assert.AreEqual(",3,-100,test", csv[2]);
+            Assert.AreEqual(",4,@evil,test", csv[3]);
+        }
+
+        [TestMethod]
         public void WriteHeaderTest()
         {
             string csv;
