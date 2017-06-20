@@ -49,7 +49,7 @@ namespace CsvHelper.TypeConversion
 			var dictionary = new Dictionary<string, string>();
 
 			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
+				? row.Context.Record.Length - 1
 				: propertyMapData.IndexEnd;
 
 			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
@@ -57,7 +57,7 @@ namespace CsvHelper.TypeConversion
 				string field;
 				if( row.TryGetField( i, out field ) )
 				{
-					dictionary.Add( row.FieldHeaders[i], field );
+					dictionary.Add( row.Context.HeaderRecord[i], field );
 				}
 			}
 

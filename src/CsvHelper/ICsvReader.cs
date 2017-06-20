@@ -49,33 +49,5 @@ namespace CsvHelper
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <returns>An <see cref="IList{Object}" /> of records.</returns>
 		IEnumerable<object> GetRecords( Type type );
-
-		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ClearRecordCache{T}"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		void ClearRecordCache<T>();
-
-		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ClearRecordCache( Type )"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		/// <param name="type">The type to invalidate.</param>
-		void ClearRecordCache( Type type );
-
-		/// <summary>
-		/// Clears the record cache for all types. After <see cref="ICsvReaderRow.GetRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ClearRecordCache()"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		void ClearRecordCache();
 	}
 }

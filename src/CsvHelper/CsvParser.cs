@@ -16,70 +16,44 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvParser : ICsvParser
 	{
-		private readonly bool leaveOpen;
-		private readonly RecordBuilder record = new RecordBuilder();
-		private FieldReader reader;
+		private ReadingContext context;
+		private IFieldReader fieldReader;
 		private bool disposed;
-		private int currentRow;
-		private int currentRawRow;
-		private int c = -1;
-		private readonly ICsvParserConfiguration configuration;
 
 		/// <summary>
-		/// Gets the <see cref="ICsvParser.TextReader"/>.
+		/// Gets the reading context.
 		/// </summary>
-		public virtual TextReader TextReader => reader.Reader;
+		public virtual IParserContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual ICsvParserConfiguration Configuration => configuration;
+		public virtual ICsvParserConfiguration Configuration => context.ParserConfiguration;
 
 		/// <summary>
-		/// Gets the character position that the parser is currently on.
+		/// Gets the <see cref="FieldReader"/>.
 		/// </summary>
-		public virtual long CharPosition => reader.CharPosition;
-
-		/// <summary>
-		/// Gets the byte position that the parser is currently on.
-		/// </summary>
-		public virtual long BytePosition => reader.BytePosition;
-
-		/// <summary>
-		/// Gets the row of the CSV file that the parser is currently on.
-		/// </summary>
-		public virtual int Row => currentRow;
-
-		/// <summary>
-		/// Gets the row of the CSV file that the parser is currently on.
-		/// This is the actual file row.
-		/// </summary>
-		public virtual int RawRow => currentRawRow;
-
-		/// <summary>
-		/// Gets the raw row for the current record that was parsed.
-		/// </summary>
-		public virtual string RawRecord => reader.RawRecord;
+		public virtual IFieldReader FieldReader => fieldReader;
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
-		public CsvParser( TextReader reader ) : this( reader, new CsvConfiguration(), false ) { }
+		public CsvParser( TextReader reader ) : this( new FieldReader( reader, new CsvConfiguration(), false ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, bool leaveOpen ) : this( reader, new CsvConfiguration(), false ) { }
+		public CsvParser( TextReader reader, bool leaveOpen ) : this( new FieldReader( reader, new CsvConfiguration(), false ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser( TextReader reader, ICsvParserConfiguration configuration ) : this( reader, configuration, false ) { }
+		public CsvParser( TextReader reader, CsvConfiguration configuration ) : this( new FieldReader( reader, configuration, false ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
@@ -87,21 +61,21 @@ namespace CsvHelper
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, ICsvParserConfiguration configuration, bool leaveOpen )
+		public CsvParser( TextReader reader, CsvConfiguration configuration, bool leaveOpen ) : this( new FieldReader( reader, configuration, leaveOpen ) ) { }
+
+		/// <summary>
+		/// Creates a new parser using the given <see cref="FieldReader"/>.
+		/// </summary>
+		/// <param name="reader">The field reader.</param>
+		public CsvParser( IFieldReader reader )
 		{
-			if( reader == null )
+			fieldReader = reader ?? throw new ArgumentNullException( nameof( reader ) );
+			if( !( fieldReader.Context is IParserContext ) )
 			{
-				throw new ArgumentNullException( nameof( reader ) );
+				throw new InvalidOperationException( "For FieldReader to be used in CsvParser, FieldReader.Context must also implement IParserContext." );
 			}
 
-			if( configuration == null )
-			{
-				throw new ArgumentNullException( nameof( configuration ) );
-			}
-
-			this.reader = new FieldReader( reader, configuration );
-			this.configuration = configuration;
-			this.leaveOpen = leaveOpen;
+			context = (ReadingContext)reader.Context;
 		}
 
 		/// <summary>
@@ -112,7 +86,7 @@ namespace CsvHelper
 		{
 			try
 			{
-				reader.ClearRawRecord();
+				context.ClearCache( Caches.RawRecord );
 
 				var row = ReadLine();
 
@@ -121,7 +95,7 @@ namespace CsvHelper
 			catch( Exception ex )
 			{
 				var csvHelperException = ex as CsvHelperException ?? new CsvParserException( "An unexpected error occurred.", ex );
-				ExceptionHelper.AddExceptionData( csvHelperException, Row, null, null, null, record.ToArray() );
+				ExceptionHelper.AddExceptionData( csvHelperException, context.Row, null, null, null, context.RecordBuilder.ToArray() );
 
 				throw csvHelperException;
 			}
@@ -133,7 +107,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose( !leaveOpen );
+			Dispose( !context.LeaveOpen );
 			GC.SuppressFinalize( this );
 		}
 
@@ -150,11 +124,12 @@ namespace CsvHelper
 
 			if( disposing )
 			{
-				reader?.Dispose();
+				fieldReader?.Dispose();
 			}
 
+			fieldReader = null;
+			context = null;
 			disposed = true;
-			reader = null;
 		}
 
 		/// <summary>
@@ -163,32 +138,32 @@ namespace CsvHelper
 		/// <returns>The CSV line.</returns>
 		protected virtual string[] ReadLine()
 		{
-			record.Clear();
-			currentRow++;
-			currentRawRow++;
+			context.RecordBuilder.Clear();
+			context.Row++;
+			context.RawRow++;
 
 			while( true )
 			{
-				c = reader.GetChar();
+				context.C = fieldReader.GetChar();
 
-				if( c == -1 )
+				if( context.C == -1 )
 				{
 					// We have reached the end of the file.
-					if( record.Length > 0 )
+					if( context.RecordBuilder.Length > 0 )
 					{
 						// There was no line break at the end of the file.
 						// We need to return the last record first.
-						record.Add( reader.GetField() );
-						return record.ToArray();
+						context.RecordBuilder.Add( fieldReader.GetField() );
+						return context.RecordBuilder.ToArray();
 					}
 
 					return null;
 				}
 
-				if( record.Length == 0 && ( ( c == configuration.Comment && configuration.AllowComments ) || c == '\r' || c == '\n' ) )
+				if( context.RecordBuilder.Length == 0 && ( ( context.C == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments ) || context.C == '\r' || context.C == '\n' ) )
 				{
 					ReadBlankLine();
-					if( !configuration.IgnoreBlankLines )
+					if( !context.ParserConfiguration.IgnoreBlankLines )
 					{
 						break;
 					}
@@ -196,7 +171,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( c == configuration.Quote && !configuration.IgnoreQuotes )
+				if( context.C == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
 				{
 					if( ReadQuotedField() )
 					{
@@ -212,7 +187,7 @@ namespace CsvHelper
 				}
 			}
 
-			return record.ToArray();
+			return context.RecordBuilder.ToArray();
 		}
 
 		/// <summary>
@@ -221,21 +196,21 @@ namespace CsvHelper
 		/// </summary>
 		protected virtual void ReadBlankLine()
 		{
-			if( configuration.IgnoreBlankLines )
+			if( context.ParserConfiguration.IgnoreBlankLines )
 			{
-				currentRow++;
+				context.Row++;
 			}
 
 			while( true )
 			{
-				if( c == '\r' || c == '\n' )
+				if( context.C == '\r' || context.C == '\n' )
 				{
 					ReadLineEnding();
-					reader.SetFieldStart();
+					fieldReader.SetFieldStart();
 					return;
 				}
 
-				if( c == -1 )
+				if( context.C == -1 )
 				{
 					return;
 				}
@@ -243,8 +218,8 @@ namespace CsvHelper
 				// If the buffer runs, it appends the current data to the field.
 				// We don't want to capture any data on a blank line, so we
 				// need to set the field start every char.
-				reader.SetFieldStart();
-				c = reader.GetChar();
+				fieldReader.SetFieldStart();
+				context.C = fieldReader.GetChar();
 			}
 		}
 
@@ -254,51 +229,51 @@ namespace CsvHelper
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual bool ReadField()
 		{
-			if( c != configuration.Delimiter[0] && c != '\r' && c != '\n' )
+			if( context.C != context.ParserConfiguration.Delimiter[0] && context.C != '\r' && context.C != '\n' )
 			{
-				c = reader.GetChar();
+				context.C = fieldReader.GetChar();
 			}
 
 			while( true )
 			{
-				if( c == configuration.Quote && !configuration.IgnoreQuotes )
+				if( context.C == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
 				{
-					reader.IsFieldBad = true;
+					context.IsFieldBad = true;
 				}
 
-				if( c == configuration.Delimiter[0] )
+				if( context.C == context.ParserConfiguration.Delimiter[0] )
 				{
-					reader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd( -1 );
 
 					// End of field.
 					if( ReadDelimiter() )
 					{
 						// Set the end of the field to the char before the delimiter.
-						record.Add( reader.GetField() );
+						context.RecordBuilder.Add( fieldReader.GetField() );
 						return false;
 					}
 				}
-				else if( c == '\r' || c == '\n' )
+				else if( context.C == '\r' || context.C == '\n' )
 				{
 					// End of line.
-					reader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd( -1 );
 					var offset = ReadLineEnding();
-					reader.SetRawRecordEnd( offset );
-					record.Add( reader.GetField() );
+					fieldReader.SetRawRecordEnd( offset );
+					context.RecordBuilder.Add( fieldReader.GetField() );
 
-					reader.SetFieldStart( offset );
+					fieldReader.SetFieldStart( offset );
 
 					return true;
 				}
-				else if( c == -1 )
+				else if( context.C == -1 )
 				{
 					// End of file.
-					reader.SetFieldEnd();
-					record.Add( reader.GetField() );
+					fieldReader.SetFieldEnd();
+					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
 				}
 
-				c = reader.GetChar();
+				context.C = fieldReader.GetChar();
 			}
 		}
 
@@ -310,24 +285,24 @@ namespace CsvHelper
 		{
 			var inQuotes = true;
 			// Set the start of the field to after the quote.
-			reader.SetFieldStart();
+			fieldReader.SetFieldStart();
 
 			while( true )
 			{
 				// 1,"2" ,3
 
-				var cPrev = c;
-				c = reader.GetChar();
-				if( c == configuration.Quote )
+				var cPrev = context.C;
+				context.C = fieldReader.GetChar();
+				if( context.C == context.ParserConfiguration.Quote )
 				{
 					inQuotes = !inQuotes;
 
 					if( !inQuotes )
 					{
 						// Add an offset for the quote.
-						reader.SetFieldEnd( -1 );
-						reader.AppendField();
-						reader.SetFieldStart();
+						fieldReader.SetFieldEnd( -1 );
+						fieldReader.AppendField();
+						fieldReader.SetFieldStart();
 					}
 
 					continue;
@@ -335,43 +310,43 @@ namespace CsvHelper
 
 				if( inQuotes )
 				{
-					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
+					if( context.C == '\r' || ( context.C == '\n' && cPrev != '\r' ) )
 					{
 						// Inside a quote \r\n is just another character to absorb.
-						currentRawRow++;
+						context.RawRow++;
 					}
 
-					if( c == -1 )
+					if( context.C == -1 )
 					{
-						reader.SetFieldEnd();
-						record.Add( reader.GetField() );
+						fieldReader.SetFieldEnd();
+						context.RecordBuilder.Add( fieldReader.GetField() );
 						return true;
 					}
 				}
 
 				if( !inQuotes )
 				{
-					if( c == configuration.Delimiter[0] )
+					if( context.C == context.ParserConfiguration.Delimiter[0] )
 					{
-						reader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd( -1 );
 
 						if( ReadDelimiter() )
 						{
 							// Add an extra offset because of the end quote.
-							record.Add( reader.GetField() );
+							context.RecordBuilder.Add( fieldReader.GetField() );
 							return false;
 						}
 					}
-					else if( c == '\r' || c == '\n' )
+					else if( context.C == '\r' || context.C == '\n' )
 					{
-						reader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd( -1 );
 						var offset = ReadLineEnding();
-						reader.SetRawRecordEnd( offset );
-						record.Add( reader.GetField() );
-						reader.SetFieldStart( offset );
+						fieldReader.SetRawRecordEnd( offset );
+						context.RecordBuilder.Add( fieldReader.GetField() );
+						fieldReader.SetFieldStart( offset );
 						return true;
 					}
-					else if( cPrev == configuration.Quote )
+					else if( cPrev == context.ParserConfiguration.Quote )
 					{
 						// We're out of quotes. Read the reset of
 						// the field like a normal field.
@@ -388,20 +363,20 @@ namespace CsvHelper
 		/// chars ended up not being the delimiter.</returns>
 		protected virtual bool ReadDelimiter()
 		{
-			if( c != configuration.Delimiter[0] )
+			if( context.C != context.ParserConfiguration.Delimiter[0] )
 			{
 				throw new InvalidOperationException( "Tried reading a delimiter when the first delimiter char didn't match the current char." );
 			}
 
-			if( configuration.Delimiter.Length == 1 )
+			if( context.ParserConfiguration.Delimiter.Length == 1 )
 			{
 				return true;
 			}
 
-			for( var i = 1; i < configuration.Delimiter.Length; i++ )
+			for( var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++ )
 			{
-				c = reader.GetChar();
-				if( c != configuration.Delimiter[i] )
+				context.C = fieldReader.GetChar();
+				if( context.C != context.ParserConfiguration.Delimiter[i] )
 				{
 					return false;
 				}
@@ -417,10 +392,10 @@ namespace CsvHelper
 		protected virtual int ReadLineEnding()
 		{
 			var fieldStartOffset = 0;
-			if( c == '\r' )
+			if( context.C == '\r' )
 			{
-				c = reader.GetChar();
-				if( c != '\n' && c != -1 )
+				context.C = fieldReader.GetChar();
+				if( context.C != '\n' && context.C != -1 )
 				{
 					// The start needs to be moved back.
 					fieldStartOffset--;

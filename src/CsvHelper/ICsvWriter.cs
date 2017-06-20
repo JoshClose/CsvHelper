@@ -15,11 +15,6 @@ namespace CsvHelper
 	public interface ICsvWriter : ICsvWriterRow, IDisposable
 	{
 		/// <summary>
-		/// Gets the serializer.
-		/// </summary>
-		ICsvSerializer Serializer { get; }
-
-		/// <summary>
 		/// Ends writing of the current record and starts a new record. 
 		/// This needs to be called to serialize the row to the writer.
 		/// </summary>
@@ -30,34 +25,5 @@ namespace CsvHelper
         /// </summary>
         /// <param name="records">The list of records to write.</param>
         void WriteRecords( IEnumerable records );
-
-		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ClearRecordCache{T}"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		/// <typeparam name="T">The record type.</typeparam>
-		void ClearRecordCache<T>();
-
-		/// <summary>
-		/// Clears the record cache for the given type. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ClearRecordCache( Type )"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		/// <param name="type">The record type.</param>
-		void ClearRecordCache( Type type );
-
-		/// <summary>
-		/// Clears the record cache for all types. After <see cref="ICsvWriterRow.WriteRecord{T}"/> is called the
-		/// first time, code is dynamically generated based on the <see cref="CsvPropertyMapCollection"/>,
-		/// compiled, and stored for the given type T. If the <see cref="CsvPropertyMapCollection"/>
-		/// changes, <see cref="ClearRecordCache()"/> needs to be called to update the
-		/// record cache.
-		/// </summary>
-		void ClearRecordCache();
 	}
 }

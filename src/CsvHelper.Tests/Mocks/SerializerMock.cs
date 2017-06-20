@@ -18,16 +18,18 @@ namespace CsvHelper.Tests.Mocks
 
 		public TextWriter TextWriter { get; }
 
-		public ICsvSerializerConfiguration Configuration { get; private set; }
+		public ICsvSerializerConfiguration Configuration { get; }
 
 		public List<string[]> Records
 		{
 			get { return records; }
 		}
 
+		public WritingContext Context { get; }
+
 		public SerializerMock( bool throwExceptionOnWrite = false )
 		{
-			Configuration = new CsvConfiguration();
+			Context = new WritingContext( new StringWriter(), new CsvConfiguration(), false );
 			this.throwExceptionOnWrite = throwExceptionOnWrite;
 		}
 

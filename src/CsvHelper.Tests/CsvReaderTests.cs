@@ -641,14 +641,14 @@ namespace CsvHelper.Tests
 			reader.Configuration.SkipEmptyRecords = true;
 
 			reader.Read();
-			Assert.AreEqual( "1", reader.CurrentRecord[0] );
-			Assert.AreEqual( "2", reader.CurrentRecord[1] );
-			Assert.AreEqual( "3", reader.CurrentRecord[2] );
+			Assert.AreEqual( "1", reader.Context.Record[0] );
+			Assert.AreEqual( "2", reader.Context.Record[1] );
+			Assert.AreEqual( "3", reader.Context.Record[2] );
 
 			reader.Read();
-			Assert.AreEqual( "4", reader.CurrentRecord[0] );
-			Assert.AreEqual( "5", reader.CurrentRecord[1] );
-			Assert.AreEqual( "6", reader.CurrentRecord[2] );
+			Assert.AreEqual( "4", reader.Context.Record[0] );
+			Assert.AreEqual( "5", reader.Context.Record[1] );
+			Assert.AreEqual( "6", reader.Context.Record[2] );
 
 			Assert.IsFalse( reader.Read() );
 		}
@@ -670,14 +670,14 @@ namespace CsvHelper.Tests
 			reader.Configuration.SkipEmptyRecords = true;
 
 			reader.Read();
-			Assert.AreEqual( "1", reader.CurrentRecord[0] );
-			Assert.AreEqual( "2", reader.CurrentRecord[1] );
-			Assert.AreEqual( "3", reader.CurrentRecord[2] );
+			Assert.AreEqual( "1", reader.Context.Record[0] );
+			Assert.AreEqual( "2", reader.Context.Record[1] );
+			Assert.AreEqual( "3", reader.Context.Record[2] );
 
 			reader.Read();
-			Assert.AreEqual( "4", reader.CurrentRecord[0] );
-			Assert.AreEqual( "5", reader.CurrentRecord[1] );
-			Assert.AreEqual( "6", reader.CurrentRecord[2] );
+			Assert.AreEqual( "4", reader.Context.Record[0] );
+			Assert.AreEqual( "5", reader.Context.Record[1] );
+			Assert.AreEqual( "6", reader.Context.Record[2] );
 
 			Assert.IsFalse( reader.Read() );
 		}
@@ -698,14 +698,14 @@ namespace CsvHelper.Tests
 			reader.Configuration.ShouldSkipRecord = row => row[1] == "2";
 
 			reader.Read();
-			Assert.AreEqual( " ", reader.CurrentRecord[0] );
-			Assert.AreEqual( "", reader.CurrentRecord[1] );
-			Assert.AreEqual( "", reader.CurrentRecord[2] );
+			Assert.AreEqual( " ", reader.Context.Record[0] );
+			Assert.AreEqual( "", reader.Context.Record[1] );
+			Assert.AreEqual( "", reader.Context.Record[2] );
 
 			reader.Read();
-			Assert.AreEqual( "4", reader.CurrentRecord[0] );
-			Assert.AreEqual( "5", reader.CurrentRecord[1] );
-			Assert.AreEqual( "6", reader.CurrentRecord[2] );
+			Assert.AreEqual( "4", reader.Context.Record[0] );
+			Assert.AreEqual( "5", reader.Context.Record[1] );
+			Assert.AreEqual( "6", reader.Context.Record[2] );
 
 			Assert.IsFalse( reader.Read() );
 		}
@@ -867,10 +867,10 @@ namespace CsvHelper.Tests
 			csv.Configuration.HasHeaderRecord = false;
 
 			csv.Read();
-			Assert.AreEqual( 1, csv.Row );
+			Assert.AreEqual( 1, csv.Context.Row );
 
 			csv.Read();
-			Assert.AreEqual( 2, csv.Row );
+			Assert.AreEqual( 2, csv.Context.Row );
 		}
 
 		[TestMethod]

@@ -15,19 +15,14 @@ namespace CsvHelper
     public interface ICsvWriterRow
 	{
 		/// <summary>
+		/// Gets the writing context.
+		/// </summary>
+		WritingContext Context { get; }
+
+		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
 		ICsvWriterConfiguration Configuration { get; }
-
-		/// <summary>
-		/// Gets the current row.
-		/// </summary>
-		int Row { get; }
-
-		/// <summary>
-		/// Get the current record;
-		/// </summary>
-		List<string> CurrentRecord { get; }
 
 		/// <summary>
 		/// Writes a field that has already been converted to a

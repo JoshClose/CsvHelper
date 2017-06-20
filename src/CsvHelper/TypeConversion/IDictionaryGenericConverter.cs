@@ -31,14 +31,14 @@ namespace CsvHelper.TypeConversion
 			var dictionary = (IDictionary)ReflectionHelper.CreateInstance( dictionaryType );
 
 			var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-				? row.CurrentRecord.Length - 1
+				? row.Context.Record.Length - 1
 				: propertyMapData.IndexEnd;
 
 			for( var i = propertyMapData.Index; i <= indexEnd; i++ )
 			{
 				var field = row.GetField( valueType, i );
 
-				dictionary.Add( row.FieldHeaders[i], field );
+				dictionary.Add( row.Context.HeaderRecord[i], field );
 			}
 
 			return dictionary;

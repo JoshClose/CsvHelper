@@ -29,9 +29,9 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.IsNotNull( csv.FieldHeaders );
-			Assert.AreEqual( "Id", csv.FieldHeaders[0] );
-			Assert.AreEqual( "Name", csv.FieldHeaders[1] );
+			Assert.IsNotNull( csv.Context.HeaderRecord );
+			Assert.AreEqual( "Id", csv.Context.HeaderRecord[0] );
+			Assert.AreEqual( "Name", csv.Context.HeaderRecord[1] );
 		}
 
 		[TestMethod]
@@ -48,30 +48,8 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.AreEqual( "Id", csv.CurrentRecord[0] );
-			Assert.AreEqual( "Name", csv.CurrentRecord[1] );
-		}
-
-		[TestMethod]
-		public void GettingFieldHeadersFailsWhenHeaderNotReadTest()
-		{
-			var rows = new Queue<string[]>();
-			rows.Enqueue( new[] { "Id", "Name" } );
-			rows.Enqueue( new[] { "1", "One" } );
-			rows.Enqueue( new[] { "2", "two" } );
-			rows.Enqueue( null );
-			var parser = new ParserMock( rows );
-
-			var csv = new CsvReader( parser );
-
-			try
-			{
-				var x = csv.FieldHeaders;
-				Assert.Fail();
-			}
-			catch( CsvReaderException )
-			{
-			}
+			Assert.AreEqual( "Id", csv.Context.Record[0] );
+			Assert.AreEqual( "Name", csv.Context.Record[1] );
 		}
 
 		[TestMethod]

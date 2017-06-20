@@ -16,24 +16,14 @@ namespace CsvHelper
 	public interface ICsvReaderRow
 	{
 		/// <summary>
+		/// Gets the reading context.
+		/// </summary>
+		IReaderContext Context { get; }
+
+		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
 		ICsvReaderConfiguration Configuration { get; }
-
-		/// <summary>
-		/// Gets the field headers.
-		/// </summary>
-		string[] FieldHeaders { get; }
-
-		/// <summary>
-		/// Get the current record;
-		/// </summary>
-		string[] CurrentRecord { get; }
-
-        /// <summary>
-        /// Gets the current row.
-        /// </summary>
-        int Row { get; }
 
 		/// <summary>
 		/// Gets the raw field at position (column) index.

@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 			{
 				// Use the index.
 				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
-					? row.CurrentRecord.Length - 1
+					? row.Context.Record.Length - 1
 					: propertyMapData.IndexEnd;
 
 				var arraySize = indexEnd - propertyMapData.Index + 1;

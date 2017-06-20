@@ -13,20 +13,18 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvSerializer : ICsvSerializer
 	{
-		private readonly bool leaveOpen;
+		private WritingContext context;
 		private bool disposed;
-		private readonly ICsvSerializerConfiguration configuration;
-		private TextWriter writer;
 
 		/// <summary>
-		/// Gets the <see cref="ICsvSerializer.TextWriter"/>.
+		/// Gets the writing context.
 		/// </summary>
-		public virtual TextWriter TextWriter => writer;
+		public virtual WritingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual ICsvSerializerConfiguration Configuration => configuration;
+		public virtual ICsvSerializerConfiguration Configuration => context.SerializerConfiguration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
@@ -47,7 +45,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration ) : this( writer, configuration, false ) { }
+		public CsvSerializer( TextWriter writer, CsvConfiguration configuration ) : this( writer, configuration, false ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
@@ -56,21 +54,9 @@ namespace CsvHelper
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer( TextWriter writer, ICsvSerializerConfiguration configuration, bool leaveOpen )
+		public CsvSerializer( TextWriter writer, CsvConfiguration configuration, bool leaveOpen )
 		{
-			if( writer == null )
-			{
-				throw new ArgumentNullException( nameof( writer ) );
-			}
-
-			if( configuration == null )
-			{
-				throw new ArgumentNullException( nameof( configuration ) );
-			}
-
-			this.writer = writer;
-			this.configuration = configuration;
-			this.leaveOpen = leaveOpen;
+			context = new WritingContext( writer, configuration, leaveOpen );
 		}
 
 		/// <summary>
@@ -83,13 +69,13 @@ namespace CsvHelper
 			{
 				if( i > 0 )
 				{
-					writer.Write( configuration.Delimiter );
+					context.Writer.Write( context.SerializerConfiguration.Delimiter );
 				}
 
-				writer.Write( record[i] );
+				context.Writer.Write( record[i] );
 			}
 
-			writer.WriteLine();
+			context.Writer.WriteLine();
 		}
 
 		/// <summary>
@@ -98,7 +84,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose( !leaveOpen );
+			Dispose( !context.LeaveOpen );
 			GC.SuppressFinalize( this );
 		}
 
@@ -115,11 +101,11 @@ namespace CsvHelper
 
 			if( disposing )
 			{
-				writer?.Dispose();
+				context.Dispose();
 			}
 
+			context = null;
 			disposed = true;
-			writer = null;
 		}
 	}
 }
