@@ -19,6 +19,11 @@ namespace CsvHelper.Configuration
 	public abstract class CsvClassMap
 	{
 		/// <summary>
+		/// The type of the class this map is for.
+		/// </summary>
+		public virtual Type ClassType { get; private set; }
+
+		/// <summary>
 		/// Gets the constructor expression.
 		/// </summary>
 		public virtual Expression Constructor { get; protected set; } 
@@ -36,16 +41,22 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Allow only internal creation of CsvClassMap.
 		/// </summary>
-		internal CsvClassMap() {}
+		/// <param name="classType">The type of the class this map is for.</param>
+		internal CsvClassMap( Type classType )
+		{
+			ClassType = classType;
+		}
 
 		/// <summary>
 		/// Maps a property/field to a CSV field.
 		/// </summary>
+		/// <param name="classType">The type of the class this map is for. This may not be the same type
+		/// as the member.DeclaringType or the current ClassType due to nested property mappings.</param>
 		/// <param name="member">The property/field to map.</param>
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same property/field.</param>
 		/// <returns>The property/field mapping.</returns>
-		public CsvPropertyMap Map( MemberInfo member, bool useExistingMap = true )
+		public CsvPropertyMap Map( Type classType, MemberInfo member, bool useExistingMap = true )
 		{
 			if( useExistingMap )
 			{
@@ -56,7 +67,7 @@ namespace CsvHelper.Configuration
 				}
 			}
 
-			var propertyMap = CsvPropertyMap.CreateGeneric( member );
+			var propertyMap = CsvPropertyMap.CreateGeneric( classType, member );
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
 
@@ -68,9 +79,9 @@ namespace CsvHelper.Configuration
 		/// data that isn't mapped to a class property/field.
 		/// </summary>
 		/// <returns>The property mapping.</returns>
-		public virtual CsvPropertyMap<object> Map()
+		public virtual CsvPropertyMap<object, object> Map()
 		{
-			var propertyMap = new CsvPropertyMap<object>( null );
+			var propertyMap = new CsvPropertyMap<object, object>( null );
 			propertyMap.Data.Index = GetMaxIndex() + 1;
 			PropertyMaps.Add( propertyMap );
 
@@ -266,7 +277,7 @@ namespace CsvHelper.Configuration
 				}
 				else
 				{
-					var propertyMap = CsvPropertyMap.CreateGeneric( member );
+					var propertyMap = CsvPropertyMap.CreateGeneric( map.ClassType, member );
 					// Use global values as the starting point.
 					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), options.TypeConverterOptionsFactory.GetOptions( member.MemberType() ), propertyMap.Data.TypeConverterOptions );
 					propertyMap.Data.Index = map.GetMaxIndex() + 1;

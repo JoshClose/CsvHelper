@@ -98,7 +98,13 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the expression used to convert data in the
 		/// row to the property/field.
 		/// </summary>
-		public virtual Expression ConvertExpression { get; set; }
+		public virtual Expression ReadingConvertExpression { get; set; }
+
+		/// <summary>
+		/// Gets or sets the expression to be used to convert the object
+		/// to a field.
+		/// </summary>
+		public virtual Expression WritingConvertExpression { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyMapData"/> class.

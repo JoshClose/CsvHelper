@@ -1406,10 +1406,10 @@ namespace CsvHelper
 		{
 			foreach( var propertyMap in members )
 			{
-				if( propertyMap.Data.ConvertExpression != null )
+				if( propertyMap.Data.ReadingConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( propertyMap.Data.ConvertExpression, Expression.Constant( this ) );
+					Expression exp = Expression.Invoke( propertyMap.Data.ReadingConvertExpression, Expression.Constant( this ) );
 					exp = Expression.Convert( exp, propertyMap.Data.Member.MemberType() );
 					bindings.Add( Expression.Bind( propertyMap.Data.Member, exp ) );
 					continue;

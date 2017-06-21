@@ -15,14 +15,19 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Maps class properties/fields to CSV fields.
 	/// </summary>
-	/// <typeparam name="T">The <see cref="System.Type"/> of class to map.</typeparam>
-	public abstract class CsvClassMap<T> : CsvClassMap
+	/// <typeparam name="TClass">The <see cref="System.Type"/> of class to map.</typeparam>
+	public abstract class CsvClassMap<TClass> : CsvClassMap
 	{
+		/// <summary>
+		/// Creates an instance of <see cref="CsvClassMap{TClass}"/>.
+		/// </summary>
+		public CsvClassMap() : base( typeof( TClass ) ) { }
+
 		/// <summary>
 		/// Constructs the row object using the given expression.
 		/// </summary>
 		/// <param name="expression">The expression.</param>
-		public virtual void ConstructUsing( Expression<Func<T>> expression )
+		public virtual void ConstructUsing( Expression<Func<TClass>> expression )
 		{
 			if( !( expression.Body is NewExpression ) && !( expression.Body is MemberInitExpression ) )
 			{
@@ -39,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same property/field.</param>
 		/// <returns>The property/field mapping.</returns>
-		public virtual CsvPropertyMap<TProperty> Map<TProperty>( Expression<Func<T, TProperty>> expression, bool useExistingMap = true )
+		public virtual CsvPropertyMap<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
 		{
 			var stack = ReflectionHelper.GetMembers( expression );
 			if( stack.Count == 0 )
@@ -80,7 +85,7 @@ namespace CsvHelper.Configuration
 			// Add the property/field map to the last reference map.
 			member = stack.Pop();
 
-			return (CsvPropertyMap<TProperty>)currentClassMap.Map( member, useExistingMap );
+			return (CsvPropertyMap<TClass, TProperty>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
 		}
 
 		/// <summary>
@@ -90,7 +95,7 @@ namespace CsvHelper.Configuration
 		/// <param name="expression">The expression.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the property/field.</returns>
-		public virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<T, object>> expression, params object[] constructorArgs ) where TClassMap : CsvClassMap
+		public virtual CsvPropertyReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : CsvClassMap
 		{
 			var property = ReflectionHelper.GetMember( expression );
 			return References( typeof( TClassMap ), property, constructorArgs );

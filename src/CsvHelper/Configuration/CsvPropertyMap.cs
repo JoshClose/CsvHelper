@@ -35,9 +35,9 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="member"></param>
 		/// <returns></returns>
-		public static CsvPropertyMap CreateGeneric( MemberInfo member )
+		public static CsvPropertyMap CreateGeneric( Type classType, MemberInfo member )
 		{
-			var propertyMapType = typeof( CsvPropertyMap<> ).MakeGenericType( member.MemberType() );
+			var propertyMapType = typeof( CsvPropertyMap<,> ).MakeGenericType( classType, member.MemberType() );
 			var propertyMap = (CsvPropertyMap)ReflectionHelper.CreateInstance( propertyMapType, member );
 
 			return propertyMap;

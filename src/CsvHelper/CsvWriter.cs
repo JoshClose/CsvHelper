@@ -637,6 +637,15 @@ namespace CsvHelper
 
 			foreach( var propertyMap in properties )
 			{
+				if( propertyMap.Data.WritingConvertExpression != null )
+				{
+					// The user is providing the expression to do the conversion.
+					Expression exp = Expression.Invoke( propertyMap.Data.WritingConvertExpression, recordParameter );
+					exp = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, exp );
+					delegates.Add( Expression.Lambda( typeof( Action<> ).MakeGenericType( type ), exp, recordParameter ).Compile() );
+					continue;
+				}
+
 				if( !CanWrite( propertyMap ) )
 				{
 					continue;

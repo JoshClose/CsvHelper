@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a property/field to a CSV field.
 	/// </summary>
-	public class CsvPropertyMap<T> : CsvPropertyMap
+	public class CsvPropertyMap<TClass, TProperty> : CsvPropertyMap
 	{
 		/// <summary>
 		/// Creates a new <see cref="CsvPropertyMap"/> instance using the specified property/field.
@@ -43,7 +43,7 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		public virtual CsvPropertyMap<T> Name( params string[] names )
+		public virtual CsvPropertyMap<TClass, TProperty> Name( params string[] names )
 		{
 			if( names == null || names.Length == 0 )
 			{
@@ -63,7 +63,7 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		public virtual CsvPropertyMap<T> NameIndex( int index )
+		public virtual CsvPropertyMap<TClass, TProperty> NameIndex( int index )
 		{
 			Data.NameIndex = index;
 
@@ -78,7 +78,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
 		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property/field.</param>
-		public virtual CsvPropertyMap<T> Index( int index, int indexEnd = -1 )
+		public virtual CsvPropertyMap<TClass, TProperty> Index( int index, int indexEnd = -1 )
 		{
 			Data.Index = index;
 			Data.IsIndexSet = true;
@@ -90,7 +90,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Ignore the property/field when reading and writing.
 		/// </summary>
-		public virtual CsvPropertyMap<T> Ignore()
+		public virtual CsvPropertyMap<TClass, TProperty> Ignore()
 		{
 			Data.Ignore = true;
 
@@ -101,7 +101,7 @@ namespace CsvHelper.Configuration
 		/// Ignore the property/field when reading and writing.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
-		public virtual CsvPropertyMap<T> Ignore( bool ignore )
+		public virtual CsvPropertyMap<TClass, TProperty> Ignore( bool ignore )
 		{
 			Data.Ignore = ignore;
 
@@ -113,7 +113,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual CsvPropertyMap<T> Default( T defaultValue )
+		public virtual CsvPropertyMap<TClass, TProperty> Default( TProperty defaultValue )
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -128,7 +128,7 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual CsvPropertyMap<T> Default( string defaultValue )
+		public virtual CsvPropertyMap<TClass, TProperty> Default( string defaultValue )
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -142,7 +142,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual CsvPropertyMap<T> Constant( T constantValue )
+		public virtual CsvPropertyMap<TClass, TProperty> Constant( TProperty constantValue )
 		{
 			Data.Constant = constantValue;
 			Data.IsConstantSet = true;
@@ -155,7 +155,7 @@ namespace CsvHelper.Configuration
 		/// when converting the property/field to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		public virtual CsvPropertyMap<T> TypeConverter( ITypeConverter typeConverter )
+		public virtual CsvPropertyMap<TClass, TProperty> TypeConverter( ITypeConverter typeConverter )
 		{
 			Data.TypeConverter = typeConverter;
 
@@ -168,7 +168,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
-		public virtual CsvPropertyMap<T> TypeConverter<TConverter>() where TConverter : ITypeConverter
+		public virtual CsvPropertyMap<TClass, TProperty> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
 			TypeConverter( ReflectionHelper.CreateInstance<TConverter>() );
 
@@ -180,9 +180,21 @@ namespace CsvHelper.Configuration
 		/// row to the property/field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual CsvPropertyMap<T> ConvertUsing( Func<ICsvReaderRow, T> convertExpression )
+		public virtual CsvPropertyMap<TClass, TProperty> ConvertUsing( Func<ICsvReaderRow, TProperty> convertExpression )
 		{
-			Data.ConvertExpression = (Expression<Func<ICsvReaderRow, T>>)( x => convertExpression( x ) );
+			Data.ReadingConvertExpression = (Expression<Func<ICsvReaderRow, TProperty>>)( x => convertExpression( x ) );
+
+			return this;
+		}
+
+		/// <summary>
+		/// Specifies an expression to be used to convert the object
+		/// to a field.
+		/// </summary>
+		/// <param name="convertExpression">The convert expression.</param>
+		public virtual CsvPropertyMap<TClass, TProperty> ConvertUsing( Func<TClass, string> convertExpression )
+		{
+			Data.WritingConvertExpression = (Expression<Func<TClass, string>>)( x => convertExpression( x ) );
 
 			return this;
 		}
