@@ -103,7 +103,7 @@ namespace CsvHelper
 
 			if( context.IsFieldBad && context.ParserConfiguration.ThrowOnBadData )
 			{
-				throw new CsvBadDataException( $"Field: '{context.Field}'" );
+				throw new CsvBadDataException( context, $"Field: '{context.Field}'" );
 			}
 
 			if( context.IsFieldBad )

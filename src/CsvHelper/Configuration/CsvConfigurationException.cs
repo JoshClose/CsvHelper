@@ -14,14 +14,14 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfigurationException"/> class.
 		/// </summary>
-		public CsvConfigurationException() {}
+		public CsvConfigurationException() { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfigurationException"/> class
 		/// with a specified error message.
 		/// </summary>
 		/// <param name="message">The message that describes the error.</param>
-		public CsvConfigurationException( string message ) : base( message ) {}
+		public CsvConfigurationException( string message ) : base( message ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfigurationException"/> class

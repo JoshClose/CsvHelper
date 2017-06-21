@@ -45,7 +45,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public virtual object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			throw new CsvTypeConverterException( "The conversion cannot be performed." );
+			throw new CsvTypeConverterException( (ReadingContext)row.Context, "The conversion cannot be performed." );
 		}
 	}
 }

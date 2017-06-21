@@ -7,6 +7,7 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -40,6 +41,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
+			var mockRow = new Mock<ICsvReaderRow>();
+
 			Assert.IsTrue( (bool)converter.ConvertFromString( "true", null, propertyMapData ) );
 			Assert.IsTrue( (bool)converter.ConvertFromString( "True", null, propertyMapData ) );
 			Assert.IsTrue( (bool)converter.ConvertFromString( "TRUE", null, propertyMapData ) );
@@ -67,7 +70,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				converter.ConvertFromString( null, null, propertyMapData );
+				converter.ConvertFromString( null, mockRow.Object, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )

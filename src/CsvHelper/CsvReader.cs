@@ -76,12 +76,7 @@ namespace CsvHelper
 		public CsvReader( ICsvParser parser )
 		{
 			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
-			if( !( this.parser.Context is IReaderContext ) )
-			{
-				throw new InvalidOperationException( "For ICsvParser to be used in CsvReader, ICSvParser.Context must also implement IReaderContext." );
-			}
-
-			context = (ReadingContext)parser.Context;
+			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( "For ICsvParser to be used in CsvReader, ICSvParser.Context must also implement IReaderContext." );
 		}
 
 		/// <summary>
@@ -92,7 +87,7 @@ namespace CsvHelper
 		{
 			if( !context.ReaderConfiguration.HasHeaderRecord )
 			{
-				throw new CsvReaderException( "Configuration.HasHeaderRecord is false." );
+				throw new CsvReaderException( context, "Configuration.HasHeaderRecord is false." );
 			}
 
 			context.HeaderRecord = context.Record;
@@ -123,8 +118,7 @@ namespace CsvHelper
 			{
 				if( context.ColumnCount > 0 && context.ColumnCount != context.Record.Length )
 				{
-					var csvException = new CsvBadDataException( "An inconsistent number of columns has been detected." );
-					ExceptionHelper.AddExceptionData( csvException, context.Row, null, context.CurrentIndex, context.NamedIndexes, context.Record );
+					var csvException = new CsvBadDataException( context, "An inconsistent number of columns has been detected." );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -206,10 +200,7 @@ namespace CsvHelper
 			{
 				if( context.ReaderConfiguration.WillThrowOnMissingField && context.ReaderConfiguration.IgnoreBlankLines )
 				{
-					var ex = new CsvMissingFieldException( $"Field at index '{index}' does not exist." );
-					ExceptionHelper.AddExceptionData( ex, context.Row, null, index, context.NamedIndexes, context.Record );
-
-					throw ex;
+					throw new CsvMissingFieldException( context, $"Field at index '{index}' does not exist." );
 				}
 
 				return default( string );
@@ -430,10 +421,8 @@ namespace CsvHelper
 			{
 				if( context.ReaderConfiguration.WillThrowOnMissingField )
 				{
-					var ex = new CsvMissingFieldException( $"Field at index '{index}' does not exist." );
-					ExceptionHelper.AddExceptionData( ex, context.Row, typeof( T ), index, context.NamedIndexes, context.Record );
-
-					throw ex;
+					context.CurrentIndex = index;
+					throw new CsvMissingFieldException( context, $"Field at index '{index}' does not exist." );
 				}
 
 				return default( T );
@@ -874,10 +863,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
-				ExceptionHelper.AddExceptionData( csvHelperException, context.Row, typeof( T ), context.CurrentIndex, context.NamedIndexes, context.Record );
-
-				throw csvHelperException;
+				throw ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
 			}
 
 			return record;
@@ -909,9 +895,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
-				ExceptionHelper.AddExceptionData( csvHelperException, context.Row, type, context.CurrentIndex, context.NamedIndexes, context.Record );
-
+				var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
 				throw csvHelperException;
 			}
 
@@ -949,8 +933,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
-					ExceptionHelper.AddExceptionData( csvHelperException, context.Row, typeof( T ), context.CurrentIndex, context.NamedIndexes, context.Record );
+					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -997,8 +980,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( "An unexpected error occurred.", ex );
-					ExceptionHelper.AddExceptionData( csvHelperException, context.Row, type, context.CurrentIndex, context.NamedIndexes, context.Record );
+					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -1053,7 +1035,7 @@ namespace CsvHelper
 		{
 			if( !context.HasBeenRead )
 			{
-				throw new CsvReaderException( "You must call read on the reader before accessing its data." );
+				throw new CsvReaderException( context, "You must call read on the reader before accessing its data." );
 			}
 		}
 
@@ -1128,7 +1110,7 @@ namespace CsvHelper
 
 			if( !context.ReaderConfiguration.HasHeaderRecord )
 			{
-				throw new CsvReaderException( "There is no header record to determine the index by name." );
+				throw new CsvReaderException( context, "There is no header record to determine the index by name." );
 			}
 
             // Caching the named index speeds up mappings that use ConvertUsing tremendously.
@@ -1160,10 +1142,7 @@ namespace CsvHelper
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
 					var namesJoined = $"'{string.Join( "', '", names )}'";
-					var ex = new CsvMissingFieldException( $"Fields {namesJoined} do not exist in the CSV file." );
-					ExceptionHelper.AddExceptionData( ex, context.Row, null, context.CurrentIndex, context.NamedIndexes, context.Record );
-
-					throw ex;
+					throw new CsvMissingFieldException( context, $"Fields {namesJoined} do not exist in the CSV file." );
 				}
 
 				return -1;
@@ -1181,7 +1160,7 @@ namespace CsvHelper
 		{
 			if( context.HeaderRecord == null )
 			{
-				throw new CsvReaderException( "No header record was found." );
+				throw new CsvReaderException( context, "No header record was found." );
 			}
 
 			for( var i = 0; i < context.HeaderRecord.Length; i++ )
@@ -1327,7 +1306,7 @@ namespace CsvHelper
 
 			if( bindings.Count == 0 )
 			{
-				throw new CsvReaderException( $"No properties are mapped for type '{recordType.FullName}'." );
+				throw new CsvReaderException( context, $"No properties are mapped for type '{recordType.FullName}'." );
 			}
 
 			Expression body;

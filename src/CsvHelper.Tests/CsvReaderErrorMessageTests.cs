@@ -45,8 +45,8 @@ namespace CsvHelper.Tests
                 }
                 catch (CsvTypeConverterException ex)
                 {
-	                Assert.AreEqual( 1, ex.Row );
-	                Assert.AreEqual( 0, ex.FieldIndex );
+	                Assert.AreEqual( 1, ex.ReadingContext.Row );
+	                Assert.AreEqual( 0, ex.ReadingContext.CurrentIndex );
                 }
             }
         }
@@ -74,8 +74,8 @@ namespace CsvHelper.Tests
                 }
                 catch (CsvTypeConverterException ex)
                 {
-	                Assert.AreEqual( 3, ex.Row );
-	                Assert.AreEqual( 0, ex.FieldIndex );
+	                Assert.AreEqual( 3, ex.ReadingContext.Row );
+	                Assert.AreEqual( 0, ex.ReadingContext.CurrentIndex );
                 }
             }
         }
@@ -105,8 +105,8 @@ namespace CsvHelper.Tests
 	            }
 	            catch( CsvTypeConverterException ex )
 	            {
-		            Assert.AreEqual( 4, ex.Row );
-		            Assert.AreEqual( 0, ex.FieldIndex );
+		            Assert.AreEqual( 4, ex.ReadingContext.Row );
+		            Assert.AreEqual( 0, ex.ReadingContext.CurrentIndex );
 	            }
             }
         }
@@ -134,8 +134,8 @@ namespace CsvHelper.Tests
                 }
                 catch (CsvTypeConverterException ex)
                 {
-					Assert.AreEqual( 3, ex.Row );
-					Assert.AreEqual( 0, ex.FieldIndex );
+					Assert.AreEqual( 3, ex.ReadingContext.Row );
+					Assert.AreEqual( 0, ex.ReadingContext.CurrentIndex );
 				}
 			}
         }
@@ -162,8 +162,8 @@ namespace CsvHelper.Tests
                 }
                 catch (CsvTypeConverterException ex)
                 {
-					Assert.AreEqual( 2, ex.Row );
-					Assert.AreEqual( 1, ex.FieldIndex );
+					Assert.AreEqual( 2, ex.ReadingContext.Row );
+					Assert.AreEqual( 1, ex.ReadingContext.CurrentIndex );
 				}
 			}
         }

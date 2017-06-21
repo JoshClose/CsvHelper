@@ -14,22 +14,49 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class.
 		/// </summary>
-		public CsvTypeConverterException() {}
+		/// <param name="context">The reading context.</param>
+		public CsvTypeConverterException( ReadingContext context ) : base( context ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class.
+		/// </summary>
+		/// <param name="context">The writing context.</param>
+		public CsvTypeConverterException( WritingContext context ) : base( context ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class
 		/// with a specified error message.
 		/// </summary>
+		/// <param name="context">The reading context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public CsvTypeConverterException( string message ) : base( message ) {}
+		public CsvTypeConverterException( ReadingContext context, string message ) : base( context, message ) {}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class
+		/// with a specified error message.
+		/// </summary>
+		/// <param name="context">The writing context.</param>
+		/// <param name="message">The message that describes the error.</param>
+		public CsvTypeConverterException( WritingContext context, string message ) : base( context, message ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class
 		/// with a specified error message and a reference to the inner exception that 
 		/// is the cause of this exception.
 		/// </summary>
+		/// <param name="context">The reading context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public CsvTypeConverterException( string message, Exception innerException ) : base( message, innerException ) { }
+		public CsvTypeConverterException( ReadingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvTypeConverterException"/> class
+		/// with a specified error message and a reference to the inner exception that 
+		/// is the cause of this exception.
+		/// </summary>
+		/// <param name="context">The writing context.</param>
+		/// <param name="message">The error message that explains the reason for the exception.</param>
+		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+		public CsvTypeConverterException( WritingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
 	}
 }

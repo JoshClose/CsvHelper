@@ -228,9 +228,7 @@ namespace CsvHelper
 	        }
 	        catch( Exception ex )
 	        {
-	            var csvHelperException = ex as CsvHelperException ?? new CsvWriterException( "An unexpected error occurred.", ex );
-	            ExceptionHelper.AddExceptionData( csvHelperException, context.Row, null, null, null, context.Record.ToArray() );
-	            throw csvHelperException;
+				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
 	        }
 		}
 
@@ -265,17 +263,17 @@ namespace CsvHelper
 
 			if( !context.WriterConfiguration.HasHeaderRecord )
 			{
-				throw new CsvWriterException( "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
+				throw new CsvWriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
 			}
 
 			if( context.HasHeaderBeenWritten )
 			{
-				throw new CsvWriterException( "The header record has already been written. You can't write it more than once." );
+				throw new CsvWriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
 			if( context.HasHeaderBeenWritten )
 			{
-				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
+				throw new CsvWriterException( context, "Records have already been written. You can't write the header after writing records has started." );
 			}
 
 			if( type == typeof( object ) )
@@ -326,17 +324,17 @@ namespace CsvHelper
 
 			if( !context.WriterConfiguration.HasHeaderRecord )
 			{
-				throw new CsvWriterException( "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
+				throw new CsvWriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
 			}
 
 			if( context.HasHeaderBeenWritten )
 			{
-				throw new CsvWriterException( "The header record has already been written. You can't write it more than once." );
+				throw new CsvWriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
 			if( context.HasHeaderBeenWritten )
 			{
-				throw new CsvWriterException( "Records have already been written. You can't write the header after writing records has started." );
+				throw new CsvWriterException( context, "Records have already been written. You can't write the header after writing records has started." );
 			}
 
 			var metaObject = record.GetMetaObject( Expression.Constant( record ) );
@@ -373,10 +371,7 @@ namespace CsvHelper
             }
             catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvWriterException( "An unexpected error occurred.", ex );
-				ExceptionHelper.AddExceptionData( csvHelperException, context.Row, record.GetType(), null, null, context.Record.ToArray() );
-
-				throw csvHelperException;
+				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
 			}
 		}
 
@@ -445,10 +440,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvWriterException( "An unexpected error occurred.", ex );
-				ExceptionHelper.AddExceptionData( csvHelperException, context.Row, recordType, null, null, context.Record.ToArray() );
-
-				throw csvHelperException;
+				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
 			}
 		}
 
@@ -638,7 +630,7 @@ namespace CsvHelper
 
 			if( properties.Count == 0 )
 			{
-				throw new CsvWriterException( $"No properties are mapped for type '{type.FullName}'." );
+				throw new CsvWriterException( context, $"No properties are mapped for type '{type.FullName}'." );
 			}
 
 			var delegates = new List<Delegate>();

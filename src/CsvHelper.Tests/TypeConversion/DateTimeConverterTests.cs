@@ -7,6 +7,7 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -41,6 +42,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
+			var mockRow = new Mock<ICsvReaderRow>();
+
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
@@ -51,7 +54,7 @@ namespace CsvHelper.Tests.TypeConversion
 			// Invalid conversions.
 			try
 			{
-				converter.ConvertFromString( null, null, propertyMapData );
+				converter.ConvertFromString( null, mockRow.Object, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException )
@@ -69,6 +72,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
+			var mockRow = new Mock<ICsvReaderRow>();
+
 			try
 			{
 				cmConverter.ConvertFromString( null );
@@ -78,7 +83,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				converter.ConvertFromString( null, null, propertyMapData );
+				converter.ConvertFromString( null, mockRow.Object, propertyMapData );
 				Assert.Fail();
 			}
 			catch( CsvTypeConverterException ) { }
@@ -92,7 +97,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			try
 			{
-				converter.ConvertFromString( "blah", null, propertyMapData );
+				converter.ConvertFromString( "blah", mockRow.Object, propertyMapData );
 			}
 			catch( FormatException ){}
 		}

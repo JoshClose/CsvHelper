@@ -66,16 +66,11 @@ namespace CsvHelper
 		/// <summary>
 		/// Creates a new parser using the given <see cref="FieldReader"/>.
 		/// </summary>
-		/// <param name="reader">The field reader.</param>
-		public CsvParser( IFieldReader reader )
+		/// <param name="fieldReader">The field reader.</param>
+		public CsvParser( IFieldReader fieldReader )
 		{
-			fieldReader = reader ?? throw new ArgumentNullException( nameof( reader ) );
-			if( !( fieldReader.Context is IParserContext ) )
-			{
-				throw new InvalidOperationException( "For FieldReader to be used in CsvParser, FieldReader.Context must also implement IParserContext." );
-			}
-
-			context = (ReadingContext)reader.Context;
+			this.fieldReader = fieldReader ?? throw new ArgumentNullException( nameof( fieldReader ) );
+			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException( "For FieldReader to be used in CsvParser, FieldReader.Context must also implement IParserContext." );
 		}
 
 		/// <summary>
@@ -94,10 +89,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvParserException( "An unexpected error occurred.", ex );
-				ExceptionHelper.AddExceptionData( csvHelperException, context.Row, null, null, null, context.RecordBuilder.ToArray() );
-
-				throw csvHelperException;
+				throw ex as CsvHelperException ?? new CsvParserException( context, "An unexpected error occurred.", ex );
 			}
 		}
 

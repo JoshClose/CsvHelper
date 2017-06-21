@@ -26,9 +26,10 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
 		{
-			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field. " +
-			                                     "If you want to do this, create your own ITypeConverter and register " +
-												 "it in the TypeConverterFactory by calling AddConverter." );
+			var message = "Converting IEnumerable types is not supported for a single field. " +
+						  "If you want to do this, create your own ITypeConverter and register " +
+						  "it in the TypeConverterFactory by calling AddConverter.";
+			throw new CsvTypeConverterException( (ReadingContext)row.Context, message );
 		}
 
 		/// <summary>
@@ -40,9 +41,10 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The string representation of the object.</returns>
 		public override string ConvertToString( object value, ICsvWriterRow row, CsvPropertyMapData propertyMapData )
 		{
-			throw new CsvTypeConverterException( "Converting IEnumerable types is not supported for a single field. " +
-												 "If you want to do this, create your own ITypeConverter and register " +
-												 "it in the TypeConverterFactory by calling AddConverter." );
+			var message = "Converting IEnumerable types is not supported for a single field. " +
+						  "If you want to do this, create your own ITypeConverter and register " +
+						  "it in the TypeConverterFactory by calling AddConverter.";
+			throw new CsvTypeConverterException( (WritingContext)row.Context, message );
 		}
 	}
 }
