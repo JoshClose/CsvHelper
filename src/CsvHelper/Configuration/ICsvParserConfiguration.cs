@@ -43,7 +43,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets a method that gets called when bad
 		/// data is detected.
 		/// </summary>
-		Action<string> BadDataCallback { get; set; }
+		Action<ReadingContext> BadDataCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the character used to denote

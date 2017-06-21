@@ -108,7 +108,7 @@ namespace CsvHelper
 
 			if( context.IsFieldBad )
 			{
-				context.ParserConfiguration.BadDataCallback?.Invoke( context.Field );
+				context.ParserConfiguration.BadDataCallback?.Invoke( context );
 			}
 
 			context.IsFieldBad = false;

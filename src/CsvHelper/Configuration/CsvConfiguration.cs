@@ -320,7 +320,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets a method that gets called when bad
 		/// data is detected.
 		/// </summary>
-		public virtual Action<string> BadDataCallback { get; set; }
+		public virtual Action<ReadingContext> BadDataCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether
