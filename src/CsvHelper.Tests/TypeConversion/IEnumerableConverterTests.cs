@@ -198,6 +198,31 @@ namespace CsvHelper.Tests.TypeConversion
 		}
 
 		[TestMethod]
+		public void FullWriteWithHeaderAutoMapTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<Test>
+				{
+					new Test { List = new List<int> { 1, 2, 3 } }
+				};
+				csv.WriteRecords( list );
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+				var expected = new StringBuilder();
+				expected.AppendLine( "Before,After" );
+				expected.AppendLine( "," );
+
+				Assert.AreEqual( expected.ToString(), result );
+			}
+		}
+
+		[TestMethod]
 		public void ReadNullValuesNameTest()
 		{
 			using( var stream = new MemoryStream() )

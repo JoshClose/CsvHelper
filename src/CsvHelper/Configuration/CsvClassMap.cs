@@ -18,6 +18,17 @@ namespace CsvHelper.Configuration
 	///</summary>
 	public abstract class CsvClassMap
 	{
+		private static readonly List<Type> enumerableConverters = new List<Type>
+		{
+			typeof( ArrayConverter ),
+			typeof( CollectionGenericConverter ),
+			typeof( EnumerableConverter ),
+			typeof( IDictionaryConverter ),
+			typeof( IDictionaryGenericConverter ),
+			typeof( IEnumerableConverter ),
+			typeof( IEnumerableGenericConverter )
+		};
+
 		/// <summary>
 		/// The type of the class this map is for.
 		/// </summary>
@@ -231,9 +242,9 @@ namespace CsvHelper.Configuration
 			{
 				var typeConverterType = TypeConverterFactory.GetConverter( member.MemberType() ).GetType();
 
-				if( typeConverterType == typeof( EnumerableConverter ) )
+				if( options.HasHeaderRecord && enumerableConverters.Contains( typeConverterType ) )
 				{
-					// The IEnumerable converter just throws an exception so skip it.
+					// Enumerable converters can't write the header properly, so skip it.
 					continue;
 				}
 

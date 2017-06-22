@@ -35,6 +35,11 @@ namespace CsvHelper.Configuration
 		public bool IncludePrivateProperties { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if the CSV file has a header record.
+		/// </summary>
+		public bool HasHeaderRecord { get; set; }
+
+		/// <summary>
 		/// Gets or sets the member types that are used when auto mapping.
 		/// MemberTypes are flags, so you can choose more than one.
 		/// Default is Properties.
@@ -60,6 +65,7 @@ namespace CsvHelper.Configuration
 		    IgnoreReferences = configuration.IgnoreReferences;
 		    PrefixReferenceHeaders = configuration.PrefixReferenceHeaders;
 		    IncludePrivateProperties = configuration.IncludePrivateMembers;
+			HasHeaderRecord = configuration.HasHeaderRecord;
 		    MemberTypes = configuration.MemberTypes;
 			TypeConverterOptionsFactory = configuration.TypeConverterOptionsFactory;
 	    }
