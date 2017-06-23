@@ -24,7 +24,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var config = new CsvConfiguration { HasHeaderRecord = false };
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
-			var rowMock = new Mock<ICsvReaderRow>();
+			var rowMock = new Mock<IReaderRow>();
 			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
 			{
 				Record = currentRecord
@@ -52,7 +52,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertWithIndexEndTest()
 		{
 			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
+			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
 			{

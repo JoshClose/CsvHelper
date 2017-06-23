@@ -21,10 +21,10 @@ namespace CsvHelper.TypeConversion
 		/// Throws an exception.
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			var message = "Converting IEnumerable types is not supported for a single field. " +
 						  "If you want to do this, create your own ITypeConverter and register " +
@@ -36,10 +36,10 @@ namespace CsvHelper.TypeConversion
 		/// Throws an exception.
 		/// </summary>
 		/// <param name="value">The object to convert to a string.</param>
-		/// <param name="row">The <see cref="ICsvWriterRow"/> for the current record.</param>
+		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, ICsvWriterRow row, CsvPropertyMapData propertyMapData )
+		public override string ConvertToString( object value, IWriterRow row, CsvPropertyMapData propertyMapData )
 		{
 			var message = "Converting IEnumerable types is not supported for a single field. " +
 						  "If you want to do this, create your own ITypeConverter and register " +

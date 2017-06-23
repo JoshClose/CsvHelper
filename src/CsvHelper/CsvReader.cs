@@ -17,13 +17,13 @@ using System.Dynamic;
 namespace CsvHelper
 {
 	/// <summary>
-	/// Reads data that was parsed from <see cref="ICsvParser" />.
+	/// Reads data that was parsed from <see cref="IParser" />.
 	/// </summary>
-	public class CsvReader : ICsvReader
+	public class CsvReader : IReader
 	{
 		private ReadingContext context;
 		private bool disposed;
-		private ICsvParser parser;
+		private IParser parser;
 
 		/// <summary>
 		/// Gets the reading context.
@@ -38,7 +38,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the parser.
 		/// </summary>
-		public virtual ICsvParser Parser => parser;
+		public virtual IParser Parser => parser;
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
@@ -70,10 +70,10 @@ namespace CsvHelper
 		public CsvReader( TextReader reader, CsvConfiguration configuration, bool leaveOpen ) : this( new CsvParser( reader, configuration, leaveOpen ) ) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="ICsvParser" />.
+		/// Creates a new CSV reader using the given <see cref="IParser" />.
 		/// </summary>
-		/// <param name="parser">The <see cref="ICsvParser" /> used to parse the CSV file.</param>
-		public CsvReader( ICsvParser parser )
+		/// <param name="parser">The <see cref="IParser" /> used to parse the CSV file.</param>
+		public CsvReader( IParser parser )
 		{
 			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
 			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( "For ICsvParser to be used in CsvReader, ICSvParser.Context must also implement IReaderContext." );
@@ -1337,7 +1337,7 @@ namespace CsvHelper
 		/// <param name="recordType">The type of the primitive to create the function for.</param>
 		protected virtual void CreateFuncForPrimitive( Type recordType )
 		{
-			var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
+			var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
 
 			var propertyMapData = new CsvPropertyMapData( null )
@@ -1444,7 +1444,7 @@ namespace CsvHelper
 				}
 
 				// Get the field using the field index.
-				var method = typeof( ICsvReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
+				var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 				Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
 
 				// Convert the field.

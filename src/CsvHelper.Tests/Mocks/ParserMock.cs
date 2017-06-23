@@ -11,7 +11,7 @@ using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests.Mocks
 {
-	public class ParserMock : ICsvParser, IEnumerable<string[]>
+	public class ParserMock : IParser, IEnumerable<string[]>
 	{
 		private readonly Queue<string[]> rows;
 		private ReadingContext context;

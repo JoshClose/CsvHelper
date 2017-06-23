@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ReadConvertNoIndexEndTest()
 		{
 			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
+			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
 			{
@@ -51,7 +51,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ReadConvertWithIndexEndTest()
 		{
 			var config = new CsvConfiguration { HasHeaderRecord = false };
-			var rowMock = new Mock<ICsvReaderRow>();
+			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
 			{
@@ -79,7 +79,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteConvertTest()
 		{
-			var rowMock = new Mock<ICsvWriterRow>();
+			var rowMock = new Mock<IWriterRow>();
 			var list = new List<string>();
 			rowMock.Setup( m => m.WriteField( It.IsAny<string>() ) ).Callback<string>( s => list.Add( s ) );
 

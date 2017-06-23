@@ -25,11 +25,11 @@ namespace CsvHelper
 	/// <summary>
 	/// Used to write CSV files.
 	/// </summary>
-	public class CsvWriter : ICsvWriter
+	public class CsvWriter : IWriter
 	{
 		private WritingContext context;
 		private bool disposed;
-		private ICsvSerializer serializer;
+		private ISerializer serializer;
 
 		/// <summary>
 		/// Gets the writing context.
@@ -62,10 +62,10 @@ namespace CsvHelper
 		public CsvWriter( TextWriter writer, CsvConfiguration configuration ) : this( new CsvSerializer( writer, configuration, false ) ) { }
 
 		/// <summary>
-		/// Creates a new CSV writer using the given <see cref="ICsvSerializer"/>.
+		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
 		/// </summary>
 		/// <param name="serializer">The serializer.</param>
-		public CsvWriter( ICsvSerializer serializer )
+		public CsvWriter( ISerializer serializer )
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
 			if( !( this.serializer.Context is IWriterContext ) )
@@ -99,7 +99,7 @@ namespace CsvHelper
 		/// Writes the field to the CSV file. The field
 		/// may get quotes added to it.
 		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// <see cref="IWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
@@ -136,7 +136,7 @@ namespace CsvHelper
 		/// and just quote based on the shouldQuote
 		/// parameter.
 		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// <see cref="IWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
@@ -160,7 +160,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the field to the CSV file.
 		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// <see cref="IWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>
@@ -175,7 +175,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the field to the CSV file.
 		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// <see cref="IWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>
@@ -202,7 +202,7 @@ namespace CsvHelper
 		/// Writes the field to the CSV file
 		/// using the given <see cref="ITypeConverter"/>.
 		/// When all fields are written for a record,
-		/// <see cref="ICsvWriter.NextRecord" /> must be called
+		/// <see cref="IWriter.NextRecord" /> must be called
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <typeparam name="T">The type of the field.</typeparam>

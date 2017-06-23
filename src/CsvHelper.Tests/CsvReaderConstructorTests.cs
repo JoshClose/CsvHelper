@@ -50,7 +50,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private class TestParser : ICsvParser
+		private class TestParser : IParser
 		{
 			private ReadingContext context;
 

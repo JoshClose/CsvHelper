@@ -2,35 +2,31 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System.Collections.Generic;
+using System;
 using System.IO;
+using CsvHelper.Configuration;
 
 namespace CsvHelper
 {
 	/// <summary>
-	/// Defines context information used by the <see cref="IWriter"/>.
+	/// Defines methods used to serialize data into a CSV file.
 	/// </summary>
-	public interface IWriterContext
-    {
+	public interface ISerializer : IDisposable
+	{
 		/// <summary>
-		/// Gets a value indicating if the header has been written.
+		/// Gets the writing context.
 		/// </summary>
-		bool HasHeaderBeenWritten { get; }
+		WritingContext Context { get; }
 
 		/// <summary>
-		/// Get the current record;
+		/// Gets the configuration.
 		/// </summary>
-		List<string> Record { get; }
+		ICsvSerializerConfiguration Configuration { get; }
 
 		/// <summary>
-		/// Gets the current row.
+		/// Writes a record to the CSV file.
 		/// </summary>
-		int Row { get; }
-
-		/// <summary>
-		/// Gets a value indicating if the <see cref="TextReader"/>
-		/// should be left open when disposing.
-		/// </summary>
-		bool LeaveOpen { get; }
+		/// <param name="record">The record to write.</param>
+		void Write( string[] record );
 	}
 }

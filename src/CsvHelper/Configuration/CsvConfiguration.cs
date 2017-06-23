@@ -335,7 +335,7 @@ namespace CsvHelper.Configuration
 		/// exception occurs. This will only happen when
 		/// <see cref="IgnoreReadingExceptions"/> is true.
 		/// </summary>
-		public virtual Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
+		public virtual Action<CsvHelperException, IReader> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Builds the values for the RequiredQuoteChars property.

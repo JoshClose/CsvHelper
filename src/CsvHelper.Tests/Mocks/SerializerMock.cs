@@ -11,7 +11,7 @@ using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests.Mocks
 {
-	public class SerializerMock : ICsvSerializer
+	public class SerializerMock : ISerializer
 	{
 		private readonly List<string[]> records = new List<string[]>();
 		private readonly bool throwExceptionOnWrite;

@@ -32,7 +32,7 @@ namespace CsvHelper.Tests
 
 		private class MyCsvReader : CsvReader
 		{
-			public MyCsvReader( ICsvParser parser ) : base( parser ){}
+			public MyCsvReader( IParser parser ) : base( parser ){}
 		}
 
 		private class Test

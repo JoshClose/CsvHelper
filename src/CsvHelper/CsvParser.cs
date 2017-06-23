@@ -14,7 +14,7 @@ namespace CsvHelper
 	/// <summary>
 	/// Parses a CSV file.
 	/// </summary>
-	public class CsvParser : ICsvParser
+	public class CsvParser : IParser
 	{
 		private ReadingContext context;
 		private IFieldReader fieldReader;
@@ -39,21 +39,21 @@ namespace CsvHelper
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
-		public CsvParser( TextReader reader ) : this( new FieldReader( reader, new CsvConfiguration(), false ) ) { }
+		public CsvParser( TextReader reader ) : this( new CsvFieldReader( reader, new CsvConfiguration(), false ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, bool leaveOpen ) : this( new FieldReader( reader, new CsvConfiguration(), false ) ) { }
+		public CsvParser( TextReader reader, bool leaveOpen ) : this( new CsvFieldReader( reader, new CsvConfiguration(), false ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser( TextReader reader, CsvConfiguration configuration ) : this( new FieldReader( reader, configuration, false ) ) { }
+		public CsvParser( TextReader reader, CsvConfiguration configuration ) : this( new CsvFieldReader( reader, configuration, false ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
@@ -61,7 +61,7 @@ namespace CsvHelper
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, CsvConfiguration configuration, bool leaveOpen ) : this( new FieldReader( reader, configuration, leaveOpen ) ) { }
+		public CsvParser( TextReader reader, CsvConfiguration configuration, bool leaveOpen ) : this( new CsvFieldReader( reader, configuration, leaveOpen ) ) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="FieldReader"/>.

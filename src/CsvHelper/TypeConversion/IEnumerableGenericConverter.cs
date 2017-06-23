@@ -20,10 +20,10 @@ namespace CsvHelper.TypeConversion
 		/// Converts the string to an object.
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			var type = propertyMapData.Member.MemberType().GetGenericArguments()[0];
 			var listType = typeof( List<> );

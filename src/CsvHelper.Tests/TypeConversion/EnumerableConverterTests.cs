@@ -25,8 +25,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var mockReaderRow = new Mock<ICsvReaderRow>();
-			var mockWriterRow = new Mock<ICsvWriterRow>();
+			var mockReaderRow = new Mock<IReaderRow>();
+			var mockWriterRow = new Mock<IWriterRow>();
 
 			try
 			{

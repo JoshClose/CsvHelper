@@ -9,7 +9,7 @@ using CsvHelper.TypeConversion;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Configuration used for the <see cref="ICsvReader"/>.
+	/// Configuration used for the <see cref="IReader"/>.
 	/// </summary>
     public interface ICsvReaderConfiguration : ICsvParserConfiguration
     {
@@ -107,7 +107,7 @@ namespace CsvHelper.Configuration
 		/// exception occurs. This will only happen when
 		/// <see cref="IgnoreReadingExceptions"/> is true.
 		/// </summary>
-		Action<CsvHelperException, ICsvReader> ReadingExceptionCallback { get; set; }
+		Action<CsvHelperException, IReader> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the member types that are used when auto mapping.

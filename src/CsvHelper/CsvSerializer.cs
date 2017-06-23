@@ -11,7 +11,7 @@ namespace CsvHelper
 	/// <summary>
 	/// Defines methods used to serialize data into a CSV file.
 	/// </summary>
-	public class CsvSerializer : ICsvSerializer
+	public class CsvSerializer : ISerializer
 	{
 		private WritingContext context;
 		private bool disposed;

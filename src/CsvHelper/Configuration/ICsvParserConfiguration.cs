@@ -8,7 +8,7 @@ using System.Text;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Configuration used for the <see cref="ICsvParser"/>.
+	/// Configuration used for the <see cref="IParser"/>.
 	/// </summary>
     public interface ICsvParserConfiguration
     {

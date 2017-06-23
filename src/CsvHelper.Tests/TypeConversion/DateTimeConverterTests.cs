@@ -42,7 +42,7 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var mockRow = new Mock<ICsvReaderRow>();
+			var mockRow = new Mock<IReaderRow>();
 
 			var dateTime = DateTime.Now;
 
@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var mockRow = new Mock<ICsvReaderRow>();
+			var mockRow = new Mock<IReaderRow>();
 
 			try
 			{

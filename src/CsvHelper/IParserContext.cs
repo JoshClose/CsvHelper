@@ -7,7 +7,7 @@ using System.IO;
 namespace CsvHelper
 {
 	/// <summary>
-	/// Defines context information used by the <see cref="ICsvParser"/>.
+	/// Defines context information used by the <see cref="IParser"/>.
 	/// </summary>
 	public interface IParserContext
     {

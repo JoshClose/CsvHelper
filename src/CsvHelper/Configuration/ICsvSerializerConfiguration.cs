@@ -5,7 +5,7 @@
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Configuration used for the <see cref="ICsvSerializer"/>.
+	/// Configuration used for the <see cref="ISerializer"/>.
 	/// </summary>
     public interface ICsvSerializerConfiguration
     {

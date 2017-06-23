@@ -1120,7 +1120,7 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : DefaultTypeConverter
 		{
-			public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
+			public override object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
 			{
 				return "test";
 			}

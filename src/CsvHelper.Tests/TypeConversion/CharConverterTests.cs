@@ -39,7 +39,7 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new CsvPropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var mockRow = new Mock<ICsvReaderRow>();
+			var mockRow = new Mock<IReaderRow>();
 
 			Assert.AreEqual( 'a', converter.ConvertFromString( "a", null, propertyMapData ) );
 			Assert.AreEqual( 'a', converter.ConvertFromString( " a ", null, propertyMapData ) );

@@ -180,9 +180,9 @@ namespace CsvHelper.Configuration
 		/// row to the property/field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual CsvPropertyMap<TClass, TProperty> ConvertUsing( Func<ICsvReaderRow, TProperty> convertExpression )
+		public virtual CsvPropertyMap<TClass, TProperty> ConvertUsing( Func<IReaderRow, TProperty> convertExpression )
 		{
-			Data.ReadingConvertExpression = (Expression<Func<ICsvReaderRow, TProperty>>)( x => convertExpression( x ) );
+			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TProperty>>)( x => convertExpression( x ) );
 
 			return this;
 		}

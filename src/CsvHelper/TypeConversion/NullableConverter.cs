@@ -58,10 +58,10 @@ namespace CsvHelper.TypeConversion
 		/// Converts the string to an object.
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="ICsvReaderRow"/> for the current record.</param>
+		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, ICsvReaderRow row, CsvPropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
 		{
 			if( string.IsNullOrEmpty( text ) )
 			{
@@ -86,7 +86,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row"></param>
 		/// <param name="propertyMapData"></param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, ICsvWriterRow row, CsvPropertyMapData propertyMapData )
+		public override string ConvertToString( object value, IWriterRow row, CsvPropertyMapData propertyMapData )
 		{
 			return UnderlyingTypeConverter.ConvertToString( value, row, propertyMapData );
 		}
