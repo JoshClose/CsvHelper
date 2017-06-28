@@ -14,8 +14,8 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public class TypeConverterOptions
 	{
-		private static readonly string[] defaultBooleanTrueValues = { "yes", "y" };
-		private static readonly string[] defaultBooleanFalseValues = { "no", "n" };
+		private static readonly string[] defaultBooleanTrueValues = { };
+		private static readonly string[] defaultBooleanFalseValues = { };
 		private static readonly string[] defaultNullValues = { };
 
 		/// <summary>
