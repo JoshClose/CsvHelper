@@ -256,31 +256,6 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
-		public void ReadNullValuesIndexTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
-			{
-				writer.WriteLine( "Before,D1,D2,D3,After" );
-				writer.WriteLine( "1,null,NULL,4,5" );
-				writer.Flush();
-				stream.Position = 0;
-
-				csv.Configuration.HasHeaderRecord = true;
-				csv.Configuration.RegisterClassMap<TestIndexMap>();
-				var records = csv.GetRecords<Test>().ToList();
-				var list = records[0].Dictionary;
-
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( null, list["D1"] );
-				Assert.AreEqual( null, list["D2"] );
-				Assert.AreEqual( "4", list["D3"] );
-			}
-		}
-
 		private class Test
 		{
 			public string Before { get; set; }

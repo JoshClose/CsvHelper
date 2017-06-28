@@ -255,57 +255,6 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
-		public void ReadNullValuesNameTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
-			{
-				writer.WriteLine( "Before,List,List,List,After" );
-				writer.WriteLine( "1,null,NULL,4,5" );
-				writer.Flush();
-				stream.Position = 0;
-
-				csv.Configuration.HasHeaderRecord = true;
-				csv.Configuration.RegisterClassMap<TestNamedMap>();
-				var records = csv.GetRecords<Test>().ToList();
-
-				var list = records[0].List.ToList();
-
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( null, list[0] );
-				Assert.AreEqual( null, list[1] );
-				Assert.AreEqual( 4, list[2] );
-			}
-		}
-
-		[TestMethod]
-		public void ReadNullValuesIndexTest()
-		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
-			{
-				writer.WriteLine( "1,null,NULL,4,5" );
-				writer.Flush();
-				stream.Position = 0;
-
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<TestIndexMap>();
-				var records = csv.GetRecords<Test>().ToList();
-
-				var list = records[0].List.ToList();
-
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( null, list[0] );
-				Assert.AreEqual( null, list[1] );
-				Assert.AreEqual( 4, list[2] );
-			}
-		}
-
 		private class Test
 		{
 			public string Before { get; set; }
