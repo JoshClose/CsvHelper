@@ -21,7 +21,7 @@ namespace CsvHelper
 		private static object locker = new object();
 
 		/// <summary>
-		/// Creates an instance of type T.
+		/// Creates an instance of type T using the current <see cref="IObjectResolver"/>.
 		/// </summary>
 		/// <typeparam name="T">The type of instance to create.</typeparam>
 		/// <param name="args">The constructor arguments.</param>
@@ -32,12 +32,24 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates an instance of the specified type.
+		/// Creates an instance of the specified type using the current <see cref="IObjectResolver"/>.
 		/// </summary>
 		/// <param name="type">The type of instance to create.</param>
 		/// <param name="args">The constructor arguments.</param>
 		/// <returns>A new instance of the specified type.</returns>
 		public static object CreateInstance( Type type, params object[] args )
+		{
+			return ObjectResolver.Current.Resolve( type, args );
+		}
+
+		/// <summary>
+		/// Creates an instance of the specified type without using the
+		/// current <see cref="IObjectResolver"/>.
+		/// </summary>
+		/// <param name="type">The type of instance to create.</param>
+		/// <param name="args">The constructor arguments.</param>
+		/// <returns>A new instance of the specified type.</returns>
+		public static object CreateInstanceWithoutContractResolver( Type type, params object[] args )
 		{
 			Dictionary<string, Delegate> funcCache;
 			lock( locker )

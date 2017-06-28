@@ -1324,7 +1324,9 @@ namespace CsvHelper
 			}
 			else
 			{
-				body = Expression.MemberInit( Expression.New( recordType ), bindings );
+				// This is in case an IContractResolver is being used.
+				var type = ReflectionHelper.CreateInstance( recordType ).GetType();
+				body = Expression.MemberInit( Expression.New( type ), bindings );
 			}
 
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
@@ -1390,7 +1392,9 @@ namespace CsvHelper
 				}
 				else
 				{
-					referenceBody = Expression.MemberInit( Expression.New( referenceMap.Data.Member.MemberType() ), referenceBindings );
+					// This is in case an IContractResolver is being used.
+					var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
+					referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
 				}
 
 				bindings.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
