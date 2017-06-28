@@ -41,7 +41,7 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Gets or sets the string format.
 		/// </summary>
-		public string Format { get; set; }
+		public string[] Formats { get; set; }
 
 		/// <summary>
 		/// Gets the list of values that can be
@@ -104,9 +104,9 @@ namespace CsvHelper.TypeConversion
 					options.NumberStyle = source.NumberStyle;
 				}
 
-				if( source.Format != null )
+				if( source.Formats != null )
 				{
-					options.Format = source.Format;
+					options.Formats = source.Formats;
 				}
 
 				// Only change the values if they are different than the defaults.

@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using CsvHelper.Configuration;
+using System.Linq;
 
 namespace CsvHelper.TypeConversion
 {
@@ -30,7 +31,8 @@ namespace CsvHelper.TypeConversion
 			var formattable = value as IFormattable;
 			if( formattable != null )
 			{
-				return formattable.ToString( propertyMapData.TypeConverterOptions.Format, propertyMapData.TypeConverterOptions.CultureInfo );
+				var format = propertyMapData.TypeConverterOptions.Formats?.FirstOrDefault();
+				return formattable.ToString( format, propertyMapData.TypeConverterOptions.CultureInfo );
 			}
 
 			return value.ToString();

@@ -65,10 +65,10 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// The string format to be used when type converting.
 		/// </summary>
-		/// <param name="format">The format.</param>
-		public virtual CsvPropertyMap Format( string format )
+		/// <param name="formats">The format.</param>
+		public virtual CsvPropertyMap Format( params string[] formats )
 		{
-			propertyMap.Data.TypeConverterOptions.Format = format;
+			propertyMap.Data.TypeConverterOptions.Formats = formats;
 
 			return propertyMap;
 		}

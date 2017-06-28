@@ -31,18 +31,18 @@ namespace CsvHelper.Tests.Culture
 			var config = new CsvConfiguration();
 			var customOptions = new TypeConverterOptions
 			{
-				Format = "custom",
+				Formats = new string[] { "custom" },
 			};
 			config.TypeConverterOptionsFactory.AddOptions<string>( customOptions );
 			var options = config.TypeConverterOptionsFactory.GetOptions<string>();
 
-			Assert.AreEqual( customOptions.Format, options.Format );
+			Assert.AreEqual( customOptions.Formats, options.Formats );
 
 			config.TypeConverterOptionsFactory.RemoveOptions<string>();
 
 			options = config.TypeConverterOptionsFactory.GetOptions<string>();
 
-			Assert.AreNotEqual( customOptions.Format, options.Format );
+			Assert.AreNotEqual( customOptions.Formats, options.Formats );
 		}
 
 		[TestMethod]
@@ -133,7 +133,7 @@ namespace CsvHelper.Tests.Culture
 			using( var writer = new StreamWriter( stream ) )
 			using( var csvWriter = new CsvWriter( writer ) )
 			{
-				var options = new TypeConverterOptions { Format = "c" };
+				var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 				csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
 				csvWriter.WriteField( 1234 );
 				csvWriter.NextRecord();
@@ -157,7 +157,7 @@ namespace CsvHelper.Tests.Culture
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-				var options = new TypeConverterOptions { Format = "c" };
+				var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 				csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.WriteRecords( list );
@@ -181,7 +181,7 @@ namespace CsvHelper.Tests.Culture
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-				var options = new TypeConverterOptions { Format = "c" };
+				var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 				csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.Configuration.RegisterClassMap<TestMap>();

@@ -27,12 +27,12 @@ namespace CsvHelper.TypeConversion
 			TimeSpan span;
 
 			var timeSpanStyle = propertyMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
-			if( !string.IsNullOrEmpty( propertyMapData.TypeConverterOptions.Format ) && TimeSpan.TryParseExact( text, propertyMapData.TypeConverterOptions.Format, formatProvider, timeSpanStyle, out span ) )
+			if( propertyMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact( text, propertyMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out span ) )
 			{
 				return span;
 			}
 
-			if( string.IsNullOrEmpty( propertyMapData.TypeConverterOptions.Format ) && TimeSpan.TryParse( text, formatProvider, out span ) )
+			if( propertyMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse( text, formatProvider, out span ) )
 			{
 				return span;
 			}

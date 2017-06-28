@@ -29,20 +29,20 @@ namespace CsvHelper.Tests.TypeConversion
         {
             var customOptions = new TypeConverterOptions
             {
-                Format = "custom",
+                Formats = new string[] { "custom" },
             };
 	        var typeConverterOptionsFactory = new TypeConverterOptionsFactory();
 
 			typeConverterOptionsFactory.AddOptions<string>(customOptions);
             var options = typeConverterOptionsFactory.GetOptions<string>();
 
-            Assert.AreEqual(customOptions.Format, options.Format);
+            Assert.AreEqual(customOptions.Formats, options.Formats);
 
             typeConverterOptionsFactory.RemoveOptions<string>();
 
             options = typeConverterOptionsFactory.GetOptions<string>();
 
-            Assert.AreNotEqual(customOptions.Format, options.Format);
+            Assert.AreNotEqual(customOptions.Formats, options.Formats);
         }
 
         [TestMethod]
@@ -111,7 +111,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void WriteFieldTest()
         {
-			var options = new TypeConverterOptions { Format = "c" };
+			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -132,7 +132,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void WriteRecordsTest()
         {
-			var options = new TypeConverterOptions { Format = "c" };
+			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -157,7 +157,7 @@ namespace CsvHelper.Tests.TypeConversion
         [TestMethod]
         public void WriteRecordsAppliedWhenMappedTest()
         {
-			var options = new TypeConverterOptions { Format = "c" };
+			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
