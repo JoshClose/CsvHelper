@@ -12,7 +12,7 @@ namespace CsvHelper
     public interface IFieldReaderContext
     {
 		/// <summary>
-		/// Gets the buffer used to store data from the <see cref="Reader"/>.
+		/// Gets the buffer used to store data.
 		/// </summary>
 		char[] Buffer { get; }
 
@@ -32,7 +32,7 @@ namespace CsvHelper
 		long CharPosition { get; }
 
 		/// <summary>
-		/// Gets the number of characters read from the <see cref="Reader"/>.
+		/// Gets the number of characters read.
 		/// </summary>
 		int CharsRead { get; }
 

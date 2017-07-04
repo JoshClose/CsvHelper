@@ -31,10 +31,10 @@ namespace CsvHelper.Configuration
 		public virtual MapTypeConverterOption TypeConverterOption { get; protected set; }
 
 		/// <summary>
-		/// Creates an instance of <see cref="CsvClassMap{T}"/> using the given <see cref="MemberInfo"/>.
+		/// Creates an instance of <see cref="CsvClassMap{T}"/> using the given Type and <see cref="MemberInfo"/>.
 		/// </summary>
+		/// <param name="classType">Type of the class the property being mapped belongs to.</param>
 		/// <param name="member"></param>
-		/// <returns></returns>
 		public static CsvPropertyMap CreateGeneric( Type classType, MemberInfo member )
 		{
 			var propertyMapType = typeof( CsvPropertyMap<,> ).MakeGenericType( classType, member.MemberType() );

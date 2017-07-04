@@ -26,8 +26,9 @@ namespace CsvHelper
 		bool ReadHeader();
 
 		/// <summary>
-		/// Advances the reader to the next record. If the header hasn't been read
-		/// yet, it'll automatically be read along with the first record.
+		/// Advances the reader to the next record. This will not read headers.
+		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/> 
+		/// for the headers to be read.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
 		bool Read();
