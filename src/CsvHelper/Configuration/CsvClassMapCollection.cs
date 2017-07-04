@@ -102,19 +102,22 @@ namespace CsvHelper.Configuration
 			data.Clear();
 		}
 
-		/// <summary>
-		/// Goes up the inheritance tree to find the type instance of CsvClassMap{}.
-		/// </summary>
-		/// <param name="type">The type to traverse.</param>
-		/// <returns>The type that is CsvClassMap{}.</returns>
-		private Type GetGenericCsvClassMapType( Type type )
-		{
-			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
-			{
-				return type;
-			}
+	    /// <summary>
+	    /// Goes up the inheritance tree to find the type instance of CsvClassMap{}.
+	    /// </summary>
+	    /// <param name="type">The type to traverse.</param>
+	    /// <returns>The type that is CsvClassMap{}.</returns>
+	    private Type GetGenericCsvClassMapType( Type type )
+	    {
+	        while( true )
+	        {
+	            if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( CsvClassMap<> ) )
+	            {
+	                return type;
+	            }
 
-			return GetGenericCsvClassMapType( type.GetTypeInfo().BaseType );
-		}
+	            type = type.GetTypeInfo().BaseType;
+	        }
+	    }
 	}
 }
