@@ -153,7 +153,7 @@ namespace CsvHelper.Configuration
 		/// properties/fields and references.
 		/// </summary>
 		/// <returns>The max index.</returns>
-		internal int GetMaxIndex()
+		public virtual int GetMaxIndex()
 		{
 			if( PropertyMaps.Count == 0 && ReferenceMaps.Count == 0 )
 			{
@@ -175,7 +175,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="indexStart">The index start.</param>
 		/// <returns>The last index + 1.</returns>
-		internal int ReIndex( int indexStart = 0 )
+		public virtual int ReIndex( int indexStart = 0 )
 		{
 			foreach( var propertyMap in PropertyMaps )
 			{
