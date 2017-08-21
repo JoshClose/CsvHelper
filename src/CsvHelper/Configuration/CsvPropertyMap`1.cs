@@ -89,6 +89,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Ignore the property/field when reading and writing.
+		/// If this property has already been mapped as a reference
+		/// property, either by a class map, or by automapping, calling
+		/// this method will not ingore all the child properties down the
+		/// tree that have already been mapped.
 		/// </summary>
 		public virtual CsvPropertyMap<TClass, TProperty> Ignore()
 		{
@@ -99,6 +103,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Ignore the property/field when reading and writing.
+		/// If this property has already been mapped as a reference
+		/// property, either by a class map, or by automapping, calling
+		/// this method will not ingore all the child properties down the
+		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
 		public virtual CsvPropertyMap<TClass, TProperty> Ignore( bool ignore )
