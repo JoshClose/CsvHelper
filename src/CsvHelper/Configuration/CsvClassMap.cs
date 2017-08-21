@@ -220,7 +220,15 @@ namespace CsvHelper.Configuration
 			var members = new List<MemberInfo>();
 			if( ( options.MemberTypes & MemberTypes.Properties ) == MemberTypes.Properties )
 			{
-				var properties = type.GetProperties( flags );
+				// We need to go up the declaration tree and find the actual type the property
+				// exists on and use that PropertyInfo instead. This is so we can get the private
+				// set method for the property.
+				var properties = new List<PropertyInfo>();
+				foreach( var property in type.GetProperties( flags ) )
+				{
+					properties.Add( ReflectionHelper.GetDeclaringProperty( type, property, flags ) );
+				}
+
 				members.AddRange( properties );
 			}
 

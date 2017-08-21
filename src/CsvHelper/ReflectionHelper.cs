@@ -85,6 +85,23 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Gets the <see cref="PropertyInfo"/> from the type where the property was declared.
+		/// </summary>
+		/// <param name="type">The type the property belongs to.</param>
+		/// <param name="property">The property to search.</param>
+		/// <param name="flags">Flags for how the property is retrieved.</param>
+		public static PropertyInfo GetDeclaringProperty( Type type, PropertyInfo property, BindingFlags flags )
+		{
+			if( property.DeclaringType != type )
+			{
+				var declaringProperty = property.DeclaringType.GetProperty( property.Name, flags );
+				return GetDeclaringProperty( property.DeclaringType, declaringProperty, flags );
+			}
+
+			return property;
+		}
+
+		/// <summary>
 		/// Gets the property from the expression.
 		/// </summary>
 		/// <typeparam name="TModel">The type of the model.</typeparam>
