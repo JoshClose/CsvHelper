@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class CsvConfiguration : ICsvReaderConfiguration, ICsvWriterConfiguration
 	{
-		private string delimiter = CultureInfo.CurrentCulture.TextInfo.ListSeparator;
+		private string delimiter = ",";
 		private char quote = '"';
 		private string quoteString = "\"";
 		private string doubleQuoteString = "\"\"";
