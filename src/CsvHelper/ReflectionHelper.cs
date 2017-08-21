@@ -66,9 +66,12 @@ namespace CsvHelper
 			var key = string.Join( "|", typeNames );
 
 			Delegate func;
-			if( !funcCache.TryGetValue( key, out func ) )
+			lock( locker )
 			{
-				funcCache[key] = func = CreateInstanceDelegate( type, args );
+				if( !funcCache.TryGetValue( key, out func ) )
+				{
+					funcCache[key] = func = CreateInstanceDelegate( type, args );
+				}
 			}
 
 			try
