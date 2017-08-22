@@ -214,16 +214,25 @@ namespace CsvHelper
 			WriteField( field, converter );
 		}
 
-	    /// <summary>
-	    /// Ends writing of the current record and starts a new record. 
-	    /// This needs to be called to serialize the row to the writer.
-	    /// </summary>
-	    public virtual void NextRecord()
+		/// <summary>
+		/// Serializes the row to the <see cref="TextWriter"/>.
+		/// </summary>
+		public virtual void Flush()
+		{
+			serializer.Write( context.Record.ToArray() );
+			context.Record.Clear();
+		}
+
+		/// <summary>
+		/// Ends writing of the current record and starts a new record.
+		/// This automatically flushes the writer.
+		/// </summary>
+		public virtual void NextRecord()
 		{
 	        try
 	        {
-	            serializer.Write( context.Record.ToArray() );
-				context.Record.Clear();
+				Flush();
+				serializer.WriteLine();
 	            context.Row++;
 	        }
 	        catch( Exception ex )

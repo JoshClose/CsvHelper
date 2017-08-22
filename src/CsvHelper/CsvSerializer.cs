@@ -74,7 +74,13 @@ namespace CsvHelper
 
 				context.Writer.Write( record[i] );
 			}
+		}
 
+		/// <summary>
+		/// Writes a new line to the CSV file.
+		/// </summary>
+		public virtual void WriteLine()
+		{
 			context.Writer.WriteLine();
 		}
 

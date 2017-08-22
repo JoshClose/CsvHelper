@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using System.IO;
 
 namespace CsvHelper
 {
@@ -15,8 +16,13 @@ namespace CsvHelper
 	public interface IWriter : IWriterRow, IDisposable
 	{
 		/// <summary>
-		/// Ends writing of the current record and starts a new record. 
-		/// This needs to be called to serialize the row to the writer.
+		/// Serializes the row to the <see cref="TextWriter"/>.
+		/// </summary>
+		void Flush();
+
+		/// <summary>
+		/// Ends writing of the current record and starts a new record.
+		/// This automatically flushes the writer.
 		/// </summary>
 		void NextRecord();
 

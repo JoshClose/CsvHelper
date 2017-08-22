@@ -43,6 +43,10 @@ namespace CsvHelper.Tests.Mocks
 			records.Add( record );
 		}
 
+		public void WriteLine()
+		{
+		}
+
 		public void Dispose()
 		{
 		}
