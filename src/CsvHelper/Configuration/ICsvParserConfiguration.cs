@@ -34,7 +34,9 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if an exception should
-		/// be thrown when bad field data is detected.
+		/// be thrown when bad field data is detected. A field has
+		/// bad data if it contains a quote and the field is not 
+		/// quoted (escaped).
 		/// True to throw, otherwise false. Default is false.
 		/// </summary>
 		bool ThrowOnBadData { get; set; }
