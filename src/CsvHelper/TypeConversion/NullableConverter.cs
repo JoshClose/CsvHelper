@@ -51,7 +51,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentException( "type is not a nullable type." );
 			}
 
-			UnderlyingTypeConverter = TypeConverterFactory.GetConverter( UnderlyingType );
+			UnderlyingTypeConverter = TypeConverterFactory.Current.GetConverter( UnderlyingType );
 		}
 
 		/// <summary>

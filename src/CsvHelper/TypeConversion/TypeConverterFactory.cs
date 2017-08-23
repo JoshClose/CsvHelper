@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,15 +14,44 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Creates <see cref="ITypeConverter"/>s.
 	/// </summary>
-	public static class TypeConverterFactory
+	public class TypeConverterFactory
 	{
-		private static readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
+		private static TypeConverterFactory current = new TypeConverterFactory();
 		private static readonly object locker = new object();
+
+		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
+
+		/// <summary>
+		/// Gets or sets the current TypeConverterFactory. This is a global
+		/// to be used by classes that don't have an instance of <see cref="CsvConfiguration"/>.
+		/// </summary>
+		public static TypeConverterFactory Current
+		{
+			get
+			{
+				lock( locker )
+				{
+					return current;
+				}
+			}
+			set
+			{
+				if( value == null )
+				{
+					throw new InvalidOperationException( "TypeConverterFactory cannot be null." );
+				}
+
+				lock( locker )
+				{
+					current = value;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Initializes the <see cref="TypeConverterFactory" /> class.
 		/// </summary>
-		static TypeConverterFactory()
+		public TypeConverterFactory()
 		{
 			CreateDefaultConverters();
 		}
@@ -31,7 +61,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="type">The type the converter converts.</param>
 		/// <param name="typeConverter">The type converter that converts the type.</param>
-		public static void AddConverter( Type type, ITypeConverter typeConverter )
+		public void AddConverter( Type type, ITypeConverter typeConverter )
 		{
 			if( type == null )
 			{
@@ -43,10 +73,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException( nameof( typeConverter ) );
 			}
 
-			lock( locker )
-			{
-				typeConverters[type] = typeConverter;
-			}
+			typeConverters[type] = typeConverter;
 		}
 
 		/// <summary>
@@ -54,41 +81,35 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <typeparam name="T">The type the converter converts.</typeparam>
 		/// <param name="typeConverter">The type converter that converts the type.</param>
-		public static void AddConverter<T>( ITypeConverter typeConverter )
+		public void AddConverter<T>( ITypeConverter typeConverter )
 		{
 			if( typeConverter == null )
 			{
 				throw new ArgumentNullException( nameof( typeConverter ) );
 			}
 
-			lock( locker )
-			{
-				typeConverters[typeof( T )] = typeConverter;
-			}
+			typeConverters[typeof( T )] = typeConverter;
 		}
 
 		/// <summary>
 		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type to remove the converter for.</param>
-		public static void RemoveConverter( Type type )
+		public void RemoveConverter( Type type )
 		{
 			if( type == null )
 			{
 				throw new ArgumentNullException( nameof( type ) );
 			}
 
-			lock( locker )
-			{
-				typeConverters.Remove( type );
-			}
+			typeConverters.Remove( type );
 		}
 
 		/// <summary>
 		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <typeparam name="T">The type to remove the converter for.</typeparam>
-		public static void RemoveConverter<T>()
+		public void RemoveConverter<T>()
 		{
 			RemoveConverter( typeof( T ) );
 		}
@@ -98,20 +119,16 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="type">The type to get the converter for.</param>
 		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.</returns>
-		public static ITypeConverter GetConverter( Type type )
+		public ITypeConverter GetConverter( Type type )
 		{
 			if( type == null )
 			{
 				throw new ArgumentNullException( nameof( type ) );
 			}
 
-			lock( locker )
+			if( typeConverters.TryGetValue( type, out ITypeConverter typeConverter ) )
 			{
-				ITypeConverter typeConverter;
-				if( typeConverters.TryGetValue( type, out typeConverter ) )
-				{
-					return typeConverter;
-				}
+				return typeConverter;
 			}
 
 			if( typeof( Enum ).IsAssignableFrom( type ) )
@@ -188,12 +205,12 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <typeparam name="T">The type to get the converter for.</typeparam>
 		/// <returns>The <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.</returns>
-		public static ITypeConverter GetConverter<T>()
+		public ITypeConverter GetConverter<T>()
 		{
 			return GetConverter( typeof( T ) );
 		}
 
-		private static void CreateDefaultConverters()
+		private void CreateDefaultConverters()
 		{
 			AddConverter( typeof( bool ), new BooleanConverter() );
 			AddConverter( typeof( byte ), new ByteConverter() );

@@ -85,6 +85,11 @@ namespace CsvHelper.Configuration
 		TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; }
 
 		/// <summary>
+		/// Gets or sets the <see cref="TypeConverterFactory"/>.
+		/// </summary>
+		TypeConverterFactory TypeConverterFactory { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if comments are allowed.
 		/// True to allow commented out lines, otherwise false.
 		/// </summary>

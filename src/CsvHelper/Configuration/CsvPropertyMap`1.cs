@@ -29,7 +29,7 @@ namespace CsvHelper.Configuration
 			}
 
 			// Set some defaults.
-			Data.TypeConverter = TypeConverterFactory.GetConverter( member.MemberType() );
+			Data.TypeConverter = TypeConverterFactory.Current.GetConverter( member.MemberType() );
 			Data.Names.Add( member.Name );
 		}
 

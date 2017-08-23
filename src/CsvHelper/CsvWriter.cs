@@ -168,7 +168,7 @@ namespace CsvHelper
 		public virtual void WriteField<T>( T field )
 		{
 			var type = field == null ? typeof( string ) : field.GetType();
-			var converter = TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterFactory.GetConverter( type );
 			WriteField( field, converter );
 		}
 
@@ -210,7 +210,7 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField<T, TConverter>( T field )
 		{
-			var converter = TypeConverterFactory.GetConverter<TConverter>();
+			var converter = Configuration.TypeConverterFactory.GetConverter<TConverter>();
 			WriteField( field, converter );
 		}
 
@@ -713,7 +713,7 @@ namespace CsvHelper
 
 			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
 
-			var typeConverter = TypeConverterFactory.GetConverter( type );
+			var typeConverter = Configuration.TypeConverterFactory.GetConverter( type );
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 

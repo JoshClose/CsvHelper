@@ -46,6 +46,11 @@ namespace CsvHelper.Configuration
 		TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; }
 
 		/// <summary>
+		/// Gets or sets the <see cref="TypeConverterFactory"/>.
+		/// </summary>
+		TypeConverterFactory TypeConverterFactory { get; set; }
+
+		/// <summary>
 		/// Prepares the header field for matching against a property/field name.
 		/// The header field and the property/field name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,

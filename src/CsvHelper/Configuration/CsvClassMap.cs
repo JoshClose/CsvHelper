@@ -248,7 +248,7 @@ namespace CsvHelper.Configuration
 
 			foreach( var member in members )
 			{
-				var typeConverterType = TypeConverterFactory.GetConverter( member.MemberType() ).GetType();
+				var typeConverterType = TypeConverterFactory.Current.GetConverter( member.MemberType() ).GetType();
 
 				if( options.HasHeaderRecord && enumerableConverters.Contains( typeConverterType ) )
 				{

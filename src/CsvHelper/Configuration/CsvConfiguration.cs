@@ -33,6 +33,11 @@ namespace CsvHelper.Configuration
 		public virtual TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
 
 		/// <summary>
+		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
+		/// </summary>
+		public virtual TypeConverterFactory TypeConverterFactory { get; set; } = new TypeConverterFactory();
+
+		/// <summary>
 		/// Gets or sets a value indicating if the
 		/// CSV file has a header record.
 		/// Default is true.
