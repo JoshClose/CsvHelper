@@ -6,9 +6,10 @@ using System;
 
 namespace CsvHelper
 {
-    /// <summary>
-    /// Represents errors that occur while reading a CSV file.
-    /// </summary>
+	/// <summary>
+	/// Represents errors that occur while reading a CSV file.
+	/// </summary>
+	[Serializable]
 	public class CsvReaderException : CsvHelperException
 	{
 		/// <summary>

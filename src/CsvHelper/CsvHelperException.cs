@@ -10,6 +10,7 @@ namespace CsvHelper
 	/// <summary>
 	/// Represents errors that occur in CsvHelper.
 	/// </summary>
+	[Serializable]
 	public class CsvHelperException : Exception
 	{
 		/// <summary>

@@ -9,6 +9,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Represents configuration errors that occur.
 	/// </summary>
+	[Serializable]
 	public class CsvConfigurationException : CsvHelperException
 	{
 		/// <summary>

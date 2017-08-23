@@ -9,6 +9,7 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Represents errors that occur while reading a CSV file.
 	/// </summary>
+	[Serializable]
 	public class CsvTypeConverterException : CsvHelperException
 	{
 		/// <summary>

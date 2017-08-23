@@ -6,10 +6,11 @@ using System;
 
 namespace CsvHelper
 {
-    /// <summary>
-    /// Represents an error caused because a field is missing
-    /// in the header while reading a CSV file.
-    /// </summary>
+	/// <summary>
+	/// Represents an error caused because a field is missing
+	/// in the header while reading a CSV file.
+	/// </summary>
+	[Serializable]
 	public class CsvMissingFieldException : CsvReaderException
 	{
 		/// <summary>

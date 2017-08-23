@@ -6,9 +6,10 @@ using System;
 
 namespace CsvHelper
 {
-    /// <summary>
-    /// Represents errors that occur due to bad data.
-    /// </summary>
+	/// <summary>
+	/// Represents errors that occur due to bad data.
+	/// </summary>
+	[Serializable]
 	public class CsvBadDataException : CsvHelperException
 	{
 		/// <summary>
