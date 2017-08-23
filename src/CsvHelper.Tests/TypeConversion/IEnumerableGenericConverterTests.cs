@@ -219,6 +219,7 @@ namespace CsvHelper.Tests.TypeConversion
 					new Test { List = new List<int?> { 1, 2, 3 } }
 				};
 				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.RegisterClassMap<TestIndexMap>();
 				csv.WriteRecords( list );
 				writer.Flush();
 				stream.Position = 0;
