@@ -2,7 +2,7 @@
 
 		<PropertyGroup>
 				<!--<TargetFrameworks>netstandard1.5;net20;net35;net40;net45;net451;portable-net40+sl5+win8+wpa81+wp8</TargetFrameworks>-->
-				<TargetFramework>netcoreapp1.1</TargetFramework>
+				<TargetFramework>netcoreapp2.0</TargetFramework>
 				<SignAssembly>True</SignAssembly>
 				<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
 		</PropertyGroup>
@@ -17,9 +17,5 @@
 		<ItemGroup>
 		  <ProjectReference Include="..\CsvHelper\CsvHelper.csproj" />
 		</ItemGroup>
-
-		<PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">
-				<DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
-		</PropertyGroup>
 
 </Project>

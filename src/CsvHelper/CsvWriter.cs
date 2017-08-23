@@ -775,7 +775,7 @@ namespace CsvHelper
 			var delegates = new List<Delegate>();
 			foreach( var propertyName in propertyNames )
 			{
-				var getMemberBinder = (GetMemberBinder)Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
+				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
 				var getMemberMetaObject = metaObject.BindGetMember( getMemberBinder );
 				var fieldExpression = getMemberMetaObject.Expression;
 				fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteField ), new[] { typeof( object ) }, fieldExpression );
