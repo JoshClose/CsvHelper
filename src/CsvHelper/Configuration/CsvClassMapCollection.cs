@@ -34,12 +34,12 @@ namespace CsvHelper.Configuration
 				var currentType = type;
 				while( true )
 				{
-					if( currentType == type )
+					if( data.ContainsKey( currentType ) )
 					{
-						return data.ContainsKey( currentType ) ? data[currentType] : null;
+						return data[currentType];
 					}
 
-					currentType = type.GetTypeInfo().BaseType;
+					currentType = currentType.GetTypeInfo().BaseType;
 					if( currentType == null )
 					{
 						return null;
