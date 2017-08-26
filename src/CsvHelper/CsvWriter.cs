@@ -280,7 +280,7 @@ namespace CsvHelper
 				throw new CsvWriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
-			if( context.HasHeaderBeenWritten )
+			if( context.HasRecordBeenWritten )
 			{
 				throw new CsvWriterException( context, "Records have already been written. You can't write the header after writing records has started." );
 			}
@@ -341,7 +341,7 @@ namespace CsvHelper
 				throw new CsvWriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
-			if( context.HasHeaderBeenWritten )
+			if( context.HasRecordBeenWritten )
 			{
 				throw new CsvWriterException( context, "Records have already been written. You can't write the header after writing records has started." );
 			}
