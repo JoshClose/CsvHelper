@@ -303,7 +303,7 @@ public sealed class MyClassMap : CsvClassMap<MyClass>
 
 #### [mapping] Runtime Mapping
 
-Maps can be created at runtime. In fact the auto map feature does everything dynamically. You can look at the following link for some inspiration: https://github.com/JoshClose/CsvHelper/blob/master/src/CsvHelper/Configuration/CsvClassMap.cs#L91
+Maps can be created at runtime. In fact the auto map feature does everything dynamically. You can look at the following link for some inspiration: https://github.com/JoshClose/CsvHelper/blob/master/src/CsvHelper/Configuration/CsvClassMap.cs#L181
 
 Another simple example is shown below:
 
