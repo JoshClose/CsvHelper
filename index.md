@@ -288,9 +288,9 @@ public sealed class MyClassMap : CsvClassMap<MyClass>
 		// Constant value.
 		Map( m => m.Constant ).ConvertUsing( row => 3 );
 		// Aggregate of two rows.
-		Map( m => m.Aggregate ).ConvertUsing( row => row.Get<int>( 0 ) + row.Get<int>( 1 ) );
+		Map( m => m.Aggregate ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
 		// Collection with a single value.
-		Map( m => m.Names ).ConvertUsing( row => new List<string>{ row.Get<string>( "Name" ) } );
+		Map( m => m.Names ).ConvertUsing( row => new List<string>{ row.GetField<string>( "Name" ) } );
 		// Just about anything.
 		Map( m => m.Anything ).ConvertUsing( row =>
 		{
