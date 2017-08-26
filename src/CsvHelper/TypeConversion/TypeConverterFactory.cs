@@ -214,6 +214,7 @@ namespace CsvHelper.TypeConversion
 		{
 			AddConverter( typeof( bool ), new BooleanConverter() );
 			AddConverter( typeof( byte ), new ByteConverter() );
+			AddConverter( typeof( byte[] ), new ByteArrayConverter() );
 			AddConverter( typeof( char ), new CharConverter() );
 			AddConverter( typeof( DateTime ), new DateTimeConverter() );
 			AddConverter( typeof( DateTimeOffset ), new DateTimeOffsetConverter() );

@@ -54,6 +54,15 @@ namespace CsvHelper.Tests.TypeConversion
 
 			Assert.IsInstanceOfType( converter, typeof( ByteConverter ) );
 		}
+		
+		[TestMethod]
+		public void GetConverterForByteArrayTest()
+		{
+			var typeConverterFactory = new TypeConverterFactory();
+			var converter = typeConverterFactory.GetConverter( typeof( byte[] ) );
+
+			Assert.IsInstanceOfType( converter, typeof( ByteArrayConverter ) );
+		}
 
 		[TestMethod]
 		public void GetConverterForCharTest()
