@@ -62,7 +62,6 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-#if !PCL
 		[TestMethod]
 		public void ComponentModelCompatibilityTest()
 		{
@@ -101,6 +100,5 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 			catch( FormatException ){}
 		}
-#endif
 	}
 }

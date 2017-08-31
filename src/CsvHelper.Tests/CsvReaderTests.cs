@@ -929,7 +929,6 @@ namespace CsvHelper.Tests
 		}
 
 
-#if !NET_3_5 && !PCL
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()
 		{
@@ -967,7 +966,6 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( "1", row.Field1 );
 			Assert.AreEqual( "one", row.Field2 );
 		}
-#endif
 
 		private class Nested
 		{

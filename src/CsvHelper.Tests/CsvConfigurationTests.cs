@@ -122,8 +122,6 @@ namespace CsvHelper.Tests
 			Assert.IsNull( config.Maps[typeof( TestClass )] );
 		}
 
-
-#if !WINRT_4_5
 		[TestMethod]
 		public void AddingMappingsWithNonGenericMethodThrowsWhenNotACsvClassMap()
 		{
@@ -134,7 +132,6 @@ namespace CsvHelper.Tests
 			}
 			catch( ArgumentException ) {}
 		}
-#endif
 
 		private class TestClass
 		{

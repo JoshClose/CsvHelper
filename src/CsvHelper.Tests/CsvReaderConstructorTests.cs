@@ -49,55 +49,5 @@ namespace CsvHelper.Tests
 				}
 			}
 		}
-
-		private class TestParser : IParser
-		{
-			private ReadingContext context;
-
-			public IParserContext Context => context;
-
-			public void Dispose()
-			{
-				throw new NotImplementedException();
-			}
-
-			public TextReader TextReader { get; }
-
-			public ICsvParserConfiguration Configuration => context.ParserConfiguration;
-
-			public int FieldCount
-			{
-				get { throw new NotImplementedException(); }
-			}
-
-			public int RawRow { get; private set; }
-
-			public string RawRecord { get; private set; }
-
-			public string[] Read()
-			{
-				throw new NotImplementedException();
-			}
-
-			public long CharPosition
-			{
-				get { throw new NotImplementedException(); }
-			}
-
-			public long BytePosition { get; private set; }
-
-			public int Row
-			{
-				get { throw new NotImplementedException(); }
-			}
-
-			public IFieldReader FieldReader
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
-		}
 	}
 }
