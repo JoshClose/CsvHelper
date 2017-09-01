@@ -5,6 +5,7 @@
 using System;
 using System.Reflection;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace CsvHelper
 {
@@ -56,6 +57,28 @@ namespace CsvHelper
 			}
 
 			throw new InvalidOperationException( "Member is not a property or a field." );
+		}
+
+		/// <summary>
+		/// Gets a value indicating if the given type is anonymous.
+		/// True for anonymous, otherwise false.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		public static bool IsAnonymous( this Type type )
+		{
+			if( type == null )
+			{
+				throw new ArgumentNullException( nameof( type ) );
+			}
+
+			// https://stackoverflow.com/a/2483054/68499
+			var isAnonymous = Attribute.IsDefined( type, typeof( CompilerGeneratedAttribute ), false )
+				&& type.IsGenericType
+				&& type.Name.Contains( "AnonymousType" )
+				&& ( type.Name.StartsWith( "<>" ) || type.Name.StartsWith( "VB$" ) )
+				&& type.Attributes.HasFlag( TypeAttributes.NotPublic );
+
+			return isAnonymous;
 		}
 	}
 }

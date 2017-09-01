@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a property/field to a CSV field.
 	/// </summary>
-	[DebuggerDisplay( "Member = {Data.Member} , Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
+	[DebuggerDisplay( "Member = {Data.Member}, Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
 	public abstract class CsvPropertyMap
 	{
 		/// <summary>
@@ -34,7 +34,7 @@ namespace CsvHelper.Configuration
 		/// Creates an instance of <see cref="CsvPropertyMap"/> using the given Type and <see cref="MemberInfo"/>.
 		/// </summary>
 		/// <param name="classType">Type of the class the property being mapped belongs to.</param>
-		/// <param name="member"></param>
+		/// <param name="member">The member being mapped.</param>
 		public static CsvPropertyMap CreateGeneric( Type classType, MemberInfo member )
 		{
 			var propertyMapType = typeof( CsvPropertyMap<,> ).MakeGenericType( classType, member.MemberType() );

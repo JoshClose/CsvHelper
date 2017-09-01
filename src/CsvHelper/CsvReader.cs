@@ -869,6 +869,27 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Get the record converted into <see cref="System.Type"/> T.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
+		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the record.</param>
+		/// <returns>The record converted to <see cref="System.Type"/> T.</returns>
+		public virtual T GetRecord<T>( T anonymousTypeDefinition )
+		{
+			if( anonymousTypeDefinition == null )
+			{
+				throw new ArgumentNullException( nameof( anonymousTypeDefinition ) );
+			}
+
+			if( !anonymousTypeDefinition.GetType().IsAnonymous() )
+			{
+				throw new ArgumentException( $"Argument is not an anonymous type.", nameof( anonymousTypeDefinition ) );
+			}
+
+			return GetRecord<T>();
+		}
+
+		/// <summary>
 		/// Gets the record.
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
@@ -907,7 +928,7 @@ namespace CsvHelper
 		/// should not be used when using this.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
-		/// <returns>An <see cref="IList{T}" /> of records.</returns>
+		/// <returns>An <see cref="IEnumerable{T}" /> of records.</returns>
 		public virtual IEnumerable<T> GetRecords<T>() 
 		{
 			// Don't need to check if it's been read
@@ -949,12 +970,35 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Gets all the records in the CSV file and converts
+		/// each to <see cref="System.Type"/> T. The read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
+		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
+		public virtual IEnumerable<T> GetRecords<T>( T anonymousTypeDefinition )
+		{
+			if( anonymousTypeDefinition == null )
+			{
+				throw new ArgumentNullException( nameof( anonymousTypeDefinition ) );
+			}
+
+			if( !anonymousTypeDefinition.GetType().IsAnonymous() )
+			{
+				throw new ArgumentException( $"Argument is not an anonymous type.", nameof( anonymousTypeDefinition ) );
+			}
+
+			return GetRecords<T>();
+		}
+
+		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="System.Type"/> T. The Read method
 		/// should not be used when using this.
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
-		/// <returns>An <see cref="IList{Object}" /> of records.</returns>
+		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
 		public virtual IEnumerable<object> GetRecords( Type type )
 		{
 			// Don't need to check if it's been read
@@ -1299,33 +1343,44 @@ namespace CsvHelper
 		/// <param name="recordType">The type of object to create the function for.</param>
 		protected virtual void CreateFuncForObject( Type recordType )
 		{
-			var bindings = new List<MemberBinding>();
-
-			CreatePropertyBindingsForMapping( context.ReaderConfiguration.Maps[recordType], recordType, bindings );
-
-			if( bindings.Count == 0 )
-			{
-				throw new CsvReaderException( context, $"No properties are mapped for type '{recordType.FullName}'." );
-			}
-
+			var map = context.ReaderConfiguration.Maps[recordType];
 			Expression body;
-			var constructorExpression = context.ReaderConfiguration.Maps[recordType].Constructor;
-			if( constructorExpression is NewExpression )
+
+			if( map.ParameterMaps.Count > 0 )
 			{
-				body = Expression.MemberInit( (NewExpression)constructorExpression, bindings );
-			}
-			else if( constructorExpression is MemberInitExpression )
-			{
-				var memberInitExpression = (MemberInitExpression)constructorExpression;
-				var defaultBindings = memberInitExpression.Bindings.ToList();
-				defaultBindings.AddRange( bindings );
-				body = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+				// This is an anonymous type.
+				var arguments = new List<Expression>();
+				CreateConstructorArgumentExpressionsForMapping( map, arguments );
+
+				body = Expression.New( map.ClassType.GetConstructors().Single(), arguments );
 			}
 			else
 			{
-				// This is in case an IContractResolver is being used.
-				var type = ReflectionHelper.CreateInstance( recordType ).GetType();
-				body = Expression.MemberInit( Expression.New( type ), bindings );
+				var bindings = new List<MemberBinding>();
+				CreatePropertyBindingsForMapping( map, recordType, bindings );
+
+				if( bindings.Count == 0 )
+				{
+					throw new CsvReaderException( context, $"No properties are mapped for type '{recordType.FullName}'." );
+				}
+
+				if( map.Constructor is NewExpression )
+				{
+					body = Expression.MemberInit( (NewExpression)map.Constructor, bindings );
+				}
+				else if( map.Constructor is MemberInitExpression )
+				{
+					var memberInitExpression = (MemberInitExpression)map.Constructor;
+					var defaultBindings = memberInitExpression.Bindings.ToList();
+					defaultBindings.AddRange( bindings );
+					body = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+				}
+				else
+				{
+					// This is in case an IContractResolver is being used.
+					var type = ReflectionHelper.CreateInstance( recordType ).GetType();
+					body = Expression.MemberInit( Expression.New( type ), bindings );
+				}
 			}
 
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
@@ -1354,6 +1409,72 @@ namespace CsvHelper
 	
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
 			context.RecordFuncs[recordType] = Expression.Lambda( funcType, fieldExpression ).Compile();
+		}
+
+		/// <summary>
+		/// Creates the constructor arguments used to create an anonymous type.
+		/// </summary>
+		/// <param name="map">The mapping to create the arguments for.</param>
+		/// <param name="argumentExpressions">The arguments that will be added to the mapping.</param>
+		protected virtual void CreateConstructorArgumentExpressionsForMapping( CsvClassMap map, List<Expression> argumentExpressions )
+		{
+			foreach( var parameterMap in map.ParameterMaps )
+			{
+				if( parameterMap.AnonymousTypeMap != null )
+				{
+					// Anonymous type.
+					var arguments = new List<Expression>();
+					CreateConstructorArgumentExpressionsForMapping( parameterMap.AnonymousTypeMap, arguments );
+					var anonymousExpression = Expression.New( parameterMap.AnonymousTypeMap.ClassType.GetConstructors().Single(), arguments );
+
+					argumentExpressions.Add( anonymousExpression );
+				}
+				else if( parameterMap.ReferenceMap != null )
+				{
+					// Reference type.
+
+					var referenceBindings = new List<MemberBinding>();
+					CreatePropertyBindingsForMapping( parameterMap.ReferenceMap.Data.Mapping, parameterMap.ReferenceMap.Data.Parameter.ParameterType, referenceBindings );
+
+					// This is in case an IContractResolver is being used.
+					var type = ReflectionHelper.CreateInstance( parameterMap.ReferenceMap.Data.Parameter.ParameterType ).GetType();
+					var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
+
+					argumentExpressions.Add( referenceBody );
+				}
+				else
+				{
+					// Value type.
+
+					var index = Configuration.HasHeaderRecord
+						? GetFieldIndex( parameterMap.Data.Name, 0 )
+						: parameterMap.Data.Index;
+
+					// Get the field using the field index.
+					var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
+					Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
+
+					// Convert the field.
+					var typeConverterExpression = Expression.Constant( parameterMap.Data.TypeConverter );
+					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( parameterMap.Data.Parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
+					parameterMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
+
+					// Create type converter expression.
+					var propertyMapData = new CsvPropertyMapData( null )
+					{
+						Index = parameterMap.Data.Index,
+						TypeConverter = parameterMap.Data.TypeConverter,
+						TypeConverterOptions = parameterMap.Data.TypeConverterOptions
+					};
+					propertyMapData.Names.Add( parameterMap.Data.Name );
+					Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
+					typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, parameterMap.Data.Parameter.ParameterType );
+
+					fieldExpression = typeConverterFieldExpression;
+
+					argumentExpressions.Add( fieldExpression );
+				}
+			}
 		}
 
 		/// <summary>

@@ -37,7 +37,13 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the constructor expression.
 		/// </summary>
-		public virtual Expression Constructor { get; protected set; } 
+		public virtual Expression Constructor { get; protected set; }
+
+		/// <summary>
+		/// The class constructor parameter mappings.
+		/// This is used for anonymous types.
+		/// </summary>
+		public virtual List<CsvParameterMap> ParameterMaps { get; } = new List<CsvParameterMap>();
 
 		/// <summary>
 		/// The class property/field mappings.
@@ -144,7 +150,24 @@ namespace CsvHelper.Configuration
 		/// <param name="options">Options for auto mapping.</param>
 		public virtual void AutoMap( AutoMapOptions options )
 		{
+			var type = GetGenericType();
+			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
+			{
+				throw new CsvConfigurationException( "Types that inherit IEnumerable cannot be auto mapped. " +
+													 "Did you accidentally call GetRecord or WriteRecord which " +
+													 "acts on a single record instead of calling GetRecords or " +
+													 "WriteRecords which acts on a list of records?" );
+			}
+
 			var mapParents = new LinkedList<Type>();
+			if( type.IsAnonymous() )
+			{
+				// Map the constructor since anonymous types have
+				// private setters. Properties will also be mapped
+				// since writing only uses getters.
+				AutoMapAnonymous( this, options, mapParents );
+			}
+
 			AutoMapInternal( this, options, mapParents );
 		}
 
@@ -155,17 +178,26 @@ namespace CsvHelper.Configuration
 		/// <returns>The max index.</returns>
 		public virtual int GetMaxIndex()
 		{
-			if( PropertyMaps.Count == 0 && ReferenceMaps.Count == 0 )
+			if( ParameterMaps.Count == 0 && PropertyMaps.Count == 0 && ReferenceMaps.Count == 0 )
 			{
 				return -1;
 			}
 
 			var indexes = new List<int>();
+			if( ParameterMaps.Count > 0 )
+			{
+				indexes.AddRange( ParameterMaps.Select( parameterMap => parameterMap.GetMaxIndex() ) );
+			}
+
 			if( PropertyMaps.Count > 0 )
 			{
 				indexes.Add( PropertyMaps.Max( pm => pm.Data.Index ) );
 			}
-			indexes.AddRange( ReferenceMaps.Select( referenceMap => referenceMap.GetMaxIndex() ) );
+
+			if( ReferenceMaps.Count > 0 )
+			{
+				indexes.AddRange( ReferenceMaps.Select( referenceMap => referenceMap.GetMaxIndex() ) );
+			}
 
 			return indexes.Max();
 		}
@@ -177,6 +209,11 @@ namespace CsvHelper.Configuration
 		/// <returns>The last index + 1.</returns>
 		public virtual int ReIndex( int indexStart = 0 )
 		{
+			foreach( var parameterMap in ParameterMaps )
+			{
+				parameterMap.Data.Index = indexStart + parameterMap.Data.Index;
+			}
+
 			foreach( var propertyMap in PropertyMaps )
 			{
 				if( !propertyMap.Data.IsIndexSet )
@@ -202,14 +239,7 @@ namespace CsvHelper.Configuration
 		/// <param name="indexStart">The index starting point.</param>
 		internal static void AutoMapInternal( CsvClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
-			var type = map.GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
-			if( typeof( IEnumerable ).IsAssignableFrom( type ) )
-			{
-				throw new CsvConfigurationException( "Types that inherit IEnumerable cannot be auto mapped. " +
-													 "Did you accidentally call GetRecord or WriteRecord which " +
-													 "acts on a single record instead of calling GetRecords or " +
-													 "WriteRecords which acts on a list of records?" );
-			}
+			var type = map.GetGenericType();
 
 			var flags = BindingFlags.Instance | BindingFlags.Public;
 			if( options.IncludePrivateProperties )
@@ -218,7 +248,7 @@ namespace CsvHelper.Configuration
 			}
 
 			var members = new List<MemberInfo>();
-			if( ( options.MemberTypes & MemberTypes.Properties ) == MemberTypes.Properties )
+			if( options.MemberTypes.HasFlag( MemberTypes.Properties ) )
 			{
 				// We need to go up the declaration tree and find the actual type the property
 				// exists on and use that PropertyInfo instead. This is so we can get the private
@@ -232,7 +262,7 @@ namespace CsvHelper.Configuration
 				members.AddRange( properties );
 			}
 
-			if( ( options.MemberTypes & MemberTypes.Fields ) == MemberTypes.Fields )
+			if( options.MemberTypes.HasFlag( MemberTypes.Fields ) )
 			{
 				var fields = new List<MemberInfo>();
 				foreach( var field in type.GetFields( flags ) )
@@ -262,14 +292,15 @@ namespace CsvHelper.Configuration
 				var isUserDefinedStruct = memberTypeInfo.IsValueType && !memberTypeInfo.IsPrimitive && !memberTypeInfo.IsEnum;
 				if( isDefaultConverter && ( hasDefaultConstructor || isUserDefinedStruct ) )
 				{
+					// If the type is not one covered by our type converters
+					// and it has a parameterless constructor, create a
+					// reference map for it.
+
 					if( options.IgnoreReferences )
 					{
 						continue;
 					}
 
-					// If the type is not one covered by our type converters
-					// and it has a parameterless constructor, create a
-					// reference map for it.
 					if( CheckForCircularReference( member.MemberType(), mapParents ) )
 					{
 						continue;
@@ -280,7 +311,8 @@ namespace CsvHelper.Configuration
 					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
 					var refOptions = options.Copy();
 					refOptions.IgnoreReferences = false;
-					AutoMapInternal( refMap, options, mapParents, map.GetMaxIndex() + 1 );
+					// Need to use Max here for nested types.
+					AutoMapInternal( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
 					mapParents.Drop( mapParents.Find( type ) );
 
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
@@ -308,6 +340,86 @@ namespace CsvHelper.Configuration
 						map.PropertyMaps.Add( propertyMap );
 					}
 				}
+			}
+
+			map.ReIndex( indexStart );
+		}
+
+		/// <summary>
+		/// Auto maps the given map for an anonymous type.
+		/// </summary>
+		/// <param name="map">The map to auto map.</param>
+		/// <param name="options">Options for auto mapping.</param>
+		/// <param name="mapParents">The list of parents for the map.</param>
+		/// <param name="indexStart">The index starting point.</param>
+		internal static void AutoMapAnonymous( CsvClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
+		{
+			var type = map.GetGenericType();
+			var constructor = map.ClassType.GetConstructors().Single();
+			var parameters = constructor.GetParameters();
+
+			foreach( var parameter in parameters )
+			{
+				var typeConverterType = TypeConverterFactory.Current.GetConverter( parameter.ParameterType ).GetType();
+
+				var parameterMap = new CsvParameterMap( parameter );
+
+				var memberTypeInfo = parameter.ParameterType.GetTypeInfo();
+				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
+				var hasDefaultConstructor = parameter.ParameterType.GetConstructor( new Type[0] ) != null;
+				var isUserDefinedStruct = memberTypeInfo.IsValueType && !memberTypeInfo.IsPrimitive && !memberTypeInfo.IsEnum;
+				if( isDefaultConverter && ( hasDefaultConstructor || isUserDefinedStruct ) )
+				{
+					// If the type is not one covered by our type converters
+					// and it has a parameterless constructor, create a
+					// reference map for it.
+
+					if( options.IgnoreReferences )
+					{
+						throw new InvalidOperationException( $"Configuration '{nameof( options.IgnoreReferences )}' can't be true " +
+															  "when using anonymous types. Anonymous types use constructor parameters " +
+															  "and all properties including references must be used." );
+					}
+
+					// Cicular references aren't possible with an anonymous type,
+					// so we don't need to worry about that check here.
+
+					mapParents.AddLast( type );
+					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( parameter.ParameterType );
+					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
+					var refOptions = options.Copy();
+					refOptions.IgnoreReferences = false;
+					AutoMapInternal( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					mapParents.Drop( mapParents.Find( type ) );
+
+					var referenceMap = new CsvParameterReferenceMap( parameter, refMap );
+					if( options.PrefixReferenceHeaders )
+					{
+						referenceMap.Prefix();
+					}
+
+					parameterMap.ReferenceMap = referenceMap;
+				}
+				else if( parameter.ParameterType.IsAnonymous() )
+				{
+					mapParents.AddLast( type );
+					var anonymousMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( parameter.ParameterType );
+					var anonymousMap = (CsvClassMap)ReflectionHelper.CreateInstance( anonymousMapType );
+					var anonymousOptions = options.Copy();
+					anonymousOptions.IgnoreReferences = false;
+					// Need to use Max here for nested types.
+					AutoMapAnonymous( anonymousMap, anonymousOptions, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					mapParents.Drop( mapParents.Find( type ) );
+
+					parameterMap.AnonymousTypeMap = anonymousMap;
+				}
+				else
+				{
+					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), options.TypeConverterOptionsFactory.GetOptions( parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
+					parameterMap.Data.Index = map.GetMaxIndex() + 1;
+				}
+
+				map.ParameterMaps.Add( parameterMap );
 			}
 
 			map.ReIndex( indexStart );
@@ -343,6 +455,11 @@ namespace CsvHelper.Configuration
 			}
 
 			return false;
+		}
+
+		private Type GetGenericType()
+		{
+			return GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
 		}
 	}
 }
