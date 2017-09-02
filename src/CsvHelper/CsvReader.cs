@@ -1582,7 +1582,7 @@ namespace CsvHelper
 
 				if( propertyMap.Data.IsConstantSet )
 				{
-					fieldExpression = Expression.Constant( propertyMap.Data.Constant );
+					fieldExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Constant ), propertyMap.Data.Member.MemberType() );
 				}
 				else if( propertyMap.Data.IsDefaultSet )
 				{

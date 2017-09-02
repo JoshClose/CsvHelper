@@ -33,7 +33,27 @@ namespace CsvHelper.Tests.Reading
 			Assert.AreEqual( 1, records[0].Id );
 			Assert.AreEqual( "constant", records[0].Name );
 			Assert.AreEqual( 2, records[1].Id );
-			Assert.AreEqual( "constant", records[0].Name );
+			Assert.AreEqual( "constant", records[1].Name );
+		}
+
+		[TestMethod]
+		public void ConstantIsNullTest()
+		{
+			var rows = new Queue<string[]>();
+			rows.Enqueue( new[] { "Id", "Name" } );
+			rows.Enqueue( new[] { "1", "one" } );
+			rows.Enqueue( new[] { "2", "two" } );
+			rows.Enqueue( null );
+			var parser = new ParserMock( rows );
+
+			var csv = new CsvReader( parser );
+			csv.Configuration.RegisterClassMap<TestNullMap>();
+			var records = csv.GetRecords<Test>().ToList();
+
+			Assert.AreEqual( 1, records[0].Id );
+			Assert.IsNull( records[0].Name );
+			Assert.AreEqual( 2, records[1].Id );
+			Assert.IsNull( records[1].Name );
 		}
 
 		private class Test
@@ -48,6 +68,15 @@ namespace CsvHelper.Tests.Reading
 			{
 				Map( m => m.Id );
 				Map( m => m.Name ).Constant( "constant" );
+			}
+		}
+
+		private sealed class TestNullMap : CsvClassMap<Test>
+		{
+			public TestNullMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name ).Constant( null );
 			}
 		}
 	}
