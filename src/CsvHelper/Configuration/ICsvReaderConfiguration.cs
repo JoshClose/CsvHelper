@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
+using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -57,6 +58,17 @@ namespace CsvHelper.Configuration
 		/// and making casing changes to ignore case.
 		/// </summary>
 		Func<string, string> PrepareHeaderForMatch { get; set; }
+
+		/// <summary>
+		/// Determines if constructor parameters should be used to create
+		/// the class instead of the default constructor and properties.
+		/// </summary>
+		Func<Type, bool> ShouldUseConstructorParameters { get; set; }
+
+		/// <summary>
+		/// Chooses the constructor to use for constuctor mapping.
+		/// </summary>
+		Func<Type, ConstructorInfo> GetConstructor { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether empty rows should be skipped when reading.

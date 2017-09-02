@@ -1348,11 +1348,11 @@ namespace CsvHelper
 
 			if( map.ParameterMaps.Count > 0 )
 			{
-				// This is an anonymous type.
+				// This is a constructor paramter type.
 				var arguments = new List<Expression>();
 				CreateConstructorArgumentExpressionsForMapping( map, arguments );
 
-				body = Expression.New( map.ClassType.GetConstructors().Single(), arguments );
+				body = Expression.New( Configuration.GetConstructor( map.ClassType ), arguments );
 			}
 			else
 			{
@@ -1412,7 +1412,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates the constructor arguments used to create an anonymous type.
+		/// Creates the constructor arguments used to create a type.
 		/// </summary>
 		/// <param name="map">The mapping to create the arguments for.</param>
 		/// <param name="argumentExpressions">The arguments that will be added to the mapping.</param>
@@ -1420,14 +1420,14 @@ namespace CsvHelper
 		{
 			foreach( var parameterMap in map.ParameterMaps )
 			{
-				if( parameterMap.AnonymousTypeMap != null )
+				if( parameterMap.ConstructorTypeMap != null )
 				{
-					// Anonymous type.
+					// Constructor paramter type.
 					var arguments = new List<Expression>();
-					CreateConstructorArgumentExpressionsForMapping( parameterMap.AnonymousTypeMap, arguments );
-					var anonymousExpression = Expression.New( parameterMap.AnonymousTypeMap.ClassType.GetConstructors().Single(), arguments );
+					CreateConstructorArgumentExpressionsForMapping( parameterMap.ConstructorTypeMap, arguments );
+					var constructorExpression = Expression.New( Configuration.GetConstructor( parameterMap.ConstructorTypeMap.ClassType ), arguments );
 
-					argumentExpressions.Add( anonymousExpression );
+					argumentExpressions.Add( constructorExpression );
 				}
 				else if( parameterMap.ReferenceMap != null )
 				{

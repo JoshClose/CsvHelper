@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Reflection;
 using CsvHelper.TypeConversion;
+using System;
 
 namespace CsvHelper.Configuration
 {
@@ -49,12 +50,23 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
 		/// </summary>
-		public TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
+		public TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; }
+
+		/// <summary>
+		/// Determines if constructor parameters should be used to create
+		/// the class instead of the default constructor and properties.
+		/// </summary>
+		public Func<Type, bool> ShouldUseConstructorParameters { get; set; }
+
+		/// <summary>
+		/// Chooses the constructor to use for constuctor mapping.
+		/// </summary>
+		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; }
 
 		/// <summary>
 		/// Create options using the defaults.
 		/// </summary>
-		public AutoMapOptions() { }
+		public AutoMapOptions() : this( new CsvConfiguration() ) { }
 
 		/// <summary>
 		/// Creates options using the given <see cref="CsvConfiguration"/>.
@@ -67,7 +79,9 @@ namespace CsvHelper.Configuration
 		    IncludePrivateProperties = configuration.IncludePrivateMembers;
 			HasHeaderRecord = configuration.HasHeaderRecord;
 		    MemberTypes = configuration.MemberTypes;
-			TypeConverterOptionsFactory = configuration.TypeConverterOptionsFactory;
+			TypeConverterOptionsFactory = configuration.TypeConverterOptionsFactory ?? throw new ArgumentException( $"Configuration value '{configuration.TypeConverterOptionsFactory}' cannot be null.", nameof( configuration ) );
+			ShouldUseConstructorParameters = configuration.ShouldUseConstructorParameters ?? throw new ArgumentException( $"Configuration value '{configuration.ShouldUseConstructorParameters}' cannot be null.", nameof( configuration ) );
+			GetConstructor = configuration.GetConstructor ?? throw new ArgumentException( $"Configuration value '{configuration.GetConstructor}' cannot be null.", nameof( configuration ) );
 	    }
 
 		/// <summary>

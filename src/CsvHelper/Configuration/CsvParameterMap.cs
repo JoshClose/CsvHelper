@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Mapping for a constructor parameter for an anonymous type.
-	/// This may contain value type data, an anonymous type map,
+	/// Mapping for a constructor parameter.
+	/// This may contain value type data, a constructor type map,
 	/// or a reference map, depending on the type of the parameter.
 	/// </summary>
 	[DebuggerDisplay( "Data = {Data}" )]
@@ -23,9 +23,9 @@ namespace CsvHelper.Configuration
 		public virtual CsvParameterMapData Data { get; protected set; }
 
 		/// <summary>
-		/// Gets or sets the map for an anonymous type.
+		/// Gets or sets the map for a constructor type.
 		/// </summary>
-		public virtual CsvClassMap AnonymousTypeMap { get; set; }
+		public virtual CsvClassMap ConstructorTypeMap { get; set; }
 
 		/// <summary>
 		/// Gets or sets the map for a reference type.

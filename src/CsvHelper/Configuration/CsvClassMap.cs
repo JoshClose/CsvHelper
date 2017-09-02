@@ -41,7 +41,6 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// The class constructor parameter mappings.
-		/// This is used for anonymous types.
 		/// </summary>
 		public virtual List<CsvParameterMap> ParameterMaps { get; } = new List<CsvParameterMap>();
 
@@ -160,15 +159,16 @@ namespace CsvHelper.Configuration
 			}
 
 			var mapParents = new LinkedList<Type>();
-			if( type.IsAnonymous() )
+			if( options.ShouldUseConstructorParameters( type ) )
 			{
-				// Map the constructor since anonymous types have
-				// private setters. Properties will also be mapped
-				// since writing only uses getters.
-				AutoMapAnonymous( this, options, mapParents );
+				// This type doesn't have a parameterless constructor so we can't create an
+				// instance and set it's property. Constructor parameters need to be created
+				// instead. Writing only uses getters, so properties will also be mapped
+				// for writing purposes.
+				AutoMapConstructorParameters( this, options, mapParents );
 			}
 
-			AutoMapInternal( this, options, mapParents );
+			AutoMapProperties( this, options, mapParents );
 		}
 
 		/// <summary>
@@ -237,7 +237,7 @@ namespace CsvHelper.Configuration
 		/// <param name="options">Options for auto mapping.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		internal static void AutoMapInternal( CsvClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
+		protected virtual void AutoMapProperties( CsvClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 			var type = map.GetGenericType();
 
@@ -288,9 +288,7 @@ namespace CsvHelper.Configuration
 
 				var memberTypeInfo = member.MemberType().GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
-				var hasDefaultConstructor = member.MemberType().GetConstructor( new Type[0] ) != null;
-				var isUserDefinedStruct = memberTypeInfo.IsValueType && !memberTypeInfo.IsPrimitive && !memberTypeInfo.IsEnum;
-				if( isDefaultConverter && ( hasDefaultConstructor || isUserDefinedStruct ) )
+				if( isDefaultConverter && ( memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct() ) )
 				{
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
@@ -312,7 +310,7 @@ namespace CsvHelper.Configuration
 					var refOptions = options.Copy();
 					refOptions.IgnoreReferences = false;
 					// Need to use Max here for nested types.
-					AutoMapInternal( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					AutoMapProperties( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
 					mapParents.Drop( mapParents.Find( type ) );
 
 					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
@@ -346,16 +344,16 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Auto maps the given map for an anonymous type.
+		/// Auto maps the given map using constructor parameters.
 		/// </summary>
 		/// <param name="map">The map to auto map.</param>
 		/// <param name="options">Options for auto mapping.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		internal static void AutoMapAnonymous( CsvClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
+		protected virtual void AutoMapConstructorParameters( CsvClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 			var type = map.GetGenericType();
-			var constructor = map.ClassType.GetConstructors().Single();
+			var constructor = options.GetConstructor( map.ClassType );
 			var parameters = constructor.GetParameters();
 
 			foreach( var parameter in parameters )
@@ -366,9 +364,7 @@ namespace CsvHelper.Configuration
 
 				var memberTypeInfo = parameter.ParameterType.GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
-				var hasDefaultConstructor = parameter.ParameterType.GetConstructor( new Type[0] ) != null;
-				var isUserDefinedStruct = memberTypeInfo.IsValueType && !memberTypeInfo.IsPrimitive && !memberTypeInfo.IsEnum;
-				if( isDefaultConverter && ( hasDefaultConstructor || isUserDefinedStruct ) )
+				if( isDefaultConverter && ( memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct() ) )
 				{
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
@@ -377,19 +373,22 @@ namespace CsvHelper.Configuration
 					if( options.IgnoreReferences )
 					{
 						throw new InvalidOperationException( $"Configuration '{nameof( options.IgnoreReferences )}' can't be true " +
-															  "when using anonymous types. Anonymous types use constructor parameters " +
-															  "and all properties including references must be used." );
+															  "when using types without a default constructor. Constructor parameters " +
+															  "are used and all properties including references must be used." );
 					}
 
-					// Cicular references aren't possible with an anonymous type,
-					// so we don't need to worry about that check here.
+					if( CheckForCircularReference( parameter.ParameterType, mapParents ) )
+					{
+						throw new InvalidOperationException( $"A circular reference was detected in constructor paramter '{parameter.Name}'." +
+															  "Since all parameters must be supplied for a constructor, this parameter can't be skipped." );
+					}
 
 					mapParents.AddLast( type );
 					var refMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( parameter.ParameterType );
 					var refMap = (CsvClassMap)ReflectionHelper.CreateInstance( refMapType );
 					var refOptions = options.Copy();
 					refOptions.IgnoreReferences = false;
-					AutoMapInternal( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					AutoMapProperties( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
 					mapParents.Drop( mapParents.Find( type ) );
 
 					var referenceMap = new CsvParameterReferenceMap( parameter, refMap );
@@ -400,18 +399,18 @@ namespace CsvHelper.Configuration
 
 					parameterMap.ReferenceMap = referenceMap;
 				}
-				else if( parameter.ParameterType.IsAnonymous() )
+				else if( options.ShouldUseConstructorParameters( parameter.ParameterType ) )
 				{
 					mapParents.AddLast( type );
-					var anonymousMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( parameter.ParameterType );
-					var anonymousMap = (CsvClassMap)ReflectionHelper.CreateInstance( anonymousMapType );
-					var anonymousOptions = options.Copy();
-					anonymousOptions.IgnoreReferences = false;
+					var constructorMapType = typeof( DefaultCsvClassMap<> ).MakeGenericType( parameter.ParameterType );
+					var constructorMap = (CsvClassMap)ReflectionHelper.CreateInstance( constructorMapType );
+					var constructorOptions = options.Copy();
+					constructorOptions.IgnoreReferences = false;
 					// Need to use Max here for nested types.
-					AutoMapAnonymous( anonymousMap, anonymousOptions, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					AutoMapConstructorParameters( constructorMap, constructorOptions, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
 					mapParents.Drop( mapParents.Find( type ) );
 
-					parameterMap.AnonymousTypeMap = anonymousMap;
+					parameterMap.ConstructorTypeMap = constructorMap;
 				}
 				else
 				{
@@ -432,7 +431,7 @@ namespace CsvHelper.Configuration
 		/// <param name="mapParents">The list of parents to check against.</param>
 		/// <returns>A value indicating if a circular reference was found.
 		/// True if a circular reference was found, otherwise false.</returns>
-		internal static bool CheckForCircularReference( Type type, LinkedList<Type> mapParents )
+		protected virtual bool CheckForCircularReference( Type type, LinkedList<Type> mapParents )
 		{
 			if( mapParents.Count == 0 )
 			{
@@ -457,7 +456,10 @@ namespace CsvHelper.Configuration
 			return false;
 		}
 
-		private Type GetGenericType()
+		/// <summary>
+		/// Gets the generic type for this class map.
+		/// </summary>
+		protected virtual Type GetGenericType()
 		{
 			return GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
 		}

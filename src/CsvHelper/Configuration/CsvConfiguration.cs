@@ -71,6 +71,21 @@ namespace CsvHelper.Configuration
 		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = header => header;
 
 		/// <summary>
+		/// Determines if constructor parameters should be used to create
+		/// the class instead of the default constructor and properties.
+		/// </summary>
+		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type => 
+				!type.HasParameterlessConstructor()
+				&& !type.IsUserDefinedStruct()
+				&& !type.IsInterface
+				&& Type.GetTypeCode( type ) == TypeCode.Object;
+
+		/// <summary>
+		/// Chooses the constructor to use for constuctor mapping.
+		/// </summary>
+		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = type => type.GetConstructorWithMostParameters();
+
+		/// <summary>
 		/// Gets or sets a value indicating whether references
 		/// should be ignored when auto mapping. True to ignore
 		/// references, otherwise false. Default is false.

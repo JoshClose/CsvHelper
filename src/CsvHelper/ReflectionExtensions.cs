@@ -6,6 +6,7 @@ using System;
 using System.Reflection;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace CsvHelper
 {
@@ -79,6 +80,35 @@ namespace CsvHelper
 				&& type.Attributes.HasFlag( TypeAttributes.NotPublic );
 
 			return isAnonymous;
+		}
+
+		/// <summary>
+		/// Gets a value indicating if the given type has a parameterless constructor.
+		/// True if it has a parameterless constructor, otherwise false.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		public static bool HasParameterlessConstructor( this Type type )
+		{
+			return type.GetConstructors().Any( t => t.GetParameters().Length == 0 );
+		}
+
+		/// <summary>
+		/// Gets the constructor that contains the most parameters.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		public static ConstructorInfo GetConstructorWithMostParameters( this Type type )
+		{
+			return type.GetConstructors().OrderByDescending( c => c.GetParameters().Length ).First();
+		}
+
+		/// <summary>
+		/// Gets a value indicating if the type is a user defined struct.
+		/// True if it is a user defined struct, otherwise false.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		public static bool IsUserDefinedStruct( this Type type )
+		{
+			return type.IsValueType && !type.IsPrimitive && !type.IsEnum;
 		}
 	}
 }
