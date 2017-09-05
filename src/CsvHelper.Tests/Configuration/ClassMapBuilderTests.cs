@@ -18,14 +18,29 @@ namespace CsvHelper.Tests.Configuration
 	public class ClassMapBuilderTests
 	{
 		private static readonly CsvFactory csvFactory = new CsvFactory();
-
 		private static Func<IReaderRow, FakeInnerClass> ConvertExpression => r => new FakeInnerClass { E = r.GetField( 4 ) };
-
 		private static readonly CsvClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
+			/*
+			.Map( m => m.A ).Constant( "a" )
+			.Map( m => m.A ).ConvertUsing( row => row.GetField( 0 ) )
+			.Map( m => m.A ).Default( "a" )
+			.Map( m => m.A ).Index( 0 )
+			.Map( m => m.A ).Index( 0 ).Default( "a" )
+			.Map( m => m.A ).Index( 0 ).Name( "a" )
+			.Map( m => m.A ).Index( 0 ).TypeConverter<StringConverter>()
+			.Map( m => m.A ).Name( "a" )
+			.Map( m => m.A ).Name( "a" ).Default( "a" )
+			.Map( m => m.A ).Name( "a" ).NameIndex( 0 )
+			.Map( m => m.A ).Name( "a" ).NameIndex( 0 ).Default( "a" )
+			.Map( m => m.A ).Name( "a" ).NameIndex( 0 ).TypeConverter<StringConverter>()
+			.Map( m => m.A ).Name( "a" ).TypeConverter<StringConverter>()
+			.Map( m => m.A ).TypeConverter<StringConverter>()
+			.Map( m => m.A ).TypeConverter<StringConverter>().Default( "a" )
+			*/
 			.Map( m => m.A ).Name( "A1" ).NameIndex( 2 ).Default( "WEW" )
 			.Map( m => m.B ).Name( "B2" ).Default( 2 )
-			.Map( m => m.C ).Index( 2 ).TypeConvert( new DateTimeConverter() )
-			.Map( m => m.D ).Name( "D4" ).TypeConvert<DoubleConverter>().Default( 4d )
+			.Map( m => m.C ).Index( 2 ).TypeConverter( new DateTimeConverter() )
+			.Map( m => m.D ).Name( "D4" ).TypeConverter<DoubleConverter>().Default( 4d )
 			.Map( m => m.E ).ConvertUsing( ConvertExpression )
 			.Build();
 

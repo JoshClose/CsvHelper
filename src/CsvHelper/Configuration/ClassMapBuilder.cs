@@ -5,103 +5,247 @@
 using System;
 using System.Linq.Expressions;
 using CsvHelper.TypeConversion;
+using System.Collections;
 
 namespace CsvHelper.Configuration
 {
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+	// 1. Map
+	// 2. TypeConverter
+	// 3. Index
+	// 4. Name
+	// 5. NameIndex
+	// 6. ConvertUsing
+	// 7. Default
+	// 8. Constant
 
-	public interface IMappableClass<TClass> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has mapping capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	public interface IHasMap<TClass> : IBuildableClass<TClass>
 	{
-		IMappedOptionsClass<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true );
+		/// <summary>
+		/// Maps a property/field to a CSV field.
+		/// </summary>
+		/// <param name="expression">The property/field to map.</param>
+		/// <param name="useExistingMap">If true, an existing map will be used if available.
+		/// If false, a new map is created for the same property/field.</param>
+		/// <returns>The property/field mapping.</returns>
+		IHasMapOptions<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true );
 	}
 
-	public interface IMappedOptionsClass<TClass, TProperty> :
-		IMappableClass<TClass>, //1
-		ITypeConvertibleClass<TClass, TProperty>, //2
-		IIndexableClass<TClass, TProperty>, //3
-		INameableClass<TClass, TProperty>, //4
-		IConvertUsingableClass<TClass, TProperty>, //6
-		IDefaultableClass<TClass, TProperty> //7 
+	/// <summary>
+	/// Options after a mapping call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasMapOptions<TClass, TProperty> :
+		IHasMap<TClass>, //1
+		IHasTypeConverter<TClass, TProperty>, //2
+		IHasIndex<TClass, TProperty>, //3
+		IHasName<TClass, TProperty>, //4
+		IHasConvertUsing<TClass, TProperty>, //6
+		IHasDefault<TClass, TProperty>, //7 
+		IHasConstant<TClass, TProperty> //8
 	{ }
 
-	public interface ITypeConvertibleClass<TClass, TProperty> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has type converter capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasTypeConverter<TClass, TProperty> : IBuildableClass<TClass>
 	{
-		ITypeConvertedOptionsClass<TClass, TProperty> TypeConvert( ITypeConverter typeConverter );
+		/// <summary>
+		/// Specifies the <see cref="TypeConverter"/> to use
+		/// when converting the property/field to and from a CSV field.
+		/// </summary>
+		/// <param name="typeConverter">The TypeConverter to use.</param>
+		IHasTypeConverterOptions<TClass, TProperty> TypeConverter( ITypeConverter typeConverter );
 
-		ITypeConvertedOptionsClass<TClass, TProperty> TypeConvert<TConverter>() where TConverter : ITypeConverter;
+		/// <summary>
+		/// Specifies the <see cref="TypeConverter"/> to use
+		/// when converting the property/field to and from a CSV field.
+		/// </summary>
+		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
+		/// <see cref="TypeConverter"/> to use.</typeparam>
+		IHasTypeConverterOptions<TClass, TProperty> TypeConverter<TConverter>() where TConverter : ITypeConverter;
 	}
 
-	public interface ITypeConvertedOptionsClass<TClass, TProperty> :
-		IMappableClass<TClass>, //1
-		IDefaultableClass<TClass, TProperty> //7
+	/// <summary>
+	/// Options after a type converter call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasTypeConverterOptions<TClass, TProperty> :
+		IHasMap<TClass>, //1
+		IHasDefault<TClass, TProperty> //7
 	{ }
 
-	public interface IIndexableClass<TClass, TProperty> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has index capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasIndex<TClass, TProperty> : IBuildableClass<TClass>
 	{
-		IIndexedOptionsClass<TClass, TProperty> Index( int index );
+		/// <summary>
+		/// When reading, is used to get the field at
+		/// the given index. When writing, the fields
+		/// will be written in the order of the field
+		/// indexes.
+		/// </summary>
+		/// <param name="index">The index of the CSV field.</param>
+		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property/field.</param>
+		IHasIndexOptions<TClass, TProperty> Index( int index, int indexEnd = -1 );
 	}
 
-	public interface IIndexedOptionsClass<TClass, TProperty> :
-		IMappableClass<TClass>, //1
-		ITypeConvertibleClass<TClass, TProperty>, //2
-		IDefaultableClass<TClass, TProperty> //7
+	/// <summary>
+	/// Options after an index call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasIndexOptions<TClass, TProperty> :
+		IHasMap<TClass>, //1
+		IHasTypeConverter<TClass, TProperty>, //2
+		IHasName<TClass, TProperty>, //4
+		IHasDefault<TClass, TProperty> //7
 	{ }
 
-	public interface INameableClass<TClass, TProperty> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has name capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasName<TClass, TProperty> : IBuildableClass<TClass>
 	{
-		INamedOptionsClass<TClass, TProperty> Name( params string[] names );
+		/// <summary>
+		/// When reading, is used to get the field
+		/// at the index of the name if there was a
+		/// header specified. It will look for the
+		/// first name match in the order listed.
+		/// When writing, sets the name of the 
+		/// field in the header record.
+		/// The first name will be used.
+		/// </summary>
+		/// <param name="names">The possible names of the CSV field.</param>
+		IHasNameOptions<TClass, TProperty> Name( params string[] names );
 	}
 
-	public interface INamedOptionsClass<TClass, TProperty> :
-		IMappableClass<TClass>, //1
-		ITypeConvertibleClass<TClass, TProperty>, //2
-		INameIndexableClass<TClass, TProperty>, //5
-		IDefaultableClass<TClass, TProperty> //7
+	/// <summary>
+	/// Options after a name call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasNameOptions<TClass, TProperty> :
+		IHasMap<TClass>, //1
+		IHasTypeConverter<TClass, TProperty>, //2
+		IHasNameIndex<TClass, TProperty>, //5
+		IHasDefault<TClass, TProperty> //7
 	{ }
 
-
-	public interface INameIndexableClass<TClass, TProperty> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has name index capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasNameIndex<TClass, TProperty> : IBuildableClass<TClass>
 	{
-		INameIndexedOptionsClass<TClass, TProperty> NameIndex( int index );
+		/// <summary>
+		/// When reading, is used to get the 
+		/// index of the name used when there 
+		/// are multiple names that are the same.
+		/// </summary>
+		/// <param name="index">The index of the name.</param>
+		IHasNameIndexOptions<TClass, TProperty> NameIndex( int index );
 	}
 
-	public interface INameIndexedOptionsClass<TClass, TProperty> :
-		IMappableClass<TClass>, //1
-		ITypeConvertibleClass<TClass, TProperty>, //2
-		IDefaultableClass<TClass, TProperty> //7
+	/// <summary>
+	/// Options after a name index call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasNameIndexOptions<TClass, TProperty> :
+		IHasMap<TClass>, //1
+		IHasTypeConverter<TClass, TProperty>, //2
+		IHasDefault<TClass, TProperty> //7
 	{ }
 
-	public interface IConvertUsingableClass<TClass, TProperty> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has convert using capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasConvertUsing<TClass, TProperty> : IBuildableClass<TClass>
 	{
-		IMappableClass<TClass> ConvertUsing( Func<IReaderRow, TProperty> convertExpression );
+		/// <summary>
+		/// Specifies an expression to be used to convert data in the
+		/// row to the property/field.
+		/// </summary>
+		/// <param name="convertExpression">The convert expression.</param>
+		IHasMap<TClass> ConvertUsing( Func<IReaderRow, TProperty> convertExpression );
+
+		/// <summary>
+		/// Specifies an expression to be used to convert the object
+		/// to a field.
+		/// </summary>
+		/// <param name="convertExpression">The convert expression.</param>
+		IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression );
 	}
 
-	public interface IDefaultableClass<TClass, TProperty> : IBuildableClass<TClass>
+	/// <summary>
+	/// Has default capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasDefault<TClass, TProperty> : IBuildableClass<TClass>
 	{
-		IMappableClass<TClass> Default( TProperty defaultValue );
+		/// <summary>
+		/// The default value that will be used when reading when
+		/// the CSV field is empty.
+		/// </summary>
+		/// <param name="defaultValue">The default value.</param>
+		IHasMap<TClass> Default( TProperty defaultValue );
+
+		/// <summary>
+		/// The default value that will be used when reading when
+		/// the CSV field is empty. This value is not type checked
+		/// and will use a <see cref="ITypeConverter"/> to convert
+		/// the field. This could potentially have runtime errors.
+		/// </summary>
+		/// <param name="defaultValue">The default value.</param>
+		IHasMap<TClass> Default( string defaultValue );
 	}
 
+	/// <summary>
+	/// Has constant capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasConstant<TClass, TProperty> : IBuildableClass<TClass>
+	{
+		/// <summary>
+		/// The constant value that will be used for every record when 
+		/// reading and writing. This value will always be used no matter 
+		/// what other mapping configurations are specified.
+		/// </summary>
+		/// <param name="value">The constant value.</param>
+		IHasMap<TClass> Constant( TProperty value );
+	}
+
+	/// <summary>
+	/// Has build capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
 	public interface IBuildableClass<TClass>
 	{
+		/// <summary>
+		/// Builds the <see cref="CsvClassMap{TClass}"/>.
+		/// </summary>
 		CsvClassMap<TClass> Build();
 	}
 
-	internal interface IHasAllBuilderAbilities<TClass, TProperty> :
-		IMappableClass<TClass>, //1
-		IMappedOptionsClass<TClass, TProperty>, //1 result
-		ITypeConvertibleClass<TClass, TProperty>, //2
-		ITypeConvertedOptionsClass<TClass, TProperty>,//2 result
-		IIndexableClass<TClass, TProperty>, //3
-		IIndexedOptionsClass<TClass, TProperty>, //3 result
-		INameableClass<TClass, TProperty>, //4
-		INamedOptionsClass<TClass, TProperty>, //4 result
-		INameIndexableClass<TClass, TProperty>, //5
-		INameIndexedOptionsClass<TClass, TProperty>, //5 result
-		IConvertUsingableClass<TClass, TProperty>, //6 - goes back to 1 only
-		IDefaultableClass<TClass, TProperty> //7 - goes back to 1 only
-	{ }
-
-	internal class ClassMapBuilder<TClass> : IMappableClass<TClass>
+	internal class ClassMapBuilder<TClass> : IHasMap<TClass>
 	{
 		private readonly CsvClassMap<TClass> map;
 
@@ -110,9 +254,9 @@ namespace CsvHelper.Configuration
 			map = new BuilderClassMap<TClass>();
 		}
 
-		public IMappedOptionsClass<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
+		public IHasMapOptions<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
 		{
-			return new MappedOptions<TClass, TProperty>( map, map.Map( expression, useExistingMap ) );
+			return new PropertyMapBuilder<TClass, TProperty>( map, map.Map( expression, useExistingMap ) );
 		}
 
 		public CsvClassMap<TClass> Build()
@@ -123,63 +267,94 @@ namespace CsvHelper.Configuration
 		private class BuilderClassMap<T> : CsvClassMap<T> { }
 	}
 
-	internal class MappedOptions<TClass, TProperty> : IHasAllBuilderAbilities<TClass, TProperty>
+	internal class PropertyMapBuilder<TClass, TProperty> :
+		IHasMap<TClass>, //1
+		IHasMapOptions<TClass, TProperty>, //1 result
+		IHasTypeConverter<TClass, TProperty>, //2
+		IHasTypeConverterOptions<TClass, TProperty>,//2 result
+		IHasIndex<TClass, TProperty>, //3
+		IHasIndexOptions<TClass, TProperty>, //3 result
+		IHasName<TClass, TProperty>, //4
+		IHasNameOptions<TClass, TProperty>, //4 result
+		IHasNameIndex<TClass, TProperty>, //5
+		IHasNameIndexOptions<TClass, TProperty>, //5 result
+		IHasConvertUsing<TClass, TProperty>, //6 - goes back to 1 only
+		IHasDefault<TClass, TProperty>, //7 - goes back to 1 only
+		IHasConstant<TClass, TProperty>
 	{
 		private readonly CsvClassMap<TClass> classMap;
 		private readonly CsvPropertyMap<TClass, TProperty> propertyMap;
 
-		public MappedOptions( CsvClassMap<TClass> classMap, CsvPropertyMap<TClass, TProperty> propertyMap )
+		public PropertyMapBuilder( CsvClassMap<TClass> classMap, CsvPropertyMap<TClass, TProperty> propertyMap )
 		{
 			this.classMap = classMap;
 			this.propertyMap = propertyMap;
 		}
 
 #pragma warning disable CS0693 // Type parameter has the same name as the type parameter from outer type
-		public IMappedOptionsClass<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
+		public IHasMapOptions<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
 		{
-			return new MappedOptions<TClass, TProperty>( classMap, classMap.Map( expression, useExistingMap ) );
+			return new PropertyMapBuilder<TClass, TProperty>( classMap, classMap.Map( expression, useExistingMap ) );
 		}
 #pragma warning restore CS0693 // Type parameter has the same name as the type parameter from outer type
 
-		public IMappableClass<TClass> ConvertUsing( Func<IReaderRow, TProperty> convertExpression )
+		public IHasMap<TClass> ConvertUsing( Func<IReaderRow, TProperty> convertExpression )
 		{
 			propertyMap.ConvertUsing( convertExpression );
 			return this;
 		}
 
-		public IMappableClass<TClass> Default( TProperty defaultValue )
+		public IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression )
+		{
+			propertyMap.ConvertUsing( convertExpression );
+			return this;
+		}
+
+		public IHasMap<TClass> Default( TProperty defaultValue )
 		{
 			propertyMap.Default( defaultValue );
 			return this;
 		}
 
-		public IIndexedOptionsClass<TClass, TProperty> Index( int index )
+		public IHasMap<TClass> Default( string defaultValue )
 		{
-			propertyMap.Index( index );
+			propertyMap.Default( defaultValue );
 			return this;
 		}
 
-		public INamedOptionsClass<TClass, TProperty> Name( params string[] names )
+		public IHasIndexOptions<TClass, TProperty> Index( int index, int indexEnd = -1 )
+		{
+			propertyMap.Index( index, indexEnd );
+			return this;
+		}
+
+		public IHasNameOptions<TClass, TProperty> Name( params string[] names )
 		{
 			propertyMap.Name( names );
 			return this;
 		}
 
-		public INameIndexedOptionsClass<TClass, TProperty> NameIndex( int index )
+		public IHasNameIndexOptions<TClass, TProperty> NameIndex( int index )
 		{
 			propertyMap.NameIndex( index );
 			return this;
 		}
 
-		public ITypeConvertedOptionsClass<TClass, TProperty> TypeConvert( ITypeConverter typeConverter )
+		public IHasTypeConverterOptions<TClass, TProperty> TypeConverter( ITypeConverter typeConverter )
 		{
 			propertyMap.TypeConverter( typeConverter );
 			return this;
 		}
 
-		public ITypeConvertedOptionsClass<TClass, TProperty> TypeConvert<TConverter>() where TConverter : ITypeConverter
+		public IHasTypeConverterOptions<TClass, TProperty> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
 			propertyMap.TypeConverter<TConverter>();
+			return this;
+		}
+
+		public IHasMap<TClass> Constant( TProperty value )
+		{
+			propertyMap.Constant( value );
 			return this;
 		}
 
@@ -188,5 +363,4 @@ namespace CsvHelper.Configuration
 			return classMap;
 		}
 	}
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

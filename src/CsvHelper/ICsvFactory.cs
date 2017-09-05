@@ -70,6 +70,6 @@ namespace CsvHelper
         /// </summary>
         /// <typeparam name="T">Type of class to map</typeparam>
         /// <returns>Next available options</returns>
-        IMappableClass<T> CreateClassMapBuilder<T>();
+        IHasMap<T> CreateClassMapBuilder<T>();
 	}
 }
