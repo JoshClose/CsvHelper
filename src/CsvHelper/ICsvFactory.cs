@@ -4,10 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System.IO;
 using CsvHelper.Configuration;
-#if !NET_2_0
-using System.Linq.Expressions;
-using System;
-#endif
 
 namespace CsvHelper
 {
@@ -69,14 +65,11 @@ namespace CsvHelper
 		/// <returns>The created writer.</returns>
 		IWriter CreateWriter( TextWriter writer );
 
-#if !NET_2_0
         /// <summary>
         /// Provides a fluent interface for dynamically creating <see cref="CsvClassMap{T}"/>s 
         /// </summary>
         /// <typeparam name="T">Type of class to map</typeparam>
-        /// <param name="map">Expression for first property to map</param>
         /// <returns>Next available options</returns>
         IMappableClass<T> CreateClassMapBuilder<T>();
-        #endif
 	}
 }
