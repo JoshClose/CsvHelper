@@ -27,7 +27,13 @@ namespace CsvHelper.Configuration
 		/// True to throw an exception, otherwise false.
 		/// Default is true.
 		/// </summary>
-		bool WillThrowOnMissingField { get; set; }
+		bool ThrowOnMissingField { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
+		/// A header is bad if all the mapped properties don't match.
+		/// </summary>
+		bool ThrowOnBadHeader { get; set; }
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.

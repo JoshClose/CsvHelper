@@ -45,12 +45,18 @@ namespace CsvHelper.Configuration
 		public virtual bool HasHeaderRecord { get; set; } = true;
 
 		/// <summary>
+		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
+		/// A header is bad if all the mapped properties don't match.
+		/// </summary>
+		public virtual bool ThrowOnBadHeader { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if an exception will be
 		/// thrown if a field defined in a mapping is missing.
 		/// True to throw an exception, otherwise false.
 		/// Default is true.
 		/// </summary>
-		public virtual bool WillThrowOnMissingField { get; set; } = true;
+		public virtual bool ThrowOnMissingField { get; set; } = true;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether changes in the column

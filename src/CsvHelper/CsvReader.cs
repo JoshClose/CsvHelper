@@ -98,6 +98,74 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Validates the header. A header is bad if all the mapped properties don't match.
+		/// If the header is not valid, a <see cref="CsvValidationException"/> will be thrown.
+		/// </summary>
+		/// <typeparam name="T">The type to validate the header against.</typeparam>
+		public virtual void ValidateHeader<T>()
+		{
+			ValidateHeader( typeof( T ) );
+		}
+
+		/// <summary>
+		/// Validates the header. A header is bad if all the mapped properties don't match.
+		/// If the header is not valid, a <see cref="CsvValidationException"/> will be thrown.
+		/// </summary>
+		/// <param name="type">The type to validate the header against.</param>
+		public virtual void ValidateHeader( Type type )
+		{
+			if( Configuration.HasHeaderRecord == false )
+			{
+				throw new InvalidOperationException( $"Validation can't be performed on a the header if no header exists. {nameof( Configuration.HasHeaderRecord )} can't be false." );
+			}
+
+			CheckHasBeenRead();
+
+			if( context.HeaderRecord == null )
+			{
+				throw new InvalidOperationException( $"The header must be read before it can be validated." );
+			}
+
+			if( context.ReaderConfiguration.Maps[type] == null )
+			{
+				context.ReaderConfiguration.Maps.Add( context.ReaderConfiguration.AutoMap( type ) );
+			}
+
+			var map = context.ReaderConfiguration.Maps[type];
+			ValidateHeader( map );
+		}
+
+		/// <summary>
+		/// Validates the header against the given map.
+		/// </summary>
+		/// <param name="map">The map to validate against.</param>
+		protected virtual void ValidateHeader( CsvClassMap map )
+		{
+			foreach( var parameter in map.ParameterMaps )
+			{
+				var index = GetFieldIndex( parameter.Data.Name, 0, true );
+				if( index == -1 )
+				{
+					throw new CsvValidationException( context, $"Header '{parameter.Data.Name}' was not found." );
+				}
+			}
+
+			foreach( var property in map.PropertyMaps )
+			{
+				var index = GetFieldIndex( property.Data.Names.ToArray(), property.Data.NameIndex, true );
+				if( index == -1 )
+				{
+					throw new CsvValidationException( context, $"Header '{property.Data.Names[property.Data.NameIndex]}' was not found." );
+				}
+			}
+
+			foreach( var reference in map.ReferenceMaps )
+			{
+				ValidateHeader( reference.Data.Mapping );
+			}
+		}
+
+		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.
 		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/> 
 		/// for the headers to be read.
@@ -239,7 +307,7 @@ namespace CsvHelper
 
 			if( index >= context.Record.Length )
 			{
-				if( context.ReaderConfiguration.WillThrowOnMissingField && context.ReaderConfiguration.IgnoreBlankLines )
+				if( context.ReaderConfiguration.ThrowOnMissingField && context.ReaderConfiguration.IgnoreBlankLines )
 				{
 					throw new CsvMissingFieldException( context, $"Field at index '{index}' does not exist." );
 				}
@@ -456,7 +524,7 @@ namespace CsvHelper
 
 			if( index >= context.Record.Length || index < 0 )
 			{
-				if( context.ReaderConfiguration.WillThrowOnMissingField )
+				if( context.ReaderConfiguration.ThrowOnMissingField )
 				{
 					context.CurrentIndex = index;
 					throw new CsvMissingFieldException( context, $"Field at index '{index}' does not exist." );
@@ -886,6 +954,10 @@ namespace CsvHelper
 			if( context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord )
 			{
 				ReadHeader();
+				if( Configuration.ThrowOnBadHeader )
+				{
+					ValidateHeader<T>();
+				}
 
 				if( !Read() )
 				{
@@ -939,6 +1011,10 @@ namespace CsvHelper
 			if( context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord )
 			{
 				ReadHeader();
+				if( Configuration.ThrowOnBadHeader )
+				{
+					ValidateHeader( type );
+				}
 
 				if( !Read() )
 				{
@@ -980,6 +1056,10 @@ namespace CsvHelper
 				}
 
 				ReadHeader();
+				if( Configuration.ThrowOnBadHeader )
+				{
+					ValidateHeader<T>();
+				}
 			}
 
 			while( Read() )
@@ -1050,6 +1130,10 @@ namespace CsvHelper
 				}
 
 				ReadHeader();
+				if( Configuration.ThrowOnBadHeader )
+				{
+					ValidateHeader( type );
+				}
 			}
 
 			while( Read() )
@@ -1212,7 +1296,7 @@ namespace CsvHelper
 
 			if( name == null || index >= context.NamedIndexes[name].Count )
 			{
-				if( context.ReaderConfiguration.WillThrowOnMissingField && !isTryGet )
+				if( context.ReaderConfiguration.ThrowOnMissingField && !isTryGet )
 				{
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
