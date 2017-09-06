@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
+using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mocks
 {
@@ -44,6 +45,11 @@ namespace CsvHelper.Tests.Mocks
 		{
 		    context.Row++;
 			return rows.Dequeue();
+		}
+
+		public Task<string[]> ReadAsync()
+		{
+			throw new NotImplementedException();
 		}
 
 		public void Add( params string[] row )

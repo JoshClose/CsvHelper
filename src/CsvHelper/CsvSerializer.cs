@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -65,6 +66,8 @@ namespace CsvHelper
 		/// <param name="record">The record to write.</param>
 		public virtual void Write( string[] record )
 		{
+			// Don't forget about the async method below!
+
 			for( var i = 0; i < record.Length; i++ )
 			{
 				if( i > 0 )
@@ -77,11 +80,38 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Writes a record to the CSV file.
+		/// </summary>
+		/// <param name="record">The record to write.</param>
+		public virtual async Task WriteAsync( string[] record )
+		{
+			for( var i = 0; i < record.Length; i++ )
+			{
+				if( i > 0 )
+				{
+					await context.Writer.WriteAsync( context.SerializerConfiguration.Delimiter );
+				}
+
+				await context.Writer.WriteAsync( record[i] );
+			}
+		}
+		
+		/// <summary>
 		/// Writes a new line to the CSV file.
 		/// </summary>
 		public virtual void WriteLine()
 		{
+			// Don't forget about the async method below!
+
 			context.Writer.WriteLine();
+		}
+
+		/// <summary>
+		/// Writes a new line to the CSV file.
+		/// </summary>
+		public virtual async Task WriteLineAsync()
+		{
+			await context.Writer.WriteLineAsync();
 		}
 
 		/// <summary>

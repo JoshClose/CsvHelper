@@ -299,6 +299,11 @@ namespace CsvHelper.Tests.Configuration
 			{
 				throw new NotImplementedException();
 			}
+
+			public T GetRecord<T>( T anonymousTypeDefinition )
+			{
+				throw new NotImplementedException();
+			}
 		}
 	}
 	

@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Linq.Expressions;
 using System.Dynamic;
 using Microsoft.CSharp.RuntimeBinder;
+using System.Threading.Tasks;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -219,7 +220,18 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void Flush()
 		{
+			// Don't forget about the async method below!
+
 			serializer.Write( context.Record.ToArray() );
+			context.Record.Clear();
+		}
+
+		/// <summary>
+		/// Serializes the row to the <see cref="TextWriter"/>.
+		/// </summary>
+		public virtual async Task FlushAsync()
+		{
+			await serializer.WriteAsync( context.Record.ToArray() );
 			context.Record.Clear();
 		}
 
@@ -229,8 +241,10 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void NextRecord()
 		{
-	        try
-	        {
+			// Don't forget about the async method below!
+
+			try
+			{
 				Flush();
 				serializer.WriteLine();
 	            context.Row++;
@@ -241,11 +255,29 @@ namespace CsvHelper
 	        }
 		}
 
-	    /// <summary>
-	    /// Writes a comment.
-	    /// </summary>
-	    /// <param name="comment">The comment to write.</param>
-	    public virtual void WriteComment( string comment )
+		/// <summary>
+		/// Ends writing of the current record and starts a new record.
+		/// This automatically flushes the writer.
+		/// </summary>
+		public virtual async Task NextRecordAsync()
+		{
+			try
+			{
+				await FlushAsync();
+				await serializer.WriteLineAsync();
+				context.Row++;
+			}
+			catch( Exception ex )
+			{
+				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
+			}
+		}
+
+		/// <summary>
+		/// Writes a comment.
+		/// </summary>
+		/// <param name="comment">The comment to write.</param>
+		public virtual void WriteComment( string comment )
 	    {
 	        WriteField( context.WriterConfiguration.Comment + comment, false );
 	    }

@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -33,5 +34,11 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
 		string[] Read();
+
+		/// <summary>
+		/// Reads a record from the CSV file asynchronously.
+		/// </summary>
+		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
+		Task<string[]> ReadAsync();
 	}
 }

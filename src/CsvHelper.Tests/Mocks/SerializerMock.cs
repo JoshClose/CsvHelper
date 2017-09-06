@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.Tests.Mocks
@@ -49,6 +50,16 @@ namespace CsvHelper.Tests.Mocks
 
 		public void Dispose()
 		{
+		}
+
+		public Task WriteAsync( string[] record )
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task WriteLineAsync()
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

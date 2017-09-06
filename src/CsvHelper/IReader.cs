@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using CsvHelper.Configuration;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -34,6 +35,14 @@ namespace CsvHelper
 		bool Read();
 
 		/// <summary>
+		/// Advances the reader to the next record. This will not read headers.
+		/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/> 
+		/// for the headers to be read.
+		/// </summary>
+		/// <returns>True if there are more records, otherwise false.</returns>
+		Task<bool> ReadAsync();
+
+		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
 		/// should not be used when using this.
@@ -41,6 +50,16 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IList{T}" /> of records.</returns>
 		IEnumerable<T> GetRecords<T>();
+
+		/// <summary>
+		/// Gets all the records in the CSV file and converts
+		/// each to <see cref="System.Type"/> T. The read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
+		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
+		IEnumerable<T> GetRecords<T>( T anonymousTypeDefinition );
 
 		/// <summary>
 		/// Gets all the records in the CSV file and

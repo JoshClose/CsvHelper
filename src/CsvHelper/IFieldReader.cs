@@ -17,6 +17,26 @@ namespace CsvHelper
 		IFieldReaderContext Context { get; }
 
 		/// <summary>
+		/// Gets a value indicating if the buffer is empty.
+		/// True if the buffer is empty, otherwise false.
+		/// </summary>
+		bool IsBufferEmpty { get; }
+
+		/// <summary>
+		/// Fills the buffer.
+		/// </summary>
+		/// <returns>True if there is more data left.
+		/// False if all the data has been read.</returns>
+		bool FillBuffer();
+
+		/// <summary>
+		/// Fills the buffer asynchronously.
+		/// </summary>
+		/// <returns>True if there is more data left.
+		/// False if all the data has been read.</returns>
+		Task<bool> FillBufferAsync();
+
+		/// <summary>
 		/// Gets the next char as an <see cref="int"/>.
 		/// </summary>
 		int GetChar();

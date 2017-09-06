@@ -1,0 +1,27 @@
+﻿<#+
+	private string AsyncType( string type, bool isAsync )
+	{
+		if( !isAsync )
+		{
+			return type ?? "void";
+		}
+
+		var s = "async Task";
+		if( type != null )
+		{
+			s += ( "<" + type + ">" );
+		}
+
+		return s;
+	}
+
+	private string AsyncPostfix( bool isAsync )
+	{
+		return isAsync ? "Async" : string.Empty;
+	}
+
+	private string Await( bool isAsync )
+	{
+		return isAsync ? "await " : string.Empty;
+	}
+#>

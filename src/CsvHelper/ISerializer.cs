@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using CsvHelper.Configuration;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -30,8 +31,19 @@ namespace CsvHelper
 		void Write( string[] record );
 
 		/// <summary>
+		/// Writes a record to the CSV file.
+		/// </summary>
+		/// <param name="record">The record to write.</param>
+		Task WriteAsync( string[] record );
+
+		/// <summary>
 		/// Writes a new line to the CSV file.
 		/// </summary>
 		void WriteLine();
+
+		/// <summary>
+		/// Writes a new line to the CSV file.
+		/// </summary>
+		Task WriteLineAsync();
 	}
 }

@@ -33,8 +33,50 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="CsvFieldReader.cs.bak" />
+	  <None Remove="CsvParser.cs.bak" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
 		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="CsvFieldReader.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>CsvFieldReader.cs</LastGenOutput>
+	  </None>
+	  <None Update="CsvParser.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>CsvParser.cs</LastGenOutput>
+	  </None>
+	  <None Update="T4Methods.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>T4Methods.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="CsvFieldReader.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>CsvFieldReader.tt</DependentUpon>
+	  </Compile>
+	  <Compile Update="CsvParser.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>CsvParser.tt</DependentUpon>
+	  </Compile>
+	  <Compile Update="T4Methods.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>T4Methods.tt</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

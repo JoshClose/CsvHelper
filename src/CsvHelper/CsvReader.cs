@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Linq.Expressions;
 using System.Dynamic;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -104,10 +105,51 @@ namespace CsvHelper
 		/// <returns>True if there are more records, otherwise false.</returns>
 		public virtual bool Read()
 		{
+			// Don't forget about the async method below!
+
 			do
 			{
 				context.Record = parser.Read();
 			} 
+			while( ShouldSkipRecord() );
+
+			context.CurrentIndex = -1;
+			context.HasBeenRead = true;
+
+			if( context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null )
+			{
+				if( context.ColumnCount > 0 && context.ColumnCount != context.Record.Length )
+				{
+					var csvException = new CsvBadDataException( context, "An inconsistent number of columns has been detected." );
+
+					if( context.ReaderConfiguration.IgnoreReadingExceptions )
+					{
+						context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException, this );
+					}
+					else
+					{
+						throw csvException;
+					}
+				}
+
+				context.ColumnCount = context.Record.Length;
+			}
+
+			return context.Record != null;
+		}
+
+		/// <summary>
+		/// Advances the reader to the next record. This will not read headers.
+		/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/> 
+		/// for the headers to be read.
+		/// </summary>
+		/// <returns>True if there are more records, otherwise false.</returns>
+		public virtual async Task<bool> ReadAsync()
+		{
+			do
+			{
+				context.Record = await parser.ReadAsync();
+			}
 			while( ShouldSkipRecord() );
 
 			context.CurrentIndex = -1;

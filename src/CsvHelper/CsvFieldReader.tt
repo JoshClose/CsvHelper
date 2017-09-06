@@ -1,4 +1,5 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿<#@ include file="T4Methods.tt" #>
+// Copyright 2009-2017 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -32,13 +33,17 @@ namespace CsvHelper
 		/// True if the buffer is empty, otherwise false.
 		/// </summary>
 		public virtual bool IsBufferEmpty => context.BufferPosition >= context.CharsRead;
-			
+		<#
+		for( var i = 0; i < 2; i++ )
+		{
+			var isAsync = i != 0;
+		#>	
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
 		/// <returns>True if there is more data left.
 		/// False if all the data has been read.</returns>
-		public virtual bool FillBuffer()
+		public virtual <#= AsyncType( "bool", isAsync ) #> FillBuffer<#= AsyncPostfix( isAsync ) #>()
 		{
 			if( !IsBufferEmpty )
 			{
@@ -67,7 +72,7 @@ namespace CsvHelper
 				context.RawRecordEndPosition = context.RawRecordEndPosition - bufferUsed;
 			}
 
-			context.CharsRead = context.Reader.Read( context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize );
+			context.CharsRead = <#= Await( isAsync ) #>context.Reader.Read<#= AsyncPostfix( isAsync ) #>( context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize );
 			if( context.CharsRead == 0 )
 			{
 				// End of file
@@ -79,54 +84,10 @@ namespace CsvHelper
 
 			return true;
 		}
-			
-		/// <summary>
-		/// Fills the buffer.
-		/// </summary>
-		/// <returns>True if there is more data left.
-		/// False if all the data has been read.</returns>
-		public virtual async Task<bool> FillBufferAsync()
-		{
-			if( !IsBufferEmpty )
-			{
-				throw new InvalidOperationException( $"The buffer can't be filled if it's not empty." );
-			}
-
-			if( context.Buffer.Length == 0 )
-			{
-				context.Buffer = new char[context.ParserConfiguration.BufferSize];
-			}
-
-			if( context.CharsRead > 0 )
-			{
-				// Create a new buffer with extra room for what is left from
-				// the old buffer. Copy the remaining contents onto the new buffer.
-				var bufferLeft = context.CharsRead - context.RawRecordStartPosition;
-				var bufferUsed = context.CharsRead - bufferLeft;
-				var tempBuffer = new char[bufferLeft + context.ParserConfiguration.BufferSize];
-				Array.Copy( context.Buffer, context.RawRecordStartPosition, tempBuffer, 0, bufferLeft );
-				context.Buffer = tempBuffer;
-
-				context.BufferPosition = context.BufferPosition - bufferUsed;
-				context.FieldStartPosition = context.FieldStartPosition - bufferUsed;
-				context.FieldEndPosition = Math.Max( context.FieldEndPosition - bufferUsed, 0 );
-				context.RawRecordStartPosition = context.RawRecordStartPosition - bufferUsed;
-				context.RawRecordEndPosition = context.RawRecordEndPosition - bufferUsed;
-			}
-
-			context.CharsRead = await context.Reader.ReadAsync( context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize );
-			if( context.CharsRead == 0 )
-			{
-				// End of file
-				return false;
-			}
-
-			// Add the char count from the previous buffer that was copied onto this one.
-			context.CharsRead += context.BufferPosition;
-
-			return true;
+		<#
 		}
-		
+		#>
+
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
 		/// <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
