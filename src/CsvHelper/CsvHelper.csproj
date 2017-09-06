@@ -8,7 +8,7 @@
 		<Authors>Josh Close</Authors>
 
 		<!-- Build -->
-		<Version>3.0.0-chi07</Version>
+		<Version>3.0.0-chi08</Version>
 		<FileVersion>3.0.0.0</FileVersion>
 		<AssemblyVersion>3.0.0.0</AssemblyVersion>
 		<TargetFramework>netstandard2.0</TargetFramework>
