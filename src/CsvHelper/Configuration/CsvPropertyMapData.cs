@@ -107,6 +107,11 @@ namespace CsvHelper.Configuration
 		public virtual Expression WritingConvertExpression { get; set; }
 
 		/// <summary>
+		/// Gets or sets the expression use to validate a field.
+		/// </summary>
+		public virtual Expression ValidateExpression { get; set; }
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvPropertyMapData"/> class.
 		/// </summary>
 		/// <param name="member">The property/field.</param>

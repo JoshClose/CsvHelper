@@ -206,5 +206,16 @@ namespace CsvHelper.Configuration
 
 			return this;
 		}
+
+		/// <summary>
+		/// Specifies an expression to be used to validate a field when reading.
+		/// </summary>
+		/// <param name="validateExpression"></param>
+		public virtual CsvPropertyMap<TClass, TProperty> Validate( Func<string, bool> validateExpression )
+		{
+			Data.ValidateExpression = (Expression<Func<string, bool>>)( x => validateExpression( x ) );
+
+			return this;
+		}
 	}
 }

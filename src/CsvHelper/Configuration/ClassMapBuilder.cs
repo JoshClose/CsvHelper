@@ -40,13 +40,14 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="TClass">The class type.</typeparam>
 	/// <typeparam name="TProperty">The property type.</typeparam>
 	public interface IHasMapOptions<TClass, TProperty> :
-		IHasMap<TClass>, //1
-		IHasTypeConverter<TClass, TProperty>, //2
-		IHasIndex<TClass, TProperty>, //3
-		IHasName<TClass, TProperty>, //4
-		IHasConvertUsing<TClass, TProperty>, //6
-		IHasDefault<TClass, TProperty>, //7 
-		IHasConstant<TClass, TProperty> //8
+		IHasMap<TClass>,
+		IHasTypeConverter<TClass, TProperty>,
+		IHasIndex<TClass, TProperty>,
+		IHasName<TClass, TProperty>,
+		IHasConvertUsing<TClass, TProperty>,
+		IHasDefault<TClass, TProperty>,
+		IHasConstant<TClass, TProperty>,
+		IHasValidate<TClass, TProperty>
 	{ }
 
 	/// <summary>
@@ -78,8 +79,9 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="TClass">The class type.</typeparam>
 	/// <typeparam name="TProperty">The property type.</typeparam>
 	public interface IHasTypeConverterOptions<TClass, TProperty> :
-		IHasMap<TClass>, //1
-		IHasDefault<TClass, TProperty> //7
+		IHasMap<TClass>,
+		IHasDefault<TClass, TProperty>,
+		IHasValidate<TClass, TProperty>
 	{ }
 
 	/// <summary>
@@ -106,10 +108,11 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="TClass">The class type.</typeparam>
 	/// <typeparam name="TProperty">The property type.</typeparam>
 	public interface IHasIndexOptions<TClass, TProperty> :
-		IHasMap<TClass>, //1
-		IHasTypeConverter<TClass, TProperty>, //2
-		IHasName<TClass, TProperty>, //4
-		IHasDefault<TClass, TProperty> //7
+		IHasMap<TClass>,
+		IHasTypeConverter<TClass, TProperty>,
+		IHasName<TClass, TProperty>,
+		IHasDefault<TClass, TProperty>,
+		IHasValidate<TClass, TProperty>
 	{ }
 
 	/// <summary>
@@ -138,10 +141,11 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="TClass">The class type.</typeparam>
 	/// <typeparam name="TProperty">The property type.</typeparam>
 	public interface IHasNameOptions<TClass, TProperty> :
-		IHasMap<TClass>, //1
-		IHasTypeConverter<TClass, TProperty>, //2
-		IHasNameIndex<TClass, TProperty>, //5
-		IHasDefault<TClass, TProperty> //7
+		IHasMap<TClass>,
+		IHasTypeConverter<TClass, TProperty>,
+		IHasNameIndex<TClass, TProperty>,
+		IHasDefault<TClass, TProperty>,
+		IHasValidate<TClass, TProperty>
 	{ }
 
 	/// <summary>
@@ -166,9 +170,10 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="TClass">The class type.</typeparam>
 	/// <typeparam name="TProperty">The property type.</typeparam>
 	public interface IHasNameIndexOptions<TClass, TProperty> :
-		IHasMap<TClass>, //1
-		IHasTypeConverter<TClass, TProperty>, //2
-		IHasDefault<TClass, TProperty> //7
+		IHasMap<TClass>,
+		IHasTypeConverter<TClass, TProperty>,
+		IHasDefault<TClass, TProperty>,
+		IHasValidate<TClass, TProperty>
 	{ }
 
 	/// <summary>
@@ -205,7 +210,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		IHasMap<TClass> Default( TProperty defaultValue );
+		IHasDefaultOptions<TClass, TProperty> Default( TProperty defaultValue );
 
 		/// <summary>
 		/// The default value that will be used when reading when
@@ -214,8 +219,18 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		IHasMap<TClass> Default( string defaultValue );
+		IHasDefaultOptions<TClass, TProperty> Default( string defaultValue );
 	}
+
+	/// <summary>
+	/// Options after a default call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasDefaultOptions<TClass, TProperty> :
+		IHasMap<TClass>,
+		IHasValidate<TClass, TProperty>
+	{ }
 
 	/// <summary>
 	/// Has constant capabilities.
@@ -231,6 +246,23 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="value">The constant value.</param>
 		IHasMap<TClass> Constant( TProperty value );
+	}
+
+	/// <summary>
+	/// Has validate capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TProperty">The property type.</typeparam>
+	public interface IHasValidate<TClass, TProperty> : IBuildableClass<TClass>
+	{
+		/// <summary>
+		/// The validate expression that will be called on every field when reading.
+		/// The expression should return true if the field is valid.
+		/// If false is returned, a <see cref="CsvValidationException"/>
+		/// will be thrown.
+		/// </summary>
+		/// <param name="validateExpression">The validation expression.</param>
+		IHasMap<TClass> Validate( Func<string, bool> validateExpression );
 	}
 
 	/// <summary>
@@ -268,19 +300,21 @@ namespace CsvHelper.Configuration
 	}
 
 	internal class PropertyMapBuilder<TClass, TProperty> :
-		IHasMap<TClass>, //1
-		IHasMapOptions<TClass, TProperty>, //1 result
-		IHasTypeConverter<TClass, TProperty>, //2
-		IHasTypeConverterOptions<TClass, TProperty>,//2 result
-		IHasIndex<TClass, TProperty>, //3
-		IHasIndexOptions<TClass, TProperty>, //3 result
-		IHasName<TClass, TProperty>, //4
-		IHasNameOptions<TClass, TProperty>, //4 result
-		IHasNameIndex<TClass, TProperty>, //5
-		IHasNameIndexOptions<TClass, TProperty>, //5 result
-		IHasConvertUsing<TClass, TProperty>, //6 - goes back to 1 only
-		IHasDefault<TClass, TProperty>, //7 - goes back to 1 only
-		IHasConstant<TClass, TProperty>
+		IHasMap<TClass>,
+		IHasMapOptions<TClass, TProperty>,
+		IHasTypeConverter<TClass, TProperty>,
+		IHasTypeConverterOptions<TClass, TProperty>,
+		IHasIndex<TClass, TProperty>,
+		IHasIndexOptions<TClass, TProperty>,
+		IHasName<TClass, TProperty>,
+		IHasNameOptions<TClass, TProperty>,
+		IHasNameIndex<TClass, TProperty>,
+		IHasNameIndexOptions<TClass, TProperty>,
+		IHasConvertUsing<TClass, TProperty>,
+		IHasDefault<TClass, TProperty>,
+		IHasDefaultOptions<TClass, TProperty>,
+		IHasConstant<TClass, TProperty>,
+		IHasValidate<TClass, TProperty>
 	{
 		private readonly CsvClassMap<TClass> classMap;
 		private readonly CsvPropertyMap<TClass, TProperty> propertyMap;
@@ -310,13 +344,13 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		public IHasMap<TClass> Default( TProperty defaultValue )
+		public IHasDefaultOptions<TClass, TProperty> Default( TProperty defaultValue )
 		{
 			propertyMap.Default( defaultValue );
 			return this;
 		}
 
-		public IHasMap<TClass> Default( string defaultValue )
+		public IHasDefaultOptions<TClass, TProperty> Default( string defaultValue )
 		{
 			propertyMap.Default( defaultValue );
 			return this;
@@ -355,6 +389,12 @@ namespace CsvHelper.Configuration
 		public IHasMap<TClass> Constant( TProperty value )
 		{
 			propertyMap.Constant( value );
+			return this;
+		}
+
+		public IHasMap<TClass> Validate( Func<string, bool> validateExpression )
+		{
+			propertyMap.Validate( validateExpression );
 			return this;
 		}
 

@@ -1603,6 +1603,19 @@ namespace CsvHelper
 				var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 				Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
 
+				// Validate the field.
+				if( propertyMap.Data.ValidateExpression != null )
+				{
+					var validateExpression = Expression.IsFalse( Expression.Invoke( propertyMap.Data.ValidateExpression, fieldExpression ) );
+					var validationExceptionConstructor = typeof( CsvValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
+					var throwExpression = Expression.Throw( Expression.Constant( new CsvValidationException( context ) ) );
+					fieldExpression = Expression.Block(
+						// If the validate method returns false, throw an exception.
+						Expression.IfThen( validateExpression, throwExpression ),
+						fieldExpression
+					);
+				}
+
 				// Convert the field.
 				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
 				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
