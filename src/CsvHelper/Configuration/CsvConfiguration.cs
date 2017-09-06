@@ -93,11 +93,9 @@ namespace CsvHelper.Configuration
 		public virtual bool IgnoreReferences { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether fields
-		/// should be trimmed. True to trim fields,
-		/// otherwise false. Default is false.
+		/// Gets or sets the field trimming options.
 		/// </summary>
-		public virtual bool TrimFields { get; set; }
+		public virtual TrimOptions TrimOptions { get; set; }
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.

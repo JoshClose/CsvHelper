@@ -83,5 +83,10 @@ namespace CsvHelper.Configuration
 		/// Default is ',';
 		/// </summary>
 		string Delimiter { get; set; }
+
+		/// <summary>
+		/// Gets or sets the field trimming options.
+		/// </summary>
+		TrimOptions TrimOptions { get; set; }
 	}
 }

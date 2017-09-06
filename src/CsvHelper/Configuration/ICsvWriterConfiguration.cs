@@ -35,13 +35,6 @@ namespace CsvHelper.Configuration
 		bool QuoteNoFields { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether fields
-		/// should be trimmed. True to trim fields,
-		/// otherwise false. Default is false.
-		/// </summary>
-		bool TrimFields { get; set; }
-
-		/// <summary>
 		/// Gets a string representation of the currently configured Quote character.
 		/// </summary>
 		/// <value>

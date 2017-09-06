@@ -187,6 +187,13 @@ namespace CsvHelper
 					continue;
 				}
 
+				// Trim start outside of quotes.
+				if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				{
+					ReadSpaces();
+					fieldReader.SetFieldStart( -1 );
+				}
+
 				if( context.C == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
 				{
 					if( ReadQuotedField() )
@@ -243,6 +250,13 @@ namespace CsvHelper
 					}
 
 					continue;
+				}
+
+				// Trim start outside of quotes.
+				if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				{
+					await ReadSpacesAsync();
+					fieldReader.SetFieldStart( -1 );
 				}
 
 				if( context.C == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
@@ -351,11 +365,31 @@ namespace CsvHelper
 				context.C = fieldReader.GetChar();
 			}
 
+			var inSpaces = false;
 			while( true )
 			{
 				if( context.C == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
 				{
 					context.IsFieldBad = true;
+				}
+
+				// Trim end outside of quotes.
+				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				{
+					inSpaces = true;
+					fieldReader.SetFieldEnd( -1 );
+					fieldReader.AppendField();
+					fieldReader.SetFieldStart( -1 );
+				}
+				else if( inSpaces && context.C != ' ' )
+				{
+					// Hit a non-space char.
+					// Need to determine if it's the end of the field or another char.
+					inSpaces = false;
+					if( context.C == context.ParserConfiguration.Delimiter[0] || context.C == '\r' || context.C == '\n' )
+					{
+						fieldReader.SetFieldStart( -1 );
+					}
 				}
 
 				if( context.C == context.ParserConfiguration.Delimiter[0] )
@@ -414,11 +448,31 @@ namespace CsvHelper
 				context.C = fieldReader.GetChar();
 			}
 
+			var inSpaces = false;
 			while( true )
 			{
 				if( context.C == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
 				{
 					context.IsFieldBad = true;
+				}
+
+				// Trim end outside of quotes.
+				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				{
+					inSpaces = true;
+					fieldReader.SetFieldEnd( -1 );
+					fieldReader.AppendField();
+					fieldReader.SetFieldStart( -1 );
+				}
+				else if( inSpaces && context.C != ' ' )
+				{
+					// Hit a non-space char.
+					// Need to determine if it's the end of the field or another char.
+					inSpaces = false;
+					if( context.C == context.ParserConfiguration.Delimiter[0] || context.C == '\r' || context.C == '\n' )
+					{
+						fieldReader.SetFieldStart( -1 );
+					}
 				}
 
 				if( context.C == context.ParserConfiguration.Delimiter[0] )
@@ -468,6 +522,7 @@ namespace CsvHelper
 			// Set the start of the field to after the quote.
 			fieldReader.SetFieldStart();
 
+			var inSpaces = false;
 			while( true )
 			{
 				// 1,"2" ,3
@@ -482,6 +537,33 @@ namespace CsvHelper
 				}
 
 				context.C = fieldReader.GetChar();
+
+				// Trim start inside quotes.
+				if( inQuotes && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) && cPrev == context.ParserConfiguration.Quote )
+				{
+					ReadSpaces();
+					fieldReader.SetFieldStart( -1 );
+				}
+
+				// Trim end inside of quotes.
+				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) )
+				{
+					inSpaces = true;
+					fieldReader.SetFieldEnd( -1 );
+					fieldReader.AppendField();
+					fieldReader.SetFieldStart( -1 );
+				}
+				else if( inSpaces && context.C != ' ' )
+				{
+					// Hit a non-space char.
+					// Need to determine if it's the end of the field or another char.
+					inSpaces = false;
+					if( context.C == context.ParserConfiguration.Delimiter[0] || context.C == '\r' || context.C == '\n' || context.C == context.ParserConfiguration.Quote )
+					{
+						fieldReader.SetFieldStart( -1 );
+					}
+				}
+
 				if( context.C == context.ParserConfiguration.Quote )
 				{
 					inQuotes = !inQuotes;
@@ -508,6 +590,13 @@ namespace CsvHelper
 
 				if( !inQuotes )
 				{
+					// Trim end outside of quotes.
+					if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+					{
+						ReadSpaces();
+						fieldReader.SetFieldStart( -1 );
+					}
+
 					if( context.C == context.ParserConfiguration.Delimiter[0] )
 					{
 						fieldReader.SetFieldEnd( -1 );
@@ -548,6 +637,7 @@ namespace CsvHelper
 			// Set the start of the field to after the quote.
 			fieldReader.SetFieldStart();
 
+			var inSpaces = false;
 			while( true )
 			{
 				// 1,"2" ,3
@@ -562,6 +652,33 @@ namespace CsvHelper
 				}
 
 				context.C = fieldReader.GetChar();
+
+				// Trim start inside quotes.
+				if( inQuotes && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) && cPrev == context.ParserConfiguration.Quote )
+				{
+					await ReadSpacesAsync();
+					fieldReader.SetFieldStart( -1 );
+				}
+
+				// Trim end inside of quotes.
+				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) )
+				{
+					inSpaces = true;
+					fieldReader.SetFieldEnd( -1 );
+					fieldReader.AppendField();
+					fieldReader.SetFieldStart( -1 );
+				}
+				else if( inSpaces && context.C != ' ' )
+				{
+					// Hit a non-space char.
+					// Need to determine if it's the end of the field or another char.
+					inSpaces = false;
+					if( context.C == context.ParserConfiguration.Delimiter[0] || context.C == '\r' || context.C == '\n' || context.C == context.ParserConfiguration.Quote )
+					{
+						fieldReader.SetFieldStart( -1 );
+					}
+				}
+
 				if( context.C == context.ParserConfiguration.Quote )
 				{
 					inQuotes = !inQuotes;
@@ -588,6 +705,13 @@ namespace CsvHelper
 
 				if( !inQuotes )
 				{
+					// Trim end outside of quotes.
+					if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+					{
+						await ReadSpacesAsync();
+						fieldReader.SetFieldStart( -1 );
+					}
+
 					if( context.C == context.ParserConfiguration.Delimiter[0] )
 					{
 						fieldReader.SetFieldEnd( -1 );
@@ -689,7 +813,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Reads until the line ending is done.
 		/// </summary>
-		/// <returns>True if more chars were read, otherwise false.</returns>
+		/// <returns>The field start offset.</returns>
 		protected virtual int ReadLineEnding()
 		{
 			var fieldStartOffset = 0;
@@ -710,11 +834,11 @@ namespace CsvHelper
 
 			return fieldStartOffset;
 		}
-		
+			
 		/// <summary>
 		/// Reads until the line ending is done.
 		/// </summary>
-		/// <returns>True if more chars were read, otherwise false.</returns>
+		/// <returns>The field start offset.</returns>
 		protected virtual async Task<int> ReadLineEndingAsync()
 		{
 			var fieldStartOffset = 0;
@@ -734,6 +858,56 @@ namespace CsvHelper
 			}
 
 			return fieldStartOffset;
+		}
+			
+		/// <summary>
+		/// Reads until a non-space character is found.
+		/// </summary>
+		/// <returns>True if there is more data to read.
+		/// False if the end of the file has been reached.</returns>
+		protected virtual bool ReadSpaces()
+		{
+			while( true )
+			{
+				if( context.C != ' ' )
+				{
+					break;
+				}
+
+				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				{
+					return false;
+				}
+
+				context.C = fieldReader.GetChar();
+			}
+
+			return true;
+		}
+		
+		/// <summary>
+		/// Reads until a non-space character is found.
+		/// </summary>
+		/// <returns>True if there is more data to read.
+		/// False if the end of the file has been reached.</returns>
+		protected virtual async Task<bool> ReadSpacesAsync()
+		{
+			while( true )
+			{
+				if( context.C != ' ' )
+				{
+					break;
+				}
+
+				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				{
+					return false;
+				}
+
+				context.C = fieldReader.GetChar();
+			}
+
+			return true;
 		}
 	}
 }

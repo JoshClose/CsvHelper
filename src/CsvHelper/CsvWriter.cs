@@ -108,7 +108,7 @@ namespace CsvHelper
 		{
 			var shouldQuote = context.WriterConfiguration.QuoteAllFields;
 
-			if( field != null && context.WriterConfiguration.TrimFields )
+			if( field != null && context.WriterConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
 			{
 				field = field.Trim();
 			}

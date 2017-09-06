@@ -30,13 +30,6 @@ namespace CsvHelper.Configuration
 		bool WillThrowOnMissingField { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether fields
-		/// should be trimmed. True to trim fields,
-		/// otherwise false. Default is false.
-		/// </summary>
-		bool TrimFields { get; set; }
-
-		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.
 		/// </summary>
 		CultureInfo CultureInfo { get; set; }

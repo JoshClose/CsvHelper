@@ -248,10 +248,6 @@ namespace CsvHelper
 			}
 
 			var field = context.Record[index];
-			if( context.ReaderConfiguration.TrimFields )
-			{
-				field = field?.Trim();
-			}
 
 			return field;
 		}
@@ -1150,16 +1146,10 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Gets a function to test for an empty string.
-		/// Will check <see cref="CsvConfiguration.TrimFields" /> when making its decision.
 		/// </summary>
 		/// <returns>The function to test for an empty string.</returns>
 		protected virtual Func<string, bool> GetEmtpyStringMethod()
 		{ 
-			if( !Configuration.TrimFields )
-			{
-				return string.IsNullOrEmpty;
-			}
-
 			return string.IsNullOrWhiteSpace;
 		}
 	
