@@ -18,7 +18,7 @@ namespace CsvHelper.Tests
 		public void Test()
 		{
 			var map = new AMap<A>();
-			Assert.AreEqual( 2, map.PropertyMaps.Count );
+			Assert.AreEqual( 2, map.MemberMaps.Count );
 		}
 
 		private interface IA

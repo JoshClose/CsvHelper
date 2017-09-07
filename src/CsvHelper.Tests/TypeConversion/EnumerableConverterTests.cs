@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new EnumerableConverter();
 
-			var propertyMapData = new PropertyMapData( null );
+			var propertyMapData = new MemberMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var mockReaderRow = new Mock<IReaderRow>();

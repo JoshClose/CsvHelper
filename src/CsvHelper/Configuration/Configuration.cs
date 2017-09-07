@@ -46,7 +46,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
-		/// A header is bad if all the mapped properties don't match.
+		/// A header is bad if all the mapped members don't match.
 		/// </summary>
 		public virtual bool ThrowOnBadHeader { get; set; } = true;
 
@@ -69,8 +69,8 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <summary>
-		/// Prepares the header field for matching against a property/field name.
-		/// The header field and the property/field name are both ran through this function.
+		/// Prepares the header field for matching against a member name.
+		/// The header field and the member name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
@@ -78,7 +78,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
-		/// the class instead of the default constructor and properties.
+		/// the class instead of the default constructor and members.
 		/// </summary>
 		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type => 
 				!type.HasParameterlessConstructor()
@@ -306,8 +306,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// properties/fields should be read from and written to.
-		/// True to include private properties/fields, otherwise false. Default is false.
+		/// member should be read from and written to.
+		/// True to include private member, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool IncludePrivateMembers { get; set; }
 
@@ -327,7 +327,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
-		/// properties/fields should get prefixed by the parent property/field
+		/// member should get prefixed by the parent member
 		/// name when automapping.
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
@@ -375,10 +375,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating that during writing if a new 
-		/// object should be created when a reference property/field is null.
+		/// object should be created when a reference member is null.
 		/// True to create a new object and use it's defaults for the
 		/// fields, or false to leave the fields empty for all the
-		/// reference property/field's properties/fields.
+		/// reference member's member.
 		/// </summary>
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
@@ -398,8 +398,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Use a <see cref="ClassMap{T}" /> to configure mappings.
-		/// When using a class map, no properties/fields are mapped by default.
-		/// Only properties/fields specified in the mapping are used.
+		/// When using a class map, no members are mapped by default.
+		/// Only member specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 		public virtual TMap RegisterClassMap<TMap>() where TMap : ClassMap
@@ -412,8 +412,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Use a <see cref="ClassMap{T}" /> to configure mappings.
-		/// When using a class map, no properties/fields are mapped by default.
-		/// Only properties/fields specified in the mapping are used.
+		/// When using a class map, no members are mapped by default.
+		/// Only members specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
 		public virtual ClassMap RegisterClassMap( Type classMapType )
@@ -435,7 +435,7 @@ namespace CsvHelper.Configuration
 		/// <param name="map">The class map to register.</param>
 		public virtual void RegisterClassMap( ClassMap map )
 		{
-			if( map.Constructor == null && map.PropertyMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
+			if( map.Constructor == null && map.MemberMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
 			{
 				throw new ConfigurationException( "No mappings were specified in the CsvClassMap." );
 			}

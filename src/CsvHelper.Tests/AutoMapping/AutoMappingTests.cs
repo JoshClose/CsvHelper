@@ -214,7 +214,7 @@ namespace CsvHelper.Tests.AutoMapping
 			var map = config.AutoMap( data.GetType() );
 
 			Assert.IsNotNull( map );
-			Assert.AreEqual( 0, map.PropertyMaps.Count );
+			Assert.AreEqual( 0, map.MemberMaps.Count );
 			Assert.AreEqual( 1, map.ReferenceMaps.Count );
 
 			// Since Simple is a reference on the anonymous object, the type won't
@@ -231,10 +231,10 @@ namespace CsvHelper.Tests.AutoMapping
 				PrefixReferenceHeaders = true,
 			};
 			var map = config.AutoMap<Nested>();
-			Assert.AreEqual( "Simple1.Id", map.ReferenceMaps[0].Data.Mapping.PropertyMaps[0].Data.Names[0] );
-			Assert.AreEqual( "Simple1.Name", map.ReferenceMaps[0].Data.Mapping.PropertyMaps[1].Data.Names[0] );
-			Assert.AreEqual( "Simple2.Id", map.ReferenceMaps[1].Data.Mapping.PropertyMaps[0].Data.Names[0] );
-			Assert.AreEqual( "Simple2.Name", map.ReferenceMaps[1].Data.Mapping.PropertyMaps[1].Data.Names[0] );
+			Assert.AreEqual( "Simple1.Id", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0] );
+			Assert.AreEqual( "Simple1.Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[1].Data.Names[0] );
+			Assert.AreEqual( "Simple2.Id", map.ReferenceMaps[1].Data.Mapping.MemberMaps[0].Data.Names[0] );
+			Assert.AreEqual( "Simple2.Name", map.ReferenceMaps[1].Data.Mapping.MemberMaps[1].Data.Names[0] );
 		}
 
 		private class Nested

@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new ByteConverter();
-			var propertyMapData = new PropertyMapData( null )
+			var propertyMapData = new MemberMapData( null )
 			{
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
@@ -34,7 +34,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new ByteConverter();
 
-			var propertyMapData = new PropertyMapData( null );
+			var propertyMapData = new MemberMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var mockRow = new Mock<IReaderRow>();

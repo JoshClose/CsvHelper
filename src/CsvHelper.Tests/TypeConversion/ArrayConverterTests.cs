@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.Context ).Returns( context );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new PropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
+			var data = new MemberMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
 			{
 				Index = 2,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
@@ -60,7 +60,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.Context ).Returns( context );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new PropertyMapData( typeof( Test ).GetProperty( "List" ) )
+			var data = new MemberMapData( typeof( Test ).GetProperty( "List" ) )
 			{
 				Index = 2,
 				IndexEnd = 3,
@@ -85,7 +85,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var array = new[] { 1, 2, 3 };
 
-			var data = new PropertyMapData( typeof( Test ).GetProperty( "List" ) )
+			var data = new MemberMapData( typeof( Test ).GetProperty( "List" ) )
 			{
 				Index = 2,
 				IndexEnd = 3,

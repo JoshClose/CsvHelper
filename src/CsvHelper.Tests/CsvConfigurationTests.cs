@@ -36,7 +36,7 @@ namespace CsvHelper.Tests
 			var config = new CsvHelper.Configuration.Configuration();
 			config.RegisterClassMap<TestClassMappings>();
 
-			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
 		}
 
 		[TestMethod]
@@ -45,7 +45,7 @@ namespace CsvHelper.Tests
 			var config = new CsvHelper.Configuration.Configuration();
 			config.RegisterClassMap<TestClassMappings>();
 
-			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
 		}
 
 		[TestMethod]
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests
 			var config = new CsvHelper.Configuration.Configuration();
 			config.RegisterClassMap( typeof( TestClassMappings ) );
 
-			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
 		}
 
 		[TestMethod]
@@ -63,7 +63,7 @@ namespace CsvHelper.Tests
 			var config = new CsvHelper.Configuration.Configuration();
 			config.RegisterClassMap( new TestClassMappings() );
 
-			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].PropertyMaps.Count );
+			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
 		}
 
 		[TestMethod]

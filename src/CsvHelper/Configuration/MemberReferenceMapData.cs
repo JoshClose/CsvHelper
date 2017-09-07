@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// The configuration data for the reference map.
 	/// </summary>
-	public class PropertyReferenceMapData
+	public class MemberReferenceMapData
 	{
 		private string prefix;
 
@@ -22,9 +22,9 @@ namespace CsvHelper.Configuration
 			set
 			{
 				prefix = value;
-				foreach( var propertyMap in Mapping.PropertyMaps )
+				foreach( var memberMap in Mapping.MemberMaps )
 				{
-					propertyMap.Data.Names.Prefix = value;
+					memberMap.Data.Names.Prefix = value;
 				}
 			}
 		}
@@ -41,11 +41,11 @@ namespace CsvHelper.Configuration
 		public ClassMap Mapping { get; private set; }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PropertyReferenceMapData"/> class.
+		/// Initializes a new instance of the <see cref="MemberReferenceMapData"/> class.
 		/// </summary>
-		/// <param name="member">The property/field.</param>
+		/// <param name="member">The member.</param>
 		/// <param name="mapping">The mapping this is a reference for.</param>
-		public PropertyReferenceMapData( MemberInfo member, ClassMap mapping )
+		public MemberReferenceMapData( MemberInfo member, ClassMap mapping )
 		{
 			Member = member;
 			Mapping = mapping;

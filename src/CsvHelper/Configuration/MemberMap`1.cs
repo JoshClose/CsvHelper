@@ -11,18 +11,18 @@ using System.Reflection;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Mapping info for a property/field to a CSV field.
+	/// Mapping info for a member to a CSV field.
 	/// </summary>
-	public class PropertyMap<TClass, TProperty> : PropertyMap
+	public class MemberMap<TClass, TMember> : MemberMap
 	{
 		/// <summary>
-		/// Creates a new <see cref="PropertyMap"/> instance using the specified property/field.
+		/// Creates a new <see cref="MemberMap"/> instance using the specified member.
 		/// </summary>
-		public PropertyMap( MemberInfo member )
+		public MemberMap( MemberInfo member )
 		{
 			TypeConverterOption = new MapTypeConverterOption( this );
 
-			Data = new PropertyMapData( member );
+			Data = new MemberMapData( member );
 			if( member == null )
 			{
 				return;
@@ -43,7 +43,7 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		public virtual PropertyMap<TClass, TProperty> Name( params string[] names )
+		public virtual MemberMap<TClass, TMember> Name( params string[] names )
 		{
 			if( names == null || names.Length == 0 )
 			{
@@ -63,7 +63,7 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		public virtual PropertyMap<TClass, TProperty> NameIndex( int index )
+		public virtual MemberMap<TClass, TMember> NameIndex( int index )
 		{
 			Data.NameIndex = index;
 
@@ -77,8 +77,8 @@ namespace CsvHelper.Configuration
 		/// indexes.
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
-		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property/field.</param>
-		public virtual PropertyMap<TClass, TProperty> Index( int index, int indexEnd = -1 )
+		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> member.</param>
+		public virtual MemberMap<TClass, TMember> Index( int index, int indexEnd = -1 )
 		{
 			Data.Index = index;
 			Data.IsIndexSet = true;
@@ -88,13 +88,13 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Ignore the property/field when reading and writing.
-		/// If this property has already been mapped as a reference
-		/// property, either by a class map, or by automapping, calling
-		/// this method will not ingore all the child properties down the
+		/// Ignore the member when reading and writing.
+		/// If this member has already been mapped as a reference
+		/// member, either by a class map, or by automapping, calling
+		/// this method will not ingore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
-		public virtual PropertyMap<TClass, TProperty> Ignore()
+		public virtual MemberMap<TClass, TMember> Ignore()
 		{
 			Data.Ignore = true;
 
@@ -102,14 +102,14 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Ignore the property/field when reading and writing.
-		/// If this property has already been mapped as a reference
-		/// property, either by a class map, or by automapping, calling
-		/// this method will not ingore all the child properties down the
+		/// Ignore the member when reading and writing.
+		/// If this member has already been mapped as a reference
+		/// member, either by a class map, or by automapping, calling
+		/// this method will not ingore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
-		public virtual PropertyMap<TClass, TProperty> Ignore( bool ignore )
+		public virtual MemberMap<TClass, TMember> Ignore( bool ignore )
 		{
 			Data.Ignore = ignore;
 
@@ -121,7 +121,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual PropertyMap<TClass, TProperty> Default( TProperty defaultValue )
+		public virtual MemberMap<TClass, TMember> Default( TMember defaultValue )
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -136,7 +136,7 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual PropertyMap<TClass, TProperty> Default( string defaultValue )
+		public virtual MemberMap<TClass, TMember> Default( string defaultValue )
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -150,7 +150,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual PropertyMap<TClass, TProperty> Constant( TProperty constantValue )
+		public virtual MemberMap<TClass, TMember> Constant( TMember constantValue )
 		{
 			Data.Constant = constantValue;
 			Data.IsConstantSet = true;
@@ -160,10 +160,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
-		/// when converting the property/field to and from a CSV field.
+		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		public virtual PropertyMap<TClass, TProperty> TypeConverter( ITypeConverter typeConverter )
+		public virtual MemberMap<TClass, TMember> TypeConverter( ITypeConverter typeConverter )
 		{
 			Data.TypeConverter = typeConverter;
 
@@ -172,11 +172,11 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
-		/// when converting the property/field to and from a CSV field.
+		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
-		public virtual PropertyMap<TClass, TProperty> TypeConverter<TConverter>() where TConverter : ITypeConverter
+		public virtual MemberMap<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
 			TypeConverter( ReflectionHelper.CreateInstance<TConverter>() );
 
@@ -185,12 +185,12 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Specifies an expression to be used to convert data in the
-		/// row to the property/field.
+		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual PropertyMap<TClass, TProperty> ConvertUsing( Func<IReaderRow, TProperty> convertExpression )
+		public virtual MemberMap<TClass, TMember> ConvertUsing( Func<IReaderRow, TMember> convertExpression )
 		{
-			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TProperty>>)( x => convertExpression( x ) );
+			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TMember>>)( x => convertExpression( x ) );
 
 			return this;
 		}
@@ -200,7 +200,7 @@ namespace CsvHelper.Configuration
 		/// to a field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual PropertyMap<TClass, TProperty> ConvertUsing( Func<TClass, string> convertExpression )
+		public virtual MemberMap<TClass, TMember> ConvertUsing( Func<TClass, string> convertExpression )
 		{
 			Data.WritingConvertExpression = (Expression<Func<TClass, string>>)( x => convertExpression( x ) );
 
@@ -211,7 +211,7 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-		public virtual PropertyMap<TClass, TProperty> Validate( Func<string, bool> validateExpression )
+		public virtual MemberMap<TClass, TMember> Validate( Func<string, bool> validateExpression )
 		{
 			Data.ValidateExpression = (Expression<Func<string, bool>>)( x => validateExpression( x ) );
 

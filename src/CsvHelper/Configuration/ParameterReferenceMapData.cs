@@ -25,9 +25,9 @@ namespace CsvHelper.Configuration
 			set
 			{
 				prefix = value;
-				foreach( var propertyMap in Mapping.PropertyMaps )
+				foreach( var memberMap in Mapping.MemberMaps )
 				{
-					propertyMap.Data.Names.Prefix = value;
+					memberMap.Data.Names.Prefix = value;
 				}
 			}
 		}

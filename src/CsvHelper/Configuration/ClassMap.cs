@@ -14,7 +14,7 @@ using CsvHelper.TypeConversion;
 namespace CsvHelper.Configuration
 {
 	///<summary>
-	/// Maps class properties to CSV fields.
+	/// Maps class members to CSV fields.
 	///</summary>
 	public abstract class ClassMap
 	{
@@ -45,14 +45,14 @@ namespace CsvHelper.Configuration
 		public virtual List<ParameterMap> ParameterMaps { get; } = new List<ParameterMap>();
 
 		/// <summary>
-		/// The class property/field mappings.
+		/// The class member mappings.
 		/// </summary>
-		public virtual PropertyMapCollection PropertyMaps { get; } = new PropertyMapCollection();
+		public virtual MemberMapCollection MemberMaps { get; } = new MemberMapCollection();
 
 		/// <summary>
-		/// The class property/field reference mappings.
+		/// The class member reference mappings.
 		/// </summary>
-		public virtual PropertyReferenceMapCollection ReferenceMaps { get; } = new PropertyReferenceMapCollection();
+		public virtual MemberReferenceMapCollection ReferenceMaps { get; } = new MemberReferenceMapCollection();
 
 		/// <summary>
 		/// Allow only internal creation of CsvClassMap.
@@ -64,54 +64,54 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Maps a property/field to a CSV field.
+		/// Maps a member to a CSV field.
 		/// </summary>
 		/// <param name="classType">The type of the class this map is for. This may not be the same type
-		/// as the member.DeclaringType or the current ClassType due to nested property mappings.</param>
-		/// <param name="member">The property/field to map.</param>
+		/// as the member.DeclaringType or the current ClassType due to nested member mappings.</param>
+		/// <param name="member">The member to map.</param>
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
-		/// If false, a new map is created for the same property/field.</param>
-		/// <returns>The property/field mapping.</returns>
-		public PropertyMap Map( Type classType, MemberInfo member, bool useExistingMap = true )
+		/// If false, a new map is created for the same member.</param>
+		/// <returns>The member mapping.</returns>
+		public MemberMap Map( Type classType, MemberInfo member, bool useExistingMap = true )
 		{
 			if( useExistingMap )
 			{
-				var existingMap = PropertyMaps.Find( member );
+				var existingMap = MemberMaps.Find( member );
 				if( existingMap != null )
 				{
 					return existingMap;
 				}
 			}
 
-			var propertyMap = PropertyMap.CreateGeneric( classType, member );
-			propertyMap.Data.Index = GetMaxIndex() + 1;
-			PropertyMaps.Add( propertyMap );
+			var memberMap = MemberMap.CreateGeneric( classType, member );
+			memberMap.Data.Index = GetMaxIndex() + 1;
+			MemberMaps.Add( memberMap );
 
-			return propertyMap;
+			return memberMap;
 		}
 
 		/// <summary>
 		/// Maps a non-member to a CSV field. This allows for writing
-		/// data that isn't mapped to a class property/field.
+		/// data that isn't mapped to a class member.
 		/// </summary>
-		/// <returns>The property mapping.</returns>
-		public virtual PropertyMap<object, object> Map()
+		/// <returns>The member mapping.</returns>
+		public virtual MemberMap<object, object> Map()
 		{
-			var propertyMap = new PropertyMap<object, object>( null );
-			propertyMap.Data.Index = GetMaxIndex() + 1;
-			PropertyMaps.Add( propertyMap );
+			var memberMap = new MemberMap<object, object>( null );
+			memberMap.Data.Index = GetMaxIndex() + 1;
+			MemberMaps.Add( memberMap );
 
-			return propertyMap;
+			return memberMap;
 		}
 
 		/// <summary>
-		/// Maps a property/field to another class map.
+		/// Maps a member to another class map.
 		/// </summary>
 		/// <param name="classMapType">The type of the class map.</param>
-		/// <param name="member">The property/field.</param>
+		/// <param name="member">The member.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
-		/// <returns>The reference mapping for the property/field.</returns>
-		public virtual PropertyReferenceMap References( Type classMapType, MemberInfo member, params object[] constructorArgs )
+		/// <returns>The reference mapping for the member.</returns>
+		public virtual MemberReferenceMap References( Type classMapType, MemberInfo member, params object[] constructorArgs )
 		{
 			if( !typeof( ClassMap ).IsAssignableFrom( classMapType ) )
 			{
@@ -127,14 +127,14 @@ namespace CsvHelper.Configuration
 
 			var map = (ClassMap)ReflectionHelper.CreateInstance( classMapType, constructorArgs );
 			map.ReIndex( GetMaxIndex() + 1 );
-			var reference = new PropertyReferenceMap( member, map );
+			var reference = new MemberReferenceMap( member, map );
 			ReferenceMaps.Add( reference );
 
 			return reference;
 		}
 
 		/// <summary>
-		/// Auto maps all properties/fields for the given type. If a property/field 
+		/// Auto maps all members for the given type. If a member 
 		/// is mapped again it will override the existing map.
 		/// </summary>
 		public virtual void AutoMap()
@@ -143,7 +143,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Auto maps all properties/fields for the given type. If a property/field 
+		/// Auto maps all members for the given type. If a member 
 		/// is mapped again it will override the existing map.
 		/// </summary>
 		/// <param name="options">Options for auto mapping.</param>
@@ -162,23 +162,23 @@ namespace CsvHelper.Configuration
 			if( options.ShouldUseConstructorParameters( type ) )
 			{
 				// This type doesn't have a parameterless constructor so we can't create an
-				// instance and set it's property. Constructor parameters need to be created
-				// instead. Writing only uses getters, so properties will also be mapped
+				// instance and set it's member. Constructor parameters need to be created
+				// instead. Writing only uses getters, so members will also be mapped
 				// for writing purposes.
 				AutoMapConstructorParameters( this, options, mapParents );
 			}
 
-			AutoMapProperties( this, options, mapParents );
+			AutoMapMembers( this, options, mapParents );
 		}
 
 		/// <summary>
 		/// Get the largest index for the
-		/// properties/fields and references.
+		/// members and references.
 		/// </summary>
 		/// <returns>The max index.</returns>
 		public virtual int GetMaxIndex()
 		{
-			if( ParameterMaps.Count == 0 && PropertyMaps.Count == 0 && ReferenceMaps.Count == 0 )
+			if( ParameterMaps.Count == 0 && MemberMaps.Count == 0 && ReferenceMaps.Count == 0 )
 			{
 				return -1;
 			}
@@ -189,9 +189,9 @@ namespace CsvHelper.Configuration
 				indexes.AddRange( ParameterMaps.Select( parameterMap => parameterMap.GetMaxIndex() ) );
 			}
 
-			if( PropertyMaps.Count > 0 )
+			if( MemberMaps.Count > 0 )
 			{
-				indexes.Add( PropertyMaps.Max( pm => pm.Data.Index ) );
+				indexes.Add( MemberMaps.Max( pm => pm.Data.Index ) );
 			}
 
 			if( ReferenceMaps.Count > 0 )
@@ -214,11 +214,11 @@ namespace CsvHelper.Configuration
 				parameterMap.Data.Index = indexStart + parameterMap.Data.Index;
 			}
 
-			foreach( var propertyMap in PropertyMaps )
+			foreach( var memberMap in MemberMaps )
 			{
-				if( !propertyMap.Data.IsIndexSet )
+				if( !memberMap.Data.IsIndexSet )
 				{
-					propertyMap.Data.Index = indexStart + propertyMap.Data.Index;
+					memberMap.Data.Index = indexStart + memberMap.Data.Index;
 				}
 			}
 
@@ -237,12 +237,12 @@ namespace CsvHelper.Configuration
 		/// <param name="options">Options for auto mapping.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapProperties( ClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
+		protected virtual void AutoMapMembers( ClassMap map, AutoMapOptions options, LinkedList<Type> mapParents, int indexStart = 0 )
 		{
 			var type = map.GetGenericType();
 
 			var flags = BindingFlags.Instance | BindingFlags.Public;
-			if( options.IncludePrivateProperties )
+			if( options.IncludePrivateMembers )
 			{
 				flags = flags | BindingFlags.NonPublic;
 			}
@@ -310,12 +310,12 @@ namespace CsvHelper.Configuration
 					var refOptions = options.Copy();
 					refOptions.IgnoreReferences = false;
 					// Need to use Max here for nested types.
-					AutoMapProperties( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					AutoMapMembers( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
 					mapParents.Drop( mapParents.Find( type ) );
 
-					if( refMap.PropertyMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
+					if( refMap.MemberMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
-						var referenceMap = new PropertyReferenceMap( member, refMap );
+						var referenceMap = new MemberReferenceMap( member, refMap );
 						if( options.PrefixReferenceHeaders )
 						{
 							referenceMap.Prefix();
@@ -326,16 +326,16 @@ namespace CsvHelper.Configuration
 				}
 				else
 				{
-					var propertyMap = PropertyMap.CreateGeneric( map.ClassType, member );
+					var memberMap = MemberMap.CreateGeneric( map.ClassType, member );
 					// Use global values as the starting point.
-					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), options.TypeConverterOptionsFactory.GetOptions( member.MemberType() ), propertyMap.Data.TypeConverterOptions );
-					propertyMap.Data.Index = map.GetMaxIndex() + 1;
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), options.TypeConverterOptionsFactory.GetOptions( member.MemberType() ), memberMap.Data.TypeConverterOptions );
+					memberMap.Data.Index = map.GetMaxIndex() + 1;
 					if( !isDefaultConverter )
 					{
-						// Only add the property/field map if it can be converted later on.
-						// If the property/field will use the default converter, don't add it because
+						// Only add the member map if it can be converted later on.
+						// If the member will use the default converter, don't add it because
 						// we don't want the .ToString() value to be used when auto mapping.
-						map.PropertyMaps.Add( propertyMap );
+						map.MemberMaps.Add( memberMap );
 					}
 				}
 			}
@@ -374,7 +374,7 @@ namespace CsvHelper.Configuration
 					{
 						throw new InvalidOperationException( $"Configuration '{nameof( options.IgnoreReferences )}' can't be true " +
 															  "when using types without a default constructor. Constructor parameters " +
-															  "are used and all properties including references must be used." );
+															  "are used and all members including references must be used." );
 					}
 
 					if( CheckForCircularReference( parameter.ParameterType, mapParents ) )
@@ -388,7 +388,7 @@ namespace CsvHelper.Configuration
 					var refMap = (ClassMap)ReflectionHelper.CreateInstance( refMapType );
 					var refOptions = options.Copy();
 					refOptions.IgnoreReferences = false;
-					AutoMapProperties( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
+					AutoMapMembers( refMap, options, mapParents, Math.Max( map.GetMaxIndex() + 1, indexStart ) );
 					mapParents.Drop( mapParents.Find( type ) );
 
 					var referenceMap = new ParameterReferenceMap( parameter, refMap );

@@ -22,7 +22,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
-		/// properties/fields should get prefixed by the parent property/field
+		/// members should get prefixed by the parent member
 		/// name when automapping.
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
@@ -30,10 +30,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// properties/fields should be read from and written to.
-		/// True to include private properties/fields, otherwise false. Default is false.
+		/// members should be read from and written to.
+		/// True to include private members, otherwise false. Default is false.
 		/// </summary>
-		public bool IncludePrivateProperties { get; set; }
+		public bool IncludePrivateMembers { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if the CSV file has a header record.
@@ -54,7 +54,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
-		/// the class instead of the default constructor and properties.
+		/// the class instead of the default constructor and members.
 		/// </summary>
 		public Func<Type, bool> ShouldUseConstructorParameters { get; set; }
 
@@ -76,7 +76,7 @@ namespace CsvHelper.Configuration
 	    {
 		    IgnoreReferences = configuration.IgnoreReferences;
 		    PrefixReferenceHeaders = configuration.PrefixReferenceHeaders;
-		    IncludePrivateProperties = configuration.IncludePrivateMembers;
+		    IncludePrivateMembers = configuration.IncludePrivateMembers;
 			HasHeaderRecord = configuration.HasHeaderRecord;
 		    MemberTypes = configuration.MemberTypes;
 			TypeConverterOptionsFactory = configuration.TypeConverterOptionsFactory ?? throw new ArgumentException( $"Configuration value '{configuration.TypeConverterOptionsFactory}' cannot be null.", nameof( configuration ) );

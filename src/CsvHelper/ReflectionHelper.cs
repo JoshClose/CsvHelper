@@ -123,11 +123,11 @@ namespace CsvHelper
 				return field;
 			}
 
-			throw new ConfigurationException( $"'{member.Name}' is not a property/field." );
+			throw new ConfigurationException( $"'{member.Name}' is not a member." );
 		}
 
 		/// <summary>
-		/// Gets the property/field inheritance chain as a stack.
+		/// Gets the member inheritance chain as a stack.
 		/// </summary>
 		/// <typeparam name="TModel">The type of the model.</typeparam>
 		/// <typeparam name="TProperty">The type of the property.</typeparam>

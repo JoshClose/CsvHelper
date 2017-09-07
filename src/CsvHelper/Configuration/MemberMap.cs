@@ -15,15 +15,15 @@ using CsvHelper.TypeConversion;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Mapping info for a property/field to a CSV field.
+	/// Mapping info for a member to a CSV field.
 	/// </summary>
-	[DebuggerDisplay( "Member = {Data.Member}, Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Property = {Data.Property}, TypeConverter = {Data.TypeConverter}" )]
-	public abstract class PropertyMap
+	[DebuggerDisplay( "Member = {Data.Member}, Names = {string.Join(\",\", Data.Names)}, Index = {Data.Index}, Ignore = {Data.Ignore}, Member = {Data.Member}, TypeConverter = {Data.TypeConverter}" )]
+	public abstract class MemberMap
 	{
 		/// <summary>
-		/// Gets the property/field map data.
+		/// Gets the member map data.
 		/// </summary>
-		public virtual PropertyMapData Data { get; protected set; }
+		public virtual MemberMapData Data { get; protected set; }
 
 		/// <summary>
 		/// Type converter options.
@@ -31,16 +31,16 @@ namespace CsvHelper.Configuration
 		public virtual MapTypeConverterOption TypeConverterOption { get; protected set; }
 
 		/// <summary>
-		/// Creates an instance of <see cref="PropertyMap"/> using the given Type and <see cref="MemberInfo"/>.
+		/// Creates an instance of <see cref="MemberMap"/> using the given Type and <see cref="MemberInfo"/>.
 		/// </summary>
-		/// <param name="classType">Type of the class the property being mapped belongs to.</param>
+		/// <param name="classType">Type of the class the member being mapped belongs to.</param>
 		/// <param name="member">The member being mapped.</param>
-		public static PropertyMap CreateGeneric( Type classType, MemberInfo member )
+		public static MemberMap CreateGeneric( Type classType, MemberInfo member )
 		{
-			var propertyMapType = typeof( PropertyMap<,> ).MakeGenericType( classType, member.MemberType() );
-			var propertyMap = (PropertyMap)ReflectionHelper.CreateInstance( propertyMapType, member );
+			var memberMapType = typeof( MemberMap<,> ).MakeGenericType( classType, member.MemberType() );
+			var memberMap = (MemberMap)ReflectionHelper.CreateInstance( memberMapType, member );
 
-			return propertyMap;
+			return memberMap;
 		}
 	}
 }

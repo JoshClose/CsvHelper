@@ -31,7 +31,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
-		/// A header is bad if all the mapped properties don't match.
+		/// A header is bad if all the mapped members don't match.
 		/// </summary>
 		bool ThrowOnBadHeader { get; set; }
 
@@ -51,8 +51,8 @@ namespace CsvHelper.Configuration
 		TypeConverterFactory TypeConverterFactory { get; set; }
 
 		/// <summary>
-		/// Prepares the header field for matching against a property/field name.
-		/// The header field and the property/field name are both ran through this function.
+		/// Prepares the header field for matching against a member name.
+		/// The header field and the member name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
@@ -60,7 +60,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
-		/// the class instead of the default constructor and properties.
+		/// the class instead of the default constructor and members.
 		/// </summary>
 		Func<Type, bool> ShouldUseConstructorParameters { get; set; }
 
@@ -87,14 +87,14 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// properties/fields should be read from and written to.
-		/// True to include private properties/fields, otherwise false. Default is false.
+		/// member should be read from and written to.
+		/// True to include private member, otherwise false. Default is false.
 		/// </summary>
 		bool IncludePrivateMembers { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
-		/// properties/fields should get prefixed by the parent property/field name 
+		/// member should get prefixed by the parent member name 
 		/// when automapping.
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
@@ -137,21 +137,21 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		ClassMapCollection Maps { get; }
 
-	    /// <summary>
-	    /// Use a <see cref="ClassMap{T}" /> to configure mappings.
-	    /// When using a class map, no properties/fields are mapped by default.
-	    /// Only properties/fields specified in the mapping are used.
-	    /// </summary>
-	    /// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-	    TMap RegisterClassMap<TMap>() where TMap : ClassMap;
+		/// <summary>
+		/// Use a <see cref="ClassMap{T}" /> to configure mappings.
+		/// When using a class map, no members are mapped by default.
+		/// Only member specified in the mapping are used.
+		/// </summary>
+		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
+		TMap RegisterClassMap<TMap>() where TMap : ClassMap;
 
-	    /// <summary>
-	    /// Use a <see cref="ClassMap{T}" /> to configure mappings.
-	    /// When using a class map, no properties/fields are mapped by default.
-	    /// Only properties/fields specified in the mapping are used.
-	    /// </summary>
-	    /// <param name="classMapType">The type of mapping class to use.</param>
-	    ClassMap RegisterClassMap( Type classMapType );
+		/// <summary>
+		/// Use a <see cref="ClassMap{T}" /> to configure mappings.
+		/// When using a class map, no member are mapped by default.
+		/// Only member specified in the mapping are used.
+		/// </summary>
+		/// <param name="classMapType">The type of mapping class to use.</param>
+		ClassMap RegisterClassMap( Type classMapType );
 
 	    /// <summary>
 	    /// Registers the class map.

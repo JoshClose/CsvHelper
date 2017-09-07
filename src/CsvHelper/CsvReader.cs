@@ -98,7 +98,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Validates the header. A header is bad if all the mapped properties don't match.
+		/// Validates the header. A header is bad if all the mapped members don't match.
 		/// If the header is not valid, a <see cref="ValidationException"/> will be thrown.
 		/// </summary>
 		/// <typeparam name="T">The type to validate the header against.</typeparam>
@@ -108,7 +108,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Validates the header. A header is bad if all the mapped properties don't match.
+		/// Validates the header. A header is bad if all the mapped members don't match.
 		/// If the header is not valid, a <see cref="ValidationException"/> will be thrown.
 		/// </summary>
 		/// <param name="type">The type to validate the header against.</param>
@@ -165,12 +165,12 @@ namespace CsvHelper
 				}
 			}
 
-			foreach( var property in map.PropertyMaps )
+			foreach( var memberMap in map.MemberMaps )
 			{
-				var index = GetFieldIndex( property.Data.Names.ToArray(), property.Data.NameIndex, true );
+				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
 				if( index == -1 )
 				{
-					throw new ValidationException( context, $"Header '{property.Data.Names[property.Data.NameIndex]}' was not found. {configSettingMessage}" );
+					throw new ValidationException( context, $"Header '{memberMap.Data.Names[memberMap.Data.NameIndex]}' was not found. {configSettingMessage}" );
 				}
 			}
 
@@ -432,8 +432,8 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			context.ReusablePropertyMapData.Index = index;
-			context.ReusablePropertyMapData.TypeConverter = converter;
+			context.ReusableMemberMapData.Index = index;
+			context.ReusableMemberMapData.TypeConverter = converter;
 			if( !context.TypeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
 			{
 				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( type ) );
@@ -441,10 +441,10 @@ namespace CsvHelper
 				context.TypeConverterOptionsCache.Add( type, typeConverterOptions );
 			}
 
-			context.ReusablePropertyMapData.TypeConverterOptions = typeConverterOptions;
+			context.ReusableMemberMapData.TypeConverterOptions = typeConverterOptions;
 
 			var field = GetField( index );
-			return converter.ConvertFromString( field, this, context.ReusablePropertyMapData );
+			return converter.ConvertFromString( field, this, context.ReusableMemberMapData );
 		}
 
 		/// <summary>
@@ -1298,11 +1298,11 @@ namespace CsvHelper
 			string name = null;
 			foreach( var pair in context.NamedIndexes )
 			{
-				var propertyName = context.ReaderConfiguration.PrepareHeaderForMatch( pair.Key );
+				var memberName = context.ReaderConfiguration.PrepareHeaderForMatch( pair.Key );
 				foreach( var n in names )
 				{
 					var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch( n );
-					if( Configuration.CultureInfo.CompareInfo.Compare( propertyName, fieldName, CompareOptions.None ) == 0 )
+					if( Configuration.CultureInfo.CompareInfo.Compare( memberName, fieldName, CompareOptions.None ) == 0 )
 					{
 						name = pair.Key;
 					}
@@ -1488,11 +1488,11 @@ namespace CsvHelper
 			else
 			{
 				var bindings = new List<MemberBinding>();
-				CreatePropertyBindingsForMapping( map, recordType, bindings );
+				CreateMemberBindingsForMapping( map, recordType, bindings );
 
 				if( bindings.Count == 0 )
 				{
-					throw new ReaderException( context, $"No properties are mapped for type '{recordType.FullName}'." );
+					throw new ReaderException( context, $"No members are mapped for type '{recordType.FullName}'." );
 				}
 
 				if( map.Constructor is NewExpression )
@@ -1527,15 +1527,15 @@ namespace CsvHelper
 			var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
 
-			var propertyMapData = new PropertyMapData( null )
+			var memberMapData = new MemberMapData( null )
 			{
 				Index = 0,
 				TypeConverter = Configuration.TypeConverterFactory.GetConverter( recordType )
 			};
-			propertyMapData.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( recordType ) );
-			propertyMapData.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
+			memberMapData.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( recordType ) );
+			memberMapData.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
 
-			fieldExpression = Expression.Call( Expression.Constant( propertyMapData.TypeConverter ), "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
+			fieldExpression = Expression.Call( Expression.Constant( memberMapData.TypeConverter ), "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
 			fieldExpression = Expression.Convert( fieldExpression, recordType );
 	
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
@@ -1565,7 +1565,7 @@ namespace CsvHelper
 					// Reference type.
 
 					var referenceBindings = new List<MemberBinding>();
-					CreatePropertyBindingsForMapping( parameterMap.ReferenceMap.Data.Mapping, parameterMap.ReferenceMap.Data.Parameter.ParameterType, referenceBindings );
+					CreateMemberBindingsForMapping( parameterMap.ReferenceMap.Data.Mapping, parameterMap.ReferenceMap.Data.Parameter.ParameterType, referenceBindings );
 
 					// This is in case an IContractResolver is being used.
 					var type = ReflectionHelper.CreateInstance( parameterMap.ReferenceMap.Data.Parameter.ParameterType ).GetType();
@@ -1591,14 +1591,14 @@ namespace CsvHelper
 					parameterMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
 
 					// Create type converter expression.
-					var propertyMapData = new PropertyMapData( null )
+					var memberMapData = new MemberMapData( null )
 					{
 						Index = parameterMap.Data.Index,
 						TypeConverter = parameterMap.Data.TypeConverter,
 						TypeConverterOptions = parameterMap.Data.TypeConverterOptions
 					};
-					propertyMapData.Names.Add( parameterMap.Data.Name );
-					Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
+					memberMapData.Names.Add( parameterMap.Data.Name );
+					Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
 					typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, parameterMap.Data.Parameter.ParameterType );
 
 					fieldExpression = typeConverterFieldExpression;
@@ -1609,14 +1609,14 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates the property/field bindings for the given <see cref="ClassMap"/>.
+		/// Creates the member bindings for the given <see cref="ClassMap"/>.
 		/// </summary>
 		/// <param name="mapping">The mapping to create the bindings for.</param>
 		/// <param name="recordType">The type of record.</param>
 		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
-		protected virtual void CreatePropertyBindingsForMapping( ClassMap mapping, Type recordType, List<MemberBinding> bindings )
+		protected virtual void CreateMemberBindingsForMapping( ClassMap mapping, Type recordType, List<MemberBinding> bindings )
 		{
-			AddPropertyBindings( mapping.PropertyMaps, bindings );
+			AddMemberBindings( mapping.MemberMaps, bindings );
 
 			foreach( var referenceMap in mapping.ReferenceMaps )
 			{
@@ -1626,7 +1626,7 @@ namespace CsvHelper
 				}
 
 				var referenceBindings = new List<MemberBinding>();
-				CreatePropertyBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
+				CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
 
 				Expression referenceBody;
 				var constructorExpression = referenceMap.Data.Mapping.Constructor;
@@ -1653,39 +1653,39 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Adds a <see cref="MemberBinding"/> for each property/field for it's field.
+		/// Adds a <see cref="MemberBinding"/> for each member for it's field.
 		/// </summary>
-		/// <param name="members">The properties/fields to add bindings for.</param>
-		/// <param name="bindings">The bindings that will be added to from the properties.</param>
-		protected virtual void AddPropertyBindings( PropertyMapCollection members, List<MemberBinding> bindings )
+		/// <param name="members">The members to add bindings for.</param>
+		/// <param name="bindings">The bindings that will be added to from the members.</param>
+		protected virtual void AddMemberBindings( MemberMapCollection members, List<MemberBinding> bindings )
 		{
-			foreach( var propertyMap in members )
+			foreach( var memberMap in members )
 			{
-				if( propertyMap.Data.ReadingConvertExpression != null )
+				if( memberMap.Data.ReadingConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( propertyMap.Data.ReadingConvertExpression, Expression.Constant( this ) );
-					exp = Expression.Convert( exp, propertyMap.Data.Member.MemberType() );
-					bindings.Add( Expression.Bind( propertyMap.Data.Member, exp ) );
+					Expression exp = Expression.Invoke( memberMap.Data.ReadingConvertExpression, Expression.Constant( this ) );
+					exp = Expression.Convert( exp, memberMap.Data.Member.MemberType() );
+					bindings.Add( Expression.Bind( memberMap.Data.Member, exp ) );
 					continue;
 				}
 
-				if( !CanRead( propertyMap ) )
+				if( !CanRead( memberMap ) )
 				{
 					continue;
 				}
 
-				if( propertyMap.Data.TypeConverter == null )
+				if( memberMap.Data.TypeConverter == null )
 				{
 					// Skip if the type isn't convertible.
 					continue;
 				}
 
 				int index;
-				if( propertyMap.Data.IsNameSet || context.ReaderConfiguration.HasHeaderRecord && !propertyMap.Data.IsIndexSet )
+				if( memberMap.Data.IsNameSet || context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
 				{
 					// Use the name.
-					index = GetFieldIndex( propertyMap.Data.Names.ToArray(), propertyMap.Data.NameIndex );
+					index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex );
 					if( index == -1 )
 					{
 						// Skip if the index was not found.
@@ -1695,7 +1695,7 @@ namespace CsvHelper
 				else
 				{
 					// Use the index.
-					index = propertyMap.Data.Index;
+					index = memberMap.Data.Index;
 				}
 
 				// Get the field using the field index.
@@ -1703,9 +1703,9 @@ namespace CsvHelper
 				Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
 
 				// Validate the field.
-				if( propertyMap.Data.ValidateExpression != null )
+				if( memberMap.Data.ValidateExpression != null )
 				{
-					var validateExpression = Expression.IsFalse( Expression.Invoke( propertyMap.Data.ValidateExpression, fieldExpression ) );
+					var validateExpression = Expression.IsFalse( Expression.Invoke( memberMap.Data.ValidateExpression, fieldExpression ) );
 					var validationExceptionConstructor = typeof( ValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
 					var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( context ) ) );
 					fieldExpression = Expression.Block(
@@ -1716,34 +1716,34 @@ namespace CsvHelper
 				}
 
 				// Convert the field.
-				var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-				propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
-				propertyMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
+				var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
+				memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+				memberMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
 
 				// Create type converter expression.
-				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
-				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, propertyMap.Data.Member.MemberType() );
+				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
+				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, memberMap.Data.Member.MemberType() );
 
-				if( propertyMap.Data.IsConstantSet )
+				if( memberMap.Data.IsConstantSet )
 				{
-					fieldExpression = Expression.Convert( Expression.Constant( propertyMap.Data.Constant ), propertyMap.Data.Member.MemberType() );
+					fieldExpression = Expression.Convert( Expression.Constant( memberMap.Data.Constant ), memberMap.Data.Member.MemberType() );
 				}
-				else if( propertyMap.Data.IsDefaultSet )
+				else if( memberMap.Data.IsDefaultSet )
 				{
 					// Create default value expression.
 					Expression defaultValueExpression;
-					if( propertyMap.Data.Member.MemberType() != typeof( string ) && propertyMap.Data.Default != null && propertyMap.Data.Default.GetType() == typeof( string ) )
+					if( memberMap.Data.Member.MemberType() != typeof( string ) && memberMap.Data.Default != null && memberMap.Data.Default.GetType() == typeof( string ) )
 					{
-						// The default is a string but the property type is not. Use a converter.
-						defaultValueExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, Expression.Constant( propertyMap.Data.Default ), Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+						// The default is a string but the member type is not. Use a converter.
+						defaultValueExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, Expression.Constant( memberMap.Data.Default ), Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
 					}
 					else
 					{
-						// The property type and default type match.
-						defaultValueExpression = Expression.Constant( propertyMap.Data.Default );
+						// The member type and default type match.
+						defaultValueExpression = Expression.Constant( memberMap.Data.Default );
 					}
 
-					defaultValueExpression = Expression.Convert( defaultValueExpression, propertyMap.Data.Member.MemberType() );
+					defaultValueExpression = Expression.Convert( defaultValueExpression, memberMap.Data.Member.MemberType() );
 
 					// If null, use string.Empty.
 					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
@@ -1759,23 +1759,23 @@ namespace CsvHelper
 					fieldExpression = typeConverterFieldExpression;
 				}
 
-				bindings.Add( Expression.Bind( propertyMap.Data.Member, fieldExpression ) );
+				bindings.Add( Expression.Bind( memberMap.Data.Member, fieldExpression ) );
 			}
 		}
 
 		/// <summary>
-		/// Determines if the property/field for the <see cref="PropertyMap"/>
+		/// Determines if the member for the <see cref="MemberMap"/>
 		/// can be read.
 		/// </summary>
-		/// <param name="propertyMap">The property/field map.</param>
-		/// <returns>A value indicating of the property/field can be read. True if it can, otherwise false.</returns>
-		protected virtual bool CanRead( PropertyMap propertyMap )
+		/// <param name="memberMap">The member map.</param>
+		/// <returns>A value indicating of the member can be read. True if it can, otherwise false.</returns>
+		protected virtual bool CanRead( MemberMap memberMap )
 		{
 			var cantRead =
-				// Ignored property/field;
-				propertyMap.Data.Ignore;
+				// Ignored member;
+				memberMap.Data.Ignore;
 
-			var property = propertyMap.Data.Member as PropertyInfo;
+			var property = memberMap.Data.Member as PropertyInfo;
 			if( property != null )
 			{
 				cantRead = cantRead ||
@@ -1790,16 +1790,16 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Determines if the property/field for the <see cref="PropertyReferenceMap"/>
+		/// Determines if the member for the <see cref="MemberReferenceMap"/>
 		/// can be read.
 		/// </summary>
-		/// <param name="propertyReferenceMap">The reference map.</param>
-		/// <returns>A value indicating of the property/field can be read. True if it can, otherwise false.</returns>
-		protected virtual bool CanRead( PropertyReferenceMap propertyReferenceMap )
+		/// <param name="memberReferenceMap">The reference map.</param>
+		/// <returns>A value indicating of the member can be read. True if it can, otherwise false.</returns>
+		protected virtual bool CanRead( MemberReferenceMap memberReferenceMap )
 		{
 			var cantRead = false;
 
-			var property = propertyReferenceMap.Data.Member as PropertyInfo;
+			var property = memberReferenceMap.Data.Member as PropertyInfo;
 			if( property != null )
 			{
 				cantRead =

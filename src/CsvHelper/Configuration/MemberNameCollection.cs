@@ -8,9 +8,9 @@ using System.Collections.Generic;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// A collection that holds property/field names.
+	/// A collection that holds member names.
 	/// </summary>
-	public class PropertyNameCollection : IEnumerable<string>
+	public class MemberNameCollection : IEnumerable<string>
 	{
 		private readonly List<string> names = new List<string>();
 

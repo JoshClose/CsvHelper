@@ -59,16 +59,16 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="PropertyMapData"/> for the property/field being created.</param>
+		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
 		{
 			if( string.IsNullOrEmpty( text ) )
 			{
 				return null;
 			}
 
-			foreach( var nullValue in propertyMapData.TypeConverterOptions.NullValues )
+			foreach( var nullValue in memberMapData.TypeConverterOptions.NullValues )
 			{
 				if( text == nullValue )
 				{
@@ -76,7 +76,7 @@ namespace CsvHelper.TypeConversion
 				}
 			}
 
-			return UnderlyingTypeConverter.ConvertFromString( text, row, propertyMapData );
+			return UnderlyingTypeConverter.ConvertFromString( text, row, memberMapData );
 		}
 
 		/// <summary>
@@ -84,11 +84,11 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="value">The object to convert to a string.</param>
 		/// <param name="row"></param>
-		/// <param name="propertyMapData"></param>
+		/// <param name="memberMapData"></param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, IWriterRow row, PropertyMapData propertyMapData )
+		public override string ConvertToString( object value, IWriterRow row, MemberMapData memberMapData )
 		{
-			return UnderlyingTypeConverter.ConvertToString( value, row, propertyMapData );
+			return UnderlyingTypeConverter.ConvertToString( value, row, memberMapData );
 		}
 	}
 }

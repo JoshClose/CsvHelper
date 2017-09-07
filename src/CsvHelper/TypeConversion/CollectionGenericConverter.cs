@@ -21,23 +21,23 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="PropertyMapData"/> for the property/field being created.</param>
+		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
 		{
-			// Since we're using the PropertyType here, this converter can be used for multiple types
+			// Since we're using the MemberType here, this converter can be used for multiple types
 			// as long as they implement IList.
-			var list = (IList)ReflectionHelper.CreateInstance( propertyMapData.Member.MemberType() );
-			var type = propertyMapData.Member.MemberType().GetGenericArguments()[0];
+			var list = (IList)ReflectionHelper.CreateInstance( memberMapData.Member.MemberType() );
+			var type = memberMapData.Member.MemberType().GetGenericArguments()[0];
 
-			if( propertyMapData.IsNameSet || row.Configuration.HasHeaderRecord && !propertyMapData.IsIndexSet )
+			if( memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet )
 			{
 				// Use the name.
 				var nameIndex = 0;
 				while( true )
 				{
 					object field;
-					if( !row.TryGetField( type, propertyMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+					if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out field ) )
 					{
 						break;
 					}
@@ -49,11 +49,11 @@ namespace CsvHelper.TypeConversion
 			else
 			{
 				// Use the index.
-				var indexEnd = propertyMapData.IndexEnd < propertyMapData.Index
+				var indexEnd = memberMapData.IndexEnd < memberMapData.Index
 					? row.Context.Record.Length - 1
-					: propertyMapData.IndexEnd;
+					: memberMapData.IndexEnd;
 
-				for( var i = propertyMapData.Index; i <= indexEnd; i++ )
+				for( var i = memberMapData.Index; i <= indexEnd; i++ )
 				{
 					var field = row.GetField( type, i );
 

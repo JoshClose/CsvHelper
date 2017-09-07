@@ -16,71 +16,71 @@ namespace CsvHelper.Configuration
 	public interface IHasMap<TClass> : IBuildableClass<TClass>
 	{
 		/// <summary>
-		/// Maps a property/field to a CSV field.
+		/// Maps a member to a CSV field.
 		/// </summary>
-		/// <param name="expression">The property/field to map.</param>
+		/// <param name="expression">The member to map.</param>
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
-		/// If false, a new map is created for the same property/field.</param>
-		/// <returns>The property/field mapping.</returns>
-		IHasMapOptions<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true );
+		/// If false, a new map is created for the same member.</param>
+		/// <returns>The member mapping.</returns>
+		IHasMapOptions<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true );
 	}
 
 	/// <summary>
 	/// Options after a mapping call.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasMapOptions<TClass, TProperty> :
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasMapOptions<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasTypeConverter<TClass, TProperty>,
-		IHasIndex<TClass, TProperty>,
-		IHasName<TClass, TProperty>,
-		IHasConvertUsing<TClass, TProperty>,
-		IHasDefault<TClass, TProperty>,
-		IHasConstant<TClass, TProperty>,
-		IHasValidate<TClass, TProperty>
+		IHasTypeConverter<TClass, TMember>,
+		IHasIndex<TClass, TMember>,
+		IHasName<TClass, TMember>,
+		IHasConvertUsing<TClass, TMember>,
+		IHasDefault<TClass, TMember>,
+		IHasConstant<TClass, TMember>,
+		IHasValidate<TClass, TMember>
 	{ }
 
 	/// <summary>
 	/// Has type converter capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasTypeConverter<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasTypeConverter<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
-		/// when converting the property/field to and from a CSV field.
+		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		IHasTypeConverterOptions<TClass, TProperty> TypeConverter( ITypeConverter typeConverter );
+		IHasTypeConverterOptions<TClass, TMember> TypeConverter( ITypeConverter typeConverter );
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
-		/// when converting the property/field to and from a CSV field.
+		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
-		IHasTypeConverterOptions<TClass, TProperty> TypeConverter<TConverter>() where TConverter : ITypeConverter;
+		IHasTypeConverterOptions<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter;
 	}
 
 	/// <summary>
 	/// Options after a type converter call.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasTypeConverterOptions<TClass, TProperty> :
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasTypeConverterOptions<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasDefault<TClass, TProperty>,
-		IHasValidate<TClass, TProperty>
+		IHasDefault<TClass, TMember>,
+		IHasValidate<TClass, TMember>
 	{ }
 
 	/// <summary>
 	/// Has index capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasIndex<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasIndex<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// When reading, is used to get the field at
@@ -89,29 +89,29 @@ namespace CsvHelper.Configuration
 		/// indexes.
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
-		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> property/field.</param>
-		IHasIndexOptions<TClass, TProperty> Index( int index, int indexEnd = -1 );
+		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> member.</param>
+		IHasIndexOptions<TClass, TMember> Index( int index, int indexEnd = -1 );
 	}
 
 	/// <summary>
 	/// Options after an index call.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasIndexOptions<TClass, TProperty> :
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasIndexOptions<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasTypeConverter<TClass, TProperty>,
-		IHasName<TClass, TProperty>,
-		IHasDefault<TClass, TProperty>,
-		IHasValidate<TClass, TProperty>
+		IHasTypeConverter<TClass, TMember>,
+		IHasName<TClass, TMember>,
+		IHasDefault<TClass, TMember>,
+		IHasValidate<TClass, TMember>
 	{ }
 
 	/// <summary>
 	/// Has name capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasName<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasName<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// When reading, is used to get the field
@@ -123,28 +123,28 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		IHasNameOptions<TClass, TProperty> Name( params string[] names );
+		IHasNameOptions<TClass, TMember> Name( params string[] names );
 	}
 
 	/// <summary>
 	/// Options after a name call.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasNameOptions<TClass, TProperty> :
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasNameOptions<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasTypeConverter<TClass, TProperty>,
-		IHasNameIndex<TClass, TProperty>,
-		IHasDefault<TClass, TProperty>,
-		IHasValidate<TClass, TProperty>
+		IHasTypeConverter<TClass, TMember>,
+		IHasNameIndex<TClass, TMember>,
+		IHasDefault<TClass, TMember>,
+		IHasValidate<TClass, TMember>
 	{ }
 
 	/// <summary>
 	/// Has name index capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasNameIndex<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasNameIndex<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// When reading, is used to get the 
@@ -152,34 +152,34 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		IHasNameIndexOptions<TClass, TProperty> NameIndex( int index );
+		IHasNameIndexOptions<TClass, TMember> NameIndex( int index );
 	}
 
 	/// <summary>
 	/// Options after a name index call.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasNameIndexOptions<TClass, TProperty> :
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasNameIndexOptions<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasTypeConverter<TClass, TProperty>,
-		IHasDefault<TClass, TProperty>,
-		IHasValidate<TClass, TProperty>
+		IHasTypeConverter<TClass, TMember>,
+		IHasDefault<TClass, TMember>,
+		IHasValidate<TClass, TMember>
 	{ }
 
 	/// <summary>
 	/// Has convert using capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasConvertUsing<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasConvertUsing<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// Specifies an expression to be used to convert data in the
-		/// row to the property/field.
+		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing( Func<IReaderRow, TProperty> convertExpression );
+		IHasMap<TClass> ConvertUsing( Func<IReaderRow, TMember> convertExpression );
 
 		/// <summary>
 		/// Specifies an expression to be used to convert the object
@@ -193,15 +193,15 @@ namespace CsvHelper.Configuration
 	/// Has default capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasDefault<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasDefault<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// The default value that will be used when reading when
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		IHasDefaultOptions<TClass, TProperty> Default( TProperty defaultValue );
+		IHasDefaultOptions<TClass, TMember> Default( TMember defaultValue );
 
 		/// <summary>
 		/// The default value that will be used when reading when
@@ -210,25 +210,25 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		IHasDefaultOptions<TClass, TProperty> Default( string defaultValue );
+		IHasDefaultOptions<TClass, TMember> Default( string defaultValue );
 	}
 
 	/// <summary>
 	/// Options after a default call.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasDefaultOptions<TClass, TProperty> :
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasDefaultOptions<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasValidate<TClass, TProperty>
+		IHasValidate<TClass, TMember>
 	{ }
 
 	/// <summary>
 	/// Has constant capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasConstant<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasConstant<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// The constant value that will be used for every record when 
@@ -236,15 +236,15 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="value">The constant value.</param>
-		IHasMap<TClass> Constant( TProperty value );
+		IHasMap<TClass> Constant( TMember value );
 	}
 
 	/// <summary>
 	/// Has validate capabilities.
 	/// </summary>
 	/// <typeparam name="TClass">The class type.</typeparam>
-	/// <typeparam name="TProperty">The property type.</typeparam>
-	public interface IHasValidate<TClass, TProperty> : IBuildableClass<TClass>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasValidate<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
 		/// The validate expression that will be called on every field when reading.
@@ -277,9 +277,9 @@ namespace CsvHelper.Configuration
 			map = new BuilderClassMap<TClass>();
 		}
 
-		public IHasMapOptions<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
+		public IHasMapOptions<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true )
 		{
-			return new PropertyMapBuilder<TClass, TProperty>( map, map.Map( expression, useExistingMap ) );
+			return new MemberMapBuilder<TClass, TMember>( map, map.Map( expression, useExistingMap ) );
 		}
 
 		public ClassMap<TClass> Build()
@@ -290,102 +290,102 @@ namespace CsvHelper.Configuration
 		private class BuilderClassMap<T> : ClassMap<T> { }
 	}
 
-	internal class PropertyMapBuilder<TClass, TProperty> :
+	internal class MemberMapBuilder<TClass, TMember> :
 		IHasMap<TClass>,
-		IHasMapOptions<TClass, TProperty>,
-		IHasTypeConverter<TClass, TProperty>,
-		IHasTypeConverterOptions<TClass, TProperty>,
-		IHasIndex<TClass, TProperty>,
-		IHasIndexOptions<TClass, TProperty>,
-		IHasName<TClass, TProperty>,
-		IHasNameOptions<TClass, TProperty>,
-		IHasNameIndex<TClass, TProperty>,
-		IHasNameIndexOptions<TClass, TProperty>,
-		IHasConvertUsing<TClass, TProperty>,
-		IHasDefault<TClass, TProperty>,
-		IHasDefaultOptions<TClass, TProperty>,
-		IHasConstant<TClass, TProperty>,
-		IHasValidate<TClass, TProperty>
+		IHasMapOptions<TClass, TMember>,
+		IHasTypeConverter<TClass, TMember>,
+		IHasTypeConverterOptions<TClass, TMember>,
+		IHasIndex<TClass, TMember>,
+		IHasIndexOptions<TClass, TMember>,
+		IHasName<TClass, TMember>,
+		IHasNameOptions<TClass, TMember>,
+		IHasNameIndex<TClass, TMember>,
+		IHasNameIndexOptions<TClass, TMember>,
+		IHasConvertUsing<TClass, TMember>,
+		IHasDefault<TClass, TMember>,
+		IHasDefaultOptions<TClass, TMember>,
+		IHasConstant<TClass, TMember>,
+		IHasValidate<TClass, TMember>
 	{
 		private readonly ClassMap<TClass> classMap;
-		private readonly PropertyMap<TClass, TProperty> propertyMap;
+		private readonly MemberMap<TClass, TMember> memberMap;
 
-		public PropertyMapBuilder( ClassMap<TClass> classMap, PropertyMap<TClass, TProperty> propertyMap )
+		public MemberMapBuilder( ClassMap<TClass> classMap, MemberMap<TClass, TMember> memberMap )
 		{
 			this.classMap = classMap;
-			this.propertyMap = propertyMap;
+			this.memberMap = memberMap;
 		}
 
 #pragma warning disable CS0693 // Type parameter has the same name as the type parameter from outer type
-		public IHasMapOptions<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
+		public IHasMapOptions<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true )
 		{
-			return new PropertyMapBuilder<TClass, TProperty>( classMap, classMap.Map( expression, useExistingMap ) );
+			return new MemberMapBuilder<TClass, TMember>( classMap, classMap.Map( expression, useExistingMap ) );
 		}
 #pragma warning restore CS0693 // Type parameter has the same name as the type parameter from outer type
 
-		public IHasMap<TClass> ConvertUsing( Func<IReaderRow, TProperty> convertExpression )
+		public IHasMap<TClass> ConvertUsing( Func<IReaderRow, TMember> convertExpression )
 		{
-			propertyMap.ConvertUsing( convertExpression );
+			memberMap.ConvertUsing( convertExpression );
 			return this;
 		}
 
 		public IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression )
 		{
-			propertyMap.ConvertUsing( convertExpression );
+			memberMap.ConvertUsing( convertExpression );
 			return this;
 		}
 
-		public IHasDefaultOptions<TClass, TProperty> Default( TProperty defaultValue )
+		public IHasDefaultOptions<TClass, TMember> Default( TMember defaultValue )
 		{
-			propertyMap.Default( defaultValue );
+			memberMap.Default( defaultValue );
 			return this;
 		}
 
-		public IHasDefaultOptions<TClass, TProperty> Default( string defaultValue )
+		public IHasDefaultOptions<TClass, TMember> Default( string defaultValue )
 		{
-			propertyMap.Default( defaultValue );
+			memberMap.Default( defaultValue );
 			return this;
 		}
 
-		public IHasIndexOptions<TClass, TProperty> Index( int index, int indexEnd = -1 )
+		public IHasIndexOptions<TClass, TMember> Index( int index, int indexEnd = -1 )
 		{
-			propertyMap.Index( index, indexEnd );
+			memberMap.Index( index, indexEnd );
 			return this;
 		}
 
-		public IHasNameOptions<TClass, TProperty> Name( params string[] names )
+		public IHasNameOptions<TClass, TMember> Name( params string[] names )
 		{
-			propertyMap.Name( names );
+			memberMap.Name( names );
 			return this;
 		}
 
-		public IHasNameIndexOptions<TClass, TProperty> NameIndex( int index )
+		public IHasNameIndexOptions<TClass, TMember> NameIndex( int index )
 		{
-			propertyMap.NameIndex( index );
+			memberMap.NameIndex( index );
 			return this;
 		}
 
-		public IHasTypeConverterOptions<TClass, TProperty> TypeConverter( ITypeConverter typeConverter )
+		public IHasTypeConverterOptions<TClass, TMember> TypeConverter( ITypeConverter typeConverter )
 		{
-			propertyMap.TypeConverter( typeConverter );
+			memberMap.TypeConverter( typeConverter );
 			return this;
 		}
 
-		public IHasTypeConverterOptions<TClass, TProperty> TypeConverter<TConverter>() where TConverter : ITypeConverter
+		public IHasTypeConverterOptions<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
-			propertyMap.TypeConverter<TConverter>();
+			memberMap.TypeConverter<TConverter>();
 			return this;
 		}
 
-		public IHasMap<TClass> Constant( TProperty value )
+		public IHasMap<TClass> Constant( TMember value )
 		{
-			propertyMap.Constant( value );
+			memberMap.Constant( value );
 			return this;
 		}
 
 		public IHasMap<TClass> Validate( Func<string, bool> validateExpression )
 		{
-			propertyMap.Validate( validateExpression );
+			memberMap.Validate( validateExpression );
 			return this;
 		}
 

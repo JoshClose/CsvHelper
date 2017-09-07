@@ -103,14 +103,14 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if private
-		/// properties/fields should be read from and written to.
-		/// True to include private properties/fields, otherwise false. Default is false.
+		/// member should be read from and written to.
+		/// True to include private member, otherwise false. Default is false.
 		/// </summary>
 		bool IncludePrivateMembers { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if headers of reference
-		/// properties/fields should get prefixed by the parent property/field name 
+		/// member should get prefixed by the parent member name 
 		/// when automapping.
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
@@ -130,19 +130,19 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Use a <see cref="ClassMap{T}" /> to configure mappings.
-		/// When using a class map, no properties/fields are mapped by default.
-		/// Only properties/fields specified in the mapping are used.
+		/// When using a class map, no member are mapped by default.
+		/// Only member specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 		TMap RegisterClassMap<TMap>() where TMap : ClassMap;
 
-	    /// <summary>
-	    /// Use a <see cref="ClassMap{T}" /> to configure mappings.
-	    /// When using a class map, no properties/fields are mapped by default.
-	    /// Only properties/fields specified in the mapping are used.
-	    /// </summary>
-	    /// <param name="classMapType">The type of mapping class to use.</param>
-	    ClassMap RegisterClassMap( Type classMapType );
+		/// <summary>
+		/// Use a <see cref="ClassMap{T}" /> to configure mappings.
+		/// When using a class map, no member are mapped by default.
+		/// Only member specified in the mapping are used.
+		/// </summary>
+		/// <param name="classMapType">The type of mapping class to use.</param>
+		ClassMap RegisterClassMap( Type classMapType );
 
 	    /// <summary>
 	    /// Registers the class map.
@@ -183,10 +183,10 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating that during writing if a new 
-		/// object should be created when a reference property/field is null.
+		/// object should be created when a reference member is null.
 		/// True to create a new object and use it's defaults for the
 		/// fields, or false to leave the fields empty for all the
-		/// reference property/field's properties/fields.
+		/// reference member's member.
 		/// </summary>
 		bool UseNewObjectForNullReferenceMembers { get; set; }
 	}

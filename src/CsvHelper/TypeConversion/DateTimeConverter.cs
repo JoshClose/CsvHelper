@@ -18,21 +18,21 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="PropertyMapData"/> for the property/field being created.</param>
+		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
 		{
 			if( text == null )
 			{
-				return base.ConvertFromString( null, row, propertyMapData );
+				return base.ConvertFromString( null, row, memberMapData );
 			}
 
-			var formatProvider = (IFormatProvider)propertyMapData.TypeConverterOptions.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? propertyMapData.TypeConverterOptions.CultureInfo;
-			var dateTimeStyle = propertyMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
+			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo.GetFormat( typeof( DateTimeFormatInfo ) ) ?? memberMapData.TypeConverterOptions.CultureInfo;
+			var dateTimeStyle = memberMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
 
-			return propertyMapData.TypeConverterOptions.Formats == null || propertyMapData.TypeConverterOptions.Formats.Length == 0
+			return memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
 				? DateTime.Parse( text, formatProvider, dateTimeStyle )
-				: DateTime.ParseExact( text, propertyMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle );
+				: DateTime.ParseExact( text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle );
 		}
 	}
 }

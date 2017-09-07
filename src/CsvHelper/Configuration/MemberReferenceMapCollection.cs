@@ -13,12 +13,12 @@ using System.Reflection;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// A collection that holds <see cref="PropertyReferenceMap"/>'s.
+	/// A collection that holds <see cref="MemberReferenceMap"/>'s.
 	/// </summary>
 	[DebuggerDisplay( "Count = {list.Count}" )]
-	public class PropertyReferenceMapCollection : IList<PropertyReferenceMap>
+	public class MemberReferenceMapCollection : IList<MemberReferenceMap>
     {
-	    private readonly List<PropertyReferenceMap> list = new List<PropertyReferenceMap>();
+	    private readonly List<MemberReferenceMap> list = new List<MemberReferenceMap>();
 
 		/// <summary>Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
 		/// <returns>The number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
@@ -33,8 +33,8 @@ namespace CsvHelper.Configuration
 		/// <param name="index">The zero-based index of the element to get or set.</param>
 		/// <exception cref="T:System.ArgumentOutOfRangeException">
 		/// <paramref name="index" /> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1" />.</exception>
-		/// <exception cref="T:System.NotSupportedException">The property/field is set and the <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
-		public virtual PropertyReferenceMap this[int index]
+		/// <exception cref="T:System.NotSupportedException">The member is set and the <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
+		public virtual MemberReferenceMap this[int index]
 		{
 			get { return list[index]; }
 			set { list[index] = value; }
@@ -43,7 +43,7 @@ namespace CsvHelper.Configuration
 		/// <summary>Returns an enumerator that iterates through the collection.</summary>
 		/// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
 		/// <filterpriority>1</filterpriority>
-		public virtual IEnumerator<PropertyReferenceMap> GetEnumerator()
+		public virtual IEnumerator<MemberReferenceMap> GetEnumerator()
 	    {
 		    return list.GetEnumerator();
 	    }
@@ -59,7 +59,7 @@ namespace CsvHelper.Configuration
 		/// <summary>Adds an item to the <see cref="T:System.Collections.Generic.ICollection`1" />.</summary>
 		/// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
 		/// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
-		public virtual void Add( PropertyReferenceMap item )
+		public virtual void Add( MemberReferenceMap item )
 	    {
 		    list.Add( item );
 	    }
@@ -74,7 +74,7 @@ namespace CsvHelper.Configuration
 		/// <summary>Determines whether the <see cref="T:System.Collections.Generic.ICollection`1" /> contains a specific value.</summary>
 		/// <returns>true if <paramref name="item" /> is found in the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false.</returns>
 		/// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
-		public virtual bool Contains( PropertyReferenceMap item )
+		public virtual bool Contains( MemberReferenceMap item )
 	    {
 		    return list.Contains( item );
 	    }
@@ -87,7 +87,7 @@ namespace CsvHelper.Configuration
 		/// <exception cref="T:System.ArgumentOutOfRangeException">
 		/// <paramref name="arrayIndex" /> is less than 0.</exception>
 		/// <exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1" /> is greater than the available space from <paramref name="arrayIndex" /> to the end of the destination <paramref name="array" />.</exception>
-		public virtual void CopyTo( PropertyReferenceMap[] array, int arrayIndex )
+		public virtual void CopyTo( MemberReferenceMap[] array, int arrayIndex )
 	    {
 		    list.CopyTo( array, arrayIndex );
 	    }
@@ -96,7 +96,7 @@ namespace CsvHelper.Configuration
 		/// <returns>true if <paramref name="item" /> was successfully removed from the <see cref="T:System.Collections.Generic.ICollection`1" />; otherwise, false. This method also returns false if <paramref name="item" /> is not found in the original <see cref="T:System.Collections.Generic.ICollection`1" />.</returns>
 		/// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1" />.</param>
 		/// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1" /> is read-only.</exception>
-		public virtual bool Remove( PropertyReferenceMap item )
+		public virtual bool Remove( MemberReferenceMap item )
 	    {
 		    return list.Remove( item );
 	    }
@@ -104,7 +104,7 @@ namespace CsvHelper.Configuration
 		/// <summary>Determines the index of a specific item in the <see cref="T:System.Collections.Generic.IList`1" />.</summary>
 		/// <returns>The index of <paramref name="item" /> if found in the list; otherwise, -1.</returns>
 		/// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1" />.</param>
-		public virtual int IndexOf( PropertyReferenceMap item )
+		public virtual int IndexOf( MemberReferenceMap item )
 	    {
 		    return list.IndexOf( item );
 	    }
@@ -115,7 +115,7 @@ namespace CsvHelper.Configuration
 		/// <exception cref="T:System.ArgumentOutOfRangeException">
 		/// <paramref name="index" /> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1" />.</exception>
 		/// <exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1" /> is read-only.</exception>
-		public virtual void Insert( int index, PropertyReferenceMap item )
+		public virtual void Insert( int index, MemberReferenceMap item )
 	    {
 		    list.Insert( index, item );
 	    }
@@ -131,23 +131,23 @@ namespace CsvHelper.Configuration
 	    }
 
 		/// <summary>
-		/// Finds the <see cref="PropertyReferenceMap"/> using the given property/field expression.
+		/// Finds the <see cref="MemberReferenceMap"/> using the given member expression.
 		/// </summary>
-		/// <typeparam name="T">The <see cref="System.Type"/> the property/field is on.</typeparam>
-		/// <param name="expression">The property/field expression.</param>
-		/// <returns>The <see cref="PropertyReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual PropertyReferenceMap Find<T>( Expression<Func<T, object>> expression )
+		/// <typeparam name="T">The <see cref="System.Type"/> the member is on.</typeparam>
+		/// <param name="expression">The member expression.</param>
+		/// <returns>The <see cref="MemberReferenceMap"/> for the given expression, or null if not found.</returns>
+		public virtual MemberReferenceMap Find<T>( Expression<Func<T, object>> expression )
 		{
 			var member = ReflectionHelper.GetMember( expression );
 			return Find( member );
 		}
 
 		/// <summary>
-		/// Finds the <see cref="PropertyReferenceMap"/> using the given property/field.
+		/// Finds the <see cref="MemberReferenceMap"/> using the given member.
 		/// </summary>
-		/// <param name="member">The property/field.</param>
-		/// <returns>The <see cref="PropertyReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual PropertyReferenceMap Find( MemberInfo member )
+		/// <param name="member">The member.</param>
+		/// <returns>The <see cref="MemberReferenceMap"/> for the given expression, or null if not found.</returns>
+		public virtual MemberReferenceMap Find( MemberInfo member )
 	    {
 			var existingMap = list.SingleOrDefault( m =>
 				m.Data.Member == member ||

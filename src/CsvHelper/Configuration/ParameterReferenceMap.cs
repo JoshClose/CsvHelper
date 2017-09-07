@@ -53,7 +53,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Get the largest index for the
-		/// properties/fields and references.
+		/// members and references.
 		/// </summary>
 		/// <returns>The max index.</returns>
 		internal int GetMaxIndex()

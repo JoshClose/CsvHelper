@@ -19,7 +19,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new BooleanConverter();
 
-			var propertyMapData = new PropertyMapData( null )
+			var propertyMapData = new MemberMapData( null )
 			{
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
@@ -38,7 +38,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new BooleanConverter();
 
-			var propertyMapData = new PropertyMapData( null );
+			var propertyMapData = new MemberMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var mockRow = new Mock<IReaderRow>();

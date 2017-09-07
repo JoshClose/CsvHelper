@@ -16,7 +16,7 @@ namespace CsvHelper
     public static class ReflectionExtensions
     {
 		/// <summary>
-		/// Gets the type from the property/field.
+		/// Gets the type from the member.
 		/// </summary>
 		/// <param name="member">The member to get the type from.</param>
 		/// <returns>The type.</returns>
@@ -38,7 +38,7 @@ namespace CsvHelper
 	    }
 		
 		/// <summary>
-		/// Gets a member expression for the property/field.
+		/// Gets a member expression for the member.
 		/// </summary>
 		/// <param name="member">The member to get the expression for.</param>
 		/// <param name="expression">The member expression.</param>

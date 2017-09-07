@@ -18,9 +18,9 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="PropertyMapData"/> for the property/field being created.</param>
+		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
 		{
 			bool b;
 			if( bool.TryParse( text, out b ) )
@@ -42,23 +42,23 @@ namespace CsvHelper.TypeConversion
 			}
 
 			var t = ( text ?? string.Empty ).Trim();
-			foreach( var trueValue in propertyMapData.TypeConverterOptions.BooleanTrueValues )
+			foreach( var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues )
 			{
-				if( propertyMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( trueValue, t, CompareOptions.IgnoreCase ) == 0 )
+				if( memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( trueValue, t, CompareOptions.IgnoreCase ) == 0 )
 				{
 					return true;
 				}
 			}
 
-			foreach( var falseValue in propertyMapData.TypeConverterOptions.BooleanFalseValues )
+			foreach( var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues )
 			{
-				if( propertyMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( falseValue, t, CompareOptions.IgnoreCase ) == 0 )
+				if( memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( falseValue, t, CompareOptions.IgnoreCase ) == 0 )
 				{
 					return false;
 				}
 			}
 
-			return base.ConvertFromString( text, row, propertyMapData );
+			return base.ConvertFromString( text, row, memberMapData );
 		}
 	}
 }

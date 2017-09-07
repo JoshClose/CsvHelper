@@ -13,7 +13,7 @@ using CsvHelper.TypeConversion;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Maps class properties/fields to CSV fields.
+	/// Maps class members to CSV fields.
 	/// </summary>
 	/// <typeparam name="TClass">The <see cref="System.Type"/> of class to map.</typeparam>
 	public abstract class ClassMap<TClass> : ClassMap
@@ -38,18 +38,18 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Maps a property/field to a CSV field.
+		/// Maps a member to a CSV field.
 		/// </summary>
-		/// <param name="expression">The property/field to map.</param>
+		/// <param name="expression">The member to map.</param>
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
-		/// If false, a new map is created for the same property/field.</param>
-		/// <returns>The property/field mapping.</returns>
-		public virtual PropertyMap<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
+		/// If false, a new map is created for the same member.</param>
+		/// <returns>The member mapping.</returns>
+		public virtual MemberMap<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true )
 		{
 			var stack = ReflectionHelper.GetMembers( expression );
 			if( stack.Count == 0 )
 			{
-				throw new InvalidOperationException( "No properties/fields were found in expression '{expression}'." );
+				throw new InvalidOperationException( "No members were found in expression '{expression}'." );
 			}
 
 			ClassMap currentClassMap = this;
@@ -57,7 +57,7 @@ namespace CsvHelper.Configuration
 
 			if( stack.Count > 1 )
 			{
-				// We need to add a reference map for every sub property/field.
+				// We need to add a reference map for every sub member.
 				while( stack.Count > 1 )
 				{
 					member = stack.Pop();
@@ -82,23 +82,23 @@ namespace CsvHelper.Configuration
 				}
 			}
 
-			// Add the property/field map to the last reference map.
+			// Add the member map to the last reference map.
 			member = stack.Pop();
 
-			return (PropertyMap<TClass, TProperty>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
+			return (MemberMap<TClass, TMember>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
 		}
 
 		/// <summary>
-		/// Maps a property/field to another class map.
+		/// Maps a member to another class map.
 		/// </summary>
 		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
 		/// <param name="expression">The expression.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
-		/// <returns>The reference mapping for the property/field.</returns>
-		public virtual PropertyReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
+		/// <returns>The reference mapping for the member.</returns>
+		public virtual MemberReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
 		{
-			var property = ReflectionHelper.GetMember( expression );
-			return References( typeof( TClassMap ), property, constructorArgs );
+			var member = ReflectionHelper.GetMember( expression );
+			return References( typeof( TClassMap ), member, constructorArgs );
 		}
 	}
 }

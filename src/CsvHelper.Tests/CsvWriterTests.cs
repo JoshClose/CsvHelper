@@ -924,12 +924,12 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : ITypeConverter
 		{
-			public string ConvertToString( object value, IWriterRow row, PropertyMapData propertyMapData )
+			public string ConvertToString( object value, IWriterRow row, MemberMapData propertyMapData )
 			{
 				return "test";
 			}
 
-			public object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
+			public object ConvertFromString( string text, IReaderRow row, MemberMapData propertyMapData )
 			{
 				throw new NotImplementedException();
 			}

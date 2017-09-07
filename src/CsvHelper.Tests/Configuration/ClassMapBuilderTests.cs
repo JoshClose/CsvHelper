@@ -60,32 +60,32 @@ namespace CsvHelper.Tests.Configuration
 		[TestMethod]
 		public void ClassMapBuilderAddsPropertyMapsCorrectly()
 		{
-			Assert.AreEqual( 5, map.PropertyMaps.Count );//IMappable
+			Assert.AreEqual( 5, map.MemberMaps.Count );//IMappable
 		}
 
 		[TestMethod]
 		public void ClassMapBuilderAddsTypeConvertersCorrectly()
 		{
-			Assert.AreEqual( typeof( DateTimeConverter ), map.PropertyMaps[2].Data.TypeConverter.GetType() );//2
-			Assert.AreEqual( typeof( DoubleConverter ), map.PropertyMaps[3].Data.TypeConverter.GetType() );//2
+			Assert.AreEqual( typeof( DateTimeConverter ), map.MemberMaps[2].Data.TypeConverter.GetType() );//2
+			Assert.AreEqual( typeof( DoubleConverter ), map.MemberMaps[3].Data.TypeConverter.GetType() );//2
 		}
 
 		[TestMethod]
 		public void ClassMapBuilderAddsIndexesCorrectly()
 		{
-			Assert.AreEqual( 2, map.PropertyMaps[2].Data.Index ); //3
+			Assert.AreEqual( 2, map.MemberMaps[2].Data.Index ); //3
 		}
 
 		[TestMethod]
 		public void ClassMapBuilderAddsNamesCorrectly()
 		{
-			Assert.AreEqual( "D4", map.PropertyMaps[3].Data.Names.Single() ); //4
+			Assert.AreEqual( "D4", map.MemberMaps[3].Data.Names.Single() ); //4
 		}
 
 		[TestMethod]
 		public void ClassMapBuilderAddsNameIndexesCorrectly()
 		{
-			Assert.AreEqual( 2, map.PropertyMaps[0].Data.NameIndex ); //5
+			Assert.AreEqual( 2, map.MemberMaps[0].Data.NameIndex ); //5
 		}
 
 		//this one is kind of hacky, but i'm not sure how else to test it more robustly since the function gets converted to an expression inside the CsvClassMap
@@ -93,14 +93,14 @@ namespace CsvHelper.Tests.Configuration
 		public void ClassMapBuilderAddsConvertUsingFunctionCorectly()
 		{
 			var fakeRow = new BuilderRowFake();
-			Assert.AreEqual( ConvertExpression( fakeRow ).E, ( map.PropertyMaps[4].Data.ReadingConvertExpression as Expression<Func<IReaderRow, FakeInnerClass>> ).Compile()( fakeRow ).E ); //6
+			Assert.AreEqual( ConvertExpression( fakeRow ).E, ( map.MemberMaps[4].Data.ReadingConvertExpression as Expression<Func<IReaderRow, FakeInnerClass>> ).Compile()( fakeRow ).E ); //6
 		}
 
 		[TestMethod]
 		public void ClassMapBuilderAddsDefaultsCorrectly()
 		{
-			Assert.AreEqual( "WEW", map.PropertyMaps[0].Data.Default );//7
-			Assert.AreEqual( 4d, map.PropertyMaps[3].Data.Default );//7
+			Assert.AreEqual( "WEW", map.MemberMaps[0].Data.Default );//7
+			Assert.AreEqual( 4d, map.MemberMaps[3].Data.Default );//7
 		}
 
 		private class BuilderRowFake : IReaderRow

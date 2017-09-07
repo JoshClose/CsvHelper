@@ -370,7 +370,7 @@ namespace CsvHelper.Tests.Mappings
 			{
 				var options = new AutoMapOptions
 				{
-					IncludePrivateProperties = true,
+					IncludePrivateMembers = true,
 					MemberTypes = MemberTypes.Fields
 				};
 				AutoMap( options );

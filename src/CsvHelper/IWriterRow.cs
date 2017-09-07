@@ -99,13 +99,13 @@ namespace CsvHelper
         void WriteComment( string comment );
 
         /// <summary>
-        /// Writes the header record from the given properties/fields.
+        /// Writes the header record from the given members.
         /// </summary>
         /// <typeparam name="T">The type of the record.</typeparam>
         void WriteHeader<T>();
 
 		/// <summary>
-		/// Writes the header record from the given properties/fields.
+		/// Writes the header record from the given members.
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		void WriteHeader( Type type );

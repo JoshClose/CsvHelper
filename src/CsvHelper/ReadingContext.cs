@@ -34,7 +34,7 @@ namespace CsvHelper
 
 		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 
-		internal PropertyMapData ReusablePropertyMapData { get; } = new PropertyMapData( null );
+		internal MemberMapData ReusableMemberMapData { get; } = new MemberMapData( null );
 
 		/// <summary>
 		/// Gets the <see cref="CsvParser"/> configuration.

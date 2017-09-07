@@ -8,12 +8,12 @@ using System.Collections.Generic;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Used to compare <see cref="PropertyMap"/>s.
+	/// Used to compare <see cref="MemberMap"/>s.
 	/// The order is by field index ascending. Any
 	/// fields that don't have an index are pushed
 	/// to the bottom.
 	/// </summary>
-	internal class PropertyMapComparer : IComparer<PropertyMap>
+	internal class MemberMapComparer : IComparer<MemberMap>
 	{
 		/// <summary>
 		/// Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
@@ -36,9 +36,9 @@ namespace CsvHelper.Configuration
 		///                 </exception><filterpriority>2</filterpriority>
 		public virtual int Compare( object x, object y )
 		{
-			var xProperty = x as PropertyMap;
-			var yProperty = y as PropertyMap;
-			return Compare( xProperty, yProperty );
+			var xMember = x as MemberMap;
+			var yMember = y as MemberMap;
+			return Compare( xMember, yMember );
 		}
 
 		/// <summary>
@@ -57,7 +57,7 @@ namespace CsvHelper.Configuration
 		/// <param name="x">The first object to compare.
 		///                 </param><param name="y">The second object to compare.
 		///                 </param>
-		public virtual int Compare( PropertyMap x, PropertyMap y )
+		public virtual int Compare( MemberMap x, MemberMap y )
 		{
 			if( x == null )
 			{

@@ -9,39 +9,39 @@ using System.Reflection;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Mapping info for a reference property/field mapping to a class.
+	/// Mapping info for a reference member mapping to a class.
 	/// </summary>
 	[DebuggerDisplay( "Member = {Data.Member}, Prefix = {Data.Prefix}" )]
-	public class PropertyReferenceMap
+	public class MemberReferenceMap
 	{
-		private readonly PropertyReferenceMapData data;
+		private readonly MemberReferenceMapData data;
 
 		/// <summary>
-		/// Gets the property/field reference map data.
+		/// Gets the member reference map data.
 		/// </summary>
-		public PropertyReferenceMapData Data => data;
+		public MemberReferenceMapData Data => data;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PropertyReferenceMap"/> class.
+		/// Initializes a new instance of the <see cref="MemberReferenceMap"/> class.
 		/// </summary>
-		/// <param name="member">The property/field.</param>
+		/// <param name="member">The member.</param>
 		/// <param name="mapping">The <see cref="ClassMap"/> to use for the reference map.</param>
-		public PropertyReferenceMap( MemberInfo member, ClassMap mapping )
+		public MemberReferenceMap( MemberInfo member, ClassMap mapping )
 		{
 			if( mapping == null )
 			{
 				throw new ArgumentNullException( nameof( mapping ) );
 			}
 
-			data = new PropertyReferenceMapData( member, mapping );
+			data = new MemberReferenceMapData( member, mapping );
 		}
 
 		/// <summary>
-		/// Appends a prefix to the header of each field of the reference property/field.
+		/// Appends a prefix to the header of each field of the reference member.
 		/// </summary>
-		/// <param name="prefix">The prefix to be prepended to headers of each reference property/field.</param>
-		/// <returns>The current <see cref="PropertyReferenceMap" /></returns>
-		public PropertyReferenceMap Prefix( string prefix = null )
+		/// <param name="prefix">The prefix to be prepended to headers of each reference member.</param>
+		/// <returns>The current <see cref="MemberReferenceMap" /></returns>
+		public MemberReferenceMap Prefix( string prefix = null )
 		{
 			if( string.IsNullOrEmpty( prefix ) )
 			{
@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Get the largest index for the
-		/// properties/fields and references.
+		/// members and references.
 		/// </summary>
 		/// <returns>The max index.</returns>
 		internal int GetMaxIndex()

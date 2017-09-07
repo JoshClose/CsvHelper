@@ -185,7 +185,7 @@ namespace CsvHelper
 		public virtual void WriteField<T>( T field, ITypeConverter converter )
 		{
 			var type = field == null ? typeof( string ) : field.GetType();
-			context.ReusablePropertyMapData.TypeConverter = converter;
+			context.ReusableMemberMapData.TypeConverter = converter;
 			if( !context.TypeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
 			{
 				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) );
@@ -193,9 +193,9 @@ namespace CsvHelper
 				context.TypeConverterOptionsCache.Add( type, typeConverterOptions );
 			}
 
-			context.ReusablePropertyMapData.TypeConverterOptions = typeConverterOptions;
+			context.ReusableMemberMapData.TypeConverterOptions = typeConverterOptions;
 
-			var fieldString = converter.ConvertToString( field, this, context.ReusablePropertyMapData );
+			var fieldString = converter.ConvertToString( field, this, context.ReusableMemberMapData );
 			WriteConvertedField( fieldString );
 		}
 
@@ -283,7 +283,7 @@ namespace CsvHelper
 	    }
 
         /// <summary>
-        /// Writes the header record from the given properties/fields.
+        /// Writes the header record from the given members.
         /// </summary>
         /// <typeparam name="T">The type of the record.</typeparam>
         public virtual void WriteHeader<T>()
@@ -292,7 +292,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Writes the header record from the given properties/fields.
+		/// Writes the header record from the given members.
 		/// </summary>
 		/// <param name="type">The type of the record.</param>
 		public virtual void WriteHeader( Type type )
@@ -327,24 +327,24 @@ namespace CsvHelper
 				context.WriterConfiguration.Maps.Add( context.WriterConfiguration.AutoMap( type ) );
 			}
 
-			var properties = new PropertyMapCollection();
-			AddProperties( properties, context.WriterConfiguration.Maps[type] );
+			var members = new MemberMapCollection();
+			AddMembers( members, context.WriterConfiguration.Maps[type] );
 
-			foreach( var property in properties )
+			foreach( var member in members )
 			{
-				if( CanWrite( property ) )
+				if( CanWrite( member ) )
 				{
-					if( property.Data.IndexEnd >= property.Data.Index )
+					if( member.Data.IndexEnd >= member.Data.Index )
 					{
-						var count = property.Data.IndexEnd - property.Data.Index + 1;
+						var count = member.Data.IndexEnd - member.Data.Index + 1;
 						for( var i = 1; i <= count; i++ )
 						{
-							WriteField( property.Data.Names.FirstOrDefault() + i );
+							WriteField( member.Data.Names.FirstOrDefault() + i );
 						}
 					}
 					else
 					{
-						WriteField( property.Data.Names.FirstOrDefault() );
+						WriteField( member.Data.Names.FirstOrDefault() );
 					}
 				}
 			}
@@ -486,81 +486,81 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Adds the properties/fields from the mapping. This will recursively
-		/// traverse the mapping tree and add all properties/fields for
+		/// Adds the members from the mapping. This will recursively
+		/// traverse the mapping tree and add all members for
 		/// reference maps.
 		/// </summary>
-		/// <param name="properties">The properties/fields to be added to.</param>
-		/// <param name="mapping">The mapping where the properties/fields are added from.</param>
-		protected virtual void AddProperties( PropertyMapCollection properties, ClassMap mapping )
+		/// <param name="members">The members to be added to.</param>
+		/// <param name="mapping">The mapping where the members are added from.</param>
+		protected virtual void AddMembers( MemberMapCollection members, ClassMap mapping )
 		{
-			properties.AddRange( mapping.PropertyMaps );
+			members.AddRange( mapping.MemberMaps );
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
-				AddProperties( properties, refMap.Data.Mapping );
+				AddMembers( members, refMap.Data.Mapping );
 			}
 		}
 
 		/// <summary>
-		/// Creates a property/field expression for the given property on the record.
-		/// This will recursively traverse the mapping to find the property/field
-		/// and create a safe property/field accessor for each level as it goes.
+		/// Creates a member expression for the given member on the record.
+		/// This will recursively traverse the mapping to find the member
+		/// and create a safe member accessor for each level as it goes.
 		/// </summary>
-		/// <param name="recordExpression">The current property/field expression.</param>
-		/// <param name="mapping">The mapping to look for the property/field to map on.</param>
-		/// <param name="propertyMap">The property/field map to look for on the mapping.</param>
-		/// <returns>An Expression to access the given property/field.</returns>
-		protected virtual Expression CreatePropertyExpression( Expression recordExpression, ClassMap mapping, PropertyMap propertyMap )
+		/// <param name="recordExpression">The current member expression.</param>
+		/// <param name="mapping">The mapping to look for the member to map on.</param>
+		/// <param name="memberMap">The member map to look for on the mapping.</param>
+		/// <returns>An Expression to access the given member.</returns>
+		protected virtual Expression CreateMemberExpression( Expression recordExpression, ClassMap mapping, MemberMap memberMap )
 		{
-			if( mapping.PropertyMaps.Any( pm => pm == propertyMap ) )
+			if( mapping.MemberMaps.Any( pm => pm == memberMap ) )
 			{
-				// The property/field is on this level.
-				if( propertyMap.Data.Member is PropertyInfo )
+				// The member is on this level.
+				if( memberMap.Data.Member is PropertyInfo )
 				{
-					return Expression.Property( recordExpression, (PropertyInfo)propertyMap.Data.Member );
+					return Expression.Property( recordExpression, (PropertyInfo)memberMap.Data.Member );
 				}
 
-				if( propertyMap.Data.Member is FieldInfo )
+				if( memberMap.Data.Member is FieldInfo )
 				{
-					return Expression.Field( recordExpression, (FieldInfo)propertyMap.Data.Member );
+					return Expression.Field( recordExpression, (FieldInfo)memberMap.Data.Member );
 				}
 			}
 
-			// The property/field isn't on this level of the mapping.
+			// The member isn't on this level of the mapping.
 			// We need to search down through the reference maps.
 			foreach( var refMap in mapping.ReferenceMaps )
 			{
 				var wrapped = refMap.Data.Member.GetMemberExpression( recordExpression );
-				var propertyExpression = CreatePropertyExpression( wrapped, refMap.Data.Mapping, propertyMap );
-				if( propertyExpression == null )
+				var memberExpression = CreateMemberExpression( wrapped, refMap.Data.Mapping, memberMap );
+				if( memberExpression == null )
 				{
 					continue;
 				}
 
 				if( refMap.Data.Member.MemberType().GetTypeInfo().IsValueType )
 				{
-					return propertyExpression;
+					return memberExpression;
 				}
 
 				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
 
-				var isValueType = propertyMap.Data.Member.MemberType().GetTypeInfo().IsValueType;
-				var isGenericType = isValueType && propertyMap.Data.Member.MemberType().GetTypeInfo().IsGenericType;
-				Type propertyType;
+				var isValueType = memberMap.Data.Member.MemberType().GetTypeInfo().IsValueType;
+				var isGenericType = isValueType && memberMap.Data.Member.MemberType().GetTypeInfo().IsGenericType;
+				Type memberType;
 				if( isValueType && !isGenericType && !context.WriterConfiguration.UseNewObjectForNullReferenceMembers )
 				{
-					propertyType = typeof( Nullable<> ).MakeGenericType( propertyMap.Data.Member.MemberType() );
-					propertyExpression = Expression.Convert( propertyExpression, propertyType );
+					memberType = typeof( Nullable<> ).MakeGenericType( memberMap.Data.Member.MemberType() );
+					memberExpression = Expression.Convert( memberExpression, memberType );
 				}
 				else
 				{
-					propertyType = propertyMap.Data.Member.MemberType();
+					memberType = memberMap.Data.Member.MemberType();
 				}
 
 				var defaultValueExpression = isValueType && !isGenericType
-					? (Expression)Expression.New( propertyType )
-					: Expression.Constant( null, propertyType );
-				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, propertyExpression );
+					? (Expression)Expression.New( memberType )
+					: Expression.Constant( null, memberType );
+				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, memberExpression );
 				return conditionExpression;
 			}
 
@@ -664,57 +664,57 @@ namespace CsvHelper
 		{
 			var recordParameter = Expression.Parameter( type, "record" );
 
-			// Get a list of all the properties/fields so they will
+			// Get a list of all the members so they will
 			// be sorted properly.
-			var properties = new PropertyMapCollection();
-			AddProperties( properties, context.WriterConfiguration.Maps[type] );
+			var members = new MemberMapCollection();
+			AddMembers( members, context.WriterConfiguration.Maps[type] );
 
-			if( properties.Count == 0 )
+			if( members.Count == 0 )
 			{
 				throw new WriterException( context, $"No properties are mapped for type '{type.FullName}'." );
 			}
 
 			var delegates = new List<Delegate>();
 
-			foreach( var propertyMap in properties )
+			foreach( var memberMap in members )
 			{
-				if( propertyMap.Data.WritingConvertExpression != null )
+				if( memberMap.Data.WritingConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( propertyMap.Data.WritingConvertExpression, recordParameter );
+					Expression exp = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameter );
 					exp = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, exp );
 					delegates.Add( Expression.Lambda( typeof( Action<> ).MakeGenericType( type ), exp, recordParameter ).Compile() );
 					continue;
 				}
 
-				if( !CanWrite( propertyMap ) )
+				if( !CanWrite( memberMap ) )
 				{
 					continue;
 				}
 
 				Expression fieldExpression;
 
-				if( propertyMap.Data.IsConstantSet )
+				if( memberMap.Data.IsConstantSet )
 				{
-					fieldExpression = Expression.Constant( propertyMap.Data.Constant );
+					fieldExpression = Expression.Constant( memberMap.Data.Constant );
 				}
 				else
 				{
-					if( propertyMap.Data.TypeConverter == null )
+					if( memberMap.Data.TypeConverter == null )
 					{
 						// Skip if the type isn't convertible.
 						continue;
 					}
 
-					fieldExpression = CreatePropertyExpression( recordParameter, context.WriterConfiguration.Maps[type], propertyMap );
+					fieldExpression = CreateMemberExpression( recordParameter, context.WriterConfiguration.Maps[type], memberMap );
 
-					var typeConverterExpression = Expression.Constant( propertyMap.Data.TypeConverter );
-					propertyMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( propertyMap.Data.Member.MemberType() ), propertyMap.Data.TypeConverterOptions );
-					propertyMap.Data.TypeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
+					var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+					memberMap.Data.TypeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
 
 					var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMap.Data ) );
+					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
 
 					if( type.GetTypeInfo().IsClass )
 					{
@@ -749,15 +749,15 @@ namespace CsvHelper
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 
-			var propertyMapData = new PropertyMapData( null )
+			var memberMapData = new MemberMapData( null )
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
 				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) )
 			};
-			propertyMapData.TypeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
+			memberMapData.TypeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
 
-			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( propertyMapData ) );
+			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
 
 			var actionType = typeof( Action<> ).MakeGenericType( type );
@@ -770,7 +770,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Creates an action for an ExpandoObject. This needs to be separate
 		/// from other dynamic objects due to what seems to be an issue in ExpandoObject
-		/// where expandos with the same properties/fields sometimes test as not equal.
+		/// where expandos with the same members sometimes test as not equal.
 		/// </summary>
 		/// <param name="obj">The ExpandoObject.</param>
 		/// <returns></returns>
@@ -802,12 +802,12 @@ namespace CsvHelper
 			var parameterExpression = Expression.Parameter( typeof( object ), "record" );
 
 			var metaObject = provider.GetMetaObject( parameterExpression );
-			var propertyNames = metaObject.GetDynamicMemberNames();
+			var memberNames = metaObject.GetDynamicMemberNames();
 
 			var delegates = new List<Delegate>();
-			foreach( var propertyName in propertyNames )
+			foreach( var memberName in memberNames )
 			{
-				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, propertyName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
+				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, memberName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
 				var getMemberMetaObject = metaObject.BindGetMember( getMemberBinder );
 				var fieldExpression = getMemberMetaObject.Expression;
 				fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteField ), new[] { typeof( object ) }, fieldExpression );
@@ -836,18 +836,18 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Checks if the property/field can be written.
+		/// Checks if the member can be written.
 		/// </summary>
-		/// <param name="propertyMap">The property/field map that we are checking.</param>
-		/// <returns>A value indicating if the property/field can be written.
-		/// True if the property/field can be written, otherwise false.</returns>
-		protected virtual bool CanWrite( PropertyMap propertyMap )
+		/// <param name="memberMap">The member map that we are checking.</param>
+		/// <returns>A value indicating if the member can be written.
+		/// True if the member can be written, otherwise false.</returns>
+		protected virtual bool CanWrite( MemberMap memberMap )
 		{
 			var cantWrite =
-				// Ignored properties/fields.
-				propertyMap.Data.Ignore;
+				// Ignored members.
+				memberMap.Data.Ignore;
 
-			var property = propertyMap.Data.Member as PropertyInfo;
+			var property = memberMap.Data.Member as PropertyInfo;
 			if( property != null )
 			{
 				cantWrite = cantWrite ||

@@ -12,9 +12,9 @@ namespace CsvHelper.Tests.AutoMapping
 			var config = new CsvHelper.Configuration.Configuration();
 			var map = config.AutoMap<ACircular>();
 			Assert.IsNotNull( map );
-			Assert.AreEqual( 1, map.PropertyMaps.Count );
+			Assert.AreEqual( 1, map.MemberMaps.Count );
 			Assert.AreEqual( 1, map.ReferenceMaps.Count );
-			Assert.AreEqual( 1, map.ReferenceMaps[0].Data.Mapping.PropertyMaps.Count );
+			Assert.AreEqual( 1, map.ReferenceMaps[0].Data.Mapping.MemberMaps.Count );
 			Assert.AreEqual( 0, map.ReferenceMaps[0].Data.Mapping.ReferenceMaps.Count );
 		}
 
@@ -23,7 +23,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			var config = new CsvHelper.Configuration.Configuration();
 			var map = config.AutoMap<A>();
-			Assert.AreEqual( 1, map.PropertyMaps.Count );
+			Assert.AreEqual( 1, map.MemberMaps.Count );
 			Assert.AreEqual( 3, map.ReferenceMaps.Count );
 		}
 
