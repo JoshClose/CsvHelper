@@ -343,6 +343,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
+			csv.Configuration.ThrowOnBadHeader = false;
 			csv.Configuration.ThrowOnMissingField = false;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
@@ -377,6 +378,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
+			csv.Configuration.ThrowOnBadHeader = false;
 			csv.Configuration.ThrowOnMissingField = false;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
@@ -407,6 +409,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
+			csv.Configuration.ThrowOnBadHeader = false;
 			csv.Configuration.ThrowOnMissingField = false;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			var records = csv.GetRecords<TestRecord>().ToList();
@@ -442,6 +445,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
+			csv.Configuration.ThrowOnBadHeader = false;
 			csv.Configuration.ThrowOnMissingField = false;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			var records = csv.GetRecords( typeof( TestRecord ) ).ToList();
@@ -695,6 +699,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
+				csvReader.Configuration.ThrowOnBadHeader = false;
 				csvReader.Configuration.ThrowOnMissingField = false;
 				csvReader.Configuration.RegisterClassMap<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();

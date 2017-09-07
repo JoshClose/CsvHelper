@@ -147,6 +147,7 @@ namespace CsvHelper.Tests.Reading
 
 				var missingFieldExceptionCount = 0;
 				var columnCountChangeExceptionCount = 0;
+				csv.Configuration.ThrowOnBadHeader = false;
 				csv.Configuration.DetectColumnCountChanges = true;
 				csv.Configuration.IgnoreReadingExceptions = true;
 				csv.Configuration.RegisterClassMap<TestMap>();

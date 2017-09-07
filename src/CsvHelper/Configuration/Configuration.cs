@@ -48,7 +48,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
 		/// A header is bad if all the mapped properties don't match.
 		/// </summary>
-		public virtual bool ThrowOnBadHeader { get; set; }
+		public virtual bool ThrowOnBadHeader { get; set; } = true;
 
 		/// <summary>
 		/// Gets or sets a value indicating if an exception will be

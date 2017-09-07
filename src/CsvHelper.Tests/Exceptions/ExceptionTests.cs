@@ -29,6 +29,7 @@ namespace CsvHelper.Tests.Exceptions
 
 				try
 				{
+					csv.Configuration.ThrowOnBadHeader = false;
 					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
 					Assert.Fail();
 				}

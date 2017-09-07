@@ -141,6 +141,10 @@ namespace CsvHelper
 		/// <param name="map">The map to validate against.</param>
 		protected virtual void ValidateHeader( ClassMap map )
 		{
+			var configSettingMessage = 
+				$"If you are expecting some headers to be missing and want to turn this validation check off, " +
+				$"set the configuration {nameof( Configuration.ThrowOnBadHeader )} to false.";
+
 			foreach( var parameter in map.ParameterMaps )
 			{
 				if( parameter.ConstructorTypeMap != null )
@@ -156,7 +160,7 @@ namespace CsvHelper
 					var index = GetFieldIndex( parameter.Data.Name, 0, true );
 					if( index == -1 )
 					{
-						throw new ValidationException( context, $"Header '{parameter.Data.Name}' was not found." );
+						throw new ValidationException( context, $"Header '{parameter.Data.Name}' was not found. {configSettingMessage}" );
 					}
 				}
 			}
@@ -166,7 +170,7 @@ namespace CsvHelper
 				var index = GetFieldIndex( property.Data.Names.ToArray(), property.Data.NameIndex, true );
 				if( index == -1 )
 				{
-					throw new ValidationException( context, $"Header '{property.Data.Names[property.Data.NameIndex]}' was not found." );
+					throw new ValidationException( context, $"Header '{property.Data.Names[property.Data.NameIndex]}' was not found. {configSettingMessage}" );
 				}
 			}
 
