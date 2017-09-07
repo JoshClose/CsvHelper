@@ -143,10 +143,21 @@ namespace CsvHelper
 		{
 			foreach( var parameter in map.ParameterMaps )
 			{
-				var index = GetFieldIndex( parameter.Data.Name, 0, true );
-				if( index == -1 )
+				if( parameter.ConstructorTypeMap != null )
 				{
-					throw new ValidationException( context, $"Header '{parameter.Data.Name}' was not found." );
+					ValidateHeader( parameter.ConstructorTypeMap );
+				}
+				else if( parameter.ReferenceMap != null )
+				{
+					ValidateHeader( parameter.ReferenceMap.Data.Mapping );
+				}
+				else
+				{
+					var index = GetFieldIndex( parameter.Data.Name, 0, true );
+					if( index == -1 )
+					{
+						throw new ValidationException( context, $"Header '{parameter.Data.Name}' was not found." );
+					}
 				}
 			}
 
