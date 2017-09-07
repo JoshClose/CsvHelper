@@ -167,7 +167,7 @@ namespace CsvHelper.Tests
 			public int DId { get; set; }
 		}
 
-		private sealed class ASubPropertyMap : CsvClassMap<IA>
+		private sealed class ASubPropertyMap : ClassMap<IA>
 		{
 			public ASubPropertyMap()
 			{
@@ -178,7 +178,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class AMap : CsvClassMap<IA>
+		private sealed class AMap : ClassMap<IA>
 		{
 			public AMap()
 			{
@@ -187,7 +187,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class BMap : CsvClassMap<IB>
+		private sealed class BMap : ClassMap<IB>
 		{
 			public BMap()
 			{
@@ -196,7 +196,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class CMap : CsvClassMap<IC>
+		private sealed class CMap : ClassMap<IC>
 		{
 			public CMap()
 			{
@@ -205,7 +205,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class DMap : CsvClassMap<ID>
+		private sealed class DMap : ClassMap<ID>
 		{
 			public DMap()
 			{

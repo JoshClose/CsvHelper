@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ConvertNoIndexEndTest()
 		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
@@ -32,7 +32,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.Context ).Returns( context );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new CsvPropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
+			var data = new PropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
 			{
 				Index = 2
 			};
@@ -50,7 +50,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ConvertWithIndexEndTest()
 		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
@@ -60,7 +60,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.Context ).Returns( context );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "List" ) )
+			var data = new PropertyMapData( typeof( Test ).GetProperty( "List" ) )
 			{
 				Index = 2,
 				IndexEnd = 3
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.TypeConversion
 			public List<int?> List { get; set; }
 		}
 
-		private sealed class TestIndexMap : CsvClassMap<Test>
+		private sealed class TestIndexMap : ClassMap<Test>
 		{
 			public TestIndexMap()
 			{
@@ -111,7 +111,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestNamedMap : CsvClassMap<Test>
+		private sealed class TestNamedMap : ClassMap<Test>
 		{
 			public TestNamedMap()
 			{
@@ -119,7 +119,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestDefaultMap : CsvClassMap<Test>
+		private sealed class TestDefaultMap : ClassMap<Test>
 		{
 			public TestDefaultMap()
 			{

@@ -34,7 +34,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new EnumConverter( typeof( TestEnum ) );
-			var propertyMapData = new CsvPropertyMapData( null )
+			var propertyMapData = new PropertyMapData( null )
 			{
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
@@ -52,7 +52,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new EnumConverter( typeof( TestEnum ) );
 
-			var propertyMapData = new CsvPropertyMapData( null );
+			var propertyMapData = new PropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var mockRow = new Mock<IReaderRow>();
@@ -65,7 +65,7 @@ namespace CsvHelper.Tests.TypeConversion
 				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( "", mockRow.Object, propertyMapData ) );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException )
+			catch( TypeConverterException )
 			{
 			}
 
@@ -74,7 +74,7 @@ namespace CsvHelper.Tests.TypeConversion
 				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( null, mockRow.Object, propertyMapData ) );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException )
+			catch( TypeConverterException )
 			{
 			}
 		}

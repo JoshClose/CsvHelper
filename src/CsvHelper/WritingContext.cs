@@ -17,23 +17,23 @@ namespace CsvHelper
     {
 		private bool disposed;
 		private TextWriter writer;
-		private CsvConfiguration configuration;
+		private Configuration.Configuration configuration;
 
 		internal Dictionary<Type, Delegate> TypeActions { get; } = new Dictionary<Type, Delegate>();
 
 		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 
-		internal CsvPropertyMapData ReusablePropertyMapData { get; } = new CsvPropertyMapData( null );
+		internal PropertyMapData ReusablePropertyMapData { get; } = new PropertyMapData( null );
 
 		/// <summary>
 		/// Gets the writer configuration.
 		/// </summary>
-		public virtual ICsvWriterConfiguration WriterConfiguration => configuration;
+		public virtual IWriterConfiguration WriterConfiguration => configuration;
 
 		/// <summary>
 		/// Gets the serializer configuration.
 		/// </summary>
-		public virtual ICsvSerializerConfiguration SerializerConfiguration => configuration;
+		public virtual ISerializerConfiguration SerializerConfiguration => configuration;
 
 		/// <summary>
 		/// Gets the <see cref="TextWriter"/>.
@@ -66,7 +66,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual bool HasRecordBeenWritten { get; internal set; }
 
-		internal WritingContext( TextWriter writer, CsvConfiguration configuration, bool leaveOpen )
+		internal WritingContext( TextWriter writer, Configuration.Configuration configuration, bool leaveOpen )
 		{
 			this.writer = writer ?? throw new ArgumentNullException( nameof( writer ) );
 			this.configuration = configuration ?? throw new ArgumentNullException( nameof( configuration ) );

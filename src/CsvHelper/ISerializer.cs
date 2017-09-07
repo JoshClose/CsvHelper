@@ -22,7 +22,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		ICsvSerializerConfiguration Configuration { get; }
+		ISerializerConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Writes a record to the CSV file.

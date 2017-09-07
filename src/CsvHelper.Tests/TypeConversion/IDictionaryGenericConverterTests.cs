@@ -24,7 +24,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ConvertNoIndexEndTest()
 		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReader>();
 			var headers = new[] { "Id", "Name", "Prop1", "Prop2", "Prop3" };
 			var currentRecord = new[] { "1", "One", "1", "2", "3" };
@@ -36,7 +36,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.Context ).Returns( context );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new CsvPropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "Dictionary" ) )
+			var data = new PropertyMapData( typeof( Test ).GetTypeInfo().GetProperty( "Dictionary" ) )
 			{
 				Index = 2
 			};
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ConvertWithIndexEndTest()
 		{
-			var config = new CsvConfiguration { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var headers = new[] { "Id", "Name", "Prop1", "Prop2", "Prop3" };
 			var currentRecord = new[] { "1", "One", "1", "2", "3" };
@@ -66,7 +66,7 @@ namespace CsvHelper.Tests.TypeConversion
 			rowMock.Setup( m => m.Configuration ).Returns( config );
 			rowMock.Setup( m => m.Context ).Returns( context );
 			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new CsvPropertyMapData( typeof( Test ).GetProperty( "Dictionary" ) )
+			var data = new PropertyMapData( typeof( Test ).GetProperty( "Dictionary" ) )
 			{
 				Index = 2,
 				IndexEnd = 3
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// You can't read into a dictionary without a header.
 					// You need to header value to use as the key.
@@ -156,7 +156,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Can't have same name with Dictionary.
 				}
@@ -183,7 +183,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Can't have same name with Dictionary.
 				}
@@ -210,7 +210,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Can't have same name with Dictionary.
 				}
@@ -224,7 +224,7 @@ namespace CsvHelper.Tests.TypeConversion
 			public string After { get; set; }
 		}
 
-		private sealed class TestIndexMap : CsvClassMap<Test>
+		private sealed class TestIndexMap : ClassMap<Test>
 		{
 			public TestIndexMap()
 			{
@@ -234,7 +234,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestNamedMap : CsvClassMap<Test>
+		private sealed class TestNamedMap : ClassMap<Test>
 		{
 			public TestNamedMap()
 			{
@@ -244,7 +244,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestDefaultMap : CsvClassMap<Test>
+		private sealed class TestDefaultMap : ClassMap<Test>
 		{
 			public TestDefaultMap()
 			{

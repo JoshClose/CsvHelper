@@ -403,7 +403,7 @@ namespace CsvHelper.Tests
 					csvWriter.WriteHeader( typeof( TestRecord ) );
 					Assert.Fail();
 				}
-				catch( CsvWriterException )
+				catch( WriterException )
 				{
 				}
 			}
@@ -825,7 +825,7 @@ namespace CsvHelper.Tests
 			public static string Name { get; set; }
 		}
 
-		private sealed class TestWithStaticMap : CsvClassMap<TestWithStatic>
+		private sealed class TestWithStaticMap : ClassMap<TestWithStatic>
 		{
 			public TestWithStaticMap()
 			{
@@ -838,7 +838,7 @@ namespace CsvHelper.Tests
 			public TestStruct Test { get; set; }
 		}
 
-		private sealed class TestStructParentMap : CsvClassMap<TestStructParent>
+		private sealed class TestStructParentMap : ClassMap<TestStructParent>
 		{
 			public TestStructParentMap()
 			{
@@ -853,7 +853,7 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
-		private sealed class TestStructMap : CsvClassMap<TestStruct>
+		private sealed class TestStructMap : ClassMap<TestStruct>
 		{
 			public TestStructMap()
 			{
@@ -887,7 +887,7 @@ namespace CsvHelper.Tests
 			public string TypeConvertedColumn { get; set; }
 		}
 
-		private sealed class TestRecordMap : CsvClassMap<TestRecord>
+		private sealed class TestRecordMap : ClassMap<TestRecord>
 		{
 			public TestRecordMap()
 			{
@@ -911,7 +911,7 @@ namespace CsvHelper.Tests
 			public string TypeConvertedColumn { get; set; }
 		}
 
-		private sealed class TestRecordNoIndexesMap : CsvClassMap<TestRecordNoIndexes>
+		private sealed class TestRecordNoIndexesMap : ClassMap<TestRecordNoIndexes>
 		{
 			public TestRecordNoIndexesMap()
 			{
@@ -924,12 +924,12 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : ITypeConverter
 		{
-			public string ConvertToString( object value, IWriterRow row, CsvPropertyMapData propertyMapData )
+			public string ConvertToString( object value, IWriterRow row, PropertyMapData propertyMapData )
 			{
 				return "test";
 			}
 
-			public object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
+			public object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
 			{
 				throw new NotImplementedException();
 			}
@@ -967,7 +967,7 @@ namespace CsvHelper.Tests
 			public string Zip { get; set; }
 		}
 
-		private sealed class PersonMap : CsvClassMap<Person>
+		private sealed class PersonMap : ClassMap<Person>
 		{
 			public PersonMap()
 			{
@@ -978,7 +978,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class HomeAddressMap : CsvClassMap<Address>
+		private sealed class HomeAddressMap : ClassMap<Address>
 		{
 			public HomeAddressMap()
 			{
@@ -989,7 +989,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class WorkAddressMap : CsvClassMap<Address>
+		private sealed class WorkAddressMap : ClassMap<Address>
 		{
 			public WorkAddressMap()
 			{

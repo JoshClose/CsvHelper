@@ -229,7 +229,7 @@ namespace CsvHelper.Tests.TypeConversion
 			public string After { get; set; }
 		}
 
-		private sealed class TestIndexMap : CsvClassMap<Test>
+		private sealed class TestIndexMap : ClassMap<Test>
 		{
 			public TestIndexMap()
 			{
@@ -239,7 +239,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestNamedMap : CsvClassMap<Test>
+		private sealed class TestNamedMap : ClassMap<Test>
 		{
 			public TestNamedMap()
 			{
@@ -249,7 +249,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestDefaultMap : CsvClassMap<Test>
+		private sealed class TestDefaultMap : ClassMap<Test>
 		{
 			public TestDefaultMap()
 			{

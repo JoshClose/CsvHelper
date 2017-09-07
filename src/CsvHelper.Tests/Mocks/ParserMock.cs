@@ -19,7 +19,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public IParserContext Context => context;
 
-		public ICsvParserConfiguration Configuration { get; }
+		public IParserConfiguration Configuration { get; }
 
 		public IFieldReader FieldReader
 		{
@@ -31,13 +31,13 @@ namespace CsvHelper.Tests.Mocks
 
 		public ParserMock()
 		{
-			context = new ReadingContext( new StringReader( string.Empty ), new CsvConfiguration(), false );
+			context = new ReadingContext( new StringReader( string.Empty ), new CsvHelper.Configuration.Configuration(), false );
 			rows = new Queue<string[]>();
 		}
 
 		public ParserMock( Queue<string[]> rows )
 		{
-			context = new ReadingContext( new StringReader( string.Empty ), new CsvConfiguration(), false );
+			context = new ReadingContext( new StringReader( string.Empty ), new CsvHelper.Configuration.Configuration(), false );
 			this.rows = rows;
 		}
 

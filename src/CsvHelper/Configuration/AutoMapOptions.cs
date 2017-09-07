@@ -66,13 +66,13 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Create options using the defaults.
 		/// </summary>
-		public AutoMapOptions() : this( new CsvConfiguration() ) { }
+		public AutoMapOptions() : this( new Configuration() ) { }
 
 		/// <summary>
-		/// Creates options using the given <see cref="CsvConfiguration"/>.
+		/// Creates options using the given <see cref="Configuration"/>.
 		/// </summary>
 		/// <param name="configuration"></param>
-	    public AutoMapOptions( CsvConfiguration configuration )
+	    public AutoMapOptions( Configuration configuration )
 	    {
 		    IgnoreReferences = configuration.IgnoreReferences;
 		    PrefixReferenceHeaders = configuration.PrefixReferenceHeaders;

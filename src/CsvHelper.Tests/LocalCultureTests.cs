@@ -50,7 +50,7 @@ namespace CsvHelper.Tests
 			const string source = "DateTimeColumn;DecimalColumn\r\n" +
 								  "11.11.2010;12,0\r\n";
 
-			var configuration = new CsvConfiguration
+			var configuration = new CsvHelper.Configuration.Configuration
 			{
 				Delimiter = ";",
 			};
@@ -76,7 +76,7 @@ namespace CsvHelper.Tests
 			};
 
 			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvConfiguration { Delimiter = ";" } );
+			var csv = new CsvWriter( writer, new CsvHelper.Configuration.Configuration { Delimiter = ";" } );
 
 			csv.WriteRecords( records );
 

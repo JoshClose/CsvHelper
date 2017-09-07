@@ -32,7 +32,7 @@ namespace CsvHelper.Tests.Exceptions
 					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 				}
 			}

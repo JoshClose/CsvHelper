@@ -17,9 +17,9 @@ namespace CsvHelper.Tests.Configuration
 	[TestClass]
 	public class ClassMapBuilderTests
 	{
-		private static readonly CsvFactory csvFactory = new CsvFactory();
+		private static readonly Factory csvFactory = new Factory();
 		private static Func<IReaderRow, FakeInnerClass> ConvertExpression => r => new FakeInnerClass { E = r.GetField( 4 ) };
-		private static readonly CsvClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
+		private static readonly ClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
 			/*
 			.Map( m => m.A ).Constant( "a" )
 			.Map( m => m.A ).ConvertUsing( row => row.GetField( 0 ) )
@@ -105,7 +105,7 @@ namespace CsvHelper.Tests.Configuration
 
 		private class BuilderRowFake : IReaderRow
 		{
-			public ICsvReaderConfiguration Configuration { get; }
+			public IReaderConfiguration Configuration { get; }
 			public string[] FieldHeaders { get; }
 			public string[] CurrentRecord { get; }
 			public int Row { get; }

@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.Reading
 				csv.ReadHeader();
 				Assert.Fail();
 			}
-			catch( CsvReaderException )
+			catch( ReaderException )
 			{
 			}
 		}
@@ -94,7 +94,7 @@ namespace CsvHelper.Tests.Reading
 				csv.ReadHeader();
 				Assert.Fail();
 			}
-			catch( CsvReaderException )
+			catch( ReaderException )
 			{
 			}
 		}

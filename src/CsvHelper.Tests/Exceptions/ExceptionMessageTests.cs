@@ -34,7 +34,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetField( 2 );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException ex )
+			catch( MissingFieldException ex )
 			{
 				Assert.AreEqual( 2, ex.ReadingContext.Row );
 				Assert.AreEqual( 2, ex.ReadingContext.CurrentIndex );
@@ -59,7 +59,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetField<int>( 2 );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException ex )
+			catch( MissingFieldException ex )
 			{
 				Assert.AreEqual( 2, ex.ReadingContext.Row );
 				//Assert.AreEqual( ex.Type, typeof( int ) );
@@ -84,7 +84,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetRecord<Simple>();
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ex )
+			catch( TypeConverterException ex )
 			{
 				//var expected = "Row: '2' (1 based)\r\n" +
 				//        "Type: 'CsvHelper.Tests.Exceptions.ExceptionMessageTests+Simple'\r\n" +
@@ -116,7 +116,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetRecord( typeof( Simple ) );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ex )
+			catch( TypeConverterException ex )
 			{
 				Assert.AreEqual( 2, ex.ReadingContext.Row );
 				//Assert.AreEqual( typeof( Simple ), ex.Type );
@@ -140,7 +140,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetRecords<Simple>().ToList();
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ex )
+			catch( TypeConverterException ex )
 			{
 				Assert.AreEqual( 2, ex.ReadingContext.Row );
 				//Assert.AreEqual( typeof( Simple ), ex.Type );
@@ -164,7 +164,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetRecords( typeof( Simple ) ).ToList();
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ex )
+			catch( TypeConverterException ex )
 			{
 				Assert.AreEqual( 2, ex.ReadingContext.Row );
 				//Assert.AreEqual( typeof( Simple ), ex.Type );
@@ -191,7 +191,7 @@ namespace CsvHelper.Tests.Exceptions
 				reader.GetField( "c" );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException ex )
+			catch( MissingFieldException ex )
 			{
 				Assert.AreEqual( 2, ex.ReadingContext.Row );
 				Assert.AreEqual( -1, ex.ReadingContext.CurrentIndex );

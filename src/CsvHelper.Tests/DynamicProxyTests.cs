@@ -54,7 +54,7 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
-		private sealed class TestClassMap : CsvClassMap<TestClass> 
+		private sealed class TestClassMap : ClassMap<TestClass> 
 		{
 			public TestClassMap()
 			{

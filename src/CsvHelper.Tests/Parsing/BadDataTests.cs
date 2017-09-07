@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.Parsing
 					parser.Read();
 					Assert.Fail( "Failed to throw exception on bad data." );
 				}
-				catch( CsvBadDataException ) { }
+				catch( BadDataException ) { }
 			}
 		}
 

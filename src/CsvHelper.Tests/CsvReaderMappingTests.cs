@@ -186,7 +186,7 @@ namespace CsvHelper.Tests
 			public int? Id { get; set; }
 		}
 
-		private sealed class CovarianceClassMap : CsvClassMap<CovarianceClass>
+		private sealed class CovarianceClassMap : ClassMap<CovarianceClass>
 		{
 			public CovarianceClassMap()
 			{
@@ -222,7 +222,7 @@ namespace CsvHelper.Tests
 			public string Name3 { get; set; }
 		}
 
-		private sealed class SameNameMultipleTimesClassMap : CsvClassMap<SameNameMultipleTimesClass>
+		private sealed class SameNameMultipleTimesClassMap : ClassMap<SameNameMultipleTimesClass>
 		{
 			public SameNameMultipleTimesClassMap()
 			{
@@ -239,7 +239,7 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 		}
 
-		private sealed class MultipleNamesClassMap : CsvClassMap<MultipleNamesClass>
+		private sealed class MultipleNamesClassMap : ClassMap<MultipleNamesClass>
 		{
 			public MultipleNamesClassMap()
 			{
@@ -260,7 +260,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ConstructorMappingClassMap : CsvClassMap<ConstructorMappingClass>
+		private sealed class ConstructorMappingClassMap : ClassMap<ConstructorMappingClass>
 		{
 			public ConstructorMappingClassMap()
 			{
@@ -269,7 +269,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ConvertUsingMap : CsvClassMap<TestClass>
+		private sealed class ConvertUsingMap : ClassMap<TestClass>
 		{
 			public ConvertUsingMap()
 			{
@@ -277,7 +277,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ConvertUsingBlockMap : CsvClassMap<TestClass>
+		private sealed class ConvertUsingBlockMap : ClassMap<TestClass>
 		{
 			public ConvertUsingBlockMap()
 			{
@@ -290,7 +290,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ConvertUsingConstantMap : CsvClassMap<TestClass>
+		private sealed class ConvertUsingConstantMap : ClassMap<TestClass>
 		{
 			public ConvertUsingConstantMap()
 			{

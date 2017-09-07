@@ -99,7 +99,7 @@ namespace CsvHelper.Tests.Defaults
 			public B B { get; set; }
 		}
 
-		private sealed class AMap : CsvClassMap<A>
+		private sealed class AMap : ClassMap<A>
 		{
 			public AMap()
 			{
@@ -114,7 +114,7 @@ namespace CsvHelper.Tests.Defaults
 			public int CId { get; set; }
 		}
 
-		public sealed class BMap : CsvClassMap<B>
+		public sealed class BMap : ClassMap<B>
 		{
 			public BMap()
 			{

@@ -34,7 +34,7 @@ namespace CsvHelper.Tests.TypeConversion
 			public int IntColumn { get; set; }
 		}
 
-		private sealed class TestMap : CsvClassMap<Test>
+		private sealed class TestMap : ClassMap<Test>
 		{
 			public TestMap()
 			{

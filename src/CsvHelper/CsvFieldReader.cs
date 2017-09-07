@@ -126,24 +126,24 @@ namespace CsvHelper
 
 			return true;
 		}
-		
-		/// <summary>
-		/// Creates a new <see cref="CsvFieldReader"/> using the given
-		/// <see cref="TextReader"/> and <see cref="CsvConfiguration"/>.
-		/// </summary>
-		/// <param name="reader">The text reader.</param>
-		/// <param name="configuration">The configuration.</param>
-		public CsvFieldReader( TextReader reader, CsvConfiguration configuration ) : this( reader, configuration, false ) { }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
-		/// <see cref="TextReader"/>, <see cref="CsvConfiguration"/>
+		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.
+		/// </summary>
+		/// <param name="reader">The text reader.</param>
+		/// <param name="configuration">The configuration.</param>
+		public CsvFieldReader( TextReader reader, Configuration.Configuration configuration ) : this( reader, configuration, false ) { }
+
+		/// <summary>
+		/// Creates a new <see cref="CsvFieldReader"/> using the given
+		/// <see cref="TextReader"/>, <see cref="Configuration.Configuration"/>
 		/// and leaveOpen flag.
 		/// </summary>
 		/// <param name="reader">The text reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the <see cref="TextReader"/> should be left open when disposing.</param>
-		public CsvFieldReader( TextReader reader, CsvConfiguration configuration, bool leaveOpen )
+		public CsvFieldReader( TextReader reader, Configuration.Configuration configuration, bool leaveOpen )
 		{
 			context = new ReadingContext( reader, configuration, leaveOpen );
 		}
@@ -172,7 +172,7 @@ namespace CsvHelper
 
 			if( context.IsFieldBad && context.ParserConfiguration.ThrowOnBadData )
 			{
-				throw new CsvBadDataException( context, $"Field: '{context.Field}'" );
+				throw new BadDataException( context, $"Field: '{context.Field}'" );
 			}
 
 			if( context.IsFieldBad )

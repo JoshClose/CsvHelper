@@ -89,7 +89,7 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
-		private sealed class TestMap1 : CsvClassMap<Test>
+		private sealed class TestMap1 : ClassMap<Test>
 		{
 			public TestMap1()
 			{
@@ -97,7 +97,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMap2 : CsvClassMap<Test>
+		private sealed class TestMap2 : ClassMap<Test>
 		{
 			public TestMap2()
 			{

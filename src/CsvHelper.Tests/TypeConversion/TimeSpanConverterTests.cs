@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new TimeSpanConverter();
-			var propertyMapData = new CsvPropertyMapData( null )
+			var propertyMapData = new PropertyMapData( null )
 			{
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
@@ -41,7 +41,7 @@ namespace CsvHelper.Tests.TypeConversion
 			var converter = new TimeSpanConverter();
 			var cmConverter = new System.ComponentModel.TimeSpanConverter();
 
-			var propertyMapData = new CsvPropertyMapData( null );
+			var propertyMapData = new PropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 			var rowMock = new Mock<IReaderRow>();
 
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests.TypeConversion
 				var val = (DateTime)converter.ConvertFromString( "", rowMock.Object, propertyMapData );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ) {}
+			catch( TypeConverterException ) {}
 
 			try
 			{
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.TypeConversion
 				converter.ConvertFromString( null, rowMock.Object, propertyMapData );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException ) { }
+			catch( TypeConverterException ) { }
 		}
 	}
 }

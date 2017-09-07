@@ -187,7 +187,7 @@ namespace CsvHelper.Tests.TypeConversion
             public int NumberOverridenInMap { get; set; }
         }
 
-        private sealed class TestMap : CsvClassMap<Test>
+        private sealed class TestMap : ClassMap<Test>
         {
             public TestMap()
             {

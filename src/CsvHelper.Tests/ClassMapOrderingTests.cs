@@ -65,7 +65,7 @@ namespace CsvHelper.Tests
 			public FirstClass First { get; set; }
 		}
 
-		private sealed class ContainerClassMap : CsvClassMap<ContainerClass>
+		private sealed class ContainerClassMap : ClassMap<ContainerClass>
 		{
 			public ContainerClassMap()
 			{
@@ -73,7 +73,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class ThirdClassMap : CsvClassMap<ThirdClass>
+		private sealed class ThirdClassMap : ClassMap<ThirdClass>
 		{
 			public ThirdClassMap()
 			{
@@ -88,7 +88,7 @@ namespace CsvHelper.Tests
 			public int Second { get; set; }
 		}
 
-		private sealed class SecondClassMap : CsvClassMap<SecondClass>
+		private sealed class SecondClassMap : ClassMap<SecondClass>
 		{
 			public SecondClassMap()
 			{
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests
 			public int First { get; set; }
 		}
 
-		private sealed class FirstClassMap : CsvClassMap<FirstClass>
+		private sealed class FirstClassMap : ClassMap<FirstClass>
 		{
 			public FirstClassMap()
 			{

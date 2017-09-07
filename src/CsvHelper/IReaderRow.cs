@@ -23,7 +23,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
-		ICsvReaderConfiguration Configuration { get; }
+		IReaderConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the raw field at position (column) index.

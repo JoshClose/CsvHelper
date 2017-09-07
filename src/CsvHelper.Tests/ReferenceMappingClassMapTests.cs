@@ -125,7 +125,7 @@ namespace CsvHelper.Tests
 			public string Zip { get; set; }
 		}
 
-		private sealed class PersonMap : CsvClassMap<Person>
+		private sealed class PersonMap : ClassMap<Person>
 		{
 			public PersonMap()
 			{
@@ -136,7 +136,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class HomeAddressMap : CsvClassMap<Address>
+		private sealed class HomeAddressMap : ClassMap<Address>
 		{
 			public HomeAddressMap()
 			{
@@ -147,7 +147,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class WorkAddressMap : CsvClassMap<Address>
+		private sealed class WorkAddressMap : ClassMap<Address>
 		{
 			public WorkAddressMap()
 			{
@@ -158,7 +158,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class OnlyReferencesMap : CsvClassMap<Person>
+		private sealed class OnlyReferencesMap : ClassMap<Person>
 		{
 			public OnlyReferencesMap()
 			{

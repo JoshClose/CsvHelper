@@ -67,7 +67,7 @@ namespace CsvHelper.Tests.Reading
 							break;
 						}
 					}
-					catch( CsvBadDataException )
+					catch( BadDataException )
 					{
 						failCount++;
 					}
@@ -99,7 +99,7 @@ namespace CsvHelper.Tests.Reading
 					csv.Read();
 					Assert.Fail();
 				}
-				catch( CsvBadDataException )
+				catch( BadDataException )
 				{
 				}
 			}
@@ -126,7 +126,7 @@ namespace CsvHelper.Tests.Reading
 					csv.Read();
 					Assert.Fail();
 				}
-				catch( CsvBadDataException )
+				catch( BadDataException )
 				{
 				}
 			}
@@ -152,11 +152,11 @@ namespace CsvHelper.Tests.Reading
 				csv.Configuration.RegisterClassMap<TestMap>();
 				csv.Configuration.ReadingExceptionCallback = ( ex, r ) =>
 				{
-					if( ex is CsvMissingFieldException )
+					if( ex is MissingFieldException )
 					{
 						missingFieldExceptionCount++;
 					}
-					else if( ex is CsvBadDataException )
+					else if( ex is BadDataException )
 					{
 						columnCountChangeExceptionCount++;
 					}
@@ -173,7 +173,7 @@ namespace CsvHelper.Tests.Reading
 			public string Name { get; set; }
 		}
 
-		private sealed class TestMap : CsvClassMap<Test>
+		private sealed class TestMap : ClassMap<Test>
 		{
 			public TestMap()
 			{

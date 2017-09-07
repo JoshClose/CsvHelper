@@ -123,7 +123,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void MapMultipleTypesTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			config.RegisterClassMap<AMap>();
 			config.RegisterClassMap<BMap>();
 
@@ -134,7 +134,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertyMapAccessTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			config.RegisterClassMap<AMap>();
 			config.Maps.Find<A>().Map( m => m.AId ).Ignore();
 
@@ -146,7 +146,7 @@ namespace CsvHelper.Tests
 			public int AId { get; set; }
 		}
 
-		private sealed class AMap : CsvClassMap<A>
+		private sealed class AMap : ClassMap<A>
 		{
 			public AMap()
 			{
@@ -159,7 +159,7 @@ namespace CsvHelper.Tests
 			public int BId { get; set; }
 		}
 
-		private sealed class BMap : CsvClassMap<B>
+		private sealed class BMap : ClassMap<B>
 		{
 			public BMap()
 			{
@@ -182,7 +182,7 @@ namespace CsvHelper.Tests
 			}
 		}
 		
-		private sealed class TestMappingConstructorClass : CsvClassMap<TestClass>
+		private sealed class TestMappingConstructorClass : ClassMap<TestClass>
 		{
 			public TestMappingConstructorClass()
 			{
@@ -190,7 +190,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingDefaultClass : CsvClassMap<TestClass>
+		private sealed class TestMappingDefaultClass : ClassMap<TestClass>
 		{
 			public TestMappingDefaultClass()
 			{
@@ -200,7 +200,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingNameClass : CsvClassMap<TestClass>
+		private sealed class TestMappingNameClass : ClassMap<TestClass>
 		{
 			public TestMappingNameClass()
 			{
@@ -210,7 +210,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingIndexClass : CsvClassMap<TestClass>
+		private sealed class TestMappingIndexClass : ClassMap<TestClass>
 		{
 			public TestMappingIndexClass()
 			{
@@ -220,7 +220,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingIngoreClass : CsvClassMap<TestClass>
+		private sealed class TestMappingIngoreClass : ClassMap<TestClass>
 		{
 			public TestMappingIngoreClass()
 			{
@@ -230,7 +230,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingTypeConverterClass : CsvClassMap<TestClass>
+		private sealed class TestMappingTypeConverterClass : ClassMap<TestClass>
 		{
 			public TestMappingTypeConverterClass()
 			{
@@ -240,7 +240,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingMultipleNamesClass : CsvClassMap<TestClass>
+		private sealed class TestMappingMultipleNamesClass : ClassMap<TestClass>
 		{
 			public TestMappingMultipleNamesClass()
 			{

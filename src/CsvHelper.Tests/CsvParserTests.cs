@@ -122,7 +122,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader( stream );
 
-			var config = new CsvConfiguration { BufferSize = 2000 };
+			var config = new CsvHelper.Configuration.Configuration { BufferSize = 2000 };
 			var parser = new CsvParser( reader, config );
 
 			var record = parser.Read();
@@ -1002,7 +1002,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ByteCountTestWithQuotedFieldsClosingQuoteAtStartOfBuffer()
 		{
-			var config = new CsvConfiguration()
+			var config = new CsvHelper.Configuration.Configuration()
 			{
 				CountBytes = true,
 				BufferSize = 4
@@ -1031,7 +1031,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ByteCountTestWithQuotedFieldsEscapedQuoteAtStartOfBuffer()
 		{
-			var config = new CsvConfiguration()
+			var config = new CsvHelper.Configuration.Configuration()
 			{
 				CountBytes = true,
 				BufferSize = 4
@@ -1188,7 +1188,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void EndBufferTest()
 		{
-			var config = new CsvHelper.Configuration.CsvConfiguration
+			var config = new CsvHelper.Configuration.Configuration
 			{
 				BufferSize = 12
 			};

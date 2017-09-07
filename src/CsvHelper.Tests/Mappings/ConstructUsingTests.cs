@@ -86,7 +86,7 @@ namespace CsvHelper.Tests.Mappings
 			}
 		}
 
-		private sealed class ANewMap : CsvClassMap<A>
+		private sealed class ANewMap : ClassMap<A>
 		{
 			public ANewMap()
 			{
@@ -95,7 +95,7 @@ namespace CsvHelper.Tests.Mappings
 			}
 		}
 
-		private sealed class BNewMap : CsvClassMap<B>
+		private sealed class BNewMap : ClassMap<B>
 		{
 			public BNewMap()
 			{
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Mappings
 			}
 		}
 
-		private sealed class AMemberInitMap : CsvClassMap<A>
+		private sealed class AMemberInitMap : ClassMap<A>
 		{
 			public AMemberInitMap()
 			{
@@ -112,7 +112,7 @@ namespace CsvHelper.Tests.Mappings
 			}
 		}
 
-		private sealed class BMemberInitMap : CsvClassMap<B>
+		private sealed class BMemberInitMap : ClassMap<B>
 		{
 			public BMemberInitMap()
 			{

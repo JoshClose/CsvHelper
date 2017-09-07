@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// You can't read into a dictionary without a header.
 					// You need to header value to use as the key.
@@ -141,7 +141,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Can't have same name with Dictionary.
 				}
@@ -168,7 +168,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Indexes must be specified for dictionaries.
 				}
@@ -195,7 +195,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Headers can't have the same name.
 				}
@@ -222,7 +222,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Header's can't have the same name.
 				}
@@ -249,7 +249,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( CsvReaderException )
+				catch( ReaderException )
 				{
 					// Header's can't have the same name.
 				}
@@ -263,7 +263,7 @@ namespace CsvHelper.Tests.TypeConversion
 			public string After { get; set; }
 		}
 
-		private sealed class TestIndexMap : CsvClassMap<Test>
+		private sealed class TestIndexMap : ClassMap<Test>
 		{
 			public TestIndexMap()
 			{
@@ -273,7 +273,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestNamedMap : CsvClassMap<Test>
+		private sealed class TestNamedMap : ClassMap<Test>
 		{
 			public TestNamedMap()
 			{
@@ -283,7 +283,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		private sealed class TestDefaultMap : CsvClassMap<Test>
+		private sealed class TestDefaultMap : ClassMap<Test>
 		{
 			public TestDefaultMap()
 			{

@@ -77,7 +77,7 @@ namespace CsvHelper.Tests
 			public string Id { get; set; }
 		}
 
-		private sealed class AMap : CsvClassMap<A>
+		private sealed class AMap : ClassMap<A>
 		{
 			public AMap()
 			{
@@ -86,7 +86,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class BMap : CsvClassMap<B>
+		private sealed class BMap : ClassMap<B>
 		{
 			public BMap()
 			{
@@ -95,7 +95,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class CMap : CsvClassMap<C>
+		private sealed class CMap : ClassMap<C>
 		{
 			public CMap()
 			{

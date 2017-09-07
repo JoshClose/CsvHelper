@@ -22,7 +22,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the configuration.
 		/// </summary>
-		ICsvWriterConfiguration Configuration { get; }
+		IWriterConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Writes a field that has already been converted to a
@@ -48,7 +48,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the field to the CSV file. This will
 		/// ignore any need to quote and ignore the
-		/// <see cref="CsvConfiguration.QuoteAllFields"/>
+		/// <see cref="CsvHelper.Configuration.Configuration.QuoteAllFields"/>
 		/// and just quote based on the shouldQuote
 		/// parameter.
 		/// When all fields are written for a record,

@@ -23,7 +23,7 @@ namespace CsvHelper.TypeConversion
 
 		/// <summary>
 		/// Gets or sets the current TypeConverterFactory. This is a global
-		/// to be used by classes that don't have an instance of <see cref="CsvConfiguration"/>.
+		/// to be used by classes that don't have an instance of <see cref="Configuration.Configuration"/>.
 		/// </summary>
 		public static TypeConverterFactory Current
 		{

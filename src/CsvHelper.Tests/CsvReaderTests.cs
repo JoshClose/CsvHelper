@@ -32,7 +32,7 @@ namespace CsvHelper.Tests
 				reader.GetField<int>( 0 );
 				Assert.Fail();
 			}
-			catch( CsvReaderException ) {}
+			catch( ReaderException ) {}
 		}
 
 		[TestMethod]
@@ -203,7 +203,7 @@ namespace CsvHelper.Tests
 				reader.GetField<string>( "blah" );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException ex )
+			catch( MissingFieldException ex )
 			{
 				Assert.AreEqual( "Fields 'blah' do not exist in the CSV file.", ex.Message );
 			}
@@ -226,7 +226,7 @@ namespace CsvHelper.Tests
 				reader.GetField( 2 );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException ex )
+			catch( MissingFieldException ex )
 			{
 				Assert.AreEqual( "Field at index '2' does not exist.", ex.Message );
 			}
@@ -249,7 +249,7 @@ namespace CsvHelper.Tests
 				reader.GetField<string>( 2 );
 				Assert.Fail();
 			}
-			catch( CsvMissingFieldException ex )
+			catch( MissingFieldException ex )
 			{
 				Assert.AreEqual( "Field at index '2' does not exist.", ex.Message );
 			}
@@ -304,7 +304,7 @@ namespace CsvHelper.Tests
 				reader.GetField<int>( "One" );
 				Assert.Fail();
 			}
-			catch( CsvReaderException ) {}
+			catch( ReaderException ) {}
 		}
 
 		[TestMethod]
@@ -507,7 +507,7 @@ namespace CsvHelper.Tests
 				csvReader.Read();
 				Assert.Fail();
 			}
-			catch( CsvReaderException ) {}
+			catch( ReaderException ) {}
 		}
 
 		[TestMethod]
@@ -952,7 +952,7 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
-		private sealed class SimpleMap : CsvClassMap<Simple>
+		private sealed class SimpleMap : ClassMap<Simple>
 		{
 			public SimpleMap()
 			{
@@ -966,7 +966,7 @@ namespace CsvHelper.Tests
 			public TestStruct Test { get; set; }
 		}
 
-		private sealed class TestStructParentMap : CsvClassMap<TestStructParent>
+		private sealed class TestStructParentMap : ClassMap<TestStructParent>
 		{
 			public TestStructParentMap()
 			{
@@ -981,7 +981,7 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
-		private sealed class TestStructMap : CsvClassMap<TestStruct>
+		private sealed class TestStructMap : ClassMap<TestStruct>
 		{
 			public TestStructMap()
 			{
@@ -995,7 +995,7 @@ namespace CsvHelper.Tests
 			public string Name;
 		}
 
-		private sealed class OnlyFieldsMap : CsvClassMap<OnlyFields>
+		private sealed class OnlyFieldsMap : ClassMap<OnlyFields>
 		{
 			public OnlyFieldsMap()
 			{
@@ -1019,7 +1019,7 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 		}
 
-		private sealed class TestDefaultValuesMap : CsvClassMap<TestDefaultValues>
+		private sealed class TestDefaultValuesMap : ClassMap<TestDefaultValues>
 		{
 			public TestDefaultValuesMap()
 			{
@@ -1055,7 +1055,7 @@ namespace CsvHelper.Tests
 			public int NoMatchingFields { get; set; }
 		}
 
-		private sealed class TestRecordMap : CsvClassMap<TestRecord>
+		private sealed class TestRecordMap : ClassMap<TestRecord>
 		{
 			public TestRecordMap()
 			{
@@ -1077,7 +1077,7 @@ namespace CsvHelper.Tests
 			public string Column3 { get; set; }
 		}
 
-		private sealed class TestRecordDuplicateHeaderNamesMap : CsvClassMap<TestRecordDuplicateHeaderNames>
+		private sealed class TestRecordDuplicateHeaderNamesMap : ClassMap<TestRecordDuplicateHeaderNames>
 		{
 			public TestRecordDuplicateHeaderNamesMap()
 			{
@@ -1089,7 +1089,7 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : DefaultTypeConverter
 		{
-			public override object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
+			public override object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
 			{
 				return "test";
 			}

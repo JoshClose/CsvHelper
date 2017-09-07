@@ -92,7 +92,7 @@ namespace CsvHelper.Tests.Mappings
 			public string P3 { get; set; }
 		}
 
-		private sealed class AMap : CsvClassMap<A>
+		private sealed class AMap : ClassMap<A>
 		{
 			public AMap()
 			{

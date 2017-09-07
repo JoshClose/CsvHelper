@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.Reading
 			public string Name { get; set; }
 		}
 
-		private sealed class TestMap : CsvClassMap<Test>
+		private sealed class TestMap : ClassMap<Test>
 		{
 			public TestMap()
 			{
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		private sealed class TestNullMap : CsvClassMap<Test>
+		private sealed class TestNullMap : ClassMap<Test>
 		{
 			public TestNullMap()
 			{

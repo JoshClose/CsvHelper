@@ -1,0 +1,104 @@
+﻿// Copyright 2009-2017 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using CsvHelper.TypeConversion;
+
+namespace CsvHelper.Configuration
+{
+	/// <summary>
+	/// Maps class properties/fields to CSV fields.
+	/// </summary>
+	/// <typeparam name="TClass">The <see cref="System.Type"/> of class to map.</typeparam>
+	public abstract class ClassMap<TClass> : ClassMap
+	{
+		/// <summary>
+		/// Creates an instance of <see cref="ClassMap{TClass}"/>.
+		/// </summary>
+		public ClassMap() : base( typeof( TClass ) ) { }
+
+		/// <summary>
+		/// Constructs the row object using the given expression.
+		/// </summary>
+		/// <param name="expression">The expression.</param>
+		public virtual void ConstructUsing( Expression<Func<TClass>> expression )
+		{
+			if( !( expression.Body is NewExpression ) && !( expression.Body is MemberInitExpression ) )
+			{
+				throw new ArgumentException( "Not a constructor expression.", nameof( expression ) );
+			}
+
+			Constructor = expression.Body;
+		}
+
+		/// <summary>
+		/// Maps a property/field to a CSV field.
+		/// </summary>
+		/// <param name="expression">The property/field to map.</param>
+		/// <param name="useExistingMap">If true, an existing map will be used if available.
+		/// If false, a new map is created for the same property/field.</param>
+		/// <returns>The property/field mapping.</returns>
+		public virtual PropertyMap<TClass, TProperty> Map<TProperty>( Expression<Func<TClass, TProperty>> expression, bool useExistingMap = true )
+		{
+			var stack = ReflectionHelper.GetMembers( expression );
+			if( stack.Count == 0 )
+			{
+				throw new InvalidOperationException( "No properties/fields were found in expression '{expression}'." );
+			}
+
+			ClassMap currentClassMap = this;
+			MemberInfo member;
+
+			if( stack.Count > 1 )
+			{
+				// We need to add a reference map for every sub property/field.
+				while( stack.Count > 1 )
+				{
+					member = stack.Pop();
+					Type mapType;
+					var property = member as PropertyInfo;
+					var field = member as FieldInfo;
+					if( property != null )
+					{
+						mapType = typeof( DefaultClassMap<> ).MakeGenericType( property.PropertyType );
+					}
+					else if( field != null )
+					{
+						mapType = typeof( DefaultClassMap<> ).MakeGenericType( field.FieldType );
+					}
+					else
+					{
+						throw new InvalidOperationException( "The given expression was not a property or a field." );
+					}
+
+					var referenceMap = currentClassMap.References( mapType, member );
+					currentClassMap = referenceMap.Data.Mapping;
+				}
+			}
+
+			// Add the property/field map to the last reference map.
+			member = stack.Pop();
+
+			return (PropertyMap<TClass, TProperty>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
+		}
+
+		/// <summary>
+		/// Maps a property/field to another class map.
+		/// </summary>
+		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
+		/// <param name="expression">The expression.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
+		/// <returns>The reference mapping for the property/field.</returns>
+		public virtual PropertyReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
+		{
+			var property = ReflectionHelper.GetMember( expression );
+			return References( typeof( TClassMap ), property, constructorArgs );
+		}
+	}
+}

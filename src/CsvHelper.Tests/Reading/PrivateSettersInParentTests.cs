@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.Reading
 
 		private class Child : Parent { }
 
-		private sealed class ChildMap : CsvClassMap<Child>
+		private sealed class ChildMap : ClassMap<Child>
 		{
 			public ChildMap()
 			{

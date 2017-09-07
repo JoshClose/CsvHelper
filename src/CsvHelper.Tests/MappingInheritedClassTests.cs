@@ -33,7 +33,7 @@ namespace CsvHelper.Tests
 			public int Name { get; set; }
 		}
 
-		private sealed class AMap<T> : CsvClassMap<T> where T : IA
+		private sealed class AMap<T> : ClassMap<T> where T : IA
 		{
 			public AMap()
 			{

@@ -27,7 +27,7 @@ namespace CsvHelper.Tests.Reading
 
 				csv.Configuration.ThrowOnMissingField = false;
 				csv.Configuration.RegisterClassMap<ValidateMap>();
-				Assert.ThrowsException<CsvValidationException>( () => csv.GetRecords<Test>().ToList() );
+				Assert.ThrowsException<ValidationException>( () => csv.GetRecords<Test>().ToList() );
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace CsvHelper.Tests.Reading
 			public string Name { get; set; }
 		}
 
-		private sealed class ValidateMap : CsvClassMap<Test>
+		private sealed class ValidateMap : ClassMap<Test>
 		{
 			public ValidateMap()
 			{
@@ -91,7 +91,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		private sealed class LogInsteadMap : CsvClassMap<Test>
+		private sealed class LogInsteadMap : ClassMap<Test>
 		{
 			public LogInsteadMap( StringBuilder logger )
 			{
@@ -109,7 +109,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		private sealed class CustomExceptionMap : CsvClassMap<Test>
+		private sealed class CustomExceptionMap : ClassMap<Test>
 		{
 			public CustomExceptionMap()
 			{

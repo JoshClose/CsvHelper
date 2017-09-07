@@ -9,15 +9,6 @@ using System.Collections;
 
 namespace CsvHelper.Configuration
 {
-	// 1. Map
-	// 2. TypeConverter
-	// 3. Index
-	// 4. Name
-	// 5. NameIndex
-	// 6. ConvertUsing
-	// 7. Default
-	// 8. Constant
-
 	/// <summary>
 	/// Has mapping capabilities.
 	/// </summary>
@@ -258,7 +249,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// The validate expression that will be called on every field when reading.
 		/// The expression should return true if the field is valid.
-		/// If false is returned, a <see cref="CsvValidationException"/>
+		/// If false is returned, a <see cref="ValidationException"/>
 		/// will be thrown.
 		/// </summary>
 		/// <param name="validateExpression">The validation expression.</param>
@@ -272,14 +263,14 @@ namespace CsvHelper.Configuration
 	public interface IBuildableClass<TClass>
 	{
 		/// <summary>
-		/// Builds the <see cref="CsvClassMap{TClass}"/>.
+		/// Builds the <see cref="ClassMap{TClass}"/>.
 		/// </summary>
-		CsvClassMap<TClass> Build();
+		ClassMap<TClass> Build();
 	}
 
 	internal class ClassMapBuilder<TClass> : IHasMap<TClass>
 	{
-		private readonly CsvClassMap<TClass> map;
+		private readonly ClassMap<TClass> map;
 
 		public ClassMapBuilder()
 		{
@@ -291,12 +282,12 @@ namespace CsvHelper.Configuration
 			return new PropertyMapBuilder<TClass, TProperty>( map, map.Map( expression, useExistingMap ) );
 		}
 
-		public CsvClassMap<TClass> Build()
+		public ClassMap<TClass> Build()
 		{
 			return map;
 		}
 
-		private class BuilderClassMap<T> : CsvClassMap<T> { }
+		private class BuilderClassMap<T> : ClassMap<T> { }
 	}
 
 	internal class PropertyMapBuilder<TClass, TProperty> :
@@ -316,10 +307,10 @@ namespace CsvHelper.Configuration
 		IHasConstant<TClass, TProperty>,
 		IHasValidate<TClass, TProperty>
 	{
-		private readonly CsvClassMap<TClass> classMap;
-		private readonly CsvPropertyMap<TClass, TProperty> propertyMap;
+		private readonly ClassMap<TClass> classMap;
+		private readonly PropertyMap<TClass, TProperty> propertyMap;
 
-		public PropertyMapBuilder( CsvClassMap<TClass> classMap, CsvPropertyMap<TClass, TProperty> propertyMap )
+		public PropertyMapBuilder( ClassMap<TClass> classMap, PropertyMap<TClass, TProperty> propertyMap )
 		{
 			this.classMap = classMap;
 			this.propertyMap = propertyMap;
@@ -398,7 +389,7 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		public CsvClassMap<TClass> Build()
+		public ClassMap<TClass> Build()
 		{
 			return classMap;
 		}

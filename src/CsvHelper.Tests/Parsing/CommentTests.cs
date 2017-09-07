@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.Parsing
 		[TestMethod]
 		public void CommentThatCrossesBuffersShouldNotAddToFieldTest()
 		{
-			var config = new CsvConfiguration
+			var config = new CsvHelper.Configuration.Configuration
 			{
 				AllowComments = true,
 				BufferSize = 10

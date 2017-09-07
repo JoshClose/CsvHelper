@@ -18,7 +18,7 @@ namespace CsvHelper
     {
 		private bool disposed;
 		private TextReader reader;
-		private CsvConfiguration configuration;
+		private Configuration.Configuration configuration;
 
 		internal virtual StringBuilder RawRecordBuilder { get; } = new StringBuilder();
 
@@ -34,17 +34,17 @@ namespace CsvHelper
 
 		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 
-		internal CsvPropertyMapData ReusablePropertyMapData { get; } = new CsvPropertyMapData( null );
+		internal PropertyMapData ReusablePropertyMapData { get; } = new PropertyMapData( null );
 
 		/// <summary>
 		/// Gets the <see cref="CsvParser"/> configuration.
 		/// </summary>
-		public virtual ICsvParserConfiguration ParserConfiguration => configuration;
+		public virtual IParserConfiguration ParserConfiguration => configuration;
 
 		/// <summary>
 		/// Gets the <see cref="CsvReader"/> configuration.
 		/// </summary>
-		public virtual ICsvReaderConfiguration ReaderConfiguration => configuration;
+		public virtual IReaderConfiguration ReaderConfiguration => configuration;
 
 		/// <summary>
 		/// Gets the <see cref="TextReader"/> that is read from.
@@ -160,7 +160,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual int ColumnCount { get; internal set; }
 
-		internal ReadingContext( TextReader reader, CsvConfiguration configuration, bool leaveOpen )
+		internal ReadingContext( TextReader reader, Configuration.Configuration configuration, bool leaveOpen )
 		{
 			this.reader = reader ?? throw new ArgumentNullException( nameof( reader ) );
 			this.configuration = configuration ?? throw new ArgumentNullException( nameof( configuration ) );

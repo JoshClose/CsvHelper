@@ -123,7 +123,7 @@ namespace CsvHelper
 				return field;
 			}
 
-			throw new CsvConfigurationException( $"'{member.Name}' is not a property/field." );
+			throw new ConfigurationException( $"'{member.Name}' is not a property/field." );
 		}
 
 		/// <summary>

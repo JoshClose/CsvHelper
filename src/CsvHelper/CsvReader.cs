@@ -34,7 +34,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual ICsvReaderConfiguration Configuration => context.ReaderConfiguration;
+		public virtual IReaderConfiguration Configuration => context.ReaderConfiguration;
 
 		/// <summary>
 		/// Gets the parser.
@@ -45,22 +45,22 @@ namespace CsvHelper
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public CsvReader( TextReader reader ) : this( new CsvParser( reader, new CsvConfiguration(), false ) ) { }
+		public CsvReader( TextReader reader ) : this( new CsvParser( reader, new Configuration.Configuration(), false ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader( TextReader reader, bool leaveOpen ) : this( new CsvParser( reader, new CsvConfiguration(), leaveOpen ) ) { }
+		public CsvReader( TextReader reader, bool leaveOpen ) : this( new CsvParser( reader, new Configuration.Configuration(), leaveOpen ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
-		/// <see cref="CsvConfiguration"/> and <see cref="CsvParser"/> as the default parser.
+		/// <see cref="CsvHelper.Configuration.Configuration"/> and <see cref="CsvParser"/> as the default parser.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvReader( TextReader reader, CsvConfiguration configuration ) : this( new CsvParser( reader, configuration, false ) ) { }
+		public CsvReader( TextReader reader, Configuration.Configuration configuration ) : this( new CsvParser( reader, configuration, false ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
@@ -68,7 +68,7 @@ namespace CsvHelper
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader( TextReader reader, CsvConfiguration configuration, bool leaveOpen ) : this( new CsvParser( reader, configuration, leaveOpen ) ) { }
+		public CsvReader( TextReader reader, Configuration.Configuration configuration, bool leaveOpen ) : this( new CsvParser( reader, configuration, leaveOpen ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="IParser" />.
@@ -88,7 +88,7 @@ namespace CsvHelper
 		{
 			if( !context.ReaderConfiguration.HasHeaderRecord )
 			{
-				throw new CsvReaderException( context, "Configuration.HasHeaderRecord is false." );
+				throw new ReaderException( context, "Configuration.HasHeaderRecord is false." );
 			}
 
 			context.HeaderRecord = context.Record;
@@ -99,7 +99,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Validates the header. A header is bad if all the mapped properties don't match.
-		/// If the header is not valid, a <see cref="CsvValidationException"/> will be thrown.
+		/// If the header is not valid, a <see cref="ValidationException"/> will be thrown.
 		/// </summary>
 		/// <typeparam name="T">The type to validate the header against.</typeparam>
 		public virtual void ValidateHeader<T>()
@@ -109,7 +109,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Validates the header. A header is bad if all the mapped properties don't match.
-		/// If the header is not valid, a <see cref="CsvValidationException"/> will be thrown.
+		/// If the header is not valid, a <see cref="ValidationException"/> will be thrown.
 		/// </summary>
 		/// <param name="type">The type to validate the header against.</param>
 		public virtual void ValidateHeader( Type type )
@@ -139,14 +139,14 @@ namespace CsvHelper
 		/// Validates the header against the given map.
 		/// </summary>
 		/// <param name="map">The map to validate against.</param>
-		protected virtual void ValidateHeader( CsvClassMap map )
+		protected virtual void ValidateHeader( ClassMap map )
 		{
 			foreach( var parameter in map.ParameterMaps )
 			{
 				var index = GetFieldIndex( parameter.Data.Name, 0, true );
 				if( index == -1 )
 				{
-					throw new CsvValidationException( context, $"Header '{parameter.Data.Name}' was not found." );
+					throw new ValidationException( context, $"Header '{parameter.Data.Name}' was not found." );
 				}
 			}
 
@@ -155,7 +155,7 @@ namespace CsvHelper
 				var index = GetFieldIndex( property.Data.Names.ToArray(), property.Data.NameIndex, true );
 				if( index == -1 )
 				{
-					throw new CsvValidationException( context, $"Header '{property.Data.Names[property.Data.NameIndex]}' was not found." );
+					throw new ValidationException( context, $"Header '{property.Data.Names[property.Data.NameIndex]}' was not found." );
 				}
 			}
 
@@ -188,7 +188,7 @@ namespace CsvHelper
 			{
 				if( context.ColumnCount > 0 && context.ColumnCount != context.Record.Length )
 				{
-					var csvException = new CsvBadDataException( context, "An inconsistent number of columns has been detected." );
+					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -227,7 +227,7 @@ namespace CsvHelper
 			{
 				if( context.ColumnCount > 0 && context.ColumnCount != context.Record.Length )
 				{
-					var csvException = new CsvBadDataException( context, "An inconsistent number of columns has been detected." );
+					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -309,7 +309,7 @@ namespace CsvHelper
 			{
 				if( context.ReaderConfiguration.ThrowOnMissingField && context.ReaderConfiguration.IgnoreBlankLines )
 				{
-					throw new CsvMissingFieldException( context, $"Field at index '{index}' does not exist." );
+					throw new MissingFieldException( context, $"Field at index '{index}' does not exist." );
 				}
 
 				return default( string );
@@ -527,7 +527,7 @@ namespace CsvHelper
 				if( context.ReaderConfiguration.ThrowOnMissingField )
 				{
 					context.CurrentIndex = index;
-					throw new CsvMissingFieldException( context, $"Field at index '{index}' does not exist." );
+					throw new MissingFieldException( context, $"Field at index '{index}' does not exist." );
 				}
 
 				return default( T );
@@ -972,7 +972,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 			}
 
 			return record;
@@ -1029,7 +1029,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 				throw csvHelperException;
 			}
 
@@ -1071,7 +1071,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -1145,7 +1145,7 @@ namespace CsvHelper
 				}
 				catch( Exception ex )
 				{
-					var csvHelperException = ex as CsvHelperException ?? new CsvReaderException( context, "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
 					if( context.ReaderConfiguration.IgnoreReadingExceptions )
 					{
@@ -1195,12 +1195,12 @@ namespace CsvHelper
 		/// <summary>
 		/// Checks if the reader has been read yet.
 		/// </summary>
-		/// <exception cref="CsvReaderException" />
+		/// <exception cref="ReaderException" />
 		protected virtual void CheckHasBeenRead()
 		{
 			if( !context.HasBeenRead )
 			{
-				throw new CsvReaderException( context, "You must call read on the reader before accessing its data." );
+				throw new ReaderException( context, "You must call read on the reader before accessing its data." );
 			}
 		}
 
@@ -1244,8 +1244,8 @@ namespace CsvHelper
 		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
 		/// <param name="isTryGet">A value indicating if the call was initiated from a TryGet.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
-		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
-		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
+		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
+		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
 		protected virtual int GetFieldIndex( string name, int index = 0, bool isTryGet = false )
 		{
 			return GetFieldIndex( new[] { name }, index, isTryGet );
@@ -1258,8 +1258,8 @@ namespace CsvHelper
 		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
 		/// <param name="isTryGet">A value indicating if the call was initiated from a TryGet.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
-		/// <exception cref="CsvReaderException">Thrown if there is no header record.</exception>
-		/// <exception cref="CsvMissingFieldException">Thrown if there isn't a field with name.</exception>
+		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
+		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
 		protected virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false )
 		{
 			if( names == null )
@@ -1269,7 +1269,7 @@ namespace CsvHelper
 
 			if( !context.ReaderConfiguration.HasHeaderRecord )
 			{
-				throw new CsvReaderException( context, "There is no header record to determine the index by name." );
+				throw new ReaderException( context, "There is no header record to determine the index by name." );
 			}
 
             // Caching the named index speeds up mappings that use ConvertUsing tremendously.
@@ -1301,7 +1301,7 @@ namespace CsvHelper
 					// If we're in strict reading mode and the
 					// named index isn't found, throw an exception.
 					var namesJoined = $"'{string.Join( "', '", names )}'";
-					throw new CsvMissingFieldException( context, $"Fields {namesJoined} do not exist in the CSV file." );
+					throw new MissingFieldException( context, $"Fields {namesJoined} do not exist in the CSV file." );
 				}
 
 				return -1;
@@ -1319,7 +1319,7 @@ namespace CsvHelper
 		{
 			if( context.HeaderRecord == null )
 			{
-				throw new CsvReaderException( context, "No header record was found." );
+				throw new ReaderException( context, "No header record was found." );
 			}
 
 			for( var i = 0; i < context.HeaderRecord.Length; i++ )
@@ -1477,7 +1477,7 @@ namespace CsvHelper
 
 				if( bindings.Count == 0 )
 				{
-					throw new CsvReaderException( context, $"No properties are mapped for type '{recordType.FullName}'." );
+					throw new ReaderException( context, $"No properties are mapped for type '{recordType.FullName}'." );
 				}
 
 				if( map.Constructor is NewExpression )
@@ -1512,7 +1512,7 @@ namespace CsvHelper
 			var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
 			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
 
-			var propertyMapData = new CsvPropertyMapData( null )
+			var propertyMapData = new PropertyMapData( null )
 			{
 				Index = 0,
 				TypeConverter = Configuration.TypeConverterFactory.GetConverter( recordType )
@@ -1532,7 +1532,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="map">The mapping to create the arguments for.</param>
 		/// <param name="argumentExpressions">The arguments that will be added to the mapping.</param>
-		protected virtual void CreateConstructorArgumentExpressionsForMapping( CsvClassMap map, List<Expression> argumentExpressions )
+		protected virtual void CreateConstructorArgumentExpressionsForMapping( ClassMap map, List<Expression> argumentExpressions )
 		{
 			foreach( var parameterMap in map.ParameterMaps )
 			{
@@ -1576,7 +1576,7 @@ namespace CsvHelper
 					parameterMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
 
 					// Create type converter expression.
-					var propertyMapData = new CsvPropertyMapData( null )
+					var propertyMapData = new PropertyMapData( null )
 					{
 						Index = parameterMap.Data.Index,
 						TypeConverter = parameterMap.Data.TypeConverter,
@@ -1594,12 +1594,12 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates the property/field bindings for the given <see cref="CsvClassMap"/>.
+		/// Creates the property/field bindings for the given <see cref="ClassMap"/>.
 		/// </summary>
 		/// <param name="mapping">The mapping to create the bindings for.</param>
 		/// <param name="recordType">The type of record.</param>
 		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
-		protected virtual void CreatePropertyBindingsForMapping( CsvClassMap mapping, Type recordType, List<MemberBinding> bindings )
+		protected virtual void CreatePropertyBindingsForMapping( ClassMap mapping, Type recordType, List<MemberBinding> bindings )
 		{
 			AddPropertyBindings( mapping.PropertyMaps, bindings );
 
@@ -1642,7 +1642,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="members">The properties/fields to add bindings for.</param>
 		/// <param name="bindings">The bindings that will be added to from the properties.</param>
-		protected virtual void AddPropertyBindings( CsvPropertyMapCollection members, List<MemberBinding> bindings )
+		protected virtual void AddPropertyBindings( PropertyMapCollection members, List<MemberBinding> bindings )
 		{
 			foreach( var propertyMap in members )
 			{
@@ -1691,8 +1691,8 @@ namespace CsvHelper
 				if( propertyMap.Data.ValidateExpression != null )
 				{
 					var validateExpression = Expression.IsFalse( Expression.Invoke( propertyMap.Data.ValidateExpression, fieldExpression ) );
-					var validationExceptionConstructor = typeof( CsvValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
-					var throwExpression = Expression.Throw( Expression.Constant( new CsvValidationException( context ) ) );
+					var validationExceptionConstructor = typeof( ValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
+					var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( context ) ) );
 					fieldExpression = Expression.Block(
 						// If the validate method returns false, throw an exception.
 						Expression.IfThen( validateExpression, throwExpression ),
@@ -1749,12 +1749,12 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Determines if the property/field for the <see cref="CsvPropertyMap"/>
+		/// Determines if the property/field for the <see cref="PropertyMap"/>
 		/// can be read.
 		/// </summary>
 		/// <param name="propertyMap">The property/field map.</param>
 		/// <returns>A value indicating of the property/field can be read. True if it can, otherwise false.</returns>
-		protected virtual bool CanRead( CsvPropertyMap propertyMap )
+		protected virtual bool CanRead( PropertyMap propertyMap )
 		{
 			var cantRead =
 				// Ignored property/field;
@@ -1775,12 +1775,12 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Determines if the property/field for the <see cref="CsvPropertyReferenceMap"/>
+		/// Determines if the property/field for the <see cref="PropertyReferenceMap"/>
 		/// can be read.
 		/// </summary>
 		/// <param name="propertyReferenceMap">The reference map.</param>
 		/// <returns>A value indicating of the property/field can be read. True if it can, otherwise false.</returns>
-		protected virtual bool CanRead( CsvPropertyReferenceMap propertyReferenceMap )
+		protected virtual bool CanRead( PropertyReferenceMap propertyReferenceMap )
 		{
 			var cantRead = false;
 

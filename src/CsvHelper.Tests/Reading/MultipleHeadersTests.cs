@@ -92,7 +92,7 @@ namespace CsvHelper.Tests.Reading
 			public int Z { get; set; }
 		}
 
-		private sealed class AlphaMap : CsvClassMap<Alpha>
+		private sealed class AlphaMap : ClassMap<Alpha>
 		{
 			public AlphaMap()
 			{
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		private sealed class OmegaMap : CsvClassMap<Omega>
+		private sealed class OmegaMap : ClassMap<Omega>
 		{
 			public OmegaMap()
 			{

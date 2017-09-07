@@ -15,7 +15,7 @@ namespace CsvHelper.Tests.Configuration
 		{
 			var parentMap = new ParentMap();
 			var childMap = new ChildMap();
-			var c = new CsvClassMapCollection();
+			var c = new ClassMapCollection();
 			c.Add( parentMap );
 			c.Add( childMap );
 
@@ -27,8 +27,8 @@ namespace CsvHelper.Tests.Configuration
 
 		private class Child : Parent { }
 
-		private sealed class ParentMap : CsvClassMap<Parent> { }
+		private sealed class ParentMap : ClassMap<Parent> { }
 
-		private sealed class ChildMap : CsvClassMap<Child> { }
+		private sealed class ChildMap : ClassMap<Child> { }
 	}
 }

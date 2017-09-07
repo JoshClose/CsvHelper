@@ -306,7 +306,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void MultipleCharDelimiterWithBufferEndingInMiddleOfDelimiterTest()
 		{
-			var config = new CsvConfiguration
+			var config = new CsvHelper.Configuration.Configuration
 			{
 				Delimiter = "|~|",
 				BufferSize = 3,

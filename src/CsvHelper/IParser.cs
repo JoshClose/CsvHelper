@@ -22,7 +22,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		ICsvParserConfiguration Configuration { get; }
+		IParserConfiguration Configuration { get; }
 
 		/// <summary>
 		/// Gets the <see cref="FieldReader"/>.

@@ -88,7 +88,7 @@ namespace CsvHelper.Tests
 			public int Order { get; set; }
 		}
 
-		private sealed class TestMap : CsvClassMap<Test>
+		private sealed class TestMap : ClassMap<Test>
 		{
 			public TestMap()
 			{
@@ -98,7 +98,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestStringMap : CsvClassMap<Test>
+		private sealed class TestStringMap : ClassMap<Test>
 		{
 			public TestStringMap()
 			{

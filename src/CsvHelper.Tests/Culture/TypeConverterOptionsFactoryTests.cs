@@ -28,7 +28,7 @@ namespace CsvHelper.Tests.Culture
 		[TestMethod]
 		public void AddGetRemoveTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			var customOptions = new TypeConverterOptions
 			{
 				Formats = new string[] { "custom" },
@@ -77,7 +77,7 @@ namespace CsvHelper.Tests.Culture
 		private static void GetFieldForCultureTest( string csvText, string culture, decimal expected1, decimal expected2 )
 		{
 			using( var reader = new StringReader( csvText ) )
-			using( var csvReader = new CsvReader( reader, new CsvConfiguration { CultureInfo = new CultureInfo( culture ) } ) )
+			using( var csvReader = new CsvReader( reader, new CsvHelper.Configuration.Configuration { CultureInfo = new CultureInfo( culture ) } ) )
 			{
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.Read();
@@ -201,7 +201,7 @@ namespace CsvHelper.Tests.Culture
 			public int NumberOverridenInMap { get; set; }
 		}
 
-		private sealed class TestMap : CsvClassMap<Test>
+		private sealed class TestMap : ClassMap<Test>
 		{
 			public TestMap()
 			{

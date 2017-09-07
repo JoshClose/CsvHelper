@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new EnumerableConverter();
 
-			var propertyMapData = new CsvPropertyMapData( null );
+			var propertyMapData = new PropertyMapData( null );
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var mockReaderRow = new Mock<IReaderRow>();
@@ -33,7 +33,7 @@ namespace CsvHelper.Tests.TypeConversion
 				converter.ConvertFromString( "", mockReaderRow.Object, propertyMapData );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException )
+			catch( TypeConverterException )
 			{
 			}
 			try
@@ -41,7 +41,7 @@ namespace CsvHelper.Tests.TypeConversion
 				converter.ConvertToString( 5, mockWriterRow.Object, propertyMapData );
 				Assert.Fail();
 			}
-			catch( CsvTypeConverterException )
+			catch( TypeConverterException )
 			{
 			}
 		}

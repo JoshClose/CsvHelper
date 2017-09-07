@@ -19,9 +19,9 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="value">The object to convert to a string.</param>
 		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being written.</param>
+		/// <param name="propertyMapData">The <see cref="PropertyMapData"/> for the property/field being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, IWriterRow row, CsvPropertyMapData propertyMapData )
+		public override string ConvertToString( object value, IWriterRow row, PropertyMapData propertyMapData )
 		{
 			var dictionary = value as IDictionary;
 			if( dictionary == null )
@@ -42,9 +42,9 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="text">The string to convert to an object.</param>
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="propertyMapData">The <see cref="CsvPropertyMapData"/> for the property/field being created.</param>
+		/// <param name="propertyMapData">The <see cref="PropertyMapData"/> for the property/field being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, CsvPropertyMapData propertyMapData )
+		public override object ConvertFromString( string text, IReaderRow row, PropertyMapData propertyMapData )
 		{
 			var dictionary = new Dictionary<string, string>();
 

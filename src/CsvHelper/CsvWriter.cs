@@ -40,27 +40,27 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual ICsvWriterConfiguration Configuration => context.WriterConfiguration;
+		public virtual IWriterConfiguration Configuration => context.WriterConfiguration;
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		public CsvWriter( TextWriter writer ) : this( new CsvSerializer( writer, new CsvConfiguration(), false ) ) { }
+		public CsvWriter( TextWriter writer ) : this( new CsvSerializer( writer, new Configuration.Configuration(), false ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvWriter( TextWriter writer, bool leaveOpen ) : this( new CsvSerializer( writer, new CsvConfiguration(), leaveOpen ) ) { }
+		public CsvWriter( TextWriter writer, bool leaveOpen ) : this( new CsvSerializer( writer, new Configuration.Configuration(), leaveOpen ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvWriter( TextWriter writer, CsvConfiguration configuration ) : this( new CsvSerializer( writer, configuration, false ) ) { }
+		public CsvWriter( TextWriter writer, Configuration.Configuration configuration ) : this( new CsvSerializer( writer, configuration, false ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
@@ -133,7 +133,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the field to the CSV file. This will
 		/// ignore any need to quote and ignore the
-		/// <see cref="CsvConfiguration.QuoteAllFields"/>
+		/// <see cref="CsvHelper.Configuration.Configuration.QuoteAllFields"/>
 		/// and just quote based on the shouldQuote
 		/// parameter.
 		/// When all fields are written for a record,
@@ -251,7 +251,7 @@ namespace CsvHelper
 	        }
 	        catch( Exception ex )
 	        {
-				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new WriterException( context, "An unexpected error occurred.", ex );
 	        }
 		}
 
@@ -269,7 +269,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new WriterException( context, "An unexpected error occurred.", ex );
 			}
 		}
 
@@ -304,17 +304,17 @@ namespace CsvHelper
 
 			if( !context.WriterConfiguration.HasHeaderRecord )
 			{
-				throw new CsvWriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
+				throw new WriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
 			}
 
 			if( context.HasHeaderBeenWritten )
 			{
-				throw new CsvWriterException( context, "The header record has already been written. You can't write it more than once." );
+				throw new WriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
 			if( context.HasRecordBeenWritten )
 			{
-				throw new CsvWriterException( context, "Records have already been written. You can't write the header after writing records has started." );
+				throw new WriterException( context, "Records have already been written. You can't write the header after writing records has started." );
 			}
 
 			if( type == typeof( object ) )
@@ -327,7 +327,7 @@ namespace CsvHelper
 				context.WriterConfiguration.Maps.Add( context.WriterConfiguration.AutoMap( type ) );
 			}
 
-			var properties = new CsvPropertyMapCollection();
+			var properties = new PropertyMapCollection();
 			AddProperties( properties, context.WriterConfiguration.Maps[type] );
 
 			foreach( var property in properties )
@@ -365,17 +365,17 @@ namespace CsvHelper
 
 			if( !context.WriterConfiguration.HasHeaderRecord )
 			{
-				throw new CsvWriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
+				throw new WriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
 			}
 
 			if( context.HasHeaderBeenWritten )
 			{
-				throw new CsvWriterException( context, "The header record has already been written. You can't write it more than once." );
+				throw new WriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
 			if( context.HasRecordBeenWritten )
 			{
-				throw new CsvWriterException( context, "Records have already been written. You can't write the header after writing records has started." );
+				throw new WriterException( context, "Records have already been written. You can't write the header after writing records has started." );
 			}
 
 			var metaObject = record.GetMetaObject( Expression.Constant( record ) );
@@ -412,7 +412,7 @@ namespace CsvHelper
             }
             catch( Exception ex )
 			{
-				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new WriterException( context, "An unexpected error occurred.", ex );
 			}
 		}
 
@@ -481,7 +481,7 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw ex as CsvHelperException ?? new CsvWriterException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new WriterException( context, "An unexpected error occurred.", ex );
 			}
 		}
 
@@ -492,7 +492,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="properties">The properties/fields to be added to.</param>
 		/// <param name="mapping">The mapping where the properties/fields are added from.</param>
-		protected virtual void AddProperties( CsvPropertyMapCollection properties, CsvClassMap mapping )
+		protected virtual void AddProperties( PropertyMapCollection properties, ClassMap mapping )
 		{
 			properties.AddRange( mapping.PropertyMaps );
 			foreach( var refMap in mapping.ReferenceMaps )
@@ -510,7 +510,7 @@ namespace CsvHelper
 		/// <param name="mapping">The mapping to look for the property/field to map on.</param>
 		/// <param name="propertyMap">The property/field map to look for on the mapping.</param>
 		/// <returns>An Expression to access the given property/field.</returns>
-		protected virtual Expression CreatePropertyExpression( Expression recordExpression, CsvClassMap mapping, CsvPropertyMap propertyMap )
+		protected virtual Expression CreatePropertyExpression( Expression recordExpression, ClassMap mapping, PropertyMap propertyMap )
 		{
 			if( mapping.PropertyMaps.Any( pm => pm == propertyMap ) )
 			{
@@ -666,12 +666,12 @@ namespace CsvHelper
 
 			// Get a list of all the properties/fields so they will
 			// be sorted properly.
-			var properties = new CsvPropertyMapCollection();
+			var properties = new PropertyMapCollection();
 			AddProperties( properties, context.WriterConfiguration.Maps[type] );
 
 			if( properties.Count == 0 )
 			{
-				throw new CsvWriterException( context, $"No properties are mapped for type '{type.FullName}'." );
+				throw new WriterException( context, $"No properties are mapped for type '{type.FullName}'." );
 			}
 
 			var delegates = new List<Delegate>();
@@ -749,7 +749,7 @@ namespace CsvHelper
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 
-			var propertyMapData = new CsvPropertyMapData( null )
+			var propertyMapData = new PropertyMapData( null )
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
@@ -841,7 +841,7 @@ namespace CsvHelper
 		/// <param name="propertyMap">The property/field map that we are checking.</param>
 		/// <returns>A value indicating if the property/field can be written.
 		/// True if the property/field can be written, otherwise false.</returns>
-		protected virtual bool CanWrite( CsvPropertyMap propertyMap )
+		protected virtual bool CanWrite( PropertyMap propertyMap )
 		{
 			var cantWrite =
 				// Ignored properties/fields.

@@ -188,19 +188,19 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapEnumerableTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			try
 			{
 				config.AutoMap( typeof( List<string> ) );
 				Assert.Fail();
 			}
-			catch( CsvConfigurationException ) {}
+			catch( ConfigurationException ) {}
 		}
 
 		[TestMethod]
 		public void AutoMapWithExistingMapTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			var existingMap = new SimpleMap();
 			config.Maps.Add( existingMap );
 			var data = new
@@ -226,7 +226,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapWithNestedHeaders()
 		{
-			var config = new CsvConfiguration
+			var config = new CsvHelper.Configuration.Configuration
 			{
 				PrefixReferenceHeaders = true,
 			};
@@ -251,7 +251,7 @@ namespace CsvHelper.Tests.AutoMapping
 			public string Name { get; set; }
 		}
 
-		private sealed class SimpleMap : CsvClassMap<Simple>
+		private sealed class SimpleMap : ClassMap<Simple>
 		{
 			public SimpleMap()
 			{

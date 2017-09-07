@@ -147,7 +147,7 @@ namespace CsvHelper.Tests.Writing
 			public string Name { get; set; }
 		}
 
-		private sealed class TestWithNameMap : CsvClassMap<Test>
+		private sealed class TestWithNameMap : ClassMap<Test>
 		{
 			public TestWithNameMap()
 			{
@@ -157,7 +157,7 @@ namespace CsvHelper.Tests.Writing
 			}
 		}
 
-		private sealed class TestWithNoNameMap : CsvClassMap<Test>
+		private sealed class TestWithNoNameMap : ClassMap<Test>
 		{
 			public TestWithNoNameMap()
 			{

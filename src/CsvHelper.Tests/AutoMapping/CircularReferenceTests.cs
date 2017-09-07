@@ -9,7 +9,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void CircularDependencyTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			var map = config.AutoMap<ACircular>();
 			Assert.IsNotNull( map );
 			Assert.AreEqual( 1, map.PropertyMaps.Count );
@@ -21,7 +21,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void CircularDependencyWithMultiplePropertiesTest()
 		{
-			var config = new CsvConfiguration();
+			var config = new CsvHelper.Configuration.Configuration();
 			var map = config.AutoMap<A>();
 			Assert.AreEqual( 1, map.PropertyMaps.Count );
 			Assert.AreEqual( 3, map.ReferenceMaps.Count );

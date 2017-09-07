@@ -28,7 +28,7 @@ namespace CsvHelper.Tests
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader, new CsvConfiguration() ) )
+			using( var csv = new CsvReader( reader, new CsvHelper.Configuration.Configuration() ) )
 			{
 				Assert.AreSame( csv.Configuration, csv.Parser.Configuration );
 			}

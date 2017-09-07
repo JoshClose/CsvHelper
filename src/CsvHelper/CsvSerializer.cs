@@ -25,37 +25,37 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the configuration.
 		/// </summary>
-		public virtual ICsvSerializerConfiguration Configuration => context.SerializerConfiguration;
+		public virtual ISerializerConfiguration Configuration => context.SerializerConfiguration;
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
-		public CsvSerializer( TextWriter writer ) : this( writer, new CsvConfiguration(), false ) { }
+		public CsvSerializer( TextWriter writer ) : this( writer, new Configuration.Configuration(), false ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer( TextWriter writer, bool leaveOpen ) : this( writer, new CsvConfiguration(), leaveOpen ) { }
+		public CsvSerializer( TextWriter writer, bool leaveOpen ) : this( writer, new Configuration.Configuration(), leaveOpen ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
-		/// and <see cref="CsvConfiguration"/>.
+		/// and <see cref="CsvHelper.Configuration.Configuration"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration ) : this( writer, configuration, false ) { }
+		public CsvSerializer( TextWriter writer, Configuration.Configuration configuration ) : this( writer, configuration, false ) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
-		/// and <see cref="CsvConfiguration"/>.
+		/// and <see cref="CsvHelper.Configuration.Configuration"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer( TextWriter writer, CsvConfiguration configuration, bool leaveOpen )
+		public CsvSerializer( TextWriter writer, Configuration.Configuration configuration, bool leaveOpen )
 		{
 			context = new WritingContext( writer, configuration, leaveOpen );
 		}

@@ -43,7 +43,7 @@ namespace CsvHelper.Tests.Mappings
 			public string Name { get; set; }
 		}
 
-		private sealed class TestMap : CsvClassMap<Test>
+		private sealed class TestMap : ClassMap<Test>
 		{
 			public TestMap()
 			{

@@ -19,7 +19,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public TextWriter TextWriter { get; }
 
-		public ICsvSerializerConfiguration Configuration { get; }
+		public ISerializerConfiguration Configuration { get; }
 
 		public List<string[]> Records
 		{
@@ -30,7 +30,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public SerializerMock( bool throwExceptionOnWrite = false )
 		{
-			Context = new WritingContext( new StringWriter(), new CsvConfiguration(), false );
+			Context = new WritingContext( new StringWriter(), new CsvHelper.Configuration.Configuration(), false );
 			this.throwExceptionOnWrite = throwExceptionOnWrite;
 		}
 

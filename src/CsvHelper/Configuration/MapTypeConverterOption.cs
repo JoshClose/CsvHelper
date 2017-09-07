@@ -14,24 +14,24 @@ namespace CsvHelper.Configuration
 	/// </summary>
     public class MapTypeConverterOption
     {
-	    private readonly CsvPropertyMap propertyMap;
+	    private readonly PropertyMap propertyMap;
 
 		/// <summary>
-		/// Creates a new instance using the given <see cref="CsvPropertyMap"/>.
+		/// Creates a new instance using the given <see cref="PropertyMap"/>.
 		/// </summary>
 		/// <param name="propertyMap">The property/field map the options are being applied to.</param>
-	    public MapTypeConverterOption( CsvPropertyMap propertyMap )
+	    public MapTypeConverterOption( PropertyMap propertyMap )
 	    {
 		    this.propertyMap = propertyMap;
 	    }
 
 		/// <summary>
 		/// The <see cref="CultureInfo"/> used when type converting.
-		/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
+		/// This will override the global <see cref="Configuration.CultureInfo"/>
 		/// setting.
 		/// </summary>
 		/// <param name="cultureInfo">The culture info.</param>
-		public virtual CsvPropertyMap CultureInfo( CultureInfo cultureInfo )
+		public virtual PropertyMap CultureInfo( CultureInfo cultureInfo )
 		{
 			propertyMap.Data.TypeConverterOptions.CultureInfo = cultureInfo;
 
@@ -43,7 +43,7 @@ namespace CsvHelper.Configuration
 		/// This is used when doing any <see cref="DateTime"/> conversions.
 		/// </summary>
 		/// <param name="dateTimeStyle">The date time style.</param>
-		public virtual CsvPropertyMap DateTimeStyles( DateTimeStyles dateTimeStyle )
+		public virtual PropertyMap DateTimeStyles( DateTimeStyles dateTimeStyle )
 		{
 			propertyMap.Data.TypeConverterOptions.DateTimeStyle = dateTimeStyle;
 
@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		/// This is used when doing any number conversions.
 		/// </summary>
 		/// <param name="numberStyle"></param>
-		public virtual CsvPropertyMap NumberStyles( NumberStyles numberStyle )
+		public virtual PropertyMap NumberStyles( NumberStyles numberStyle )
 		{
 			propertyMap.Data.TypeConverterOptions.NumberStyle = numberStyle;
 
@@ -66,7 +66,7 @@ namespace CsvHelper.Configuration
 		/// The string format to be used when type converting.
 		/// </summary>
 		/// <param name="formats">The format.</param>
-		public virtual CsvPropertyMap Format( params string[] formats )
+		public virtual PropertyMap Format( params string[] formats )
 		{
 			propertyMap.Data.TypeConverterOptions.Formats = formats;
 
@@ -79,7 +79,7 @@ namespace CsvHelper.Configuration
 		/// <param name="isTrue">A value indicating whether true values or false values are being set.</param>
 		/// <param name="clearValues">A value indication if the current values should be cleared before adding the new ones.</param>
 		/// <param name="booleanValues">The string boolean values.</param>
-		public virtual CsvPropertyMap BooleanValues( bool isTrue, bool clearValues = true, params string[] booleanValues )
+		public virtual PropertyMap BooleanValues( bool isTrue, bool clearValues = true, params string[] booleanValues )
 		{
 			if( isTrue )
 			{
@@ -108,7 +108,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="nullValues">The values that represent null.</param>
 		/// <returns></returns>
-		public virtual CsvPropertyMap NullValues( params string[] nullValues )
+		public virtual PropertyMap NullValues( params string[] nullValues )
 		{
 			return NullValues( true, nullValues );
 		}
@@ -119,7 +119,7 @@ namespace CsvHelper.Configuration
 		/// <param name="clearValues">A value indication if the current values should be cleared before adding the new ones.</param>
 		/// <param name="nullValues">The values that represent null.</param>
 		/// <returns></returns>
-		public virtual CsvPropertyMap NullValues( bool clearValues, params string[] nullValues )
+		public virtual PropertyMap NullValues( bool clearValues, params string[] nullValues )
 		{
 			if( clearValues )
 			{

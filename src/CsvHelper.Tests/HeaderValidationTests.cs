@@ -29,7 +29,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<CsvValidationException>( () => csv.ValidateHeader<Test>() );
+				Assert.ThrowsException<ValidationException>( () => csv.ValidateHeader<Test>() );
 			}
 		}
 
@@ -40,7 +40,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<CsvValidationException>( () => csv.ValidateHeader<HasReference>() );
+				Assert.ThrowsException<ValidationException>( () => csv.ValidateHeader<HasReference>() );
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<CsvValidationException>( () => csv.ValidateHeader<HasConstructor>() );
+				Assert.ThrowsException<ValidationException>( () => csv.ValidateHeader<HasConstructor>() );
 			}
 		}
 
@@ -62,7 +62,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Configuration.ThrowOnBadHeader = true;
 				csv.Read();
-				Assert.ThrowsException<CsvValidationException>( () => csv.GetRecord( typeof( Test ) ) );
+				Assert.ThrowsException<ValidationException>( () => csv.GetRecord( typeof( Test ) ) );
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Configuration.ThrowOnBadHeader = true;
 				csv.Read();
-				Assert.ThrowsException<CsvValidationException>( () => csv.GetRecord<Test>() );
+				Assert.ThrowsException<ValidationException>( () => csv.GetRecord<Test>() );
 			}
 		}
 
@@ -83,7 +83,7 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
 			{
 				csv.Configuration.ThrowOnBadHeader = true;
-				Assert.ThrowsException<CsvValidationException>( () => csv.GetRecords( typeof( Test ) ).ToList() );
+				Assert.ThrowsException<ValidationException>( () => csv.GetRecords( typeof( Test ) ).ToList() );
 			}
 		}
 
@@ -93,7 +93,7 @@ namespace CsvHelper.Tests
 			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
 			{
 				csv.Configuration.ThrowOnBadHeader = true;
-				Assert.ThrowsException<CsvValidationException>( () => csv.GetRecords<Test>().ToList() );
+				Assert.ThrowsException<ValidationException>( () => csv.GetRecords<Test>().ToList() );
 			}
 		}
 
