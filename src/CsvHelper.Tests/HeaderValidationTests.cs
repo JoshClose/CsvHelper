@@ -60,7 +60,6 @@ namespace CsvHelper.Tests
 		{
 			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
 			{
-				csv.Configuration.ThrowOnBadHeader = true;
 				csv.Read();
 				Assert.ThrowsException<ValidationException>( () => csv.GetRecord( typeof( Test ) ) );
 			}
@@ -71,7 +70,6 @@ namespace CsvHelper.Tests
 		{
 			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
 			{
-				csv.Configuration.ThrowOnBadHeader = true;
 				csv.Read();
 				Assert.ThrowsException<ValidationException>( () => csv.GetRecord<Test>() );
 			}
@@ -82,7 +80,6 @@ namespace CsvHelper.Tests
 		{
 			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
 			{
-				csv.Configuration.ThrowOnBadHeader = true;
 				Assert.ThrowsException<ValidationException>( () => csv.GetRecords( typeof( Test ) ).ToList() );
 			}
 		}
@@ -92,8 +89,22 @@ namespace CsvHelper.Tests
 		{
 			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
 			{
-				csv.Configuration.ThrowOnBadHeader = true;
 				Assert.ThrowsException<ValidationException>( () => csv.GetRecords<Test>().ToList() );
+			}
+		}
+
+		[TestMethod]
+		public void PrivateSetterTest()
+		{
+			var data = new StringBuilder();
+			data.AppendLine( "Number" );
+			data.AppendLine( "1" );
+			using( var csv = new CsvReader( new StringReader( data.ToString() ) ) )
+			{
+				var records = csv.GetRecords<HasPrivateSetter>().ToList();
+				var record = records[0];
+				Assert.AreEqual( 1, record.Number );
+				Assert.AreEqual( 2, record.Double );
 			}
 		}
 
@@ -120,6 +131,13 @@ namespace CsvHelper.Tests
 				this.Id = Id;
 				this.Name = Name;
 			}
+		}
+
+		public class HasPrivateSetter
+		{
+			public int Number { get; set; }
+
+			public int Double => Number * 2;
 		}
     }
 }

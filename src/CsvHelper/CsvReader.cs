@@ -167,6 +167,11 @@ namespace CsvHelper
 
 			foreach( var memberMap in map.MemberMaps )
 			{
+				if( !CanRead( memberMap ) )
+				{
+					continue;
+				}
+
 				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
 				if( index == -1 )
 				{
@@ -174,9 +179,14 @@ namespace CsvHelper
 				}
 			}
 
-			foreach( var reference in map.ReferenceMaps )
+			foreach( var referenceMap in map.ReferenceMaps )
 			{
-				ValidateHeader( reference.Data.Mapping );
+				if( !CanRead( referenceMap ) )
+				{
+					continue;
+				}
+
+				ValidateHeader( referenceMap.Data.Mapping );
 			}
 		}
 
@@ -1779,11 +1789,11 @@ namespace CsvHelper
 			if( property != null )
 			{
 				cantRead = cantRead ||
-				// Properties that don't have a public setter
-				// and we are honoring the accessor modifier.
-				property.GetSetMethod() == null && !context.ReaderConfiguration.IncludePrivateMembers ||
-				// Properties that don't have a setter at all.
-				property.GetSetMethod( true ) == null;
+					// Properties that don't have a public setter
+					// and we are honoring the accessor modifier.
+					property.GetSetMethod() == null && !context.ReaderConfiguration.IncludePrivateMembers ||
+					// Properties that don't have a setter at all.
+					property.GetSetMethod( true ) == null;
 			}
 
 			return !cantRead;
