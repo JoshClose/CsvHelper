@@ -114,8 +114,10 @@ namespace CsvHelper
 		public virtual long BytePosition { get; internal set; }
 
 		/// <summary>
-		/// Getsa value indicating if the field is bad.
+		/// Gets a value indicating if the field is bad.
 		/// True if the field is bad, otherwise false.
+		/// A field is bad if a quote is found in a field
+		/// that isn't escaped.
 		/// </summary>
 		public virtual bool IsFieldBad { get; internal set; }
 
