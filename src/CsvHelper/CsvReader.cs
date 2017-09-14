@@ -330,7 +330,7 @@ namespace CsvHelper
 			// when reading records.
 			context.CurrentIndex = index;
 
-			if( index >= context.Record.Length )
+			if( index >= context.Record.Length || index < 0 )
 			{
 				if( context.ReaderConfiguration.ThrowOnMissingField && context.ReaderConfiguration.IgnoreBlankLines )
 				{
