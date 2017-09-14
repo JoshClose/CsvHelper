@@ -167,7 +167,7 @@ namespace CsvHelper
 
 			foreach( var memberMap in map.MemberMaps )
 			{
-				if( !CanRead( memberMap ) )
+				if( memberMap.Data.Ignore || !CanRead( memberMap ) )
 				{
 					continue;
 				}

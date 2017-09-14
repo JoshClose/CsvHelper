@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CsvHelper.Configuration;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -108,6 +109,22 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[TestMethod]
+		public void IgnorePropertyTest()
+		{
+			var data = new StringBuilder();
+			data.AppendLine( "Id" );
+			data.AppendLine( "1" );
+			using( var csv = new CsvReader( new StringReader( data.ToString() ) ) )
+			{
+				csv.Configuration.RegisterClassMap<HasIngoredPropertyMap>();
+				var records = csv.GetRecords<Test>().ToList();
+				var record = records[0];
+				Assert.AreEqual( 1, record.Id );
+				Assert.IsNull( record.Name );
+			}
+		}
+
 		private class Test
 		{
 			public int Id { get; set; }
@@ -120,7 +137,7 @@ namespace CsvHelper.Tests
 			public Test Reference { get; set; }
 		}
 
-		public class HasConstructor
+		private class HasConstructor
 		{
 			public int Id { get; private set; }
 
@@ -133,11 +150,20 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		public class HasPrivateSetter
+		private class HasPrivateSetter
 		{
 			public int Number { get; set; }
 
 			public int Double => Number * 2;
+		}
+
+		private sealed class HasIngoredPropertyMap : ClassMap<Test>
+		{
+			public HasIngoredPropertyMap()
+			{
+				AutoMap();
+				Map( m => m.Name ).Ignore();
+			}
 		}
     }
 }
