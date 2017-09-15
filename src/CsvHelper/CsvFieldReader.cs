@@ -126,7 +126,7 @@ namespace CsvHelper
 
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
 		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.

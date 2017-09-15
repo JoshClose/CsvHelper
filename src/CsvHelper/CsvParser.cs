@@ -53,14 +53,14 @@ namespace CsvHelper
 		public CsvParser( TextReader reader, bool leaveOpen ) : this( new CsvFieldReader( reader, new Configuration.Configuration(), false ) ) { }
 
 		/// <summary>
-		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvHelper.Configuration.Configuration"/>.
+		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		public CsvParser( TextReader reader, Configuration.Configuration configuration ) : this( new CsvFieldReader( reader, configuration, false ) ) { }
 
 		/// <summary>
-		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="CsvHelper.Configuration.Configuration"/>.
+		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
