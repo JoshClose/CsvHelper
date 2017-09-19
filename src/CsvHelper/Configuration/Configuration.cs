@@ -25,7 +25,7 @@ namespace CsvHelper.Configuration
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
 		private bool quoteAllFields;
 		private bool quoteNoFields;
-		private readonly ClassMapCollection maps = new ClassMapCollection();
+		private readonly ClassMapCollection maps;
 
 		/// <summary>
 		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
@@ -387,6 +387,8 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public Configuration()
 		{
+			maps = new ClassMapCollection( this );
+
 			BuildRequiredQuoteChars = () =>
 			{
 				return delimiter.Length > 1 ?
@@ -489,7 +491,8 @@ namespace CsvHelper.Configuration
 		{
 			var mapType = typeof( DefaultClassMap<> ).MakeGenericType( type );
 			var map = (ClassMap)ReflectionHelper.CreateInstance( mapType );
-			map.AutoMap( new AutoMapOptions( this ) );
+			map.AutoMap( this );
+			maps.Add( map );
 
 			return map;
 		}

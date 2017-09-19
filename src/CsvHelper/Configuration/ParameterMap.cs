@@ -39,12 +39,7 @@ namespace CsvHelper.Configuration
 		/// <param name="parameter">The parameter being mapped.</param>
 		public ParameterMap( ParameterInfo parameter )
 		{
-			Data = new ParameterMapData( parameter )
-			{
-				// Set some defaults.
-				TypeConverter = TypeConverterFactory.Current.GetConverter( parameter.ParameterType ),
-				Name = parameter.Name
-			};
+			Data = new ParameterMapData( parameter );
 		}
 
 		internal int GetMaxIndex()

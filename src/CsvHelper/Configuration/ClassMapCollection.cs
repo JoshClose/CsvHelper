@@ -15,6 +15,7 @@ namespace CsvHelper.Configuration
 	public class ClassMapCollection
 	{
 		private readonly Dictionary<Type, ClassMap> data = new Dictionary<Type, ClassMap>();
+		private readonly Configuration configuration;
 
 		/// <summary>
 		/// Gets the <see cref="ClassMap"/> for the specified record type.
@@ -49,6 +50,15 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Creates a new instance using the given configuration.
+		/// </summary>
+		/// <param name="configuration">The configuration.</param>
+		public ClassMapCollection( Configuration configuration )
+		{
+			this.configuration = configuration;
+		}
+
+		/// <summary>
 		/// Finds the <see cref="ClassMap"/> for the specified record type.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
@@ -66,6 +76,8 @@ namespace CsvHelper.Configuration
 		/// <param name="map">The map.</param>
 		internal virtual void Add( ClassMap map )
 		{
+			SetMapDefaults( map );
+
 			var type = GetGenericCsvClassMapType( map.GetType() ).GetGenericArguments().First();
 
 			if( data.ContainsKey( type ) )
@@ -115,6 +127,63 @@ namespace CsvHelper.Configuration
 			}
 
 			return GetGenericCsvClassMapType( type.GetTypeInfo().BaseType );
+		}
+
+		/// <summary>
+		/// Sets defaults for the mapping tree. The defaults used
+		/// to be set inside the classes, but this didn't allow for
+		/// the TypeConverter to be created from the Configuration's
+		/// TypeConverterFactory.
+		/// </summary>
+		/// <param name="map">The map to set defaults on.</param>
+		private void SetMapDefaults( ClassMap map )
+		{
+			foreach( var memberMap in map.MemberMaps )
+			{
+				if( memberMap.Data.Member == null )
+				{
+					continue;
+				}
+
+				if( memberMap.Data.TypeConverter == null )
+				{
+					memberMap.Data.TypeConverter = configuration.TypeConverterFactory.GetConverter( memberMap.Data.Member.MemberType() );
+				}
+
+				if( memberMap.Data.Names.Count == 0 )
+				{
+					memberMap.Data.Names.Add( memberMap.Data.Member.Name );
+				}
+			}
+
+			foreach( var parameterMap in map.ParameterMaps )
+			{
+				if( parameterMap.ConstructorTypeMap != null )
+				{
+					SetMapDefaults( parameterMap.ConstructorTypeMap );
+				}
+				else if( parameterMap.ReferenceMap != null )
+				{
+					SetMapDefaults( parameterMap.ReferenceMap.Data.Mapping );
+				}
+				else
+				{ 
+					if( parameterMap.Data.TypeConverter == null )
+					{
+						parameterMap.Data.TypeConverter = configuration.TypeConverterFactory.GetConverter( parameterMap.Data.Parameter.ParameterType );
+					}
+
+					if( parameterMap.Data.Name == null )
+					{
+						parameterMap.Data.Name = parameterMap.Data.Parameter.Name;
+					}
+				}
+			}
+
+			foreach( var referenceMap in map.ReferenceMaps )
+			{
+				SetMapDefaults( referenceMap.Data.Mapping );
+			}
 		}
 	}
 }

@@ -21,17 +21,17 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( 3, map.MemberMaps.Count );
 
-			Assert.AreEqual( "GuidColumn", map.MemberMaps[0].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( 0, map.MemberMaps[0].Data.Names.Count );
 			Assert.AreEqual( 0, map.MemberMaps[0].Data.Index );
-			Assert.AreEqual( typeof( GuidConverter ), map.MemberMaps[0].Data.TypeConverter.GetType() );
+			Assert.IsNull( map.MemberMaps[0].Data.TypeConverter );
 
-			Assert.AreEqual( "IntColumn", map.MemberMaps[1].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( 0, map.MemberMaps[1].Data.Names.Count );
 			Assert.AreEqual( 1, map.MemberMaps[1].Data.Index );
-			Assert.AreEqual( typeof( Int32Converter ), map.MemberMaps[1].Data.TypeConverter.GetType() );
+			Assert.IsNull( map.MemberMaps[1].Data.TypeConverter );
 
-			Assert.AreEqual( "StringColumn", map.MemberMaps[2].Data.Names.FirstOrDefault() );
+			Assert.AreEqual( 0, map.MemberMaps[2].Data.Names.Count );
 			Assert.AreEqual( 2, map.MemberMaps[2].Data.Index );
-			Assert.AreEqual( typeof( StringConverter ), map.MemberMaps[2].Data.TypeConverter.GetType() );
+			Assert.IsNull( map.MemberMaps[2].Data.TypeConverter );
 		}
 
 		[TestMethod]

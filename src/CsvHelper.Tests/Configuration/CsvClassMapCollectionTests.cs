@@ -15,7 +15,7 @@ namespace CsvHelper.Tests.Configuration
 		{
 			var parentMap = new ParentMap();
 			var childMap = new ChildMap();
-			var c = new ClassMapCollection();
+			var c = new ClassMapCollection( new CsvHelper.Configuration.Configuration() );
 			c.Add( parentMap );
 			c.Add( childMap );
 

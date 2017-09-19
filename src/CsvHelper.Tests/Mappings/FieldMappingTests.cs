@@ -368,12 +368,12 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public APrivateMap()
 			{
-				var options = new AutoMapOptions
+				var config = new CsvHelper.Configuration.Configuration
 				{
 					IncludePrivateMembers = true,
 					MemberTypes = MemberTypes.Fields
 				};
-				AutoMap( options );
+				AutoMap( config );
 			}
 		}
 	}

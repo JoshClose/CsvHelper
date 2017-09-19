@@ -41,8 +41,9 @@ namespace CsvHelper.TypeConversion
 		/// Creates a new <see cref="NullableConverter"/> for the given <see cref="Nullable{T}"/> <see cref="Type"/>.
 		/// </summary>
 		/// <param name="type">The nullable type.</param>
+		/// <param name="typeConverterFactory">The type converter factory.</param>
 		/// <exception cref="System.ArgumentException">type is not a nullable type.</exception>
-		public NullableConverter( Type type )
+		public NullableConverter( Type type, TypeConverterFactory typeConverterFactory )
 		{
 			NullableType = type;
 			UnderlyingType = Nullable.GetUnderlyingType( type );
@@ -51,7 +52,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentException( "type is not a nullable type." );
 			}
 
-			UnderlyingTypeConverter = TypeConverterFactory.Current.GetConverter( UnderlyingType );
+			UnderlyingTypeConverter = typeConverterFactory.GetConverter( UnderlyingType );
 		}
 
 		/// <summary>

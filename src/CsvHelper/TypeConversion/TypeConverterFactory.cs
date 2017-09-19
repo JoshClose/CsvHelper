@@ -22,33 +22,6 @@ namespace CsvHelper.TypeConversion
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
 
 		/// <summary>
-		/// Gets or sets the current TypeConverterFactory. This is a global
-		/// to be used by classes that don't have an instance of <see cref="Configuration.Configuration"/>.
-		/// </summary>
-		public static TypeConverterFactory Current
-		{
-			get
-			{
-				lock( locker )
-				{
-					return current;
-				}
-			}
-			set
-			{
-				if( value == null )
-				{
-					throw new InvalidOperationException( "TypeConverterFactory cannot be null." );
-				}
-
-				lock( locker )
-				{
-					current = value;
-				}
-			}
-		}
-
-		/// <summary>
 		/// Initializes the <see cref="TypeConverterFactory" /> class.
 		/// </summary>
 		public TypeConverterFactory()
@@ -139,7 +112,7 @@ namespace CsvHelper.TypeConversion
 
 			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( Nullable<> ) )
 			{
-				AddConverter( type, new NullableConverter( type ) );
+				AddConverter( type, new NullableConverter( type, this ) );
 				return GetConverter( type );
 			}
 

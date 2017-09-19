@@ -23,14 +23,6 @@ namespace CsvHelper.Configuration
 			TypeConverterOption = new MapTypeConverterOption( this );
 
 			Data = new MemberMapData( member );
-			if( member == null )
-			{
-				return;
-			}
-
-			// Set some defaults.
-			Data.TypeConverter = TypeConverterFactory.Current.GetConverter( member.MemberType() );
-			Data.Names.Add( member.Name );
 		}
 
 		/// <summary>
