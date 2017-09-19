@@ -45,18 +45,71 @@ namespace CsvHelper.Configuration
 		public virtual bool HasHeaderRecord { get; set; } = true;
 
 		/// <summary>
-		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
-		/// A header is bad if all the mapped members don't match.
+		/// Gets or sets the function that is called when a header validation check is ran. The default function
+		/// will throw a <see cref="ValidationException"/> if there is no header for a given property mapping.
+		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
+		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		public virtual bool ThrowOnBadHeader { get; set; } = true;
+		public virtual Action<bool, string[], int, ReadingContext> HeaderValidatedCallback { get; set; } = ( isValid, headerNames, headerNameIndex, context ) =>
+		{
+			if( isValid )
+			{
+				return;
+			}
+
+			var message =
+				$"Header matching ['{string.Join( "', '", headerNames )}'] names at index {headerNameIndex} was not found. " +
+				$"If you are expecting some headers to be missing and want to ignore this validation, " +
+				$"set the configuration {nameof( HeaderValidatedCallback )} to null. You can also change the " +
+				$"functionality to do something else, like logging the issue.";
+
+			throw new ValidationException( context, message );
+		};
 
 		/// <summary>
-		/// Gets or sets a value indicating if an exception will be
-		/// thrown if a field defined in a mapping is missing.
-		/// True to throw an exception, otherwise false.
-		/// Default is true.
+		/// Gets or sets the function that is called when a missing field is found. The default function will
+		/// throw a <see cref="MissingFieldException"/>. You can supply your own function to do other things
+		/// like logging the issue instead of throwing an exception.
+		/// Arguments: headerNames, index, context
 		/// </summary>
-		public virtual bool ThrowOnMissingField { get; set; } = true;
+		public virtual Action<string[], int, ReadingContext> MissingFieldFoundCallback { get; set; } = ( headerNames, index, context ) =>
+		{
+			var messagePostfix = $"You can ignore missing fields by setting {nameof( MissingFieldFoundCallback )} to null.";
+
+			if( headerNames != null && headerNames.Length > 0 )
+			{
+				throw new MissingFieldException( context, $"Field with names ['{string.Join( "', '", headerNames )}'] at index '{index}' does not exist. {messagePostfix}" );
+			}
+
+			throw new MissingFieldException( context, $"Field at index '{index}' does not exist. {messagePostfix}" );
+		};
+
+		/// <summary>
+		/// Gets or sets the function that is called when bad field data is found. A field
+		/// has bad data if it contains a quote and the field is not quoted (escaped).
+		/// You can supply your own function to do other things like logging the issue
+		/// instead of throwing an exception.
+		/// Arguments: context
+		/// </summary>
+		public virtual Action<ReadingContext> BadDataFoundCallback { get; set; } = context =>
+		{
+			throw new BadDataException( context, $"Field: '{context.Field}'. You can ignore bad data by setting {nameof( BadDataFoundCallback )} to null." );
+		};
+
+		/// <summary>
+		/// Gets or sets the function that is called when a reading exception occurs.
+		/// The default function will re-throw the given exception. If you want to ignore
+		/// reading exceptions, you can supply your own function to do other things like
+		/// logging the issue.
+		/// Arguments: exception
+		/// </summary>
+		public virtual Action<CsvHelperException> ReadingExceptionCallback { get; set; } = exception => throw exception;
+
+		/// <summary>
+		/// Gets or sets the callback that will be called to
+		/// determine whether to skip the given record or not.
+		/// </summary>
+		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = record => false;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether changes in the column
@@ -283,22 +336,6 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Gets or sets a value indicating whether empty rows should be skipped when reading.
-		/// A record is considered empty if all fields are empty.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if [skip empty rows]; otherwise, <c>false</c>.
-		/// </value>
-		public virtual bool SkipEmptyRecords { get; set; }
-
-		/// <summary>
-		/// Gets or sets the callback that will be called to
-		/// determine whether to skip the given record or not.
-		/// This overrides the <see cref="SkipEmptyRecords"/> setting.
-		/// </summary>
-		public virtual Func<string[], bool> ShouldSkipRecord { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating if quotes should be
 		/// ingored when parsing and treated like any other character.
 		/// </summary>
@@ -332,36 +369,6 @@ namespace CsvHelper.Configuration
 		/// True to prefix, otherwise false. Default is false.
 		/// </summary>
 		public virtual bool PrefixReferenceHeaders { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating if an exception should
-		/// be thrown when bad field data is detected. A field has
-		/// bad data if it contains a quote and the field is not 
-		/// quoted (escaped).
-		/// True to throw, otherwise false. Default is false.
-		/// </summary>
-		public virtual bool ThrowOnBadData { get; set; }
-
-		/// <summary>
-		/// Gets or sets a method that gets called when bad
-		/// data is detected.
-		/// </summary>
-		public virtual Action<ReadingContext> BadDataCallback { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating whether
-		/// exceptions that occur duruing reading
-		/// should be ignored. True to ignore exceptions,
-		/// otherwise false. Default is false.
-		/// </summary>
-		public virtual bool IgnoreReadingExceptions { get; set; }
-
-		/// <summary>
-		/// Gets or sets the callback that is called when a reading
-		/// exception occurs. This will only happen when
-		/// <see cref="IgnoreReadingExceptions"/> is true.
-		/// </summary>
-		public virtual Action<CsvHelperException, IReader> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Builds the values for the RequiredQuoteChars property.

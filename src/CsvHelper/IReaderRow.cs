@@ -384,15 +384,6 @@ namespace CsvHelper
 		bool TryGetField<T, TConverter>( string name, int index, out T field ) where TConverter : ITypeConverter;
 
 		/// <summary>
-		/// Determines whether the current record is empty.
-		/// A record is considered empty if all fields are empty.
-		/// </summary>
-		/// <returns>
-		///   <c>true</c> if [is record empty]; otherwise, <c>false</c>.
-		/// </returns>
-		bool IsRecordEmpty();
-
-		/// <summary>
 		/// Gets the record converted into <see cref="Type"/> T.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>

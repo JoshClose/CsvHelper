@@ -344,7 +344,8 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Auto maps the given map using constructor parameters.
 		/// </summary>
-		/// <param name="map">The map to auto map.</param>The configuration.</param>
+		/// <param name="map">The map.</param>
+		/// <param name="configuration">The configuration.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
 		protected virtual void AutoMapConstructorParameters( ClassMap map, Configuration configuration, LinkedList<Type> mapParents, int indexStart = 0 )

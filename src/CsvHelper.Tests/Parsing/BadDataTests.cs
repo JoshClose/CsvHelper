@@ -25,7 +25,7 @@ namespace CsvHelper.Tests.Parsing
 				stream.Position = 0;
 
 				string field = null;
-				parser.Configuration.BadDataCallback = f => field = f.Field;
+				parser.Configuration.BadDataFoundCallback = f => field = f.Field;
 				parser.Read();
 
 				Assert.IsNotNull( field );
@@ -55,7 +55,6 @@ namespace CsvHelper.Tests.Parsing
 				writer.Flush();
 				stream.Position = 0;
 
-				parser.Configuration.ThrowOnBadData = true;
 				parser.Read();
 				try
 				{
@@ -79,7 +78,6 @@ namespace CsvHelper.Tests.Parsing
 				stream.Position = 0;
 
 				parser.Configuration.IgnoreQuotes = true;
-				parser.Configuration.ThrowOnBadData = true;
 				var record = parser.Read();
 
 				Assert.AreEqual( "2\"two", record[1] );

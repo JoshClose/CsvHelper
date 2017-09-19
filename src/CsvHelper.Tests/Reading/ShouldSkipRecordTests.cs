@@ -65,8 +65,7 @@ namespace CsvHelper.Tests.Reading
 			var parser = new ParserMock( rows );
 
 			var csv = new CsvReader( parser );
-			csv.Configuration.ShouldSkipRecord = row => row[0].StartsWith( "skipme" );
-			csv.Configuration.SkipEmptyRecords = true;
+			csv.Configuration.ShouldSkipRecord = row => row[0].StartsWith( "skipme" ) || row.All( string.IsNullOrWhiteSpace );
 
 			csv.Read();
 			csv.Read();

@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.Reading
 			queue.Enqueue( null );
 			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { ThrowOnMissingField = true } };
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 			reader.ReadHeader();
 			reader.Read();
@@ -154,7 +154,7 @@ namespace CsvHelper.Tests.Reading
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.ThrowOnMissingField = true;
+			reader.Configuration.MissingFieldFoundCallback = null;
 			reader.Read();
 			string field;
 			Assert.IsFalse( reader.TryGetField( "test", out field ) );

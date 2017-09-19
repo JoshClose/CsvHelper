@@ -33,19 +33,13 @@ namespace CsvHelper.Configuration
 		Encoding Encoding { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating if an exception should
-		/// be thrown when bad field data is detected. A field has
-		/// bad data if it contains a quote and the field is not 
-		/// quoted (escaped).
-		/// True to throw, otherwise false. Default is false.
+		/// Gets or sets the function that is called when bad field data is found. A field
+		/// has bad data if it contains a quote and the field is not quoted (escaped).
+		/// You can supply your own function to do other things like logging the issue
+		/// instead of throwing an exception.
+		/// Arguments: context
 		/// </summary>
-		bool ThrowOnBadData { get; set; }
-
-		/// <summary>
-		/// Gets or sets a method that gets called when bad
-		/// data is detected.
-		/// </summary>
-		Action<ReadingContext> BadDataCallback { get; set; }
+		Action<ReadingContext> BadDataFoundCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the character used to denote

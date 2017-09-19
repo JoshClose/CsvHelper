@@ -25,7 +25,7 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ThrowOnMissingField = false;
+				csv.Configuration.MissingFieldFoundCallback = null;
 				csv.Configuration.RegisterClassMap<ValidateMap>();
 				Assert.ThrowsException<ValidationException>( () => csv.GetRecords<Test>().ToList() );
 			}
@@ -45,7 +45,7 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var logger = new StringBuilder();
-				csv.Configuration.ThrowOnMissingField = false;
+				csv.Configuration.MissingFieldFoundCallback = null;
 				csv.Configuration.RegisterClassMap( new LogInsteadMap( logger ) );
 				csv.GetRecords<Test>().ToList();
 
@@ -69,7 +69,7 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ThrowOnMissingField = false;
+				csv.Configuration.MissingFieldFoundCallback = null;
 				csv.Configuration.RegisterClassMap<CustomExceptionMap>();
 				Assert.ThrowsException<CustomException>( () => csv.GetRecords<Test>().ToList() );
 			}

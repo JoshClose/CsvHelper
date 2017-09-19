@@ -56,7 +56,7 @@ namespace CsvHelper.Tests.TypeConversion
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ThrowOnBadHeader = false;
+				csv.Configuration.HeaderValidatedCallback = null;
 				csv.Configuration.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
@@ -109,7 +109,7 @@ namespace CsvHelper.Tests.TypeConversion
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ThrowOnBadHeader = false;
+				csv.Configuration.HeaderValidatedCallback = null;
 				csv.Configuration.HasHeaderRecord = true;
 				csv.Configuration.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
@@ -163,7 +163,7 @@ namespace CsvHelper.Tests.TypeConversion
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.ThrowOnBadHeader = false;
+				csv.Configuration.HeaderValidatedCallback = null;
 				csv.Configuration.HasHeaderRecord = true;
 				csv.Configuration.RegisterClassMap<TestDefaultMap>();
 				try

@@ -179,7 +179,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.ThrowOnMissingField = false;
+			reader.Configuration.MissingFieldFoundCallback = null;
 			reader.Read();
 
 			Assert.IsNull( reader.GetField<string>( "blah" ) );
@@ -195,7 +195,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue( data2 );
 			var parserMock = new ParserMock( queue );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { ThrowOnMissingField = true } };
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			try
@@ -205,7 +205,7 @@ namespace CsvHelper.Tests
 			}
 			catch( MissingFieldException ex )
 			{
-				Assert.AreEqual( "Fields 'blah' do not exist in the CSV file.", ex.Message );
+				Assert.AreEqual( "Field with names ['blah'] at index '0' does not exist. You can ignore missing fields by setting MissingFieldFoundCallback to null.", ex.Message );
 			}
 		}
 
@@ -218,7 +218,7 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { ThrowOnMissingField = true } };
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			try
@@ -228,7 +228,7 @@ namespace CsvHelper.Tests
 			}
 			catch( MissingFieldException ex )
 			{
-				Assert.AreEqual( "Field at index '2' does not exist.", ex.Message );
+				Assert.AreEqual( "Field at index '2' does not exist. You can ignore missing fields by setting MissingFieldFoundCallback to null.", ex.Message );
 			}
 		}
 
@@ -241,7 +241,7 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { ThrowOnMissingField = true } };
+			var reader = new CsvReader( parserMock );
 			reader.Read();
 
 			try
@@ -251,7 +251,7 @@ namespace CsvHelper.Tests
 			}
 			catch( MissingFieldException ex )
 			{
-				Assert.AreEqual( "Field at index '2' does not exist.", ex.Message );
+				Assert.AreEqual( "Field at index '2' does not exist. You can ignore missing fields by setting MissingFieldFoundCallback to null.", ex.Message );
 			}
 		}
 
@@ -264,7 +264,8 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock ) { Configuration = { ThrowOnMissingField = false } };
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.MissingFieldFoundCallback = null;
 			reader.Read();
 
 			Assert.IsNull( reader.GetField( 2 ) );
@@ -279,10 +280,8 @@ namespace CsvHelper.Tests
 			data.Enqueue( null );
 			var parserMock = new ParserMock( data );
 
-			var reader = new CsvReader( parserMock )
-			{
-				Configuration = { ThrowOnMissingField = false }
-			};
+			var reader = new CsvReader( parserMock );
+			reader.Configuration.MissingFieldFoundCallback = null;
 			reader.Read();
 
 			Assert.IsNull( reader.GetField<string>( 2 ) );
@@ -317,7 +316,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock( queue );
 
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.ThrowOnMissingField = true;
+			reader.Configuration.MissingFieldFoundCallback = null;
 			reader.Read();
 		}
 
@@ -343,8 +342,8 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.ThrowOnBadHeader = false;
-			csv.Configuration.ThrowOnMissingField = false;
+			csv.Configuration.HeaderValidatedCallback = null;
+			csv.Configuration.MissingFieldFoundCallback = null;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
 			var record = csv.GetRecord<TestRecord>();
@@ -378,8 +377,8 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.ThrowOnBadHeader = false;
-			csv.Configuration.ThrowOnMissingField = false;
+			csv.Configuration.HeaderValidatedCallback = null;
+			csv.Configuration.MissingFieldFoundCallback = null;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.Read();
 			var record = (TestRecord)csv.GetRecord( typeof( TestRecord ) );
@@ -409,8 +408,8 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.ThrowOnBadHeader = false;
-			csv.Configuration.ThrowOnMissingField = false;
+			csv.Configuration.HeaderValidatedCallback = null;
+			csv.Configuration.MissingFieldFoundCallback = null;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			var records = csv.GetRecords<TestRecord>().ToList();
 
@@ -445,8 +444,8 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.ThrowOnBadHeader = false;
-			csv.Configuration.ThrowOnMissingField = false;
+			csv.Configuration.HeaderValidatedCallback = null;
+			csv.Configuration.MissingFieldFoundCallback = null;
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			var records = csv.GetRecords( typeof( TestRecord ) ).ToList();
 
@@ -481,7 +480,7 @@ namespace CsvHelper.Tests
 			var csvParserMock = new ParserMock( queue );
 
 			var csv = new CsvReader( csvParserMock );
-			csv.Configuration.ThrowOnMissingField = true;
+			csv.Configuration.MissingFieldFoundCallback = null;
 			csv.Configuration.RegisterClassMap<TestRecordDuplicateHeaderNamesMap>();
 			var records = csv.GetRecords<TestRecordDuplicateHeaderNames>().ToList();
 
@@ -642,7 +641,7 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Configuration.HasHeaderRecord = false;
-			reader.Configuration.SkipEmptyRecords = true;
+			reader.Configuration.ShouldSkipRecord = record => record != null && record.All( string.IsNullOrWhiteSpace );
 
 			reader.Read();
 			Assert.AreEqual( "1", reader.Context.Record[0] );
@@ -670,7 +669,7 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Configuration.HasHeaderRecord = false;
-			reader.Configuration.ShouldSkipRecord = row => row[1] == "2";
+			reader.Configuration.ShouldSkipRecord = row => row != null && row[1] == "2";
 
 			reader.Read();
 			Assert.AreEqual( " ", reader.Context.Record[0] );
@@ -699,8 +698,8 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csvReader.Configuration.ThrowOnBadHeader = false;
-				csvReader.Configuration.ThrowOnMissingField = false;
+				csvReader.Configuration.HeaderValidatedCallback = null;
+				csvReader.Configuration.MissingFieldFoundCallback = null;
 				csvReader.Configuration.RegisterClassMap<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual( 2, records.Count() );
@@ -721,9 +720,8 @@ namespace CsvHelper.Tests
 			queue.Enqueue( null );
 			var parserMock = new ParserMock( queue );
 			var csv = new CsvReader( parserMock );
-			csv.Configuration.IgnoreReadingExceptions = true;
 			var callbackCount = 0;
-			csv.Configuration.ReadingExceptionCallback = ( ex, row ) =>
+			csv.Configuration.ReadingExceptionCallback = ( ex ) =>
 			{
 				callbackCount++;
 			};
@@ -820,7 +818,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue( new[] { "1", "2" } );
 			var parserMock = new ParserMock( queue );
 			var reader = new CsvReader( parserMock );
-			reader.Configuration.ThrowOnMissingField = false;
+			reader.Configuration.MissingFieldFoundCallback = null;
 			reader.Configuration.PrepareHeaderForMatch = header => header.Trim();
 			reader.Read();
 			reader.ReadHeader();

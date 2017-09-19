@@ -170,14 +170,9 @@ namespace CsvHelper
 		{
 			AppendField();
 
-			if( context.IsFieldBad && context.ParserConfiguration.ThrowOnBadData )
-			{
-				throw new BadDataException( context, $"Field: '{context.Field}'" );
-			}
-
 			if( context.IsFieldBad )
 			{
-				context.ParserConfiguration.BadDataCallback?.Invoke( context );
+				context.ParserConfiguration.BadDataFoundCallback?.Invoke( context );
 			}
 
 			context.IsFieldBad = false;

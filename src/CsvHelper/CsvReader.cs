@@ -141,10 +141,6 @@ namespace CsvHelper
 		/// <param name="map">The map to validate against.</param>
 		protected virtual void ValidateHeader( ClassMap map )
 		{
-			var configSettingMessage = 
-				$"If you are expecting some headers to be missing and want to turn this validation check off, " +
-				$"set the configuration {nameof( Configuration.ThrowOnBadHeader )} to false.";
-
 			foreach( var parameter in map.ParameterMaps )
 			{
 				if( parameter.ConstructorTypeMap != null )
@@ -158,10 +154,7 @@ namespace CsvHelper
 				else
 				{
 					var index = GetFieldIndex( parameter.Data.Name, 0, true );
-					if( index == -1 )
-					{
-						throw new ValidationException( context, $"Header '{parameter.Data.Name}' was not found. {configSettingMessage}" );
-					}
+					Configuration.HeaderValidatedCallback?.Invoke( index != -1, new[] { parameter.Data.Name }, 0, context );
 				}
 			}
 
@@ -173,10 +166,7 @@ namespace CsvHelper
 				}
 
 				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
-				if( index == -1 )
-				{
-					throw new ValidationException( context, $"Header '{memberMap.Data.Names[memberMap.Data.NameIndex]}' was not found. {configSettingMessage}" );
-				}
+				Configuration.HeaderValidatedCallback?.Invoke( index != -1, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
 			}
 
 			foreach( var referenceMap in map.ReferenceMaps )
@@ -204,7 +194,7 @@ namespace CsvHelper
 			{
 				context.Record = parser.Read();
 			} 
-			while( ShouldSkipRecord() );
+			while( Configuration.ShouldSkipRecord( context.Record ) );
 
 			context.CurrentIndex = -1;
 			context.HasBeenRead = true;
@@ -215,14 +205,7 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
 
-					if( context.ReaderConfiguration.IgnoreReadingExceptions )
-					{
-						context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException, this );
-					}
-					else
-					{
-						throw csvException;
-					}
+					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException );
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -243,7 +226,7 @@ namespace CsvHelper
 			{
 				context.Record = await parser.ReadAsync();
 			}
-			while( ShouldSkipRecord() );
+			while( Configuration.ShouldSkipRecord( context.Record ) );
 
 			context.CurrentIndex = -1;
 			context.HasBeenRead = true;
@@ -254,14 +237,7 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
 
-					if( context.ReaderConfiguration.IgnoreReadingExceptions )
-					{
-						context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException, this );
-					}
-					else
-					{
-						throw csvException;
-					}
+					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException );
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -332,9 +308,9 @@ namespace CsvHelper
 
 			if( index >= context.Record.Length || index < 0 )
 			{
-				if( context.ReaderConfiguration.ThrowOnMissingField && context.ReaderConfiguration.IgnoreBlankLines )
+				if( context.ReaderConfiguration.IgnoreBlankLines )
 				{
-					throw new MissingFieldException( context, $"Field at index '{index}' does not exist." );
+					context.ReaderConfiguration.MissingFieldFoundCallback?.Invoke( null, index, context );
 				}
 
 				return default( string );
@@ -549,11 +525,8 @@ namespace CsvHelper
 
 			if( index >= context.Record.Length || index < 0 )
 			{
-				if( context.ReaderConfiguration.ThrowOnMissingField )
-				{
-					context.CurrentIndex = index;
-					throw new MissingFieldException( context, $"Field at index '{index}' does not exist." );
-				}
+				context.CurrentIndex = index;
+				context.ReaderConfiguration.MissingFieldFoundCallback?.Invoke( null, index, context );
 
 				return default( T );
 			}
@@ -956,18 +929,6 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Determines whether the current record is empty.
-		/// A record is considered empty if all fields are empty.
-		/// </summary>
-		/// <returns>
-		///   <c>true</c> if [is record empty]; otherwise, <c>false</c>.
-		/// </returns>
-		public virtual bool IsRecordEmpty()
-		{
-			return IsRecordEmpty( true );
-		}
-
-		/// <summary>
 		/// Gets the record converted into <see cref="System.Type"/> T.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
@@ -979,10 +940,7 @@ namespace CsvHelper
 			if( context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord )
 			{
 				ReadHeader();
-				if( Configuration.ThrowOnBadHeader )
-				{
-					ValidateHeader<T>();
-				}
+				ValidateHeader<T>();
 
 				if( !Read() )
 				{
@@ -1036,10 +994,7 @@ namespace CsvHelper
 			if( context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord )
 			{
 				ReadHeader();
-				if( Configuration.ThrowOnBadHeader )
-				{
-					ValidateHeader( type );
-				}
+				ValidateHeader( type );
 
 				if( !Read() )
 				{
@@ -1081,10 +1036,7 @@ namespace CsvHelper
 				}
 
 				ReadHeader();
-				if( Configuration.ThrowOnBadHeader )
-				{
-					ValidateHeader<T>();
-				}
+				ValidateHeader<T>();
 			}
 
 			while( Read() )
@@ -1098,14 +1050,10 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
-					if( context.ReaderConfiguration.IgnoreReadingExceptions )
-					{
-						context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException, this );
+					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException );
 
-						continue;
-					}
-
-					throw csvHelperException;
+					// If the callback doesn't throw, keep going.
+					continue;
 				}
 
 				yield return record;
@@ -1155,10 +1103,7 @@ namespace CsvHelper
 				}
 
 				ReadHeader();
-				if( Configuration.ThrowOnBadHeader )
-				{
-					ValidateHeader( type );
-				}
+				ValidateHeader( type );
 			}
 
 			while( Read() )
@@ -1172,14 +1117,10 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
-					if( context.ReaderConfiguration.IgnoreReadingExceptions )
-					{
-						context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException, this );
+					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException );
 
-						continue;
-					}
-
-					throw csvHelperException;
+					// If the callback doesn't throw, keep going.
+					continue;
 				}
 
 				yield return record;
@@ -1229,39 +1170,6 @@ namespace CsvHelper
 			}
 		}
 
-		/// <summary>
-		/// Determines whether the current record is empty.
-		/// A record is considered empty if all fields are empty.
-		/// </summary>
-		/// <param name="checkHasBeenRead">True to check if the record 
-		/// has been read, otherwise false.</param>
-		/// <returns>
-		///   <c>true</c> if [is record empty]; otherwise, <c>false</c>.
-		/// </returns>
-		protected virtual bool IsRecordEmpty( bool checkHasBeenRead )
-		{
-			if( checkHasBeenRead )
-			{
-				CheckHasBeenRead();
-			}
-
-			if( context.Record == null )
-			{
-				return false;
-			}
-
-			return context.Record.All( GetEmtpyStringMethod() );
-		}
-
-		/// <summary>
-		/// Gets a function to test for an empty string.
-		/// </summary>
-		/// <returns>The function to test for an empty string.</returns>
-		protected virtual Func<string, bool> GetEmtpyStringMethod()
-		{ 
-			return string.IsNullOrWhiteSpace;
-		}
-	
 		/// <summary>
 		/// Gets the index of the field at name if found.
 		/// </summary>
@@ -1321,12 +1229,9 @@ namespace CsvHelper
 
 			if( name == null || index >= context.NamedIndexes[name].Count )
 			{
-				if( context.ReaderConfiguration.ThrowOnMissingField && !isTryGet )
+				if( !isTryGet )
 				{
-					// If we're in strict reading mode and the
-					// named index isn't found, throw an exception.
-					var namesJoined = $"'{string.Join( "', '", names )}'";
-					throw new MissingFieldException( context, $"Fields {namesJoined} do not exist in the CSV file." );
+					context.ReaderConfiguration.MissingFieldFoundCallback?.Invoke( names, index, context );
 				}
 
 				return -1;
@@ -1359,22 +1264,6 @@ namespace CsvHelper
 					context.NamedIndexes[name] = new List<int> { i };
 				}
 			}
-		}
-
-		/// <summary>
-		/// Checks if the current record should be skipped or not.
-		/// </summary>
-		/// <returns><c>true</c> if the current record should be skipped, <c>false</c> otherwise.</returns>
-		protected virtual bool ShouldSkipRecord()
-		{
-			if( context.Record == null )
-			{
-				return false;
-			}
-
-			return context.ReaderConfiguration.ShouldSkipRecord != null
-				? context.ReaderConfiguration.ShouldSkipRecord( context.Record ) || ( context.ReaderConfiguration.SkipEmptyRecords && IsRecordEmpty( false ) )
-				: context.ReaderConfiguration.SkipEmptyRecords && IsRecordEmpty( false );
 		}
 
 		/// <summary>

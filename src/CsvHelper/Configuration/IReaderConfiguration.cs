@@ -22,18 +22,28 @@ namespace CsvHelper.Configuration
 		bool HasHeaderRecord { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating if an exception will be
-		/// thrown if a field defined in a mapping is missing.
-		/// True to throw an exception, otherwise false.
-		/// Default is true.
+		/// Gets or sets the function that is called when a header validation check is ran. The default function
+		/// will throw a <see cref="ValidationException"/> if there is no header for a given property mapping.
+		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// </summary>
-		bool ThrowOnMissingField { get; set; }
+		Action<bool, string[], int, ReadingContext> HeaderValidatedCallback { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating if an exception should be thrown if the header is bad.
-		/// A header is bad if all the mapped members don't match.
+		/// Gets or sets the function that is called when a missing field is found. The default function will
+		/// throw a <see cref="MissingFieldException"/>. You can supply your own function to do other things
+		/// like logging the issue instead of throwing an exception.
+		/// Arguments: headerNames, index, context
 		/// </summary>
-		bool ThrowOnBadHeader { get; set; }
+		Action<string[], int, ReadingContext> MissingFieldFoundCallback { get; set; }
+
+		/// <summary>
+		/// Gets or sets the function that is called when a reading exception occurs.
+		/// The default function will re-throw the given exception. If you want to ignore
+		/// reading exceptions, you can supply your own function to do other things like
+		/// logging the issue.
+		/// Arguments: exception
+		/// </summary>
+		Action<CsvHelperException> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.
@@ -70,18 +80,8 @@ namespace CsvHelper.Configuration
 		Func<Type, ConstructorInfo> GetConstructor { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether empty rows should be skipped when reading.
-		/// A record is considered empty if all fields are empty.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if [skip empty rows]; otherwise, <c>false</c>.
-		/// </value>
-		bool SkipEmptyRecords { get; set; }
-
-		/// <summary>
 		/// Gets or sets the callback that will be called to
 		/// determine whether to skip the given record or not.
-		/// This overrides the <see cref="SkipEmptyRecords"/> setting.
 		/// </summary>
 		Func<string[], bool> ShouldSkipRecord { get; set; }
 
@@ -109,21 +109,6 @@ namespace CsvHelper.Configuration
 		/// <c>true</c> if [detect column count changes]; otherwise, <c>false</c>.
 		/// </value>
 		bool DetectColumnCountChanges { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating whether
-		/// exceptions that occur duruing reading
-		/// should be ignored. True to ignore exceptions,
-		/// otherwise false. Default is false.
-		/// </summary>
-		bool IgnoreReadingExceptions { get; set; }
-
-		/// <summary>
-		/// Gets or sets the callback that is called when a reading
-		/// exception occurs. This will only happen when
-		/// <see cref="IgnoreReadingExceptions"/> is true.
-		/// </summary>
-		Action<CsvHelperException, IReader> ReadingExceptionCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the member types that are used when auto mapping.
