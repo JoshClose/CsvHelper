@@ -696,7 +696,18 @@ namespace CsvHelper
 
 				if( memberMap.Data.IsConstantSet )
 				{
-					fieldExpression = Expression.Constant( memberMap.Data.Constant );
+					if( memberMap.Data.Constant == null )
+					{
+						fieldExpression = Expression.Constant( string.Empty );
+					}
+					else
+					{
+						fieldExpression = Expression.Constant( memberMap.Data.Constant );
+						var typeConverterExpression = Expression.Constant( Configuration.TypeConverterFactory.GetConverter( memberMap.Data.Constant.GetType() ) );
+						var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
+						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
+						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
+					}
 				}
 				else
 				{

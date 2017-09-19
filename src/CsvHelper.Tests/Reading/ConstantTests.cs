@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
 
 namespace CsvHelper.Tests.Reading
 {
@@ -27,7 +28,7 @@ namespace CsvHelper.Tests.Reading
 			var parser = new ParserMock( rows );
 
 			var csv = new CsvReader( parser );
-			csv.Configuration.RegisterClassMap<TestMap>();
+			csv.Configuration.RegisterClassMap<TestStringMap>();
 			var records = csv.GetRecords<Test>().ToList();
 
 			Assert.AreEqual( 1, records[0].Id );
@@ -56,15 +57,30 @@ namespace CsvHelper.Tests.Reading
 			Assert.IsNull( records[1].Name );
 		}
 
+		[TestMethod]
+		public void IntConstantTest()
+		{
+			using( var reader = new StringReader( "1,one\r\n" ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.RegisterClassMap<TestIntMap>();
+				var records = csv.GetRecords<Test>().ToList();
+
+				Assert.AreEqual( -1, records[0].Id );
+				Assert.AreEqual( "one", records[0].Name );
+			}
+		}
+
 		private class Test
 		{
 			public int Id { get; set; }
 			public string Name { get; set; }
 		}
 
-		private sealed class TestMap : ClassMap<Test>
+		private sealed class TestStringMap : ClassMap<Test>
 		{
-			public TestMap()
+			public TestStringMap()
 			{
 				Map( m => m.Id );
 				Map( m => m.Name ).Constant( "constant" );
@@ -77,6 +93,15 @@ namespace CsvHelper.Tests.Reading
 			{
 				Map( m => m.Id );
 				Map( m => m.Name ).Constant( null );
+			}
+		}
+
+		private sealed class TestIntMap : ClassMap<Test>
+		{
+			public TestIntMap()
+			{
+				Map( m => m.Id ).Constant( -1 );
+				Map( m => m.Name );
 			}
 		}
 	}

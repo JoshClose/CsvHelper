@@ -17,7 +17,7 @@ namespace CsvHelper.Tests.Writing
 	public class ConstantTests
 	{
 		[TestMethod]
-		public void SameValueIsWrittenForEveryRecordTest()
+		public void StringConstantTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
@@ -30,7 +30,7 @@ namespace CsvHelper.Tests.Writing
 					new Test { Id = 2, Name = "two" }
 				};
 
-				csv.Configuration.RegisterClassMap<TestMap>();
+				csv.Configuration.RegisterClassMap<TestStringMap>();
 				csv.WriteRecords( records );
 				writer.Flush();
 				stream.Position = 0;
@@ -45,6 +45,46 @@ namespace CsvHelper.Tests.Writing
 				Assert.AreEqual( expected.ToString(), result );
 			}
 		}
+		
+		[TestMethod]
+		public void NullConstantTest()
+		{
+			using( var writer = new StringWriter() )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var records = new List<Test>
+				{
+					new Test { Id = 1, Name = "one" },
+				};
+
+				csv.Configuration.RegisterClassMap<TestNullMap>();
+				csv.Configuration.HasHeaderRecord = false;
+				csv.WriteRecords( records );
+				writer.Flush();
+
+				Assert.AreEqual( "1,\r\n", writer.ToString() );
+			}
+		}
+
+		[TestMethod]
+		public void IntConstantTest()
+		{
+			using( var writer = new StringWriter() )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var records = new List<Test>
+				{
+					new Test { Id = 1, Name = "one" },
+				};
+
+				csv.Configuration.RegisterClassMap<TestIntMap>();
+				csv.Configuration.HasHeaderRecord = false;
+				csv.WriteRecords( records );
+				writer.Flush();
+
+				Assert.AreEqual( "-1,one\r\n", writer.ToString() );
+			}
+		}
 
 		private class Test
 		{
@@ -52,9 +92,27 @@ namespace CsvHelper.Tests.Writing
 			public string Name { get; set; }
 		}
 
-		private sealed class TestMap : ClassMap<Test>
+		private sealed class TestIntMap : ClassMap<Test>
 		{
-			public TestMap()
+			public TestIntMap()
+			{
+				Map( m => m.Id ).Constant( -1 );
+				Map( m => m.Name );
+			}
+		}
+
+		private sealed class TestNullMap : ClassMap<Test>
+		{
+			public TestNullMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name ).Constant( null );
+			}
+		}
+
+		private sealed class TestStringMap : ClassMap<Test>
+		{
+			public TestStringMap()
 			{
 				Map( m => m.Id );
 				Map( m => m.Name ).Constant( "constant" );
