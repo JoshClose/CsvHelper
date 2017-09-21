@@ -188,7 +188,7 @@ namespace CsvHelper
 				}
 
 				// Trim start outside of quotes.
-				if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
 				{
 					ReadSpaces();
 					fieldReader.SetFieldStart( -1 );
@@ -253,7 +253,7 @@ namespace CsvHelper
 				}
 
 				// Trim start outside of quotes.
-				if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
 				{
 					await ReadSpacesAsync();
 					fieldReader.SetFieldStart( -1 );
@@ -374,7 +374,7 @@ namespace CsvHelper
 				}
 
 				// Trim end outside of quotes.
-				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				if( !inSpaces && context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
 				{
 					inSpaces = true;
 					fieldReader.SetFieldEnd( -1 );
@@ -457,7 +457,7 @@ namespace CsvHelper
 				}
 
 				// Trim end outside of quotes.
-				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+				if( !inSpaces && context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
 				{
 					inSpaces = true;
 					fieldReader.SetFieldEnd( -1 );
@@ -539,14 +539,14 @@ namespace CsvHelper
 				context.C = fieldReader.GetChar();
 
 				// Trim start inside quotes.
-				if( inQuotes && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) && cPrev == context.ParserConfiguration.Quote )
+				if( inQuotes && context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote )
 				{
 					ReadSpaces();
 					fieldReader.SetFieldStart( -1 );
 				}
 
 				// Trim end inside of quotes.
-				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) )
+				if( !inSpaces && context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes )
 				{
 					inSpaces = true;
 					fieldReader.SetFieldEnd( -1 );
@@ -591,7 +591,7 @@ namespace CsvHelper
 				if( !inQuotes )
 				{
 					// Trim end outside of quotes.
-					if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+					if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
 					{
 						ReadSpaces();
 						fieldReader.SetFieldStart( -1 );
@@ -654,14 +654,14 @@ namespace CsvHelper
 				context.C = fieldReader.GetChar();
 
 				// Trim start inside quotes.
-				if( inQuotes && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) && cPrev == context.ParserConfiguration.Quote )
+				if( inQuotes && context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote )
 				{
 					await ReadSpacesAsync();
 					fieldReader.SetFieldStart( -1 );
 				}
 
 				// Trim end inside of quotes.
-				if( !inSpaces && context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.InsideQuotes ) )
+				if( !inSpaces && context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes )
 				{
 					inSpaces = true;
 					fieldReader.SetFieldEnd( -1 );
@@ -706,7 +706,7 @@ namespace CsvHelper
 				if( !inQuotes )
 				{
 					// Trim end outside of quotes.
-					if( context.C == ' ' && context.ParserConfiguration.TrimOptions.HasFlag( TrimOptions.Trim ) )
+					if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
 					{
 						await ReadSpacesAsync();
 						fieldReader.SetFieldStart( -1 );

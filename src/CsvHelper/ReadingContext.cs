@@ -176,22 +176,22 @@ namespace CsvHelper
 		/// <param name="cache">The caches to clear.</param>
 		public void ClearCache( Caches cache )
 		{
-			if( cache.HasFlag( Caches.NamedIndex ) )
+			if( ( cache & Caches.NamedIndex ) == Caches.NamedIndex )
 			{
 				NamedIndexCache.Clear();
 			}
 
-			if( cache.HasFlag( Caches.ReadRecord ) )
+			if( ( cache & Caches.ReadRecord ) == Caches.ReadRecord )
 			{
 				RecordFuncs.Clear();
 			}
 
-			if( cache.HasFlag( Caches.TypeConverterOptions ) )
+			if( ( cache & Caches.TypeConverterOptions ) == Caches.TypeConverterOptions )
 			{
 				TypeConverterOptionsCache.Clear();
 			}
 
-			if( cache.HasFlag( Caches.RawRecord ) )
+			if( ( cache & Caches.RawRecord ) == Caches.RawRecord )
 			{
 				RawRecordBuilder.Clear();
 			}

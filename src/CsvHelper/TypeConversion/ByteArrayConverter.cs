@@ -23,8 +23,8 @@ namespace CsvHelper.TypeConversion
 			this.options = options;
 			ValidateOptions();
 
-			HexStringPrefix = options.HasFlag( ByteArrayConverterOptions.HexDashes ) ? "-" : string.Empty;
-			ByteLength = options.HasFlag( ByteArrayConverterOptions.HexDashes ) ? (byte)3 : (byte)2;
+			HexStringPrefix = ( options & ByteArrayConverterOptions.HexDashes ) == ByteArrayConverterOptions.HexDashes ? "-" : string.Empty;
+			ByteLength = ( options & ByteArrayConverterOptions.HexDashes ) == ByteArrayConverterOptions.HexDashes ? (byte)3 : (byte)2;
 		}
 
 		/// <summary>
@@ -38,7 +38,7 @@ namespace CsvHelper.TypeConversion
 		{
 			if( value is byte[] byteArray )
 			{
-				return options.HasFlag( ByteArrayConverterOptions.Base64 )
+				return ( options & ByteArrayConverterOptions.Base64 ) == ByteArrayConverterOptions.Base64
 					? Convert.ToBase64String( byteArray )
 					: ByteArrayToHexString( byteArray );
 			}
@@ -57,7 +57,7 @@ namespace CsvHelper.TypeConversion
 		{
 			if( text != null )
 			{
-				return options.HasFlag( ByteArrayConverterOptions.Base64 )
+				return ( options & ByteArrayConverterOptions.Base64 ) == ByteArrayConverterOptions.Base64
 					? Convert.FromBase64String( text )
 					: HexStringToByteArray( text );
 			}
@@ -69,7 +69,7 @@ namespace CsvHelper.TypeConversion
 		{
 			var hexString = new StringBuilder();
 
-			if( options.HasFlag( ByteArrayConverterOptions.HexInclude0x ) )
+			if( ( options & ByteArrayConverterOptions.HexInclude0x ) == ByteArrayConverterOptions.HexInclude0x )
 			{
 				hexString.Append( "0x" );
 			}
@@ -107,7 +107,7 @@ namespace CsvHelper.TypeConversion
 
 		private void ValidateOptions()
 		{
-			if( options.HasFlag( ByteArrayConverterOptions.Base64 ) )
+			if( ( options & ByteArrayConverterOptions.Base64 ) == ByteArrayConverterOptions.Base64 )
 			{
 				if( ( options & ( ByteArrayConverterOptions.HexInclude0x | ByteArrayConverterOptions.HexDashes | ByteArrayConverterOptions.Hexadecimal ) ) != ByteArrayConverterOptions.None )
 				{

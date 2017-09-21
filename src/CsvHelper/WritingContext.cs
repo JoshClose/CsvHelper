@@ -79,12 +79,12 @@ namespace CsvHelper
 		/// <param name="cache">The caches to clear.</param>
 		public void ClearCache( Caches cache )
 		{
-			if( cache.HasFlag( Caches.TypeConverterOptions ) )
+			if( ( cache & Caches.TypeConverterOptions ) == Caches.TypeConverterOptions )
 			{
 				TypeConverterOptionsCache.Clear();
 			}
 
-			if( cache.HasFlag( Caches.WriteRecord ) )
+			if( ( cache & Caches.WriteRecord ) == Caches.WriteRecord )
 			{
 				TypeActions.Clear();
 			}

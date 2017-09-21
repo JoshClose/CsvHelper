@@ -248,7 +248,7 @@ namespace CsvHelper.Configuration
 			}
 
 			var members = new List<MemberInfo>();
-			if( configuration.MemberTypes.HasFlag( MemberTypes.Properties ) )
+			if( ( configuration.MemberTypes & MemberTypes.Properties ) == MemberTypes.Properties )
 			{
 				// We need to go up the declaration tree and find the actual type the property
 				// exists on and use that PropertyInfo instead. This is so we can get the private
@@ -262,7 +262,7 @@ namespace CsvHelper.Configuration
 				members.AddRange( properties );
 			}
 
-			if( configuration.MemberTypes.HasFlag( MemberTypes.Fields ) )
+			if( ( configuration.MemberTypes & MemberTypes.Fields ) == MemberTypes.Fields )
 			{
 				var fields = new List<MemberInfo>();
 				foreach( var field in type.GetFields( flags ) )
