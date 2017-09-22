@@ -606,14 +606,16 @@ namespace CsvHelper
 		protected virtual Action<T> GetWriteRecordAction<T>( T record )
 		{
 			var type = typeof( T );
+			var typeKey = type.FullName;
 			if( type == typeof( object ) )
 			{
 				type = record.GetType();
+				typeKey += $"|{type.FullName}";
 			}
 
-			if( !context.TypeActions.TryGetValue( type, out var action ) )
+			if( !context.TypeActions.TryGetValue( typeKey, out var action ) )
 			{
-				action = CreateWriteRecordAction( type, record );
+				context.TypeActions[typeKey] = action = CreateWriteRecordAction( type, record );
 			}
 
 			return (Action<T>)action;
@@ -737,7 +739,6 @@ namespace CsvHelper
 			}
 
 			var action = CombineDelegates( delegates );
-			context.TypeActions[type] = action;
 
 			return action;
 		}
@@ -768,7 +769,6 @@ namespace CsvHelper
 			fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
 
 			var action = Expression.Lambda<Action<T>>( fieldExpression, recordParameter ).Compile();
-			context.TypeActions[type] = action;
 
 			return action;
 		}
@@ -790,8 +790,6 @@ namespace CsvHelper
 					WriteField( val );
 				}
 			};
-
-			context.TypeActions[typeof( ExpandoObject )] = action;
 
 			return action;
 		}
@@ -823,8 +821,6 @@ namespace CsvHelper
 			}
 
 			var action = CombineDelegates( delegates );
-
-			context.TypeActions[type] = action;
 
 			return action;
 		}

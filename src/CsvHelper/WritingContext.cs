@@ -19,7 +19,7 @@ namespace CsvHelper
 		private TextWriter writer;
 		private Configuration.Configuration configuration;
 
-		internal Dictionary<Type, Delegate> TypeActions { get; } = new Dictionary<Type, Delegate>();
+		internal Dictionary<string, Delegate> TypeActions { get; } = new Dictionary<string, Delegate>();
 
 		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 
