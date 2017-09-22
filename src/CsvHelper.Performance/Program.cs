@@ -17,10 +17,8 @@ namespace CsvHelper.Performance
 			//ReadGetField();
 			//ReadGetRecords();
 
-			//WriteField( 50, 1000000);
-			//WriteRecords( 1000000 );
-
-			Console.ReadKey();
+			WriteField( 50, 1000000);
+			WriteRecords( 1000000 );
 		}
 
 		static string GetFilePath()

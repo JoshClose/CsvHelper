@@ -12,6 +12,7 @@
 		<FileVersion>3.0.0.0</FileVersion>
 		<AssemblyVersion>3.0.0.0</AssemblyVersion>
 		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>7.1</LangVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AssemblyName>CsvHelper</AssemblyName>
 

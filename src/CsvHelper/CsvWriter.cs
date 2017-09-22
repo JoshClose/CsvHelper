@@ -395,19 +395,18 @@ namespace CsvHelper
 		/// <param name="record">The record to write.</param>
 		public virtual void WriteRecord<T>( T record )
 		{
-			var dynamicRecord = record as IDynamicMetaObjectProvider;
-			if( dynamicRecord != null )
+			if( record is IDynamicMetaObjectProvider dynamicRecord )
 			{
 				if( context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten )
 				{
 					WriteDynamicHeader( dynamicRecord );
-				    NextRecord();
+					NextRecord();
 				}
 			}
 
 			try
 			{
-				GetWriteRecordAction( record ).DynamicInvoke( record );
+				GetWriteRecordAction( record ).Invoke( record );
 				context.HasHeaderBeenWritten = true;
             }
             catch( Exception ex )
@@ -446,13 +445,12 @@ namespace CsvHelper
 				{
 					recordType = record.GetType();
 
-					var dynamicObject = record as IDynamicMetaObjectProvider;
-					if( dynamicObject != null )
+					if( record is IDynamicMetaObjectProvider dynamicObject )
 					{
 						if( context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten )
 						{
 							WriteDynamicHeader( dynamicObject );
-                            NextRecord();
+							NextRecord();
 						}
 					}
 					else
@@ -463,13 +461,13 @@ namespace CsvHelper
 						if( context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive )
 						{
 							WriteHeader( recordType );
-                            NextRecord();
+							NextRecord();
 						}
 					}
 
-                    try
+					try
 					{
-						GetWriteRecordAction( record ).DynamicInvoke( record );
+						GetWriteRecordAction( record ).Invoke( record );
                     }
                     catch( TargetInvocationException ex )
 					{
@@ -605,7 +603,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the custom class being written.</typeparam>
 		/// <param name="record"></param>
 		/// <returns>The action delegate.</returns>
-		protected virtual Delegate GetWriteRecordAction<T>( T record )
+		protected virtual Action<T> GetWriteRecordAction<T>( T record )
 		{
 			var type = typeof( T );
 			if( type == typeof( object ) )
@@ -613,13 +611,12 @@ namespace CsvHelper
 				type = record.GetType();
 			}
 
-			Delegate action;
-			if( !context.TypeActions.TryGetValue( type, out action ) )
+			if( !context.TypeActions.TryGetValue( type, out var action ) )
 			{
 				action = CreateWriteRecordAction( type, record );
 			}
 
-			return action;
+			return (Action<T>)action;
 		}
 
 		/// <summary>
@@ -628,18 +625,17 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The type of the custom class being written.</param>
 		/// <param name="record">The record that will be written.</param>
-		protected virtual Delegate CreateWriteRecordAction<T>( Type type, T record )
+		/// <typeparam name="T">The type of the record being written.</typeparam>
+		protected virtual Action<T> CreateWriteRecordAction<T>( Type type, T record )
 		{
-			var expandoObject = record as ExpandoObject;
-			if( expandoObject != null )
+			if( record is ExpandoObject expandoObject )
 			{
-				return CreateActionForExpandoObject( expandoObject );
+				return CreateActionForExpandoObject<T>( expandoObject );
 			}
-			
-			var dynamicObject = record as IDynamicMetaObjectProvider;
-			if( dynamicObject != null )
+
+			if( record is IDynamicMetaObjectProvider dynamicObject )
 			{
-				return CreateActionForDynamic( dynamicObject );
+				return CreateActionForDynamic<T>( dynamicObject );
 			}
 
 			if( context.WriterConfiguration.Maps[type] == null )
@@ -650,19 +646,20 @@ namespace CsvHelper
 
 			if( type.GetTypeInfo().IsPrimitive )
 			{
-				return CreateActionForPrimitive( type );
+				return CreateActionForPrimitive<T>( type );
 			}
 
-			return CreateActionForObject( type );
+			return CreateActionForObject<T>( type );
 		}
 
 		/// <summary>
 		/// Creates the action for an object.
 		/// </summary>
 		/// <param name="type">The type of object to create the action for.</param>
-		protected virtual Delegate CreateActionForObject( Type type )
+		protected virtual Action<T> CreateActionForObject<T>( Type type )
 		{
-			var recordParameter = Expression.Parameter( type, "record" );
+			var recordParameter = Expression.Parameter( typeof( T ), "record" );
+			var recordParameterConverted = Expression.Convert( recordParameter, type );
 
 			// Get a list of all the members so they will
 			// be sorted properly.
@@ -674,16 +671,16 @@ namespace CsvHelper
 				throw new WriterException( context, $"No properties are mapped for type '{type.FullName}'." );
 			}
 
-			var delegates = new List<Delegate>();
+			var delegates = new List<Action<T>>();
 
 			foreach( var memberMap in members )
 			{
 				if( memberMap.Data.WritingConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameter );
+					Expression exp = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameterConverted );
 					exp = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, exp );
-					delegates.Add( Expression.Lambda( typeof( Action<> ).MakeGenericType( type ), exp, recordParameter ).Compile() );
+					delegates.Add( Expression.Lambda<Action<T>>( exp, recordParameter ).Compile() );
 					continue;
 				}
 
@@ -717,7 +714,7 @@ namespace CsvHelper
 						continue;
 					}
 
-					fieldExpression = CreateMemberExpression( recordParameter, context.WriterConfiguration.Maps[type], memberMap );
+					fieldExpression = CreateMemberExpression( recordParameterConverted, context.WriterConfiguration.Maps[type], memberMap );
 
 					var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
 					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
@@ -729,15 +726,14 @@ namespace CsvHelper
 
 					if( type.GetTypeInfo().IsClass )
 					{
-						var areEqualExpression = Expression.Equal( recordParameter, Expression.Constant( null ) );
+						var areEqualExpression = Expression.Equal( recordParameterConverted, Expression.Constant( null ) );
 						fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 					}
 				}
 
 				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
 
-				var actionType = typeof( Action<> ).MakeGenericType( type );
-				delegates.Add( Expression.Lambda( actionType, writeFieldMethodCall, recordParameter ).Compile() );
+				delegates.Add( Expression.Lambda<Action<T>>( writeFieldMethodCall, recordParameter ).Compile() );
 			}
 
 			var action = CombineDelegates( delegates );
@@ -750,9 +746,9 @@ namespace CsvHelper
 		/// Creates the action for a primitive.
 		/// </summary>
 		/// <param name="type">The type of primitive to create the action for.</param>
-		protected virtual Delegate CreateActionForPrimitive( Type type )
+		protected virtual Action<T> CreateActionForPrimitive<T>( Type type )
 		{
-			var recordParameter = Expression.Parameter( type, "record" );
+			var recordParameter = Expression.Parameter( typeof( T ), "record" );
 
 			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
 
@@ -771,8 +767,7 @@ namespace CsvHelper
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
 
-			var actionType = typeof( Action<> ).MakeGenericType( type );
-			var action = Expression.Lambda( actionType, fieldExpression, recordParameter ).Compile();
+			var action = Expression.Lambda<Action<T>>( fieldExpression, recordParameter ).Compile();
 			context.TypeActions[type] = action;
 
 			return action;
@@ -785,9 +780,9 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="obj">The ExpandoObject.</param>
 		/// <returns></returns>
-		protected virtual Delegate CreateActionForExpandoObject( ExpandoObject obj )
+		protected virtual Action<T> CreateActionForExpandoObject<T>( ExpandoObject obj )
 		{
-			Action<object> action = record =>
+			Action<T> action = record =>
 			{
 				var dict = (IDictionary<string, object>)record;
 				foreach( var val in dict.Values )
@@ -805,17 +800,17 @@ namespace CsvHelper
 		/// Creates the action for a dynamic object.
 		/// </summary>
 		/// <param name="provider">The dynamic object.</param>
-		protected virtual Delegate CreateActionForDynamic( IDynamicMetaObjectProvider provider )
+		protected virtual Action<T> CreateActionForDynamic<T>( IDynamicMetaObjectProvider provider )
 		{
 			// http://stackoverflow.com/a/14011692/68499
 
 			var type = provider.GetType();
-			var parameterExpression = Expression.Parameter( typeof( object ), "record" );
+			var parameterExpression = Expression.Parameter( typeof( T ), "record" );
 
 			var metaObject = provider.GetMetaObject( parameterExpression );
 			var memberNames = metaObject.GetDynamicMemberNames();
 
-			var delegates = new List<Delegate>();
+			var delegates = new List<Action<T>>();
 			foreach( var memberName in memberNames )
 			{
 				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, memberName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
@@ -823,7 +818,7 @@ namespace CsvHelper
 				var fieldExpression = getMemberMetaObject.Expression;
 				fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteField ), new[] { typeof( object ) }, fieldExpression );
 				fieldExpression = Expression.Block( fieldExpression, Expression.Label( CallSiteBinder.UpdateLabel ) );
-				var lambda = Expression.Lambda( fieldExpression, parameterExpression );
+				var lambda = Expression.Lambda<Action<T>>( fieldExpression, parameterExpression );
 				delegates.Add( lambda.Compile() );
 			}
 
@@ -841,9 +836,9 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="delegates">The delegates to combine.</param>
 		/// <returns>A multicast delegate combined from the given delegates.</returns>
-		protected virtual Delegate CombineDelegates( IEnumerable<Delegate> delegates )
+		protected virtual Action<T> CombineDelegates<T>( IEnumerable<Action<T>> delegates )
 		{
-			return delegates.Aggregate<Delegate, Delegate>( null, Delegate.Combine );
+			return (Action<T>)delegates.Aggregate<Delegate, Delegate>( null, Delegate.Combine );
 		}
 
 		/// <summary>
@@ -858,8 +853,7 @@ namespace CsvHelper
 				// Ignored members.
 				memberMap.Data.Ignore;
 
-			var property = memberMap.Data.Member as PropertyInfo;
-			if( property != null )
+			if( memberMap.Data.Member is PropertyInfo property )
 			{
 				cantWrite = cantWrite ||
 				// Properties that don't have a public getter
