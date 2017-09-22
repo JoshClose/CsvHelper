@@ -419,7 +419,7 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>
-		public virtual void WriteRecords( IEnumerable records )
+		public virtual void WriteRecords<T>( IEnumerable<T> records )
 		{
 			Type recordType = null;
 			try

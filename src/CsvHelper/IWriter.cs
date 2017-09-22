@@ -8,6 +8,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace CsvHelper
 {
@@ -42,6 +43,6 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>
-		void WriteRecords( IEnumerable records );
+		void WriteRecords<T>( IEnumerable<T> records );
 	}
 }
