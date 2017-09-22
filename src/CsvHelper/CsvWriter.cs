@@ -406,7 +406,7 @@ namespace CsvHelper
 
 			try
 			{
-				GetWriteRecordAction( record ).Invoke( record );
+				GetWriteRecordAction( record )( record );
 				context.HasHeaderBeenWritten = true;
             }
             catch( Exception ex )
@@ -467,7 +467,7 @@ namespace CsvHelper
 
 					try
 					{
-						GetWriteRecordAction( record ).Invoke( record );
+						GetWriteRecordAction( record )( record );
                     }
                     catch( TargetInvocationException ex )
 					{
