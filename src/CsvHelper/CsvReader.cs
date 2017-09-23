@@ -22,7 +22,8 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvReader : IReader
 	{
-		private ReadingContext context;
+		// TODO: This need to be private.
+		internal ReadingContext context;
 		private bool disposed;
 		private IParser parser;
 
@@ -1128,6 +1129,52 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Enumerates the records filling the given record instance with row data.
+		/// The record instance is re-used and not cleared on each enumeration. 
+		/// This only works for streaming rows. If any methods are call on the projection
+		/// that force the evaluation of the IEnumerable, such as ToList(), the entire list
+		/// will contain the same instance of the record, which is the last row.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <param name="record">The record to fill each enumeration.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
+		public virtual IEnumerable<T> EnumerateRecords<T>( T record )
+		{
+			// Don't need to check if it's been read
+			// since we're doing the reading ourselves.
+
+			if( context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null )
+			{
+				if( !Read() )
+				{
+					yield break;
+				}
+
+				ReadHeader();
+				ValidateHeader<T>();
+			}
+
+			while( Read() )
+			{
+				try
+				{
+					FillRecord( record );
+				}
+				catch( Exception ex )
+				{
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+
+					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException );
+
+					// If the callback doesn't throw, keep going.
+					continue;
+				}
+
+				yield return record;
+			}
+		}
+
+		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <filterpriority>2</filterpriority>
@@ -1179,7 +1226,7 @@ namespace CsvHelper
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
-		protected virtual int GetFieldIndex( string name, int index = 0, bool isTryGet = false )
+		public virtual int GetFieldIndex( string name, int index = 0, bool isTryGet = false )
 		{
 			return GetFieldIndex( new[] { name }, index, isTryGet );
 		}
@@ -1193,7 +1240,7 @@ namespace CsvHelper
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
-		protected virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false )
+		public virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false )
 		{
 			if( names == null )
 			{
@@ -1312,6 +1359,23 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Fills the given record's members.
+		/// </summary>
+		/// <typeparam name="T">Type of the record.</typeparam>
+		/// <param name="record">The record to fill.</param>
+		protected virtual void FillRecord<T>( T record )
+		{
+			try
+			{
+				GetFillRecordAction<T>()( record );
+			}
+			catch( TargetInvocationException ex )
+			{
+				throw ex.InnerException;
+			}
+		}
+
+		/// <summary>
 		/// Gets the function delegate used to populate
 		/// a custom class object with data from the reader.
 		/// </summary>
@@ -1323,7 +1387,7 @@ namespace CsvHelper
 			var recordType = typeof( T );
 			CreateReadRecordFunc( recordType );
 
-			return (Func<T>)context.RecordFuncs[recordType];
+			return (Func<T>)context.CreateRecordFuncs[recordType];
 		}
 
 		/// <summary>
@@ -1337,7 +1401,20 @@ namespace CsvHelper
 		{
 			CreateReadRecordFunc( recordType );
 
-			return context.RecordFuncs[recordType];
+			return context.CreateRecordFuncs[recordType];
+		}
+
+		/// <summary>
+		/// Gets the action delegate used to fill a custom class object's members with data from the reader.
+		/// </summary>
+		/// <typeparam name="T">The record type.</typeparam>
+		protected virtual Action<T> GetFillRecordAction<T>()
+		{
+			var recordType = typeof( T );
+
+			CreateFillRecordAction<T>();
+
+			return (Action<T>)context.FillRecordActions[recordType];
 		}
 
 		/// <summary>
@@ -1347,7 +1424,7 @@ namespace CsvHelper
 		/// <param name="recordType">Type of the record.</param>
 		protected virtual void CreateReadRecordFunc( Type recordType )
 		{
-			if( context.RecordFuncs.ContainsKey( recordType ) )
+			if( context.CreateRecordFuncs.ContainsKey( recordType ) )
 			{
 				return;
 			}
@@ -1414,7 +1491,7 @@ namespace CsvHelper
 			}
 
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
-			context.RecordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
+			context.CreateRecordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
 		}
 
 		/// <summary>
@@ -1438,7 +1515,7 @@ namespace CsvHelper
 			fieldExpression = Expression.Convert( fieldExpression, recordType );
 	
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
-			context.RecordFuncs[recordType] = Expression.Lambda( funcType, fieldExpression ).Compile();
+			context.CreateRecordFuncs[recordType] = Expression.Lambda( funcType, fieldExpression ).Compile();
 		}
 
 		/// <summary>
@@ -1515,7 +1592,16 @@ namespace CsvHelper
 		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
 		protected virtual void CreateMemberBindingsForMapping( ClassMap mapping, Type recordType, List<MemberBinding> bindings )
 		{
-			AddMemberBindings( mapping.MemberMaps, bindings );
+			foreach( var memberMap in mapping.MemberMaps )
+			{
+				var fieldExpression = CreateFieldExpression( memberMap );
+				if( fieldExpression == null )
+				{
+					continue;
+				}
+
+				bindings.Add( Expression.Bind( memberMap.Data.Member, fieldExpression ) );
+			}
 
 			foreach( var referenceMap in mapping.ReferenceMaps )
 			{
@@ -1550,116 +1636,188 @@ namespace CsvHelper
 				bindings.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
 			}
 		}
+		
+		/// <summary>
+		/// Creates the action delegate used to fill a record's members with data from the reader.
+		/// </summary>
+		/// <typeparam name="T">The record type.</typeparam>
+		protected virtual void CreateFillRecordAction<T>()
+		{
+			var recordType = typeof( T );
+
+			if( context.FillRecordActions.ContainsKey( recordType ) )
+			{
+				return;
+			}
+
+			if( context.ReaderConfiguration.Maps[recordType] == null )
+			{
+				context.ReaderConfiguration.Maps.Add( context.ReaderConfiguration.AutoMap( recordType ) );
+			}
+
+			var mapping = context.ReaderConfiguration.Maps[recordType];
+
+			var recordTypeParameter = Expression.Parameter( recordType, "record" );
+			var memberAssignments = new List<Expression>();
+
+			foreach( var memberMap in mapping.MemberMaps )
+			{
+				var fieldExpression = CreateFieldExpression( memberMap );
+				if( fieldExpression == null )
+				{
+					continue;
+				}
+
+				var memberTypeParameter = Expression.Parameter( memberMap.Data.Member.MemberType(), "member" );
+				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, memberMap.Data.Member );
+				var memberAssignment = Expression.Assign( memberAccess, fieldExpression );
+				memberAssignments.Add( memberAssignment );
+			}
+
+			foreach( var referenceMap in mapping.ReferenceMaps )
+			{
+				if( !CanRead( referenceMap ) )
+				{
+					continue;
+				}
+
+				var referenceBindings = new List<MemberBinding>();
+				CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
+
+				Expression referenceBody;
+				var constructorExpression = referenceMap.Data.Mapping.Constructor;
+				if( constructorExpression is NewExpression )
+				{
+					referenceBody = Expression.MemberInit( (NewExpression)constructorExpression, referenceBindings );
+				}
+				else if( constructorExpression is MemberInitExpression )
+				{
+					var memberInitExpression = (MemberInitExpression)constructorExpression;
+					var defaultBindings = memberInitExpression.Bindings.ToList();
+					defaultBindings.AddRange( referenceBindings );
+					referenceBody = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
+				}
+				else
+				{
+					// This is in case an IContractResolver is being used.
+					var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
+					referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
+				}
+
+				var memberTypeParameter = Expression.Parameter( referenceMap.Data.Member.MemberType(), "referenceMember" );
+				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, referenceMap.Data.Member );
+				var memberAssignment = Expression.Assign( memberAccess, referenceBody );
+				memberAssignments.Add( memberAssignment );
+			}
+
+			var body = Expression.Block( memberAssignments );
+			context.FillRecordActions[recordType] = Expression.Lambda<Action<T>>( body, recordTypeParameter ).Compile();
+		}
 
 		/// <summary>
-		/// Adds a <see cref="MemberBinding"/> for each member for it's field.
+		/// Creates an expression the represents getting the field for the given
+		/// member and converting it to the member's type.
 		/// </summary>
-		/// <param name="members">The members to add bindings for.</param>
-		/// <param name="bindings">The bindings that will be added to from the members.</param>
-		protected virtual void AddMemberBindings( MemberMapCollection members, List<MemberBinding> bindings )
+		/// <param name="memberMap">The mapping for the member.</param>
+		protected virtual Expression CreateFieldExpression( MemberMap memberMap )
 		{
-			foreach( var memberMap in members )
+			if( memberMap.Data.ReadingConvertExpression != null )
 			{
-				if( memberMap.Data.ReadingConvertExpression != null )
-				{
-					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( memberMap.Data.ReadingConvertExpression, Expression.Constant( this ) );
-					exp = Expression.Convert( exp, memberMap.Data.Member.MemberType() );
-					bindings.Add( Expression.Bind( memberMap.Data.Member, exp ) );
-					continue;
-				}
-
-				if( !CanRead( memberMap ) )
-				{
-					continue;
-				}
-
-				if( memberMap.Data.TypeConverter == null )
-				{
-					// Skip if the type isn't convertible.
-					continue;
-				}
-
-				int index;
-				if( memberMap.Data.IsNameSet || context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
-				{
-					// Use the name.
-					index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex );
-					if( index == -1 )
-					{
-						// Skip if the index was not found.
-						continue;
-					}
-				}
-				else
-				{
-					// Use the index.
-					index = memberMap.Data.Index;
-				}
-
-				// Get the field using the field index.
-				var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
-				Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
-
-				// Validate the field.
-				if( memberMap.Data.ValidateExpression != null )
-				{
-					var validateExpression = Expression.IsFalse( Expression.Invoke( memberMap.Data.ValidateExpression, fieldExpression ) );
-					var validationExceptionConstructor = typeof( ValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
-					var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( context ) ) );
-					fieldExpression = Expression.Block(
-						// If the validate method returns false, throw an exception.
-						Expression.IfThen( validateExpression, throwExpression ),
-						fieldExpression
-					);
-				}
-
-				// Convert the field.
-				var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-				memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
-				memberMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
-
-				// Create type converter expression.
-				Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
-				typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, memberMap.Data.Member.MemberType() );
-
-				if( memberMap.Data.IsConstantSet )
-				{
-					fieldExpression = Expression.Convert( Expression.Constant( memberMap.Data.Constant ), memberMap.Data.Member.MemberType() );
-				}
-				else if( memberMap.Data.IsDefaultSet )
-				{
-					// Create default value expression.
-					Expression defaultValueExpression;
-					if( memberMap.Data.Member.MemberType() != typeof( string ) && memberMap.Data.Default != null && memberMap.Data.Default.GetType() == typeof( string ) )
-					{
-						// The default is a string but the member type is not. Use a converter.
-						defaultValueExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, Expression.Constant( memberMap.Data.Default ), Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
-					}
-					else
-					{
-						// The member type and default type match.
-						defaultValueExpression = Expression.Constant( memberMap.Data.Default );
-					}
-
-					defaultValueExpression = Expression.Convert( defaultValueExpression, memberMap.Data.Member.MemberType() );
-
-					// If null, use string.Empty.
-					var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
-
-					// Check if the field is an empty string.
-					var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( coalesceExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
-
-					// Use a default value if the field is an empty string.
-					fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
-				}
-				else
-				{
-					fieldExpression = typeConverterFieldExpression;
-				}
-
-				bindings.Add( Expression.Bind( memberMap.Data.Member, fieldExpression ) );
+				// The user is providing the expression to do the conversion.
+				Expression exp = Expression.Invoke( memberMap.Data.ReadingConvertExpression, Expression.Constant( this ) );
+				return Expression.Convert( exp, memberMap.Data.Member.MemberType() );
 			}
+
+			if( !CanRead( memberMap ) )
+			{
+				return null;
+			}
+
+			if( memberMap.Data.TypeConverter == null )
+			{
+				// Skip if the type isn't convertible.
+				return null;
+			}
+
+			int index;
+			if( memberMap.Data.IsNameSet || context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
+			{
+				// Use the name.
+				index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex );
+				if( index == -1 )
+				{
+					// Skip if the index was not found.
+					return null;
+				}
+			}
+			else
+			{
+				// Use the index.
+				index = memberMap.Data.Index;
+			}
+
+			// Get the field using the field index.
+			var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
+			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
+
+			// Validate the field.
+			if( memberMap.Data.ValidateExpression != null )
+			{
+				var validateExpression = Expression.IsFalse( Expression.Invoke( memberMap.Data.ValidateExpression, fieldExpression ) );
+				var validationExceptionConstructor = typeof( ValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
+				var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( context ) ) );
+				fieldExpression = Expression.Block(
+					// If the validate method returns false, throw an exception.
+					Expression.IfThen( validateExpression, throwExpression ),
+					fieldExpression
+				);
+			}
+
+			// Convert the field.
+			var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
+			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+			memberMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
+
+			// Create type converter expression.
+			Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
+			typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, memberMap.Data.Member.MemberType() );
+
+			if( memberMap.Data.IsConstantSet )
+			{
+				fieldExpression = Expression.Convert( Expression.Constant( memberMap.Data.Constant ), memberMap.Data.Member.MemberType() );
+			}
+			else if( memberMap.Data.IsDefaultSet )
+			{
+				// Create default value expression.
+				Expression defaultValueExpression;
+				if( memberMap.Data.Member.MemberType() != typeof( string ) && memberMap.Data.Default != null && memberMap.Data.Default.GetType() == typeof( string ) )
+				{
+					// The default is a string but the member type is not. Use a converter.
+					defaultValueExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, Expression.Constant( memberMap.Data.Default ), Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
+				}
+				else
+				{
+					// The member type and default type match.
+					defaultValueExpression = Expression.Constant( memberMap.Data.Default );
+				}
+
+				defaultValueExpression = Expression.Convert( defaultValueExpression, memberMap.Data.Member.MemberType() );
+
+				// If null, use string.Empty.
+				var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
+
+				// Check if the field is an empty string.
+				var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( coalesceExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
+
+				// Use a default value if the field is an empty string.
+				fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
+			}
+			else
+			{
+				fieldExpression = typeConverterFieldExpression;
+			}
+
+			return fieldExpression;
 		}
 
 		/// <summary>

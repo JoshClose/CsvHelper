@@ -30,7 +30,9 @@ namespace CsvHelper
 
 		internal Dictionary<string, Tuple<string, int>> NamedIndexCache { get; } = new Dictionary<string, Tuple<string, int>>();
 
-		internal Dictionary<Type, Delegate> RecordFuncs = new Dictionary<Type, Delegate>();
+		internal Dictionary<Type, Delegate> CreateRecordFuncs = new Dictionary<Type, Delegate>();
+
+		internal Dictionary<Type, Delegate> FillRecordActions = new Dictionary<Type, Delegate>();
 
 		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 
@@ -183,7 +185,7 @@ namespace CsvHelper
 
 			if( ( cache & Caches.ReadRecord ) == Caches.ReadRecord )
 			{
-				RecordFuncs.Clear();
+				CreateRecordFuncs.Clear();
 			}
 
 			if( ( cache & Caches.TypeConverterOptions ) == Caches.TypeConverterOptions )

@@ -67,7 +67,19 @@ namespace CsvHelper
 		/// should not be used when using this.
 		/// </summary>
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
-		/// <returns>An <see cref="IList{Object}" /> of records.</returns>
+		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
 		IEnumerable<object> GetRecords( Type type );
+
+		/// <summary>
+		/// Enumerates the records filling the given record instance with row data.
+		/// The record instance is re-used and not cleared on each enumeration. 
+		/// This only works for streaming rows. If any methods are call on the projection
+		/// that force the evaluation of the IEnumerable, such as ToList(), the entire list
+		/// will contain the same instance of the record, which is the last row.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <param name="record">The record to fill each enumeration.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
+		IEnumerable<T> EnumerateRecords<T>( T record );
 	}
 }
