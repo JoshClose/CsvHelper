@@ -11,7 +11,7 @@
 		<Version>3.0.0-RC02</Version>
 		<FileVersion>3.0.0.0</FileVersion>
 		<AssemblyVersion>3.0.0.0</AssemblyVersion>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
 		<LangVersion>7.1</LangVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<AssemblyName>CsvHelper</AssemblyName>
@@ -33,14 +33,18 @@
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <None Remove="CsvFieldReader.cs.bak" />
-	  <None Remove="CsvParser.cs.bak" />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
+		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+		<Reference Include="Microsoft.CSharp" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
-		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+		<None Remove="CsvFieldReader.cs.bak" />
+		<None Remove="CsvParser.cs.bak" />
 	</ItemGroup>
 
 	<ItemGroup>
