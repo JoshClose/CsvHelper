@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using System.Dynamic;
 using System.Threading.Tasks;
+using CsvHelper.Expressions;
 
 namespace CsvHelper
 {
@@ -22,6 +23,7 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvReader : IReader
 	{
+		private readonly RecordManager recordManager;
 		// TODO: This need to be private.
 		internal ReadingContext context;
 		private bool disposed;
@@ -79,6 +81,7 @@ namespace CsvHelper
 		{
 			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
 			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( "For ICsvParser to be used in CsvReader, ICSvParser.Context must also implement IReaderContext." );
+			recordManager = new RecordManager( this );
 		}
 
 		/// <summary>
@@ -952,7 +955,7 @@ namespace CsvHelper
 			T record;
 			try
 			{
-				record = CreateRecord<T>();
+				record = recordManager.Create<T>();
 			}
 			catch( Exception ex )
 			{
@@ -1006,7 +1009,7 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = CreateRecord( type );
+				record = recordManager.Create( type );
 			}
 			catch( Exception ex )
 			{
@@ -1045,7 +1048,7 @@ namespace CsvHelper
 				T record;
 				try
 				{
-					record = CreateRecord<T>();
+					record = recordManager.Create<T>();
 				}
 				catch( Exception ex )
 				{
@@ -1112,7 +1115,7 @@ namespace CsvHelper
 				object record;
 				try
 				{
-					record = CreateRecord( type );
+					record = recordManager.Create( type );
 				}
 				catch( Exception ex )
 				{
@@ -1158,7 +1161,7 @@ namespace CsvHelper
 			{
 				try
 				{
-					FillRecord( record );
+					recordManager.Hydrate( record );
 				}
 				catch( Exception ex )
 				{
@@ -1171,49 +1174,6 @@ namespace CsvHelper
 				}
 
 				yield return record;
-			}
-		}
-
-		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		/// <filterpriority>2</filterpriority>
-		public void Dispose()
-		{
-			Dispose( !context.LeaveOpen );
-			GC.SuppressFinalize( this );
-		}
-
-		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		/// <param name="disposing">True if the instance needs to be disposed of.</param>
-		protected virtual void Dispose( bool disposing )
-		{
-			if( disposed )
-			{
-				return;
-			}
-
-			if( disposing )
-			{
-				parser?.Dispose();
-			}
-
-			parser = null;
-			context = null;
-			disposed = true;
-		}
-
-		/// <summary>
-		/// Checks if the reader has been read yet.
-		/// </summary>
-		/// <exception cref="ReaderException" />
-		protected virtual void CheckHasBeenRead()
-		{
-			if( !context.HasBeenRead )
-			{
-				throw new ReaderException( context, "You must call read on the reader before accessing its data." );
 			}
 		}
 
@@ -1290,543 +1250,12 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Parses the named indexes from the header record.
-		/// </summary>
-		protected virtual void ParseNamedIndexes()
-		{
-			if( context.HeaderRecord == null )
-			{
-				throw new ReaderException( context, "No header record was found." );
-			}
-
-			for( var i = 0; i < context.HeaderRecord.Length; i++ )
-			{
-				var name = context.HeaderRecord[i];
-				if( context.NamedIndexes.ContainsKey( name ) )
-				{
-					context.NamedIndexes[name].Add( i );
-				}
-				else
-				{
-					context.NamedIndexes[name] = new List<int> { i };
-				}
-			}
-		}
-
-		/// <summary>
-		/// Creates the record for the given type.
-		/// </summary>
-		/// <typeparam name="T">The type of record to create.</typeparam>
-		/// <returns>The created record.</returns>
-		protected virtual T CreateRecord<T>() 
-		{
-			// If the type is an object, a dynamic
-			// object will be created. That is the
-			// only way we can dynamically add properties
-			// to a type of object.
-			if( typeof( T ) == typeof( object ) )
-			{
-				return CreateDynamic();
-			}
-
-			return GetReadRecordFunc<T>()();
-		}
-
-		/// <summary>
-		/// Creates the record for the given type.
-		/// </summary>
-		/// <param name="type">The type of record to create.</param>
-		/// <returns>The created record.</returns>
-		protected virtual object CreateRecord( Type type )
-		{
-			// If the type is an object, a dynamic
-			// object will be created. That is the
-			// only way we can dynamically add properties
-			// to a type of object.
-			if( type == typeof( object ) )
-			{
-				return CreateDynamic();
-			}
-
-			try
-			{
-				return GetReadRecordFunc( type ).DynamicInvoke();
-			}
-			catch( TargetInvocationException ex )
-			{
-				throw ex.InnerException;
-			}
-		}
-
-		/// <summary>
-		/// Fills the given record's members.
-		/// </summary>
-		/// <typeparam name="T">Type of the record.</typeparam>
-		/// <param name="record">The record to fill.</param>
-		protected virtual void FillRecord<T>( T record )
-		{
-			try
-			{
-				GetFillRecordAction<T>()( record );
-			}
-			catch( TargetInvocationException ex )
-			{
-				throw ex.InnerException;
-			}
-		}
-
-		/// <summary>
-		/// Gets the function delegate used to populate
-		/// a custom class object with data from the reader.
-		/// </summary>
-		/// <typeparam name="T">The <see cref="System.Type"/> of object that is created
-		/// and populated.</typeparam>
-		/// <returns>The function delegate.</returns>
-		protected virtual Func<T> GetReadRecordFunc<T>() 
-		{
-			var recordType = typeof( T );
-			CreateReadRecordFunc( recordType );
-
-			return (Func<T>)context.CreateRecordFuncs[recordType];
-		}
-
-		/// <summary>
-		/// Gets the function delegate used to populate
-		/// a custom class object with data from the reader.
-		/// </summary>
-		/// <param name="recordType">The <see cref="System.Type"/> of object that is created
-		/// and populated.</param>
-		/// <returns>The function delegate.</returns>
-		protected virtual Delegate GetReadRecordFunc( Type recordType )
-		{
-			CreateReadRecordFunc( recordType );
-
-			return context.CreateRecordFuncs[recordType];
-		}
-
-		/// <summary>
-		/// Gets the action delegate used to fill a custom class object's members with data from the reader.
-		/// </summary>
-		/// <typeparam name="T">The record type.</typeparam>
-		protected virtual Action<T> GetFillRecordAction<T>()
-		{
-			var recordType = typeof( T );
-
-			CreateFillRecordAction<T>();
-
-			return (Action<T>)context.FillRecordActions[recordType];
-		}
-
-		/// <summary>
-		/// Creates the read record func for the given type if it
-		/// doesn't already exist.
-		/// </summary>
-		/// <param name="recordType">Type of the record.</param>
-		protected virtual void CreateReadRecordFunc( Type recordType )
-		{
-			if( context.CreateRecordFuncs.ContainsKey( recordType ) )
-			{
-				return;
-			}
-
-			if( context.ReaderConfiguration.Maps[recordType] == null )
-			{
-				context.ReaderConfiguration.Maps.Add( context.ReaderConfiguration.AutoMap( recordType ) );
-			}
-
-			if( recordType.GetTypeInfo().IsPrimitive )
-			{
-				CreateFuncForPrimitive( recordType );
-			}
-			else
-			{
-				CreateFuncForObject( recordType );
-			}
-		}
-
-		/// <summary>
-		/// Creates the function for an object.
-		/// </summary>
-		/// <param name="recordType">The type of object to create the function for.</param>
-		protected virtual void CreateFuncForObject( Type recordType )
-		{
-			var map = context.ReaderConfiguration.Maps[recordType];
-			Expression body;
-
-			if( map.ParameterMaps.Count > 0 )
-			{
-				// This is a constructor paramter type.
-				var arguments = new List<Expression>();
-				CreateConstructorArgumentExpressionsForMapping( map, arguments );
-
-				body = Expression.New( Configuration.GetConstructor( map.ClassType ), arguments );
-			}
-			else
-			{
-				var bindings = new List<MemberBinding>();
-				CreateMemberBindingsForMapping( map, recordType, bindings );
-
-				if( bindings.Count == 0 )
-				{
-					throw new ReaderException( context, $"No members are mapped for type '{recordType.FullName}'." );
-				}
-
-				if( map.Constructor is NewExpression )
-				{
-					body = Expression.MemberInit( (NewExpression)map.Constructor, bindings );
-				}
-				else if( map.Constructor is MemberInitExpression )
-				{
-					var memberInitExpression = (MemberInitExpression)map.Constructor;
-					var defaultBindings = memberInitExpression.Bindings.ToList();
-					defaultBindings.AddRange( bindings );
-					body = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
-				}
-				else
-				{
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( recordType ).GetType();
-					body = Expression.MemberInit( Expression.New( type ), bindings );
-				}
-			}
-
-			var funcType = typeof( Func<> ).MakeGenericType( recordType );
-			context.CreateRecordFuncs[recordType] = Expression.Lambda( funcType, body ).Compile();
-		}
-
-		/// <summary>
-		/// Creates the function for a primitive.
-		/// </summary>
-		/// <param name="recordType">The type of the primitive to create the function for.</param>
-		protected virtual void CreateFuncForPrimitive( Type recordType )
-		{
-			var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
-			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( 0, typeof( int ) ) );
-
-			var memberMapData = new MemberMapData( null )
-			{
-				Index = 0,
-				TypeConverter = Configuration.TypeConverterFactory.GetConverter( recordType )
-			};
-			memberMapData.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( recordType ) );
-			memberMapData.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
-
-			fieldExpression = Expression.Call( Expression.Constant( memberMapData.TypeConverter ), "ConvertFromString", null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
-			fieldExpression = Expression.Convert( fieldExpression, recordType );
-	
-			var funcType = typeof( Func<> ).MakeGenericType( recordType );
-			context.CreateRecordFuncs[recordType] = Expression.Lambda( funcType, fieldExpression ).Compile();
-		}
-
-		/// <summary>
-		/// Creates the constructor arguments used to create a type.
-		/// </summary>
-		/// <param name="map">The mapping to create the arguments for.</param>
-		/// <param name="argumentExpressions">The arguments that will be added to the mapping.</param>
-		protected virtual void CreateConstructorArgumentExpressionsForMapping( ClassMap map, List<Expression> argumentExpressions )
-		{
-			foreach( var parameterMap in map.ParameterMaps )
-			{
-				if( parameterMap.ConstructorTypeMap != null )
-				{
-					// Constructor paramter type.
-					var arguments = new List<Expression>();
-					CreateConstructorArgumentExpressionsForMapping( parameterMap.ConstructorTypeMap, arguments );
-					var constructorExpression = Expression.New( Configuration.GetConstructor( parameterMap.ConstructorTypeMap.ClassType ), arguments );
-
-					argumentExpressions.Add( constructorExpression );
-				}
-				else if( parameterMap.ReferenceMap != null )
-				{
-					// Reference type.
-
-					var referenceBindings = new List<MemberBinding>();
-					CreateMemberBindingsForMapping( parameterMap.ReferenceMap.Data.Mapping, parameterMap.ReferenceMap.Data.Parameter.ParameterType, referenceBindings );
-
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( parameterMap.ReferenceMap.Data.Parameter.ParameterType ).GetType();
-					var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
-
-					argumentExpressions.Add( referenceBody );
-				}
-				else
-				{
-					// Value type.
-
-					var index = Configuration.HasHeaderRecord
-						? GetFieldIndex( parameterMap.Data.Name, 0 )
-						: parameterMap.Data.Index;
-
-					// Get the field using the field index.
-					var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
-					Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
-
-					// Convert the field.
-					var typeConverterExpression = Expression.Constant( parameterMap.Data.TypeConverter );
-					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( parameterMap.Data.Parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
-					parameterMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
-
-					// Create type converter expression.
-					var memberMapData = new MemberMapData( null )
-					{
-						Index = parameterMap.Data.Index,
-						TypeConverter = parameterMap.Data.TypeConverter,
-						TypeConverterOptions = parameterMap.Data.TypeConverterOptions
-					};
-					memberMapData.Names.Add( parameterMap.Data.Name );
-					Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
-					typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, parameterMap.Data.Parameter.ParameterType );
-
-					fieldExpression = typeConverterFieldExpression;
-
-					argumentExpressions.Add( fieldExpression );
-				}
-			}
-		}
-
-		/// <summary>
-		/// Creates the member bindings for the given <see cref="ClassMap"/>.
-		/// </summary>
-		/// <param name="mapping">The mapping to create the bindings for.</param>
-		/// <param name="recordType">The type of record.</param>
-		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
-		protected virtual void CreateMemberBindingsForMapping( ClassMap mapping, Type recordType, List<MemberBinding> bindings )
-		{
-			foreach( var memberMap in mapping.MemberMaps )
-			{
-				var fieldExpression = CreateFieldExpression( memberMap );
-				if( fieldExpression == null )
-				{
-					continue;
-				}
-
-				bindings.Add( Expression.Bind( memberMap.Data.Member, fieldExpression ) );
-			}
-
-			foreach( var referenceMap in mapping.ReferenceMaps )
-			{
-				if( !CanRead( referenceMap ) )
-				{
-					continue;
-				}
-
-				var referenceBindings = new List<MemberBinding>();
-				CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
-
-				Expression referenceBody;
-				var constructorExpression = referenceMap.Data.Mapping.Constructor;
-				if( constructorExpression is NewExpression )
-				{
-					referenceBody = Expression.MemberInit( (NewExpression)constructorExpression, referenceBindings );
-				}
-				else if( constructorExpression is MemberInitExpression )
-				{
-					var memberInitExpression = (MemberInitExpression)constructorExpression;
-					var defaultBindings = memberInitExpression.Bindings.ToList();
-					defaultBindings.AddRange( referenceBindings );
-					referenceBody = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
-				}
-				else
-				{
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
-					referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
-				}
-
-				bindings.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
-			}
-		}
-		
-		/// <summary>
-		/// Creates the action delegate used to fill a record's members with data from the reader.
-		/// </summary>
-		/// <typeparam name="T">The record type.</typeparam>
-		protected virtual void CreateFillRecordAction<T>()
-		{
-			var recordType = typeof( T );
-
-			if( context.FillRecordActions.ContainsKey( recordType ) )
-			{
-				return;
-			}
-
-			if( context.ReaderConfiguration.Maps[recordType] == null )
-			{
-				context.ReaderConfiguration.Maps.Add( context.ReaderConfiguration.AutoMap( recordType ) );
-			}
-
-			var mapping = context.ReaderConfiguration.Maps[recordType];
-
-			var recordTypeParameter = Expression.Parameter( recordType, "record" );
-			var memberAssignments = new List<Expression>();
-
-			foreach( var memberMap in mapping.MemberMaps )
-			{
-				var fieldExpression = CreateFieldExpression( memberMap );
-				if( fieldExpression == null )
-				{
-					continue;
-				}
-
-				var memberTypeParameter = Expression.Parameter( memberMap.Data.Member.MemberType(), "member" );
-				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, memberMap.Data.Member );
-				var memberAssignment = Expression.Assign( memberAccess, fieldExpression );
-				memberAssignments.Add( memberAssignment );
-			}
-
-			foreach( var referenceMap in mapping.ReferenceMaps )
-			{
-				if( !CanRead( referenceMap ) )
-				{
-					continue;
-				}
-
-				var referenceBindings = new List<MemberBinding>();
-				CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
-
-				Expression referenceBody;
-				var constructorExpression = referenceMap.Data.Mapping.Constructor;
-				if( constructorExpression is NewExpression )
-				{
-					referenceBody = Expression.MemberInit( (NewExpression)constructorExpression, referenceBindings );
-				}
-				else if( constructorExpression is MemberInitExpression )
-				{
-					var memberInitExpression = (MemberInitExpression)constructorExpression;
-					var defaultBindings = memberInitExpression.Bindings.ToList();
-					defaultBindings.AddRange( referenceBindings );
-					referenceBody = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
-				}
-				else
-				{
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
-					referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
-				}
-
-				var memberTypeParameter = Expression.Parameter( referenceMap.Data.Member.MemberType(), "referenceMember" );
-				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, referenceMap.Data.Member );
-				var memberAssignment = Expression.Assign( memberAccess, referenceBody );
-				memberAssignments.Add( memberAssignment );
-			}
-
-			var body = Expression.Block( memberAssignments );
-			context.FillRecordActions[recordType] = Expression.Lambda<Action<T>>( body, recordTypeParameter ).Compile();
-		}
-
-		/// <summary>
-		/// Creates an expression the represents getting the field for the given
-		/// member and converting it to the member's type.
-		/// </summary>
-		/// <param name="memberMap">The mapping for the member.</param>
-		protected virtual Expression CreateFieldExpression( MemberMap memberMap )
-		{
-			if( memberMap.Data.ReadingConvertExpression != null )
-			{
-				// The user is providing the expression to do the conversion.
-				Expression exp = Expression.Invoke( memberMap.Data.ReadingConvertExpression, Expression.Constant( this ) );
-				return Expression.Convert( exp, memberMap.Data.Member.MemberType() );
-			}
-
-			if( !CanRead( memberMap ) )
-			{
-				return null;
-			}
-
-			if( memberMap.Data.TypeConverter == null )
-			{
-				// Skip if the type isn't convertible.
-				return null;
-			}
-
-			int index;
-			if( memberMap.Data.IsNameSet || context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
-			{
-				// Use the name.
-				index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex );
-				if( index == -1 )
-				{
-					// Skip if the index was not found.
-					return null;
-				}
-			}
-			else
-			{
-				// Use the index.
-				index = memberMap.Data.Index;
-			}
-
-			// Get the field using the field index.
-			var method = typeof( IReaderRow ).GetProperty( "Item", typeof( string ), new[] { typeof( int ) } ).GetGetMethod();
-			Expression fieldExpression = Expression.Call( Expression.Constant( this ), method, Expression.Constant( index, typeof( int ) ) );
-
-			// Validate the field.
-			if( memberMap.Data.ValidateExpression != null )
-			{
-				var validateExpression = Expression.IsFalse( Expression.Invoke( memberMap.Data.ValidateExpression, fieldExpression ) );
-				var validationExceptionConstructor = typeof( ValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
-				var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( context ) ) );
-				fieldExpression = Expression.Block(
-					// If the validate method returns false, throw an exception.
-					Expression.IfThen( validateExpression, throwExpression ),
-					fieldExpression
-				);
-			}
-
-			// Convert the field.
-			var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
-			memberMap.Data.TypeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
-
-			// Create type converter expression.
-			Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
-			typeConverterFieldExpression = Expression.Convert( typeConverterFieldExpression, memberMap.Data.Member.MemberType() );
-
-			if( memberMap.Data.IsConstantSet )
-			{
-				fieldExpression = Expression.Convert( Expression.Constant( memberMap.Data.Constant ), memberMap.Data.Member.MemberType() );
-			}
-			else if( memberMap.Data.IsDefaultSet )
-			{
-				// Create default value expression.
-				Expression defaultValueExpression;
-				if( memberMap.Data.Member.MemberType() != typeof( string ) && memberMap.Data.Default != null && memberMap.Data.Default.GetType() == typeof( string ) )
-				{
-					// The default is a string but the member type is not. Use a converter.
-					defaultValueExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, Expression.Constant( memberMap.Data.Default ), Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
-				}
-				else
-				{
-					// The member type and default type match.
-					defaultValueExpression = Expression.Constant( memberMap.Data.Default );
-				}
-
-				defaultValueExpression = Expression.Convert( defaultValueExpression, memberMap.Data.Member.MemberType() );
-
-				// If null, use string.Empty.
-				var coalesceExpression = Expression.Coalesce( fieldExpression, Expression.Constant( string.Empty ) );
-
-				// Check if the field is an empty string.
-				var checkFieldEmptyExpression = Expression.Equal( Expression.Convert( coalesceExpression, typeof( string ) ), Expression.Constant( string.Empty, typeof( string ) ) );
-
-				// Use a default value if the field is an empty string.
-				fieldExpression = Expression.Condition( checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression );
-			}
-			else
-			{
-				fieldExpression = typeConverterFieldExpression;
-			}
-
-			return fieldExpression;
-		}
-
-		/// <summary>
 		/// Determines if the member for the <see cref="MemberMap"/>
 		/// can be read.
 		/// </summary>
 		/// <param name="memberMap">The member map.</param>
 		/// <returns>A value indicating of the member can be read. True if it can, otherwise false.</returns>
-		protected virtual bool CanRead( MemberMap memberMap )
+		public virtual bool CanRead( MemberMap memberMap )
 		{
 			var cantRead =
 				// Ignored member;
@@ -1852,7 +1281,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="memberReferenceMap">The reference map.</param>
 		/// <returns>A value indicating of the member can be read. True if it can, otherwise false.</returns>
-		protected virtual bool CanRead( MemberReferenceMap memberReferenceMap )
+		public virtual bool CanRead( MemberReferenceMap memberReferenceMap )
 		{
 			var cantRead = false;
 
@@ -1871,34 +1300,70 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Creates a dynamic object from the current record.
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
-		/// <returns>The dynamic object.</returns>
-		protected virtual dynamic CreateDynamic()
+		/// <filterpriority>2</filterpriority>
+		public void Dispose()
 		{
-			var obj = new ExpandoObject();
-			var dict = obj as IDictionary<string, object>;
-			if( context.HeaderRecord != null )
+			Dispose( !context.LeaveOpen );
+			GC.SuppressFinalize( this );
+		}
+
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
+		protected virtual void Dispose( bool disposing )
+		{
+			if( disposed )
 			{
-				var length = Math.Min( context.HeaderRecord.Length, context.Record.Length );
-				for( var i = 0; i < length; i++ )
-				{
-					var header = context.HeaderRecord[i];
-					var field = GetField( i );
-					dict.Add( header, field );
-				}
-			}
-			else
-			{
-				for( var i = 0; i < context.Record.Length; i++ )
-				{
-					var propertyName = "Field" + ( i + 1 );
-					var field = GetField( i );
-					dict.Add( propertyName, field );
-				}
+				return;
 			}
 
-			return obj;
+			if( disposing )
+			{
+				parser?.Dispose();
+			}
+
+			parser = null;
+			context = null;
+			disposed = true;
+		}
+
+		/// <summary>
+		/// Checks if the reader has been read yet.
+		/// </summary>
+		/// <exception cref="ReaderException" />
+		protected virtual void CheckHasBeenRead()
+		{
+			if( !context.HasBeenRead )
+			{
+				throw new ReaderException( context, "You must call read on the reader before accessing its data." );
+			}
+		}
+
+		/// <summary>
+		/// Parses the named indexes from the header record.
+		/// </summary>
+		protected virtual void ParseNamedIndexes()
+		{
+			if( context.HeaderRecord == null )
+			{
+				throw new ReaderException( context, "No header record was found." );
+			}
+
+			for( var i = 0; i < context.HeaderRecord.Length; i++ )
+			{
+				var name = context.HeaderRecord[i];
+				if( context.NamedIndexes.ContainsKey( name ) )
+				{
+					context.NamedIndexes[name].Add( i );
+				}
+				else
+				{
+					context.NamedIndexes[name] = new List<int> { i };
+				}
+			}
 		}
 	}
 }

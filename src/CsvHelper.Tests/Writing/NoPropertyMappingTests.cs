@@ -140,6 +140,37 @@ namespace CsvHelper.Tests.Writing
 			}
 		}
 
+		[TestMethod]
+		public void OutOfOrderTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var reader = new StreamReader( stream ) )
+			using( var writer = new StreamWriter( stream ) )
+			using( var csv = new CsvWriter( writer ) )
+			{
+				var list = new List<Test>
+				{
+					new Test { Id = 1, Name = "one" },
+					new Test { Id = 2, Name = "two" }
+				};
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.RegisterClassMap<TestMapOutOfOrderWithEmptyFieldsMap>();
+				csv.WriteRecords( list );
+
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+
+				var expected = new StringBuilder();
+				expected.AppendLine( "one,,,1" );
+				expected.AppendLine( "two,,,2" );
+
+				Assert.AreEqual( expected.ToString(), result );
+			}
+		}
+
 		private class Test
 		{
 			public int Id { get; set; }
@@ -163,6 +194,17 @@ namespace CsvHelper.Tests.Writing
 			{
 				Map( m => m.Id );
 				Map().Constant( "const" );
+			}
+		}
+
+		private sealed class TestMapOutOfOrderWithEmptyFieldsMap : ClassMap<Test>
+		{
+			public TestMapOutOfOrderWithEmptyFieldsMap()
+			{
+				Map( m => m.Name ).Index( 0 );
+				Map().Index( 1 ).Constant( null );
+				Map().Index( 2 ).Constant( string.Empty );
+				Map( m => m.Id ).Index( 3 );
 			}
 		}
 	}

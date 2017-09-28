@@ -228,5 +228,20 @@ namespace CsvHelper.Configuration
 
 			return existingMap;
 		}
+
+		/// <summary>
+		/// Adds the members from the mapping. This will recursively
+		/// traverse the mapping tree and add all members for
+		/// reference maps.
+		/// </summary>
+		/// <param name="mapping">The mapping where the members are added from.</param>
+		public virtual void AddMembers( ClassMap mapping )
+		{
+			AddRange( mapping.MemberMaps );
+			foreach( var refmap in mapping.ReferenceMaps )
+			{
+				AddMembers( refmap.Data.Mapping );
+			}
+		}
 	}
 }

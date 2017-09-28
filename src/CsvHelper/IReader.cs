@@ -71,7 +71,7 @@ namespace CsvHelper
 		IEnumerable<object> GetRecords( Type type );
 
 		/// <summary>
-		/// Enumerates the records filling the given record instance with row data.
+		/// Enumerates the records hydrating the given record instance with row data.
 		/// The record instance is re-used and not cleared on each enumeration. 
 		/// This only works for streaming rows. If any methods are call on the projection
 		/// that force the evaluation of the IEnumerable, such as ToList(), the entire list

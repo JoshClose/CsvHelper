@@ -32,7 +32,7 @@ namespace CsvHelper
 
 		internal Dictionary<Type, Delegate> CreateRecordFuncs = new Dictionary<Type, Delegate>();
 
-		internal Dictionary<Type, Delegate> FillRecordActions = new Dictionary<Type, Delegate>();
+		internal Dictionary<Type, Delegate> HydrateRecordActions = new Dictionary<Type, Delegate>();
 
 		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 

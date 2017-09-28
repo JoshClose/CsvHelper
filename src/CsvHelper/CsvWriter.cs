@@ -17,6 +17,7 @@ using System.Linq.Expressions;
 using System.Dynamic;
 using Microsoft.CSharp.RuntimeBinder;
 using System.Threading.Tasks;
+using CsvHelper.Expressions;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -28,7 +29,9 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvWriter : IWriter
 	{
-		private WritingContext context;
+		private readonly RecordManager recordManager;
+		// TODO: This should be private.
+		internal WritingContext context;
 		private bool disposed;
 		private ISerializer serializer;
 
@@ -75,6 +78,7 @@ namespace CsvHelper
 			}
 
 			context = serializer.Context;
+			recordManager = new RecordManager( this );
 		}
 
 		/// <summary>
@@ -328,7 +332,7 @@ namespace CsvHelper
 			}
 
 			var members = new MemberMapCollection();
-			AddMembers( members, context.WriterConfiguration.Maps[type] );
+			members.AddMembers( context.WriterConfiguration.Maps[type] );
 
 			foreach( var member in members )
 			{
@@ -406,7 +410,7 @@ namespace CsvHelper
 
 			try
 			{
-				GetWriteRecordAction( record )( record );
+				recordManager.Write( record );
 				context.HasHeaderBeenWritten = true;
             }
             catch( Exception ex )
@@ -467,7 +471,7 @@ namespace CsvHelper
 
 					try
 					{
-						GetWriteRecordAction( record )( record );
+						recordManager.Write( record );
                     }
                     catch( TargetInvocationException ex )
 					{
@@ -484,85 +488,46 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Adds the members from the mapping. This will recursively
-		/// traverse the mapping tree and add all members for
-		/// reference maps.
+		/// Checks if the member can be written.
 		/// </summary>
-		/// <param name="members">The members to be added to.</param>
-		/// <param name="mapping">The mapping where the members are added from.</param>
-		protected virtual void AddMembers( MemberMapCollection members, ClassMap mapping )
+		/// <param name="memberMap">The member map that we are checking.</param>
+		/// <returns>A value indicating if the member can be written.
+		/// True if the member can be written, otherwise false.</returns>
+		public virtual bool CanWrite( MemberMap memberMap )
 		{
-			members.AddRange( mapping.MemberMaps );
-			foreach( var refMap in mapping.ReferenceMaps )
+			var cantWrite =
+				// Ignored members.
+				memberMap.Data.Ignore;
+
+			if( memberMap.Data.Member is PropertyInfo property )
 			{
-				AddMembers( members, refMap.Data.Mapping );
+				cantWrite = cantWrite ||
+				// Properties that don't have a public getter
+				// and we are honoring the accessor modifier.
+				property.GetGetMethod() == null && !context.WriterConfiguration.IncludePrivateMembers ||
+				// Properties that don't have a getter at all.
+				property.GetGetMethod( true ) == null;
 			}
+
+			return !cantWrite;
 		}
 
 		/// <summary>
-		/// Creates a member expression for the given member on the record.
-		/// This will recursively traverse the mapping to find the member
-		/// and create a safe member accessor for each level as it goes.
+		/// Gets the type for the record. If the generic type
+		/// is an object due to boxing, it will call GetType()
+		/// on the record itself.
 		/// </summary>
-		/// <param name="recordExpression">The current member expression.</param>
-		/// <param name="mapping">The mapping to look for the member to map on.</param>
-		/// <param name="memberMap">The member map to look for on the mapping.</param>
-		/// <returns>An Expression to access the given member.</returns>
-		protected virtual Expression CreateMemberExpression( Expression recordExpression, ClassMap mapping, MemberMap memberMap )
+		/// <typeparam name="T">The record type.</typeparam>
+		/// <param name="record">The record.</param>
+		public virtual Type GetTypeForRecord<T>( T record )
 		{
-			if( mapping.MemberMaps.Any( pm => pm == memberMap ) )
+			var type = typeof( T );
+			if( type == typeof( object ) )
 			{
-				// The member is on this level.
-				if( memberMap.Data.Member is PropertyInfo )
-				{
-					return Expression.Property( recordExpression, (PropertyInfo)memberMap.Data.Member );
-				}
-
-				if( memberMap.Data.Member is FieldInfo )
-				{
-					return Expression.Field( recordExpression, (FieldInfo)memberMap.Data.Member );
-				}
+				type = record.GetType();
 			}
 
-			// The member isn't on this level of the mapping.
-			// We need to search down through the reference maps.
-			foreach( var refMap in mapping.ReferenceMaps )
-			{
-				var wrapped = refMap.Data.Member.GetMemberExpression( recordExpression );
-				var memberExpression = CreateMemberExpression( wrapped, refMap.Data.Mapping, memberMap );
-				if( memberExpression == null )
-				{
-					continue;
-				}
-
-				if( refMap.Data.Member.MemberType().GetTypeInfo().IsValueType )
-				{
-					return memberExpression;
-				}
-
-				var nullCheckExpression = Expression.Equal( wrapped, Expression.Constant( null ) );
-
-				var isValueType = memberMap.Data.Member.MemberType().GetTypeInfo().IsValueType;
-				var isGenericType = isValueType && memberMap.Data.Member.MemberType().GetTypeInfo().IsGenericType;
-				Type memberType;
-				if( isValueType && !isGenericType && !context.WriterConfiguration.UseNewObjectForNullReferenceMembers )
-				{
-					memberType = typeof( Nullable<> ).MakeGenericType( memberMap.Data.Member.MemberType() );
-					memberExpression = Expression.Convert( memberExpression, memberType );
-				}
-				else
-				{
-					memberType = memberMap.Data.Member.MemberType();
-				}
-
-				var defaultValueExpression = isValueType && !isGenericType
-					? (Expression)Expression.New( memberType )
-					: Expression.Constant( null, memberType );
-				var conditionExpression = Expression.Condition( nullCheckExpression, defaultValueExpression, memberExpression );
-				return conditionExpression;
-			}
-
-			return null;
+			return type;
 		}
 
 		/// <summary>
@@ -594,272 +559,6 @@ namespace CsvHelper
 			serializer = null;
 			context = null;
 			disposed = true;
-		}
-
-		/// <summary>
-		/// Gets the action delegate used to write the custom
-		/// class object to the writer.
-		/// </summary>
-		/// <typeparam name="T">The type of the custom class being written.</typeparam>
-		/// <param name="record"></param>
-		/// <returns>The action delegate.</returns>
-		protected virtual Action<T> GetWriteRecordAction<T>( T record )
-		{
-			var type = typeof( T );
-			var typeKey = type.FullName;
-			if( type == typeof( object ) )
-			{
-				type = record.GetType();
-				typeKey += $"|{type.FullName}";
-			}
-
-			if( !context.TypeActions.TryGetValue( typeKey, out var action ) )
-			{
-				context.TypeActions[typeKey] = action = CreateWriteRecordAction( type, record );
-			}
-
-			return (Action<T>)action;
-		}
-
-		/// <summary>
-		/// Creates the write record action for the given type if it
-		/// doesn't already exist.
-		/// </summary>
-		/// <param name="type">The type of the custom class being written.</param>
-		/// <param name="record">The record that will be written.</param>
-		/// <typeparam name="T">The type of the record being written.</typeparam>
-		protected virtual Action<T> CreateWriteRecordAction<T>( Type type, T record )
-		{
-			if( record is ExpandoObject expandoObject )
-			{
-				return CreateActionForExpandoObject<T>( expandoObject );
-			}
-
-			if( record is IDynamicMetaObjectProvider dynamicObject )
-			{
-				return CreateActionForDynamic<T>( dynamicObject );
-			}
-
-			if( context.WriterConfiguration.Maps[type] == null )
-			{
-				// We need to check again in case the header was not written.
-				context.WriterConfiguration.Maps.Add( context.WriterConfiguration.AutoMap( type ) );
-			}
-
-			if( type.GetTypeInfo().IsPrimitive )
-			{
-				return CreateActionForPrimitive<T>( type );
-			}
-
-			return CreateActionForObject<T>( type );
-		}
-
-		/// <summary>
-		/// Creates the action for an object.
-		/// </summary>
-		/// <param name="type">The type of object to create the action for.</param>
-		protected virtual Action<T> CreateActionForObject<T>( Type type )
-		{
-			var recordParameter = Expression.Parameter( typeof( T ), "record" );
-			var recordParameterConverted = Expression.Convert( recordParameter, type );
-
-			// Get a list of all the members so they will
-			// be sorted properly.
-			var members = new MemberMapCollection();
-			AddMembers( members, context.WriterConfiguration.Maps[type] );
-
-			if( members.Count == 0 )
-			{
-				throw new WriterException( context, $"No properties are mapped for type '{type.FullName}'." );
-			}
-
-			var delegates = new List<Action<T>>();
-
-			foreach( var memberMap in members )
-			{
-				if( memberMap.Data.WritingConvertExpression != null )
-				{
-					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameterConverted );
-					exp = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, exp );
-					delegates.Add( Expression.Lambda<Action<T>>( exp, recordParameter ).Compile() );
-					continue;
-				}
-
-				if( !CanWrite( memberMap ) )
-				{
-					continue;
-				}
-
-				Expression fieldExpression;
-
-				if( memberMap.Data.IsConstantSet )
-				{
-					if( memberMap.Data.Constant == null )
-					{
-						fieldExpression = Expression.Constant( string.Empty );
-					}
-					else
-					{
-						fieldExpression = Expression.Constant( memberMap.Data.Constant );
-						var typeConverterExpression = Expression.Constant( Configuration.TypeConverterFactory.GetConverter( memberMap.Data.Constant.GetType() ) );
-						var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
-						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
-					}
-				}
-				else
-				{
-					if( memberMap.Data.TypeConverter == null )
-					{
-						// Skip if the type isn't convertible.
-						continue;
-					}
-
-					fieldExpression = CreateMemberExpression( recordParameterConverted, context.WriterConfiguration.Maps[type], memberMap );
-
-					var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
-					memberMap.Data.TypeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
-
-					var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
-					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
-					fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMap.Data ) );
-
-					if( type.GetTypeInfo().IsClass )
-					{
-						var areEqualExpression = Expression.Equal( recordParameterConverted, Expression.Constant( null ) );
-						fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
-					}
-				}
-
-				var writeFieldMethodCall = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
-
-				delegates.Add( Expression.Lambda<Action<T>>( writeFieldMethodCall, recordParameter ).Compile() );
-			}
-
-			var action = CombineDelegates( delegates );
-
-			return action;
-		}
-
-		/// <summary>
-		/// Creates the action for a primitive.
-		/// </summary>
-		/// <param name="type">The type of primitive to create the action for.</param>
-		protected virtual Action<T> CreateActionForPrimitive<T>( Type type )
-		{
-			var recordParameter = Expression.Parameter( typeof( T ), "record" );
-
-			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
-
-			var typeConverter = Configuration.TypeConverterFactory.GetConverter( type );
-			var typeConverterExpression = Expression.Constant( typeConverter );
-			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
-
-			var memberMapData = new MemberMapData( null )
-			{
-				Index = 0,
-				TypeConverter = typeConverter,
-				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) )
-			};
-			memberMapData.TypeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
-
-			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( this ), Expression.Constant( memberMapData ) );
-			fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteConvertedField ), null, fieldExpression );
-
-			var action = Expression.Lambda<Action<T>>( fieldExpression, recordParameter ).Compile();
-
-			return action;
-		}
-
-		/// <summary>
-		/// Creates an action for an ExpandoObject. This needs to be separate
-		/// from other dynamic objects due to what seems to be an issue in ExpandoObject
-		/// where expandos with the same members sometimes test as not equal.
-		/// </summary>
-		/// <param name="obj">The ExpandoObject.</param>
-		/// <returns></returns>
-		protected virtual Action<T> CreateActionForExpandoObject<T>( ExpandoObject obj )
-		{
-			Action<T> action = record =>
-			{
-				var dict = (IDictionary<string, object>)record;
-				foreach( var val in dict.Values )
-				{
-					WriteField( val );
-				}
-			};
-
-			return action;
-		}
-
-		/// <summary>
-		/// Creates the action for a dynamic object.
-		/// </summary>
-		/// <param name="provider">The dynamic object.</param>
-		protected virtual Action<T> CreateActionForDynamic<T>( IDynamicMetaObjectProvider provider )
-		{
-			// http://stackoverflow.com/a/14011692/68499
-
-			var type = provider.GetType();
-			var parameterExpression = Expression.Parameter( typeof( T ), "record" );
-
-			var metaObject = provider.GetMetaObject( parameterExpression );
-			var memberNames = metaObject.GetDynamicMemberNames();
-
-			var delegates = new List<Action<T>>();
-			foreach( var memberName in memberNames )
-			{
-				var getMemberBinder = (GetMemberBinder)Microsoft.CSharp.RuntimeBinder.Binder.GetMember( 0, memberName, type, new[] { CSharpArgumentInfo.Create( 0, null ) } );
-				var getMemberMetaObject = metaObject.BindGetMember( getMemberBinder );
-				var fieldExpression = getMemberMetaObject.Expression;
-				fieldExpression = Expression.Call( Expression.Constant( this ), nameof( WriteField ), new[] { typeof( object ) }, fieldExpression );
-				fieldExpression = Expression.Block( fieldExpression, Expression.Label( CallSiteBinder.UpdateLabel ) );
-				var lambda = Expression.Lambda<Action<T>>( fieldExpression, parameterExpression );
-				delegates.Add( lambda.Compile() );
-			}
-
-			var action = CombineDelegates( delegates );
-
-			return action;
-		}
-
-		/// <summary>
-		/// Combines the delegates into a single multicast delegate.
-		/// This is needed because Silverlight doesn't have the
-		/// Delegate.Combine( params Delegate[] ) overload.
-		/// </summary>
-		/// <param name="delegates">The delegates to combine.</param>
-		/// <returns>A multicast delegate combined from the given delegates.</returns>
-		protected virtual Action<T> CombineDelegates<T>( IEnumerable<Action<T>> delegates )
-		{
-			return (Action<T>)delegates.Aggregate<Delegate, Delegate>( null, Delegate.Combine );
-		}
-
-		/// <summary>
-		/// Checks if the member can be written.
-		/// </summary>
-		/// <param name="memberMap">The member map that we are checking.</param>
-		/// <returns>A value indicating if the member can be written.
-		/// True if the member can be written, otherwise false.</returns>
-		protected virtual bool CanWrite( MemberMap memberMap )
-		{
-			var cantWrite =
-				// Ignored members.
-				memberMap.Data.Ignore;
-
-			if( memberMap.Data.Member is PropertyInfo property )
-			{
-				cantWrite = cantWrite ||
-				// Properties that don't have a public getter
-				// and we are honoring the accessor modifier.
-				property.GetGetMethod() == null && !context.WriterConfiguration.IncludePrivateMembers ||
-				// Properties that don't have a getter at all.
-				property.GetGetMethod( true ) == null;
-			}
-
-			return !cantWrite;
 		}
 	}
 }
