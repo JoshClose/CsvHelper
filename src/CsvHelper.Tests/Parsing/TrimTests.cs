@@ -32,6 +32,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideStartNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  a,b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideStartSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -40,6 +59,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "  a b c,d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideStartSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  a b c,d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -70,6 +108,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideEndNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "a  ,b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideEndSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -78,6 +135,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "a b c  ,d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideEndSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "a b c  ,d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -108,6 +184,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideBothNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  a  ,b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideBothSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -116,6 +211,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "  a b c  ,d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideBothSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  a b c  ,d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -146,6 +260,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideQuotesStartNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  \"a\",b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideQuotesStartSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -154,6 +287,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "  \"a b c\",d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideQuotesStartSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  \"a b c\",d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -184,6 +336,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideQuotesEndNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"a\"  ,b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideQuotesEndSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -192,6 +363,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "\"a b c\"  ,d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideQuotesEndSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"a b c\"  ,d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -222,6 +412,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideQuotesBothNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  \"a\"  ,b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideQuotesBothSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -230,6 +439,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "  \"a b c\"  ,d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideQuotesBothSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  \"a b c\"  ,d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -261,6 +489,26 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void OutsideQuotesBothSpacesInFieldMultipleRecordsNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  a b c  ,  d e f  " );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+				Assert.AreEqual( "d e f", record[1] );
+			}
+		}
+
+		[TestMethod]
 		public void InsideQuotesStartTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -269,6 +517,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "\"  a\",b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void InsideQuotesStartNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"  a\",b" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -299,6 +566,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void InsideQuotesStartSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"  a b c\",b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void InsideQuotesEndTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -307,6 +593,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "\"a  \",b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void InsideQuotesEndNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"a  \",b" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -337,6 +642,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void InsideQuotesEndSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"a b c  \",d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void InsideQuotesBothTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -356,6 +680,25 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void InsideQuotesBothNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"  a  \",b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a", record[0] );
+			}
+		}
+
+		[TestMethod]
 		public void InsideQuotesBothSpacesInFieldTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -364,6 +707,25 @@ namespace CsvHelper.Tests.Parsing
 			using( var parser = new CsvParser( reader ) )
 			{
 				writer.WriteLine( "\"  a b c  \",d" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void InsideQuotesBothSpacesInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"  a b c  \",d" );
 				writer.Flush();
 				stream.Position = 0;
 
@@ -395,6 +757,26 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void InsideQuotesBothSpacesInFieldMultipleRecordsNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "\"  a b c  \",\"  d e f  \"" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+				Assert.AreEqual( "d e f", record[1] );
+			}
+		}
+
+		[TestMethod]
 		public void OutsideAndInsideQuotesTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -413,7 +795,65 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual( "d e f", record[1] );
 			}
 		}
-		
+
+		[TestMethod]
+		public void OutsideAndInsideQuotesNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "  \"  a b c  \"  ,  \"  d e f  \"  " );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim | TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b c", record[0] );
+				Assert.AreEqual( "d e f", record[1] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideQuotesNoSpacesNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "abc" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "abc", record[0] );
+			}
+		}
+
+		[TestMethod]
+		public void OutsideQuotesNoSpacesHasSpaceInFieldNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.Write( "a b" );
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Configuration.TrimOptions = TrimOptions.Trim;
+				var record = parser.Read();
+
+				Assert.AreEqual( "a b", record[0] );
+			}
+		}
+
 		[TestMethod]
 		public void ReadingTest()
 		{

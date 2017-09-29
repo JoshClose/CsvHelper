@@ -192,6 +192,20 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Sets the raw recodr start to the current buffer position;
+		/// </summary>
+		/// <param name="offset">An offset for the raw record start.
+		/// The offset should be less than 1.</param>
+		public virtual void SetRawRecordStart( int offset )
+		{
+			var position = context.BufferPosition + offset;
+			if( position >= 0 )
+			{
+				context.RawRecordStartPosition = position;
+			}
+		}
+
+		/// <summary>
 		/// Sets the raw record end to the current buffer position.
 		/// </summary>
 		/// <param name="offset">An offset for the raw record end.

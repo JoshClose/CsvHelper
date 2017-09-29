@@ -162,7 +162,7 @@ namespace CsvHelper
 			{
 				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
 				{
-					// We have reached the end of the file.
+					// End of file.
 					if( context.RecordBuilder.Length > 0 )
 					{
 						// There was no line break at the end of the file.
@@ -227,7 +227,7 @@ namespace CsvHelper
 			{
 				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
 				{
-					// We have reached the end of the file.
+					// End of file.
 					if( context.RecordBuilder.Length > 0 )
 					{
 						// There was no line break at the end of the file.
@@ -305,6 +305,7 @@ namespace CsvHelper
 
 				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
 				{
+					// End of file.
 					return;
 				}
 
@@ -339,6 +340,7 @@ namespace CsvHelper
 
 				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
 				{
+					// End of file.
 					return;
 				}
 
@@ -358,6 +360,12 @@ namespace CsvHelper
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
+
+					if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					{
+						fieldReader.SetFieldStart();
+					}
+
 					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
 				}
@@ -380,6 +388,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd( -1 );
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetRawRecordStart( -1 );
 				}
 				else if( inSpaces && context.C != ' ' )
 				{
@@ -421,6 +430,12 @@ namespace CsvHelper
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
+
+					if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					{
+						fieldReader.SetFieldStart();
+					}
+
 					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
 				}
@@ -441,6 +456,12 @@ namespace CsvHelper
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
+
+					if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					{
+						fieldReader.SetFieldStart();
+					}
+
 					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
 				}
@@ -463,6 +484,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd( -1 );
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetRawRecordStart( -1 );
 				}
 				else if( inSpaces && context.C != ' ' )
 				{
@@ -504,6 +526,12 @@ namespace CsvHelper
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
+
+					if( context.C == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					{
+						fieldReader.SetFieldStart();
+					}
+
 					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
 				}
@@ -531,6 +559,7 @@ namespace CsvHelper
 
 				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
 				{
+					// End of file.
 					fieldReader.SetFieldEnd();
 					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
@@ -646,6 +675,7 @@ namespace CsvHelper
 
 				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
 				{
+					// End of file.
 					fieldReader.SetFieldEnd();
 					context.RecordBuilder.Add( fieldReader.GetField() );
 					return true;
@@ -763,6 +793,7 @@ namespace CsvHelper
 			{
 				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
 				{
+					// End of file.
 					return false;
 				}
 
@@ -797,6 +828,7 @@ namespace CsvHelper
 			{
 				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
 				{
+					// End of file.
 					return false;
 				}
 
@@ -821,6 +853,7 @@ namespace CsvHelper
 			{
 				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
 				{
+					// End of file.
 					return fieldStartOffset;
 				}
 
@@ -846,6 +879,7 @@ namespace CsvHelper
 			{
 				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
 				{
+					// End of file.
 					return fieldStartOffset;
 				}
 
@@ -876,6 +910,7 @@ namespace CsvHelper
 
 				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
 				{
+					// End of file.
 					return false;
 				}
 
@@ -901,6 +936,7 @@ namespace CsvHelper
 
 				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
 				{
+					// End of file.
 					return false;
 				}
 

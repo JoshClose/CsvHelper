@@ -67,6 +67,13 @@ namespace CsvHelper
 		void SetFieldEnd( int offset = 0 );
 
 		/// <summary>
+		/// Sets the raw recodr start to the current buffer position;
+		/// </summary>
+		/// <param name="offset">An offset for the raw record start.
+		/// The offset should be less than 1.</param>
+		void SetRawRecordStart( int offset );
+
+		/// <summary>
 		/// Sets the raw record end to the current buffer position.
 		/// </summary>
 		/// <param name="offset">An offset for the raw record end.
