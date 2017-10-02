@@ -113,15 +113,15 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if fields should be sanitized
-		/// to prevent MS Excel injection. This covers Google Sheets and
-		/// Open Office Calc also.
+		/// to prevent malicious injection. This covers MS Excel, 
+		/// Google Sheets and Open Office Calc.
 		/// </summary>
-		public virtual bool SanitizeForExelInjection { get; set; } = true;
+		public virtual bool SanitizeForInjection { get; set; } = true;
 
 		/// <summary>
-		/// Gets or sets the characters
+		/// Gets or sets the characters that are used for injection attacks.
 		/// </summary>
-		public virtual char[] ExcelInjectionCharacters { get; set; } = new[] { '=', '@', '+', '-' };
+		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-' };
 
 		/// <summary>
 		/// Gets or sets a value indicating whether changes in the column

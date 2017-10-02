@@ -76,8 +76,8 @@ namespace CsvHelper
 					context.Writer.Write( context.SerializerConfiguration.Delimiter );
 				}
 
-				var field = Configuration.SanitizeForExelInjection
-					? SanitizeForExcelInjection( record[i] )
+				var field = Configuration.SanitizeForInjection
+					? SanitizeForInjection( record[i] )
 					: record[i];
 
 				context.Writer.Write( field );
@@ -150,22 +150,22 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Sanitizes the field to prevent Excel injection.
+		/// Sanitizes the field to prevent injection.
 		/// </summary>
 		/// <param name="field">The field to sanitize.</param>
-		protected virtual string SanitizeForExcelInjection( string field )
+		protected virtual string SanitizeForInjection( string field )
 		{
 			if( string.IsNullOrEmpty( field ) )
 			{
 				return field;
 			}
 
-			if( Configuration.ExcelInjectionCharacters.Contains( field[0] ) )
+			if( Configuration.InjectionCharacters.Contains( field[0] ) )
 			{
 				return "\t" + field;
 			}
 
-			if( field[0] == Configuration.Quote && Configuration.ExcelInjectionCharacters.Contains( field[1] ) )
+			if( field[0] == Configuration.Quote && Configuration.InjectionCharacters.Contains( field[1] ) )
 			{
 				return Configuration.Quote + "\t" + field.Substring( 1 );
 			}

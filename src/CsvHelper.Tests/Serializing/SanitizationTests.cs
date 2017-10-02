@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.Serializing
 {
 	[TestClass]
-    public class ExcelSanitizationTests
+    public class SanitizationTests
     {    
 		[TestMethod]
 		public void NoQuoteTest()
