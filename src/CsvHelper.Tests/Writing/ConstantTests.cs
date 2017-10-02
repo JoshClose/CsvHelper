@@ -79,6 +79,7 @@ namespace CsvHelper.Tests.Writing
 
 				csv.Configuration.RegisterClassMap<TestIntMap>();
 				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.SanitizeForExelInjection = false;
 				csv.WriteRecords( records );
 				writer.Flush();
 

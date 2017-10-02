@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace CsvHelper
 {
@@ -75,7 +76,11 @@ namespace CsvHelper
 					context.Writer.Write( context.SerializerConfiguration.Delimiter );
 				}
 
-				context.Writer.Write( record[i] );
+				var field = Configuration.SanitizeForExelInjection
+					? SanitizeForExcelInjection( record[i] )
+					: record[i];
+
+				context.Writer.Write( field );
 			}
 		}
 
@@ -142,6 +147,30 @@ namespace CsvHelper
 
 			context = null;
 			disposed = true;
+		}
+
+		/// <summary>
+		/// Sanitizes the field to prevent Excel injection.
+		/// </summary>
+		/// <param name="field">The field to sanitize.</param>
+		protected virtual string SanitizeForExcelInjection( string field )
+		{
+			if( string.IsNullOrEmpty( field ) )
+			{
+				return field;
+			}
+
+			if( Configuration.ExcelInjectionCharacters.Contains( field[0] ) )
+			{
+				return "\t" + field;
+			}
+
+			if( field[0] == Configuration.Quote && Configuration.ExcelInjectionCharacters.Contains( field[1] ) )
+			{
+				return Configuration.Quote + "\t" + field.Substring( 1 );
+			}
+
+			return field;
 		}
 	}
 }

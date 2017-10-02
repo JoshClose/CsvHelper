@@ -62,12 +62,6 @@ namespace CsvHelper.Configuration
 		string DoubleQuoteString { get; }
 
 		/// <summary>
-		/// Gets or sets the character used to quote fields.
-		/// Default is '"'.
-		/// </summary>
-		char Quote { get; }
-
-		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.
 		/// </summary>
 		CultureInfo CultureInfo { get; set; }

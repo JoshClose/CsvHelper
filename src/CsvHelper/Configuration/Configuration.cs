@@ -112,6 +112,18 @@ namespace CsvHelper.Configuration
 		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = record => false;
 
 		/// <summary>
+		/// Gets or sets a value indicating if fields should be sanitized
+		/// to prevent MS Excel injection. This covers Google Sheets and
+		/// Open Office Calc also.
+		/// </summary>
+		public virtual bool SanitizeForExelInjection { get; set; } = true;
+
+		/// <summary>
+		/// Gets or sets the characters
+		/// </summary>
+		public virtual char[] ExcelInjectionCharacters { get; set; } = new[] { '=', '@', '+', '-' };
+
+		/// <summary>
 		/// Gets or sets a value indicating whether changes in the column
 		/// count should be detected. If true, a <see cref="BadDataException"/>
 		/// will be thrown if a different column count is detected.

@@ -16,8 +16,26 @@ namespace CsvHelper.Configuration
 		string Delimiter { get; set; }
 
 		/// <summary>
+		/// Gets or sets the character used to quote fields.
+		/// Default is '"'.
+		/// </summary>
+		char Quote { get; }
+
+		/// <summary>
 		/// Gets or sets the field trimming options.
 		/// </summary>
 		TrimOptions TrimOptions { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if fields should be sanitized
+		/// to prevent MS Excel injection. This covers Google Sheets and
+		/// Open Office Calc also.
+		/// </summary>
+		bool SanitizeForExelInjection { get; set; }
+
+		/// <summary>
+		/// Gets or sets the characters
+		/// </summary>
+		char[] ExcelInjectionCharacters { get; set; }
 	}
 }
