@@ -119,7 +119,7 @@ namespace CsvHelper.Expressions
 			}
 
 			int index;
-			if( memberMap.Data.IsNameSet || reader.context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
+			if( memberMap.Data.IsNameSet || reader.Context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
 			{
 				// Use the name.
 				index = reader.GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex );
@@ -144,7 +144,7 @@ namespace CsvHelper.Expressions
 			{
 				var validateExpression = Expression.IsFalse( Expression.Invoke( memberMap.Data.ValidateExpression, fieldExpression ) );
 				var validationExceptionConstructor = typeof( ValidationException ).GetConstructors().OrderBy( c => c.GetParameters().Length ).First();
-				var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( reader.context ) ) );
+				var throwExpression = Expression.Throw( Expression.Constant( new ValidationException( reader.Context ) ) );
 				fieldExpression = Expression.Block(
 					// If the validate method returns false, throw an exception.
 					Expression.IfThen( validateExpression, throwExpression ),
@@ -154,8 +154,8 @@ namespace CsvHelper.Expressions
 
 			// Convert the field.
 			var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), reader.context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
-			memberMap.Data.TypeConverterOptions.CultureInfo = reader.context.ReaderConfiguration.CultureInfo;
+			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), reader.Context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+			memberMap.Data.TypeConverterOptions.CultureInfo = reader.Context.ReaderConfiguration.CultureInfo;
 
 			// Create type converter expression.
 			Expression typeConverterFieldExpression = Expression.Call( typeConverterExpression, nameof( ITypeConverter.ConvertFromString ), null, fieldExpression, Expression.Constant( reader ), Expression.Constant( memberMap.Data ) );
@@ -245,7 +245,7 @@ namespace CsvHelper.Expressions
 				var isValueType = memberMap.Data.Member.MemberType().GetTypeInfo().IsValueType;
 				var isGenericType = isValueType && memberMap.Data.Member.MemberType().GetTypeInfo().IsGenericType;
 				Type memberType;
-				if( isValueType && !isGenericType && !writer.context.WriterConfiguration.UseNewObjectForNullReferenceMembers )
+				if( isValueType && !isGenericType && !writer.Context.WriterConfiguration.UseNewObjectForNullReferenceMembers )
 				{
 					memberType = typeof( Nullable<> ).MakeGenericType( memberMap.Data.Member.MemberType() );
 					memberExpression = Expression.Convert( memberExpression, memberType );

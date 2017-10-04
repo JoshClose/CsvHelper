@@ -46,9 +46,9 @@ namespace CsvHelper.Expressions
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
-				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) )
+				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) )
 			};
-			memberMapData.TypeConverterOptions.CultureInfo = Writer.context.WriterConfiguration.CultureInfo;
+			memberMapData.TypeConverterOptions.CultureInfo = Writer.Context.WriterConfiguration.CultureInfo;
 
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( Writer ), Expression.Constant( memberMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( Writer ), nameof( Writer.WriteConvertedField ), null, fieldExpression );

@@ -38,19 +38,19 @@ namespace CsvHelper.Expressions
 		{
 			var obj = new ExpandoObject();
 			var dict = obj as IDictionary<string, object>;
-			if( Reader.context.HeaderRecord != null )
+			if( Reader.Context.HeaderRecord != null )
 			{
-				var length = Math.Min( Reader.context.HeaderRecord.Length, Reader.context.Record.Length );
+				var length = Math.Min( Reader.Context.HeaderRecord.Length, Reader.Context.Record.Length );
 				for( var i = 0; i < length; i++ )
 				{
-					var header = Reader.context.HeaderRecord[i];
+					var header = Reader.Context.HeaderRecord[i];
 					var field = Reader.GetField( i );
 					dict.Add( header, field );
 				}
 			}
 			else
 			{
-				for( var i = 0; i < Reader.context.Record.Length; i++ )
+				for( var i = 0; i < Reader.Context.Record.Length; i++ )
 				{
 					var propertyName = "Field" + ( i + 1 );
 					var field = Reader.GetField( i );

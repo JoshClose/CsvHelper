@@ -33,12 +33,12 @@ namespace CsvHelper.Expressions
 		/// <param name="recordType">The record type.</param>
 		protected override Delegate CreateCreateRecordDelegate( Type recordType )
 		{
-			if( Reader.context.ReaderConfiguration.Maps[recordType] == null )
+			if( Reader.Context.ReaderConfiguration.Maps[recordType] == null )
 			{
-				Reader.context.ReaderConfiguration.Maps.Add( Reader.context.ReaderConfiguration.AutoMap( recordType ) );
+				Reader.Context.ReaderConfiguration.Maps.Add( Reader.Context.ReaderConfiguration.AutoMap( recordType ) );
 			}
 
-			var map = Reader.context.ReaderConfiguration.Maps[recordType];
+			var map = Reader.Context.ReaderConfiguration.Maps[recordType];
 
 			Expression body;
 
@@ -57,7 +57,7 @@ namespace CsvHelper.Expressions
 
 				if( bindings.Count == 0 )
 				{
-					throw new ReaderException( Reader.context, $"No members are mapped for type '{recordType.FullName}'." );
+					throw new ReaderException( Reader.Context, $"No members are mapped for type '{recordType.FullName}'." );
 				}
 
 				if( map.Constructor is NewExpression )
@@ -129,8 +129,8 @@ namespace CsvHelper.Expressions
 
 					// Convert the field.
 					var typeConverterExpression = Expression.Constant( parameterMap.Data.TypeConverter );
-					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Reader.context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( parameterMap.Data.Parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
-					parameterMap.Data.TypeConverterOptions.CultureInfo = Reader.context.ReaderConfiguration.CultureInfo;
+					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Reader.Context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( parameterMap.Data.Parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
+					parameterMap.Data.TypeConverterOptions.CultureInfo = Reader.Context.ReaderConfiguration.CultureInfo;
 
 					// Create type converter expression.
 					var memberMapData = new MemberMapData( null )

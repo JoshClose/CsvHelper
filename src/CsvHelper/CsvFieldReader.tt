@@ -22,13 +22,13 @@ namespace CsvHelper
 	/// </summary>
 	public partial class CsvFieldReader : IFieldReader
 	{
-		private ReadingContext context;
+		private IReadingContext context;
 		private bool disposed;
 
 		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		public virtual IFieldReaderContext Context => context;
+		public virtual IReadingContext Context => context;
 
 		/// <summary>
 		/// Gets a value indicating if the buffer is empty.

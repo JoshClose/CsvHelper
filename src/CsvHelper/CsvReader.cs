@@ -24,15 +24,14 @@ namespace CsvHelper
 	public class CsvReader : IReader
 	{
 		private readonly RecordManager recordManager;
-		// TODO: This need to be private.
-		internal ReadingContext context;
+		private IReadingContext context;
 		private bool disposed;
 		private IParser parser;
 
 		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		public virtual IReaderContext Context => context;
+		public virtual IReadingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -80,7 +79,7 @@ namespace CsvHelper
 		public CsvReader( IParser parser )
 		{
 			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
-			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( "For ICsvParser to be used in CsvReader, ICSvParser.Context must also implement IReaderContext." );
+			context = parser.Context as IReadingContext ?? throw new InvalidOperationException( $"For {nameof( IParser )} to be used in {nameof( CsvReader )}, {nameof( IParser.Context )} must also implement {nameof( IReadingContext )}." );
 			recordManager = new RecordManager( this );
 		}
 
@@ -1147,11 +1146,11 @@ namespace CsvHelper
 			// since we're doing the reading ourselves.
 
 			if( context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null )
-			{
+		{
 				if( !Read() )
-				{
+			{
 					yield break;
-				}
+			}
 
 				ReadHeader();
 				ValidateHeader<T>();
@@ -1162,7 +1161,7 @@ namespace CsvHelper
 				try
 				{
 					recordManager.Hydrate( record );
-				}
+			}
 				catch( Exception ex )
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
@@ -1171,7 +1170,7 @@ namespace CsvHelper
 
 					// If the callback doesn't throw, keep going.
 					continue;
-				}
+		}
 
 				yield return record;
 			}
@@ -1314,11 +1313,11 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
-		{
-			if( disposed )
 			{
+			if( disposed )
+				{
 				return;
-			}
+				}
 
 			if( disposing )
 			{
@@ -1335,12 +1334,12 @@ namespace CsvHelper
 		/// </summary>
 		/// <exception cref="ReaderException" />
 		protected virtual void CheckHasBeenRead()
-		{
-			if( !context.HasBeenRead )
 			{
+			if( !context.HasBeenRead )
+				{
 				throw new ReaderException( context, "You must call read on the reader before accessing its data." );
+				}
 			}
-		}
 
 		/// <summary>
 		/// Parses the named indexes from the header record.
@@ -1350,7 +1349,7 @@ namespace CsvHelper
 			if( context.HeaderRecord == null )
 			{
 				throw new ReaderException( context, "No header record was found." );
-			}
+		}
 
 			for( var i = 0; i < context.HeaderRecord.Length; i++ )
 			{
@@ -1358,11 +1357,11 @@ namespace CsvHelper
 				if( context.NamedIndexes.ContainsKey( name ) )
 				{
 					context.NamedIndexes[name].Add( i );
-				}
+	}
 				else
 				{
 					context.NamedIndexes[name] = new List<int> { i };
-				}
+}
 			}
 		}
 	}

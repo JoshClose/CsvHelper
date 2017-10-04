@@ -16,7 +16,7 @@ namespace CsvHelper
 		/// Initializes a new instance of the <see cref="WriterException"/> class.
 		/// </summary>
 		/// <param name="context">The writing context.</param>
-		public WriterException( WritingContext context ) : base( context ) { }
+		public WriterException( IWritingContext context ) : base( context ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="WriterException"/> class
@@ -24,7 +24,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public WriterException( WritingContext context, string message ) : base( context, message ) { }
+		public WriterException( IWritingContext context, string message ) : base( context, message ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="WriterException"/> class
@@ -34,6 +34,6 @@ namespace CsvHelper
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public WriterException( WritingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
+		public WriterException( IWritingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
 	}
 }

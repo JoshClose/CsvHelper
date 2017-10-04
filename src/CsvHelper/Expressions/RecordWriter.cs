@@ -69,9 +69,9 @@ namespace CsvHelper.Expressions
 				typeKey += $"|{type.FullName}";
 			}
 
-			if( !Writer.context.TypeActions.TryGetValue( typeKey, out Delegate action ) )
+			if( !Writer.Context.TypeActions.TryGetValue( typeKey, out Delegate action ) )
 			{
-				Writer.context.TypeActions[typeKey] = action = CreateWriteDelegate( record );
+				Writer.Context.TypeActions[typeKey] = action = CreateWriteDelegate( record );
 			}
 
 			return (Action<T>)action;

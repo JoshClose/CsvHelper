@@ -26,7 +26,7 @@ namespace CsvHelper.Configuration
 		/// will throw a <see cref="ValidationException"/> if there is no header for a given property mapping.
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// </summary>
-		Action<bool, string[], int, ReadingContext> HeaderValidatedCallback { get; set; }
+		Action<bool, string[], int, IReadingContext> HeaderValidatedCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
@@ -34,7 +34,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		Action<string[], int, ReadingContext> MissingFieldFoundCallback { get; set; }
+		Action<string[], int, IReadingContext> MissingFieldFoundCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a reading exception occurs.

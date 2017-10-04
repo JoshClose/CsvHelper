@@ -26,7 +26,7 @@ namespace CsvHelper.Tests.Mocks
 			get { return records; }
 		}
 
-		public WritingContext Context { get; }
+		public IWritingContext Context { get; }
 
 		public SerializerMock( bool throwExceptionOnWrite = false )
 		{

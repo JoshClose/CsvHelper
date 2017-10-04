@@ -39,7 +39,7 @@ namespace CsvHelper.Configuration
 		/// instead of throwing an exception.
 		/// Arguments: context
 		/// </summary>
-		Action<ReadingContext> BadDataFoundCallback { get; set; }
+		Action<IReadingContext> BadDataFoundCallback { get; set; }
 
 		/// <summary>
 		/// Gets or sets the character used to denote

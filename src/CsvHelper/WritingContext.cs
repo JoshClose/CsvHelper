@@ -13,17 +13,26 @@ namespace CsvHelper
 	/// <summary>
 	/// CSV writing state.
 	/// </summary>
-	public class WritingContext : IWriterContext, ISerializerContext, IDisposable
+	public class WritingContext : IWritingContext, IDisposable
     {
 		private bool disposed;
 		private TextWriter writer;
 		private Configuration.Configuration configuration;
 
-		internal Dictionary<string, Delegate> TypeActions { get; } = new Dictionary<string, Delegate>();
+		/// <summary>
+		/// Gets the type actions.
+		/// </summary>
+		public Dictionary<string, Delegate> TypeActions { get; } = new Dictionary<string, Delegate>();
 
-		internal Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
+		/// <summary>
+		/// Gets the type converter options.
+		/// </summary>
+		public Dictionary<Type, TypeConverterOptions> TypeConverterOptionsCache { get; } = new Dictionary<Type, TypeConverterOptions>();
 
-		internal MemberMapData ReusableMemberMapData { get; } = new MemberMapData( null );
+		/// <summary>
+		/// Gets or sets the reusable member map data.
+		/// </summary>
+		public MemberMapData ReusableMemberMapData { get; set; } = new MemberMapData( null );
 
 		/// <summary>
 		/// Gets the writer configuration.
@@ -44,12 +53,12 @@ namespace CsvHelper
 		/// Gets a value indicating if the <see cref="Writer"/>
 		/// should be left open when disposing.
 		/// </summary>
-		public virtual bool LeaveOpen { get; internal set; }
+		public virtual bool LeaveOpen { get; set; }
 
 		/// <summary>
 		/// Gets the current row.
 		/// </summary>
-		public virtual int Row { get; internal set; } = 1;
+		public virtual int Row { get; set; } = 1;
 
 		/// <summary>
 		/// Get the current record;
@@ -59,14 +68,20 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets a value indicating if the header has been written.
 		/// </summary>
-		public virtual bool HasHeaderBeenWritten { get; internal set; }
+		public virtual bool HasHeaderBeenWritten { get; set; }
 
 		/// <summary>
 		/// Gets a value indicating if a record has been written.
 		/// </summary>
-		public virtual bool HasRecordBeenWritten { get; internal set; }
+		public virtual bool HasRecordBeenWritten { get; set; }
 
-		internal WritingContext( TextWriter writer, Configuration.Configuration configuration, bool leaveOpen )
+		/// <summary>
+		/// Initializes a new instance.
+		/// </summary>
+		/// <param name="writer">The writer.</param>
+		/// <param name="configuration">The configuration.</param>
+		/// <param name="leaveOpen">A value indicating if the TextWriter should be left open.</param>
+		public WritingContext( TextWriter writer, Configuration.Configuration configuration, bool leaveOpen )
 		{
 			this.writer = writer ?? throw new ArgumentNullException( nameof( writer ) );
 			this.configuration = configuration ?? throw new ArgumentNullException( nameof( configuration ) );

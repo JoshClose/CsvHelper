@@ -17,7 +17,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the writing context.
 		/// </summary>
-		WritingContext Context { get; }
+		IWritingContext Context { get; }
 
 		/// <summary>
 		/// Gets the configuration.

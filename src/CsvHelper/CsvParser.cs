@@ -20,14 +20,14 @@ namespace CsvHelper
 	/// </summary>
 	public partial class CsvParser : IParser
 	{
-		private ReadingContext context;
+		private IReadingContext context;
 		private IFieldReader fieldReader;
 		private bool disposed;
 
 		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		public virtual IParserContext Context => context;
+		public virtual IReadingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -74,7 +74,7 @@ namespace CsvHelper
 		public CsvParser( IFieldReader fieldReader )
 		{
 			this.fieldReader = fieldReader ?? throw new ArgumentNullException( nameof( fieldReader ) );
-			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException( "For FieldReader to be used in CsvParser, FieldReader.Context must also implement IParserContext." );
+			context = fieldReader.Context as IReadingContext ?? throw new InvalidOperationException( $"For {nameof( FieldReader )} to be used in {nameof( CsvParser )}, {nameof( FieldReader.Context )} must also implement {nameof( IReadingContext )}." );
 		}
 			
 		/// <summary>

@@ -35,9 +35,9 @@ namespace CsvHelper.Expressions
 		{
 			var type = Writer.GetTypeForRecord( record );
 
-			if( Writer.context.WriterConfiguration.Maps[type] == null )
+			if( Writer.Context.WriterConfiguration.Maps[type] == null )
 			{
-				Writer.context.WriterConfiguration.Maps.Add( Writer.context.WriterConfiguration.AutoMap( type ) );
+				Writer.Context.WriterConfiguration.Maps.Add( Writer.Context.WriterConfiguration.AutoMap( type ) );
 			}
 
 			var recordParameter = Expression.Parameter( typeof( T ), "record" );
@@ -46,11 +46,11 @@ namespace CsvHelper.Expressions
 			// Get a list of all the members so they will
 			// be sorted properly.
 			var members = new MemberMapCollection();
-			members.AddMembers( Writer.context.WriterConfiguration.Maps[type] );
+			members.AddMembers( Writer.Context.WriterConfiguration.Maps[type] );
 
 			if( members.Count == 0 )
 			{
-				throw new WriterException( Writer.context, $"No properties are mapped for type '{type.FullName}'." );
+				throw new WriterException( Writer.Context, $"No properties are mapped for type '{type.FullName}'." );
 			}
 
 			var delegates = new List<Action<T>>();
@@ -96,11 +96,11 @@ namespace CsvHelper.Expressions
 						continue;
 					}
 
-					fieldExpression = ExpressionManager.CreateGetMemberExpression( recordParameterConverted, Writer.context.WriterConfiguration.Maps[type], memberMap );
+					fieldExpression = ExpressionManager.CreateGetMemberExpression( recordParameterConverted, Writer.Context.WriterConfiguration.Maps[type], memberMap );
 
 					var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
-					memberMap.Data.TypeConverterOptions.CultureInfo = Writer.context.WriterConfiguration.CultureInfo;
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+					memberMap.Data.TypeConverterOptions.CultureInfo = Writer.Context.WriterConfiguration.CultureInfo;
 
 					var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );

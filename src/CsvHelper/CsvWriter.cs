@@ -30,15 +30,14 @@ namespace CsvHelper
 	public class CsvWriter : IWriter
 	{
 		private readonly RecordManager recordManager;
-		// TODO: This should be private.
-		internal WritingContext context;
+		private IWritingContext context;
 		private bool disposed;
 		private ISerializer serializer;
 
 		/// <summary>
 		/// Gets the writing context.
 		/// </summary>
-		public virtual WritingContext Context => context;
+		public virtual IWritingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -72,12 +71,7 @@ namespace CsvHelper
 		public CsvWriter( ISerializer serializer )
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
-			if( !( this.serializer.Context is IWriterContext ) )
-			{
-				throw new InvalidOperationException( "For ICsvSerializer to be used in CsvWriter, ICsvSerializer.Context must also implement IWriterContext." );
-			}
-
-			context = serializer.Context;
+			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( IWritingContext )}." );
 			recordManager = new RecordManager( this );
 		}
 
@@ -525,10 +519,10 @@ namespace CsvHelper
 			if( type == typeof( object ) )
 			{
 				type = record.GetType();
-			}
+				}
 
 			return type;
-		}
+				}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -560,5 +554,5 @@ namespace CsvHelper
 			context = null;
 			disposed = true;
 		}
-	}
-}
+			}
+			}

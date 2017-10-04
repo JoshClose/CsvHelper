@@ -110,7 +110,7 @@ namespace CsvHelper.Tests.Configuration
 			public string[] CurrentRecord { get; }
 			public int Row { get; }
 
-			public IReaderContext Context
+			public IReadingContext Context
 			{
 				get
 				{

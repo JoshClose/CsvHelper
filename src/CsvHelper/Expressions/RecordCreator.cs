@@ -72,9 +72,9 @@ namespace CsvHelper.Expressions
 		/// <param name="recordType">The record type.</param>
 		protected virtual Delegate GetCreateRecordDelegate( Type recordType )
 		{
-			if( !Reader.context.CreateRecordFuncs.TryGetValue( recordType, out Delegate func ) )
+			if( !Reader.Context.CreateRecordFuncs.TryGetValue( recordType, out Delegate func ) )
 			{
-				Reader.context.CreateRecordFuncs[recordType] = func = CreateCreateRecordDelegate( recordType );
+				Reader.Context.CreateRecordFuncs[recordType] = func = CreateCreateRecordDelegate( recordType );
 			}
 
 			return func;
