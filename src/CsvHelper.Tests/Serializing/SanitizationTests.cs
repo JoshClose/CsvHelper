@@ -17,6 +17,7 @@ namespace CsvHelper.Tests.Serializing
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvSerializer( writer ) )
 			{
+				csv.Configuration.SanitizeForInjection = true;
 				csv.Write( new[] { "=one" } );
 				writer.Flush();
 
@@ -30,10 +31,41 @@ namespace CsvHelper.Tests.Serializing
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvSerializer( writer ) )
 			{
+				csv.Configuration.SanitizeForInjection = true;
 				csv.Write( new[] { "\"=one\"" } );
 				writer.Flush();
 
 				Assert.AreEqual( "\"\t=one\"", writer.ToString() );
+			}
+		}
+
+		[TestMethod]
+		public void NoQuoteChangeEscapeCharacterTest()
+		{
+			using( var writer = new StringWriter() )
+			using( var csv = new CsvSerializer( writer ) )
+			{
+				csv.Configuration.SanitizeForInjection = true;
+				csv.Configuration.InjectionEscapeCharacter = '\'';
+				csv.Write( new[] { "=one" } );
+				writer.Flush();
+
+				Assert.AreEqual( "'=one", writer.ToString() );
+			}
+		}
+
+		[TestMethod]
+		public void QuoteChangeEscapeCharacterTest()
+		{
+			using( var writer = new StringWriter() )
+			using( var csv = new CsvSerializer( writer ) )
+			{
+				csv.Configuration.SanitizeForInjection = true;
+				csv.Configuration.InjectionEscapeCharacter = '\'';
+				csv.Write( new[] { "\"=one\"" } );
+				writer.Flush();
+
+				Assert.AreEqual( "\"'=one\"", writer.ToString() );
 			}
 		}
 	}

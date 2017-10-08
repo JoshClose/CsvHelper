@@ -37,5 +37,10 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the characters that are used for injection attacks.
 		/// </summary>
 		char[] InjectionCharacters { get; set; }
+
+		/// <summary>
+		/// Gets or sets the character used to escape a detected injection.
+		/// </summary>
+		char InjectionEscapeCharacter { get; set; }
 	}
 }

@@ -162,12 +162,12 @@ namespace CsvHelper
 
 			if( Configuration.InjectionCharacters.Contains( field[0] ) )
 			{
-				return "\t" + field;
+				return Configuration.InjectionEscapeCharacter + field;
 			}
 
 			if( field[0] == Configuration.Quote && Configuration.InjectionCharacters.Contains( field[1] ) )
 			{
-				return Configuration.Quote + "\t" + field.Substring( 1 );
+				return field[0].ToString() + Configuration.InjectionEscapeCharacter.ToString() + field.Substring( 1 );
 			}
 
 			return field;
