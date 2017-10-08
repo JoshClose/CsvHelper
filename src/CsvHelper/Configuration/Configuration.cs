@@ -46,7 +46,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the function that is called when a header validation check is ran. The default function
-		/// will throw a <see cref="ValidationException"/> if there is no header for a given property mapping.
+		/// will throw a <see cref="ValidationException"/> if there is no header for a given member mapping.
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
@@ -170,7 +170,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
-		/// Default is ',';
+		/// Default is ",";
 		/// </summary>
 		public virtual string Delimiter
 		{
@@ -275,7 +275,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the size of the buffer
-		/// used for reading and writing CSV files.
+		/// used for reading CSV files.
 		/// Default is 2048.
 		/// </summary>
 		public virtual int BufferSize { get; set; } = 2048;

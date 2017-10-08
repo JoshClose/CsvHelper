@@ -14,7 +14,7 @@ namespace CsvHelper.Configuration
     {
 		/// <summary>
 		/// Gets or sets the size of the buffer
-		/// used for reading and writing CSV files.
+		/// used for reading CSV files.
 		/// Default is 2048.
 		/// </summary>
 		int BufferSize { get; set; }
@@ -74,7 +74,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
-		/// Default is ',';
+		/// Default is ",";
 		/// </summary>
 		string Delimiter { get; set; }
 

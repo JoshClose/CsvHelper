@@ -23,8 +23,9 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the function that is called when a header validation check is ran. The default function
-		/// will throw a <see cref="ValidationException"/> if there is no header for a given property mapping.
+		/// will throw a <see cref="ValidationException"/> if there is no header for a given member mapping.
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
+		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
 		Action<bool, string[], int, IReadingContext> HeaderValidatedCallback { get; set; }
 
