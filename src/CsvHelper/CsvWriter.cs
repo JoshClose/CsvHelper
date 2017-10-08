@@ -167,7 +167,7 @@ namespace CsvHelper
 		public virtual void WriteField<T>( T field )
 		{
 			var type = field == null ? typeof( string ) : field.GetType();
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			WriteField( field, converter );
 		}
 
@@ -186,7 +186,7 @@ namespace CsvHelper
 			context.ReusableMemberMapData.TypeConverter = converter;
 			if( !context.TypeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
 			{
-				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) );
+				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.WriterConfiguration.TypeConverterOptionsCache.GetOptions( type ) );
 				typeConverterOptions.CultureInfo = context.WriterConfiguration.CultureInfo;
 				context.TypeConverterOptionsCache.Add( type, typeConverterOptions );
 			}
@@ -209,7 +209,7 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField<T, TConverter>( T field )
 		{
-			var converter = Configuration.TypeConverterFactory.GetConverter<TConverter>();
+			var converter = Configuration.TypeConverterCache.GetConverter<TConverter>();
 			WriteField( field, converter );
 		}
 

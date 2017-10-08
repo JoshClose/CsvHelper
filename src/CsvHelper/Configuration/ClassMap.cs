@@ -278,7 +278,7 @@ namespace CsvHelper.Configuration
 
 			foreach( var member in members )
 			{
-				var typeConverterType = configuration.TypeConverterFactory.GetConverter( member.MemberType() ).GetType();
+				var typeConverterType = configuration.TypeConverterCache.GetConverter( member.MemberType() ).GetType();
 
 				if( configuration.HasHeaderRecord && enumerableConverters.Contains( typeConverterType ) )
 				{
@@ -326,7 +326,7 @@ namespace CsvHelper.Configuration
 				{
 					var memberMap = MemberMap.CreateGeneric( map.ClassType, member );
 					// Use global values as the starting point.
-					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( member.MemberType() ), memberMap.Data.TypeConverterOptions );
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions( member.MemberType() ), memberMap.Data.TypeConverterOptions );
 					memberMap.Data.Index = map.GetMaxIndex() + 1;
 					if( !isDefaultConverter )
 					{
@@ -356,7 +356,7 @@ namespace CsvHelper.Configuration
 
 			foreach( var parameter in parameters )
 			{
-				var typeConverterType = configuration.TypeConverterFactory.GetConverter( parameter.ParameterType ).GetType();
+				var typeConverterType = configuration.TypeConverterCache.GetConverter( parameter.ParameterType ).GetType();
 
 				var parameterMap = new ParameterMap( parameter );
 
@@ -408,7 +408,7 @@ namespace CsvHelper.Configuration
 				}
 				else
 				{
-					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsFactory.GetOptions( parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
+					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions( parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
 					parameterMap.Data.Index = map.GetMaxIndex() + 1;
 				}
 

@@ -38,7 +38,7 @@ namespace CsvHelper.Expressions
 
 			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
 
-			var typeConverter = Writer.Configuration.TypeConverterFactory.GetConverter( type );
+			var typeConverter = Writer.Configuration.TypeConverterCache.GetConverter( type );
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 
@@ -46,7 +46,7 @@ namespace CsvHelper.Expressions
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
-				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( type ) )
+				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsCache.GetOptions( type ) )
 			};
 			memberMapData.TypeConverterOptions.CultureInfo = Writer.Context.WriterConfiguration.CultureInfo;
 

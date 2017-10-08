@@ -82,7 +82,7 @@ namespace CsvHelper.Expressions
 					else
 					{
 						fieldExpression = Expression.Constant( memberMap.Data.Constant );
-						var typeConverterExpression = Expression.Constant( Writer.Configuration.TypeConverterFactory.GetConverter( memberMap.Data.Constant.GetType() ) );
+						var typeConverterExpression = Expression.Constant( Writer.Configuration.TypeConverterCache.GetConverter( memberMap.Data.Constant.GetType() ) );
 						var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 						fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );
 						fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( Writer ), Expression.Constant( memberMap.Data ) );
@@ -99,7 +99,7 @@ namespace CsvHelper.Expressions
 					fieldExpression = ExpressionManager.CreateGetMemberExpression( recordParameterConverted, Writer.Context.WriterConfiguration.Maps[type], memberMap );
 
 					var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsCache.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
 					memberMap.Data.TypeConverterOptions.CultureInfo = Writer.Context.WriterConfiguration.CultureInfo;
 
 					var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );

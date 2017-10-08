@@ -147,7 +147,7 @@ namespace CsvHelper.Configuration
 
 				if( memberMap.Data.TypeConverter == null )
 				{
-					memberMap.Data.TypeConverter = configuration.TypeConverterFactory.GetConverter( memberMap.Data.Member.MemberType() );
+					memberMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter( memberMap.Data.Member.MemberType() );
 				}
 
 				if( memberMap.Data.Names.Count == 0 )
@@ -170,7 +170,7 @@ namespace CsvHelper.Configuration
 				{ 
 					if( parameterMap.Data.TypeConverter == null )
 					{
-						parameterMap.Data.TypeConverter = configuration.TypeConverterFactory.GetConverter( parameterMap.Data.Parameter.ParameterType );
+						parameterMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter( parameterMap.Data.Parameter.ParameterType );
 					}
 
 					if( parameterMap.Data.Name == null )

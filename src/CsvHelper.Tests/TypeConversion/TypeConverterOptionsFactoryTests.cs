@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.TypeConversion
             {
                 Formats = new string[] { "custom" },
             };
-	        var typeConverterOptionsFactory = new TypeConverterOptionsFactory();
+	        var typeConverterOptionsFactory = new TypeConverterOptionsCache();
 
 			typeConverterOptionsFactory.AddOptions<string>(customOptions);
             var options = typeConverterOptionsFactory.GetOptions<string>();
@@ -59,7 +59,7 @@ namespace CsvHelper.Tests.TypeConversion
                 writer.Flush();
                 stream.Position = 0;
 
-	            csvReader.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
+	            csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
                 csvReader.Configuration.HasHeaderRecord = false;
                 csvReader.Read();
                 Assert.AreEqual(1234, csvReader.GetField<int>(0));
@@ -81,7 +81,7 @@ namespace CsvHelper.Tests.TypeConversion
                 writer.Flush();
                 stream.Position = 0;
 
-	            csvReader.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
+	            csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
                 csvReader.Configuration.HasHeaderRecord = false;
                 csvReader.GetRecords<Test>().ToList();
             }
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests.TypeConversion
                 writer.Flush();
                 stream.Position = 0;
 
-	            csvReader.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
+	            csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
                 csvReader.Configuration.HasHeaderRecord = false;
                 csvReader.Configuration.RegisterClassMap<TestMap>();
                 csvReader.GetRecords<Test>().ToList();
@@ -118,7 +118,7 @@ namespace CsvHelper.Tests.TypeConversion
             using (var writer = new StreamWriter(stream))
             using (var csvWriter = new CsvWriter(writer))
             {
-	            csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
+	            csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
                 csvWriter.WriteField(1234);
                 csvWriter.NextRecord();
                 writer.Flush();
@@ -143,7 +143,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-	            csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
+	            csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
                 csvWriter.Configuration.HasHeaderRecord = false;
                 csvWriter.WriteRecords(list);
                 writer.Flush();
@@ -168,7 +168,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-	            csvWriter.Configuration.TypeConverterOptionsFactory.AddOptions<int>( options );
+	            csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
                 csvWriter.Configuration.HasHeaderRecord = false;
                 csvWriter.Configuration.RegisterClassMap<TestMap>();
                 csvWriter.WriteRecords(list);

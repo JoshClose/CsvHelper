@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsFactory.GetOptions<string>().NullValues.Add( string.Empty );
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( string.Empty );
 				var records = csv.GetRecords<Test>().ToList();
 
 				Assert.IsNull( records[0].Id );
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsFactory.GetOptions<string>().NullValues.Add( "null" );
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( "null" );
 				csv.Configuration.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 

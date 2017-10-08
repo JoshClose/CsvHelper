@@ -374,7 +374,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			return GetField( type, index, converter );
 		}
 
@@ -389,7 +389,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			return GetField( type, name, converter );
 		}
 
@@ -405,7 +405,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			return GetField( type, name, index, converter );
 		}
 
@@ -425,7 +425,7 @@ namespace CsvHelper
 			context.ReusableMemberMapData.TypeConverter = converter;
 			if( !context.TypeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
 			{
-				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( type ) );
+				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( type ) );
 				typeConverterOptions.CultureInfo = context.ReaderConfiguration.CultureInfo;
 				context.TypeConverterOptionsCache.Add( type, typeConverterOptions );
 			}
@@ -479,7 +479,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter<T>();
+			var converter = Configuration.TypeConverterCache.GetConverter<T>();
 			return GetField<T>( index, converter );
 		}
 
@@ -493,7 +493,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter<T>();
+			var converter = Configuration.TypeConverterCache.GetConverter<T>();
 			return GetField<T>( name, converter );
 		}
 
@@ -510,7 +510,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter<T>();
+			var converter = Configuration.TypeConverterCache.GetConverter<T>();
 			return GetField<T>( name, index, converter );
 		}
 
@@ -632,7 +632,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			return TryGetField( type, index, converter, out field );
 		}
 
@@ -647,7 +647,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			return TryGetField( type, name, converter, out field );
 		}
 
@@ -665,7 +665,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter( type );
+			var converter = Configuration.TypeConverterCache.GetConverter( type );
 			return TryGetField( type, name, index, converter, out field );
 		}
 
@@ -767,7 +767,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter<T>();
+			var converter = Configuration.TypeConverterCache.GetConverter<T>();
 			return TryGetField( index, converter, out field );
 		}
 
@@ -782,7 +782,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter<T>();
+			var converter = Configuration.TypeConverterCache.GetConverter<T>();
 			return TryGetField( name, converter, out field );
 		}
 
@@ -800,7 +800,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterFactory.GetConverter<T>();
+			var converter = Configuration.TypeConverterCache.GetConverter<T>();
 			return TryGetField( name, index, converter, out field );
 		}
 

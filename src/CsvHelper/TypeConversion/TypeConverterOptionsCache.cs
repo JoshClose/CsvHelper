@@ -8,9 +8,9 @@ using System.Collections.Generic;
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Creates <see cref="TypeConverterOptions"/>.
+	/// Caches <see cref="TypeConverterOptions"/> for a given type.
 	/// </summary>
-	public class TypeConverterOptionsFactory
+	public class TypeConverterOptionsCache
 	{
 		private Dictionary<Type, TypeConverterOptions> typeConverterOptions = new Dictionary<Type, TypeConverterOptions>();
 

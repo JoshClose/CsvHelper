@@ -43,7 +43,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="type">The nullable type.</param>
 		/// <param name="typeConverterFactory">The type converter factory.</param>
 		/// <exception cref="System.ArgumentException">type is not a nullable type.</exception>
-		public NullableConverter( Type type, TypeConverterFactory typeConverterFactory )
+		public NullableConverter( Type type, TypeConverterCache typeConverterFactory )
 		{
 			NullableType = type;
 			UnderlyingType = Nullable.GetUnderlyingType( type );

@@ -67,14 +67,14 @@ namespace CsvHelper.Configuration
 		CultureInfo CultureInfo { get; set; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
+		/// Gets or sets the <see cref="TypeConverterOptionsCache"/>.
 		/// </summary>
-		TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; }
+		TypeConverterOptionsCache TypeConverterOptionsCache { get; set; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="TypeConverterFactory"/>.
+		/// Gets or sets the <see cref="TypeConverterCache"/>.
 		/// </summary>
-		TypeConverterFactory TypeConverterFactory { get; set; }
+		TypeConverterCache TypeConverterCache { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if comments are allowed.

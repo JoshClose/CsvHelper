@@ -12,19 +12,19 @@ using System.Reflection;
 namespace CsvHelper.TypeConversion
 {
 	/// <summary>
-	/// Creates <see cref="ITypeConverter"/>s.
+	/// Caches <see cref="ITypeConverter"/>s for a given type.
 	/// </summary>
-	public class TypeConverterFactory
+	public class TypeConverterCache
 	{
-		private static TypeConverterFactory current = new TypeConverterFactory();
+		private static TypeConverterCache current = new TypeConverterCache();
 		private static readonly object locker = new object();
 
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
 
 		/// <summary>
-		/// Initializes the <see cref="TypeConverterFactory" /> class.
+		/// Initializes the <see cref="TypeConverterCache" /> class.
 		/// </summary>
-		public TypeConverterFactory()
+		public TypeConverterCache()
 		{
 			CreateDefaultConverters();
 		}

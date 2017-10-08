@@ -28,14 +28,14 @@ namespace CsvHelper.Configuration
 		private readonly ClassMapCollection maps;
 
 		/// <summary>
-		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
+		/// Gets or sets the <see cref="TypeConverterOptionsCache"/>.
 		/// </summary>
-		public virtual TypeConverterOptionsFactory TypeConverterOptionsFactory { get; set; } = new TypeConverterOptionsFactory();
+		public virtual TypeConverterOptionsCache TypeConverterOptionsCache { get; set; } = new TypeConverterOptionsCache();
 
 		/// <summary>
-		/// Gets or sets the <see cref="TypeConverterOptionsFactory"/>.
+		/// Gets or sets the <see cref="TypeConverterOptionsCache"/>.
 		/// </summary>
-		public virtual TypeConverterFactory TypeConverterFactory { get; set; } = new TypeConverterFactory();
+		public virtual TypeConverterCache TypeConverterCache { get; set; } = new TypeConverterCache();
 
 		/// <summary>
 		/// Gets or sets a value indicating if the

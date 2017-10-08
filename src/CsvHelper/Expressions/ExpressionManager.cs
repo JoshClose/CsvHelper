@@ -154,7 +154,7 @@ namespace CsvHelper.Expressions
 
 			// Convert the field.
 			var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), reader.Context.ReaderConfiguration.TypeConverterOptionsFactory.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
+			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
 			memberMap.Data.TypeConverterOptions.CultureInfo = reader.Context.ReaderConfiguration.CultureInfo;
 
 			// Create type converter expression.
