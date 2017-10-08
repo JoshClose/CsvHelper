@@ -25,7 +25,7 @@ namespace CsvHelper.Tests.Parsing
 				stream.Position = 0;
 
 				string field = null;
-				parser.Configuration.BadDataFoundCallback = f => field = f.Field;
+				parser.Configuration.BadDataFound = f => field = f.Field;
 				parser.Read();
 
 				Assert.IsNotNull( field );

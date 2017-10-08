@@ -26,8 +26,8 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HeaderValidatedCallback = null;
-				csv.Configuration.MissingFieldFoundCallback = null;
+				csv.Configuration.HeaderValidated = null;
+				csv.Configuration.MissingFieldFound = null;
 
 				var record = new Basic
 				{
@@ -68,8 +68,8 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HeaderValidatedCallback = null;
-				csv.Configuration.MissingFieldFoundCallback = null;
+				csv.Configuration.HeaderValidated = null;
+				csv.Configuration.MissingFieldFound = null;
 
 				var record = new UnUsedProperty
 				{
@@ -113,8 +113,8 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HeaderValidatedCallback = null;
-				csv.Configuration.MissingFieldFoundCallback = null;
+				csv.Configuration.HeaderValidated = null;
+				csv.Configuration.MissingFieldFound = null;
 
 				var record = new HasReferences
 				{

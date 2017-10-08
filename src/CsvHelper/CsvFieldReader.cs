@@ -172,7 +172,7 @@ namespace CsvHelper
 
 			if( context.IsFieldBad )
 			{
-				context.ParserConfiguration.BadDataFoundCallback?.Invoke( context );
+				context.ParserConfiguration.BadDataFound?.Invoke( context );
 			}
 
 			context.IsFieldBad = false;

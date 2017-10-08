@@ -122,7 +122,7 @@ namespace CsvHelper.Tests.TypeConversion
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HeaderValidatedCallback = null;
+				csv.Configuration.HeaderValidated = null;
 				csv.Configuration.HasHeaderRecord = true;
 				csv.Configuration.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();

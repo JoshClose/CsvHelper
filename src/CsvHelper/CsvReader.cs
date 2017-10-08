@@ -157,7 +157,7 @@ namespace CsvHelper
 				else
 				{
 					var index = GetFieldIndex( parameter.Data.Name, 0, true );
-					Configuration.HeaderValidatedCallback?.Invoke( index != -1, new[] { parameter.Data.Name }, 0, context );
+					Configuration.HeaderValidated?.Invoke( index != -1, new[] { parameter.Data.Name }, 0, context );
 				}
 			}
 
@@ -169,7 +169,7 @@ namespace CsvHelper
 				}
 
 				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
-				Configuration.HeaderValidatedCallback?.Invoke( index != -1, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
+				Configuration.HeaderValidated?.Invoke( index != -1, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
 			}
 
 			foreach( var referenceMap in map.ReferenceMaps )
@@ -208,7 +208,7 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
 
-					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvException );
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -240,7 +240,7 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
 
-					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvException );
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -313,7 +313,7 @@ namespace CsvHelper
 			{
 				if( context.ReaderConfiguration.IgnoreBlankLines )
 				{
-					context.ReaderConfiguration.MissingFieldFoundCallback?.Invoke( null, index, context );
+					context.ReaderConfiguration.MissingFieldFound?.Invoke( null, index, context );
 				}
 
 				return default( string );
@@ -529,7 +529,7 @@ namespace CsvHelper
 			if( index >= context.Record.Length || index < 0 )
 			{
 				context.CurrentIndex = index;
-				context.ReaderConfiguration.MissingFieldFoundCallback?.Invoke( null, index, context );
+				context.ReaderConfiguration.MissingFieldFound?.Invoke( null, index, context );
 
 				return default( T );
 			}
@@ -1053,7 +1053,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
-					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1120,7 +1120,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
-					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1166,7 +1166,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
 
-					context.ReaderConfiguration.ReadingExceptionCallback?.Invoke( csvHelperException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1237,7 +1237,7 @@ namespace CsvHelper
 			{
 				if( !isTryGet )
 				{
-					context.ReaderConfiguration.MissingFieldFoundCallback?.Invoke( names, index, context );
+					context.ReaderConfiguration.MissingFieldFound?.Invoke( names, index, context );
 				}
 
 				return -1;

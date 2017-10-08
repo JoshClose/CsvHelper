@@ -151,7 +151,7 @@ namespace CsvHelper.Tests
 			var reader = new StreamReader( stream );
 
 			var parser = new CsvParser( reader );
-			parser.Configuration.BadDataFoundCallback = null;
+			parser.Configuration.BadDataFound = null;
 
 			var record = parser.Read();
 			Assert.AreEqual( " one ", record[0] );
@@ -961,7 +961,7 @@ namespace CsvHelper.Tests
 			using( var parser = new CsvParser( reader ) )
 			{
 				parser.Configuration.CountBytes = true;
-				parser.Configuration.BadDataFoundCallback = null;
+				parser.Configuration.BadDataFound = null;
 
 				writer.Write( "1,\"2\" \" a\r\n" );
 				writer.Write( "\"3\",4\r\n" );

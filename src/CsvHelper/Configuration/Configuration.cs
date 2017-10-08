@@ -50,7 +50,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		public virtual Action<bool, string[], int, IReadingContext> HeaderValidatedCallback { get; set; } = ( isValid, headerNames, headerNameIndex, context ) =>
+		public virtual Action<bool, string[], int, IReadingContext> HeaderValidated { get; set; } = ( isValid, headerNames, headerNameIndex, context ) =>
 		{
 			if( isValid )
 			{
@@ -60,7 +60,7 @@ namespace CsvHelper.Configuration
 			var message =
 				$"Header matching ['{string.Join( "', '", headerNames )}'] names at index {headerNameIndex} was not found. " +
 				$"If you are expecting some headers to be missing and want to ignore this validation, " +
-				$"set the configuration {nameof( HeaderValidatedCallback )} to null. You can also change the " +
+				$"set the configuration {nameof( HeaderValidated )} to null. You can also change the " +
 				$"functionality to do something else, like logging the issue.";
 
 			throw new ValidationException( context, message );
@@ -72,9 +72,9 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		public virtual Action<string[], int, IReadingContext> MissingFieldFoundCallback { get; set; } = ( headerNames, index, context ) =>
+		public virtual Action<string[], int, IReadingContext> MissingFieldFound { get; set; } = ( headerNames, index, context ) =>
 		{
-			var messagePostfix = $"You can ignore missing fields by setting {nameof( MissingFieldFoundCallback )} to null.";
+			var messagePostfix = $"You can ignore missing fields by setting {nameof( MissingFieldFound )} to null.";
 
 			if( headerNames != null && headerNames.Length > 0 )
 			{
@@ -91,9 +91,9 @@ namespace CsvHelper.Configuration
 		/// instead of throwing an exception.
 		/// Arguments: context
 		/// </summary>
-		public virtual Action<IReadingContext> BadDataFoundCallback { get; set; } = context =>
+		public virtual Action<IReadingContext> BadDataFound { get; set; } = context =>
 		{
-			throw new BadDataException( context, $"You can ignore bad data by setting {nameof( BadDataFoundCallback )} to null." );
+			throw new BadDataException( context, $"You can ignore bad data by setting {nameof( BadDataFound )} to null." );
 		};
 
 		/// <summary>
@@ -103,7 +103,7 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		public virtual Action<CsvHelperException> ReadingExceptionCallback { get; set; } = exception => throw exception;
+		public virtual Action<CsvHelperException> ReadingExceptionOccurred { get; set; } = exception => throw exception;
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to

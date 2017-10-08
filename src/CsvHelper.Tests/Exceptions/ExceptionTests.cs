@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.Exceptions
 
 				try
 				{
-					csv.Configuration.HeaderValidatedCallback = null;
+					csv.Configuration.HeaderValidated = null;
 					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
 					Assert.Fail();
 				}

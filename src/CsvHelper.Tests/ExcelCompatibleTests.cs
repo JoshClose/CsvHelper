@@ -115,7 +115,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				parser.Configuration.BadDataFoundCallback = null;
+				parser.Configuration.BadDataFound = null;
 				var record = parser.Read();
 
 				Assert.IsNotNull( record );
@@ -139,7 +139,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				parser.Configuration.BadDataFoundCallback = null;
+				parser.Configuration.BadDataFound = null;
 				var record = parser.Read();
 
 				Assert.IsNotNull( record );

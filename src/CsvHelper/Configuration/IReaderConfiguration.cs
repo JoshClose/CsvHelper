@@ -27,7 +27,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		Action<bool, string[], int, IReadingContext> HeaderValidatedCallback { get; set; }
+		Action<bool, string[], int, IReadingContext> HeaderValidated { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		Action<string[], int, IReadingContext> MissingFieldFoundCallback { get; set; }
+		Action<string[], int, IReadingContext> MissingFieldFound { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a reading exception occurs.
@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		Action<CsvHelperException> ReadingExceptionCallback { get; set; }
+		Action<CsvHelperException> ReadingExceptionOccurred { get; set; }
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.
