@@ -315,7 +315,7 @@ var Layout = function (_Component) {
 				page = "home";
 			}
 
-			(0, _isomorphicFetch2.default)("/pages/" + page + ".md", {
+			(0, _isomorphicFetch2.default)("pages/" + page + ".md", {
 				method: "get",
 				credentials: "same-origin",
 				headers: {
