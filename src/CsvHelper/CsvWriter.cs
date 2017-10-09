@@ -535,6 +535,8 @@ namespace CsvHelper
 				return;
 			}
 
+			Flush();
+
 			if( disposing )
 			{
 				serializer?.Dispose();
