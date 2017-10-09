@@ -1,0 +1,12 @@
+@import "../../node_modules/bulma/sass/utilities/initial-variables";
+//@import "initial-variables/css";
+@import "../../node_modules/bulma/bulma";
+@import "pages/all";
+
+.title::before
+{
+	content: "";
+	display: block;
+	height: 3.25rem;
+	margin: -3.25rem 0 0;
+}

@@ -1,0 +1,58 @@
+{
+	"name": "csvhelper-website",
+	"version": "1.0.0",
+	"description": "",
+	"main": "server.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/JoshClose/CsvHelper.git"
+	},
+	"author": "",
+	"license": "ms-pl, apache-2.0",
+	"bugs": {
+		"url": "https://github.com/JoshClose/CsvHelper/issues"
+	},
+	"homepage": "http://joshclose.github.io/CsvHelper/",
+	"dependencies": {
+		"bulma": "^0.5.1",
+		"classnames": "^2.2.5",
+		"font-awesome": "^4.7.0",
+		"highlight.js": "^9.12.0",
+		"history": "^4.7.2",
+		"isomorphic-fetch": "^2.2.1",
+		"marked": "^0.3.6",
+		"prop-types": "^15.5.10",
+		"query-string": "^5.0.0",
+		"react": "^15.6.1",
+		"react-addons-css-transition-group": "^15.6.0",
+		"react-addons-transition-group": "^15.6.0",
+		"react-dom": "^15.6.1",
+		"react-redux": "^5.0.6",
+		"react-router-dom": "^4.2.2",
+		"react-router-redux": "next",
+		"redux": "^3.7.2",
+		"redux-logger": "^3.0.6"
+	},
+	"devDependencies": {
+		"babel-core": "^6.26.0",
+		"babel-loader": "^7.1.2",
+		"babel-preset-latest": "^6.24.1",
+		"babel-preset-react": "^6.24.1",
+		"babel-preset-stage-2": "^6.24.1",
+		"css-loader": "^0.28.7",
+		"express": "^4.15.4",
+		"extract-text-webpack-plugin": "^3.0.0",
+		"file-loader": "^0.11.2",
+		"json-loader": "^0.5.7",
+		"node-noop": "^1.0.0",
+		"node-sass": "^4.5.3",
+		"sass-loader": "^6.0.6",
+		"style-loader": "^0.18.2",
+		"url-loader": "^0.5.9",
+		"webpack": "^3.5.6",
+		"webpack-merge": "^4.1.0"
+	}
+}
