@@ -83,7 +83,7 @@ class Layout extends Component {
 			page = "home";
 		}
 
-		fetch(`/pages/${page}.md`, {
+		fetch(`pages/${page}.md`, {
 			method: "get",
 			credentials: "same-origin",
 			headers: {
