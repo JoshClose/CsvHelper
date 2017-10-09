@@ -878,7 +878,33 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		[TestMethod]
+
+	    [TestMethod]
+	    public void IgnoreBlankLinesAndShouldSkipRecordTest()
+	    {
+	        using (var stream = new MemoryStream())
+	        using (var reader = new StreamReader(stream))
+	        using (var writer = new StreamWriter(stream))
+	        using (var csv = new CsvReader(reader))
+	        {
+	            csv.Configuration.IgnoreBlankLines = true; // skip empty lines
+	            csv.Configuration.ShouldSkipRecord = row => /* row != null && */ row.All( string.IsNullOrEmpty ); // skip lines with just empty columns
+	            csv.Configuration.RegisterClassMap<SimpleMap>();
+
+	            writer.WriteLine("Id,Name");
+	            writer.WriteLine("1,one");
+	            writer.WriteLine(",");
+	            writer.WriteLine("");
+	            writer.WriteLine("2,two");
+	            writer.Flush();
+	            stream.Position = 0;
+
+	            var records = csv.GetRecords<Simple>().ToList();
+	            Assert.AreEqual(2, records.Count);
+	        }
+	    }
+
+        [TestMethod]
 		public void WriteNestedHeadersTest()
 		{
 			using( var stream = new MemoryStream() )
