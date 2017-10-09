@@ -89,7 +89,17 @@ namespace CsvHelper
 		/// <param name="type">The type.</param>
 		public static bool HasParameterlessConstructor( this Type type )
 		{
+			return type.GetConstructor( new Type[0] ) != null;
 			return type.GetConstructors().Any( t => t.GetParameters().Length == 0 );
+		}
+
+		/// <summary>
+		/// Gets a value indicating if the given type has any constructors.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		public static bool HasConstructor( this Type type )
+		{
+			return type.GetConstructors().Length > 0;
 		}
 
 		/// <summary>

@@ -152,6 +152,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type => 
 				!type.HasParameterlessConstructor()
+				&& type.HasConstructor()
 				&& !type.IsUserDefinedStruct()
 				&& !type.IsInterface
 				&& Type.GetTypeCode( type ) == TypeCode.Object;
