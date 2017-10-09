@@ -113,12 +113,12 @@ namespace CsvHelper
 
 			if( !context.WriterConfiguration.QuoteNoFields && !string.IsNullOrEmpty( field ) )
 			{
-                if( shouldQuote // Quote all fields
-				    || field.Contains( context.WriterConfiguration.QuoteString ) // Contains quote
+				if( shouldQuote // Quote all fields
+					|| field.Contains( context.WriterConfiguration.QuoteString ) // Contains quote
 					|| field[0] == ' ' // Starts with a space
-				    || field[field.Length - 1] == ' ' // Ends with a space
-				    || field.IndexOfAny( context.WriterConfiguration.QuoteRequiredChars ) > -1 // Contains chars that require quotes
-				    || ( context.WriterConfiguration.Delimiter.Length > 0 && field.Contains( context.WriterConfiguration.Delimiter ) ) // Contains delimiter
+					|| field[field.Length - 1] == ' ' // Ends with a space
+					|| field.IndexOfAny( context.WriterConfiguration.QuoteRequiredChars ) > -1 // Contains chars that require quotes
+					|| ( context.WriterConfiguration.Delimiter.Length > 0 && field.Contains( context.WriterConfiguration.Delimiter ) ) // Contains delimiter
 					|| context.WriterConfiguration.AllowComments && context.Record.Count == 0 && field[0] == context.WriterConfiguration.Comment ) // Comments are on first field starts with comment char
 				{
 					shouldQuote = true;
@@ -142,7 +142,7 @@ namespace CsvHelper
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
 		public virtual void WriteField( string field, bool shouldQuote )
 		{
-            // All quotes must be doubled.       
+			// All quotes must be doubled.       
 			if( shouldQuote && !string.IsNullOrEmpty( field ) )
 			{
 				field = field.Replace( context.WriterConfiguration.QuoteString, context.WriterConfiguration.DoubleQuoteString );
@@ -245,12 +245,12 @@ namespace CsvHelper
 			{
 				Flush();
 				serializer.WriteLine();
-	            context.Row++;
-	        }
-	        catch( Exception ex )
-	        {
+				context.Row++;
+			}
+			catch( Exception ex )
+			{
 				throw ex as CsvHelperException ?? new WriterException( context, "An unexpected error occurred.", ex );
-	        }
+			}
 		}
 
 		/// <summary>
@@ -276,15 +276,15 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="comment">The comment to write.</param>
 		public virtual void WriteComment( string comment )
-	    {
-	        WriteField( context.WriterConfiguration.Comment + comment, false );
-	    }
+		{
+			WriteField( context.WriterConfiguration.Comment + comment, false );
+		}
 
-        /// <summary>
-        /// Writes the header record from the given members.
-        /// </summary>
-        /// <typeparam name="T">The type of the record.</typeparam>
-        public virtual void WriteHeader<T>()
+		/// <summary>
+		/// Writes the header record from the given members.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		public virtual void WriteHeader<T>()
 		{
 			WriteHeader( typeof( T ) );
 		}
@@ -303,11 +303,6 @@ namespace CsvHelper
 			if( !context.WriterConfiguration.HasHeaderRecord )
 			{
 				throw new WriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
-			}
-
-			if( context.HasHeaderBeenWritten )
-			{
-				throw new WriterException( context, "The header record has already been written. You can't write it more than once." );
 			}
 
 			if( context.HasRecordBeenWritten )
@@ -366,11 +361,6 @@ namespace CsvHelper
 				throw new WriterException( context, "Configuration.HasHeaderRecord is false. This will need to be enabled to write the header." );
 			}
 
-			if( context.HasHeaderBeenWritten )
-			{
-				throw new WriterException( context, "The header record has already been written. You can't write it more than once." );
-			}
-
 			if( context.HasRecordBeenWritten )
 			{
 				throw new WriterException( context, "Records have already been written. You can't write the header after writing records has started." );
@@ -406,8 +396,8 @@ namespace CsvHelper
 			{
 				recordManager.Write( record );
 				context.HasHeaderBeenWritten = true;
-            }
-            catch( Exception ex )
+			}
+			catch( Exception ex )
 			{
 				throw ex as CsvHelperException ?? new WriterException( context, "An unexpected error occurred.", ex );
 			}
@@ -432,10 +422,10 @@ namespace CsvHelper
 					if( context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive && recordType != typeof( object ) )
 					{
 						WriteHeader( recordType );
-                        if( context.HasHeaderBeenWritten )
-                        {
-                            NextRecord();
-                        }
+						if( context.HasHeaderBeenWritten )
+						{
+							NextRecord();
+						}
 					}
 				}
 
@@ -466,8 +456,8 @@ namespace CsvHelper
 					try
 					{
 						recordManager.Write( record );
-                    }
-                    catch( TargetInvocationException ex )
+					}
+					catch( TargetInvocationException ex )
 					{
 						throw ex.InnerException;
 					}
@@ -519,10 +509,10 @@ namespace CsvHelper
 			if( type == typeof( object ) )
 			{
 				type = record.GetType();
-				}
+			}
 
 			return type;
-				}
+		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -554,5 +544,5 @@ namespace CsvHelper
 			context = null;
 			disposed = true;
 		}
-			}
-			}
+	}
+}
