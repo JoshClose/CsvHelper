@@ -77,7 +77,7 @@
 
 #### Breaking Changes
 
-- Removed all .NET builds except for netstandard2.0.
+- Removed all .NET builds except for net45 and netstandard2.0.
 - Removed obsolete code.
  - `object ICsvReader.GetField( int index, ITypeConverter converter )`
  - `object ICsvReader.GetField( string name, ITypeConverter converter )`
