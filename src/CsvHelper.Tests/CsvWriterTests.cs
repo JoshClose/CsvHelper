@@ -818,6 +818,33 @@ namespace CsvHelper.Tests
 			}
 		}
 
+
+		[TestMethod]
+		public void WriteInternalConstructorClassTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
+			{
+				csv.WriteRecords(new List<GetOnly>());
+				writer.Flush();
+				stream.Position = 0;
+
+				var text = reader.ReadToEnd();
+				Assert.AreEqual("One\r\n", text);
+			}
+		}
+
+		private class GetOnly
+		{
+			internal GetOnly(string someParam)
+			{
+			}
+
+			public int One { get; }
+		}
+
 		private class TestWithStatic
 		{
 			public int Id { get; set; }
