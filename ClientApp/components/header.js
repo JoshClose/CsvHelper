@@ -10,8 +10,8 @@ class Header extends Component {
 				<div className="container">
 					<nav className="navbar">
 						<div className="navbar-brand">
-							<a className="navbar-item" href="/">
-								<img src="/images/logo-header.png" width="66" height="28" />
+							<a className="navbar-item" href="/CsvHelper/">
+								<img src="/CsvHelper/images/logo-header.png" width="66" height="28" />
 							</a>
 
 							<div className="navbar-burger burger">
@@ -24,52 +24,52 @@ class Header extends Component {
 						<div className="navbar-menu">
 							<div className="navbar-start">
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/reading">Reading</Link>
+									<Link className="navbar-link" to="/CsvHelper/reading">Reading</Link>
 									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/reading#getting-all-records">Getting All Records</Link>
-										<Link className="navbar-item" to="/reading#reading-records">Reading Records</Link>
-										<Link className="navbar-item" to="/reading#getting-a-single-record">Getting a Single Record</Link>
-										<Link className="navbar-item" to="/reading#getting-fields">Getting Fields</Link>
-										<Link className="navbar-item" to="/reading#reading-context">Reading Context</Link>
-										<Link className="navbar-item" to="/reading#configuration">Configuration</Link>
+										<Link className="navbar-item" to="/CsvHelper/CsvHelper/reading#getting-all-records">Getting All Records</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#reading-records">Reading Records</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#getting-a-single-record">Getting a Single Record</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#getting-fields">Getting Fields</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#reading-context">Reading Context</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#configuration">Configuration</Link>
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/writing">Writing</Link>
+									<Link className="navbar-link" to="/CsvHelper/writing">Writing</Link>
 									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/writing#writing-all-records">Writing All Records</Link>
-										<Link className="navbar-item" to="/writing#writing-a-single-record">Writing a Single Record</Link>
-										<Link className="navbar-item" to="/writing#writing-fields">Writing Fields</Link>
-										<Link className="navbar-item" to="/writing#ending-the-row">Ending the Row</Link>
-										<Link className="navbar-item" to="/writing#writing-context">Writing Context</Link>
-										<Link className="navbar-item" to="/writing#configuration">Configuration</Link>
+										<Link className="navbar-item" to="/CsvHelper/writing#writing-all-records">Writing All Records</Link>
+										<Link className="navbar-item" to="/CsvHelper/writing#writing-a-single-record">Writing a Single Record</Link>
+										<Link className="navbar-item" to="/CsvHelper/writing#writing-fields">Writing Fields</Link>
+										<Link className="navbar-item" to="/CsvHelper/writing#ending-the-row">Ending the Row</Link>
+										<Link className="navbar-item" to="/CsvHelper/writing#writing-context">Writing Context</Link>
+										<Link className="navbar-item" to="/CsvHelper/writing#configuration">Configuration</Link>
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/mapping">Mapping</Link>
+									<Link className="navbar-link" to="/CsvHelper/mapping">Mapping</Link>
 									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="mapping#reference-mapping">Reference Mapping</Link>
-										<Link className="navbar-item" to="mapping#auto-mapping">Auto Mapping</Link>
-										<Link className="navbar-item" to="mapping#options">Options</Link>
+										<Link className="navbar-item" to="/CsvHelper/mapping#reference-mapping">Reference Mapping</Link>
+										<Link className="navbar-item" to="/CsvHelper/mapping#auto-mapping">Auto Mapping</Link>
+										<Link className="navbar-item" to="/CsvHelper/mapping#options">Options</Link>
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/configuration">Configuration</Link>
-									<div className="navbar-dropdown">
-									</div>
-								</div>
-								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/type-converters">Type Converters</Link>
+									<Link className="navbar-link" to="/CsvHelper/configuration">Configuration</Link>
 									<div className="navbar-dropdown">
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/examples">Examples</Link>
+									<Link className="navbar-link" to="/CsvHelper/type-converters">Type Converters</Link>
 									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="examples#private-members">Private Members</Link>
 									</div>
 								</div>
-								<Link className="navbar-item" to="/change-log">Change Log</Link>
+								<div className="navbar-item has-dropdown is-hoverable">
+									<Link className="navbar-link" to="/CsvHelper/examples">Examples</Link>
+									<div className="navbar-dropdown">
+										<Link className="navbar-item" to="/CsvHelper/examples#private-members">Private Members</Link>
+									</div>
+								</div>
+								<Link className="navbar-item" to="/CsvHelper/change-log">Change Log</Link>
 							</div>
 						</div>
 					</nav>

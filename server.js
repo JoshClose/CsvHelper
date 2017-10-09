@@ -4,7 +4,7 @@ const path = require("path");
 
 const port = process.env.PORT || 3002;
 
-app.use(express.static("./"));
+app.use("/CsvHelper", express.static("./"));
 
 app.get("*", function (req, res) {
 	res.sendFile(path.join(__dirname, "index.html"));

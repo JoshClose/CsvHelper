@@ -78,12 +78,12 @@ class Layout extends Component {
 	}
 
 	loadPage = (location) => {
-		var page = location.pathname.replace(/\/(.*)#?.*/, "$1");
+		var page = location.pathname.replace(/\/CsvHelper\/(.*)#?.*/, "$1");
 		if (page === "") {
 			page = "home";
 		}
 
-		fetch(`pages/${page}.md`, {
+		fetch(`/CsvHelper/pages/${page}.md`, {
 			method: "get",
 			credentials: "same-origin",
 			headers: {

@@ -310,12 +310,12 @@ var Layout = function (_Component) {
 		};
 
 		_this.loadPage = function (location) {
-			var page = location.pathname.replace(/\/(.*)#?.*/, "$1");
+			var page = location.pathname.replace(/\/CsvHelper\/(.*)#?.*/, "$1");
 			if (page === "") {
 				page = "home";
 			}
 
-			(0, _isomorphicFetch2.default)("pages/" + page + ".md", {
+			(0, _isomorphicFetch2.default)("/CsvHelper/pages/" + page + ".md", {
 				method: "get",
 				credentials: "same-origin",
 				headers: {
@@ -459,8 +459,8 @@ var Header = function (_Component) {
 							{ className: "navbar-brand" },
 							_react2.default.createElement(
 								"a",
-								{ className: "navbar-item", href: "/" },
-								_react2.default.createElement("img", { src: "/images/logo-header.png", width: "66", height: "28" })
+								{ className: "navbar-item", href: "/CsvHelper/" },
+								_react2.default.createElement("img", { src: "/CsvHelper/images/logo-header.png", width: "66", height: "28" })
 							),
 							_react2.default.createElement(
 								"div",
@@ -481,7 +481,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/reading" },
+										{ className: "navbar-link", to: "/CsvHelper/reading" },
 										"Reading"
 									),
 									_react2.default.createElement(
@@ -489,32 +489,32 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/reading#getting-all-records" },
+											{ className: "navbar-item", to: "/CsvHelper/CsvHelper/reading#getting-all-records" },
 											"Getting All Records"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/reading#reading-records" },
+											{ className: "navbar-item", to: "/CsvHelper/reading#reading-records" },
 											"Reading Records"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/reading#getting-a-single-record" },
+											{ className: "navbar-item", to: "/CsvHelper/reading#getting-a-single-record" },
 											"Getting a Single Record"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/reading#getting-fields" },
+											{ className: "navbar-item", to: "/CsvHelper/reading#getting-fields" },
 											"Getting Fields"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/reading#reading-context" },
+											{ className: "navbar-item", to: "/CsvHelper/reading#reading-context" },
 											"Reading Context"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/reading#configuration" },
+											{ className: "navbar-item", to: "/CsvHelper/reading#configuration" },
 											"Configuration"
 										)
 									)
@@ -524,7 +524,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/writing" },
+										{ className: "navbar-link", to: "/CsvHelper/writing" },
 										"Writing"
 									),
 									_react2.default.createElement(
@@ -532,32 +532,32 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/writing#writing-all-records" },
+											{ className: "navbar-item", to: "/CsvHelper/writing#writing-all-records" },
 											"Writing All Records"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/writing#writing-a-single-record" },
+											{ className: "navbar-item", to: "/CsvHelper/writing#writing-a-single-record" },
 											"Writing a Single Record"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/writing#writing-fields" },
+											{ className: "navbar-item", to: "/CsvHelper/writing#writing-fields" },
 											"Writing Fields"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/writing#ending-the-row" },
+											{ className: "navbar-item", to: "/CsvHelper/writing#ending-the-row" },
 											"Ending the Row"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/writing#writing-context" },
+											{ className: "navbar-item", to: "/CsvHelper/writing#writing-context" },
 											"Writing Context"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/writing#configuration" },
+											{ className: "navbar-item", to: "/CsvHelper/writing#configuration" },
 											"Configuration"
 										)
 									)
@@ -567,7 +567,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/mapping" },
+										{ className: "navbar-link", to: "/CsvHelper/mapping" },
 										"Mapping"
 									),
 									_react2.default.createElement(
@@ -575,17 +575,17 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "mapping#reference-mapping" },
+											{ className: "navbar-item", to: "/CsvHelper/mapping#reference-mapping" },
 											"Reference Mapping"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "mapping#auto-mapping" },
+											{ className: "navbar-item", to: "/CsvHelper/mapping#auto-mapping" },
 											"Auto Mapping"
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "mapping#options" },
+											{ className: "navbar-item", to: "/CsvHelper/mapping#options" },
 											"Options"
 										)
 									)
@@ -595,7 +595,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/configuration" },
+										{ className: "navbar-link", to: "/CsvHelper/configuration" },
 										"Configuration"
 									),
 									_react2.default.createElement("div", { className: "navbar-dropdown" })
@@ -605,7 +605,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/type-converters" },
+										{ className: "navbar-link", to: "/CsvHelper/type-converters" },
 										"Type Converters"
 									),
 									_react2.default.createElement("div", { className: "navbar-dropdown" })
@@ -615,7 +615,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/examples" },
+										{ className: "navbar-link", to: "/CsvHelper/examples" },
 										"Examples"
 									),
 									_react2.default.createElement(
@@ -623,14 +623,14 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "examples#private-members" },
+											{ className: "navbar-item", to: "/CsvHelper/examples#private-members" },
 											"Private Members"
 										)
 									)
 								),
 								_react2.default.createElement(
 									_reactRouterDom.Link,
-									{ className: "navbar-item", to: "/change-log" },
+									{ className: "navbar-item", to: "/CsvHelper/change-log" },
 									"Change Log"
 								)
 							)
