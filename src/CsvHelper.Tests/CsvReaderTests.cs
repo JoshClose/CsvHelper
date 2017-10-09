@@ -641,7 +641,7 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Configuration.HasHeaderRecord = false;
-			reader.Configuration.ShouldSkipRecord = record => record != null && record.All( string.IsNullOrWhiteSpace );
+			reader.Configuration.ShouldSkipRecord = record => record.All( string.IsNullOrWhiteSpace );
 
 			reader.Read();
 			Assert.AreEqual( "1", reader.Context.Record[0] );
@@ -669,7 +669,7 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Configuration.HasHeaderRecord = false;
-			reader.Configuration.ShouldSkipRecord = row => row != null && row[1] == "2";
+			reader.Configuration.ShouldSkipRecord = row => row[1] == "2";
 
 			reader.Read();
 			Assert.AreEqual( " ", reader.Context.Record[0] );
@@ -877,8 +877,8 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "two", records[3].Name );
 			}
 		}
-
-		[TestMethod]
+		
+        [TestMethod]
 		public void WriteNestedHeadersTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -901,7 +901,6 @@ namespace CsvHelper.Tests
 				Assert.AreEqual( "two", records[0].Simple2.Name );
 			}
 		}
-
 
 		[TestMethod]
 		public void ReaderDynamicHasHeaderTest()
