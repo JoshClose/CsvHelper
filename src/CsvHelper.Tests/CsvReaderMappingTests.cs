@@ -14,7 +14,44 @@ namespace CsvHelper.Tests
 	[TestClass]
 	public class CsvReaderMappingTests
 	{
-		[TestMethod]
+	    private sealed class ConvertUsingClassMap : ClassMap<MultipleNamesClass>
+	    {
+	        public ConvertUsingClassMap()
+	        {
+	            Map(m => m.IntColumn).Name("int2");
+	            Map(m => m.StringColumn).ConvertUsing(row => row.GetField("string.3"));
+	        }
+	    }
+
+        [TestMethod]
+	    public void ReadWithConvertUsingTest()
+	    {
+	        var data = new List<string[]>
+	        {
+	            new[] { "int2", "string.3" },
+	            new[] { "1", "one" },
+	            new[] { "2", "two" },
+	            null
+	        };
+
+	        var queue = new Queue<string[]>(data);
+	        var parserMock = new ParserMock(queue);
+
+	        var csvReader = new CsvReader(parserMock);
+	        // csvReader.Configuration.HeaderValidated = (isValid, headerNames, headerNameIndex, context) => {};
+	        csvReader.Configuration.RegisterClassMap<ConvertUsingClassMap>();
+
+	        var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
+
+	        Assert.IsNotNull(records);
+	        Assert.AreEqual(2, records.Count);
+	        Assert.AreEqual(1, records[0].IntColumn);
+	        Assert.AreEqual("one", records[0].StringColumn);
+	        Assert.AreEqual(2, records[1].IntColumn);
+	        Assert.AreEqual("two", records[1].StringColumn);
+	    }
+
+        [TestMethod]
 		public void ReadMultipleNamesTest()
 		{
 			var data = new List<string[]>
@@ -248,7 +285,8 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private class ConstructorMappingClass
+
+        private class ConstructorMappingClass
 		{
 			public int IntColumn { get; set; }
 
