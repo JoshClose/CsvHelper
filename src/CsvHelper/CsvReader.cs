@@ -168,6 +168,12 @@ namespace CsvHelper
 					continue;
 				}
 
+				if( memberMap.Data.ReadingConvertExpression != null || memberMap.Data.IsConstantSet )
+				{
+					// If ConvertUsing and Constant don't require a header.
+					continue;
+				}
+
 				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
 				Configuration.HeaderValidated?.Invoke( index != -1, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
 			}

@@ -14,15 +14,6 @@ namespace CsvHelper.Tests
 	[TestClass]
 	public class CsvReaderMappingTests
 	{
-	    private sealed class ConvertUsingClassMap : ClassMap<MultipleNamesClass>
-	    {
-	        public ConvertUsingClassMap()
-	        {
-	            Map(m => m.IntColumn).Name("int2");
-	            Map(m => m.StringColumn).ConvertUsing(row => row.GetField("string.3"));
-	        }
-	    }
-
         [TestMethod]
 	    public void ReadWithConvertUsingTest()
 	    {
@@ -333,6 +324,15 @@ namespace CsvHelper.Tests
 			public ConvertUsingConstantMap()
 			{
 				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
+			}
+		}
+
+		private sealed class ConvertUsingClassMap : ClassMap<MultipleNamesClass>
+		{
+			public ConvertUsingClassMap()
+			{
+				Map( m => m.IntColumn ).Name( "int2" );
+				Map( m => m.StringColumn ).ConvertUsing( row => row.GetField( "string.3" ) );
 			}
 		}
 	}
