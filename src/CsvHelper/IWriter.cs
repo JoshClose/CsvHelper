@@ -43,6 +43,6 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The list of records to write.</param>
-		void WriteRecords<T>( IEnumerable<T> records );
+		void WriteRecords( IEnumerable records );
 	}
 }
