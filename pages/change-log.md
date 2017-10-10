@@ -1,5 +1,18 @@
 # Change Log
 
+### 3.1.0
+
+#### Features
+
+- Allow multiple headers to be written.
+
+#### Bug Fixes
+
+- Flush `CsvWriter` on `Dispose`.
+- Made `ShouldSkipRecord` not called if the parser returns `null` for an end of stream.
+- `ShouldUseConstructorParameters` returns `false` if there are no constructors.
+- Header validation doesn't validate members where `ConvertUsing` or `Constant` are used.
+
 ### 3.0
 
 #### Features
