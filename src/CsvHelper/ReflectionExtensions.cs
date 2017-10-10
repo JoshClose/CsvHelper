@@ -90,7 +90,6 @@ namespace CsvHelper
 		public static bool HasParameterlessConstructor( this Type type )
 		{
 			return type.GetConstructor( new Type[0] ) != null;
-			return type.GetConstructors().Any( t => t.GetParameters().Length == 0 );
 		}
 
 		/// <summary>
