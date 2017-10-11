@@ -24,6 +24,15 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// The string format to be used when type converting.
 		/// </summary>
+		/// <param name="format">The format.</param>
+		public FormatAttribute( string format )
+		{
+			Formats = new string[] { format };
+		}
+
+		/// <summary>
+		/// The string format to be used when type converting.
+		/// </summary>
 		/// <param name="formats">The formats.</param>
 		public FormatAttribute( params string[] formats )
 		{
