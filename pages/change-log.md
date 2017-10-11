@@ -1,5 +1,17 @@
 # Change Log
 
+### 3.2.0
+
+#### Features
+
+- Attribute mapping. It's back...
+
+### 3.1.1
+
+#### Bug Fixes
+
+- Fixed issue where you weren't able to write `IEnumerable`.
+
 ### 3.1.0
 
 #### Features
@@ -13,7 +25,7 @@
 - `ShouldUseConstructorParameters` returns `false` if there are no constructors.
 - Header validation doesn't validate members where `ConvertUsing` or `Constant` are used.
 
-### 3.0
+### 3.0.0
 
 #### Features
 
