@@ -26,7 +26,7 @@ class Header extends Component {
 								<div className="navbar-item has-dropdown is-hoverable">
 									<Link className="navbar-link" to="/CsvHelper/reading">Reading</Link>
 									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/CsvHelper/CsvHelper/reading#getting-all-records">Getting All Records</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#getting-all-records">Getting All Records</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#reading-records">Reading Records</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#getting-a-single-record">Getting a Single Record</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#getting-fields">Getting Fields</Link>

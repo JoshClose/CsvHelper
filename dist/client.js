@@ -310,10 +310,8 @@ var Layout = function (_Component) {
 		};
 
 		_this.loadPage = function (location) {
-			var page = location.pathname.replace(/\/CsvHelper\/(.*)#?.*/, "$1");
-			if (page === "") {
-				page = "home";
-			}
+			var match = location.pathname.match(/\/CsvHelper\/([^\?#/]+).*/);
+			var page = !match ? "home" : match[1];
 
 			(0, _isomorphicFetch2.default)("/CsvHelper/pages/" + page + ".md", {
 				method: "get",
@@ -489,7 +487,7 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/CsvHelper/CsvHelper/reading#getting-all-records" },
+											{ className: "navbar-item", to: "/CsvHelper/reading#getting-all-records" },
 											"Getting All Records"
 										),
 										_react2.default.createElement(
