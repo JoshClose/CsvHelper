@@ -40,8 +40,7 @@ namespace CsvHelper.Expressions
 				Index = 0,
 				TypeConverter = Reader.Configuration.TypeConverterCache.GetConverter( recordType )
 			};
-			memberMapData.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( recordType ) );
-			memberMapData.TypeConverterOptions.CultureInfo = Reader.Context.ReaderConfiguration.CultureInfo;
+			memberMapData.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions { CultureInfo = Reader.Context.ReaderConfiguration.CultureInfo }, Reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( recordType ) );
 
 			fieldExpression = Expression.Call( Expression.Constant( memberMapData.TypeConverter ), "ConvertFromString", null, fieldExpression, Expression.Constant( Reader ), Expression.Constant( memberMapData ) );
 			fieldExpression = Expression.Convert( fieldExpression, recordType );

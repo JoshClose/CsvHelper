@@ -129,8 +129,7 @@ namespace CsvHelper.Expressions
 
 					// Convert the field.
 					var typeConverterExpression = Expression.Constant( parameterMap.Data.TypeConverter );
-					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( parameterMap.Data.Parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
-					parameterMap.Data.TypeConverterOptions.CultureInfo = Reader.Context.ReaderConfiguration.CultureInfo;
+					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions { CultureInfo = Reader.Context.ReaderConfiguration.CultureInfo }, Reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( parameterMap.Data.Parameter.ParameterType ), parameterMap.Data.TypeConverterOptions );
 
 					// Create type converter expression.
 					var memberMapData = new MemberMapData( null )

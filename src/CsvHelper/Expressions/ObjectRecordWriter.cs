@@ -99,8 +99,7 @@ namespace CsvHelper.Expressions
 					fieldExpression = ExpressionManager.CreateGetMemberExpression( recordParameterConverted, Writer.Context.WriterConfiguration.Maps[type], memberMap );
 
 					var typeConverterExpression = Expression.Constant( memberMap.Data.TypeConverter );
-					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsCache.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
-					memberMap.Data.TypeConverterOptions.CultureInfo = Writer.Context.WriterConfiguration.CultureInfo;
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions { CultureInfo = Writer.Context.WriterConfiguration.CultureInfo }, Writer.Context.WriterConfiguration.TypeConverterOptionsCache.GetOptions( memberMap.Data.Member.MemberType() ), memberMap.Data.TypeConverterOptions );
 
 					var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 					fieldExpression = Expression.Convert( fieldExpression, typeof( object ) );

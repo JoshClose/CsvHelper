@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using CsvHelper.TypeConversion;
+using CsvHelper.Configuration.Attributes;
 
 namespace CsvHelper.Configuration
 {
@@ -319,22 +320,25 @@ namespace CsvHelper.Configuration
 							referenceMap.Prefix();
 						}
 
+						ApplyAttributes( referenceMap );
+
 						map.ReferenceMaps.Add( referenceMap );
 					}
 				}
-				else
+				else if( !isDefaultConverter )
 				{
+					// Only add the member map if it can be converted later on.
+					// If the member will use the default converter, don't add it because
+					// we don't want the .ToString() value to be used when auto mapping.
+
 					var memberMap = MemberMap.CreateGeneric( map.ClassType, member );
 					// Use global values as the starting point.
 					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions( member.MemberType() ), memberMap.Data.TypeConverterOptions );
 					memberMap.Data.Index = map.GetMaxIndex() + 1;
-					if( !isDefaultConverter )
-					{
-						// Only add the member map if it can be converted later on.
-						// If the member will use the default converter, don't add it because
-						// we don't want the .ToString() value to be used when auto mapping.
-						map.MemberMaps.Add( memberMap );
-					}
+
+					ApplyAttributes( memberMap );
+
+					map.MemberMaps.Add( memberMap );
 				}
 			}
 
@@ -456,6 +460,108 @@ namespace CsvHelper.Configuration
 		protected virtual Type GetGenericType()
 		{
 			return GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
+		}
+
+		/// <summary>
+		/// Applies attribute configurations to the map.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		protected virtual void ApplyAttributes( MemberMap memberMap )
+		{
+			var member = memberMap.Data.Member;
+
+			if( member.GetCustomAttribute( typeof( IndexAttribute ) ) is IndexAttribute indexAttribute )
+			{
+				memberMap.Data.Index = indexAttribute.Index;
+				memberMap.Data.IndexEnd = indexAttribute.IndexEnd;
+				memberMap.Data.IsIndexSet = true;
+			}
+
+			if( member.GetCustomAttribute( typeof( NameAttribute ) ) is NameAttribute nameAttribute )
+			{
+				memberMap.Data.Names.Clear();
+				memberMap.Data.Names.AddRange( nameAttribute.Names );
+				memberMap.Data.IsNameSet = true;
+			}
+
+			if( member.GetCustomAttribute( typeof( NameIndexAttribute ) ) is NameIndexAttribute nameIndexAttribute )
+			{
+				memberMap.Data.NameIndex = nameIndexAttribute.NameIndex;
+			}
+
+			if( member.GetCustomAttribute( typeof( IgnoreAttribute ) ) is IgnoreAttribute ignoreAttribute )
+			{
+				memberMap.Data.Ignore = true;
+			}
+
+			if( member.GetCustomAttribute( typeof( DefaultAttribute ) ) is DefaultAttribute defaultAttribute )
+			{
+				memberMap.Data.Default = defaultAttribute.Default;
+				memberMap.Data.IsDefaultSet = true;
+			}
+
+			if( member.GetCustomAttribute( typeof( ConstantAttribute ) ) is ConstantAttribute constantAttribute )
+			{
+				memberMap.Data.Constant = constantAttribute.Constant;
+				memberMap.Data.IsConstantSet = true;
+			}
+
+			if( member.GetCustomAttribute( typeof( TypeConverterAttribute ) ) is TypeConverterAttribute typeConverterAttribute )
+			{
+				memberMap.Data.TypeConverter = typeConverterAttribute.TypeConverter;
+			}
+
+			if( member.GetCustomAttribute( typeof( CultureInfoAttribute ) ) is CultureInfoAttribute cultureInfoAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.CultureInfo = cultureInfoAttribute.CultureInfo;
+			}
+
+			if( member.GetCustomAttribute( typeof( DateTimeStylesAttribute ) ) is DateTimeStylesAttribute dateTimeStylesAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.DateTimeStyle = dateTimeStylesAttribute.DateTimeStyles;
+			}
+
+			if( member.GetCustomAttribute( typeof( NumberStylesAttribute ) ) is NumberStylesAttribute numberStylesAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.NumberStyle = numberStylesAttribute.NumberStyles;
+			}
+
+			if( member.GetCustomAttribute( typeof( FormatAttribute ) ) is FormatAttribute formatAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.Formats = formatAttribute.Formats;
+			}
+
+			if( member.GetCustomAttribute( typeof( BooleanTrueValuesAttribute ) ) is BooleanTrueValuesAttribute booleanTrueValuesAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.BooleanTrueValues.Clear();
+				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange( booleanTrueValuesAttribute.TrueValues );
+			}
+
+			if( member.GetCustomAttribute( typeof( BooleanFalseValuesAttribute ) ) is BooleanFalseValuesAttribute booleanFalseValuesAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
+				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange( booleanFalseValuesAttribute.FalseValues );
+			}
+
+			if( member.GetCustomAttribute( typeof( NullValuesAttribute ) ) is NullValuesAttribute nullValuesAttribute )
+			{
+				memberMap.Data.TypeConverterOptions.NullValues.Clear();
+				memberMap.Data.TypeConverterOptions.NullValues.AddRange( nullValuesAttribute.NullValues );
+			}
+		}
+
+		/// <summary>
+		/// Applies attribute configurations to the map.
+		/// </summary>
+		/// <param name="referenceMap">The reference map.</param>
+		protected virtual void ApplyAttributes( MemberReferenceMap referenceMap )
+		{
+			var member = referenceMap.Data.Member;
+
+			if( member.GetCustomAttribute( typeof( HeaderPrefixAttribute ) ) is HeaderPrefixAttribute headerPrefixAttribute )
+			{
+				referenceMap.Data.Prefix = headerPrefixAttribute.Prefix ?? member.Name + ".";
+			}
 		}
 	}
 }

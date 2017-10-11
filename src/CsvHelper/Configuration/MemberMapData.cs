@@ -90,7 +90,7 @@ namespace CsvHelper.Configuration
 		public virtual object Constant { get; set; }
 
 		/// <summary>
-		/// 
+		/// Gets or sets a value indicating if a constant was explicitly set.
 		/// </summary>
 		public virtual bool IsConstantSet { get; set; }
 
