@@ -1,5 +1,11 @@
 # Change Log
 
+### 3.4.0
+
+#### Bug Fixes
+
+- Fixed issue when a map was created through auto mapping, you couldn't use sub property mapping to update a member.
+
 ### 3.3.0
 
 #### Features
