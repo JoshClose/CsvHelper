@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using CsvHelper.Configuration;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace CsvHelper.TypeConversion
 {
@@ -47,7 +48,12 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public virtual object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
 		{
-			throw new TypeConverterException( (ReadingContext)row.Context, "The conversion cannot be performed." );
+			var message =
+				$"The conversion cannot be performed.\r\n" +
+				$"    Text: '{text}'\r\n" +
+				$"    MemberType: {memberMapData.Member?.MemberType().FullName}\r\n" +
+				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
+		throw new TypeConverterException( (ReadingContext)row.Context, "The conversion cannot be performed." );
 		}
 	}
 }

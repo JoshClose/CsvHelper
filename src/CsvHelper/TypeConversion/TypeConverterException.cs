@@ -16,13 +16,13 @@ namespace CsvHelper.TypeConversion
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class.
 		/// </summary>
 		/// <param name="context">The reading context.</param>
-		public TypeConverterException( ReadingContext context ) : base( context ) { }
+		public TypeConverterException( IReadingContext context ) : base( context ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class.
 		/// </summary>
 		/// <param name="context">The writing context.</param>
-		public TypeConverterException( WritingContext context ) : base( context ) { }
+		public TypeConverterException( IWritingContext context ) : base( context ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class
@@ -30,7 +30,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="context">The reading context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public TypeConverterException( ReadingContext context, string message ) : base( context, message ) {}
+		public TypeConverterException( IReadingContext context, string message ) : base( context, message ) {}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class
@@ -38,7 +38,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public TypeConverterException( WritingContext context, string message ) : base( context, message ) { }
+		public TypeConverterException( IWritingContext context, string message ) : base( context, message ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class
@@ -48,7 +48,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="context">The reading context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public TypeConverterException( ReadingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
+		public TypeConverterException( IReadingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class
@@ -58,6 +58,6 @@ namespace CsvHelper.TypeConversion
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public TypeConverterException( WritingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
+		public TypeConverterException( IWritingContext context, string message, Exception innerException ) : base( context, message, innerException ) { }
 	}
 }
