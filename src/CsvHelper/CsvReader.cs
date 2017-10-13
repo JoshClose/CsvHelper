@@ -202,7 +202,7 @@ namespace CsvHelper
 			do
 			{
 				context.Record = parser.Read();
-			} 
+			}
 			while( context.Record != null && Configuration.ShouldSkipRecord( context.Record ) );
 
 			context.CurrentIndex = -1;
@@ -293,7 +293,7 @@ namespace CsvHelper
 		/// <returns>The raw field.</returns>
 		public virtual string this[string name, int index]
 		{
-			get 
+			get
 			{
 				CheckHasBeenRead();
 
@@ -941,7 +941,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <returns>The record converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetRecord<T>() 
+		public virtual T GetRecord<T>()
 		{
 			CheckHasBeenRead();
 
@@ -1031,7 +1031,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IEnumerable{T}" /> of records.</returns>
-		public virtual IEnumerable<T> GetRecords<T>() 
+		public virtual IEnumerable<T> GetRecords<T>()
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
@@ -1151,11 +1151,11 @@ namespace CsvHelper
 			// since we're doing the reading ourselves.
 
 			if( context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null )
-		{
-				if( !Read() )
 			{
+				if( !Read() )
+				{
 					yield break;
-			}
+				}
 
 				ReadHeader();
 				ValidateHeader<T>();
@@ -1166,7 +1166,7 @@ namespace CsvHelper
 				try
 				{
 					recordManager.Hydrate( record );
-			}
+				}
 				catch( Exception ex )
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
@@ -1175,7 +1175,7 @@ namespace CsvHelper
 
 					// If the callback doesn't throw, keep going.
 					continue;
-		}
+				}
 
 				yield return record;
 			}
@@ -1216,30 +1216,31 @@ namespace CsvHelper
 				throw new ReaderException( context, "There is no header record to determine the index by name." );
 			}
 
-            // Caching the named index speeds up mappings that use ConvertUsing tremendously.
-		    var nameKey = string.Join( "_", names ) + index;
-		    if( context.NamedIndexCache.ContainsKey( nameKey ) )
-		    {
-		        var tuple = context.NamedIndexCache[nameKey];
-		        return context.NamedIndexes[tuple.Item1][tuple.Item2];
-		    }
-
-			string name = null;
-			foreach( var pair in context.NamedIndexes )
+			// Caching the named index speeds up mappings that use ConvertUsing tremendously.
+			var nameKey = string.Join( "_", names ) + index;
+			if( context.NamedIndexCache.ContainsKey( nameKey ) )
 			{
-				var memberName = context.ReaderConfiguration.PrepareHeaderForMatch( pair.Key );
-				foreach( var n in names )
+				var tuple = context.NamedIndexCache[nameKey];
+				return context.NamedIndexes[tuple.Item1][tuple.Item2];
+			}
+
+			// Check all possible names for this field.
+			string name = null;
+			foreach( var n in names )
+			{
+				// Get the list of indexes for this name.
+				var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch( n );
+				if( context.NamedIndexes.ContainsKey( fieldName ) )
 				{
-					var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch( n );
-					if( Configuration.CultureInfo.CompareInfo.Compare( memberName, fieldName, CompareOptions.None ) == 0 )
-					{
-						name = pair.Key;
-					}
+					name = fieldName;
+					break;
 				}
 			}
 
+			// Check if the index position exists.
 			if( name == null || index >= context.NamedIndexes[name].Count )
 			{
+				// It doesn't exist. The field is missing.
 				if( !isTryGet )
 				{
 					context.ReaderConfiguration.MissingFieldFound?.Invoke( names, index, context );
@@ -1318,11 +1319,11 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
 		protected virtual void Dispose( bool disposing )
-			{
+		{
 			if( disposed )
-				{
+			{
 				return;
-				}
+			}
 
 			if( disposing )
 			{
@@ -1339,12 +1340,12 @@ namespace CsvHelper
 		/// </summary>
 		/// <exception cref="ReaderException" />
 		protected virtual void CheckHasBeenRead()
-			{
+		{
 			if( !context.HasBeenRead )
-				{
+			{
 				throw new ReaderException( context, "You must call read on the reader before accessing its data." );
-				}
 			}
+		}
 
 		/// <summary>
 		/// Parses the named indexes from the header record.
@@ -1354,19 +1355,19 @@ namespace CsvHelper
 			if( context.HeaderRecord == null )
 			{
 				throw new ReaderException( context, "No header record was found." );
-		}
+			}
 
 			for( var i = 0; i < context.HeaderRecord.Length; i++ )
 			{
-				var name = context.HeaderRecord[i];
+				var name = context.ReaderConfiguration.PrepareHeaderForMatch( context.HeaderRecord[i] );
 				if( context.NamedIndexes.ContainsKey( name ) )
 				{
 					context.NamedIndexes[name].Add( i );
-	}
+				}
 				else
 				{
 					context.NamedIndexes[name] = new List<int> { i };
-}
+				}
 			}
 		}
 	}
