@@ -331,7 +331,12 @@ namespace CsvHelper.Configuration
 					// If the member will use the default converter, don't add it because
 					// we don't want the .ToString() value to be used when auto mapping.
 
-					var memberMap = MemberMap.CreateGeneric( map.ClassType, member );
+					// Use the top of the map tree. This will maps that have been auto mapped
+					// to later on get a reference to a map by doing map.Map( m => m.A.B.C.Id )
+					// and it will return the correct parent map type of A instead of C.
+					var classType = mapParents.First?.Value ?? map.ClassType;
+					var memberMap = MemberMap.CreateGeneric( classType, member );
+
 					// Use global values as the starting point.
 					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions( member.MemberType() ), memberMap.Data.TypeConverterOptions );
 					memberMap.Data.Index = map.GetMaxIndex() + 1;

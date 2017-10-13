@@ -502,9 +502,13 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="T">The type to generate the map for.</typeparam>
 		/// <returns>The generate map.</returns>
-		public virtual ClassMap AutoMap<T>()
+		public virtual ClassMap<T> AutoMap<T>()
 		{
-			return AutoMap( typeof( T ) );
+			var map = ReflectionHelper.CreateInstance<DefaultClassMap<T>>();
+			map.AutoMap( this );
+			maps.Add( map );
+
+			return map;
 		}
 
 		/// <summary>

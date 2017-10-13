@@ -166,7 +166,7 @@ namespace CsvHelper.Configuration
 	    /// </summary>
 	    /// <typeparam name="T">The type to generate the map for.</typeparam>
 	    /// <returns>The generate map.</returns>
-	    ClassMap AutoMap<T>();
+	    ClassMap<T> AutoMap<T>();
 
 	    /// <summary>
 	    /// Generates a <see cref="ClassMap"/> for the type.
