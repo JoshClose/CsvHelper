@@ -1,5 +1,12 @@
 # Change Log
 
+### 3.3.0
+
+#### Features
+
+- Added more information to the `DefaultTypeConverter.ConvertFromString` not convertible exception.
+- Reduced the number of `PrepareHeaderForMatch` calls.
+
 ### 3.2.0
 
 #### Features
