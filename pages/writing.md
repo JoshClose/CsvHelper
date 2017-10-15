@@ -189,6 +189,6 @@ When writing, all the information in the system is held in a context object. If 
 
 <hr/>
 
-See [configuration](/configuration)
+See [configuration](configuration)
 
 <br/>

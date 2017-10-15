@@ -39,6 +39,6 @@ Want to contribute? Great! Here are a few guidelines.
 4. Pull requests should have a single commit. If you have multiple commits, squash them into a single commit before requesting a pull.
 5. Try and follow the code styling already in place.
 
-Looking for 2.x documentation? You can find it [here](/2.x).
+Looking for 2.x documentation? You can find it [here](2.x).
 
 <br/>
