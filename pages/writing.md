@@ -21,7 +21,7 @@ When opening a CSV in an external program, a formula in a field could be ran tha
 "=one" -> "\t=one"
 ```
 
-You are able to turn of this functionality in configuration.
+You are able to turn off this functionality in configuration.
 
 ```cs
 csv.Configuration.SanitizeForInjection = false;
