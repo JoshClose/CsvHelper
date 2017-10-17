@@ -100,6 +100,9 @@ Sometimes there is a reason that you may need to loop the records yourself. You 
 ### GetRecord
 
 ```cs
+// Don't forget to read the data before getting it.
+csv.Read();
+
 // By type
 var record = csv.GetRecord<MyClass>();
 var record = csv.GetRecord( typeof( MyClass ) );
@@ -128,6 +131,9 @@ If you need a more granular way of getting records, you are able to get individu
 You can use an indexer to get by position or name. This will return the field as a `string`.
 
 ```cs
+// Don't forget to read the data before getting it.
+csv.Read();
+
 // By position
 var field = csv[0];
 
@@ -140,6 +146,9 @@ var field = csv["HeaderName"];
 You can get fields converted to a specific type.
 
 ```cs
+// Don't forget to read the data before getting it.
+csv.Read();
+
 // Gets field by position returning string
 var field = csv.GetField( 0 );
 
@@ -158,6 +167,9 @@ var field = csv.GetField( typeof( bool ), "IsTrue" );
 If there data isn't consistent and sometimes may not be able to be converted to the correct type, you can use the `TryGetField` methods.
 
 ```cs
+// Don't forget to read the data before getting it.
+csv.Read();
+
 var success = csv.TryGetField<int>( 0, out string field );
 ```
 
