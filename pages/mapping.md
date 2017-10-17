@@ -63,53 +63,6 @@ public sealed class AMap : ClassMap<A>
 }
 ```
 
-What reference member mapping does is creates a reference map. You can manually create a reference map like this.
-
-```cs
-public class A
-{
-	public int Id { get; set; }
-	public B B { get; set; }
-}
-
-public class B
-{
-	public int Id { get; set; }
-	public C C { get; set; }
-}
-
-public class C
-{
-	public int Id { get; set; }
-}
-
-public sealed class AMap : ClassMap<A>
-{
-	public AMap()
-	{
-		Map( m => m.Id ).Name( "A" );
-		References<BMap>( m => m.B );
-	}
-}
-
-public sealed class BMap : ClassMap<B>
-{
-	public BMap()
-	{
-		Map( m => m.Id ).Name( "B" );
-		References<CMap>( m => m.C );
-	}
-}
-
-public sealed class CMap : ClassMap<C>
-{
-	public CMap()
-	{
-		Map( m => m.Id ).Name( "C" );
-	}
-}
-```
-
 ## Auto Mapping
 
 <hr/>

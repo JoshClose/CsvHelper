@@ -147,6 +147,20 @@
 - Added a `Flush` method to the writer.
 - Changed `Property` naming to `Member`.
 - Removed `Configuration`s `ThrowOnBadData`, `IgnoreReadingExceptions`, `SkipEmptyRecords`, and `WillThrowOnMissingField` in favor of function callbacks.
+- Renamed
+  - `TypeConverterFactory` to `TypeConverterCache`
+  - `TypeConverterOptionsFactory` to `TypeConverterOptionsCache`
+  - `Configuration.HeaderValidatedCallback` to `Configuration.HeaderValidated`
+  - `Configuration.MissingFieldFoundCallback` to `Configuration.MissingFieldFound`
+  - `Configuration.ReadingExceptionCallback` to `Configuration.ReadingExceptionOccurred`
+  - `Configuration.BadDataFoundCallback` to `Configuration.BadDataFound`
+  - `ICsvParser` to `IParser`
+  - `FieldReader` to `CsvFieldReader`
+  - `ICsvReader` to `IReader`
+  - `ICsvReaderRow` to `IReaderRow`
+  - `ICsvSerializer` to `ISerializer`
+  - `ICsvWriter` to `IWriter`
+  - `ICsvWriterRow` to `IWriterRow`
 
 ### 2.16.3
 
