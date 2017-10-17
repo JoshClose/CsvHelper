@@ -2,6 +2,8 @@
 
 ## Private Members
 
+<hr/>
+
 If your class has private members and needs to use constructor parameters instead, you won't be able to use a class map. Instead, the auto mapper will detect this and automatically inject the constructor parameters.
 
 The constructor parameter names will be used for the column header names. If there is no header, the position of the parameters will be used instead. You can configure the header matching of the properties.
@@ -76,6 +78,18 @@ csv.Configuration.GetConstructor = type =>
 	type.GetConstructor( new [] { typeof( int ), typeof(string ) } );
 
 var records = csv.GetRecords<PrivateMembers>();
+```
+
+## Writing Blank Fields
+
+<hr/>
+
+If you want to write blank fields, you can have a member that is `null` or an empty `string`. If you don't have members for the field, you can map a constant instead.
+
+```cs
+Map( m => m.Id ).Index( 0 );
+Map().Index( 1 ).Constant( null );
+Map( m => m.Name ).Index( 2 );
 ```
 
 <br/>
