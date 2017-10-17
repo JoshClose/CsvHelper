@@ -95,6 +95,7 @@ namespace CsvHelper.Configuration
 		/// <param name="expression">The expression.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the member.</returns>
+		[Obsolete( "Use sub-property mapping instead. ex: Map( m => m.A.B.C.Id )" )]
 		public virtual MemberReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
 		{
 			var member = ReflectionHelper.GetMember( expression );
