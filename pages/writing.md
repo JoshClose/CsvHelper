@@ -66,7 +66,7 @@ csv.WriteRecords( records );
 
 <hr/>
 
-Sometimes you want to write individual records by themselves.
+Sometimes you want to write individual records by themselves. When you are done writing the row, don't forget to call `NextRecord` to flush the data and write the line ending.
 
 ### WriteHeader
 
@@ -75,6 +75,7 @@ Writes the header record. You can call this method on any row if you want to wri
 ```cs
 csv.WriteHeader<MyClass>();
 csv.WriteHeader( Type type );
+csv.NextRecord();
 ```
 
 ### WriteRecord
@@ -84,16 +85,19 @@ Writes a record.
 ```cs
 var record = new MyClass { Id = 1, Name = "one" };
 csv.WriteRecord( record );
+csv.NextRecord();
 
 // Dynamic
 dynamic record = new ExpandoObject();
 record.Id = 1;
 record.Name = "one";
 csv.WriteRecord( record );
+csv.NextRecord();
 
 // Anonymous
 var record = new { Id = 1, Name = "one" };
 csv.WriteRecord( record );
+csv.NextRecord();
 ```
 
 ## Writing Fields
@@ -131,6 +135,9 @@ csv.WriteField<MyTypeConverter>( value );
 // by a type converter. If the field is null, it
 // won't get written.
 csv.WriteConvertedField( "field" );
+
+// Don't forget to forget to end the row.
+csv.NextRecord();
 ```
 
 ### WriteComment
@@ -139,13 +146,14 @@ This will write text to the field using the comment character supplied in `Confi
 
 ```cs
 csv.WriteComment( "This is a comment. ");
+csv.NextRecord();
 ```
 
 ## Ending the Row
 
 <hr/>
 
-When you are done writing the row, you need to flush the fields and start a new row. Flushing and starting a new row are separated so that you can flush without creating a new row.
+When you are done writing the row, you need to flush the fields and start a new row. Flushing and starting a new row are separated so that you can flush without creating a new row. Calling `NextRecord` will flush for you.
 
 ### Flush
 
@@ -189,6 +197,6 @@ When writing, all the information in the system is held in a context object. If 
 
 <hr/>
 
-See [configuration](/configuration)
+See <a href="/CsvHelper/configuration">configuration</a>
 
 <br/>

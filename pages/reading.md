@@ -171,6 +171,6 @@ When reading, all the information in the system is held in a context object. If 
 
 <hr/>
 
-See [configuration](/configuration)
+See <a href="/CsvHelper/configuration">configuration</a>
 
 <br/>
