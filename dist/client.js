@@ -210,6 +210,8 @@ var _reactRedux = __webpack_require__(2);
 
 var _reactRouter = __webpack_require__(12);
 
+var _reactRouterDom = __webpack_require__(17);
+
 var _reactRouterRedux = __webpack_require__(3);
 
 var _isomorphicFetch = __webpack_require__(13);
@@ -276,7 +278,7 @@ renderer.heading = function (text, level) {
 	return "<h" + level + " id=\"" + toSeoFriendly(text) + "\" class=\"title is-" + level + "\"><span>" + htmlEncode(text) + "</span></h" + level + ">";
 };
 renderer.link = function (href, title, text) {
-	return "<a href=\"" + href + "\" target=\"_blank\">" + text + "</a>";
+	return "<a href=\"" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_blank") + "\">" + text + "</a>";
 };
 renderer.list = function (body, ordered) {
 	return ordered ? "<div class=\"content\"><ol>" + body + "</ol></div>" : "<div class=\"content\"><ul>" + body + "</ul></div>";
@@ -351,6 +353,7 @@ var Layout = function (_Component) {
 			    content = _state.content,
 			    page = _state.page;
 
+			var markdown = (0, _marked2.default)(content);
 
 			return _react2.default.createElement(
 				"div",
@@ -365,8 +368,13 @@ var Layout = function (_Component) {
 				_react2.default.createElement(
 					"div",
 					{ className: "container" },
-					_react2.default.createElement("div", { className: page,
-						dangerouslySetInnerHTML: { __html: (0, _marked2.default)(content) } })
+					_react2.default.createElement(
+						_reactRouterDom.Switch,
+						null,
+						_react2.default.createElement(_reactRouterDom.Route, { path: "/", render: function render() {
+								return _react2.default.createElement("div", { className: page, dangerouslySetInnerHTML: { __html: markdown } });
+							} })
+					)
 				),
 				_react2.default.createElement(_footer2.default, null)
 			);
@@ -612,24 +620,24 @@ var Header = function (_Component) {
 									"div",
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
-										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/CsvHelper/examples" },
-										"Examples"
+										"div",
+										{ className: "navbar-link" },
+										"Misc"
 									),
 									_react2.default.createElement(
 										"div",
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactRouterDom.Link,
-											{ className: "navbar-item", to: "/CsvHelper/examples#private-members" },
-											"Private Members"
+											{ className: "navbar-item", to: "/CsvHelper/examples" },
+											"Examples"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/change-log" },
+											"Change Log"
 										)
 									)
-								),
-								_react2.default.createElement(
-									_reactRouterDom.Link,
-									{ className: "navbar-item", to: "/CsvHelper/change-log" },
-									"Change Log"
 								)
 							)
 						)

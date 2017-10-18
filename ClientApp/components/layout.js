@@ -1,6 +1,7 @@
 import React, { Component } from "react"
 import { connect } from "react-redux"
 import { withRouter } from "react-router"
+import { Route, Switch } from "react-router-dom"
 import { LOCATION_CHANGE } from "react-router-redux"
 import fetch from "isomorphic-fetch"
 import marked from "marked"
@@ -44,7 +45,7 @@ renderer.code = function (code, lang) {
 	return wrapInColumns(`<pre><code class="box ${lang}">${code}</code></pre>`);
 }
 renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${htmlEncode(text)}</span></h${level}>`;
-renderer.link = (href, title, text) => `<a href="${href}" target="_blank">${text}</a>`;
+renderer.link = (href, title, text) => `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_blank"}">${text}</a>`;
 renderer.list = (body, ordered) => {
 	return ordered
 		? `<div class="content"><ol>${body}</ol></div>` :
@@ -107,6 +108,7 @@ class Layout extends Component {
 
 	render() {
 		const { content, page } = this.state;
+		const markdown = marked(content);
 
 		return (
 			<div className="layout">
@@ -116,8 +118,9 @@ class Layout extends Component {
 				<Header />
 				<div id="top-of-page"></div>
 				<div className="container">
-					<div className={page}
-						dangerouslySetInnerHTML={{ __html: marked(content) }}></div>
+					<Switch>
+						<Route path="/" render={() => <div className={page} dangerouslySetInnerHTML={{ __html: markdown }}></div>} />
+					</Switch>
 				</div>
 				<Footer />
 			</div >

@@ -64,12 +64,12 @@ class Header extends Component {
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/CsvHelper/examples">Examples</Link>
+									<div className="navbar-link">Misc</div>
 									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/CsvHelper/examples#private-members">Private Members</Link>
+										<Link className="navbar-item" to="/CsvHelper/examples">Examples</Link>
+										<Link className="navbar-item" to="/CsvHelper/change-log">Change Log</Link>
 									</div>
 								</div>
-								<Link className="navbar-item" to="/CsvHelper/change-log">Change Log</Link>
 							</div>
 						</div>
 					</nav>

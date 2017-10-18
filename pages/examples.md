@@ -1,5 +1,8 @@
 # Examples
 
+- [Private Members](#private-members)
+- [Writing Blank Fields](#writing-blank-fields)
+
 ## Private Members
 
 <hr/>
