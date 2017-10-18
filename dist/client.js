@@ -609,7 +609,60 @@ var Header = function (_Component) {
 										{ className: "navbar-link", to: "/CsvHelper/configuration" },
 										"Configuration"
 									),
-									_react2.default.createElement("div", { className: "navbar-dropdown" })
+									_react2.default.createElement(
+										"div",
+										{ className: "navbar-dropdown" },
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#malicious-injection-protection" },
+											"Malicious Injection Protection"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#headers" },
+											"Headers"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#mapping" },
+											"Mapping"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#constructor-mapping" },
+											"Constructor Mapping"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#error-handling" },
+											"Error Handling"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#type-conversion" },
+											"Type Conversion"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#reading" },
+											"Reading"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#parsing" },
+											"Parsing"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#writing" },
+											"Writing"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/configuration#formatting" },
+											"Formatting"
+										)
+									)
 								),
 								_react2.default.createElement(
 									"div",

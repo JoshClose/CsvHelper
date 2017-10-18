@@ -57,6 +57,16 @@ class Header extends Component {
 								<div className="navbar-item has-dropdown is-hoverable">
 									<Link className="navbar-link" to="/CsvHelper/configuration">Configuration</Link>
 									<div className="navbar-dropdown">
+										<Link className="navbar-item" to="/CsvHelper/configuration#malicious-injection-protection">Malicious Injection Protection</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#headers">Headers</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#mapping">Mapping</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#constructor-mapping">Constructor Mapping</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#error-handling">Error Handling</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#type-conversion">Type Conversion</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#reading">Reading</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#parsing">Parsing</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#writing">Writing</Link>
+										<Link className="navbar-item" to="/CsvHelper/configuration#formatting">Formatting</Link>
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
