@@ -70,7 +70,7 @@ class Header extends Component {
 									</div>
 								</div>
 								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/CsvHelper/type-converters">Type Converters</Link>
+									<Link className="navbar-link" to="/CsvHelper/type-conversion">Type Conversion</Link>
 									<div className="navbar-dropdown">
 									</div>
 								</div>

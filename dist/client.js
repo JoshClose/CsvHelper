@@ -669,8 +669,8 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactRouterDom.Link,
-										{ className: "navbar-link", to: "/CsvHelper/type-converters" },
-										"Type Converters"
+										{ className: "navbar-link", to: "/CsvHelper/type-conversion" },
+										"Type Conversion"
 									),
 									_react2.default.createElement("div", { className: "navbar-dropdown" })
 								),

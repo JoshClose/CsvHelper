@@ -1,5 +1,19 @@
 # Change Log
 
+### 4.0.0
+
+#### Breaking Changes
+
+- Added setter to `ISerializerConfiguration.Quote`.
+- Removed `ClassMap<TClass>.References( expression, constructorArs )`. Use sub property mapping instead.
+- Removed `ClassMap<TClass>.ConstructUsing( expression ). Use the `ObjectResolver` instead.
+- Change how reference header prefixing works.
+ - Changed `Configuration`/`IReaderConfiguration`/`IWriterConfiguration` `bool PrefixReferenceHeaders` to `Func<Type, string, string> ReferenceHeaderPrefix`. The function takes in the member type and member name and returns the prefix.
+ - Removed `MemberReferenceMap.Prefix()` method.
+ - Removed `ParameterReferenceMap.Prefix()` method.
+- Changed `Configuration`/`IReaderConfiguration`/`IWriterConfiguration` `ClassMap AutoMap<T>()` to `ClassMap<T> AutoMap<T>()`
+- Changed `TypeConverterException` constructors parameter from `ReadingContext` to `IReadingContext`.
+
 ### 3.4.0
 
 #### Bug Fixes
