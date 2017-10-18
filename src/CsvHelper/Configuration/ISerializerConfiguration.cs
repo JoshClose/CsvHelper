@@ -19,7 +19,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the character used to quote fields.
 		/// Default is '"'.
 		/// </summary>
-		char Quote { get; }
+		char Quote { get; set; }
 
 		/// <summary>
 		/// Gets or sets the field trimming options.
