@@ -30,6 +30,7 @@ class Header extends Component {
 										<Link className="navbar-item" to="/CsvHelper/reading#reading-records">Reading Records</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#getting-a-single-record">Getting a Single Record</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#getting-fields">Getting Fields</Link>
+										<Link className="navbar-item" to="/CsvHelper/reading#malformed-field-fallback">Malformed Field Fallback</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#reading-context">Reading Context</Link>
 										<Link className="navbar-item" to="/CsvHelper/reading#configuration">Configuration</Link>
 									</div>

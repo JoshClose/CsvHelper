@@ -8,7 +8,6 @@ var records = csv.GetRecords<MyClass>();
 ```
 
 ## Getting All Records
-
 <hr/>
 
 The most common scenario is using one of the `GetRecords` methods.  You can specify the type of object you want returned, and it will return an `IEnumerable` that will `yield` results. This means when iterating the results, only a single record will be in memory at a time, instead of the entire file. Records aren't pulled until you actually start iterating the results.
@@ -57,7 +56,6 @@ foreach( var r in records )
 ```
 
 ## Reading Records
-
 <hr/>
 
 To be able to get individual records or even fields, you need to iterate through the records. This is done using the `Read` methods. `Read` will advance the reader to the next record. You must call `Read` before you can get any records or fields. When `GetRecords`, `Read` is automatically called for you.
@@ -92,7 +90,6 @@ while( csv.Read() )
 ```
 
 ## Getting a Single Record
-
 <hr/>
 
 Sometimes there is a reason that you may need to loop the records yourself. You can still easily get a single record, just like with multiple records.
@@ -121,7 +118,6 @@ var record = csv.GetRecord( anonymousTypeDefinition );
 ```
 
 ## Getting Fields
-
 <hr/>
 
 If you need a more granular way of getting records, you are able to get individual fields.
@@ -173,14 +169,33 @@ csv.Read();
 var success = csv.TryGetField<int>( 0, out string field );
 ```
 
-## Reading Context
+## Malformed Field Fallback
+<hr/>
 
+If the field is malformed, meaning it doesn't follow RFC 4180, some fallback strategies are used so the fields can still be read. In general, this is how a malformed file would behave when opened in Excel.
+
+1. \r or \n is used instead of \r\n
+ - Both `\r` and `\n` are handled as a line ending, just like `\r\n`.
+1. No \r\n at the end of the file
+ - The last row and field is read as if there was a `\r\n`.
+1. Escaped field has space before first quote.
+ - The field is treated as a non escaped field.
+ - `, "field",` -> `][ "field"][`
+1. Escaped field has characters after second quote.
+ - Characters after second quote aren't modified.
+ - `,"field" ,` -> `][field ][`
+ - `,"field" "s,` -> `][field "s][`
+ - `,"field "" s",` -> `][field " s"][`
+1. Escaped field has no ending quote.
+ - The field will go to the end of the file.
+ - `a,b,"c\r\nd,e,f\r\n` -> `[a][b][c\r\nd,e,f\r\n]`
+
+## Reading Context
 <hr/>
 
 When reading, all the information in the system is held in a context object. If you need to get raw system information for some reason, it's available here. When an exception is thrown, the context is included so you can inspect the current state of the reader.
 
 ## Configuration
-
 <hr/>
 
 See <a href="/CsvHelper/configuration">configuration</a>

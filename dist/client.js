@@ -515,6 +515,11 @@ var Header = function (_Component) {
 										),
 										_react2.default.createElement(
 											_reactRouterDom.Link,
+											{ className: "navbar-item", to: "/CsvHelper/reading#malformed-field-fallback" },
+											"Malformed Field Fallback"
+										),
+										_react2.default.createElement(
+											_reactRouterDom.Link,
 											{ className: "navbar-item", to: "/CsvHelper/reading#reading-context" },
 											"Reading Context"
 										),
