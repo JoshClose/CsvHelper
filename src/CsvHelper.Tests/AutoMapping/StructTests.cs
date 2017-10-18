@@ -29,8 +29,6 @@ namespace CsvHelper.Tests.AutoMapping
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrefixReferenceHeaders = true;
-
 				var records = csv.GetRecords<B>().ToList();
 
 				Assert.AreEqual( 1, records[0].Id );
@@ -51,8 +49,7 @@ namespace CsvHelper.Tests.AutoMapping
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrefixReferenceHeaders = true;
-
+				csv.Configuration.ReferenceHeaderPrefix = ( type, name ) => $"{name}.";
 				var records = csv.GetRecords<A>().ToList();
 
 				Assert.AreEqual( 1, records[0].Simple1.Id );

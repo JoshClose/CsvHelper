@@ -57,15 +57,7 @@ namespace CsvHelper.Tests
 			public AMap()
 			{
 				Map( m => m.Id ).Index( 1 );
-				References<BMap>( m => m.B );
-			}
-		}
-
-		private sealed class BMap : ClassMap<B>
-		{
-			public BMap()
-			{
-				Map( m => m.Id ).Index( 0 );
+				Map( m => m.B.Id ).Index( 0 );
 			}
 		}
 	}

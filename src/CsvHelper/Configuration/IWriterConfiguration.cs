@@ -5,6 +5,7 @@
 using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
+using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
@@ -103,12 +104,10 @@ namespace CsvHelper.Configuration
 		bool IncludePrivateMembers { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating if headers of reference
-		/// member should get prefixed by the parent member name 
-		/// when automapping.
-		/// True to prefix, otherwise false. Default is false.
+		/// Gets or sets a callback that will return the prefix for a reference header.
+		/// Arguments: memberType, memberName
 		/// </summary>
-		bool PrefixReferenceHeaders { get; set; }
+		Func<Type, string, string> ReferenceHeaderPrefix { get; set; }
 
 		/// <summary>
 		/// Gets or sets the member types that are used when auto mapping.

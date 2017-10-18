@@ -228,7 +228,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			var config = new CsvHelper.Configuration.Configuration
 			{
-				PrefixReferenceHeaders = true,
+				ReferenceHeaderPrefix = ( type, name ) => $"{name}."
 			};
 			var map = config.AutoMap<Nested>();
 			Assert.AreEqual( "Simple1.Id", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0] );

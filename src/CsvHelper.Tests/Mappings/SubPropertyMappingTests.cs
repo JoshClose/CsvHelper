@@ -75,14 +75,6 @@ namespace CsvHelper.Tests.Mappings
 			}
 		}
 
-		[Ignore]
-		[TestMethod]
-		public void ReferenceMapTest()
-		{
-			var map = new AReferenceMap();
-			map.Map( m => m.B.C.P3 ).Index( 3 );
-		}
-
 		[TestMethod]
 		public void ChangeMemberMapTest()
 		{
@@ -121,32 +113,6 @@ namespace CsvHelper.Tests.Mappings
 				Map( m => m.B.C.P3 ).Index( 0 );
 				Map( m => m.P1 ).Index( 1 );
 				Map( m => m.B.P2 ).Index( 2 );
-			}
-		}
-
-		private sealed class AReferenceMap : ClassMap<A>
-		{
-			public AReferenceMap()
-			{
-				Map( m => m.P1 ).Index( 1 );
-				References<BReferenceMap>( m => m.B );
-			}
-		}
-
-		private sealed class BReferenceMap : ClassMap<B>
-		{
-			public BReferenceMap()
-			{
-				Map( m => m.P2 ).Index( 2 );
-				References<CReferenceMap>( m => m.C );
-			}
-		}
-
-		private sealed class CReferenceMap : ClassMap<C>
-		{
-			public CReferenceMap()
-			{
-				Map( m => m.P3 ).Index( 0 );
 			}
 		}
 

@@ -177,40 +177,5 @@ namespace CsvHelper.Tests
 				Map( m => m.B.C.D.DId );
 			}
 		}
-
-		private sealed class AMap : ClassMap<IA>
-		{
-			public AMap()
-			{
-				Map( m => m.AId );
-				References<BMap>( m => m.B );
-			}
-		}
-
-		private sealed class BMap : ClassMap<IB>
-		{
-			public BMap()
-			{
-				Map( m => m.BId );
-				References<CMap>( m => m.C );
-			}
-		}
-
-		private sealed class CMap : ClassMap<IC>
-		{
-			public CMap()
-			{
-				Map( m => m.CId );
-				References<DMap>( m => m.D );
-			}
-		}
-
-		private sealed class DMap : ClassMap<ID>
-		{
-			public DMap()
-			{
-				Map( m => m.DId );
-			}
-		}
 	}
 }

@@ -60,23 +60,9 @@ namespace CsvHelper.Expressions
 					throw new ReaderException( Reader.Context, $"No members are mapped for type '{recordType.FullName}'." );
 				}
 
-				if( map.Constructor is NewExpression )
-				{
-					body = Expression.MemberInit( (NewExpression)map.Constructor, bindings );
-				}
-				else if( map.Constructor is MemberInitExpression )
-				{
-					var memberInitExpression = (MemberInitExpression)map.Constructor;
-					var defaultBindings = memberInitExpression.Bindings.ToList();
-					defaultBindings.AddRange( bindings );
-					body = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
-				}
-				else
-				{
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( recordType ).GetType();
-					body = Expression.MemberInit( Expression.New( type ), bindings );
-				}
+				// This is in case an IContractResolver is being used.
+				var type = ReflectionHelper.CreateInstance( recordType ).GetType();
+				body = Expression.MemberInit( Expression.New( type ), bindings );
 			}
 
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );

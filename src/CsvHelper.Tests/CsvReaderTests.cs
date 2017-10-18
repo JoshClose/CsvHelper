@@ -14,6 +14,7 @@ using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Reflection;
 #pragma warning disable 649
 
 namespace CsvHelper.Tests
@@ -886,13 +887,12 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvReader( reader ) )
 			{
-				csv.Configuration.PrefixReferenceHeaders = true;
-
 				writer.WriteLine( "Simple1.Id,Simple1.Name,Simple2.Id,Simple2.Name" );
 				writer.WriteLine( "1,one,2,two" );
 				writer.Flush();
 				stream.Position = 0;
 
+				csv.Configuration.ReferenceHeaderPrefix = ( type, name ) => $"{name}.";
 				var records = csv.GetRecords<Nested>().ToList();
 				Assert.IsNotNull( records );
 				Assert.AreEqual( 1, records[0].Simple1.Id );
@@ -972,7 +972,8 @@ namespace CsvHelper.Tests
 		{
 			public TestStructParentMap()
 			{
-				References<TestStructMap>( m => m.Test );
+				Map( m => m.Test.Id );
+				Map( m => m.Test.Name );
 			}
 		}
 
@@ -981,15 +982,6 @@ namespace CsvHelper.Tests
 			public int Id { get; set; }
 
 			public string Name { get; set; }
-		}
-
-		private sealed class TestStructMap : ClassMap<TestStruct>
-		{
-			public TestStructMap()
-			{
-				Map( m => m.Id );
-				Map( m => m.Name );
-			}
 		}
 
 		private class OnlyFields

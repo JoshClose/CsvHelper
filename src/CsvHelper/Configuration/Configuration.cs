@@ -150,7 +150,7 @@ namespace CsvHelper.Configuration
 		/// Determines if constructor parameters should be used to create
 		/// the class instead of the default constructor and members.
 		/// </summary>
-		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type => 
+		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type =>
 				!type.HasParameterlessConstructor()
 				&& type.HasConstructor()
 				&& !type.IsUserDefinedStruct()
@@ -209,7 +209,7 @@ namespace CsvHelper.Configuration
 			}
 		}
 
-        /// <summary>
+		/// <summary>
 		/// Gets or sets the character used to quote fields.
 		/// Default is '"'.
 		/// </summary>
@@ -381,12 +381,10 @@ namespace CsvHelper.Configuration
 		public virtual bool IgnoreBlankLines { get; set; } = true;
 
 		/// <summary>
-		/// Gets or sets a value indicating if headers of reference
-		/// member should get prefixed by the parent member
-		/// name when automapping.
-		/// True to prefix, otherwise false. Default is false.
+		/// Gets or sets a callback that will return the prefix for a reference header.
+		/// Arguments: memberType, memberName
 		/// </summary>
-		public virtual bool PrefixReferenceHeaders { get; set; }
+		public virtual Func<Type, string, string> ReferenceHeaderPrefix { get; set; }
 
 		/// <summary>
 		/// Builds the values for the RequiredQuoteChars property.
@@ -462,7 +460,7 @@ namespace CsvHelper.Configuration
 		/// <param name="map">The class map to register.</param>
 		public virtual void RegisterClassMap( ClassMap map )
 		{
-			if( map.Constructor == null && map.MemberMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
+			if( map.MemberMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
 			{
 				throw new ConfigurationException( "No mappings were specified in the CsvClassMap." );
 			}

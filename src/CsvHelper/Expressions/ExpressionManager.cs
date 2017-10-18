@@ -69,25 +69,9 @@ namespace CsvHelper.Expressions
 				var referenceBindings = new List<MemberBinding>();
 				CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
 
-				Expression referenceBody;
-				var constructorExpression = referenceMap.Data.Mapping.Constructor;
-				if( constructorExpression is NewExpression )
-				{
-					referenceBody = Expression.MemberInit( (NewExpression)constructorExpression, referenceBindings );
-				}
-				else if( constructorExpression is MemberInitExpression )
-				{
-					var memberInitExpression = (MemberInitExpression)constructorExpression;
-					var defaultBindings = memberInitExpression.Bindings.ToList();
-					defaultBindings.AddRange( referenceBindings );
-					referenceBody = Expression.MemberInit( memberInitExpression.NewExpression, defaultBindings );
-				}
-				else
-				{
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
-					referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
-				}
+				// This is in case an IContractResolver is being used.
+				var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
+				var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
 
 				bindings.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
 			}

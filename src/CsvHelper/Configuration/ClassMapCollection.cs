@@ -183,6 +183,11 @@ namespace CsvHelper.Configuration
 			foreach( var referenceMap in map.ReferenceMaps )
 			{
 				SetMapDefaults( referenceMap.Data.Mapping );
+
+				if( configuration.ReferenceHeaderPrefix != null )
+				{
+					referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix( referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name );
+				}
 			}
 		}
 	}

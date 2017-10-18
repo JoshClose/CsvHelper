@@ -37,23 +37,6 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Appends a prefix to the header of each field of the reference member.
-		/// </summary>
-		/// <param name="prefix">The prefix to be prepended to headers of each reference member.</param>
-		/// <returns>The current <see cref="MemberReferenceMap" /></returns>
-		public MemberReferenceMap Prefix( string prefix = null )
-		{
-			if( string.IsNullOrEmpty( prefix ) )
-			{
-				prefix = data.Member.Name + ".";
-			}
-
-			data.Prefix = prefix;
-
-			return this;
-		}
-
-		/// <summary>
 		/// Get the largest index for the
 		/// members and references.
 		/// </summary>

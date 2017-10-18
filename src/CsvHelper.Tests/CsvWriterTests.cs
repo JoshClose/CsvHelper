@@ -701,7 +701,7 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.PrefixReferenceHeaders = true;
+				csv.Configuration.ReferenceHeaderPrefix = ( type, name ) => $"{name}.";
 				csv.WriteRecords( list );
 				writer.Flush();
 				stream.Position = 0;
@@ -869,7 +869,8 @@ namespace CsvHelper.Tests
 		{
 			public TestStructParentMap()
 			{
-				References<TestStructMap>( m => m.Test );
+				Map( m => m.Test.Id );
+				Map( m => m.Test.Name );
 			}
 		}
 
@@ -878,15 +879,6 @@ namespace CsvHelper.Tests
 			public int Id { get; set; }
 
 			public string Name { get; set; }
-		}
-
-		private sealed class TestStructMap : ClassMap<TestStruct>
-		{
-			public TestStructMap()
-			{
-				Map( m => m.Id );
-				Map( m => m.Name );
-			}
 		}
 
 		private class TestPrivateGet
@@ -998,34 +990,17 @@ namespace CsvHelper.Tests
 		{
 			public PersonMap()
 			{
-				Map( m => m.FirstName );
-				Map( m => m.LastName );
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
+				Map( m => m.FirstName ).Index( 0 );
+				Map( m => m.LastName ).Index( 1 );
+				Map( m => m.HomeAddress.Street ).Name( "HomeStreet" ).Index( 2 );
+				Map( m => m.HomeAddress.City ).Name( "HomeCity" ).Index( 3 );
+				Map( m => m.HomeAddress.State ).Name( "HomeState" ).Index( 4 );
+				Map( m => m.HomeAddress.Zip ).Name( "HomeZip" ).Index( 5 );
+				Map( m => m.WorkAddress.Street ).Name( "WorkStreet" ).Index( 6 );
+				Map( m => m.WorkAddress.City ).Name( "WorkCity" ).Index( 7 );
+				Map( m => m.WorkAddress.State ).Name( "WorkState" ).Index( 8 );
+				Map( m => m.WorkAddress.Zip ).Name( "WorkZip" ).Index( 9 );
 			}
 		}
-
-		private sealed class HomeAddressMap : ClassMap<Address>
-		{
-			public HomeAddressMap()
-			{
-				Map( m => m.Street ).Name( "HomeStreet" );
-				Map( m => m.City ).Name( "HomeCity" );
-				Map( m => m.State ).Name( "HomeState" );
-				Map( m => m.Zip ).Name( "HomeZip" );
-			}
-		}
-
-		private sealed class WorkAddressMap : ClassMap<Address>
-		{
-			public WorkAddressMap()
-			{
-				Map( m => m.Street ).Name( "WorkStreet" );
-				Map( m => m.City ).Name( "WorkCity" );
-				Map( m => m.State ).Name( "WorkState" );
-				Map( m => m.Zip ).Name( "WorkZip" );
-			}
-		}
-
 	}
 }

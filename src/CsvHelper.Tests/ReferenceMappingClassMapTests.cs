@@ -131,30 +131,14 @@ namespace CsvHelper.Tests
 			{
 				Map( m => m.FirstName );
 				Map( m => m.LastName );
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
-			}
-		}
-
-		private sealed class HomeAddressMap : ClassMap<Address>
-		{
-			public HomeAddressMap()
-			{
-				Map( m => m.Street ).Name( "HomeStreet" );
-				Map( m => m.City ).Name( "HomeCity" );
-				Map( m => m.State ).Name( "HomeState" );
-				Map( m => m.Zip ).Name( "HomeZip" );
-			}
-		}
-
-		private sealed class WorkAddressMap : ClassMap<Address>
-		{
-			public WorkAddressMap()
-			{
-				Map(m => m.Street).Name( "WorkStreet" );
-				Map(m => m.City).Name( "WorkCity" );
-				Map(m => m.State).Name( "WorkState" );
-				Map(m => m.Zip).Name( "WorkZip" );
+				Map( m => m.HomeAddress.Street ).Name( "HomeStreet" );
+				Map( m => m.HomeAddress.City ).Name( "HomeCity" );
+				Map( m => m.HomeAddress.State ).Name( "HomeState" );
+				Map( m => m.HomeAddress.Zip ).Name( "HomeZip" );
+				Map( m => m.WorkAddress.Street ).Name( "WorkStreet" );
+				Map( m => m.WorkAddress.City ).Name( "WorkCity" );
+				Map( m => m.WorkAddress.State ).Name( "WorkState" );
+				Map( m => m.WorkAddress.Zip ).Name( "WorkZip" );
 			}
 		}
 
@@ -162,8 +146,14 @@ namespace CsvHelper.Tests
 		{
 			public OnlyReferencesMap()
 			{
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
+				Map( m => m.HomeAddress.Street ).Name( "HomeStreet" );
+				Map( m => m.HomeAddress.City ).Name( "HomeCity" );
+				Map( m => m.HomeAddress.State ).Name( "HomeState" );
+				Map( m => m.HomeAddress.Zip ).Name( "HomeZip" );
+				Map( m => m.WorkAddress.Street ).Name( "WorkStreet" );
+				Map( m => m.WorkAddress.City ).Name( "WorkCity" );
+				Map( m => m.WorkAddress.State ).Name( "WorkState" );
+				Map( m => m.WorkAddress.Zip ).Name( "WorkZip" );
 			}
 		}
 	}

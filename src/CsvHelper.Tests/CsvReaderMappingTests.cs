@@ -70,23 +70,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void ConstructUsingTest()
-		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "1" } );
-			var parserMock = new ParserMock( queue );
-
-			var csvReader = new CsvReader( parserMock );
-			csvReader.Configuration.HasHeaderRecord = false;
-			csvReader.Configuration.RegisterClassMap<ConstructorMappingClassMap>();
-
-			csvReader.Read();
-			var record = csvReader.GetRecord<ConstructorMappingClass>();
-
-			Assert.AreEqual( "one", record.StringColumn );
-		}
-
-		[TestMethod]
 		public void ConvertUsingTest()
 		{
 			var queue = new Queue<string[]>();
@@ -286,15 +269,6 @@ namespace CsvHelper.Tests
 			public ConstructorMappingClass( string stringColumn )
 			{
 				StringColumn = stringColumn;
-			}
-		}
-
-		private sealed class ConstructorMappingClassMap : ClassMap<ConstructorMappingClass>
-		{
-			public ConstructorMappingClassMap()
-			{
-				ConstructUsing( () => new ConstructorMappingClass( "one" ) );
-				Map( m => m.IntColumn ).Index( 0 );
 			}
 		}
 

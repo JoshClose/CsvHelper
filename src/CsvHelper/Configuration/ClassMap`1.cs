@@ -24,20 +24,6 @@ namespace CsvHelper.Configuration
 		public ClassMap() : base( typeof( TClass ) ) { }
 
 		/// <summary>
-		/// Constructs the row object using the given expression.
-		/// </summary>
-		/// <param name="expression">The expression.</param>
-		public virtual void ConstructUsing( Expression<Func<TClass>> expression )
-		{
-			if( !( expression.Body is NewExpression ) && !( expression.Body is MemberInitExpression ) )
-			{
-				throw new ArgumentException( "Not a constructor expression.", nameof( expression ) );
-			}
-
-			Constructor = expression.Body;
-		}
-
-		/// <summary>
 		/// Maps a member to a CSV field.
 		/// </summary>
 		/// <param name="expression">The member to map.</param>
@@ -86,20 +72,6 @@ namespace CsvHelper.Configuration
 			member = stack.Pop();
 
 			return (MemberMap<TClass, TMember>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
-		}
-
-		/// <summary>
-		/// Maps a member to another class map.
-		/// </summary>
-		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
-		/// <param name="expression">The expression.</param>
-		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
-		/// <returns>The reference mapping for the member.</returns>
-		[Obsolete( "Use sub-property mapping instead. ex: Map( m => m.A.B.C.Id )" )]
-		public virtual MemberReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
-		{
-			var member = ReflectionHelper.GetMember( expression );
-			return References( typeof( TClassMap ), member, constructorArgs );
 		}
 	}
 }

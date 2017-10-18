@@ -112,15 +112,6 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void MapConstructorTest()
-		{
-			var map = new TestMappingConstructorClass();
-			//map.CreateMap();
-
-			Assert.IsNotNull( map.Constructor );
-		}
-
-		[TestMethod]
 		public void MapMultipleTypesTest()
 		{
 			var config = new CsvHelper.Configuration.Configuration();
@@ -182,14 +173,6 @@ namespace CsvHelper.Tests
 			}
 		}
 		
-		private sealed class TestMappingConstructorClass : ClassMap<TestClass>
-		{
-			public TestMappingConstructorClass()
-			{
-				ConstructUsing( () => new TestClass( "String Column" ) );
-			}
-		}
-
 		private sealed class TestMappingDefaultClass : ClassMap<TestClass>
 		{
 			public TestMappingDefaultClass()

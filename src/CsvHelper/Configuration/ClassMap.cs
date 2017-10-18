@@ -36,11 +36,6 @@ namespace CsvHelper.Configuration
 		public virtual Type ClassType { get; private set; }
 
 		/// <summary>
-		/// Gets the constructor expression.
-		/// </summary>
-		public virtual Expression Constructor { get; protected set; }
-
-		/// <summary>
 		/// The class constructor parameter mappings.
 		/// </summary>
 		public virtual List<ParameterMap> ParameterMaps { get; } = new List<ParameterMap>();
@@ -315,9 +310,9 @@ namespace CsvHelper.Configuration
 					if( refMap.MemberMaps.Count > 0 || refMap.ReferenceMaps.Count > 0 )
 					{
 						var referenceMap = new MemberReferenceMap( member, refMap );
-						if( configuration.PrefixReferenceHeaders )
+						if( configuration.ReferenceHeaderPrefix != null )
 						{
-							referenceMap.Prefix();
+							referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix( member.MemberType(), member.Name );
 						}
 
 						ApplyAttributes( referenceMap );
@@ -397,9 +392,9 @@ namespace CsvHelper.Configuration
 					mapParents.Drop( mapParents.Find( type ) );
 
 					var referenceMap = new ParameterReferenceMap( parameter, refMap );
-					if( configuration.PrefixReferenceHeaders )
+					if( configuration.ReferenceHeaderPrefix != null )
 					{
-						referenceMap.Prefix();
+						referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix( memberTypeInfo.MemberType(), memberTypeInfo.Name );
 					}
 
 					parameterMap.ReferenceMap = referenceMap;

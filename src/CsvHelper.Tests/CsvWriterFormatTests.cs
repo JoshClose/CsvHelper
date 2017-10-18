@@ -170,35 +170,18 @@ namespace CsvHelper.Tests
 		{
 			public PersonMap()
 			{
-				Map( m => m.FirstName );
-				Map( m => m.LastName );
-				Map( m => m.Updated ).TypeConverterOption.Format( "yyyy-MM-dd HH:mm:ss.fff" );
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
+				Map( m => m.FirstName ).Index( 0 );
+				Map( m => m.LastName ).Index( 1 );
+				Map( m => m.Updated ).Index( 2 ).TypeConverterOption.Format( "yyyy-MM-dd HH:mm:ss.fff" );
+				Map( m => m.HomeAddress.Street ).Name( "HomeStreet" ).Index( 3 );
+				Map( m => m.HomeAddress.City ).Name( "HomeCity" ).Index( 4 );
+				Map( m => m.HomeAddress.State ).Name( "HomeState" ).Index( 5 );
+				Map( m => m.HomeAddress.Zip ).Name( "HomeZip" ).Index( 6 ).TypeConverterOption.Format( "00000" );
+				Map( m => m.WorkAddress.Street ).Name( "WorkStreet" ).Index( 7 );
+				Map( m => m.WorkAddress.City ).Name( "WorkCity" ).Index( 8 );
+				Map( m => m.WorkAddress.State ).Name( "WorkState" ).Index( 9 );
+				Map( m => m.WorkAddress.Zip ).Name( "WorkZip" ).Index( 10 ).TypeConverterOption.Format( "00000" );
 			}
 		}
-
-		private sealed class HomeAddressMap : ClassMap<Address>
-		{
-			public HomeAddressMap()
-			{
-				Map( m => m.Street ).Name( "HomeStreet" );
-				Map( m => m.City ).Name( "HomeCity" );
-				Map( m => m.State ).Name( "HomeState" );
-				Map( m => m.Zip ).Name( "HomeZip" ).TypeConverterOption.Format( "00000" );
-			}
-		}
-
-		private sealed class WorkAddressMap : ClassMap<Address>
-		{
-			public WorkAddressMap()
-			{
-				Map( m => m.Street ).Name( "WorkStreet" );
-				Map( m => m.City ).Name( "WorkCity" );
-				Map( m => m.State ).Name( "WorkState" );
-				Map( m => m.Zip ).Name( "WorkZip" ).TypeConverterOption.Format( "00000" );
-			}
-		}
-
 	}
 }
