@@ -875,5 +875,24 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual( "d e f", record.B );
 			}
 		}
-	}
+
+        [TestMethod]
+        public void InsideQuotesWithDelimiterAndSpacesInFieldTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var parser = new CsvParser(reader))
+            {
+                writer.WriteLine("\"  a ,b c\",b");
+                writer.Flush();
+                stream.Position = 0;
+
+                parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+                var record = parser.Read();
+
+                Assert.AreEqual("a ,b c", record[0]);
+            }
+        }
+    }
 }
