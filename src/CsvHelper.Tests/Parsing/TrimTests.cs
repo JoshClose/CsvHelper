@@ -603,27 +603,27 @@ namespace CsvHelper.Tests.Parsing
 			}
 		}
 
-	    [TestMethod]
-	    public void InsideQuotesStartSpacesInFieldDelimiterInFieldSmallBufferNoNewlineTest()
-	    {
-	        using (var stream = new MemoryStream())
-	        using (var writer = new StreamWriter(stream))
-	        using (var reader = new StreamReader(stream))
-	        using (var parser = new CsvParser(reader))
-	        {
-	            writer.WriteLine("\" a ,b c\",b");
-	            writer.Flush();
-	            stream.Position = 0;
+		[TestMethod]
+		public void InsideQuotesStartSpacesInFieldDelimiterInFieldSmallBufferNoNewlineTest()
+		{
+			using( var stream = new MemoryStream() )
+			using( var writer = new StreamWriter( stream ) )
+			using( var reader = new StreamReader( stream ) )
+			using( var parser = new CsvParser( reader ) )
+			{
+				writer.WriteLine( "\" a ,b c\",b" );
+				writer.Flush();
+				stream.Position = 0;
 
-	            parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
-	            parser.Configuration.BufferSize = 1;
-	            var record = parser.Read();
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				parser.Configuration.BufferSize = 1;
+				var record = parser.Read();
 
-	            Assert.AreEqual("a ,b c", record[0]);
-	        }
-	    }
+				Assert.AreEqual( "a ,b c", record[0] );
+			}
+		}
 
-        [TestMethod]
+		[TestMethod]
 		public void InsideQuotesEndTest()
 		{
 			using( var stream = new MemoryStream() )
