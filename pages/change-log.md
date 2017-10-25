@@ -1,5 +1,23 @@
 # Change Log
 
+### 4.0.3
+
+#### Bug Fixes
+
+- Added `ReadingExceptionOccurred` callback to `GetRecord` methods when an exception occurs.
+
+### 4.0.2
+
+#### Bug Fixes
+
+- Fixed issue with parsing when buffer spans over a field.
+
+### 4.0.1
+
+#### Bug Fixes
+
+- Fixed issue where trimming inside quotes would fail when the character after a space was a delimiter, \r, or \n.
+
 ### 4.0.0
 
 #### Breaking Changes
