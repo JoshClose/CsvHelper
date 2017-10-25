@@ -952,7 +952,7 @@ namespace CsvHelper
 
 				if( !Read() )
 				{
-					return default( T );
+					return default;
 				}
 			}
 
@@ -963,7 +963,11 @@ namespace CsvHelper
 			}
 			catch( Exception ex )
 			{
-				throw ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+
+				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+
+				record = default;
 			}
 
 			return record;
@@ -1018,7 +1022,10 @@ namespace CsvHelper
 			catch( Exception ex )
 			{
 				var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
-				throw csvHelperException;
+
+				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+
+				record = default;
 			}
 
 			return record;
