@@ -53,7 +53,7 @@ namespace CsvHelper.TypeConversion
 				$"    Text: '{text}'\r\n" +
 				$"    MemberType: {memberMapData.Member?.MemberType().FullName}\r\n" +
 				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
-		throw new TypeConverterException( (ReadingContext)row.Context, "The conversion cannot be performed." );
+		throw new TypeConverterException( (ReadingContext)row.Context, message );
 		}
 	}
 }
