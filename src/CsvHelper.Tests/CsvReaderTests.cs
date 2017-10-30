@@ -938,29 +938,29 @@ namespace CsvHelper.Tests
 
 			Assert.AreEqual( "1", row.Field1 );
 			Assert.AreEqual( "one", row.Field2 );
-        }
+		}
 
-        [TestMethod]
-        public void ReaderDynamicCustomHeaderValueWhenNoHeadersTest()
-        {
-            var queue = new Queue<string[]>();
-            queue.Enqueue(new[] { "1", "one" });
-            queue.Enqueue(new[] { "2", "two" });
-            queue.Enqueue(null);
+		[TestMethod]
+		public void ReaderDynamicCustomHeaderValueWhenNoHeadersTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue(new[] { "1", "one" });
+			queue.Enqueue(new[] { "2", "two" });
+			queue.Enqueue(null);
 
-            var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock(queue);
 
-            var csv = new CsvReader(parserMock);
-            csv.Configuration.HasHeaderRecord = false;
-            csv.Configuration.DynamicHeaderValue = i => $"Column{i+1}";
-            csv.Read();
-            var row = csv.GetRecord<dynamic>();
+			var csv = new CsvReader(parserMock);
+			csv.Configuration.HasHeaderRecord = false;
+			csv.Configuration.DynamicHeaderValue = i => $"Column{i+1}";
+			csv.Read();
+			var row = csv.GetRecord<dynamic>();
 
-            Assert.AreEqual("1", row.Column1);
-            Assert.AreEqual("one", row.Column2);
-        }
+			Assert.AreEqual("1", row.Column1);
+			Assert.AreEqual("one", row.Column2);
+		}
 
-        private class Nested
+		private class Nested
 		{
 			public Simple Simple1 { get; set; }
 

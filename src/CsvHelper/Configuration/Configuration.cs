@@ -146,17 +146,17 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = header => header;
 
-        /// <summary>
-        /// Gets or sets the callback that will determine header value for dynamic columns.
-        /// Default is: `Field{i+1}`
-        /// </summary>
-        public virtual Func<int, string> DynamicHeaderValue { get; set; } = i => $"Field{i+1}";
+		/// <summary>
+		/// Gets or sets the callback that will determine header value for dynamic columns.
+		/// Default is: `Field{i+1}`
+		/// </summary>
+		public virtual Func<int, string> DynamicHeaderValue { get; set; } = i => $"Field{i+1}";
 
-        /// <summary>
-        /// Determines if constructor parameters should be used to create
-        /// the class instead of the default constructor and members.
-        /// </summary>
-        public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type =>
+		/// <summary>
+		/// Determines if constructor parameters should be used to create
+		/// the class instead of the default constructor and members.
+		/// </summary>
+		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type =>
 				!type.HasParameterlessConstructor()
 				&& type.HasConstructor()
 				&& !type.IsUserDefinedStruct()
