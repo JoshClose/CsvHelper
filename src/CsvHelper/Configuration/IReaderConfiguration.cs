@@ -61,19 +61,27 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		TypeConverterCache TypeConverterCache { get; set; }
 
-		/// <summary>
-		/// Prepares the header field for matching against a member name.
-		/// The header field and the member name are both ran through this function.
-		/// You should do things like trimming, removing whitespace, removing underscores,
-		/// and making casing changes to ignore case.
-		/// </summary>
-		Func<string, string> PrepareHeaderForMatch { get; set; }
+        /// <summary>
+        /// Prepares the header field for matching against a member name.
+        /// The header field and the member name are both ran through this function.
+        /// You should do things like trimming, removing whitespace, removing underscores,
+        /// and making casing changes to ignore case.
+        /// </summary>
+        Func<string, string> PrepareHeaderForMatch { get; set; }
 
-		/// <summary>
-		/// Determines if constructor parameters should be used to create
-		/// the class instead of the default constructor and members.
-		/// </summary>
-		Func<Type, bool> ShouldUseConstructorParameters { get; set; }
+        /// <summary>
+        /// Generates header field value when dynamic headers are used.
+        /// The header field value is set to "Field{index}" by default but this can be
+        /// changed to be a value returned by this function. First parameter passed to
+        /// the function is an integer, which is a current column index.
+        /// </summary>
+        Func<int, string> DynamicHeaderValue { get; set; }
+
+        /// <summary>
+        /// Determines if constructor parameters should be used to create
+        /// the class instead of the default constructor and members.
+        /// </summary>
+        Func<Type, bool> ShouldUseConstructorParameters { get; set; }
 
 		/// <summary>
 		/// Chooses the constructor to use for constuctor mapping.

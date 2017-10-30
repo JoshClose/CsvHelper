@@ -52,7 +52,7 @@ namespace CsvHelper.Expressions
 			{
 				for( var i = 0; i < Reader.Context.Record.Length; i++ )
 				{
-					var propertyName = "Field" + ( i + 1 );
+					var propertyName = Reader.Context.ReaderConfiguration.DynamicHeaderValue(i);
 					var field = Reader.GetField( i );
 					dict.Add( propertyName, field );
 				}
