@@ -2,22 +2,19 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
+using CsvHelper.Container;
+using CsvHelper.Expressions;
+using CsvHelper.TypeConversion;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Reflection;
-using System.Text;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Linq.Expressions;
 using System.Dynamic;
-using Microsoft.CSharp.RuntimeBinder;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
-using CsvHelper.Expressions;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -68,11 +65,18 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
 		/// </summary>
 		/// <param name="serializer">The serializer.</param>
-		public CsvWriter( ISerializer serializer )
+		public CsvWriter( ISerializer serializer ) : this( serializer, new ContainerFactory() ) { }
+
+		/// <summary>
+		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
+		/// </summary>
+		/// <param name="serializer">The serializer.</param>
+		/// <param name="containerFactory">The container factory to build internals.</param>
+		public CsvWriter(ISerializer serializer, IContainerFactory containerFactory)
 		{
-			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
-			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( IWritingContext )}." );
-			recordManager = new RecordManager( this );
+			this.serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException($"For {nameof(ISerializer)} to be used in {nameof(CsvWriter)}, {nameof(ISerializer.Context)} must also implement {nameof(IWritingContext)}.");
+			recordManager = containerFactory.WriterRecordManager(this);
 		}
 
 		/// <summary>

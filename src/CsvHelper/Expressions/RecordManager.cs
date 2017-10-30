@@ -11,7 +11,6 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class RecordManager
     {
-		private readonly CsvReader reader;
 		private readonly RecordCreatorFactory recordCreatorFactory;
 		private readonly RecordHydrator recordHydrator;
 		private readonly RecordWriterFactory recordWriterFactory;
@@ -22,18 +21,17 @@ namespace CsvHelper.Expressions
 		/// <param name="reader"></param>
 		public RecordManager( CsvReader reader )
 		{
-			this.reader = reader;
 			recordCreatorFactory = new RecordCreatorFactory( reader );
 			recordHydrator = new RecordHydrator( reader );
 		}
 
-		/// <summary>
-		/// Initializes a new instance using the given writer.
-		/// </summary>
-		/// <param name="writer">The writer.</param>
-		public RecordManager( CsvWriter writer )
+        /// <summary>
+        /// Initializes a new instance using the given writer factory.
+        /// </summary>
+        /// <param name="recordWriterFactory">The record writer factory.</param>
+        public RecordManager( RecordWriterFactory recordWriterFactory)
 		{
-			recordWriterFactory = new RecordWriterFactory( writer );
+			this.recordWriterFactory = recordWriterFactory;
 		}
 
 		/// <summary>

@@ -4,9 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Expressions
 {
@@ -19,7 +16,8 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given writer.
 		/// </summary>
 		/// <param name="writer">The writer.</param>
-		public ExpandoObjectRecordWriter( CsvWriter writer ) : base( writer ) { }
+		/// <param name="expressionManager">The expression manager</param>
+		public ExpandoObjectRecordWriter( CsvWriter writer, ExpressionManager expressionManager ) : base( writer, expressionManager ) { }
 
 		/// <summary>
 		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
