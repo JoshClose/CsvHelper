@@ -3,7 +3,6 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using CsvHelper.Container;
 using CsvHelper.Expressions;
 using CsvHelper.TypeConversion;
 using System;
@@ -65,18 +64,16 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
 		/// </summary>
 		/// <param name="serializer">The serializer.</param>
-		public CsvWriter( ISerializer serializer ) : this( serializer, new ContainerFactory() ) { }
-
-		/// <summary>
-		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
-		/// </summary>
-		/// <param name="serializer">The serializer.</param>
-		/// <param name="containerFactory">The container factory to build internals.</param>
-		public CsvWriter(ISerializer serializer, IContainerFactory containerFactory)
+		public CsvWriter(ISerializer serializer)
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
 			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException($"For {nameof(ISerializer)} to be used in {nameof(CsvWriter)}, {nameof(ISerializer.Context)} must also implement {nameof(IWritingContext)}.");
-			recordManager = containerFactory.WriterRecordManager(this);
+
+			// We have to build the DI path from the resolver
+			var objectResolver = ObjectResolver.Current;
+			var expressionManager = (ExpressionManager)objectResolver.Resolve(typeof(ExpressionManager), new object[] { this });
+			var factory = (RecordWriterFactory)objectResolver.Resolve(typeof(RecordWriterFactory), new object[] { this, expressionManager });
+			recordManager = (RecordManager)objectResolver.Resolve(typeof(RecordManager), new object[] { factory });
 		}
 
 		/// <summary>
