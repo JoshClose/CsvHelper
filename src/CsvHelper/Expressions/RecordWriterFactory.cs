@@ -33,7 +33,7 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record.</param>
-		public RecordWriter MakeRecordWriter<T>( T record )
+		public virtual RecordWriter MakeRecordWriter<T>( T record )
 		{
 			var type = writer.GetTypeForRecord( record );
 

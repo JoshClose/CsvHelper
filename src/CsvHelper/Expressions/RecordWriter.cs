@@ -33,8 +33,8 @@ namespace CsvHelper.Expressions
 		public RecordWriter( CsvWriter writer )
 		{
 			Writer = writer;
-			ExpressionManager = new ExpressionManager( writer );
-		}
+			ExpressionManager = (ExpressionManager)ObjectResolver.Current.Resolve(typeof(ExpressionManager), new object[] { writer });
+        }
 
 		/// <summary>
 		/// Writes the record to the current row.
