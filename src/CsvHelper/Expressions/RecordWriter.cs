@@ -6,16 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Expressions
 {
 	/// <summary>
 	/// Base implementation for classes that write records.
 	/// </summary>
-    public abstract class RecordWriter
-    {
+	public abstract class RecordWriter
+	{
 		/// <summary>
 		/// Gets the writer.
 		/// </summary>
@@ -30,10 +28,11 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given writer.
 		/// </summary>
 		/// <param name="writer">The writer.</param>
-		public RecordWriter( CsvWriter writer )
+		/// <param name="expressionManager">The expression manager</param>
+		public RecordWriter( CsvWriter writer, ExpressionManager expressionManager )
 		{
 			Writer = writer;
-			ExpressionManager = new ExpressionManager( writer );
+			ExpressionManager = expressionManager;
 		}
 
 		/// <summary>
