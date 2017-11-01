@@ -69,9 +69,17 @@ namespace CsvHelper.Tests
 		{
 			public ContainerClassMap()
 			{
-				Map( m => m.Contents.First.First );
-				Map( m => m.Contents.Second.Second );
-				Map( m => m.Contents.Third );
+				References<ThirdClassMap>( m => m.Contents );
+			}
+		}
+
+		private sealed class ThirdClassMap : ClassMap<ThirdClass>
+		{
+			public ThirdClassMap()
+			{
+				References<FirstClassMap>( m => m.First );
+				References<SecondClassMap>( m => m.Second );
+				Map( m => m.Third );
 			}
 		}
 

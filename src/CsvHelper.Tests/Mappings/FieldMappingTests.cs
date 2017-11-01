@@ -308,7 +308,15 @@ namespace CsvHelper.Tests.Mappings
 			public APublicMap()
 			{
 				Map( m => m.IdField );
-				Map( m => m.BField.NameField );
+				References<BPublicMap>( m => m.BField );
+			}
+		}
+
+		private sealed class BPublicMap : ClassMap<BPublic>
+		{
+			public BPublicMap()
+			{
+				Map( m => m.NameField );
 			}
 		}
 

@@ -14,7 +14,6 @@ using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Reflection;
 #pragma warning disable 649
 
 namespace CsvHelper.Tests
@@ -972,8 +971,7 @@ namespace CsvHelper.Tests
 		{
 			public TestStructParentMap()
 			{
-				Map( m => m.Test.Id );
-				Map( m => m.Test.Name );
+				References<TestStructMap>( m => m.Test );
 			}
 		}
 
@@ -982,6 +980,15 @@ namespace CsvHelper.Tests
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+		}
+
+		private sealed class TestStructMap : ClassMap<TestStruct>
+		{
+			public TestStructMap()
+			{
+				Map( m => m.Id );
+				Map( m => m.Name );
+			}
 		}
 
 		private class OnlyFields

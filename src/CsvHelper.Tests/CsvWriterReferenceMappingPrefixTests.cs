@@ -22,15 +22,6 @@ namespace CsvHelper.Tests
 			using( var writer = new StreamWriter( stream ) )
 			using( var csv = new CsvWriter( writer ) )
 			{
-				csv.Configuration.ReferenceHeaderPrefix = ( type, name ) =>
-				{
-					if( name == "B" )
-					{
-						return $"{name}Prefix_";
-					}
-
-					return $"{name}.";
-				};
 				csv.Configuration.RegisterClassMap<AMap>();
 
 				var list = new List<A>();
@@ -91,8 +82,24 @@ namespace CsvHelper.Tests
 			public AMap()
 			{
 				Map( m => m.Id );
-				Map( m => m.B.Id );
-				Map( m => m.B.C.Id ).Name( "CId" );
+				References<BMap>( m => m.B ).Prefix( "BPrefix_" );
+			}
+		}
+
+		private sealed class BMap : ClassMap<B>
+		{
+			public BMap()
+			{
+				Map( m => m.Id );
+				References<CMap>( m => m.C ).Prefix();
+			}
+		}
+
+		private sealed class CMap : ClassMap<C>
+		{
+			public CMap()
+			{
+				Map( m => m.Id ).Name( "CId" );
 			}
 		}
 	}
