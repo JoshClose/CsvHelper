@@ -20,12 +20,12 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader"></param>
-		public RecordManager(CsvReader reader)
+		public RecordManager( CsvReader reader )
 		{
 			this.reader = reader;
 			var resolver = ObjectResolver.Current;
-			recordCreatorFactory = (RecordCreatorFactory)resolver.Resolve(typeof(RecordCreatorFactory), new object[] { reader });
-			recordHydrator = (RecordHydrator)resolver.Resolve(typeof(RecordHydrator), new object[] { reader });
+			recordCreatorFactory = resolver.Resolve<RecordCreatorFactory>( reader );
+			recordHydrator = resolver.Resolve<RecordHydrator>( reader );
 		}
 
 		/// <summary>
@@ -34,7 +34,7 @@ namespace CsvHelper.Expressions
 		/// <param name="writer">The writer.</param>
 		public RecordManager( CsvWriter writer )
 		{
-			recordWriterFactory = (RecordWriterFactory)ObjectResolver.Current.Resolve(typeof(RecordWriterFactory), new object[] { writer });
+			recordWriterFactory = ObjectResolver.Current.Resolve<RecordWriterFactory>( writer );
 		}
 
 		/// <summary>

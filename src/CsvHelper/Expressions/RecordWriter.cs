@@ -33,7 +33,7 @@ namespace CsvHelper.Expressions
 		public RecordWriter( CsvWriter writer )
 		{
 			Writer = writer;
-			ExpressionManager = (ExpressionManager)ObjectResolver.Current.Resolve(typeof(ExpressionManager), new object[] { writer });
+			ExpressionManager = ObjectResolver.Current.Resolve<ExpressionManager>( writer );
         }
 
 		/// <summary>

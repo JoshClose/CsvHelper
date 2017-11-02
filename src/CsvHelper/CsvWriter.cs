@@ -72,7 +72,7 @@ namespace CsvHelper
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
 			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( IWritingContext )}." );
-			recordManager = (RecordManager)ObjectResolver.Current.Resolve(typeof(RecordManager), new object[] { this });
+			recordManager = ObjectResolver.Current.Resolve<RecordManager>( this );
 		}
 
 		/// <summary>

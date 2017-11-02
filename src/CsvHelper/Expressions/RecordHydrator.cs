@@ -27,7 +27,7 @@ namespace CsvHelper.Expressions
 		public RecordHydrator( CsvReader reader )
 		{
 			this.reader = reader;
-			expressionManager = (ExpressionManager)ObjectResolver.Current.Resolve(typeof(ExpressionManager), new object[] { reader });
+			expressionManager = ObjectResolver.Current.Resolve<ExpressionManager>( reader );
 		}
 
 		/// <summary>

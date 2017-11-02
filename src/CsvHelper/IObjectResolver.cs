@@ -41,6 +41,17 @@ namespace CsvHelper
 		/// <param name="type">The type to create an instance from. The created object
 		/// may not be the same type as the given type.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the type.</param>
-		object Resolve( Type type, object[] constructorArgs = null );
+		object Resolve( Type type, params object[] constructorArgs );
+
+		/// <summary>
+		/// Creates an object from the given type using the <see cref="ResolveFunction"/>
+		/// function. If <see cref="CanResolve"/> is false, the object will be
+		/// created using CsvHelper's default object creation. If <see cref="UseFallback"/>
+		/// is false, an exception is thrown.
+		/// </summary>
+		/// <typeparam name="T">The type to create an instance from. The created object
+		/// may not be the same type as the given type.</typeparam>
+		/// <param name="constructorArgs">Constructor arguments used to create the type.</param>
+		T Resolve<T>( params object[] constructorArgs );
 	}
 }

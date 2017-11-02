@@ -15,6 +15,32 @@ namespace CsvHelper
 		private static IObjectResolver current = new ObjectResolver();
 
 		/// <summary>
+		/// Gets or sets the current resolver.
+		/// </summary>
+		public static IObjectResolver Current
+		{
+			get
+			{
+				lock( locker )
+				{
+					return current;
+				}
+			}
+			set
+			{
+				if( value == null )
+				{
+					throw new InvalidOperationException( "IObjectResolver cannot be null." );
+				}
+
+				lock( locker )
+				{
+					current = value;
+				}
+			}
+		}
+
+		/// <summary>
 		/// A value indicating if the resolver's <see cref="CanResolve"/>
 		/// returns false that an object will still be created using
 		/// CsvHelper's object creation. True to fallback, otherwise false.
@@ -67,7 +93,7 @@ namespace CsvHelper
 		/// <param name="type">The type to create an instance from. The created object
 		/// may not be the same type as the given type.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the type.</param>
-		public object Resolve( Type type, object[] constructorArgs = null )
+		public object Resolve( Type type, params object[] constructorArgs )
 		{
 			if( CanResolve( type ) )
 			{
@@ -79,34 +105,21 @@ namespace CsvHelper
 				return ReflectionHelper.CreateInstance( type, constructorArgs );
 			}
 
-			var message = $"Type '{type.FullName}' can't be resolved and fallback is turned off.";
-			throw new CsvHelperException( message );
+			throw new CsvHelperException( $"Type '{type.FullName}' can't be resolved and fallback is turned off." );
 		}
 
 		/// <summary>
-		/// Gets or sets the current resolver.
+		/// Creates an object from the given type using the <see cref="ResolveFunction"/>
+		/// function. If <see cref="CanResolve"/> is false, the object will be
+		/// created using CsvHelper's default object creation. If <see cref="UseFallback"/>
+		/// is false, an exception is thrown.
 		/// </summary>
-		public static IObjectResolver Current
+		/// <typeparam name="T">The type to create an instance from. The created object
+		/// may not be the same type as the given type.</typeparam>
+		/// <param name="constructorArgs">Constructor arguments used to create the type.</param>
+		public T Resolve<T>( params object[] constructorArgs )
 		{
-			get
-			{
-				lock( locker )
-				{
-					return current;
-				}
-			}
-			set
-			{
-				if( value == null )
-				{
-					throw new InvalidOperationException( "IObjectResolver cannot be null." );
-				}
-
-				lock( locker )
-				{
-					current = value;
-				}
-			}
+			return (T)Resolve( typeof( T ), constructorArgs );
 		}
 	}
 }

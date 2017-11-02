@@ -89,7 +89,7 @@ namespace CsvHelper.Tests
 
 			public bool UseFallback { get; set; }
 
-			public object Resolve( Type type, object[] constructorArgs = null )
+			public object Resolve( Type type, params object[] constructorArgs )
 			{
 				if( type == typeof( IA ) )
 				{
@@ -112,6 +112,11 @@ namespace CsvHelper.Tests
 				}
 
 				return ReflectionHelper.CreateInstanceWithoutContractResolver( type, constructorArgs );
+			}
+
+			public T Resolve<T>( params object[] constructorArgs )
+			{
+				return (T)Resolve( typeof( T ), constructorArgs );
 			}
 		}
 
