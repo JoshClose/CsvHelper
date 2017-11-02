@@ -31,7 +31,7 @@ namespace CsvHelper.Expressions
 		/// Creates a record creator for the given record type.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-        public RecordCreator MakeRecordCreator( Type recordType )
+        public virtual RecordCreator MakeRecordCreator( Type recordType )
 		{
 			if( recordType == typeof( object ) )
 			{
