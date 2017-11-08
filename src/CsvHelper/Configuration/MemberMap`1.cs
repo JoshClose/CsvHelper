@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		public virtual MemberMap<TClass, TMember> Name( params string[] names )
+		public virtual new MemberMap<TClass, TMember> Name( params string[] names )
 		{
 			if( names == null || names.Length == 0 )
 			{
@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		public virtual MemberMap<TClass, TMember> NameIndex( int index )
+		public virtual new MemberMap<TClass, TMember> NameIndex( int index )
 		{
 			Data.NameIndex = index;
 
@@ -70,7 +70,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
 		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> member.</param>
-		public virtual MemberMap<TClass, TMember> Index( int index, int indexEnd = -1 )
+		public virtual new MemberMap<TClass, TMember> Index( int index, int indexEnd = -1 )
 		{
 			Data.Index = index;
 			Data.IsIndexSet = true;
@@ -86,7 +86,7 @@ namespace CsvHelper.Configuration
 		/// this method will not ingore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
-		public virtual MemberMap<TClass, TMember> Ignore()
+		public virtual new MemberMap<TClass, TMember> Ignore()
 		{
 			Data.Ignore = true;
 
@@ -101,7 +101,7 @@ namespace CsvHelper.Configuration
 		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
-		public virtual MemberMap<TClass, TMember> Ignore( bool ignore )
+		public virtual new MemberMap<TClass, TMember> Ignore( bool ignore )
 		{
 			Data.Ignore = ignore;
 
@@ -128,7 +128,7 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual MemberMap<TClass, TMember> Default( string defaultValue )
+		public virtual new MemberMap<TClass, TMember> Default( string defaultValue )
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -155,7 +155,7 @@ namespace CsvHelper.Configuration
 		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		public virtual MemberMap<TClass, TMember> TypeConverter( ITypeConverter typeConverter )
+		public virtual new MemberMap<TClass, TMember> TypeConverter( ITypeConverter typeConverter )
 		{
 			Data.TypeConverter = typeConverter;
 
@@ -168,7 +168,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
-		public virtual MemberMap<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
+		public virtual new MemberMap<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
 			TypeConverter( ReflectionHelper.CreateInstance<TConverter>() );
 
@@ -203,7 +203,7 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-		public virtual MemberMap<TClass, TMember> Validate( Func<string, bool> validateExpression )
+		public virtual new MemberMap<TClass, TMember> Validate( Func<string, bool> validateExpression )
 		{
 			Data.ValidateExpression = (Expression<Func<string, bool>>)( x => validateExpression( x ) );
 
