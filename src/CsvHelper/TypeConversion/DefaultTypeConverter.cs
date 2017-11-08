@@ -29,8 +29,7 @@ namespace CsvHelper.TypeConversion
 				return string.Empty;
 			}
 
-			var formattable = value as IFormattable;
-			if( formattable != null )
+			if( value is IFormattable formattable )
 			{
 				var format = memberMapData.TypeConverterOptions.Formats?.FirstOrDefault();
 				return formattable.ToString( format, memberMapData.TypeConverterOptions.CultureInfo );
@@ -53,7 +52,7 @@ namespace CsvHelper.TypeConversion
 				$"    Text: '{text}'\r\n" +
 				$"    MemberType: {memberMapData.Member?.MemberType().FullName}\r\n" +
 				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
-		throw new TypeConverterException( (ReadingContext)row.Context, message );
+			throw new TypeConverterException( this, memberMapData, text, (ReadingContext)row.Context, message );
 		}
 	}
 }
