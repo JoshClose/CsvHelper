@@ -1,5 +1,34 @@
 # Change Log
 
+### 6.0.0
+
+#### Features
+
+- Use `ObjectResolver` to create internal classes `RecordManager`, `ExpressionManager`, `RecordCreatorFactory`, and `RecordHydrator`, `RecordWriterFactory`.
+- Added generic resolve method to object resolver.
+- Added mapping methods to MemberMap for use during runtime mapping.
+- Added more info and properties to TypeConverterException.
+
+#### Bug Fixes
+
+- Fixed issue where mapping an interface doesn't get used when writing.
+
+#### Breaking Changes
+
+- Added `IObjectResolver.Resolve<T>( params object[] constructorArgs )` method.
+- Added `IWriter.WriteRecords<T>( IEnumerable<T> records )` method.
+- `TypeConverterException` constructors signatures changed.
+
+### 5.0.0
+
+#### Features
+
+- Added `Map<TClass>.References( expression )` back in.
+
+#### Bug Fixes
+
+- Fixed `DefaultTypeConverterException` message. The generated message wasn't being used.
+
 ### 4.0.3
 
 #### Bug Fixes
