@@ -84,7 +84,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Reads the header field without reading the first row.
+		/// Reads the header record without reading the first row.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
 		public virtual bool ReadHeader()
