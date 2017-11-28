@@ -6,3 +6,12 @@ http://joshclose.github.io/CsvHelper/configuration
 http://joshclose.github.io/CsvHelper/type-conversion
 http://joshclose.github.io/CsvHelper/examples
 http://joshclose.github.io/CsvHelper/change-log
+
+https://joshclose.github.io/CsvHelper/
+https://joshclose.github.io/CsvHelper/reading
+https://joshclose.github.io/CsvHelper/writing
+https://joshclose.github.io/CsvHelper/mapping
+https://joshclose.github.io/CsvHelper/configuration
+https://joshclose.github.io/CsvHelper/type-conversion
+https://joshclose.github.io/CsvHelper/examples
+https://joshclose.github.io/CsvHelper/change-log
