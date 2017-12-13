@@ -22,7 +22,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the type actions.
 		/// </summary>
-		public Dictionary<string, Delegate> TypeActions { get; } = new Dictionary<string, Delegate>();
+		public Dictionary<int, Delegate> TypeActions { get; } = new Dictionary<int, Delegate>();
 
 		/// <summary>
 		/// Gets the type converter options.

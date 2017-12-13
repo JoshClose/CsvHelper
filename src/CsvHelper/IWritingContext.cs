@@ -21,7 +21,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the type actions.
 		/// </summary>
-		Dictionary<string, Delegate> TypeActions { get; }
+		Dictionary<int, Delegate> TypeActions { get; }
 
 		/// <summary>
 		/// Gets the type converter options.

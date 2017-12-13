@@ -62,12 +62,14 @@ namespace CsvHelper.Expressions
 		protected Action<T> GetWriteDelegate<T>( T record )
 		{
 			var type = typeof( T );
-			var typeKey = type.FullName;
+			var typeKeyName = type.AssemblyQualifiedName;
 			if( type == typeof( object ) )
 			{
 				type = record.GetType();
-				typeKey += $"|{type.FullName}";
+				typeKeyName += $"|{type.AssemblyQualifiedName}";
 			}
+
+			int typeKey = typeKeyName.GetHashCode();
 
 			if( !Writer.Context.TypeActions.TryGetValue( typeKey, out Delegate action ) )
 			{
