@@ -8,7 +8,7 @@
 		<Authors>Josh Close</Authors>
 
 		<!-- Build -->
-		<Version>6.0.3</Version>
+		<Version>6.1.0</Version>
 		<FileVersion>6.0.0.0</FileVersion>
 		<AssemblyVersion>6.0.0.0</AssemblyVersion>
 		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>

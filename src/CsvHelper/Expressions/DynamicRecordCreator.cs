@@ -44,6 +44,7 @@ namespace CsvHelper.Expressions
 				for( var i = 0; i < length; i++ )
 				{
 					var header = Reader.Context.HeaderRecord[i];
+					header = Reader.Configuration.PrepareHeaderForMatch( header );
 					var field = Reader.GetField( i );
 					dict.Add( header, field );
 				}
