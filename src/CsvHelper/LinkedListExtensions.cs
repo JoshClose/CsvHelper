@@ -19,15 +19,14 @@ namespace CsvHelper
 				return;
 			}
 
-			var nodeToDrop = list.Find( node.Value );
-			while( list.Count > 0 && list.Last != nodeToDrop )
+			while( list.Count > 0 )
 			{
+				var nodeToRemove = list.Last;
 				list.RemoveLast();
-			}
-
-			if( list.Last == nodeToDrop )
-			{
-				list.RemoveLast();
+				if( nodeToRemove == node )
+				{
+					break;
+				}
 			}
 		}
 	}

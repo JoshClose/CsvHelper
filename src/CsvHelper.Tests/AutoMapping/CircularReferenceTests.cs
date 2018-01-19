@@ -7,6 +7,13 @@ namespace CsvHelper.Tests.AutoMapping
     public class CircularReferenceTests
     {
 		[TestMethod]
+		public void SelfCircularDependencyTest()
+		{
+			var config = new CsvHelper.Configuration.Configuration();
+			var map = config.AutoMap<SelfCircularA>();
+		}
+
+		[TestMethod]
 		public void CircularDependencyTest()
 		{
 			var config = new CsvHelper.Configuration.Configuration();
@@ -25,6 +32,23 @@ namespace CsvHelper.Tests.AutoMapping
 			var map = config.AutoMap<A>();
 			Assert.AreEqual( 1, map.MemberMaps.Count );
 			Assert.AreEqual( 3, map.ReferenceMaps.Count );
+		}
+
+		private class SelfCircularA
+		{
+			public SelfCircularB Circular { get; set; }
+		}
+
+		private class SelfCircularB
+		{
+			public SelfCircularB Self { get; set; }
+
+			public SelfCircularC C { get; set; }
+		}
+
+		private class SelfCircularC
+		{
+			public string Id { get; set; }
 		}
 
 		private class ACircular
