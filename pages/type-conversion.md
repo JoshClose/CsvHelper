@@ -1,6 +1,6 @@
 # Type Conversion
 
-CsvHelper uses type converters to convert a `string into an `object`, and and `object` into a `string`.
+CsvHelper uses type converters to convert a `string` into an `object`, and an `object` into a `string`.
 
 ## ITypeConverter
 <hr/>
