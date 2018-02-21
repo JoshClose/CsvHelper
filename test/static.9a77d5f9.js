@@ -67,7 +67,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/CsvHelper/test/";
+/******/ 	__webpack_require__.p = "http://joshclose.github.io/CsvHelper/test/";
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = 7);
@@ -1634,4 +1634,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.60353f8b.js.map
+//# sourceMappingURL=static.9a77d5f9.js.map
