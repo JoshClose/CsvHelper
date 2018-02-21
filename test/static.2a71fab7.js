@@ -445,7 +445,18 @@ var _layout2 = _interopRequireDefault(_layout);
 
 __webpack_require__(24);
 
+var _axios = __webpack_require__(25);
+
+var _axios2 = _interopRequireDefault(_axios);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+_axios2.default.interceptors.request.use(function (config) {
+	console.log("axios config", config);
+	return config;
+}, function (error) {
+	return Promise.reject(error);
+});
 
 var App = function App() {
 	return _react2.default.createElement(
@@ -524,7 +535,7 @@ var universalOptions = {
 
 var t_0 = (0, _reactUniversalComponent2.default)((0, _universalImport3.default)({
   id: '../src/components/content',
-  file: 'C:/Users/narsh/Projects/react-static/my-static-site/dist/react-static-routes.js',
+  file: 'C:/Users/narsh/Projects/CsvHelperWebSite-react-static/dist/react-static-routes.js',
   load: function load() {
     return Promise.all([new Promise(function(resolve) { resolve(); }).then(__webpack_require__.bind(null, 5)), (0, _importCss3.default)('src/components/content', {
       disableWarnings: true
@@ -544,7 +555,7 @@ var t_0 = (0, _reactUniversalComponent2.default)((0, _universalImport3.default)(
 }), universalOptions);
 var t_1 = (0, _reactUniversalComponent2.default)((0, _universalImport3.default)({
   id: '../src/components/404',
-  file: 'C:/Users/narsh/Projects/react-static/my-static-site/dist/react-static-routes.js',
+  file: 'C:/Users/narsh/Projects/CsvHelperWebSite-react-static/dist/react-static-routes.js',
   load: function load() {
     return Promise.all([new Promise(function(resolve) { resolve(); }).then(__webpack_require__.bind(null, 6)), (0, _importCss3.default)('src/components/404', {
       disableWarnings: true
@@ -1631,7 +1642,13 @@ exports.default = Header;
 
 // removed by extract-text-webpack-plugin
 
+/***/ }),
+/* 25 */
+/***/ (function(module, exports) {
+
+module.exports = require("axios");
+
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.cdf0be14.js.map
+//# sourceMappingURL=static.2a71fab7.js.map
