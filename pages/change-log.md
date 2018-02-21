@@ -1,5 +1,43 @@
 # Change Log
 
+### 7.0.0
+
+#### Features
+
+- Reading performance improvements.
+
+#### Breaking Changes
+
+- Removed `IReadingContext` and `IWritingContext` interfaces. `ReadingContext` and `WritingContext` are used directly now.
+
+### 6.1.1
+
+#### Bug Fixes
+
+- Fixed issue with circular references when auto mapping.
+
+### 6.1.0
+
+#### Features
+
+- Dynamic now uses `Configuration.PrepareHeaderForMatch` on header name to get property name for dynamic object.
+
+### 6.0.3
+
+#### Bug Fixes
+
+- Fixed issue with LINQPad not working propertly due to types from differently assemblies being cached in the writer.
+
+#### Breaking Changes
+
+- `IWritingContext.TypeActions` signature changed.
+
+### 6.0.2
+
+#### Bug Fixes
+
+- Fixed issue with LINQPad not working propertly due to types from differently assemblies being cached.
+
 ### 6.0.0
 
 #### Features
