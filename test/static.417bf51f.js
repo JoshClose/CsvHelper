@@ -1401,7 +1401,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "/reading" },
+										{ className: "navbar-link", to: "reading" },
 										"Reading"
 									),
 									_react2.default.createElement(
@@ -1409,37 +1409,37 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#getting-all-records" },
+											{ className: "navbar-item", to: "reading#getting-all-records" },
 											"Getting All Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#reading-records" },
+											{ className: "navbar-item", to: "reading#reading-records" },
 											"Reading Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#getting-a-single-record" },
+											{ className: "navbar-item", to: "reading#getting-a-single-record" },
 											"Getting a Single Record"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#getting-fields" },
+											{ className: "navbar-item", to: "reading#getting-fields" },
 											"Getting Fields"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#malformed-field-fallback" },
+											{ className: "navbar-item", to: "reading#malformed-field-fallback" },
 											"Malformed Field Fallback"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#reading-context" },
+											{ className: "navbar-item", to: "reading#reading-context" },
 											"Reading Context"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/reading#configuration" },
+											{ className: "navbar-item", to: "reading#configuration" },
 											"Configuration"
 										)
 									)
@@ -1457,32 +1457,32 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/writing#writing-all-records" },
+											{ className: "navbar-item", to: "writing#writing-all-records" },
 											"Writing All Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/writing#writing-a-single-record" },
+											{ className: "navbar-item", to: "writing#writing-a-single-record" },
 											"Writing a Single Record"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/writing#writing-fields" },
+											{ className: "navbar-item", to: "writing#writing-fields" },
 											"Writing Fields"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/writing#ending-the-row" },
+											{ className: "navbar-item", to: "writing#ending-the-row" },
 											"Ending the Row"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/writing#writing-context" },
+											{ className: "navbar-item", to: "writing#writing-context" },
 											"Writing Context"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "/writing#configuration" },
+											{ className: "navbar-item", to: "writing#configuration" },
 											"Configuration"
 										)
 									)
@@ -1634,4 +1634,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.a346bd0f.js.map
+//# sourceMappingURL=static.417bf51f.js.map
