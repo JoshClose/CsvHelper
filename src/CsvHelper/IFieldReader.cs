@@ -18,7 +18,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		IReadingContext Context { get; }
+		ReadingContext Context { get; }
 
 		/// <summary>
 		/// Gets a value indicating if the buffer is empty.

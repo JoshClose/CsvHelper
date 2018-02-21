@@ -30,14 +30,14 @@ namespace CsvHelper
 	public class CsvWriter : IWriter
 	{
 		private readonly RecordManager recordManager;
-		private IWritingContext context;
+		private WritingContext context;
 		private bool disposed;
 		private ISerializer serializer;
 
 		/// <summary>
 		/// Gets the writing context.
 		/// </summary>
-		public virtual IWritingContext Context => context;
+		public virtual WritingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -71,7 +71,7 @@ namespace CsvHelper
 		public CsvWriter( ISerializer serializer )
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
-			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( IWritingContext )}." );
+			context = serializer.Context as WritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( WritingContext )}." );
 			recordManager = ObjectResolver.Current.Resolve<RecordManager>( this );
 		}
 

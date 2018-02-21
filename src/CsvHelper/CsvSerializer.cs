@@ -15,13 +15,13 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvSerializer : ISerializer
 	{
-		private IWritingContext context;
+		private WritingContext context;
 		private bool disposed;
 
 		/// <summary>
 		/// Gets the writing context.
 		/// </summary>
-		public virtual IWritingContext Context => context;
+		public virtual WritingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.

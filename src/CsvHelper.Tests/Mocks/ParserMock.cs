@@ -17,7 +17,7 @@ namespace CsvHelper.Tests.Mocks
 		private readonly Queue<string[]> rows;
 		private ReadingContext context;
 
-		public IReadingContext Context => context;
+		public ReadingContext Context => context;
 
 		public IParserConfiguration Configuration { get; }
 

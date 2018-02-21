@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,18 +14,18 @@ namespace CsvHelper.Performance
 	{
 		static void Main( string[] args )
 		{
+			//WriteField( 50, 1000000);
+			WriteRecords( 1000000 );
+
 			//Parse();
 			//ReadGetField();
 			//ReadGetRecords();
-
-			WriteField( 50, 1000000);
-			WriteRecords( 1000000 );
 		}
 
 		static string GetFilePath()
 		{
 			var homePath = Environment.ExpandEnvironmentVariables( "%HOMEDRIVE%%HOMEPATH%" );
-			var filePath = Path.Combine( homePath, "Documents", "large.csv" );
+			var filePath = Path.Combine( homePath, "Documents", "performance.csv" );
 			return filePath;
 		}
 
@@ -198,6 +199,28 @@ namespace CsvHelper.Performance
 
 			stopwatch.Stop();
 			Console.WriteLine( stopwatch.Elapsed );
+		}
+
+		private class Data
+		{
+			public int Id { get; set; }
+
+			public string Name { get; set; }
+
+			public int Age { get; set; }
+
+			public DateTimeOffset Birthday { get; set; }
+		}
+
+		private class DataMap : ClassMap<Data>
+		{
+			public DataMap()
+			{
+				Map( m => m.Id ).Index( 0 );
+				Map( m => m.Name ).Index( 1 );
+				Map( m => m.Age ).Index( 2 );
+				Map( m => m.Birthday ).Index( 3 );
+			}
 		}
 
 		private class Columns50

@@ -13,7 +13,7 @@ namespace CsvHelper
 	/// <summary>
 	/// CSV writing state.
 	/// </summary>
-	public class WritingContext : IWritingContext, IDisposable
+	public class WritingContext : IDisposable
     {
 		private bool disposed;
 		private TextWriter writer;
