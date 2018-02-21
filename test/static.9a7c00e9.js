@@ -1318,6 +1318,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 _axios2.default.interceptors.request.use(function (config) {
 	console.log("axios config", config);
+	if (config.url.startsWith("/staticData")) {
+		config.url = "http://joshclose.github.io/CsvHelper/test" + config.url;
+	}
+
 	return config;
 }, function (error) {
 	return Promise.reject(error);
@@ -1662,4 +1666,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.7edb19d2.js.map
+//# sourceMappingURL=static.9a7c00e9.js.map
