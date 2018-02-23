@@ -22,12 +22,25 @@ namespace CsvHelper.Tests.Reflection
 			Assert.AreEqual( "name", test.Name );
 		}
 
+		[TestMethod]
+		public void PrivateConstructorTest()
+		{
+			var c = ReflectionHelper.CreateInstance<PrivateConstructor>();
+
+			Assert.IsNotNull( c );
+		}
+
 		private class Test
 		{
 			public string Name
 			{
 				get { return "name"; }
 			}
+		}
+
+		private class PrivateConstructor
+		{
+			private PrivateConstructor() { }
 		}
 	}
 }
