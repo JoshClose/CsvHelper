@@ -1,5 +1,11 @@
 # Change Log
 
+### 7.0.1
+
+#### Bug Fixes
+
+- Allow private constructors to be used to instantiate new class instances.
+
 ### 7.0.0
 
 #### Features
