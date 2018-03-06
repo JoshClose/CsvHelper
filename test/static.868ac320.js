@@ -67,10 +67,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "http://joshclose.github.io/CsvHelper/test/";
+/******/ 	__webpack_require__.p = "http://joshclose/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 8);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -81,6 +81,12 @@ module.exports = require("react");
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+module.exports = require("react-static");
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -106,12 +112,6 @@ module.exports = function(module) {
 	return module;
 };
 
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-module.exports = require("react-static");
 
 /***/ }),
 /* 3 */
@@ -228,7 +228,7 @@ var loadFromPromiseCache = exports.loadFromPromiseCache = function loadFromPromi
 var cacheProm = exports.cacheProm = function cacheProm(pr, chunkName, props, promisecache) {
   return promisecache[callForString(chunkName, props)] = pr;
 };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)(module)))
 
 /***/ }),
 /* 4 */
@@ -251,13 +251,13 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactStatic = __webpack_require__(2);
+var _reactStatic = __webpack_require__(1);
 
-var _marked = __webpack_require__(21);
+var _marked = __webpack_require__(20);
 
 var _marked2 = _interopRequireDefault(_marked);
 
-var _highlight2 = __webpack_require__(22);
+var _highlight2 = __webpack_require__(21);
 
 var _highlight3 = _interopRequireDefault(_highlight2);
 
@@ -369,12 +369,6 @@ exports.default = function () {
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
-
-module.exports = require("axios");
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -388,37 +382,24 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactDom = __webpack_require__(9);
+var _reactDom = __webpack_require__(8);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _App = __webpack_require__(10);
+var _App = __webpack_require__(9);
 
 var _App2 = _interopRequireDefault(_App);
-
-var _axios = __webpack_require__(7);
-
-var _axios2 = _interopRequireDefault(_axios);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Export your top level component as JSX (for static rendering)
 exports.default = _App2.default;
 
+// Render your app
+
+
 // Your top level component
 
-_axios2.default.interceptors.request.use(function (config) {
-	console.log("axios config", config);
-	if (config.url.startsWith("/staticData")) {
-		config.url = "http://joshclose.github.io/CsvHelper/test" + config.url;
-	}
-
-	return config;
-}, function (error) {
-	return Promise.reject(error);
-});
-
-// Render your app
 if (typeof document !== 'undefined') {
 	var renderMethod =  false ? _reactDom2.default.render : _reactDom2.default.hydrate || _reactDom2.default.render;
 	var render = function render(Comp) {
@@ -430,13 +411,13 @@ if (typeof document !== 'undefined') {
 }
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-dom");
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -450,38 +431,23 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactStatic = __webpack_require__(2);
+var _reactStatic = __webpack_require__(1);
 
-var _reactHotLoader = __webpack_require__(11);
+var _reactHotLoader = __webpack_require__(10);
 
-var _reactStaticRoutes = __webpack_require__(12);
+var _reactStaticRoutes = __webpack_require__(11);
 
 var _reactStaticRoutes2 = _interopRequireDefault(_reactStaticRoutes);
 
-var _axios = __webpack_require__(7);
-
-var _axios2 = _interopRequireDefault(_axios);
-
-var _layout = __webpack_require__(23);
+var _layout = __webpack_require__(22);
 
 var _layout2 = _interopRequireDefault(_layout);
 
-__webpack_require__(25);
+__webpack_require__(24);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var App = function App() {
-	_axios2.default.interceptors.request.use(function (config) {
-		console.log("axios config", config);
-		if (config.url.startsWith("/staticData")) {
-			config.url = "http://joshclose.github.io/CsvHelper/test" + config.url;
-		}
-
-		return config;
-	}, function (error) {
-		return Promise.reject(error);
-	});
-
 	return _react2.default.createElement(
 		_reactStatic.Router,
 		{ scrollToHashDuration: 0 },
@@ -494,16 +460,16 @@ var App = function App() {
 };
 
 exports.default = (0, _reactHotLoader.hot)(module)(App);
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)(module)))
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-hot-loader");
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -513,15 +479,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _path2 = __webpack_require__(13);
+var _path2 = __webpack_require__(12);
 
 var _path3 = _interopRequireDefault(_path2);
 
-var _importCss2 = __webpack_require__(14);
+var _importCss2 = __webpack_require__(13);
 
 var _importCss3 = _interopRequireDefault(_importCss2);
 
-var _universalImport2 = __webpack_require__(15);
+var _universalImport2 = __webpack_require__(14);
 
 var _universalImport3 = _interopRequireDefault(_universalImport2);
 
@@ -531,11 +497,13 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactRouterDom = __webpack_require__(16);
+var _reactRouterDom = __webpack_require__(15);
 
-var _reactUniversalComponent = __webpack_require__(17);
+var _reactUniversalComponent = __webpack_require__(16);
 
 var _reactUniversalComponent2 = _interopRequireDefault(_reactUniversalComponent);
+
+var _reactStatic = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -552,7 +520,12 @@ var universalOptions = {
     return null;
   },
   error: function error() {
-    return null;
+    console.error(props.error);
+    return _react2.default.createElement(
+      'div',
+      null,
+      'An unknown error has occured loading this page. Please reload your browser and try again.'
+    );
   }
 };
 
@@ -598,32 +571,21 @@ var t_1 = (0, _reactUniversalComponent2.default)((0, _universalImport3.default)(
 }), universalOptions);
 
 // Template Map
-var templateMap = {
-  t_0: t_0,
-  t_1: t_1
+var componentsByTemplateID = [t_0, t_1];
 
-  // Template Tree
-};var templateTree = { c: { "404": { t: "t_1" }, "/": { t: "t_0" }, "reading": { t: "t_0" }, "writing": { t: "t_0" }, "mapping": { t: "t_0" }, "configuration": { t: "t_0" }, "type-conversion": { t: "t_0" }, "examples": { t: "t_0" }, "change-log": { t: "t_0" } }
+// Template Tree
+var templateIDsByPath = {
+  '404': 1
 
   // Get template for given path
 };var getComponentForPath = function getComponentForPath(path) {
-  var parts = path === '/' ? ['/'] : path.split('/').filter(function (d) {
-    return d;
-  });
-  var cursor = templateTree;
-  try {
-    parts.forEach(function (part) {
-      cursor = cursor.c[part];
-    });
-    return templateMap[cursor.t];
-  } catch (e) {
-    return false;
-  }
+  return componentsByTemplateID[templateIDsByPath[path]];
 };
 
-if (typeof document !== 'undefined') {
-  window.reactStaticGetComponentForPath = getComponentForPath;
-}
+global.reactStaticGetComponentForPath = getComponentForPath;
+global.reactStaticRegisterTemplateIDForPath = function (path, id) {
+  templateIDsByPath[path] = id;
+};
 
 var Routes = function (_Component) {
   _inherits(Routes, _Component);
@@ -643,24 +605,26 @@ var Routes = function (_Component) {
           children = _props.children;
 
       var renderProps = {
-        templateMap: templateMap,
-        templateTree: templateTree,
+        componentsByTemplateID: componentsByTemplateID,
+        templateIDsByPath: templateIDsByPath,
         getComponentForPath: getComponentForPath
       };
+
       if (Comp) {
         return _react2.default.createElement(Comp, renderProps);
       }
+
       if (render || children) {
         return (render || children)(renderProps);
       }
 
       // This is the default auto-routing renderer
       return _react2.default.createElement(_reactRouterDom.Route, { path: '*', render: function render(props) {
-          var Comp = getComponentForPath(props.location.pathname);
+          var Comp = getComponentForPath((0, _reactStatic.cleanPath)(props.location.pathname));
           if (!Comp) {
             Comp = getComponentForPath('404');
           }
-          return Comp && _react2.default.createElement(Comp, props);
+          return Comp ? _react2.default.createElement(Comp, props) : null;
         } });
     }
   }]);
@@ -672,31 +636,31 @@ exports.default = Routes;
 /* WEBPACK VAR INJECTION */}.call(exports, "/"))
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = require("path");
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = require("babel-plugin-universal-import/importCss");
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = require("babel-plugin-universal-import/universalImport");
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports) {
 
 module.exports = require("react-router-dom");
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -711,7 +675,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _requireUniversalModule = __webpack_require__(18);
+var _requireUniversalModule = __webpack_require__(17);
 
 Object.defineProperty(exports, 'CHUNK_NAMES', {
   enumerable: true,
@@ -726,7 +690,7 @@ Object.defineProperty(exports, 'MODULE_IDS', {
   }
 });
 
-var _reportChunks = __webpack_require__(19);
+var _reportChunks = __webpack_require__(18);
 
 Object.defineProperty(exports, 'ReportChunks', {
   enumerable: true,
@@ -743,7 +707,7 @@ var _propTypes = __webpack_require__(4);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _hoistNonReactStatics = __webpack_require__(20);
+var _hoistNonReactStatics = __webpack_require__(19);
 
 var _hoistNonReactStatics2 = _interopRequireDefault(_hoistNonReactStatics);
 
@@ -842,6 +806,7 @@ function universal(component) {
 
         if (!_this._mounted) return;
         if (!state.error) state.error = null;
+
         _this.handleAfter(state, isMount, isSync, isServer);
       };
 
@@ -1017,11 +982,11 @@ function universal(component) {
           return (0, _utils.createElement)(Loading, props);
         } else if (userError) {
           return (0, _utils.createElement)(Err, _extends({}, props, { error: userError }));
+        } else if (error) {
+          return (0, _utils.createElement)(Err, _extends({}, props, { error: error }));
         } else if (Component) {
           // primary usage (for async import loading + errors):
           return (0, _utils.createElement)(Component, props);
-        } else if (error) {
-          return (0, _utils.createElement)(Err, _extends({}, props, { error: error }));
         }
 
         return (0, _utils.createElement)(Loading, props);
@@ -1035,10 +1000,10 @@ function universal(component) {
   }, _temp;
 }
 exports.default = universal;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)(module)))
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1220,7 +1185,7 @@ var getConfig = function getConfig(isDynamic, universalConfig, options, props) {
 };
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1283,25 +1248,25 @@ ReportChunks.childContextTypes = {
 exports.default = ReportChunks;
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = require("hoist-non-react-statics");
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("marked");
 
 /***/ }),
-/* 22 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("highlight.js");
 
 /***/ }),
-/* 23 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1317,7 +1282,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _header = __webpack_require__(24);
+var _header = __webpack_require__(23);
 
 var _header2 = _interopRequireDefault(_header);
 
@@ -1361,7 +1326,7 @@ var Layout = function (_Component) {
 exports.default = Layout;
 
 /***/ }),
-/* 24 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1377,7 +1342,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactStatic = __webpack_require__(2);
+var _reactStatic = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1414,7 +1379,7 @@ var Header = function (_Component) {
 							_react2.default.createElement(
 								_reactStatic.Link,
 								{ className: "navbar-item", to: "/" },
-								_react2.default.createElement("img", { src: "./images/logo-header.png", width: "66", height: "28" })
+								_react2.default.createElement("img", { src: "/images/logo-header.png", width: "66", height: "28" })
 							),
 							_react2.default.createElement(
 								"div",
@@ -1435,7 +1400,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./reading" },
+										{ className: "navbar-link", to: "/reading" },
 										"Reading"
 									),
 									_react2.default.createElement(
@@ -1443,37 +1408,37 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#getting-all-records" },
+											{ className: "navbar-item", to: "/reading#getting-all-records" },
 											"Getting All Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#reading-records" },
+											{ className: "navbar-item", to: "/reading#reading-records" },
 											"Reading Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#getting-a-single-record" },
+											{ className: "navbar-item", to: "/reading#getting-a-single-record" },
 											"Getting a Single Record"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#getting-fields" },
+											{ className: "navbar-item", to: "/reading#getting-fields" },
 											"Getting Fields"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#malformed-field-fallback" },
+											{ className: "navbar-item", to: "/reading#malformed-field-fallback" },
 											"Malformed Field Fallback"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#reading-context" },
+											{ className: "navbar-item", to: "/reading#reading-context" },
 											"Reading Context"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#configuration" },
+											{ className: "navbar-item", to: "/reading#configuration" },
 											"Configuration"
 										)
 									)
@@ -1483,7 +1448,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./writing" },
+										{ className: "navbar-link", to: "/writing" },
 										"Writing"
 									),
 									_react2.default.createElement(
@@ -1491,32 +1456,32 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-all-records" },
+											{ className: "navbar-item", to: "/writing#writing-all-records" },
 											"Writing All Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-a-single-record" },
+											{ className: "navbar-item", to: "/writing#writing-a-single-record" },
 											"Writing a Single Record"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-fields" },
+											{ className: "navbar-item", to: "/writing#writing-fields" },
 											"Writing Fields"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#ending-the-row" },
+											{ className: "navbar-item", to: "/writing#ending-the-row" },
 											"Ending the Row"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-context" },
+											{ className: "navbar-item", to: "/writing#writing-context" },
 											"Writing Context"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#configuration" },
+											{ className: "navbar-item", to: "/writing#configuration" },
 											"Configuration"
 										)
 									)
@@ -1526,7 +1491,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./mapping" },
+										{ className: "navbar-link", to: "/mapping" },
 										"Mapping"
 									),
 									_react2.default.createElement(
@@ -1534,17 +1499,17 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./mapping#reference-mapping" },
+											{ className: "navbar-item", to: "/mapping#reference-mapping" },
 											"Reference Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./mapping#auto-mapping" },
+											{ className: "navbar-item", to: "/mapping#auto-mapping" },
 											"Auto Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./mapping#options" },
+											{ className: "navbar-item", to: "/mapping#options" },
 											"Options"
 										)
 									)
@@ -1554,7 +1519,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./configuration" },
+										{ className: "navbar-link", to: "/configuration" },
 										"Configuration"
 									),
 									_react2.default.createElement(
@@ -1562,52 +1527,52 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#malicious-injection-protection" },
+											{ className: "navbar-item", to: "/configuration#malicious-injection-protection" },
 											"Malicious Injection Protection"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#headers" },
+											{ className: "navbar-item", to: "/configuration#headers" },
 											"Headers"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#mapping" },
+											{ className: "navbar-item", to: "/configuration#mapping" },
 											"Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#constructor-mapping" },
+											{ className: "navbar-item", to: "/configuration#constructor-mapping" },
 											"Constructor Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#error-handling" },
+											{ className: "navbar-item", to: "/configuration#error-handling" },
 											"Error Handling"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#type-conversion" },
+											{ className: "navbar-item", to: "/configuration#type-conversion" },
 											"Type Conversion"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#reading" },
+											{ className: "navbar-item", to: "/configuration#reading" },
 											"Reading"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#parsing" },
+											{ className: "navbar-item", to: "/configuration#parsing" },
 											"Parsing"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#writing" },
+											{ className: "navbar-item", to: "/configuration#writing" },
 											"Writing"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#formatting" },
+											{ className: "navbar-item", to: "/configuration#formatting" },
 											"Formatting"
 										)
 									)
@@ -1617,7 +1582,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./type-conversion" },
+										{ className: "navbar-link", to: "/type-conversion" },
 										"Type Conversion"
 									),
 									_react2.default.createElement("div", { className: "navbar-dropdown" })
@@ -1635,12 +1600,12 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./examples" },
+											{ className: "navbar-item", to: "/examples" },
 											"Examples"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./change-log" },
+											{ className: "navbar-item", to: "/change-log" },
 											"Change Log"
 										)
 									)
@@ -1660,7 +1625,7 @@ var Header = function (_Component) {
 exports.default = Header;
 
 /***/ }),
-/* 25 */
+/* 24 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
@@ -1668,4 +1633,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.7a3796c2.js.map
+//# sourceMappingURL=static.868ac320.js.map

@@ -1,74 +1,79 @@
 
-    import React, { Component } from 'react'
-    import { Route } from 'react-router-dom'
-    import universal, { setHasBabelPlugin } from 'react-universal-component'
 
-    setHasBabelPlugin()
+import React, { Component } from 'react'
+import { Route } from 'react-router-dom'
+import universal, { setHasBabelPlugin } from 'react-universal-component'
+import { cleanPath } from 'react-static'
 
-    const universalOptions = {
-      loading: () => null,
-      error: () => null,
-    }
 
-    const t_0 = universal(import('../src/components/content'), universalOptions)
+
+setHasBabelPlugin()
+
+const universalOptions = {
+  loading: () => null,
+  error: () => {
+    console.error(props.error);
+    return <div>An unknown error has occured loading this page. Please reload your browser and try again.</div>;
+  },
+}
+
+  const t_0 = universal(import('../src/components/content'), universalOptions)
 const t_1 = universal(import('../src/components/404'), universalOptions)
+    
 
-    // Template Map
-    const templateMap = {
-      t_0,
+// Template Map
+const componentsByTemplateID = [
+  t_0,
 t_1
+]
+
+// Template Tree
+const templateIDsByPath = {
+  '404': 1
+}
+
+// Get template for given path
+const getComponentForPath = path => {
+  return componentsByTemplateID[templateIDsByPath[path]]
+}
+
+global.reactStaticGetComponentForPath = getComponentForPath
+global.reactStaticRegisterTemplateIDForPath = (path, id) => {
+  templateIDsByPath[path] = id
+}
+
+export default class Routes extends Component {
+  render () {
+    const { component: Comp, render, children } = this.props
+    const renderProps = {
+      componentsByTemplateID,
+      templateIDsByPath,
+      getComponentForPath
     }
 
-    // Template Tree
-    const templateTree = {c:{"404":{t:"t_1"},"/":{t:"t_0"},"reading":{t:"t_0"},"writing":{t:"t_0"},"mapping":{t:"t_0"},"configuration":{t:"t_0"},"type-conversion":{t:"t_0"},"examples":{t:"t_0"},"change-log":{t:"t_0"}}}
-
-    // Get template for given path
-    const getComponentForPath = path => {
-      const parts = path === '/' ? ['/'] : path.split('/').filter(d => d)
-      let cursor = templateTree
-      try {
-        parts.forEach(part => {
-          cursor = cursor.c[part]
-        })
-        return templateMap[cursor.t]
-      } catch (e) {
-        return false
-      }
+    if (Comp) {
+      return (
+        <Comp
+          {...renderProps}
+        />
+      )
     }
 
-    if (typeof document !== 'undefined') {
-      window.reactStaticGetComponentForPath = getComponentForPath
+    if (render || children) {
+      return (render || children)(renderProps)
     }
 
-    export default class Routes extends Component {
-      render () {
-        const { component: Comp, render, children } = this.props
-        const renderProps = {
-          templateMap,
-          templateTree,
-          getComponentForPath
+    // This is the default auto-routing renderer
+    return (
+      <Route path='*' render={props => {
+        let Comp = getComponentForPath(cleanPath(props.location.pathname))
+        if (!Comp) {
+          Comp = getComponentForPath('404')
         }
-        if (Comp) {
-          return (
-            <Comp
-              {...renderProps}
-            />
-          )
-        }
-        if (render || children) {
-          return (render || children)(renderProps)
-        }
+        return Comp ? <Comp {...props} /> : null
+      }} />
+    )
+  }
+}
 
-        // This is the default auto-routing renderer
-        return (
-          <Route path='*' render={props => {
-            let Comp = getComponentForPath(props.location.pathname)
-            if (!Comp) {
-              Comp = getComponentForPath('404')
-            }
-            return Comp && <Comp {...props} />
-          }} />
-        )
-      }
-    }
     
