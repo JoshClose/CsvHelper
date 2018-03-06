@@ -491,6 +491,8 @@ var _universalImport2 = __webpack_require__(14);
 
 var _universalImport3 = _interopRequireDefault(_universalImport2);
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = __webpack_require__(0);
@@ -621,10 +623,12 @@ var Routes = function (_Component) {
       // This is the default auto-routing renderer
       return _react2.default.createElement(_reactRouterDom.Route, { path: '*', render: function render(props) {
           var Comp = getComponentForPath((0, _reactStatic.cleanPath)(props.location.pathname));
+          var is404 = props.location.pathname === '404';
           if (!Comp) {
+            is404 = true;
             Comp = getComponentForPath('404');
           }
-          return Comp ? _react2.default.createElement(Comp, props) : null;
+          return Comp ? _react2.default.createElement(Comp, _extends({}, props, is404 ? { is404: true } : {})) : null;
         } });
     }
   }]);
@@ -1633,4 +1637,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.a7a0ab01.js.map
+//# sourceMappingURL=static.93206811.js.map
