@@ -1379,7 +1379,7 @@ var Header = function (_Component) {
 							_react2.default.createElement(
 								_reactStatic.Link,
 								{ className: "navbar-item", to: "/" },
-								_react2.default.createElement("img", { src: "./images/logo-header.png", width: "66", height: "28" })
+								_react2.default.createElement("img", { src: "/images/logo-header.png", width: "66", height: "28" })
 							),
 							_react2.default.createElement(
 								"div",
@@ -1408,37 +1408,37 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#getting-all-records" },
+											{ className: "navbar-item", to: "/reading#getting-all-records" },
 											"Getting All Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#reading-records" },
+											{ className: "navbar-item", to: "/reading#reading-records" },
 											"Reading Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#getting-a-single-record" },
+											{ className: "navbar-item", to: "/reading#getting-a-single-record" },
 											"Getting a Single Record"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#getting-fields" },
+											{ className: "navbar-item", to: "/reading#getting-fields" },
 											"Getting Fields"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#malformed-field-fallback" },
+											{ className: "navbar-item", to: "/reading#malformed-field-fallback" },
 											"Malformed Field Fallback"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#reading-context" },
+											{ className: "navbar-item", to: "/reading#reading-context" },
 											"Reading Context"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./reading#configuration" },
+											{ className: "navbar-item", to: "/reading#configuration" },
 											"Configuration"
 										)
 									)
@@ -1456,32 +1456,32 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-all-records" },
+											{ className: "navbar-item", to: "/writing#writing-all-records" },
 											"Writing All Records"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-a-single-record" },
+											{ className: "navbar-item", to: "/writing#writing-a-single-record" },
 											"Writing a Single Record"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-fields" },
+											{ className: "navbar-item", to: "/writing#writing-fields" },
 											"Writing Fields"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#ending-the-row" },
+											{ className: "navbar-item", to: "/writing#ending-the-row" },
 											"Ending the Row"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#writing-context" },
+											{ className: "navbar-item", to: "/writing#writing-context" },
 											"Writing Context"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./writing#configuration" },
+											{ className: "navbar-item", to: "/writing#configuration" },
 											"Configuration"
 										)
 									)
@@ -1499,17 +1499,17 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./mapping#reference-mapping" },
+											{ className: "navbar-item", to: "/mapping#reference-mapping" },
 											"Reference Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./mapping#auto-mapping" },
+											{ className: "navbar-item", to: "/mapping#auto-mapping" },
 											"Auto Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./mapping#options" },
+											{ className: "navbar-item", to: "/mapping#options" },
 											"Options"
 										)
 									)
@@ -1519,7 +1519,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./configuration" },
+										{ className: "navbar-link", to: "/configuration" },
 										"Configuration"
 									),
 									_react2.default.createElement(
@@ -1527,52 +1527,52 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#malicious-injection-protection" },
+											{ className: "navbar-item", to: "/configuration#malicious-injection-protection" },
 											"Malicious Injection Protection"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#headers" },
+											{ className: "navbar-item", to: "/configuration#headers" },
 											"Headers"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#mapping" },
+											{ className: "navbar-item", to: "/configuration#mapping" },
 											"Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#constructor-mapping" },
+											{ className: "navbar-item", to: "/configuration#constructor-mapping" },
 											"Constructor Mapping"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#error-handling" },
+											{ className: "navbar-item", to: "/configuration#error-handling" },
 											"Error Handling"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#type-conversion" },
+											{ className: "navbar-item", to: "/configuration#type-conversion" },
 											"Type Conversion"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#reading" },
+											{ className: "navbar-item", to: "/configuration#reading" },
 											"Reading"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#parsing" },
+											{ className: "navbar-item", to: "/configuration#parsing" },
 											"Parsing"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#writing" },
+											{ className: "navbar-item", to: "/configuration#writing" },
 											"Writing"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./configuration#formatting" },
+											{ className: "navbar-item", to: "/configuration#formatting" },
 											"Formatting"
 										)
 									)
@@ -1582,7 +1582,7 @@ var Header = function (_Component) {
 									{ className: "navbar-item has-dropdown is-hoverable" },
 									_react2.default.createElement(
 										_reactStatic.Link,
-										{ className: "navbar-link", to: "./type-conversion" },
+										{ className: "navbar-link", to: "/type-conversion" },
 										"Type Conversion"
 									),
 									_react2.default.createElement("div", { className: "navbar-dropdown" })
@@ -1600,12 +1600,12 @@ var Header = function (_Component) {
 										{ className: "navbar-dropdown" },
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./examples" },
+											{ className: "navbar-item", to: "/examples" },
 											"Examples"
 										),
 										_react2.default.createElement(
 											_reactStatic.Link,
-											{ className: "navbar-item", to: "./change-log" },
+											{ className: "navbar-item", to: "/change-log" },
 											"Change Log"
 										)
 									)
@@ -1633,4 +1633,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.d628bd63.js.map
+//# sourceMappingURL=static.a7a0ab01.js.map
