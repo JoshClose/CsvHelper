@@ -1,0 +1,56 @@
+@import "../../node_modules/bulma/sass/utilities/initial-variables";
+//@import "initial-variables/css";
+@import "../../node_modules/bulma/bulma";
+
+pre
+{
+	padding: 0;
+	overflow: visible;
+}
+
+.title::before
+{
+	content: "";
+	display: block;
+	height: 3.25rem;
+	margin: -3.25rem 0 0;
+}
+
+.layout
+{
+	.fork-me-on-github
+	{
+		img
+		{
+			position: fixed;
+			top: 0;
+			right: 0;
+			border: 0;
+			z-index: 2;
+		}
+	}
+}
+
+.header
+{
+	.container
+	{
+		position: fixed !important;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 1;
+	}
+}
+
+.home
+{
+	h1 span
+	{
+		background: url(../../public/images/logo.png) top left no-repeat;
+		display: block;
+		height: 260px;
+		text-indent: -9999px;
+		width: 612px;
+	}
+}
