@@ -1,5 +1,11 @@
 # Change Log
 
+### 7.0.1
+
+#### Bug Fixes
+
+- Allow private constructors to be used to instantiate new class instances.
+
 ### 7.0.0
 
 #### Features
@@ -26,7 +32,7 @@
 
 #### Bug Fixes
 
-- Fixed issue with LINQPad not working propertly due to types from differently assemblies being cached in the writer.
+- Fixed issue with LINQPad not working properly due to types from differently assemblies being cached in the writer.
 
 #### Breaking Changes
 
@@ -36,7 +42,7 @@
 
 #### Bug Fixes
 
-- Fixed issue with LINQPad not working propertly due to types from differently assemblies being cached.
+- Fixed issue with LINQPad not working properly due to types from differently assemblies being cached.
 
 ### 6.0.0
 
