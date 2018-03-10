@@ -1,5 +1,5 @@
 import React from "react"
-import fs from "fs"
+import fs from "fs-extra"
 import axios from "axios"
 import ExtractTextPlugin from "extract-text-webpack-plugin"
 
@@ -12,7 +12,7 @@ function createData(name) {
 
 export default {
 	siteRoot: "http://joshclose.github.io",
-	basePath: "/CsvHelper/test/",
+	basePath: "/CsvHelper/",
 	getRoutes: async () => {
 		return [
 			{
@@ -92,5 +92,10 @@ export default {
 			],
 		}]
 		return config
+	},
+	onBuild: async () => {
+		console.log("Copying build to docs folder.");
+		await fs.remove("../docs");
+		await fs.copy("./dist", "../docs")
 	}
 }
