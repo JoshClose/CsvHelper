@@ -21,6 +21,18 @@ namespace CsvHelper.Tests
 	[TestClass]
 	public class CsvReaderTests
 	{
+        [TestMethod]
+        public void DisposeShouldBeCallableMultipleTimes()
+        {
+            var parserMock = new ParserMock( new Queue<string[]>() );
+            var reader = new CsvReader( parserMock );
+
+            for ( var i = 0; i < 3; i++ )
+            {
+                reader.Dispose();
+            }
+        }
+
 		[TestMethod]
 		public void HasHeaderRecordNotReadExceptionTest()
 		{

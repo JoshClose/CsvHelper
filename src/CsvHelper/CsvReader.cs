@@ -1317,7 +1317,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( !context.LeaveOpen );
+			Dispose( !disposed && !context.LeaveOpen );
 			GC.SuppressFinalize( this );
 		}
 
