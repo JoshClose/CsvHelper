@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CsvHelper.Tests.Mocks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,6 +39,16 @@ namespace CsvHelper.Tests
 
 				Assert.AreEqual( "A", writer.ToString() );
 			}
+		}
+
+		[TestMethod]
+		public void DisposeShouldBeCallableMultipleTimes()
+		{
+			var parserMock = new ParserMock( new Queue<string[]>() );
+			var reader = new CsvReader( parserMock );
+
+			reader.Dispose();
+			reader.Dispose();
 		}
 	}
 }
