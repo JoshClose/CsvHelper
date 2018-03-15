@@ -41,12 +41,11 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Creates the member bindings for the given <see cref="ClassMap"/>.
+		/// Creates the member assignments for the given <see cref="ClassMap"/>.
 		/// </summary>
-		/// <param name="mapping">The mapping to create the bindings for.</param>
-		/// <param name="recordType">The type of record.</param>
-		/// <param name="bindings">The bindings that will be added to from the mapping.</param>
-		public virtual void CreateMemberBindingsForMapping( ClassMap mapping, Type recordType, List<MemberBinding> bindings )
+		/// <param name="mapping">The mapping to create the assignments for.</param>
+		/// <param name="assignments">The assignments that will be added to from the mapping.</param>
+		public virtual void CreateMemberAssignmentsForMapping( ClassMap mapping, List<MemberAssignment> assignments )
 		{
 			foreach( var memberMap in mapping.MemberMaps )
 			{
@@ -56,7 +55,7 @@ namespace CsvHelper.Expressions
 					continue;
 				}
 
-				bindings.Add( Expression.Bind( memberMap.Data.Member, fieldExpression ) );
+				assignments.Add( Expression.Bind( memberMap.Data.Member, fieldExpression ) );
 			}
 
 			foreach( var referenceMap in mapping.ReferenceMaps )
@@ -66,14 +65,12 @@ namespace CsvHelper.Expressions
 					continue;
 				}
 
-				var referenceBindings = new List<MemberBinding>();
-				CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
+				var referenceAssignments = new List<MemberAssignment>();
+				CreateMemberAssignmentsForMapping( referenceMap.Data.Mapping, referenceAssignments );
 
-				// This is in case an IContractResolver is being used.
-				var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
-				var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
+				var referenceBody = CreateInstanceAndAssignMembers( referenceMap.Data.Member.MemberType(), referenceAssignments );
 
-				bindings.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
+				assignments.Add( Expression.Bind( referenceMap.Data.Member, referenceBody ) );
 			}
 		}
 
@@ -246,6 +243,28 @@ namespace CsvHelper.Expressions
 			}
 
 			return null;
+		}
+
+		/// <summary>
+		/// Creates an instance of the given type using <see cref="ReflectionHelper.CreateInstance"/> (in turn using the ObjectResolver), then assigns
+		/// the given member assignments to that instance.
+		/// </summary>
+		/// <param name="recordType">The type of the record we're creating.</param>
+		/// <param name="assignments">The member assignments that will be assigned to the created instance.</param>
+		/// <returns>A <see cref="BlockExpression"/> representing the instance creation and assignments.</returns>
+		public virtual BlockExpression CreateInstanceAndAssignMembers( Type recordType, List<MemberAssignment> assignments )
+		{
+			var expressions = new List<Expression>();
+			var createInstanceMethod = typeof( ReflectionHelper ).GetMethod( nameof( ReflectionHelper.CreateInstance ), new Type[] { typeof( Type ), typeof( object[] ) } );
+			var instanceExpression = Expression.Convert( Expression.Call( createInstanceMethod, Expression.Constant( recordType ), Expression.Constant( new object[0] ) ), recordType );
+			var variableExpression = Expression.Variable( instanceExpression.Type, "instance" );
+			expressions.Add( Expression.Assign( variableExpression, instanceExpression ) );
+			expressions.AddRange( assignments.Select( b => Expression.Assign( Expression.MakeMemberAccess( variableExpression, b.Member ), b.Expression ) ) );
+			expressions.Add( variableExpression );
+			var variables = new ParameterExpression[] { variableExpression };
+			var blockExpression = Expression.Block( variables, expressions );
+
+			return blockExpression;
 		}
 	}
 }
