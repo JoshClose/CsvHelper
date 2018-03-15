@@ -1,5 +1,11 @@
 # Change Log
 
+### 7.1.0
+
+#### Features
+
+- Changed record object creation to use the `ObjectResolver`.
+
 ### 7.0.1
 
 #### Bug Fixes
