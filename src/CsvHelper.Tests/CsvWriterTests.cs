@@ -836,7 +836,49 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private class GetOnly
+        /// <summary>
+        /// Asserts that csv.Flush() results in the underlying TextWriter being flushed
+        /// </summary>
+        [TestMethod]
+        public void WriteRecordsFlushTest()
+        {
+            var records = new List<TestRecord>
+            {
+                new TestRecord
+                {
+                    IntColumn     = 1,
+                    StringColumn  = "string column",
+                    IgnoredColumn = "ignored column",
+                    FirstColumn   = "first column",
+                },
+                new TestRecord
+                {
+                    IntColumn     = 2,
+                    StringColumn  = "string column 2",
+                    IgnoredColumn = "ignored column 2",
+                    FirstColumn   = "first column 2",
+                },
+            };
+
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream) { AutoFlush = false }; // Autoflush not set
+            var csv    = new CsvWriter(writer);
+            csv.Configuration.RegisterClassMap<TestRecordMap>();
+
+            csv.WriteRecords(records);
+            csv.Flush();
+
+            stream.Position = 0;
+            var reader      = new StreamReader(stream);
+            var csvFile     = reader.ReadToEnd();
+            var expected    = "FirstColumn,Int Column,StringColumn,TypeConvertedColumn\r\n";
+            expected += "first column,1,string column,test\r\n";
+            expected += "first column 2,2,string column 2,test\r\n";
+
+            Assert.AreEqual(expected, csvFile);
+        }
+
+        private class GetOnly
 		{
 			internal GetOnly(string someParam)
 			{

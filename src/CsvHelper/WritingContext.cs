@@ -7,6 +7,7 @@ using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -104,6 +105,28 @@ namespace CsvHelper
 				TypeActions.Clear();
 			}
 		}
+
+        /// <summary>
+        /// Clears all buffers for the current context and causes any buffered data to be
+        /// written to the underlying stream.
+        /// </summary>
+        public void Flush() => Writer?.Flush();
+
+        /// <summary>
+        /// Asynchronously clears all buffers for the current context and causes any buffered
+        /// data to be written to the underlying stream.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous flush operation.</returns>
+        /// <exception cref="System.InvalidOperationException">The context is currently in use by a previous write operation.</exception>
+        public Task FlushAsync()
+        {
+            if (Writer == null)
+            {
+                return Task.FromResult<object>(null);
+            }
+
+            return Writer.FlushAsync();
+        }
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

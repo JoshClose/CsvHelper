@@ -221,6 +221,7 @@ namespace CsvHelper
 
 			serializer.Write( context.Record.ToArray() );
 			context.Record.Clear();
+            context.Flush();
 		}
 
 		/// <summary>
@@ -230,6 +231,7 @@ namespace CsvHelper
 		{
 			await serializer.WriteAsync( context.Record.ToArray() );
 			context.Record.Clear();
+            await context.FlushAsync();
 		}
 
 		/// <summary>
