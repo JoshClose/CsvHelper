@@ -54,7 +54,7 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		/// <param name="leaveOpen">true to leave the writer open after the CsvWriter object is disposed, otherwise false.</param>
 		public CsvWriter( TextWriter writer, bool leaveOpen ) : this( new CsvSerializer( writer, new Configuration.Configuration(), leaveOpen ) ) { }
 
 		/// <summary>
@@ -63,6 +63,14 @@ namespace CsvHelper
 		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
 		/// <param name="configuration">The configuration.</param>
 		public CsvWriter( TextWriter writer, Configuration.Configuration configuration ) : this( new CsvSerializer( writer, configuration, false ) ) { }
+
+		/// <summary>
+		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
+		/// </summary>
+		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
+		/// <param name="configuration">The configuration.</param>
+		/// <param name="leaveOpen">true to leave the writer open after the CsvWriter object is disposed, otherwise false.</param>
+		public CsvWriter( TextWriter writer, Configuration.Configuration configuration, bool leaveOpen ) : this( new CsvSerializer( writer, configuration, leaveOpen ) ) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
