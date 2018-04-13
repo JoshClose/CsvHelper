@@ -261,6 +261,8 @@ var _highlight2 = __webpack_require__(21);
 
 var _highlight3 = _interopRequireDefault(_highlight2);
 
+__webpack_require__(22);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // https://github.com/EmilTholin/react-static-markdown-example
@@ -313,6 +315,7 @@ _marked2.default.setOptions({
 	renderer: renderer,
 	highlight: function highlight(code, language, callback) {
 		//code = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		var h = _highlight3.default;
 		if (language) {
 			return _highlight3.default.highlight(language, code, true).value;
 		}
@@ -439,11 +442,11 @@ var _reactStaticRoutes = __webpack_require__(11);
 
 var _reactStaticRoutes2 = _interopRequireDefault(_reactStaticRoutes);
 
-var _layout = __webpack_require__(22);
+var _layout = __webpack_require__(23);
 
 var _layout2 = _interopRequireDefault(_layout);
 
-__webpack_require__(24);
+__webpack_require__(25);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -1280,6 +1283,12 @@ module.exports = require("highlight.js");
 
 /***/ }),
 /* 22 */
+/***/ (function(module, exports) {
+
+module.exports = require("highlight.js/styles/vs.css");
+
+/***/ }),
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1295,7 +1304,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _header = __webpack_require__(23);
+var _header = __webpack_require__(24);
 
 var _header2 = _interopRequireDefault(_header);
 
@@ -1339,7 +1348,7 @@ var Layout = function (_Component) {
 exports.default = Layout;
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1638,7 +1647,7 @@ var Header = function (_Component) {
 exports.default = Header;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
@@ -1646,4 +1655,4 @@ exports.default = Header;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.ad5953b3.js.map
+//# sourceMappingURL=static.14edc921.js.map
