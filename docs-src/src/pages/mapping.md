@@ -166,6 +166,8 @@ Map( m => m.Name ).TypeConverter<MyConverter>();
 
 Specifies an expression to be used to convert a field to a member, or a member to a field.
 
+Reading:
+
 ```cs
 // Convert to member
 Map( m => m.Aggregate ).ConvertUsing( row => row.Get<int>( "A" ) + row.Get<int>( "B" ) );
@@ -177,7 +179,11 @@ Map( m => m.Aggregate ).ConvertUsing( row =>
 	var b = row.Get<int>( "B" );
 	return a + b;
 } );
+```
 
+Writing:
+
+```cs
 // Convert to field
 Map( m => m.Aggregate ).ConvertUsing( m => $"A + B = {m.A + m.B}" );
 
