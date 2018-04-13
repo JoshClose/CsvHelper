@@ -2,6 +2,7 @@ import React, { Component } from "react"
 import { withSiteData, withRouteData } from 'react-static'
 import marked from "marked"
 import highlight from "highlight.js"
+import "highlight.js/styles/vs.css"
 
 // https://github.com/EmilTholin/react-static-markdown-example
 
@@ -51,6 +52,7 @@ marked.setOptions({
 	renderer,
 	highlight: (code, language, callback) => {
 		//code = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		const h = highlight;
 		if (language) {
 			return highlight.highlight(language, code, true).value;
 		}
@@ -59,9 +61,9 @@ marked.setOptions({
 	}
 });
 
-const Content = ({ className, data }) => {	
+const Content = ({ className, data }) => {
 	const markdown = marked(data);
-	
+
 	return (
 		<div className="container">
 			<div className={className} dangerouslySetInnerHTML={{ __html: markdown }}></div>
