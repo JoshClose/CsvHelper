@@ -4,7 +4,7 @@
 {
     <span class="hljs-function"><span class="hljs-keyword">string</span> <span class="hljs-title">ConvertToString</span>(<span class="hljs-params"> <span class="hljs-keyword">object</span> <span class="hljs-keyword">value</span>, IWriterRow row, MemberMapData memberMapData </span>)</span>;
 
-    <span class="hljs-function"><span class="hljs-keyword">string</span> <span class="hljs-title">ConvertFromString</span>(<span class="hljs-params"> <span class="hljs-keyword">string</span> text, IReaderRow row, MemberMapData memberMapData </span>)</span>;
+    <span class="hljs-function"><span class="hljs-keyword">object</span> <span class="hljs-title">ConvertFromString</span>(<span class="hljs-params"> <span class="hljs-keyword">string</span> text, IReaderRow row, MemberMapData memberMapData </span>)</span>;
 }</code></pre></div></div><h3 id="converttostring" class="title is-3"><span>ConvertToString</span></h3><div class="columns"><div class="column"><p>Takes an <code>object</code> and converts it to a <code>string</code>.</p></div></div><div class="columns"><div class="column"><p>Parameters</p></div></div><div class="content"><ul><li>value: The <code>object</code> to convert that can be a value or reference type.</li>
 <li>row: The <code>IWriterRow</code> to allow the converter to write, have access to the configuration, and context.</li>
 <li>memberMapData: The configured map data for the member that is being converted.</li>
