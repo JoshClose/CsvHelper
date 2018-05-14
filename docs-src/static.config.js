@@ -11,7 +11,7 @@ function createData(name) {
 }
 
 export default {
-	siteRoot: "http://joshclose.github.io",
+	siteRoot: "https://joshclose.github.io",
 	basePath: "/CsvHelper/",
 	getRoutes: async () => {
 		return [
