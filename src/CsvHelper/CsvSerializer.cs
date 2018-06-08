@@ -94,10 +94,10 @@ namespace CsvHelper
 			{
 				if( i > 0 )
 				{
-					await context.Writer.WriteAsync( context.SerializerConfiguration.Delimiter );
+					await context.Writer.WriteAsync( context.SerializerConfiguration.Delimiter ).ConfigureAwait(false);
 				}
 
-				await context.Writer.WriteAsync( record[i] );
+				await context.Writer.WriteAsync( record[i] ).ConfigureAwait(false);
 			}
 		}
 		
@@ -116,7 +116,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual async Task WriteLineAsync()
 		{
-			await context.Writer.WriteLineAsync();
+			await context.Writer.WriteLineAsync().ConfigureAwait(false);
 		}
 
 		/// <summary>

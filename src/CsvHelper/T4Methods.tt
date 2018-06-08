@@ -2,28 +2,33 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper<#+
-	private string AsyncType( string type, bool isAsync )
+	private string AsyncType(string type, bool isAsync)
 	{
-		if( !isAsync )
+		if (!isAsync)
 		{
 			return type ?? "void";
 		}
 
 		var s = "async Task";
-		if( type != null )
+		if (type != null)
 		{
-			s += ( "<" + type + ">" );
+			s += ("<" + type + ">");
 		}
 
 		return s;
 	}
 
-	private string AsyncPostfix( bool isAsync )
+	private string AsyncPostfix(bool isAsync)
 	{
 		return isAsync ? "Async" : string.Empty;
 	}
 
-	private string Await( bool isAsync )
+	private string ConfigureAwait(bool isAsync)
+	{
+		return isAsync ? ".ConfigureAwait(false)" : string.Empty;
+	}
+
+	private string Await(bool isAsync)
 	{
 		return isAsync ? "await " : string.Empty;
 	}

@@ -44,21 +44,21 @@ namespace CsvHelper
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
-		public CsvParser( TextReader reader ) : this( new CsvFieldReader( reader, new Configuration.Configuration(), false ) ) { }
+		public CsvParser(TextReader reader) : this(new CsvFieldReader(reader, new Configuration.Configuration(), false)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, bool leaveOpen ) : this( new CsvFieldReader( reader, new Configuration.Configuration(), false ) ) { }
+		public CsvParser(TextReader reader, bool leaveOpen) : this(new CsvFieldReader(reader, new Configuration.Configuration(), false)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser( TextReader reader, Configuration.Configuration configuration ) : this( new CsvFieldReader( reader, configuration, false ) ) { }
+		public CsvParser(TextReader reader, Configuration.Configuration configuration) : this(new CsvFieldReader(reader, configuration, false)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
@@ -66,16 +66,16 @@ namespace CsvHelper
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser( TextReader reader, Configuration.Configuration configuration, bool leaveOpen ) : this( new CsvFieldReader( reader, configuration, leaveOpen ) ) { }
+		public CsvParser(TextReader reader, Configuration.Configuration configuration, bool leaveOpen) : this(new CsvFieldReader(reader, configuration, leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="FieldReader"/>.
 		/// </summary>
 		/// <param name="fieldReader">The field reader.</param>
-		public CsvParser( IFieldReader fieldReader )
+		public CsvParser(IFieldReader fieldReader)
 		{
-			this.fieldReader = fieldReader ?? throw new ArgumentNullException( nameof( fieldReader ) );
-			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException( $"For {nameof( FieldReader )} to be used in {nameof( CsvParser )}, {nameof( FieldReader.Context )} must also implement {nameof( ReadingContext )}." );
+			this.fieldReader = fieldReader ?? throw new ArgumentNullException(nameof(fieldReader));
+			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException($"For {nameof(FieldReader)} to be used in {nameof(CsvParser)}, {nameof(FieldReader.Context)} must also implement {nameof(ReadingContext)}.");
 		}
 			
 		/// <summary>
@@ -86,15 +86,15 @@ namespace CsvHelper
 		{
 			try
 			{
-				context.ClearCache( Caches.RawRecord );
+				context.ClearCache(Caches.RawRecord);
 
 				var row = ReadLine();
 
 				return row;
 			}
-			catch( Exception ex )
+			catch(Exception ex)
 			{
-				throw ex as CsvHelperException ?? new ParserException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
 		}
 			
@@ -106,15 +106,15 @@ namespace CsvHelper
 		{
 			try
 			{
-				context.ClearCache( Caches.RawRecord );
+				context.ClearCache(Caches.RawRecord);
 
-				var row = await ReadLineAsync();
+				var row = await ReadLineAsync().ConfigureAwait(false);
 
 				return row;
 			}
-			catch( Exception ex )
+			catch(Exception ex)
 			{
-				throw ex as CsvHelperException ?? new ParserException( context, "An unexpected error occurred.", ex );
+				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
 		}
 			
@@ -124,22 +124,22 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose( !context.LeaveOpen );
-			GC.SuppressFinalize( this );
+			Dispose(!context.LeaveOpen);
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
-		protected virtual void Dispose( bool disposing )
+		protected virtual void Dispose(bool disposing)
 		{
-			if( disposed )
+			if (disposed)
 			{
 				return;
 			}
 
-			if( disposing )
+			if (disposing)
 			{
 				fieldReader?.Dispose();
 			}
@@ -159,16 +159,16 @@ namespace CsvHelper
 			context.Row++;
 			context.RawRow++;
 
-			while( true )
+			while (true)
 			{
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
-					if( context.RecordBuilder.Length > 0 )
+					if (context.RecordBuilder.Length > 0)
 					{
 						// There was no line break at the end of the file.
 						// We need to return the last record first.
-						context.RecordBuilder.Add( fieldReader.GetField() );
+						context.RecordBuilder.Add(fieldReader.GetField());
 						return context.RecordBuilder.ToArray();
 					}
 
@@ -177,10 +177,10 @@ namespace CsvHelper
 
 				c = fieldReader.GetChar();
 
-				if( context.RecordBuilder.Length == 0 && ( ( c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments ) || c == '\r' || c == '\n' ) )
+				if (context.RecordBuilder.Length == 0 && ((c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments) || c == '\r' || c == '\n'))
 				{
 					ReadBlankLine();
-					if( !context.ParserConfiguration.IgnoreBlankLines )
+					if (!context.ParserConfiguration.IgnoreBlankLines)
 					{
 						break;
 					}
@@ -189,22 +189,22 @@ namespace CsvHelper
 				}
 
 				// Trim start outside of quotes.
-				if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+				if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 				{
 					ReadSpaces();
-					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetFieldStart(-1);
 				}
 
-				if( c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
+				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
 				{
-					if( ReadQuotedField() )
+					if (ReadQuotedField())
 					{
 						break;
 					}
 				}
 				else
 				{
-					if( ReadField() )
+					if (ReadField())
 					{
 						break;
 					}
@@ -224,16 +224,16 @@ namespace CsvHelper
 			context.Row++;
 			context.RawRow++;
 
-			while( true )
+			while (true)
 			{
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
-					if( context.RecordBuilder.Length > 0 )
+					if (context.RecordBuilder.Length > 0)
 					{
 						// There was no line break at the end of the file.
 						// We need to return the last record first.
-						context.RecordBuilder.Add( fieldReader.GetField() );
+						context.RecordBuilder.Add(fieldReader.GetField());
 						return context.RecordBuilder.ToArray();
 					}
 
@@ -242,10 +242,10 @@ namespace CsvHelper
 
 				c = fieldReader.GetChar();
 
-				if( context.RecordBuilder.Length == 0 && ( ( c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments ) || c == '\r' || c == '\n' ) )
+				if (context.RecordBuilder.Length == 0 && ((c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments) || c == '\r' || c == '\n'))
 				{
-					await ReadBlankLineAsync();
-					if( !context.ParserConfiguration.IgnoreBlankLines )
+					await ReadBlankLineAsync().ConfigureAwait(false);
+					if (!context.ParserConfiguration.IgnoreBlankLines)
 					{
 						break;
 					}
@@ -254,22 +254,22 @@ namespace CsvHelper
 				}
 
 				// Trim start outside of quotes.
-				if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+				if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 				{
-					await ReadSpacesAsync();
-					fieldReader.SetFieldStart( -1 );
+					await ReadSpacesAsync().ConfigureAwait(false);
+					fieldReader.SetFieldStart(-1);
 				}
 
-				if( c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
+				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
 				{
-					if( await ReadQuotedFieldAsync() )
+					if (await ReadQuotedFieldAsync().ConfigureAwait(false))
 					{
 						break;
 					}
 				}
 				else
 				{
-					if( await ReadFieldAsync() )
+					if (await ReadFieldAsync().ConfigureAwait(false))
 					{
 						break;
 					}
@@ -285,14 +285,14 @@ namespace CsvHelper
 		/// </summary>
 		protected virtual void ReadBlankLine()
 		{
-			if( context.ParserConfiguration.IgnoreBlankLines )
+			if (context.ParserConfiguration.IgnoreBlankLines)
 			{
 				context.Row++;
 			}
 
-			while( true )
+			while (true)
 			{
-				if( c == '\r' || c == '\n' )
+				if (c == '\r' || c == '\n')
 				{
 					ReadLineEnding();
 					fieldReader.SetFieldStart();
@@ -304,7 +304,7 @@ namespace CsvHelper
 				// need to set the field start every char.
 				fieldReader.SetFieldStart();
 
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					return;
@@ -320,16 +320,16 @@ namespace CsvHelper
 		/// </summary>
 		protected virtual async Task ReadBlankLineAsync()
 		{
-			if( context.ParserConfiguration.IgnoreBlankLines )
+			if (context.ParserConfiguration.IgnoreBlankLines)
 			{
 				context.Row++;
 			}
 
-			while( true )
+			while (true)
 			{
-				if( c == '\r' || c == '\n' )
+				if (c == '\r' || c == '\n')
 				{
-					await ReadLineEndingAsync();
+					await ReadLineEndingAsync().ConfigureAwait(false);
 					fieldReader.SetFieldStart();
 					return;
 				}
@@ -339,7 +339,7 @@ namespace CsvHelper
 				// need to set the field start every char.
 				fieldReader.SetFieldStart();
 
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					return;
@@ -355,19 +355,19 @@ namespace CsvHelper
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual bool ReadField()
 		{
-			if( c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n' )
+			if (c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n')
 			{
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
 
-					if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
 						fieldReader.SetFieldStart();
 					}
 
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					context.RecordBuilder.Add(fieldReader.GetField());
 					return true;
 				}
 
@@ -375,69 +375,69 @@ namespace CsvHelper
 			}
 
 			var inSpaces = false;
-			while( true )
+			while (true)
 			{
-				if( c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
+				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
 				{
 					context.IsFieldBad = true;
 				}
 
 				// Trim end outside of quotes.
-				if( !inSpaces && c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 				{
 					inSpaces = true;
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
-					fieldReader.SetFieldStart( -1 );
-					fieldReader.SetRawRecordStart( -1 );
+					fieldReader.SetFieldStart(-1);
+					fieldReader.SetRawRecordStart(-1);
 				}
-				else if( inSpaces && c != ' ' )
+				else if (inSpaces && c != ' ')
 				{
 					// Hit a non-space char.
 					// Need to determine if it's the end of the field or another char.
 					inSpaces = false;
-					if( c == context.ParserConfiguration.Delimiter[0] || c == '\r' || c == '\n' )
+					if (c == context.ParserConfiguration.Delimiter[0] || c == '\r' || c == '\n')
 					{
-						fieldReader.SetFieldStart( -1 );
+						fieldReader.SetFieldStart(-1);
 					}
 				}
 
-				if( c == context.ParserConfiguration.Delimiter[0] )
+				if (c == context.ParserConfiguration.Delimiter[0])
 				{
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 
 					// End of field.
-					if( ReadDelimiter() )
+					if (ReadDelimiter())
 					{
 						// Set the end of the field to the char before the delimiter.
-						context.RecordBuilder.Add( fieldReader.GetField() );
+						context.RecordBuilder.Add(fieldReader.GetField());
 						return false;
 					}
 				}
-				else if( c == '\r' || c == '\n' )
+				else if (c == '\r' || c == '\n')
 				{
 					// End of line.
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 					var offset = ReadLineEnding();
-					fieldReader.SetRawRecordEnd( offset );
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					fieldReader.SetRawRecordEnd(offset);
+					context.RecordBuilder.Add(fieldReader.GetField());
 
-					fieldReader.SetFieldStart( offset );
+					fieldReader.SetFieldStart(offset);
 
 					return true;
 				}
 
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
 
-					if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
 						fieldReader.SetFieldStart();
 					}
 
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					context.RecordBuilder.Add(fieldReader.GetField());
 					return true;
 				}
 
@@ -451,19 +451,19 @@ namespace CsvHelper
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual async Task<bool> ReadFieldAsync()
 		{
-			if( c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n' )
+			if (c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n')
 			{
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
 
-					if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
 						fieldReader.SetFieldStart();
 					}
 
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					context.RecordBuilder.Add(fieldReader.GetField());
 					return true;
 				}
 
@@ -471,69 +471,69 @@ namespace CsvHelper
 			}
 
 			var inSpaces = false;
-			while( true )
+			while (true)
 			{
-				if( c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes )
+				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
 				{
 					context.IsFieldBad = true;
 				}
 
 				// Trim end outside of quotes.
-				if( !inSpaces && c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 				{
 					inSpaces = true;
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
-					fieldReader.SetFieldStart( -1 );
-					fieldReader.SetRawRecordStart( -1 );
+					fieldReader.SetFieldStart(-1);
+					fieldReader.SetRawRecordStart(-1);
 				}
-				else if( inSpaces && c != ' ' )
+				else if (inSpaces && c != ' ')
 				{
 					// Hit a non-space char.
 					// Need to determine if it's the end of the field or another char.
 					inSpaces = false;
-					if( c == context.ParserConfiguration.Delimiter[0] || c == '\r' || c == '\n' )
+					if (c == context.ParserConfiguration.Delimiter[0] || c == '\r' || c == '\n')
 					{
-						fieldReader.SetFieldStart( -1 );
+						fieldReader.SetFieldStart(-1);
 					}
 				}
 
-				if( c == context.ParserConfiguration.Delimiter[0] )
+				if (c == context.ParserConfiguration.Delimiter[0])
 				{
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 
 					// End of field.
-					if( await ReadDelimiterAsync() )
+					if (await ReadDelimiterAsync().ConfigureAwait(false))
 					{
 						// Set the end of the field to the char before the delimiter.
-						context.RecordBuilder.Add( fieldReader.GetField() );
+						context.RecordBuilder.Add(fieldReader.GetField());
 						return false;
 					}
 				}
-				else if( c == '\r' || c == '\n' )
+				else if (c == '\r' || c == '\n')
 				{
 					// End of line.
-					fieldReader.SetFieldEnd( -1 );
-					var offset = await ReadLineEndingAsync();
-					fieldReader.SetRawRecordEnd( offset );
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					fieldReader.SetFieldEnd(-1);
+					var offset = await ReadLineEndingAsync().ConfigureAwait(false);
+					fieldReader.SetRawRecordEnd(offset);
+					context.RecordBuilder.Add(fieldReader.GetField());
 
-					fieldReader.SetFieldStart( offset );
+					fieldReader.SetFieldStart(offset);
 
 					return true;
 				}
 
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
 
-					if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
 						fieldReader.SetFieldStart();
 					}
 
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					context.RecordBuilder.Add(fieldReader.GetField());
 					return true;
 				}
 
@@ -552,57 +552,57 @@ namespace CsvHelper
 			fieldReader.SetFieldStart();
 
 			var inSpaces = false;
-			while( true )
+			while (true)
 			{
 				// 1,"2" ,3
 
 				var cPrev = c;
 
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					context.RecordBuilder.Add(fieldReader.GetField());
 					return true;
 				}
 
 				c = fieldReader.GetChar();
 
 				// Trim start inside quotes.
-				if( inQuotes && c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote )
+				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote)
 				{
 					ReadSpaces();
 					cPrev = ' ';
-					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetFieldStart(-1);
 				}
 
 				// Trim end inside of quotes.
-				if( !inSpaces && c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes )
+				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
 					inSpaces = true;
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
-					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetFieldStart(-1);
 				}
-				else if( inSpaces && c != ' ' )
+				else if (inSpaces && c != ' ')
 				{
 					// Hit a non-space char.
 					// Need to determine if it's the end of the field or another char.
 					inSpaces = false;
-					if( c == context.ParserConfiguration.Quote )
+					if (c == context.ParserConfiguration.Quote)
 					{
-						fieldReader.SetFieldStart( -1 );
+						fieldReader.SetFieldStart(-1);
 					}
 				}
 
-				if( c == context.ParserConfiguration.Quote )
+				if (c == context.ParserConfiguration.Quote)
 				{
 					inQuotes = !inQuotes;
 
-					if( !inQuotes )
+					if (!inQuotes)
 					{
 						// Add an offset for the quote.
-						fieldReader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd(-1);
 						fieldReader.AppendField();
 						fieldReader.SetFieldStart();
 					}
@@ -610,45 +610,45 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( inQuotes )
+				if (inQuotes)
 				{
-					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
+					if (c == '\r' || (c == '\n' && cPrev != '\r'))
 					{
 						// Inside a quote \r\n is just another character to absorb.
 						context.RawRow++;
 					}
 				}
 
-				if( !inQuotes )
+				if (!inQuotes)
 				{
 					// Trim end outside of quotes.
-					if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
 						ReadSpaces();
-						fieldReader.SetFieldStart( -1 );
+						fieldReader.SetFieldStart(-1);
 					}
 
-					if( c == context.ParserConfiguration.Delimiter[0] )
+					if (c == context.ParserConfiguration.Delimiter[0])
 					{
-						fieldReader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd(-1);
 
-						if( ReadDelimiter() )
+						if (ReadDelimiter())
 						{
 							// Add an extra offset because of the end quote.
-							context.RecordBuilder.Add( fieldReader.GetField() );
+							context.RecordBuilder.Add(fieldReader.GetField());
 							return false;
 						}
 					}
-					else if( c == '\r' || c == '\n' )
+					else if (c == '\r' || c == '\n')
 					{
-						fieldReader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd(-1);
 						var offset = ReadLineEnding();
-						fieldReader.SetRawRecordEnd( offset );
-						context.RecordBuilder.Add( fieldReader.GetField() );
-						fieldReader.SetFieldStart( offset );
+						fieldReader.SetRawRecordEnd(offset);
+						context.RecordBuilder.Add(fieldReader.GetField());
+						fieldReader.SetFieldStart(offset);
 						return true;
 					}
-					else if( cPrev == context.ParserConfiguration.Quote )
+					else if (cPrev == context.ParserConfiguration.Quote)
 					{
 						// We're out of quotes. Read the reset of
 						// the field like a normal field.
@@ -669,57 +669,57 @@ namespace CsvHelper
 			fieldReader.SetFieldStart();
 
 			var inSpaces = false;
-			while( true )
+			while (true)
 			{
 				// 1,"2" ,3
 
 				var cPrev = c;
 
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
-					context.RecordBuilder.Add( fieldReader.GetField() );
+					context.RecordBuilder.Add(fieldReader.GetField());
 					return true;
 				}
 
 				c = fieldReader.GetChar();
 
 				// Trim start inside quotes.
-				if( inQuotes && c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote )
+				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote)
 				{
-					await ReadSpacesAsync();
+					await ReadSpacesAsync().ConfigureAwait(false);
 					cPrev = ' ';
-					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetFieldStart(-1);
 				}
 
 				// Trim end inside of quotes.
-				if( !inSpaces && c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes ) == TrimOptions.InsideQuotes )
+				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
 					inSpaces = true;
-					fieldReader.SetFieldEnd( -1 );
+					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
-					fieldReader.SetFieldStart( -1 );
+					fieldReader.SetFieldStart(-1);
 				}
-				else if( inSpaces && c != ' ' )
+				else if (inSpaces && c != ' ')
 				{
 					// Hit a non-space char.
 					// Need to determine if it's the end of the field or another char.
 					inSpaces = false;
-					if( c == context.ParserConfiguration.Quote )
+					if (c == context.ParserConfiguration.Quote)
 					{
-						fieldReader.SetFieldStart( -1 );
+						fieldReader.SetFieldStart(-1);
 					}
 				}
 
-				if( c == context.ParserConfiguration.Quote )
+				if (c == context.ParserConfiguration.Quote)
 				{
 					inQuotes = !inQuotes;
 
-					if( !inQuotes )
+					if (!inQuotes)
 					{
 						// Add an offset for the quote.
-						fieldReader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd(-1);
 						fieldReader.AppendField();
 						fieldReader.SetFieldStart();
 					}
@@ -727,49 +727,49 @@ namespace CsvHelper
 					continue;
 				}
 
-				if( inQuotes )
+				if (inQuotes)
 				{
-					if( c == '\r' || ( c == '\n' && cPrev != '\r' ) )
+					if (c == '\r' || (c == '\n' && cPrev != '\r'))
 					{
 						// Inside a quote \r\n is just another character to absorb.
 						context.RawRow++;
 					}
 				}
 
-				if( !inQuotes )
+				if (!inQuotes)
 				{
 					// Trim end outside of quotes.
-					if( c == ' ' && ( context.ParserConfiguration.TrimOptions & TrimOptions.Trim ) == TrimOptions.Trim )
+					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
-						await ReadSpacesAsync();
-						fieldReader.SetFieldStart( -1 );
+						await ReadSpacesAsync().ConfigureAwait(false);
+						fieldReader.SetFieldStart(-1);
 					}
 
-					if( c == context.ParserConfiguration.Delimiter[0] )
+					if (c == context.ParserConfiguration.Delimiter[0])
 					{
-						fieldReader.SetFieldEnd( -1 );
+						fieldReader.SetFieldEnd(-1);
 
-						if( await ReadDelimiterAsync() )
+						if (await ReadDelimiterAsync().ConfigureAwait(false))
 						{
 							// Add an extra offset because of the end quote.
-							context.RecordBuilder.Add( fieldReader.GetField() );
+							context.RecordBuilder.Add(fieldReader.GetField());
 							return false;
 						}
 					}
-					else if( c == '\r' || c == '\n' )
+					else if (c == '\r' || c == '\n')
 					{
-						fieldReader.SetFieldEnd( -1 );
-						var offset = await ReadLineEndingAsync();
-						fieldReader.SetRawRecordEnd( offset );
-						context.RecordBuilder.Add( fieldReader.GetField() );
-						fieldReader.SetFieldStart( offset );
+						fieldReader.SetFieldEnd(-1);
+						var offset = await ReadLineEndingAsync().ConfigureAwait(false);
+						fieldReader.SetRawRecordEnd(offset);
+						context.RecordBuilder.Add(fieldReader.GetField());
+						fieldReader.SetFieldStart(offset);
 						return true;
 					}
-					else if( cPrev == context.ParserConfiguration.Quote )
+					else if (cPrev == context.ParserConfiguration.Quote)
 					{
 						// We're out of quotes. Read the reset of
 						// the field like a normal field.
-						return await ReadFieldAsync();
+						return await ReadFieldAsync().ConfigureAwait(false);
 					}
 				}
 			}
@@ -782,26 +782,26 @@ namespace CsvHelper
 		/// chars ended up not being the delimiter.</returns>
 		protected virtual bool ReadDelimiter()
 		{
-			if( c != context.ParserConfiguration.Delimiter[0] )
+			if (c != context.ParserConfiguration.Delimiter[0])
 			{
-				throw new InvalidOperationException( "Tried reading a delimiter when the first delimiter char didn't match the current char." );
+				throw new InvalidOperationException("Tried reading a delimiter when the first delimiter char didn't match the current char.");
 			}
 
-			if( context.ParserConfiguration.Delimiter.Length == 1 )
+			if (context.ParserConfiguration.Delimiter.Length == 1)
 			{
 				return true;
 			}
 
-			for( var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++ )
+			for(var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					return false;
 				}
 
 				c = fieldReader.GetChar();
-				if( c != context.ParserConfiguration.Delimiter[i] )
+				if (c != context.ParserConfiguration.Delimiter[i])
 				{
 					return false;
 				}
@@ -817,26 +817,26 @@ namespace CsvHelper
 		/// chars ended up not being the delimiter.</returns>
 		protected virtual async Task<bool> ReadDelimiterAsync()
 		{
-			if( c != context.ParserConfiguration.Delimiter[0] )
+			if (c != context.ParserConfiguration.Delimiter[0])
 			{
-				throw new InvalidOperationException( "Tried reading a delimiter when the first delimiter char didn't match the current char." );
+				throw new InvalidOperationException("Tried reading a delimiter when the first delimiter char didn't match the current char.");
 			}
 
-			if( context.ParserConfiguration.Delimiter.Length == 1 )
+			if (context.ParserConfiguration.Delimiter.Length == 1)
 			{
 				return true;
 			}
 
-			for( var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++ )
+			for(var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					return false;
 				}
 
 				c = fieldReader.GetChar();
-				if( c != context.ParserConfiguration.Delimiter[i] )
+				if (c != context.ParserConfiguration.Delimiter[i])
 				{
 					return false;
 				}
@@ -852,16 +852,16 @@ namespace CsvHelper
 		protected virtual int ReadLineEnding()
 		{
 			var fieldStartOffset = 0;
-			if( c == '\r' )
+			if (c == '\r')
 			{
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					return fieldStartOffset;
 				}
 
 				c = fieldReader.GetChar();
-				if( c != '\n' && c != -1 )
+				if (c != '\n' && c != -1)
 				{
 					// The start needs to be moved back.
 					fieldStartOffset--;
@@ -878,16 +878,16 @@ namespace CsvHelper
 		protected virtual async Task<int> ReadLineEndingAsync()
 		{
 			var fieldStartOffset = 0;
-			if( c == '\r' )
+			if (c == '\r')
 			{
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					return fieldStartOffset;
 				}
 
 				c = fieldReader.GetChar();
-				if( c != '\n' && c != -1 )
+				if (c != '\n' && c != -1)
 				{
 					// The start needs to be moved back.
 					fieldStartOffset--;
@@ -904,14 +904,14 @@ namespace CsvHelper
 		/// False if the end of the file has been reached.</returns>
 		protected virtual bool ReadSpaces()
 		{
-			while( true )
+			while (true)
 			{
-				if( c != ' ' )
+				if (c != ' ')
 				{
 					break;
 				}
 
-				if( fieldReader.IsBufferEmpty && !fieldReader.FillBuffer() )
+				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
 					// End of file.
 					return false;
@@ -930,14 +930,14 @@ namespace CsvHelper
 		/// False if the end of the file has been reached.</returns>
 		protected virtual async Task<bool> ReadSpacesAsync()
 		{
-			while( true )
+			while (true)
 			{
-				if( c != ' ' )
+				if (c != ' ')
 				{
 					break;
 				}
 
-				if( fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync() )
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{
 					// End of file.
 					return false;
