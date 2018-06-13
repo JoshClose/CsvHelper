@@ -81,6 +81,13 @@ namespace CsvHelper.Configuration
 		Func<Type, ConstructorInfo> GetConstructor { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating whether references
+		/// should be ignored when auto mapping. True to ignore
+		/// references, otherwise false. Default is false.
+		/// </summary>
+		bool IgnoreReferences { get; set; }
+
+		/// <summary>
 		/// Gets or sets the callback that will be called to
 		/// determine whether to skip the given record or not.
 		/// </summary>
