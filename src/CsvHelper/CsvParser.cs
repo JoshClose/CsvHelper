@@ -92,7 +92,7 @@ namespace CsvHelper
 
 				return row;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
@@ -112,7 +112,7 @@ namespace CsvHelper
 
 				return row;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
@@ -411,6 +411,7 @@ namespace CsvHelper
 					{
 						// Set the end of the field to the char before the delimiter.
 						context.RecordBuilder.Add(fieldReader.GetField());
+
 						return false;
 					}
 				}
@@ -423,6 +424,7 @@ namespace CsvHelper
 					context.RecordBuilder.Add(fieldReader.GetField());
 
 					fieldReader.SetFieldStart(offset);
+					fieldReader.SetBufferPosition(offset);
 
 					return true;
 				}
@@ -438,6 +440,7 @@ namespace CsvHelper
 					}
 
 					context.RecordBuilder.Add(fieldReader.GetField());
+
 					return true;
 				}
 
@@ -507,6 +510,7 @@ namespace CsvHelper
 					{
 						// Set the end of the field to the char before the delimiter.
 						context.RecordBuilder.Add(fieldReader.GetField());
+
 						return false;
 					}
 				}
@@ -519,6 +523,7 @@ namespace CsvHelper
 					context.RecordBuilder.Add(fieldReader.GetField());
 
 					fieldReader.SetFieldStart(offset);
+					fieldReader.SetBufferPosition(offset);
 
 					return true;
 				}
@@ -534,6 +539,7 @@ namespace CsvHelper
 					}
 
 					context.RecordBuilder.Add(fieldReader.GetField());
+
 					return true;
 				}
 
@@ -563,6 +569,7 @@ namespace CsvHelper
 					// End of file.
 					fieldReader.SetFieldEnd();
 					context.RecordBuilder.Add(fieldReader.GetField());
+
 					return true;
 				}
 
@@ -636,6 +643,7 @@ namespace CsvHelper
 						{
 							// Add an extra offset because of the end quote.
 							context.RecordBuilder.Add(fieldReader.GetField());
+
 							return false;
 						}
 					}
@@ -645,7 +653,10 @@ namespace CsvHelper
 						var offset = ReadLineEnding();
 						fieldReader.SetRawRecordEnd(offset);
 						context.RecordBuilder.Add(fieldReader.GetField());
+
 						fieldReader.SetFieldStart(offset);
+						fieldReader.SetBufferPosition(offset);
+
 						return true;
 					}
 					else if (cPrev == context.ParserConfiguration.Quote)
@@ -680,6 +691,7 @@ namespace CsvHelper
 					// End of file.
 					fieldReader.SetFieldEnd();
 					context.RecordBuilder.Add(fieldReader.GetField());
+
 					return true;
 				}
 
@@ -753,6 +765,7 @@ namespace CsvHelper
 						{
 							// Add an extra offset because of the end quote.
 							context.RecordBuilder.Add(fieldReader.GetField());
+
 							return false;
 						}
 					}
@@ -762,7 +775,10 @@ namespace CsvHelper
 						var offset = await ReadLineEndingAsync().ConfigureAwait(false);
 						fieldReader.SetRawRecordEnd(offset);
 						context.RecordBuilder.Add(fieldReader.GetField());
+
 						fieldReader.SetFieldStart(offset);
+						fieldReader.SetBufferPosition(offset);
+
 						return true;
 					}
 					else if (cPrev == context.ParserConfiguration.Quote)
@@ -792,7 +808,7 @@ namespace CsvHelper
 				return true;
 			}
 
-			for(var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
+			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
 				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
 				{
@@ -827,7 +843,7 @@ namespace CsvHelper
 				return true;
 			}
 
-			for(var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
+			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
 				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
 				{

@@ -205,6 +205,19 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Move's the buffer position according to the given offset.
+		/// </summary>
+		/// <param name="offset">The offset to move the buffer.</param>
+		public virtual void SetBufferPosition(int offset = 0)
+		{
+			var position = context.BufferPosition + offset;
+			if (position >= 0)
+			{
+				context.BufferPosition = position;
+			}
+		}
+
+		/// <summary>
 		/// Sets the start of the field to the current buffer position.
 		/// </summary>
 		/// <param name="offset">An offset for the field start.

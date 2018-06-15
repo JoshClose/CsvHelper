@@ -81,7 +81,7 @@ namespace CsvHelper
 			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException($"For {nameof(FieldReader)} to be used in {nameof(CsvParser)}, {nameof(FieldReader.Context)} must also implement {nameof(ReadingContext)}.");
 		}
 		<#
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -99,7 +99,7 @@ namespace CsvHelper
 
 				return row;
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
@@ -137,7 +137,7 @@ namespace CsvHelper
 			disposed = true;
 		}
 		<#
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -208,7 +208,7 @@ namespace CsvHelper
 		<# 
 		}
 		
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -249,7 +249,7 @@ namespace CsvHelper
 		<# 
 		}
 
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -315,6 +315,7 @@ namespace CsvHelper
 					{
 						// Set the end of the field to the char before the delimiter.
 						context.RecordBuilder.Add(fieldReader.GetField());
+
 						return false;
 					}
 				}
@@ -327,6 +328,7 @@ namespace CsvHelper
 					context.RecordBuilder.Add(fieldReader.GetField());
 
 					fieldReader.SetFieldStart(offset);
+					fieldReader.SetBufferPosition(offset);
 
 					return true;
 				}
@@ -342,6 +344,7 @@ namespace CsvHelper
 					}
 
 					context.RecordBuilder.Add(fieldReader.GetField());
+
 					return true;
 				}
 
@@ -351,7 +354,7 @@ namespace CsvHelper
 		<# 
 		}
 
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -377,6 +380,7 @@ namespace CsvHelper
 					// End of file.
 					fieldReader.SetFieldEnd();
 					context.RecordBuilder.Add(fieldReader.GetField());
+
 					return true;
 				}
 
@@ -450,6 +454,7 @@ namespace CsvHelper
 						{
 							// Add an extra offset because of the end quote.
 							context.RecordBuilder.Add(fieldReader.GetField());
+
 							return false;
 						}
 					}
@@ -459,7 +464,10 @@ namespace CsvHelper
 						var offset = <#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
 						fieldReader.SetRawRecordEnd(offset);
 						context.RecordBuilder.Add(fieldReader.GetField());
+
 						fieldReader.SetFieldStart(offset);
+						fieldReader.SetBufferPosition(offset);
+
 						return true;
 					}
 					else if (cPrev == context.ParserConfiguration.Quote)
@@ -474,7 +482,7 @@ namespace CsvHelper
 		<# 
 		}
 
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -495,7 +503,7 @@ namespace CsvHelper
 				return true;
 			}
 
-			for(var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
+			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
 				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
 				{
@@ -515,7 +523,7 @@ namespace CsvHelper
 		<# 
 		}
 
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>	
@@ -547,7 +555,7 @@ namespace CsvHelper
 		<# 
 		} 
 
-		for(var i = 0; i < 2; i++)
+		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>
