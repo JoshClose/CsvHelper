@@ -29,7 +29,7 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvWriter : IWriter
 	{
-		private readonly RecordManager recordManager;
+		private readonly Lazy<RecordManager> recordManager;
 		private WritingContext context;
 		private bool disposed;
 		private ISerializer serializer;
@@ -80,7 +80,7 @@ namespace CsvHelper
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
 			context = serializer.Context as WritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( WritingContext )}." );
-			recordManager = ObjectResolver.Current.Resolve<RecordManager>( this );
+			recordManager = new Lazy<RecordManager>(() => ObjectResolver.Current.Resolve<RecordManager>(this));
 		}
 
 		/// <summary>
@@ -401,7 +401,7 @@ namespace CsvHelper
 
 			try
 			{
-				recordManager.Write( record );
+				recordManager.Value.Write( record );
 				context.HasHeaderBeenWritten = true;
 			}
 			catch( Exception ex )
@@ -446,7 +446,7 @@ namespace CsvHelper
 
 					try
 					{
-						recordManager.Write( record );
+						recordManager.Value.Write( record );
 					}
 					catch( TargetInvocationException ex )
 					{
@@ -516,7 +516,7 @@ namespace CsvHelper
 
 					try
 					{
-						recordManager.Write( record );
+						recordManager.Value.Write( record );
 					}
 					catch( TargetInvocationException ex )
 					{

@@ -15,11 +15,13 @@ namespace CsvHelper.Performance
 		static void Main( string[] args )
 		{
 			//WriteField( 50, 1000000);
-			WriteRecords( 1000000 );
+			//WriteRecords( 1000000 );
 
 			//Parse();
 			//ReadGetField();
-			//ReadGetRecords();
+			ReadGetRecords();
+
+			Console.ReadKey();
 		}
 
 		static string GetFilePath()

@@ -23,7 +23,7 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvReader : IReader
 	{
-		private readonly RecordManager recordManager;
+		private readonly Lazy<RecordManager> recordManager;
 		private ReadingContext context;
 		private bool disposed;
 		private IParser parser;
@@ -80,7 +80,7 @@ namespace CsvHelper
 		{
 			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
 			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( $"For {nameof( IParser )} to be used in {nameof( CsvReader )}, {nameof( IParser.Context )} must also implement {nameof( ReadingContext )}." );
-			recordManager = new RecordManager( this );
+			recordManager = new Lazy<RecordManager>(() => ObjectResolver.Current.Resolve<RecordManager>(this));
 		}
 
 		/// <summary>
@@ -959,7 +959,7 @@ namespace CsvHelper
 			T record;
 			try
 			{
-				record = recordManager.Create<T>();
+				record = recordManager.Value.Create<T>();
 			}
 			catch( Exception ex )
 			{
@@ -1017,7 +1017,7 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = recordManager.Create( type );
+				record = recordManager.Value.Create( type );
 			}
 			catch( Exception ex )
 			{
@@ -1059,7 +1059,7 @@ namespace CsvHelper
 				T record;
 				try
 				{
-					record = recordManager.Create<T>();
+					record = recordManager.Value.Create<T>();
 				}
 				catch( Exception ex )
 				{
@@ -1126,7 +1126,7 @@ namespace CsvHelper
 				object record;
 				try
 				{
-					record = recordManager.Create( type );
+					record = recordManager.Value.Create( type );
 				}
 				catch( Exception ex )
 				{
@@ -1172,7 +1172,7 @@ namespace CsvHelper
 			{
 				try
 				{
-					recordManager.Hydrate( record );
+					recordManager.Value.Hydrate( record );
 				}
 				catch( Exception ex )
 				{
