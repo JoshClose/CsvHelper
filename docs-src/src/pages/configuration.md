@@ -177,13 +177,13 @@ Ignores reference members when auto mapping. Default is false.
 csv.Configuration.IgnoreReferences = true;
 ```
 
-### PrefixReferenceHeaders
+### ReferenceHeaderPrefix
 
-Prefix headers of reference members with the parent member name.
+Function to determine what (if any) prefix should be prepended to header names.
 
 ```cs
-// Turn on.
-csv.Configuration.PrefixReferenceHeaders = true;
+// Prefix headers with the name of the member
+csv.Configuration.ReferenceHeaderPrefix = (memberType, memberName) => $"{memberName}_";
 ```
 
 ## Constructor Mapping
