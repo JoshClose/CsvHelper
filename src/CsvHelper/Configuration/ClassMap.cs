@@ -284,7 +284,8 @@ namespace CsvHelper.Configuration
 
 				var memberTypeInfo = member.MemberType().GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof( DefaultTypeConverter );
-				if( isDefaultConverter && ( memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct() ) )
+				if( isDefaultConverter && ( memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct()
+                    || memberTypeInfo.ImplementedInterfaces.Contains(typeof(IStructuralEquatable))))
 				{
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
