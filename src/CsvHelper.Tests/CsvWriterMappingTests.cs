@@ -197,7 +197,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( m => $"Converted{m.IntColumn}" );
+				Map( m => m.IntColumn ).UseWriteConversion( m => $"Converted{m.IntColumn}" );
 			}
 		}
 
@@ -205,7 +205,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( m =>
+				Map( m => m.IntColumn ).UseWriteConversion( m =>
 				{
 					var x = "Converted";
 					x += m.IntColumn;
@@ -218,7 +218,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingConstantMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( m => "Constant" );
+				Map( m => m.IntColumn ).UseWriteConversion( m => "Constant" );
 			}
 		}
 	}

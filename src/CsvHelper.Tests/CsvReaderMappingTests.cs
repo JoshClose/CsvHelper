@@ -201,7 +201,7 @@ namespace CsvHelper.Tests
 		{
 			public CovarianceClassMap()
 			{
-				Map( m => m.Id ).ConvertUsing( row => row.GetField<int>( 0 ) );
+				Map( m => m.Id ).UseReadConversion( row => row.GetField<int>( 0 ) );
 			}
 		}
 
@@ -215,7 +215,7 @@ namespace CsvHelper.Tests
 		//{
 		//	public ContravarianceClassMap()
 		//	{
-		//		Map( m => m.Id ).ConvertUsing( row => row.GetField<int?>( 0 ) );
+		//		Map( m => m.Id ).UseReadConversion( row => row.GetField<int?>( 0 ) );
 		//	}
 		//}
 
@@ -276,7 +276,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
+				Map( m => m.IntColumn ).UseReadConversion( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
 			}
 		}
 
@@ -284,7 +284,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( row =>
+				Map( m => m.IntColumn ).UseReadConversion( row =>
 				{
 					var x = row.GetField<int>( 0 );
 					var y = row.GetField<int>( 1 );
@@ -297,7 +297,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingConstantMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
+				Map( m => m.IntColumn ).UseReadConversion( row => 1 );
 			}
 		}
 
@@ -306,7 +306,7 @@ namespace CsvHelper.Tests
 			public ConvertUsingClassMap()
 			{
 				Map( m => m.IntColumn ).Name( "int2" );
-				Map( m => m.StringColumn ).ConvertUsing( row => row.GetField( "string.3" ) );
+				Map( m => m.StringColumn ).UseReadConversion( row => row.GetField( "string.3" ) );
 			}
 		}
 	}

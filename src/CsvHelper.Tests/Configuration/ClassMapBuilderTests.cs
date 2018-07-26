@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.Configuration
 		private static readonly ClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
 			/*
 			.Map( m => m.A ).Constant( "a" )
-			.Map( m => m.A ).ConvertUsing( row => row.GetField( 0 ) )
+			.Map( m => m.A ).UseReadConversion( row => row.GetField( 0 ) )
 			.Map( m => m.A ).Default( "a" )
 			.Map( m => m.A ).Index( 0 )
 			.Map( m => m.A ).Index( 0 ).Validate( field => true )
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests.Configuration
 			.Map( m => m.B ).Name( "B2" ).Default( 2 )
 			.Map( m => m.C ).Index( 2 ).TypeConverter( new DateTimeConverter() )
 			.Map( m => m.D ).Name( "D4" ).TypeConverter<DoubleConverter>().Default( 4d )
-			.Map( m => m.E ).ConvertUsing( ConvertExpression )
+			.Map( m => m.E ).UseReadConversion( ConvertExpression )
 			.Build();
 
 		[TestMethod]

@@ -170,7 +170,7 @@ namespace CsvHelper
 
 				if( memberMap.Data.ReadingConvertExpression != null || memberMap.Data.IsConstantSet )
 				{
-					// If ConvertUsing and Constant don't require a header.
+					// If UseReadConversion and Constant don't require a header.
 					continue;
 				}
 
@@ -1223,7 +1223,7 @@ namespace CsvHelper
 				throw new ReaderException( context, "There is no header record to determine the index by name." );
 			}
 
-			// Caching the named index speeds up mappings that use ConvertUsing tremendously.
+			// Caching the named index speeds up mappings that use UseReadConversion tremendously.
 			var nameKey = string.Join( "_", names ) + index;
 			if( context.NamedIndexCache.ContainsKey( nameKey ) )
 			{

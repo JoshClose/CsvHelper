@@ -180,7 +180,7 @@ namespace CsvHelper.Configuration
 		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual MemberMap<TClass, TMember> ConvertUsing( Func<IReaderRow, TMember> convertExpression )
+		public virtual MemberMap<TClass, TMember> UseReadConversion( Func<IReaderRow, TMember> convertExpression )
 		{
 			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TMember>>)( x => convertExpression( x ) );
 
@@ -192,7 +192,7 @@ namespace CsvHelper.Configuration
 		/// to a field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual MemberMap<TClass, TMember> ConvertUsing( Func<TClass, string> convertExpression )
+		public virtual MemberMap<TClass, TMember> UseWriteConversion( Func<TClass, string> convertExpression )
 		{
 			Data.WritingConvertExpression = (Expression<Func<TClass, string>>)( x => convertExpression( x ) );
 

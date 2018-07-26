@@ -179,14 +179,14 @@ namespace CsvHelper.Configuration
 		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing( Func<IReaderRow, TMember> convertExpression );
+		IHasMap<TClass> UseReadConversion( Func<IReaderRow, TMember> convertExpression );
 
 		/// <summary>
 		/// Specifies an expression to be used to convert the object
 		/// to a field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression );
+		IHasMap<TClass> UseWriteConversion( Func<TClass, string> convertExpression );
 	}
 
 	/// <summary>
@@ -323,15 +323,15 @@ namespace CsvHelper.Configuration
 		}
 #pragma warning restore CS0693 // Type parameter has the same name as the type parameter from outer type
 
-		public IHasMap<TClass> ConvertUsing( Func<IReaderRow, TMember> convertExpression )
+		public IHasMap<TClass> UseReadConversion( Func<IReaderRow, TMember> convertExpression )
 		{
-			memberMap.ConvertUsing( convertExpression );
+			memberMap.UseReadConversion( convertExpression );
 			return this;
 		}
 
-		public IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression )
+		public IHasMap<TClass> UseWriteConversion( Func<TClass, string> convertExpression )
 		{
-			memberMap.ConvertUsing( convertExpression );
+			memberMap.UseWriteConversion( convertExpression );
 			return this;
 		}
 
