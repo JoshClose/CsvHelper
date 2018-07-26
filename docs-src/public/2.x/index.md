@@ -278,7 +278,7 @@ public sealed class MyClassMap : CsvClassMap<MyClass>
 
 #### [mapping] Convert Using
 
-When all else fails, you can use ConvertUsing. ConvertUsing allows you to write custom code inline to convert the row into a single property value.
+When all else fails, you can use UseReadConversion. UseReadConversion allows you to write custom code inline to convert the row into a single property value.
 
 ```cs
 public sealed class MyClassMap : CsvClassMap<MyClass>
@@ -286,13 +286,13 @@ public sealed class MyClassMap : CsvClassMap<MyClass>
 	public MyClassMap()
 	{
 		// Constant value.
-		Map( m => m.Constant ).ConvertUsing( row => 3 );
+		Map( m => m.Constant ).UseReadConversion( row => 3 );
 		// Aggregate of two rows.
-		Map( m => m.Aggregate ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
+		Map( m => m.Aggregate ).UseReadConversion( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
 		// Collection with a single value.
-		Map( m => m.Names ).ConvertUsing( row => new List<string>{ row.GetField<string>( "Name" ) } );
+		Map( m => m.Names ).UseReadConversion( row => new List<string>{ row.GetField<string>( "Name" ) } );
 		// Just about anything.
-		Map( m => m.Anything ).ConvertUsing( row =>
+		Map( m => m.Anything ).UseReadConversion( row =>
 		{
 			// You can do anything you want in a block.
 			// Just make sure to return the same type as the property.

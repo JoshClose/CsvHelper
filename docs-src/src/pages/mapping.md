@@ -162,18 +162,16 @@ Map( m => m.Name ).TypeConverter( new MyConverter() );
 Map( m => m.Name ).TypeConverter<MyConverter>();
 ```
 
-### ConvertUsing
+### UseReadConversion
 
-Specifies an expression to be used to convert a field to a member, or a member to a field.
-
-Reading:
+Specifies an expression to be used to convert a field to a member.
 
 ```cs
 // Convert to member
-Map( m => m.Aggregate ).ConvertUsing( row => row.Get<int>( "A" ) + row.Get<int>( "B" ) );
+Map( m => m.Aggregate ).UseReadConversion( row => row.Get<int>( "A" ) + row.Get<int>( "B" ) );
 
 // Block
-Map( m => m.Aggregate ).ConvertUsing( row =>
+Map( m => m.Aggregate ).UseReadConversion( row =>
 {
 	var a = row.Get<int>( "A" );
 	var b = row.Get<int>( "B" );
@@ -181,14 +179,16 @@ Map( m => m.Aggregate ).ConvertUsing( row =>
 } );
 ```
 
-Writing:
+### UseWriteConversion
+
+Specifies an expression to be used to convert a member to a field.
 
 ```cs
 // Convert to field
-Map( m => m.Aggregate ).ConvertUsing( m => $"A + B = {m.A + m.B}" );
+Map( m => m.Aggregate ).UseWriteConversion( m => $"A + B = {m.A + m.B}" );
 
 // Block
-Map( m => m.Aggregate ).ConvertUsing( m =>
+Map( m => m.Aggregate ).UseWriteConversion( m =>
 {
 	var field = "A + B = ";
 	field += ( m.A + m.B ).ToString();
