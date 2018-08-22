@@ -3,9 +3,12 @@
 This library was created to work as easy as possible without any configuration by default. If your class property names match your CSV file header names, it's as simple as this.
 
 ```cs
-var records = new List<MyClass> { ... };
-var csv = new CsvWriter( textWriter );
-csv.WriteRecords( records );
+using (StreamWriter textWriter = new StreamWriter(passInPathHereAsString))
+{
+	var records = new List<MyClass> { ... };
+        var csv = new CsvWriter(textWriter);
+        csv.WriteRecords(records);
+}
 ```
 
 <h2 id="injection-warning" class="title is-2 has-text-danger">
