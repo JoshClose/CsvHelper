@@ -314,11 +314,21 @@ csv.Configuration.TypeConverterOptionsCache.GetOptions( typeof( string )).Cultur
 
 ### DetectColumnCountChanges
 
-If a different column count is detected on rows a `BadDataException` is thrown. Default is false.
+A `BadDataException` is thrown every time a different column count from the previous row is detected. If you only want to know about missing fields, see the MissingFieldFound option. Default is false.
 
 ```cs
 // Turn on.
 csv.Configuration.DetectColumnCountChanges = true;
+```
+
+An example of the flow:
+```
+column1;column2;column3
+column1;column2;column3
+column1;column3	        > Exception thrown, only 2 columns found
+column1;column3
+column1;column2;column3	> Exception thrown, back to 3 columns instead of 2
+column1;column2;column3
 ```
 
 ### ShouldSkipRecord
