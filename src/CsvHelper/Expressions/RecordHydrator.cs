@@ -102,12 +102,10 @@ namespace CsvHelper.Expressions
 					continue;
 				}
 
-				var referenceBindings = new List<MemberBinding>();
-				expressionManager.CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
+				var referenceAssignments = new List<MemberAssignment>();
+				expressionManager.CreateMemberAssignmentsForMapping( referenceMap.Data.Mapping, referenceAssignments );
 
-				// This is in case an IContractResolver is being used.
-				var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
-				var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
+				var referenceBody = expressionManager.CreateInstanceAndAssignMembers( referenceMap.Data.Member.MemberType(), referenceAssignments );
 
 				var memberTypeParameter = Expression.Parameter( referenceMap.Data.Member.MemberType(), "referenceMember" );
 				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, referenceMap.Data.Member );

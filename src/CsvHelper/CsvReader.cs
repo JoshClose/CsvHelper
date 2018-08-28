@@ -24,14 +24,14 @@ namespace CsvHelper
 	public class CsvReader : IReader
 	{
 		private readonly RecordManager recordManager;
-		private IReadingContext context;
+		private ReadingContext context;
 		private bool disposed;
 		private IParser parser;
 
 		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		public virtual IReadingContext Context => context;
+		public virtual ReadingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -79,7 +79,7 @@ namespace CsvHelper
 		public CsvReader( IParser parser )
 		{
 			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
-			context = parser.Context as IReadingContext ?? throw new InvalidOperationException( $"For {nameof( IParser )} to be used in {nameof( CsvReader )}, {nameof( IParser.Context )} must also implement {nameof( IReadingContext )}." );
+			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( $"For {nameof( IParser )} to be used in {nameof( CsvReader )}, {nameof( IParser.Context )} must also implement {nameof( ReadingContext )}." );
 			recordManager = new RecordManager( this );
 		}
 
@@ -1317,7 +1317,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( !context.LeaveOpen );
+			Dispose( !context?.LeaveOpen ?? true );
 			GC.SuppressFinalize( this );
 		}
 

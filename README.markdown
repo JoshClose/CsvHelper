@@ -16,6 +16,13 @@ To install CsvHelper, run the following command in the Package Manager Console
 
 http://joshclose.github.io/CsvHelper/
 
+### Building the Documentation
+
+1. Install [node.js](https://nodejs.org/en/download/) and [yarn](https://yarnpkg.com/en/docs/install)
+1. Go into the `CsvHelper/docs-src` folder.
+1. Run `yarn start` to start a local test site. Make any changes needed.
+1. Run `yarn build` to build the documentation files that are output to `CsvHelper/docs`.
+
 ## License
 
 Dual licensed

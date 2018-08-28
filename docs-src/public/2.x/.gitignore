@@ -1,0 +1,17 @@
+*_ReSharper*
+*.user
+*.suo
+*.dbmdl
+*.schemaview
+*[Bb]in/
+*[Oo]bj/
+*[Dd]ebug/
+*TestResults/
+packages/
+*[Ll]og.txt
+docs/Help
+NuGet/lib/
+NuGet/*.nupkg
+*crunch*
+.idea/
+.settings/

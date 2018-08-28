@@ -50,7 +50,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		public virtual Action<bool, string[], int, IReadingContext> HeaderValidated { get; set; } = ( isValid, headerNames, headerNameIndex, context ) =>
+		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ( isValid, headerNames, headerNameIndex, context ) =>
 		{
 			if( isValid )
 			{
@@ -72,7 +72,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		public virtual Action<string[], int, IReadingContext> MissingFieldFound { get; set; } = ( headerNames, index, context ) =>
+		public virtual Action<string[], int, ReadingContext> MissingFieldFound { get; set; } = ( headerNames, index, context ) =>
 		{
 			var messagePostfix = $"You can ignore missing fields by setting {nameof( MissingFieldFound )} to null.";
 
@@ -91,7 +91,7 @@ namespace CsvHelper.Configuration
 		/// instead of throwing an exception.
 		/// Arguments: context
 		/// </summary>
-		public virtual Action<IReadingContext> BadDataFound { get; set; } = context =>
+		public virtual Action<ReadingContext> BadDataFound { get; set; } = context =>
 		{
 			throw new BadDataException( context, $"You can ignore bad data by setting {nameof( BadDataFound )} to null." );
 		};
@@ -355,7 +355,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if quotes should be
-		/// ingored when parsing and treated like any other character.
+		/// ignored when parsing and treated like any other character.
 		/// </summary>
 		public virtual bool IgnoreQuotes { get; set; }
 

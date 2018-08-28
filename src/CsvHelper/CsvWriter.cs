@@ -30,14 +30,14 @@ namespace CsvHelper
 	public class CsvWriter : IWriter
 	{
 		private readonly RecordManager recordManager;
-		private IWritingContext context;
+		private WritingContext context;
 		private bool disposed;
 		private ISerializer serializer;
 
 		/// <summary>
 		/// Gets the writing context.
 		/// </summary>
-		public virtual IWritingContext Context => context;
+		public virtual WritingContext Context => context;
 
 		/// <summary>
 		/// Gets the configuration.
@@ -54,7 +54,7 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
+		/// <param name="leaveOpen">true to leave the writer open after the CsvWriter object is disposed, otherwise false.</param>
 		public CsvWriter( TextWriter writer, bool leaveOpen ) : this( new CsvSerializer( writer, new Configuration.Configuration(), leaveOpen ) ) { }
 
 		/// <summary>
@@ -65,13 +65,21 @@ namespace CsvHelper
 		public CsvWriter( TextWriter writer, Configuration.Configuration configuration ) : this( new CsvSerializer( writer, configuration, false ) ) { }
 
 		/// <summary>
+		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
+		/// </summary>
+		/// <param name="writer">The <see cref="StreamWriter"/> use to write the CSV file.</param>
+		/// <param name="configuration">The configuration.</param>
+		/// <param name="leaveOpen">true to leave the writer open after the CsvWriter object is disposed, otherwise false.</param>
+		public CsvWriter( TextWriter writer, Configuration.Configuration configuration, bool leaveOpen ) : this( new CsvSerializer( writer, configuration, leaveOpen ) ) { }
+
+		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="ISerializer"/>.
 		/// </summary>
 		/// <param name="serializer">The serializer.</param>
 		public CsvWriter( ISerializer serializer )
 		{
 			this.serializer = serializer ?? throw new ArgumentNullException( nameof( serializer ) );
-			context = serializer.Context as IWritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( IWritingContext )}." );
+			context = serializer.Context as WritingContext ?? throw new InvalidOperationException( $"For {nameof( ISerializer )} to be used in {nameof( CsvWriter )}, {nameof( ISerializer.Context )} must also implement {nameof( WritingContext )}." );
 			recordManager = ObjectResolver.Current.Resolve<RecordManager>( this );
 		}
 
@@ -228,7 +236,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual async Task FlushAsync()
 		{
-			await serializer.WriteAsync( context.Record.ToArray() );
+			await serializer.WriteAsync( context.Record.ToArray() ).ConfigureAwait(false);
 			context.Record.Clear();
 		}
 
@@ -260,8 +268,8 @@ namespace CsvHelper
 		{
 			try
 			{
-				await FlushAsync();
-				await serializer.WriteLineAsync();
+				await FlushAsync().ConfigureAwait(false);
+				await serializer.WriteLineAsync().ConfigureAwait(false);
 				context.Row++;
 			}
 			catch( Exception ex )
@@ -573,7 +581,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( !context.LeaveOpen );
+			Dispose( !context?.LeaveOpen ?? true );
 			GC.SuppressFinalize( this );
 		}
 

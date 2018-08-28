@@ -52,17 +52,15 @@ namespace CsvHelper.Expressions
 			}
 			else
 			{
-				var bindings = new List<MemberBinding>();
-				ExpressionManager.CreateMemberBindingsForMapping( map, recordType, bindings );
+				var assignments = new List<MemberAssignment>();
+				ExpressionManager.CreateMemberAssignmentsForMapping( map, assignments );
 
-				if( bindings.Count == 0 )
+				if( assignments.Count == 0 )
 				{
 					throw new ReaderException( Reader.Context, $"No members are mapped for type '{recordType.FullName}'." );
 				}
 
-				// This is in case an IContractResolver is being used.
-				var type = ReflectionHelper.CreateInstance( recordType ).GetType();
-				body = Expression.MemberInit( Expression.New( type ), bindings );
+				body = ExpressionManager.CreateInstanceAndAssignMembers( recordType, assignments );
 			}
 
 			var funcType = typeof( Func<> ).MakeGenericType( recordType );
@@ -92,13 +90,10 @@ namespace CsvHelper.Expressions
 				{
 					// Reference type.
 
-					var referenceBindings = new List<MemberBinding>();
-					ExpressionManager.CreateMemberBindingsForMapping( parameterMap.ReferenceMap.Data.Mapping, parameterMap.ReferenceMap.Data.Parameter.ParameterType, referenceBindings );
+					var referenceAssignments = new List<MemberAssignment>();
+					ExpressionManager.CreateMemberAssignmentsForMapping( parameterMap.ReferenceMap.Data.Mapping, referenceAssignments );
 
-					// This is in case an IContractResolver is being used.
-					var type = ReflectionHelper.CreateInstance( parameterMap.ReferenceMap.Data.Parameter.ParameterType ).GetType();
-					var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
-
+					var referenceBody = ExpressionManager.CreateInstanceAndAssignMembers( parameterMap.ReferenceMap.Data.Parameter.ParameterType, referenceAssignments );
 					argumentExpressions.Add( referenceBody );
 				}
 				else

@@ -27,7 +27,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		Action<bool, string[], int, IReadingContext> HeaderValidated { get; set; }
+		Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		Action<string[], int, IReadingContext> MissingFieldFound { get; set; }
+		Action<string[], int, ReadingContext> MissingFieldFound { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a reading exception occurs.
@@ -79,6 +79,13 @@ namespace CsvHelper.Configuration
 		/// Chooses the constructor to use for constuctor mapping.
 		/// </summary>
 		Func<Type, ConstructorInfo> GetConstructor { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether references
+		/// should be ignored when auto mapping. True to ignore
+		/// references, otherwise false. Default is false.
+		/// </summary>
+		bool IgnoreReferences { get; set; }
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to
