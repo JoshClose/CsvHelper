@@ -97,6 +97,13 @@ namespace CsvHelper.Configuration
 		bool HasHeaderRecord { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating whether references
+		/// should be ignored when auto mapping. True to ignore
+		/// references, otherwise false. Default is false.
+		/// </summary>
+		bool IgnoreReferences { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if private
 		/// member should be read from and written to.
 		/// True to include private member, otherwise false. Default is false.

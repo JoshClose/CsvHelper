@@ -1,0 +1,8 @@
+docs/
+docs-src/
+lib/
+logo/
+
+*.bat
+*.linq
+*.markdown

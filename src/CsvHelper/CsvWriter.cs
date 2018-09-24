@@ -236,7 +236,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual async Task FlushAsync()
 		{
-			await serializer.WriteAsync( context.Record.ToArray() );
+			await serializer.WriteAsync( context.Record.ToArray() ).ConfigureAwait(false);
 			context.Record.Clear();
 		}
 
@@ -268,8 +268,8 @@ namespace CsvHelper
 		{
 			try
 			{
-				await FlushAsync();
-				await serializer.WriteLineAsync();
+				await FlushAsync().ConfigureAwait(false);
+				await serializer.WriteLineAsync().ConfigureAwait(false);
 				context.Row++;
 			}
 			catch( Exception ex )
@@ -581,7 +581,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( !context.LeaveOpen );
+			Dispose( !context?.LeaveOpen ?? true );
 			GC.SuppressFinalize( this );
 		}
 

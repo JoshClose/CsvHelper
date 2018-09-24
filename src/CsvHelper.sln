@@ -5,15 +5,14 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6445B2A3-9E05-4ABF-AE2E-C875773B277A}"
 	ProjectSection(SolutionItems) = preProject
+		..\.fossa.yml = ..\.fossa.yml
+		..\.fossaignore = ..\.fossaignore
 		..\.gitignore = ..\.gitignore
+		..\Fossa Build.bat = ..\Fossa Build.bat
 		..\Pack NuGet Packages.bat = ..\Pack NuGet Packages.bat
 		..\Push NuGet Packages.bat = ..\Push NuGet Packages.bat
 		..\README.markdown = ..\README.markdown
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3EBB2EEF-29C1-48E4-8416-D7FFDE004AA2}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.targets = .nuget\NuGet.targets
+		..\Unity Build.bat = ..\Unity Build.bat
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper", "CsvHelper\CsvHelper.csproj", "{ECF9E2A8-3592-4DA4-9FAB-BFA56AD44B9C}"
@@ -23,9 +22,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Performance", "CsvHelper.Performance\CsvHelper.Performance.csproj", "{9DC1A5EB-4E87-4449-B5B2-241ACD5121E1}"
 EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM
@@ -105,6 +101,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7F48D3EE-214D-45F4-AC6A-3E95C3A25E9F}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

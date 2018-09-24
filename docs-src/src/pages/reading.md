@@ -27,7 +27,7 @@ var records = csv.GetRecords( typeof( MyClass ) );
 var records = csv.GetRecords<dynamic>();
 
 // Using anonymous type for the class definition
-var anonymousTypeDefinition =
+var anonymousTypeDefinition = new
 {
 	Id = default( int ),
 	Name = string.Empty,

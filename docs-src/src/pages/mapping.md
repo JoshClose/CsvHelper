@@ -118,7 +118,7 @@ Specifies the zero-based index of the header name if the header name appears in 
 id,name,id
 
 // Mapping
-Map( m => m.Id ).Name( "id" ).Index( 1 );
+Map( m => m.Id ).Name( "id" ).NameIndex( 1 );
 ```
 
 ### Index
