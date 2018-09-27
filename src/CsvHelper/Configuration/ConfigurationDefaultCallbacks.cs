@@ -45,8 +45,9 @@ namespace CsvHelper.Configuration
 		/// <summary>Always re-throws exceptions wrapped in a new <c>CsvHelperException</c>.</summary>
 		public static void ReadingExceptionOccurred(CsvHelperException exception)
 		{
-			// Don't simply `throw exception` because it erases the stack trace. Re-throw it by wrapping it in another exception:
-			throw new CsvHelperException( "Exception caught by " + nameof(ReadingExceptionOccurred) + " was unhandled.", exception );
+			// TODO: Don't simply `throw exception` because it erases the stack trace. Re-throw it by wrapping it in another exception:
+			//throw new CsvHelperException( "Exception caught by " + nameof(ReadingExceptionOccurred) + " was unhandled.", exception );
+			throw exception;
 		}
 
 		/// <summary>Always returns <c>false</c>.</summary>
