@@ -22,6 +22,7 @@ namespace CsvHelper.Tests.Reading
 			using( var csv = new CsvReader( reader ) )
 			{
 				csv.Configuration.IgnoreBlankLines = false;
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<Int32?>().NullValues.Add( string.Empty );
 
 				// Read header row, assert header row columns:
 				{
@@ -62,6 +63,7 @@ namespace CsvHelper.Tests.Reading
 			using( var csv = new CsvReader( reader ) )
 			{
 				csv.Configuration.IgnoreBlankLines = false;
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<Int32?>().NullValues.Add( string.Empty );
 
 				// Read header row, assert header row columns:
 				{
@@ -131,6 +133,7 @@ namespace CsvHelper.Tests.Reading
 			using( var csv = new CsvReader( reader ) )
 			{
 				csv.Configuration.IgnoreBlankLines = false;
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( string.Empty ); // Read empty fields as nulls instead of `""`.
 
 				// Read header row, assert header row columns:
 				{
@@ -234,8 +237,8 @@ namespace CsvHelper.Tests.Reading
 						String strByIndex = csv.GetField<string>( index: 1 );
 						String strByName  = csv.GetField<string>( name: "NullableStringField" );
 
-						Assert.IsNull( strByIndex );
-						Assert.IsNull( strByName  );
+						Assert.AreEqual( "Bar", strByIndex );
+						Assert.AreEqual( "Bar", strByName  );
 					}
 				}
 
