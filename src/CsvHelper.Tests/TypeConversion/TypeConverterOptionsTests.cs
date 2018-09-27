@@ -80,6 +80,47 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
+		[TestMethod]
+		public void NullValueTest()
+		{
+			const string input =
+				( "NULL,\"row0-col1\",\"row0-col2\"" + "\r\n" ) +
+				( "\"row1-col0\",NULL,\"row1-col2\"" + "\r\n" ) +
+				( "\"row2-col0\",\"row2-col1\",NULL" + "\r\n" );
+
+			using( var reader = new StringReader( input ) )
+			using( var csv = new CsvReader( reader ) )
+			{
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( "NULL" );
+				
+				// Row 0:
+				Assert.IsTrue  ( csv.Read() );
+				Assert.AreEqual( 3, csv.Context.Record.Length );
+
+				Assert.IsNull  (              csv.GetField<string>( 0 ) );
+				Assert.AreEqual( "row0-col1", csv.GetField<string>( 1 ) );
+				Assert.AreEqual( "row0-col2", csv.GetField<string>( 2 ) );
+				
+
+				// Row 1:
+				Assert.IsTrue  ( csv.Read() );
+				Assert.AreEqual( 3, csv.Context.Record.Length );
+
+				Assert.AreEqual( "row1-col0", csv.GetField<string>( 0 ) );
+				Assert.IsNull  (              csv.GetField<string>( 1 ) );
+				Assert.AreEqual( "row1-col2", csv.GetField<string>( 2 ) );
+
+				// Row 2:
+				Assert.IsTrue  ( csv.Read() );
+				Assert.AreEqual( 3, csv.Context.Record.Length );
+
+				Assert.AreEqual( "row2-col0", csv.GetField<string>( 0 ) );
+				Assert.AreEqual( "row2-col1", csv.GetField<string>( 1 ) );
+				Assert.IsNull  (              csv.GetField<string>( 2 ) );
+			}
+		}
+
 		private class Test
 		{
 			public int? Id { get; set; }
