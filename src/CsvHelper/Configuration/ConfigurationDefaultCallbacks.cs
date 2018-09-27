@@ -42,12 +42,16 @@ namespace CsvHelper.Configuration
 			throw new BadDataException( context, $"You can ignore bad data by setting {nameof( BadDataFound )} to null." );
 		}
 
-		/// <summary>Always re-throws exceptions wrapped in a new <c>CsvHelperException</c>.</summary>
+		/// <summary>Always re-throws the <paramref name="exception"/> value. Note this will erase the original <c>StackTrace</c> property value.</summary>
 		public static void ReadingExceptionOccurred(CsvHelperException exception)
 		{
-			// TODO: Don't simply `throw exception` because it erases the stack trace. Re-throw it by wrapping it in another exception:
-			//throw new CsvHelperException( "Exception caught by " + nameof(ReadingExceptionOccurred) + " was unhandled.", exception );
 			throw exception;
+		}
+
+		/// <summary>Always throws a new <c>CsvHelperException</c> that wraps the <paramref name="exception"/> value as the <c>InnerException</c>.</summary>
+		public static void WrapReadingExceptionOccurred(CsvHelperException exception)
+		{
+			throw new CsvHelperException( "Exception caught by " + nameof(ReadingExceptionOccurred) + " was unhandled.", exception );
 		}
 
 		/// <summary>Always returns <c>false</c>.</summary>
