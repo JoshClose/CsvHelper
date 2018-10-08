@@ -251,7 +251,7 @@ csv.Configuration.MissingFieldFound = null;
 // Log missing field.
 csv.Configuration.MissingFieldFound = ( headerNames, index, context ) =>
 {
-	logger.WriteLine( $"Field with names ['{string.Join( "', '", headerNames )}'] at index '{index}' was not found. );
+	logger.WriteLine( $"Field with names ['{string.Join( "', '", headerNames )}'] at index '{index}' was not found." );
 };
 ```
 
