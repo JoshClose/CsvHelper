@@ -3,11 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Text;
+
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -50,21 +49,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ( isValid, headerNames, headerNameIndex, context ) =>
-		{
-			if( isValid )
-			{
-				return;
-			}
-
-			var message =
-				$"Header matching ['{string.Join( "', '", headerNames )}'] names at index {headerNameIndex} was not found. " +
-				$"If you are expecting some headers to be missing and want to ignore this validation, " +
-				$"set the configuration {nameof( HeaderValidated )} to null. You can also change the " +
-				$"functionality to do something else, like logging the issue.";
-
-			throw new ValidationException( context, message );
-		};
+		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ConfigurationDefaultCallbacks.HeaderValidated;
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
@@ -72,17 +57,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		public virtual Action<string[], int, ReadingContext> MissingFieldFound { get; set; } = ( headerNames, index, context ) =>
-		{
-			var messagePostfix = $"You can ignore missing fields by setting {nameof( MissingFieldFound )} to null.";
-
-			if( headerNames != null && headerNames.Length > 0 )
-			{
-				throw new MissingFieldException( context, $"Field with names ['{string.Join( "', '", headerNames )}'] at index '{index}' does not exist. {messagePostfix}" );
-			}
-
-			throw new MissingFieldException( context, $"Field at index '{index}' does not exist. {messagePostfix}" );
-		};
+		public virtual Action<string[], int, ReadingContext> MissingFieldFound { get; set; } = ConfigurationDefaultCallbacks.MissingFieldFound;
 
 		/// <summary>
 		/// Gets or sets the function that is called when bad field data is found. A field
@@ -91,10 +66,7 @@ namespace CsvHelper.Configuration
 		/// instead of throwing an exception.
 		/// Arguments: context
 		/// </summary>
-		public virtual Action<ReadingContext> BadDataFound { get; set; } = context =>
-		{
-			throw new BadDataException( context, $"You can ignore bad data by setting {nameof( BadDataFound )} to null." );
-		};
+		public virtual Action<ReadingContext> BadDataFound { get; set; } = ConfigurationDefaultCallbacks.BadDataFound;
 
 		/// <summary>
 		/// Gets or sets the function that is called when a reading exception occurs.
@@ -103,13 +75,13 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		public virtual Action<CsvHelperException> ReadingExceptionOccurred { get; set; } = exception => throw exception;
+		public virtual Action<CsvHelperException> ReadingExceptionOccurred { get; set; } = ConfigurationDefaultCallbacks.ReadingExceptionOccurred;
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to
 		/// determine whether to skip the given record or not.
 		/// </summary>
-		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = record => false;
+		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = ConfigurationDefaultCallbacks.ShouldSkipRecord;
 
 		/// <summary>
 		/// Gets or sets a value indicating if fields should be sanitized
@@ -144,23 +116,18 @@ namespace CsvHelper.Configuration
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
-		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = header => header;
+		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = ConfigurationDefaultCallbacks.PrepareHeaderForMatch;
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
 		/// the class instead of the default constructor and members.
 		/// </summary>
-		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = type =>
-				!type.HasParameterlessConstructor()
-				&& type.HasConstructor()
-				&& !type.IsUserDefinedStruct()
-				&& !type.IsInterface
-				&& Type.GetTypeCode( type ) == TypeCode.Object;
+		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = ConfigurationDefaultCallbacks.ShouldUseConstructorParameters;
 
 		/// <summary>
 		/// Chooses the constructor to use for constuctor mapping.
 		/// </summary>
-		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = type => type.GetConstructorWithMostParameters();
+		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = ConfigurationDefaultCallbacks.GetConstructor;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether references
