@@ -18,11 +18,11 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Creates a new <see cref="MemberMap"/> instance using the specified member.
 		/// </summary>
-		public MemberMap( MemberInfo member )
+		public MemberMap(MemberInfo member)
 		{
-			TypeConverterOption = new MapTypeConverterOption( this );
+			TypeConverterOption = new MapTypeConverterOption(this);
 
-			Data = new MemberMapData( member );
+			Data = new MemberMapData(member);
 		}
 
 		/// <summary>
@@ -35,15 +35,15 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		public virtual new MemberMap<TClass, TMember> Name( params string[] names )
+		public virtual new MemberMap<TClass, TMember> Name(params string[] names)
 		{
-			if( names == null || names.Length == 0 )
+			if (names == null || names.Length == 0)
 			{
-				throw new ArgumentNullException( nameof( names ) );
+				throw new ArgumentNullException(nameof(names));
 			}
 
 			Data.Names.Clear();
-			Data.Names.AddRange( names );
+			Data.Names.AddRange(names);
 			Data.IsNameSet = true;
 
 			return this;
@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		public virtual new MemberMap<TClass, TMember> NameIndex( int index )
+		public virtual new MemberMap<TClass, TMember> NameIndex(int index)
 		{
 			Data.NameIndex = index;
 
@@ -70,7 +70,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
 		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> member.</param>
-		public virtual new MemberMap<TClass, TMember> Index( int index, int indexEnd = -1 )
+		public virtual new MemberMap<TClass, TMember> Index(int index, int indexEnd = -1)
 		{
 			Data.Index = index;
 			Data.IsIndexSet = true;
@@ -101,7 +101,7 @@ namespace CsvHelper.Configuration
 		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
-		public virtual new MemberMap<TClass, TMember> Ignore( bool ignore )
+		public virtual new MemberMap<TClass, TMember> Ignore(bool ignore)
 		{
 			Data.Ignore = ignore;
 
@@ -113,7 +113,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual MemberMap<TClass, TMember> Default( TMember defaultValue )
+		public virtual MemberMap<TClass, TMember> Default(TMember defaultValue)
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -128,7 +128,7 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual new MemberMap<TClass, TMember> Default( string defaultValue )
+		public virtual new MemberMap<TClass, TMember> Default(string defaultValue)
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
@@ -142,7 +142,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual MemberMap<TClass, TMember> Constant( TMember constantValue )
+		public virtual MemberMap<TClass, TMember> Constant(TMember constantValue)
 		{
 			Data.Constant = constantValue;
 			Data.IsConstantSet = true;
@@ -155,7 +155,7 @@ namespace CsvHelper.Configuration
 		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		public virtual new MemberMap<TClass, TMember> TypeConverter( ITypeConverter typeConverter )
+		public virtual new MemberMap<TClass, TMember> TypeConverter(ITypeConverter typeConverter)
 		{
 			Data.TypeConverter = typeConverter;
 
@@ -170,7 +170,7 @@ namespace CsvHelper.Configuration
 		/// <see cref="TypeConverter"/> to use.</typeparam>
 		public virtual new MemberMap<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
-			TypeConverter( ReflectionHelper.CreateInstance<TConverter>() );
+			TypeConverter(ReflectionHelper.CreateInstance<TConverter>());
 
 			return this;
 		}
@@ -180,9 +180,9 @@ namespace CsvHelper.Configuration
 		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual MemberMap<TClass, TMember> ConvertUsing( Func<IReaderRow, TMember> convertExpression )
+		public virtual MemberMap<TClass, TMember> ConvertUsing(Func<IReaderRow, TMember> convertExpression)
 		{
-			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TMember>>)( x => convertExpression( x ) );
+			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TMember>>)(x => convertExpression(x));
 
 			return this;
 		}
@@ -192,9 +192,19 @@ namespace CsvHelper.Configuration
 		/// to a field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		public virtual MemberMap<TClass, TMember> ConvertUsing( Func<TClass, string> convertExpression )
+		public virtual MemberMap<TClass, TMember> ConvertUsing(Func<TClass, string> convertExpression)
 		{
-			Data.WritingConvertExpression = (Expression<Func<TClass, string>>)( x => convertExpression( x ) );
+			Data.WritingConvertExpression = (Expression<Func<TClass, string>>)(x => convertExpression(x));
+
+			return this;
+		}
+
+		/// <summary>
+		/// Ignore the member when reading if no matching field name can be found.
+		/// </summary>
+		public virtual MemberMap<TClass, TMember> Optional()
+		{
+			Data.IsOptional = true;
 
 			return this;
 		}
@@ -203,9 +213,9 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-		public virtual new MemberMap<TClass, TMember> Validate( Func<string, bool> validateExpression )
+		public virtual new MemberMap<TClass, TMember> Validate(Func<string, bool> validateExpression)
 		{
-			Data.ValidateExpression = (Expression<Func<string, bool>>)( x => validateExpression( x ) );
+			Data.ValidateExpression = (Expression<Func<string, bool>>)(x => validateExpression(x));
 
 			return this;
 		}

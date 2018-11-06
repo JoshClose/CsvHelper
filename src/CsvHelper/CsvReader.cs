@@ -47,14 +47,14 @@ namespace CsvHelper
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public CsvReader( TextReader reader ) : this( new CsvParser( reader, new Configuration.Configuration(), false ) ) { }
+		public CsvReader(TextReader reader) : this(new CsvParser(reader, new Configuration.Configuration(), false)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader( TextReader reader, bool leaveOpen ) : this( new CsvParser( reader, new Configuration.Configuration(), leaveOpen ) ) { }
+		public CsvReader(TextReader reader, bool leaveOpen) : this(new CsvParser(reader, new Configuration.Configuration(), leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
@@ -62,7 +62,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvReader( TextReader reader, Configuration.Configuration configuration ) : this( new CsvParser( reader, configuration, false ) ) { }
+		public CsvReader(TextReader reader, Configuration.Configuration configuration) : this(new CsvParser(reader, configuration, false)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
@@ -70,16 +70,16 @@ namespace CsvHelper
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader( TextReader reader, Configuration.Configuration configuration, bool leaveOpen ) : this( new CsvParser( reader, configuration, leaveOpen ) ) { }
+		public CsvReader(TextReader reader, Configuration.Configuration configuration, bool leaveOpen) : this(new CsvParser(reader, configuration, leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="IParser" />.
 		/// </summary>
 		/// <param name="parser">The <see cref="IParser" /> used to parse the CSV file.</param>
-		public CsvReader( IParser parser )
+		public CsvReader(IParser parser)
 		{
-			this.parser = parser ?? throw new ArgumentNullException( nameof( parser ) );
-			context = parser.Context as ReadingContext ?? throw new InvalidOperationException( $"For {nameof( IParser )} to be used in {nameof( CsvReader )}, {nameof( IParser.Context )} must also implement {nameof( ReadingContext )}." );
+			this.parser = parser ?? throw new ArgumentNullException(nameof(parser));
+			context = parser.Context as ReadingContext ?? throw new InvalidOperationException($"For {nameof(IParser)} to be used in {nameof(CsvReader)}, {nameof(IParser.Context)} must also implement {nameof(ReadingContext)}.");
 			recordManager = new Lazy<RecordManager>(() => ObjectResolver.Current.Resolve<RecordManager>(this));
 		}
 
@@ -89,9 +89,9 @@ namespace CsvHelper
 		/// <returns>True if there are more records, otherwise false.</returns>
 		public virtual bool ReadHeader()
 		{
-			if( !context.ReaderConfiguration.HasHeaderRecord )
+			if (!context.ReaderConfiguration.HasHeaderRecord)
 			{
-				throw new ReaderException( context, "Configuration.HasHeaderRecord is false." );
+				throw new ReaderException(context, "Configuration.HasHeaderRecord is false.");
 			}
 
 			context.HeaderRecord = context.Record;
@@ -107,7 +107,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The type to validate the header against.</typeparam>
 		public virtual void ValidateHeader<T>()
 		{
-			ValidateHeader( typeof( T ) );
+			ValidateHeader(typeof(T));
 		}
 
 		/// <summary>
@@ -115,77 +115,78 @@ namespace CsvHelper
 		/// If the header is not valid, a <see cref="ValidationException"/> will be thrown.
 		/// </summary>
 		/// <param name="type">The type to validate the header against.</param>
-		public virtual void ValidateHeader( Type type )
+		public virtual void ValidateHeader(Type type)
 		{
-			if( Configuration.HasHeaderRecord == false )
+			if (Configuration.HasHeaderRecord == false)
 			{
-				throw new InvalidOperationException( $"Validation can't be performed on a the header if no header exists. {nameof( Configuration.HasHeaderRecord )} can't be false." );
+				throw new InvalidOperationException($"Validation can't be performed on a the header if no header exists. {nameof(Configuration.HasHeaderRecord)} can't be false.");
 			}
 
 			CheckHasBeenRead();
 
-			if( context.HeaderRecord == null )
+			if (context.HeaderRecord == null)
 			{
-				throw new InvalidOperationException( $"The header must be read before it can be validated." );
+				throw new InvalidOperationException($"The header must be read before it can be validated.");
 			}
 
-			if( context.ReaderConfiguration.Maps[type] == null )
+			if (context.ReaderConfiguration.Maps[type] == null)
 			{
-				context.ReaderConfiguration.Maps.Add( context.ReaderConfiguration.AutoMap( type ) );
+				context.ReaderConfiguration.Maps.Add(context.ReaderConfiguration.AutoMap(type));
 			}
 
 			var map = context.ReaderConfiguration.Maps[type];
-			ValidateHeader( map );
+			ValidateHeader(map);
 		}
 
 		/// <summary>
 		/// Validates the header against the given map.
 		/// </summary>
 		/// <param name="map">The map to validate against.</param>
-		protected virtual void ValidateHeader( ClassMap map )
+		protected virtual void ValidateHeader(ClassMap map)
 		{
-			foreach( var parameter in map.ParameterMaps )
+			foreach (var parameter in map.ParameterMaps)
 			{
-				if( parameter.ConstructorTypeMap != null )
+				if (parameter.ConstructorTypeMap != null)
 				{
-					ValidateHeader( parameter.ConstructorTypeMap );
+					ValidateHeader(parameter.ConstructorTypeMap);
 				}
-				else if( parameter.ReferenceMap != null )
+				else if (parameter.ReferenceMap != null)
 				{
-					ValidateHeader( parameter.ReferenceMap.Data.Mapping );
+					ValidateHeader(parameter.ReferenceMap.Data.Mapping);
 				}
 				else
 				{
-					var index = GetFieldIndex( parameter.Data.Name, 0, true );
-					Configuration.HeaderValidated?.Invoke( index != -1, new[] { parameter.Data.Name }, 0, context );
+					var index = GetFieldIndex(parameter.Data.Name, 0, true);
+					Configuration.HeaderValidated?.Invoke(index != -1, new[] { parameter.Data.Name }, 0, context);
 				}
 			}
 
-			foreach( var memberMap in map.MemberMaps )
+			foreach (var memberMap in map.MemberMaps)
 			{
-				if( memberMap.Data.Ignore || !CanRead( memberMap ) )
+				if (memberMap.Data.Ignore || !CanRead(memberMap))
 				{
 					continue;
 				}
 
-				if( memberMap.Data.ReadingConvertExpression != null || memberMap.Data.IsConstantSet )
+				if (memberMap.Data.ReadingConvertExpression != null || memberMap.Data.IsConstantSet)
 				{
 					// If ConvertUsing and Constant don't require a header.
 					continue;
 				}
 
-				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
-				Configuration.HeaderValidated?.Invoke( index != -1, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
+				var index = GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true);
+				var isValid = index != -1 || memberMap.Data.IsOptional;
+				Configuration.HeaderValidated?.Invoke(isValid, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context);
 			}
 
-			foreach( var referenceMap in map.ReferenceMaps )
+			foreach (var referenceMap in map.ReferenceMaps)
 			{
-				if( !CanRead( referenceMap ) )
+				if (!CanRead(referenceMap))
 				{
 					continue;
 				}
 
-				ValidateHeader( referenceMap.Data.Mapping );
+				ValidateHeader(referenceMap.Data.Mapping);
 			}
 		}
 
@@ -203,18 +204,18 @@ namespace CsvHelper
 			{
 				context.Record = parser.Read();
 			}
-			while( context.Record != null && Configuration.ShouldSkipRecord( context.Record ) );
+			while (context.Record != null && Configuration.ShouldSkipRecord(context.Record));
 
 			context.CurrentIndex = -1;
 			context.HasBeenRead = true;
 
-			if( context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null )
+			if (context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null)
 			{
-				if( context.ColumnCount > 0 && context.ColumnCount != context.Record.Length )
+				if (context.ColumnCount > 0 && context.ColumnCount != context.Record.Length)
 				{
-					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
+					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException);
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -235,18 +236,18 @@ namespace CsvHelper
 			{
 				context.Record = await parser.ReadAsync();
 			}
-			while( Configuration.ShouldSkipRecord( context.Record ) );
+			while (Configuration.ShouldSkipRecord(context.Record));
 
 			context.CurrentIndex = -1;
 			context.HasBeenRead = true;
 
-			if( context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null )
+			if (context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null)
 			{
-				if( context.ColumnCount > 0 && context.ColumnCount != context.Record.Length )
+				if (context.ColumnCount > 0 && context.ColumnCount != context.Record.Length)
 				{
-					var csvException = new BadDataException( context, "An inconsistent number of columns has been detected." );
+					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException);
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -266,7 +267,7 @@ namespace CsvHelper
 			{
 				CheckHasBeenRead();
 
-				return GetField( index );
+				return GetField(index);
 			}
 		}
 
@@ -281,7 +282,7 @@ namespace CsvHelper
 			{
 				CheckHasBeenRead();
 
-				return GetField( name );
+				return GetField(name);
 			}
 		}
 
@@ -297,7 +298,7 @@ namespace CsvHelper
 			{
 				CheckHasBeenRead();
 
-				return GetField( name, index );
+				return GetField(name, index);
 			}
 		}
 
@@ -306,7 +307,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="index">The zero based index of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string GetField( int index )
+		public virtual string GetField(int index)
 		{
 			CheckHasBeenRead();
 
@@ -315,14 +316,14 @@ namespace CsvHelper
 			// when reading records.
 			context.CurrentIndex = index;
 
-			if( index >= context.Record.Length || index < 0 )
+			if (index >= context.Record.Length || index < 0)
 			{
-				if( context.ReaderConfiguration.IgnoreBlankLines )
+				if (context.ReaderConfiguration.IgnoreBlankLines)
 				{
-					context.ReaderConfiguration.MissingFieldFound?.Invoke( null, index, context );
+					context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 				}
 
-				return default( string );
+				return default(string);
 			}
 
 			var field = context.Record[index];
@@ -335,17 +336,17 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string GetField( string name )
+		public virtual string GetField(string name)
 		{
 			CheckHasBeenRead();
 
-			var index = GetFieldIndex( name );
-			if( index < 0 )
+			var index = GetFieldIndex(name);
+			if (index < 0)
 			{
 				return null;
 			}
 
-			return GetField( index );
+			return GetField(index);
 		}
 
 		/// <summary>
@@ -356,17 +357,17 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <returns>The raw field.</returns>
-		public virtual string GetField( string name, int index )
+		public virtual string GetField(string name, int index)
 		{
 			CheckHasBeenRead();
 
-			var fieldIndex = GetFieldIndex( name, index );
-			if( fieldIndex < 0 )
+			var fieldIndex = GetFieldIndex(name, index);
+			if (fieldIndex < 0)
 			{
 				return null;
 			}
 
-			return GetField( fieldIndex );
+			return GetField(fieldIndex);
 		}
 
 		/// <summary>
@@ -376,12 +377,12 @@ namespace CsvHelper
 		/// <param name="type">The type of the field.</param>
 		/// <param name="index">The index of the field.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		public virtual object GetField( Type type, int index )
+		public virtual object GetField(Type type, int index)
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterCache.GetConverter( type );
-			return GetField( type, index, converter );
+			var converter = Configuration.TypeConverterCache.GetConverter(type);
+			return GetField(type, index, converter);
 		}
 
 		/// <summary>
@@ -391,12 +392,12 @@ namespace CsvHelper
 		/// <param name="type">The type of the field.</param>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		public virtual object GetField( Type type, string name )
+		public virtual object GetField(Type type, string name)
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterCache.GetConverter( type );
-			return GetField( type, name, converter );
+			var converter = Configuration.TypeConverterCache.GetConverter(type);
+			return GetField(type, name, converter);
 		}
 
 		/// <summary>
@@ -407,12 +408,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		public virtual object GetField( Type type, string name, int index )
+		public virtual object GetField(Type type, string name, int index)
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterCache.GetConverter( type );
-			return GetField( type, name, index, converter );
+			var converter = Configuration.TypeConverterCache.GetConverter(type);
+			return GetField(type, name, index, converter);
 		}
 
 		/// <summary>
@@ -423,22 +424,22 @@ namespace CsvHelper
 		/// <param name="index">The index of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		public virtual object GetField( Type type, int index, ITypeConverter converter )
+		public virtual object GetField(Type type, int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
 			context.ReusableMemberMapData.Index = index;
 			context.ReusableMemberMapData.TypeConverter = converter;
-			if( !context.TypeConverterOptionsCache.TryGetValue( type, out TypeConverterOptions typeConverterOptions ) )
+			if (!context.TypeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
 			{
-				typeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions { CultureInfo = context.ReaderConfiguration.CultureInfo }, context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions( type ) );
-				context.TypeConverterOptionsCache.Add( type, typeConverterOptions );
+				typeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = context.ReaderConfiguration.CultureInfo }, context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(type));
+				context.TypeConverterOptionsCache.Add(type, typeConverterOptions);
 			}
 
 			context.ReusableMemberMapData.TypeConverterOptions = typeConverterOptions;
 
-			var field = GetField( index );
-			return converter.ConvertFromString( field, this, context.ReusableMemberMapData );
+			var field = GetField(index);
+			return converter.ConvertFromString(field, this, context.ReusableMemberMapData);
 		}
 
 		/// <summary>
@@ -449,12 +450,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		public virtual object GetField( Type type, string name, ITypeConverter converter )
+		public virtual object GetField(Type type, string name, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
-			var index = GetFieldIndex( name );
-			return GetField( type, index, converter );
+			var index = GetFieldIndex(name);
+			return GetField(type, index, converter);
 		}
 
 		/// <summary>
@@ -466,12 +467,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
 		/// <returns>The field converted to <see cref="Object"/>.</returns>
-		public virtual object GetField( Type type, string name, int index, ITypeConverter converter )
+		public virtual object GetField(Type type, string name, int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
-			var fieldIndex = GetFieldIndex( name, index );
-			return GetField( type, fieldIndex, converter );
+			var fieldIndex = GetFieldIndex(name, index);
+			return GetField(type, fieldIndex, converter);
 		}
 
 		/// <summary>
@@ -480,12 +481,12 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="System.Type"/> of the field.</typeparam>
 		/// <param name="index">The zero based index of the field.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T>( int index )
+		public virtual T GetField<T>(int index)
 		{
 			CheckHasBeenRead();
 
 			var converter = Configuration.TypeConverterCache.GetConverter<T>();
-			return GetField<T>( index, converter );
+			return GetField<T>(index, converter);
 		}
 
 		/// <summary>
@@ -494,12 +495,12 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="System.Type"/> of the field.</typeparam>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T>( string name )
+		public virtual T GetField<T>(string name)
 		{
 			CheckHasBeenRead();
 
 			var converter = Configuration.TypeConverterCache.GetConverter<T>();
-			return GetField<T>( name, converter );
+			return GetField<T>(name, converter);
 		}
 
 		/// <summary>
@@ -511,12 +512,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <returns></returns>
-		public virtual T GetField<T>( string name, int index )
+		public virtual T GetField<T>(string name, int index)
 		{
 			CheckHasBeenRead();
 
 			var converter = Configuration.TypeConverterCache.GetConverter<T>();
-			return GetField<T>( name, index, converter );
+			return GetField<T>(name, index, converter);
 		}
 
 		/// <summary>
@@ -527,19 +528,19 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T>( int index, ITypeConverter converter )
+		public virtual T GetField<T>(int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
-			if( index >= context.Record.Length || index < 0 )
+			if (index >= context.Record.Length || index < 0)
 			{
 				context.CurrentIndex = index;
-				context.ReaderConfiguration.MissingFieldFound?.Invoke( null, index, context );
+				context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 
-				return default( T );
+				return default(T);
 			}
 
-			return (T)GetField( typeof( T ), index, converter );
+			return (T)GetField(typeof(T), index, converter);
 		}
 
 		/// <summary>
@@ -550,12 +551,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T>( string name, ITypeConverter converter )
+		public virtual T GetField<T>(string name, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
-			var index = GetFieldIndex( name );
-			return GetField<T>( index, converter );
+			var index = GetFieldIndex(name);
+			return GetField<T>(index, converter);
 		}
 
 		/// <summary>
@@ -568,12 +569,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T>( string name, int index, ITypeConverter converter )
+		public virtual T GetField<T>(string name, int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
-			var fieldIndex = GetFieldIndex( name, index );
-			return GetField<T>( fieldIndex, converter );
+			var fieldIndex = GetFieldIndex(name, index);
+			return GetField<T>(fieldIndex, converter);
 		}
 
 		/// <summary>
@@ -584,12 +585,12 @@ namespace CsvHelper
 		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</typeparam>
 		/// <param name="index">The zero based index of the field.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T, TConverter>( int index ) where TConverter : ITypeConverter
+		public virtual T GetField<T, TConverter>(int index) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
 			var converter = ReflectionHelper.CreateInstance<TConverter>();
-			return GetField<T>( index, converter );
+			return GetField<T>(index, converter);
 		}
 
 		/// <summary>
@@ -600,12 +601,12 @@ namespace CsvHelper
 		/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</typeparam>
 		/// <param name="name">The named index of the field.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T, TConverter>( string name ) where TConverter : ITypeConverter
+		public virtual T GetField<T, TConverter>(string name) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
 			var converter = ReflectionHelper.CreateInstance<TConverter>();
-			return GetField<T>( name, converter );
+			return GetField<T>(name, converter);
 		}
 
 		/// <summary>
@@ -618,12 +619,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <returns>The field converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetField<T, TConverter>( string name, int index ) where TConverter : ITypeConverter
+		public virtual T GetField<T, TConverter>(string name, int index) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
 			var converter = ReflectionHelper.CreateInstance<TConverter>();
-			return GetField<T>( name, index, converter );
+			return GetField<T>(name, index, converter);
 		}
 
 		/// <summary>
@@ -633,12 +634,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the field.</param>
 		/// <param name="field">The field converted to type T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( Type type, int index, out object field )
+		public virtual bool TryGetField(Type type, int index, out object field)
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterCache.GetConverter( type );
-			return TryGetField( type, index, converter, out field );
+			var converter = Configuration.TypeConverterCache.GetConverter(type);
+			return TryGetField(type, index, converter, out field);
 		}
 
 		/// <summary>
@@ -648,12 +649,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( Type type, string name, out object field )
+		public virtual bool TryGetField(Type type, string name, out object field)
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterCache.GetConverter( type );
-			return TryGetField( type, name, converter, out field );
+			var converter = Configuration.TypeConverterCache.GetConverter(type);
+			return TryGetField(type, name, converter, out field);
 		}
 
 		/// <summary>
@@ -666,12 +667,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( Type type, string name, int index, out object field )
+		public virtual bool TryGetField(Type type, string name, int index, out object field)
 		{
 			CheckHasBeenRead();
 
-			var converter = Configuration.TypeConverterCache.GetConverter( type );
-			return TryGetField( type, name, index, converter, out field );
+			var converter = Configuration.TypeConverterCache.GetConverter(type);
+			return TryGetField(type, name, index, converter, out field);
 		}
 
 		/// <summary>
@@ -683,18 +684,18 @@ namespace CsvHelper
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( Type type, int index, ITypeConverter converter, out object field )
+		public virtual bool TryGetField(Type type, int index, ITypeConverter converter, out object field)
 		{
 			CheckHasBeenRead();
 
 			// DateTimeConverter.ConvertFrom will successfully convert
 			// a white space string to a DateTime.MinValue instead of
 			// returning null, so we need to handle this special case.
-			if( converter is DateTimeConverter )
+			if (converter is DateTimeConverter)
 			{
-				if( string.IsNullOrWhiteSpace( context.Record[index] ) )
+				if (string.IsNullOrWhiteSpace(context.Record[index]))
 				{
-					field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+					field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
 					return false;
 				}
 			}
@@ -704,12 +705,12 @@ namespace CsvHelper
 			// do it twice and just do it ourselves.
 			try
 			{
-				field = GetField( type, index, converter );
+				field = GetField(type, index, converter);
 				return true;
 			}
 			catch
 			{
-				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
 				return false;
 			}
 		}
@@ -723,18 +724,18 @@ namespace CsvHelper
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( Type type, string name, ITypeConverter converter, out object field )
+		public virtual bool TryGetField(Type type, string name, ITypeConverter converter, out object field)
 		{
 			CheckHasBeenRead();
 
-			var index = GetFieldIndex( name, isTryGet: true );
-			if( index == -1 )
+			var index = GetFieldIndex(name, isTryGet: true);
+			if (index == -1)
 			{
-				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
 				return false;
 			}
 
-			return TryGetField( type, index, converter, out field );
+			return TryGetField(type, index, converter, out field);
 		}
 
 		/// <summary>
@@ -747,18 +748,18 @@ namespace CsvHelper
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField( Type type, string name, int index, ITypeConverter converter, out object field )
+		public virtual bool TryGetField(Type type, string name, int index, ITypeConverter converter, out object field)
 		{
 			CheckHasBeenRead();
 
-			var fieldIndex = GetFieldIndex( name, index, true );
-			if( fieldIndex == -1 )
+			var fieldIndex = GetFieldIndex(name, index, true);
+			if (fieldIndex == -1)
 			{
-				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance( type ) : null;
+				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
 				return false;
 			}
 
-			return TryGetField( type, fieldIndex, converter, out field );
+			return TryGetField(type, fieldIndex, converter, out field);
 		}
 
 		/// <summary>
@@ -768,12 +769,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the field.</param>
 		/// <param name="field">The field converted to type T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T>( int index, out T field )
+		public virtual bool TryGetField<T>(int index, out T field)
 		{
 			CheckHasBeenRead();
 
 			var converter = Configuration.TypeConverterCache.GetConverter<T>();
-			return TryGetField( index, converter, out field );
+			return TryGetField(index, converter, out field);
 		}
 
 		/// <summary>
@@ -783,12 +784,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T>( string name, out T field )
+		public virtual bool TryGetField<T>(string name, out T field)
 		{
 			CheckHasBeenRead();
 
 			var converter = Configuration.TypeConverterCache.GetConverter<T>();
-			return TryGetField( name, converter, out field );
+			return TryGetField(name, converter, out field);
 		}
 
 		/// <summary>
@@ -801,12 +802,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T>( string name, int index, out T field )
+		public virtual bool TryGetField<T>(string name, int index, out T field)
 		{
 			CheckHasBeenRead();
 
 			var converter = Configuration.TypeConverterCache.GetConverter<T>();
-			return TryGetField( name, index, converter, out field );
+			return TryGetField(name, index, converter, out field);
 		}
 
 		/// <summary>
@@ -818,7 +819,7 @@ namespace CsvHelper
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T>( int index, ITypeConverter converter, out T field )
+		public virtual bool TryGetField<T>(int index, ITypeConverter converter, out T field)
 		{
 			CheckHasBeenRead();
 
@@ -827,12 +828,12 @@ namespace CsvHelper
 			// do it twice and just do it ourselves.
 			try
 			{
-				field = GetField<T>( index, converter );
+				field = GetField<T>(index, converter);
 				return true;
 			}
 			catch
 			{
-				field = default( T );
+				field = default(T);
 				return false;
 			}
 		}
@@ -846,18 +847,18 @@ namespace CsvHelper
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T>( string name, ITypeConverter converter, out T field )
+		public virtual bool TryGetField<T>(string name, ITypeConverter converter, out T field)
 		{
 			CheckHasBeenRead();
 
-			var index = GetFieldIndex( name, isTryGet: true );
-			if( index == -1 )
+			var index = GetFieldIndex(name, isTryGet: true);
+			if (index == -1)
 			{
-				field = default( T );
+				field = default(T);
 				return false;
 			}
 
-			return TryGetField( index, converter, out field );
+			return TryGetField(index, converter, out field);
 		}
 
 		/// <summary>
@@ -870,18 +871,18 @@ namespace CsvHelper
 		/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T>( string name, int index, ITypeConverter converter, out T field )
+		public virtual bool TryGetField<T>(string name, int index, ITypeConverter converter, out T field)
 		{
 			CheckHasBeenRead();
 
-			var fieldIndex = GetFieldIndex( name, index, true );
-			if( fieldIndex == -1 )
+			var fieldIndex = GetFieldIndex(name, index, true);
+			if (fieldIndex == -1)
 			{
-				field = default( T );
+				field = default(T);
 				return false;
 			}
 
-			return TryGetField( fieldIndex, converter, out field );
+			return TryGetField(fieldIndex, converter, out field);
 		}
 
 		/// <summary>
@@ -893,12 +894,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T, TConverter>( int index, out T field ) where TConverter : ITypeConverter
+		public virtual bool TryGetField<T, TConverter>(int index, out T field) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
 			var converter = ReflectionHelper.CreateInstance<TConverter>();
-			return TryGetField( index, converter, out field );
+			return TryGetField(index, converter, out field);
 		}
 
 		/// <summary>
@@ -910,12 +911,12 @@ namespace CsvHelper
 		/// <param name="name">The named index of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T, TConverter>( string name, out T field ) where TConverter : ITypeConverter
+		public virtual bool TryGetField<T, TConverter>(string name, out T field) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
 			var converter = ReflectionHelper.CreateInstance<TConverter>();
-			return TryGetField( name, converter, out field );
+			return TryGetField(name, converter, out field);
 		}
 
 		/// <summary>
@@ -928,12 +929,12 @@ namespace CsvHelper
 		/// <param name="index">The zero based index of the instance of the field.</param>
 		/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
 		/// <returns>A value indicating if the get was successful.</returns>
-		public virtual bool TryGetField<T, TConverter>( string name, int index, out T field ) where TConverter : ITypeConverter
+		public virtual bool TryGetField<T, TConverter>(string name, int index, out T field) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
 			var converter = ReflectionHelper.CreateInstance<TConverter>();
-			return TryGetField( name, index, converter, out field );
+			return TryGetField(name, index, converter, out field);
 		}
 
 		/// <summary>
@@ -945,12 +946,12 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			if( context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord )
+			if (context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord)
 			{
 				ReadHeader();
 				ValidateHeader<T>();
 
-				if( !Read() )
+				if (!Read())
 				{
 					return default;
 				}
@@ -961,11 +962,11 @@ namespace CsvHelper
 			{
 				record = recordManager.Value.Create<T>();
 			}
-			catch( Exception ex )
+			catch (Exception ex)
 			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
 
 				record = default;
 			}
@@ -979,16 +980,16 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the record.</param>
 		/// <returns>The record converted to <see cref="System.Type"/> T.</returns>
-		public virtual T GetRecord<T>( T anonymousTypeDefinition )
+		public virtual T GetRecord<T>(T anonymousTypeDefinition)
 		{
-			if( anonymousTypeDefinition == null )
+			if (anonymousTypeDefinition == null)
 			{
-				throw new ArgumentNullException( nameof( anonymousTypeDefinition ) );
+				throw new ArgumentNullException(nameof(anonymousTypeDefinition));
 			}
 
-			if( !anonymousTypeDefinition.GetType().IsAnonymous() )
+			if (!anonymousTypeDefinition.GetType().IsAnonymous())
 			{
-				throw new ArgumentException( $"Argument is not an anonymous type.", nameof( anonymousTypeDefinition ) );
+				throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
 			}
 
 			return GetRecord<T>();
@@ -999,16 +1000,16 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
 		/// <returns>The record.</returns>
-		public virtual object GetRecord( Type type )
+		public virtual object GetRecord(Type type)
 		{
 			CheckHasBeenRead();
 
-			if( context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord )
+			if (context.HeaderRecord == null && context.ReaderConfiguration.HasHeaderRecord)
 			{
 				ReadHeader();
-				ValidateHeader( type );
+				ValidateHeader(type);
 
-				if( !Read() )
+				if (!Read())
 				{
 					return null;
 				}
@@ -1017,13 +1018,13 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = recordManager.Value.Create( type );
+				record = recordManager.Value.Create(type);
 			}
-			catch( Exception ex )
+			catch (Exception ex)
 			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
 
 				record = default;
 			}
@@ -1043,9 +1044,9 @@ namespace CsvHelper
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
-			if( context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null )
+			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
-				if( !Read() )
+				if (!Read())
 				{
 					yield break;
 				}
@@ -1054,18 +1055,18 @@ namespace CsvHelper
 				ValidateHeader<T>();
 			}
 
-			while( Read() )
+			while (Read())
 			{
 				T record;
 				try
 				{
 					record = recordManager.Value.Create<T>();
 				}
-				catch( Exception ex )
+				catch (Exception ex)
 				{
-					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1083,16 +1084,16 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
-		public virtual IEnumerable<T> GetRecords<T>( T anonymousTypeDefinition )
+		public virtual IEnumerable<T> GetRecords<T>(T anonymousTypeDefinition)
 		{
-			if( anonymousTypeDefinition == null )
+			if (anonymousTypeDefinition == null)
 			{
-				throw new ArgumentNullException( nameof( anonymousTypeDefinition ) );
+				throw new ArgumentNullException(nameof(anonymousTypeDefinition));
 			}
 
-			if( !anonymousTypeDefinition.GetType().IsAnonymous() )
+			if (!anonymousTypeDefinition.GetType().IsAnonymous())
 			{
-				throw new ArgumentException( $"Argument is not an anonymous type.", nameof( anonymousTypeDefinition ) );
+				throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
 			}
 
 			return GetRecords<T>();
@@ -1105,34 +1106,34 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
 		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
-		public virtual IEnumerable<object> GetRecords( Type type )
+		public virtual IEnumerable<object> GetRecords(Type type)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
-			if( context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null )
+			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
-				if( !Read() )
+				if (!Read())
 				{
 					yield break;
 				}
 
 				ReadHeader();
-				ValidateHeader( type );
+				ValidateHeader(type);
 			}
 
-			while( Read() )
+			while (Read())
 			{
 				object record;
 				try
 				{
-					record = recordManager.Value.Create( type );
+					record = recordManager.Value.Create(type);
 				}
-				catch( Exception ex )
+				catch (Exception ex)
 				{
-					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1152,14 +1153,14 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to fill each enumeration.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
-		public virtual IEnumerable<T> EnumerateRecords<T>( T record )
+		public virtual IEnumerable<T> EnumerateRecords<T>(T record)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
-			if( context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null )
+			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
-				if( !Read() )
+				if (!Read())
 				{
 					yield break;
 				}
@@ -1168,17 +1169,17 @@ namespace CsvHelper
 				ValidateHeader<T>();
 			}
 
-			while( Read() )
+			while (Read())
 			{
 				try
 				{
-					recordManager.Value.Hydrate( record );
+					recordManager.Value.Hydrate(record);
 				}
-				catch( Exception ex )
+				catch (Exception ex)
 				{
-					var csvHelperException = ex as CsvHelperException ?? new ReaderException( context, "An unexpected error occurred.", ex );
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke( csvHelperException );
+					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1197,9 +1198,9 @@ namespace CsvHelper
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
-		public virtual int GetFieldIndex( string name, int index = 0, bool isTryGet = false )
+		public virtual int GetFieldIndex(string name, int index = 0, bool isTryGet = false)
 		{
-			return GetFieldIndex( new[] { name }, index, isTryGet );
+			return GetFieldIndex(new[] { name }, index, isTryGet);
 		}
 
 		/// <summary>
@@ -1208,24 +1209,25 @@ namespace CsvHelper
 		/// <param name="names">The possible names of the field to get the index for.</param>
 		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
 		/// <param name="isTryGet">A value indicating if the call was initiated from a TryGet.</param>
+		/// <param name="isOptional">A value indicating if the call was initiated for an optional field.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
-		public virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false )
+		public virtual int GetFieldIndex(string[] names, int index = 0, bool isTryGet = false, bool isOptional = false)
 		{
-			if( names == null )
+			if (names == null)
 			{
-				throw new ArgumentNullException( nameof( names ) );
+				throw new ArgumentNullException(nameof(names));
 			}
 
-			if( !context.ReaderConfiguration.HasHeaderRecord )
+			if (!context.ReaderConfiguration.HasHeaderRecord)
 			{
-				throw new ReaderException( context, "There is no header record to determine the index by name." );
+				throw new ReaderException(context, "There is no header record to determine the index by name.");
 			}
 
 			// Caching the named index speeds up mappings that use ConvertUsing tremendously.
-			var nameKey = string.Join( "_", names ) + index;
-			if( context.NamedIndexCache.ContainsKey( nameKey ) )
+			var nameKey = string.Join("_", names) + index;
+			if (context.NamedIndexCache.ContainsKey(nameKey))
 			{
 				var tuple = context.NamedIndexCache[nameKey];
 				return context.NamedIndexes[tuple.Item1][tuple.Item2];
@@ -1233,11 +1235,11 @@ namespace CsvHelper
 
 			// Check all possible names for this field.
 			string name = null;
-			foreach( var n in names )
+			foreach (var n in names)
 			{
 				// Get the list of indexes for this name.
-				var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch( n );
-				if( context.NamedIndexes.ContainsKey( fieldName ) )
+				var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch(n);
+				if (context.NamedIndexes.ContainsKey(fieldName))
 				{
 					name = fieldName;
 					break;
@@ -1245,18 +1247,18 @@ namespace CsvHelper
 			}
 
 			// Check if the index position exists.
-			if( name == null || index >= context.NamedIndexes[name].Count )
+			if (name == null || index >= context.NamedIndexes[name].Count)
 			{
 				// It doesn't exist. The field is missing.
-				if( !isTryGet )
+				if (!isTryGet && !isOptional)
 				{
-					context.ReaderConfiguration.MissingFieldFound?.Invoke( names, index, context );
+					context.ReaderConfiguration.MissingFieldFound?.Invoke(names, index, context);
 				}
 
 				return -1;
 			}
 
-			context.NamedIndexCache.Add( nameKey, new Tuple<string, int>( name, index ) );
+			context.NamedIndexCache.Add(nameKey, new Tuple<string, int>(name, index));
 
 			return context.NamedIndexes[name][index];
 		}
@@ -1267,21 +1269,21 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="memberMap">The member map.</param>
 		/// <returns>A value indicating of the member can be read. True if it can, otherwise false.</returns>
-		public virtual bool CanRead( MemberMap memberMap )
+		public virtual bool CanRead(MemberMap memberMap)
 		{
 			var cantRead =
 				// Ignored member;
 				memberMap.Data.Ignore;
 
 			var property = memberMap.Data.Member as PropertyInfo;
-			if( property != null )
+			if (property != null)
 			{
 				cantRead = cantRead ||
 					// Properties that don't have a public setter
 					// and we are honoring the accessor modifier.
 					property.GetSetMethod() == null && !context.ReaderConfiguration.IncludePrivateMembers ||
 					// Properties that don't have a setter at all.
-					property.GetSetMethod( true ) == null;
+					property.GetSetMethod(true) == null;
 			}
 
 			return !cantRead;
@@ -1293,19 +1295,19 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="memberReferenceMap">The reference map.</param>
 		/// <returns>A value indicating of the member can be read. True if it can, otherwise false.</returns>
-		public virtual bool CanRead( MemberReferenceMap memberReferenceMap )
+		public virtual bool CanRead(MemberReferenceMap memberReferenceMap)
 		{
 			var cantRead = false;
 
 			var property = memberReferenceMap.Data.Member as PropertyInfo;
-			if( property != null )
+			if (property != null)
 			{
 				cantRead =
 					// Properties that don't have a public setter
 					// and we are honoring the accessor modifier.
 					property.GetSetMethod() == null && !context.ReaderConfiguration.IncludePrivateMembers ||
 					// Properties that don't have a setter at all.
-					property.GetSetMethod( true ) == null;
+					property.GetSetMethod(true) == null;
 			}
 
 			return !cantRead;
@@ -1317,22 +1319,22 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
-			Dispose( !context?.LeaveOpen ?? true );
-			GC.SuppressFinalize( this );
+			Dispose(!context?.LeaveOpen ?? true);
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
-		protected virtual void Dispose( bool disposing )
+		protected virtual void Dispose(bool disposing)
 		{
-			if( disposed )
+			if (disposed)
 			{
 				return;
 			}
 
-			if( disposing )
+			if (disposing)
 			{
 				parser?.Dispose();
 			}
@@ -1348,9 +1350,9 @@ namespace CsvHelper
 		/// <exception cref="ReaderException" />
 		protected virtual void CheckHasBeenRead()
 		{
-			if( !context.HasBeenRead )
+			if (!context.HasBeenRead)
 			{
-				throw new ReaderException( context, "You must call read on the reader before accessing its data." );
+				throw new ReaderException(context, "You must call read on the reader before accessing its data.");
 			}
 		}
 
@@ -1359,17 +1361,17 @@ namespace CsvHelper
 		/// </summary>
 		protected virtual void ParseNamedIndexes()
 		{
-			if( context.HeaderRecord == null )
+			if (context.HeaderRecord == null)
 			{
-				throw new ReaderException( context, "No header record was found." );
+				throw new ReaderException(context, "No header record was found.");
 			}
 
-			for( var i = 0; i < context.HeaderRecord.Length; i++ )
+			for (var i = 0; i < context.HeaderRecord.Length; i++)
 			{
-				var name = context.ReaderConfiguration.PrepareHeaderForMatch( context.HeaderRecord[i] );
-				if( context.NamedIndexes.ContainsKey( name ) )
+				var name = context.ReaderConfiguration.PrepareHeaderForMatch(context.HeaderRecord[i]);
+				if (context.NamedIndexes.ContainsKey(name))
 				{
-					context.NamedIndexes[name].Add( i );
+					context.NamedIndexes[name].Add(i);
 				}
 				else
 				{
