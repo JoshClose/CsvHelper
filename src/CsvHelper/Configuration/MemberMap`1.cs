@@ -200,6 +200,17 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Ignore the member when reading if no matching field name
+		/// can be found.
+		/// </summary>
+		public virtual MemberMap<TClass, TMember> Optional()
+		{
+		    Data.IsOptional = true;
+		
+		    return this;
+        }
+
+		/// <summary>
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>

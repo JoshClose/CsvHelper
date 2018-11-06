@@ -175,7 +175,7 @@ namespace CsvHelper
 				}
 
 				var index = GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true );
-				Configuration.HeaderValidated?.Invoke( index != -1, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
+				Configuration.HeaderValidated?.Invoke( index != -1 || memberMap.Data.IsOptional, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context );
 			}
 
 			foreach( var referenceMap in map.ReferenceMaps )
@@ -1208,12 +1208,13 @@ namespace CsvHelper
 		/// <param name="names">The possible names of the field to get the index for.</param>
 		/// <param name="index">The index of the field if there are multiple fields with the same name.</param>
 		/// <param name="isTryGet">A value indicating if the call was initiated from a TryGet.</param>
+		/// <param name="isOptional">A value indicating if the call was initiated for an optional field.</param>
 		/// <returns>The index of the field if found, otherwise -1.</returns>
 		/// <exception cref="ReaderException">Thrown if there is no header record.</exception>
 		/// <exception cref="MissingFieldException">Thrown if there isn't a field with name.</exception>
-		public virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false )
-		{
-			if( names == null )
+		public virtual int GetFieldIndex( string[] names, int index = 0, bool isTryGet = false, bool isOptional = false )
+        {
+            if ( names == null )
 			{
 				throw new ArgumentNullException( nameof( names ) );
 			}
@@ -1248,7 +1249,7 @@ namespace CsvHelper
 			if( name == null || index >= context.NamedIndexes[name].Count )
 			{
 				// It doesn't exist. The field is missing.
-				if( !isTryGet )
+				if( !isTryGet && !isOptional)
 				{
 					context.ReaderConfiguration.MissingFieldFound?.Invoke( names, index, context );
 				}

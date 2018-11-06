@@ -103,7 +103,7 @@ namespace CsvHelper.Expressions
 			if( memberMap.Data.IsNameSet || reader.Context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet )
 			{
 				// Use the name.
-				index = reader.GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex );
+				index = reader.GetFieldIndex( memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional  );
 				if( index == -1 )
 				{
 					// Skip if the index was not found.

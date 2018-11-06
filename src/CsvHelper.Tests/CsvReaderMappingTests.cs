@@ -192,7 +192,61 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( 1, records.Count );
 		}
 
-		private class CovarianceClass
+		[TestMethod]
+		public void OptionalWithExistingColumnTest()
+		{
+		    var data = new List<string[]>
+		    {
+		        new[] { "int", "string" },
+		        new[] { "1", "one" },
+		        new[] { "2", "two" },
+		        null
+		    };
+		
+		    var queue = new Queue<string[]>(data);
+		    var parserMock = new ParserMock(queue);
+		
+		    var csvReader = new CsvReader(parserMock);
+		    csvReader.Configuration.RegisterClassMap<OptionalFieldClassMap>();
+		
+		    var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
+		
+		    Assert.IsNotNull(records);
+		    Assert.AreEqual(2, records.Count);
+		    Assert.AreEqual(1, records[0].IntColumn);
+		    Assert.AreEqual("one", records[0].StringColumn);
+		    Assert.AreEqual(2, records[1].IntColumn);
+		    Assert.AreEqual("two", records[1].StringColumn);
+        }
+
+        [TestMethod]
+        public void OptionalWithMissingColumnTest()
+        {
+            var data = new List<string[]>
+            {
+                new[] { "string" },
+                new[] { "one" },
+                new[] { "two" },
+                null
+            };
+
+            var queue = new Queue<string[]>(data);
+            var parserMock = new ParserMock(queue);
+
+            var csvReader = new CsvReader(parserMock);
+            csvReader.Configuration.RegisterClassMap<OptionalFieldClassMap>();
+
+            var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
+
+            Assert.IsNotNull(records);
+            Assert.AreEqual(2, records.Count);
+            Assert.AreEqual(0, records[0].IntColumn);
+            Assert.AreEqual("one", records[0].StringColumn);
+            Assert.AreEqual(0, records[1].IntColumn);
+            Assert.AreEqual("two", records[1].StringColumn);
+        }
+
+        private class CovarianceClass
 		{
 			public int? Id { get; set; }
 		}
@@ -309,5 +363,15 @@ namespace CsvHelper.Tests
 				Map( m => m.StringColumn ).ConvertUsing( row => row.GetField( "string.3" ) );
 			}
 		}
-	}
+
+        private sealed class OptionalFieldClassMap : ClassMap<MultipleNamesClass>
+        {
+            public OptionalFieldClassMap()
+            {
+                Map(m => m.IntColumn).Name("int").Optional();
+                Map(m => m.StringColumn).Name("string");
+            }
+        }
+
+    }
 }

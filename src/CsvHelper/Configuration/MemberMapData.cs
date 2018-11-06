@@ -112,6 +112,11 @@ namespace CsvHelper.Configuration
 		public virtual Expression ValidateExpression { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if a field is optional.
+		/// </summary>
+		public virtual bool IsOptional { get; set; }
+		
+		/// <summary>
 		/// Initializes a new instance of the <see cref="MemberMapData"/> class.
 		/// </summary>
 		/// <param name="member">The member.</param>
