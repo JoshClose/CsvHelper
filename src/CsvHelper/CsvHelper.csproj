@@ -4,11 +4,11 @@
 		<!-- Assembly -->
 		<AssemblyTitle>CsvHelper</AssemblyTitle>
 		<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-		<Copyright>Copyright © 2009-2017 Josh Close and Contributors</Copyright>
+		<Copyright>Copyright © 2009-2018 Josh Close and Contributors</Copyright>
 		<Authors>Josh Close</Authors>
 
 		<!-- Build -->
-		<Version>8.0.0-beta01</Version>
+		<Version>8.0.0</Version>
 		<FileVersion>8.0.0.0</FileVersion>
 		<AssemblyVersion>8.0.0.0</AssemblyVersion>
 		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>

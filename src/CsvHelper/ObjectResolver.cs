@@ -21,19 +21,19 @@ namespace CsvHelper
 		{
 			get
 			{
-				lock( locker )
+				lock (locker)
 				{
 					return current;
 				}
 			}
 			set
 			{
-				if( value == null )
+				if (value == null)
 				{
-					throw new InvalidOperationException( "IObjectResolver cannot be null." );
+					throw new InvalidOperationException("IObjectResolver cannot be null.");
 				}
 
-				lock( locker )
+				lock (locker)
 				{
 					current = value;
 				}
@@ -59,11 +59,11 @@ namespace CsvHelper
 		/// The function that creates an object from a given type.
 		/// </summary>
 		public Func<Type, object[], object> ResolveFunction { get; private set; }
-		
+
 		/// <summary>
 		/// Creates an instance of the object resolver using default values.
 		/// </summary>
-		public ObjectResolver() : this( type => true, ReflectionHelper.CreateInstanceWithoutContractResolver ) { }
+		public ObjectResolver() : this(type => true, ReflectionHelper.CreateInstanceWithoutContractResolver) { }
 
 		/// <summary>
 		/// Creates an instance of the object resolver using the given can create function
@@ -77,10 +77,10 @@ namespace CsvHelper
 		/// returns false that an object will still be created using
 		/// CsvHelper's object creation. True to fallback, otherwise false.
 		/// Default value is true.</param>
-		public ObjectResolver( Func<Type, bool> canResolve, Func<Type, object[], object> resolveFunction, bool useFallback = true )
+		public ObjectResolver(Func<Type, bool> canResolve, Func<Type, object[], object> resolveFunction, bool useFallback = true)
 		{
-			CanResolve = canResolve ?? throw new ArgumentNullException( nameof( canResolve ) );
-			ResolveFunction = resolveFunction ?? throw new ArgumentNullException( nameof( resolveFunction ) );
+			CanResolve = canResolve ?? throw new ArgumentNullException(nameof(canResolve));
+			ResolveFunction = resolveFunction ?? throw new ArgumentNullException(nameof(resolveFunction));
 			UseFallback = useFallback;
 		}
 
@@ -93,19 +93,19 @@ namespace CsvHelper
 		/// <param name="type">The type to create an instance from. The created object
 		/// may not be the same type as the given type.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the type.</param>
-		public object Resolve( Type type, params object[] constructorArgs )
+		public object Resolve(Type type, params object[] constructorArgs)
 		{
-			if( CanResolve( type ) )
+			if (CanResolve(type))
 			{
-				return ResolveFunction( type, constructorArgs );
+				return ResolveFunction(type, constructorArgs);
 			}
 
-			if( UseFallback )
+			if (UseFallback)
 			{
-				return ReflectionHelper.CreateInstance( type, constructorArgs );
+				return ReflectionHelper.CreateInstanceWithoutContractResolver(type, constructorArgs);
 			}
 
-			throw new CsvHelperException( $"Type '{type.FullName}' can't be resolved and fallback is turned off." );
+			throw new CsvHelperException($"Type '{type.FullName}' can't be resolved and fallback is turned off.");
 		}
 
 		/// <summary>
@@ -117,9 +117,9 @@ namespace CsvHelper
 		/// <typeparam name="T">The type to create an instance from. The created object
 		/// may not be the same type as the given type.</typeparam>
 		/// <param name="constructorArgs">Constructor arguments used to create the type.</param>
-		public T Resolve<T>( params object[] constructorArgs )
+		public T Resolve<T>(params object[] constructorArgs)
 		{
-			return (T)Resolve( typeof( T ), constructorArgs );
+			return (T)Resolve(typeof(T), constructorArgs);
 		}
 	}
 }

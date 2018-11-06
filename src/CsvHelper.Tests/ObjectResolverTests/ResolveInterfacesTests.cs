@@ -11,10 +11,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CsvHelper.Tests
+namespace CsvHelper.Tests.ObjectResolverTests
 {
 	[TestClass]
-	public class ObjectResolverTests
+	public class ResolveInterfacesTests
 	{
 		[TestCleanup]
 		public void Cleanup()
