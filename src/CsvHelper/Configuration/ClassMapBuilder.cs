@@ -35,6 +35,7 @@ namespace CsvHelper.Configuration
 		IHasTypeConverter<TClass, TMember>,
 		IHasIndex<TClass, TMember>,
 		IHasName<TClass, TMember>,
+		IHasOptional<TClass, TMember>,
 		IHasConvertUsing<TClass, TMember>,
 		IHasDefault<TClass, TMember>,
 		IHasConstant<TClass, TMember>,
@@ -99,6 +100,32 @@ namespace CsvHelper.Configuration
 	/// <typeparam name="TClass">The class type.</typeparam>
 	/// <typeparam name="TMember">The member type.</typeparam>
 	public interface IHasIndexOptions<TClass, TMember> :
+		IHasMap<TClass>,
+		IHasTypeConverter<TClass, TMember>,
+		IHasName<TClass, TMember>,
+		IHasDefault<TClass, TMember>,
+		IHasValidate<TClass, TMember>
+	{ }
+
+	/// <summary>
+	/// Has optional capabilities.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasOptional<TClass, TMember> : IBuildableClass<TClass>
+	{
+		/// <summary>
+		/// Ignore the member when reading if no matching field name can be found.
+		/// </summary>
+		IHasOptionalOptions<TClass, TMember> Optional();
+	}
+
+	/// <summary>
+	/// Options after an optional call.
+	/// </summary>
+	/// <typeparam name="TClass">The class type.</typeparam>
+	/// <typeparam name="TMember">The member type.</typeparam>
+	public interface IHasOptionalOptions<TClass, TMember> :
 		IHasMap<TClass>,
 		IHasTypeConverter<TClass, TMember>,
 		IHasName<TClass, TMember>,
@@ -301,6 +328,8 @@ namespace CsvHelper.Configuration
 		IHasNameOptions<TClass, TMember>,
 		IHasNameIndex<TClass, TMember>,
 		IHasNameIndexOptions<TClass, TMember>,
+		IHasOptional<TClass, TMember>,
+		IHasOptionalOptions<TClass, TMember>,
 		IHasConvertUsing<TClass, TMember>,
 		IHasDefault<TClass, TMember>,
 		IHasDefaultOptions<TClass, TMember>,
@@ -362,6 +391,12 @@ namespace CsvHelper.Configuration
 		public IHasNameIndexOptions<TClass, TMember> NameIndex( int index )
 		{
 			memberMap.NameIndex( index );
+			return this;
+		}
+
+		public IHasOptionalOptions<TClass, TMember> Optional()
+		{
+			memberMap.Optional();
 			return this;
 		}
 
