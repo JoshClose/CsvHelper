@@ -2,8 +2,6 @@
 
 [![Join the chat at https://gitter.im/CsvHelper/Lobby](https://badges.gitter.im/CsvHelper/Lobby.svg)](https://gitter.im/CsvHelper/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FJoshClose%2FCsvHelper.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FJoshClose%2FCsvHelper?ref=badge_shield)
-
 A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.
 
 ## Install
