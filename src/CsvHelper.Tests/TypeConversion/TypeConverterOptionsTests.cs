@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CsvHelper.Configuration;
+using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.TypeConversion
@@ -19,33 +20,33 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GlobalNullValueTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "," );
+				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( string.Empty );
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty);
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.IsNull( records[0].Id );
-				Assert.IsNull( records[0].Name );
+				Assert.IsNull(records[0].Id);
+				Assert.IsNull(records[0].Name);
 			}
 		}
 
 		[TestMethod]
 		public void MappingNullValueTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "," );
+				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -53,71 +54,30 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Configuration.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.IsNull( records[0].Id );
-				Assert.IsNull( records[0].Name );
+				Assert.IsNull(records[0].Id);
+				Assert.IsNull(records[0].Name);
 			}
 		}
 
 		[TestMethod]
 		public void GlobalAndMappingNullValueTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "," );
+				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( "null" );
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 				csv.Configuration.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.IsNull( records[0].Id );
-				Assert.IsNull( records[0].Name );
-			}
-		}
-
-		[TestMethod]
-		public void NullValueTest()
-		{
-			const string input =
-				( "NULL,\"row0-col1\",\"row0-col2\"" + "\r\n" ) +
-				( "\"row1-col0\",NULL,\"row1-col2\"" + "\r\n" ) +
-				( "\"row2-col0\",\"row2-col1\",NULL" + "\r\n" );
-
-			using( var reader = new StringReader( input ) )
-			using( var csv = new CsvReader( reader ) )
-			{
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( "NULL" );
-				
-				// Row 0:
-				Assert.IsTrue  ( csv.Read() );
-				Assert.AreEqual( 3, csv.Context.Record.Length );
-
-				Assert.IsNull  (              csv.GetField<string>( 0 ) );
-				Assert.AreEqual( "row0-col1", csv.GetField<string>( 1 ) );
-				Assert.AreEqual( "row0-col2", csv.GetField<string>( 2 ) );
-				
-
-				// Row 1:
-				Assert.IsTrue  ( csv.Read() );
-				Assert.AreEqual( 3, csv.Context.Record.Length );
-
-				Assert.AreEqual( "row1-col0", csv.GetField<string>( 0 ) );
-				Assert.IsNull  (              csv.GetField<string>( 1 ) );
-				Assert.AreEqual( "row1-col2", csv.GetField<string>( 2 ) );
-
-				// Row 2:
-				Assert.IsTrue  ( csv.Read() );
-				Assert.AreEqual( 3, csv.Context.Record.Length );
-
-				Assert.AreEqual( "row2-col0", csv.GetField<string>( 0 ) );
-				Assert.AreEqual( "row2-col1", csv.GetField<string>( 1 ) );
-				Assert.IsNull  (              csv.GetField<string>( 2 ) );
+				Assert.IsNull(records[0].Id);
+				Assert.IsNull(records[0].Name);
 			}
 		}
 
@@ -131,8 +91,8 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).TypeConverterOption.NullValues( string.Empty );
+				Map(m => m.Id);
+				Map(m => m.Name).TypeConverterOption.NullValues(string.Empty);
 			}
 		}
 

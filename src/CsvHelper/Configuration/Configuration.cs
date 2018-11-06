@@ -49,7 +49,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ConfigurationDefaultCallbacks.HeaderValidated;
+		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ConfigurationFunctions.HeaderValidated;
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
@@ -57,7 +57,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		public virtual Action<string[], int, ReadingContext> MissingFieldFound { get; set; } = ConfigurationDefaultCallbacks.MissingFieldFound;
+		public virtual Action<string[], int, ReadingContext> MissingFieldFound { get; set; } = ConfigurationFunctions.MissingFieldFound;
 
 		/// <summary>
 		/// Gets or sets the function that is called when bad field data is found. A field
@@ -66,7 +66,7 @@ namespace CsvHelper.Configuration
 		/// instead of throwing an exception.
 		/// Arguments: context
 		/// </summary>
-		public virtual Action<ReadingContext> BadDataFound { get; set; } = ConfigurationDefaultCallbacks.BadDataFound;
+		public virtual Action<ReadingContext> BadDataFound { get; set; } = ConfigurationFunctions.BadDataFound;
 
 		/// <summary>
 		/// Gets or sets the function that is called when a reading exception occurs.
@@ -75,13 +75,13 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		public virtual Action<CsvHelperException> ReadingExceptionOccurred { get; set; } = ConfigurationDefaultCallbacks.ReadingExceptionOccurred;
+		public virtual Action<CsvHelperException> ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to
 		/// determine whether to skip the given record or not.
 		/// </summary>
-		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = ConfigurationDefaultCallbacks.ShouldSkipRecord;
+		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = ConfigurationFunctions.ShouldSkipRecord;
 
 		/// <summary>
 		/// Gets or sets a value indicating if fields should be sanitized
@@ -116,18 +116,18 @@ namespace CsvHelper.Configuration
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
-		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = ConfigurationDefaultCallbacks.PrepareHeaderForMatch;
+		public virtual Func<string, string> PrepareHeaderForMatch { get; set; } = ConfigurationFunctions.PrepareHeaderForMatch;
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
 		/// the class instead of the default constructor and members.
 		/// </summary>
-		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = ConfigurationDefaultCallbacks.ShouldUseConstructorParameters;
+		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;
 
 		/// <summary>
 		/// Chooses the constructor to use for constuctor mapping.
 		/// </summary>
-		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = ConfigurationDefaultCallbacks.GetConstructor;
+		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = ConfigurationFunctions.GetConstructor;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether references
@@ -150,24 +150,24 @@ namespace CsvHelper.Configuration
 			get { return delimiter; }
 			set
 			{
-				if( value == "\n" )
+				if (value == "\n")
 				{
-					throw new ConfigurationException( "Newline is not a valid delimiter." );
+					throw new ConfigurationException("Newline is not a valid delimiter.");
 				}
 
-				if( value == "\r" )
+				if (value == "\r")
 				{
-					throw new ConfigurationException( "Carriage return is not a valid delimiter." );
+					throw new ConfigurationException("Carriage return is not a valid delimiter.");
 				}
 
-				if( value == "\0" )
+				if (value == "\0")
 				{
-					throw new ConfigurationException( "Null is not a valid delimiter." );
+					throw new ConfigurationException("Null is not a valid delimiter.");
 				}
 
-				if( value == Convert.ToString( quote ) )
+				if (value == Convert.ToString(quote))
 				{
-					throw new ConfigurationException( "You can not use the quote as a delimiter." );
+					throw new ConfigurationException("You can not use the quote as a delimiter.");
 				}
 
 				delimiter = value;
@@ -185,29 +185,29 @@ namespace CsvHelper.Configuration
 			get { return quote; }
 			set
 			{
-				if( value == '\n' )
+				if (value == '\n')
 				{
-					throw new ConfigurationException( "Newline is not a valid quote." );
+					throw new ConfigurationException("Newline is not a valid quote.");
 				}
 
-				if( value == '\r' )
+				if (value == '\r')
 				{
-					throw new ConfigurationException( "Carriage return is not a valid quote." );
+					throw new ConfigurationException("Carriage return is not a valid quote.");
 				}
 
-				if( value == '\0' )
+				if (value == '\0')
 				{
-					throw new ConfigurationException( "Null is not a valid quote." );
+					throw new ConfigurationException("Null is not a valid quote.");
 				}
 
-				if( Convert.ToString( value ) == delimiter )
+				if (Convert.ToString(value) == delimiter)
 				{
-					throw new ConfigurationException( "You can not use the delimiter as a quote." );
+					throw new ConfigurationException("You can not use the delimiter as a quote.");
 				}
 
 				quote = value;
 
-				quoteString = Convert.ToString( value, cultureInfo );
+				quoteString = Convert.ToString(value, cultureInfo);
 				doubleQuoteString = quoteString + quoteString;
 			}
 		}
@@ -268,7 +268,7 @@ namespace CsvHelper.Configuration
 			set
 			{
 				quoteAllFields = value;
-				if( quoteAllFields && quoteNoFields )
+				if (quoteAllFields && quoteNoFields)
 				{
 					// Both can't be true at the same time.
 					quoteNoFields = false;
@@ -290,7 +290,7 @@ namespace CsvHelper.Configuration
 			set
 			{
 				quoteNoFields = value;
-				if( quoteNoFields && quoteAllFields )
+				if (quoteNoFields && quoteAllFields)
 				{
 					// Both can't be true at the same time.
 					quoteAllFields = false;
@@ -356,7 +356,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Builds the values for the RequiredQuoteChars property.
 		/// </summary>
-		public virtual Func<char[]> BuildRequiredQuoteChars { get; set; } 
+		public virtual Func<char[]> BuildRequiredQuoteChars { get; set; }
 
 		/// <summary>
 		/// The configured <see cref="ClassMap"/>s.
@@ -377,7 +377,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public Configuration()
 		{
-			maps = new ClassMapCollection( this );
+			maps = new ClassMapCollection(this);
 
 			BuildRequiredQuoteChars = () =>
 			{
@@ -397,7 +397,7 @@ namespace CsvHelper.Configuration
 		public virtual TMap RegisterClassMap<TMap>() where TMap : ClassMap
 		{
 			var map = ReflectionHelper.CreateInstance<TMap>();
-			RegisterClassMap( map );
+			RegisterClassMap(map);
 
 			return map;
 		}
@@ -408,15 +408,15 @@ namespace CsvHelper.Configuration
 		/// Only members specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
-		public virtual ClassMap RegisterClassMap( Type classMapType )
+		public virtual ClassMap RegisterClassMap(Type classMapType)
 		{
-			if( !typeof( ClassMap ).IsAssignableFrom( classMapType ) )
+			if (!typeof(ClassMap).IsAssignableFrom(classMapType))
 			{
-				throw new ArgumentException( "The class map type must inherit from CsvClassMap." );
+				throw new ArgumentException("The class map type must inherit from CsvClassMap.");
 			}
 
-			var map = (ClassMap)ReflectionHelper.CreateInstance( classMapType );
-			RegisterClassMap( map );
+			var map = (ClassMap)ReflectionHelper.CreateInstance(classMapType);
+			RegisterClassMap(map);
 
 			return map;
 		}
@@ -425,33 +425,33 @@ namespace CsvHelper.Configuration
 		/// Registers the class map.
 		/// </summary>
 		/// <param name="map">The class map to register.</param>
-		public virtual void RegisterClassMap( ClassMap map )
+		public virtual void RegisterClassMap(ClassMap map)
 		{
-			if( map.MemberMaps.Count == 0 && map.ReferenceMaps.Count == 0 )
+			if (map.MemberMaps.Count == 0 && map.ReferenceMaps.Count == 0)
 			{
-				throw new ConfigurationException( "No mappings were specified in the CsvClassMap." );
+				throw new ConfigurationException("No mappings were specified in the CsvClassMap.");
 			}
 
-			Maps.Add( map );
+			Maps.Add(map);
 		}
 
 		/// <summary>
 		/// Unregisters the class map.
 		/// </summary>
 		/// <typeparam name="TMap">The map type to unregister.</typeparam>
-		public virtual void UnregisterClassMap<TMap>() 
+		public virtual void UnregisterClassMap<TMap>()
 			where TMap : ClassMap
 		{
-			UnregisterClassMap( typeof( TMap ) );
+			UnregisterClassMap(typeof(TMap));
 		}
 
 		/// <summary>
 		/// Unregisters the class map.
 		/// </summary>
 		/// <param name="classMapType">The map type to unregister.</param>
-		public virtual void UnregisterClassMap( Type classMapType )
+		public virtual void UnregisterClassMap(Type classMapType)
 		{
-			maps.Remove( classMapType );
+			maps.Remove(classMapType);
 		}
 
 		/// <summary>
@@ -470,8 +470,8 @@ namespace CsvHelper.Configuration
 		public virtual ClassMap<T> AutoMap<T>()
 		{
 			var map = ReflectionHelper.CreateInstance<DefaultClassMap<T>>();
-			map.AutoMap( this );
-			maps.Add( map );
+			map.AutoMap(this);
+			maps.Add(map);
 
 			return map;
 		}
@@ -481,12 +481,12 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type to generate for the map.</param>
 		/// <returns>The generate map.</returns>
-		public virtual ClassMap AutoMap( Type type )
+		public virtual ClassMap AutoMap(Type type)
 		{
-			var mapType = typeof( DefaultClassMap<> ).MakeGenericType( type );
-			var map = (ClassMap)ReflectionHelper.CreateInstance( mapType );
-			map.AutoMap( this );
-			maps.Add( map );
+			var mapType = typeof(DefaultClassMap<>).MakeGenericType(type);
+			var map = (ClassMap)ReflectionHelper.CreateInstance(mapType);
+			map.AutoMap(this);
+			maps.Add(map);
 
 			return map;
 		}

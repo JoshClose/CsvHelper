@@ -323,7 +323,7 @@ namespace CsvHelper
 					context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 				}
 
-				return default(string);
+				return default;
 			}
 
 			var field = context.Record[index];
@@ -540,7 +540,7 @@ namespace CsvHelper
 					context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 				}
 
-				return default(T);
+				return default;
 			}
 
 			return (T)GetField(typeof(T), index, converter);
@@ -836,7 +836,7 @@ namespace CsvHelper
 			}
 			catch
 			{
-				field = default(T);
+				field = default;
 				return false;
 			}
 		}
@@ -857,7 +857,7 @@ namespace CsvHelper
 			var index = GetFieldIndex(name, isTryGet: true);
 			if (index == -1)
 			{
-				field = default(T);
+				field = default;
 				return false;
 			}
 
@@ -881,7 +881,7 @@ namespace CsvHelper
 			var fieldIndex = GetFieldIndex(name, index, true);
 			if (fieldIndex == -1)
 			{
-				field = default(T);
+				field = default;
 				return false;
 			}
 

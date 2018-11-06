@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.IO;
+using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.Reading
@@ -14,238 +15,200 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void SingleColumnCsvWithHeadersAndSingleNullDataRowTest()
 		{
-			const string csvInput =
-				( "NullableInt32Field" + "\r\n" ) +
-				( "\r\n");
+			var parser = new ParserMock
+			{
+				{ "NullableInt32Field" },
+				{ new string[0] },
+				{ null }
+			};
 
-			using( var reader = new StringReader( csvInput ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var csv = new CsvReader(parser))
 			{
 				csv.Configuration.IgnoreBlankLines = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<Int32?>().NullValues.Add( string.Empty );
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<int?>().NullValues.Add(string.Empty);
 
 				// Read header row, assert header row columns:
-				{
-					Assert.IsTrue( csv.Read() );
-					Assert.IsTrue( csv.ReadHeader() );
-					Assert.AreEqual( 1, csv.Context.HeaderRecord.Length );
-					Assert.AreEqual( "NullableInt32Field", csv.Context.HeaderRecord[0] );
-				}
+				Assert.IsTrue(csv.Read());
+				Assert.IsTrue(csv.ReadHeader());
+				Assert.AreEqual(1, csv.Context.HeaderRecord.Length);
+				Assert.AreEqual("NullableInt32Field", csv.Context.HeaderRecord[0]);
 
 				// Read single data row, assert single null value:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-					Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-					Assert.IsFalse( nullableIntValueByIndex.HasValue );
-					Assert.IsFalse( nullableIntValueByName .HasValue );
-				}
+				var nullableIntValueByIndex = csv.GetField<int?>(index: 0);
+				var nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
+
+				Assert.IsFalse(nullableIntValueByIndex.HasValue);
+				Assert.IsFalse(nullableIntValueByName.HasValue);
 
 				// Read to end of file:
-				{
-					Assert.IsFalse( csv.Read() );
-				}
+				Assert.IsFalse(csv.Read());
 			}
 		}
 
 		[TestMethod]
 		public void SingleColumnCsvWithHeadersAndPresentAndNullDataRowTest()
 		{
-			const string csvInput =
-				( "NullableInt32Field" + "\r\n" ) +
-				( "1"                  + "\r\n" ) + //    1
-				(                        "\r\n" ) + // NULL
-				( "3"                  + "\r\n" );  //    3
+			var parser = new ParserMock
+			{
+				{ "NullableInt32Field" },
+				{ "1" },
+				{ new string[0] },
+				{ "3" },
+				{ null }
+			};
 
-			using( var reader = new StringReader( csvInput ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var csv = new CsvReader(parser))
 			{
 				csv.Configuration.IgnoreBlankLines = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<Int32?>().NullValues.Add( string.Empty );
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<int?>().NullValues.Add(string.Empty);
 
 				// Read header row, assert header row columns:
-				{
-					Assert.IsTrue( csv.Read() );
-					Assert.IsTrue( csv.ReadHeader() );
-					Assert.AreEqual( 1, csv.Context.HeaderRecord.Length );
-					Assert.AreEqual( "NullableInt32Field", csv.Context.HeaderRecord[0] );
-				}
+				Assert.IsTrue(csv.Read());
+				Assert.IsTrue(csv.ReadHeader());
+				Assert.AreEqual(1, csv.Context.HeaderRecord.Length);
+				Assert.AreEqual("NullableInt32Field", csv.Context.HeaderRecord[0]);
 
 				// Read first data row, assert "1" value:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-					Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-					Assert.IsTrue( nullableIntValueByIndex.HasValue );
-					Assert.IsTrue( nullableIntValueByName .HasValue );
+				var nullableIntValueByIndex = csv.GetField<int?>(0);
+				var nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
 
-					Assert.AreEqual( 1, nullableIntValueByIndex );
-					Assert.AreEqual( 1, nullableIntValueByName  );
-				}
+				Assert.IsTrue(nullableIntValueByIndex.HasValue);
+				Assert.IsTrue(nullableIntValueByName.HasValue);
+
+				Assert.AreEqual(1, nullableIntValueByIndex);
+				Assert.AreEqual(1, nullableIntValueByName);
 
 				// Read second data row, assert null value:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-					Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-					Assert.IsFalse( nullableIntValueByIndex.HasValue );
-					Assert.IsFalse( nullableIntValueByName .HasValue );
-				}
+				nullableIntValueByIndex = csv.GetField<int?>(0);
+				nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
+
+				Assert.IsFalse(nullableIntValueByIndex.HasValue);
+				Assert.IsFalse(nullableIntValueByName.HasValue);
 
 				// Read third data row, assert "3" value:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-					Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-					Assert.IsTrue( nullableIntValueByIndex.HasValue );
-					Assert.IsTrue( nullableIntValueByName .HasValue );
+				nullableIntValueByIndex = csv.GetField<int?>(0);
+				nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
 
-					Assert.AreEqual( 3, nullableIntValueByIndex );
-					Assert.AreEqual( 3, nullableIntValueByName  );
-				}
+				Assert.IsTrue(nullableIntValueByIndex.HasValue);
+				Assert.IsTrue(nullableIntValueByName.HasValue);
+
+				Assert.AreEqual(3, nullableIntValueByIndex);
+				Assert.AreEqual(3, nullableIntValueByName);
 
 				// Read to end of file:
-				{
-					Assert.IsFalse( csv.Read() );
-				}
+				Assert.IsFalse(csv.Read());
 			}
 		}
 
 		[TestMethod]
 		public void TwoColumnCsvWithHeadersAndPresentAndNullDataRowTest()
 		{
-			const string csvInput =
-				( "NullableInt32Field,NullableStringField" + "\r\n" ) +
-				( "1,"                                     + "\r\n" ) + //    1, NULL
-				( ",\"Foo\""                               + "\r\n" ) + // NULL, "Foo"
-				( ","                                      + "\r\n" ) + // NULL, NULL
-				( "4,\"Bar\""                              + "\r\n" );  //    4, "Bar"
+			var parser = new ParserMock
+			{
+				{ "NullableInt32Field", "NullableStringField" },
+				{ "1" },
+				{ "", "Foo" },
+				{ "", "" },
+				{ "4", "Bar" },
+				{ null }
+			};
 
-			using( var reader = new StringReader( csvInput ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var csv = new CsvReader(parser))
 			{
 				csv.Configuration.IgnoreBlankLines = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add( string.Empty ); // Read empty fields as nulls instead of `""`.
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty); // Read empty fields as nulls instead of `""`.
 
 				// Read header row, assert header row columns:
-				{
-					Assert.IsTrue( csv.Read() );
-					Assert.IsTrue( csv.ReadHeader() );
-					Assert.AreEqual( 2, csv.Context.HeaderRecord.Length );
-					Assert.AreEqual( "NullableInt32Field" , csv.Context.HeaderRecord[0] );
-					Assert.AreEqual( "NullableStringField", csv.Context.HeaderRecord[1] );
-				}
+				Assert.IsTrue(csv.Read());
+				Assert.IsTrue(csv.ReadHeader());
+				Assert.AreEqual(2, csv.Context.HeaderRecord.Length);
+				Assert.AreEqual("NullableInt32Field", csv.Context.HeaderRecord[0]);
+				Assert.AreEqual("NullableStringField", csv.Context.HeaderRecord[1]);
 
 				// Read first data row:
-				{
-					Assert.IsTrue( csv.Read() );
+				Assert.IsTrue(csv.Read());
 
-					// Read `Int32?`, assert "1" value:
-					{
-						Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-						Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				// Read `Int32?`, assert "1" value:
+				var nullableIntValueByIndex = csv.GetField<int?>(0);
+				var nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
 
-						Assert.IsTrue( nullableIntValueByIndex.HasValue );
-						Assert.IsTrue( nullableIntValueByName .HasValue );
+				Assert.IsTrue(nullableIntValueByIndex.HasValue);
+				Assert.IsTrue(nullableIntValueByName.HasValue);
 
-						Assert.AreEqual( 1, nullableIntValueByIndex );
-						Assert.AreEqual( 1, nullableIntValueByName  );
-					}
+				Assert.AreEqual(1, nullableIntValueByIndex);
+				Assert.AreEqual(1, nullableIntValueByName);
 
-					// Read nullable String, assert null value:
-					{
-						String strByIndex = csv.GetField<string>( index: 1 );
-						String strByName  = csv.GetField<string>( name: "NullableStringField" );
+				// Read nullable String, assert null value:
+				var strByIndex = csv.GetField<string>(1);
+				var strByName = csv.GetField<string>("NullableStringField");
 
-						Assert.IsNull( strByIndex );
-						Assert.IsNull( strByName  );
-					}
-				}
+				Assert.IsNull(strByIndex);
+				Assert.IsNull(strByName);
 
 				// Read second data row:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					// Read `Int32?`, assert NULL value:
-					{
-						Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-						Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-						Assert.IsFalse( nullableIntValueByIndex.HasValue );
-						Assert.IsFalse( nullableIntValueByName .HasValue );
-					}
+				// Read `Int32?`, assert NULL value:
+				nullableIntValueByIndex = csv.GetField<int?>(0);
+				nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
 
-					// Read nullable String, assert "Foo" value:
-					{
-						String strByIndex = csv.GetField<string>( index: 1 );
-						String strByName  = csv.GetField<string>( name: "NullableStringField" );
+				Assert.IsFalse(nullableIntValueByIndex.HasValue);
+				Assert.IsFalse(nullableIntValueByName.HasValue);
 
-						Assert.AreEqual( "Foo", strByIndex );
-						Assert.AreEqual( "Foo", strByName  );
-					}
-				}
+				// Read nullable String, assert "Foo" value:
+				strByIndex = csv.GetField<string>(1);
+				strByName = csv.GetField<string>("NullableStringField");
+
+				Assert.AreEqual("Foo", strByIndex);
+				Assert.AreEqual("Foo", strByName);
 
 				// Read third data row:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					// Read `Int32?`, assert NULL value:
-					{
-						Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-						Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-						Assert.IsFalse( nullableIntValueByIndex.HasValue );
-						Assert.IsFalse( nullableIntValueByName .HasValue );
-					}
+				// Read `Int32?`, assert NULL value:
+				nullableIntValueByIndex = csv.GetField<int?>(0);
+				nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
 
-					// Read nullable String, assert "Foo" value:
-					{
-						String strByIndex = csv.GetField<string>( index: 1 );
-						String strByName  = csv.GetField<string>( name: "NullableStringField" );
+				Assert.IsFalse(nullableIntValueByIndex.HasValue);
+				Assert.IsFalse(nullableIntValueByName.HasValue);
 
-						Assert.IsNull( strByIndex );
-						Assert.IsNull( strByName  );
-					}
-				}
+				// Read nullable String, assert "Foo" value:
+				strByIndex = csv.GetField<string>(1);
+				strByName = csv.GetField<string>("NullableStringField");
+
+				Assert.IsNull(strByIndex);
+				Assert.IsNull(strByName);
 
 				// Read fourth data row:
-				{
-					Assert.IsTrue( csv.Read() );
-					
-					// Read `Int32?`, assert "3" value:
-					{
-						Int32? nullableIntValueByIndex = csv.GetField<Int32?>( index: 0 );
-						Int32? nullableIntValueByName  = csv.GetField<Int32?>( name: "NullableInt32Field" );
+				Assert.IsTrue(csv.Read());
 
-						Assert.IsTrue( nullableIntValueByIndex.HasValue );
-						Assert.IsTrue( nullableIntValueByName .HasValue );
+				// Read `Int32?`, assert "3" value:
+				nullableIntValueByIndex = csv.GetField<int?>(0);
+				nullableIntValueByName = csv.GetField<int?>("NullableInt32Field");
 
-						Assert.AreEqual( 4, nullableIntValueByIndex );
-						Assert.AreEqual( 4, nullableIntValueByName  );
-					}
+				Assert.IsTrue(nullableIntValueByIndex.HasValue);
+				Assert.IsTrue(nullableIntValueByName.HasValue);
 
-					// Read nullable String, assert "Bar" value:
-					{
-						String strByIndex = csv.GetField<string>( index: 1 );
-						String strByName  = csv.GetField<string>( name: "NullableStringField" );
+				Assert.AreEqual(4, nullableIntValueByIndex);
+				Assert.AreEqual(4, nullableIntValueByName);
 
-						Assert.AreEqual( "Bar", strByIndex );
-						Assert.AreEqual( "Bar", strByName  );
-					}
-				}
+				// Read nullable String, assert "Bar" value:
+				strByIndex = csv.GetField<string>(1);
+				strByName = csv.GetField<string>("NullableStringField");
+
+				Assert.AreEqual("Bar", strByIndex);
+				Assert.AreEqual("Bar", strByName);
 
 				// Read to end of file:
-				{
-					Assert.IsFalse( csv.Read() );
-				}
+				Assert.IsFalse(csv.Read());
 			}
 		}
 	}
