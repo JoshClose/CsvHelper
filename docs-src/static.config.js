@@ -1,7 +1,5 @@
-import React from "react"
-import fs from "fs-extra"
-import axios from "axios"
-import ExtractTextPlugin from "extract-text-webpack-plugin"
+import fs from "fs-extra";
+import ExtractTextPlugin from "extract-text-webpack-plugin";
 
 function createData(name) {
 	return () => ({
@@ -57,40 +55,65 @@ export default {
 			},
 			{
 				is404: true,
-				component: 'src/components/404',
+				component: "src/components/404",
 			}
 		]
 	},
 	webpack: (config, { defaultLoaders, stage }) => {
-		config.module.rules = [{
-			oneOf: [
+		config.plugins.push(
+			new ExtractTextPlugin({
+				filename: "[name].css"
+			})
+		);
+
+		let loaders = []
+
+		if (stage === 'dev') {
+			loaders = [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'sass-loader' }]
+		} else {
+			loaders = [
 				{
-					test: /\.s[ac]ss$/,
-					use:
-						stage === 'dev'
-							? [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'sass-loader' }]
-							: ExtractTextPlugin.extract({
-								use: [
-									{
-										loader: 'css-loader',
-										options: {
-											importLoaders: 1,
-											minimize: true,
-											sourceMap: false,
-										},
-									},
-									{
-										loader: 'sass-loader',
-										options: { includePaths: ['src/'] },
-									},
-								],
-							}),
+					loader: 'css-loader',
+					options: {
+						importLoaders: 1,
+						minimize: stage === 'prod',
+						sourceMap: false,
+					},
 				},
-				defaultLoaders.cssLoader,
-				defaultLoaders.jsLoader,
-				defaultLoaders.fileLoader,
-			],
-		}]
+				{
+					loader: 'sass-loader',
+					options: { includePaths: ['src/'] },
+				},
+			]
+
+			// Don't extract css to file during node build process
+			if (stage !== 'node') {
+				loaders = ExtractTextPlugin.extract({
+					fallback: {
+						loader: 'style-loader',
+						options: {
+							sourceMap: false,
+							hmr: false,
+						},
+					},
+					use: loaders,
+				})
+			}
+		}
+
+		config.module.rules = [
+			{
+				oneOf: [
+					{
+						test: /\.s(a|c)ss$/,
+						use: loaders,
+					},
+					defaultLoaders.cssLoader,
+					defaultLoaders.jsLoader,
+					defaultLoaders.fileLoader,
+				],
+			},
+		]
 		return config
 	},
 	onBuild: async () => {
