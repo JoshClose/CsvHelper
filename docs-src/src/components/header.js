@@ -6,8 +6,8 @@ export default class Header extends Component {
 	render() {
 		return (
 			<header className="header">
-				<div className="container">
-					<nav className="navbar">
+				<nav className="navbar is-light">
+					<div className="container">
 						<div className="navbar-brand">
 							<Link className="navbar-item" to="/">
 								<img src="/images/logo-header.png" width="66" height="28" />
@@ -82,8 +82,8 @@ export default class Header extends Component {
 								</div>
 							</div>
 						</div>
-					</nav>
-				</div>
+					</div>
+				</nav>
 
 				{/*
 				The actual navbar above is fixed so we need to add the same amount of space

@@ -1,5 +1,4 @@
-@import "../../node_modules/bulma/sass/utilities/initial-variables";
-//@import "initial-variables/css";
+@charset "utf-8";
 @import "../../node_modules/bulma/bulma";
 
 pre
@@ -26,20 +25,20 @@ pre
 			top: 0;
 			right: 0;
 			border: 0;
-			z-index: 2;
+			z-index: 50;
 		}
 	}
 }
 
 .header
 {
-	.container
+	.navbar:first-child
 	{
 		position: fixed !important;
 		top: 0;
 		left: 0;
 		right: 0;
-		z-index: 1;
+		z-index: 40;
 	}
 }
 

@@ -16,42 +16,42 @@ export default {
 	getRoutes: async () => {
 		return [
 			{
-				path: "",
+				path: "/",
 				component: "src/components/content",
 				getData: createData("home")
 			},
 			{
-				path: "reading",
+				path: "/reading",
 				component: "src/components/content",
 				getData: createData("reading")
 			},
 			{
-				path: "writing",
+				path: "/writing",
 				component: "src/components/content",
 				getData: createData("writing")
 			},
 			{
-				path: "mapping",
+				path: "/mapping",
 				component: "src/components/content",
 				getData: createData("mapping")
 			},
 			{
-				path: "configuration",
+				path: "/configuration",
 				component: "src/components/content",
 				getData: createData("configuration")
 			},
 			{
-				path: "type-conversion",
+				path: "/type-conversion",
 				component: "src/components/content",
 				getData: createData("type-conversion")
 			},
 			{
-				path: "examples",
+				path: "/examples",
 				component: "src/components/content",
 				getData: createData("examples")
 			},
 			{
-				path: "change-log",
+				path: "/change-log",
 				component: "src/components/content",
 				getData: createData("change-log")
 			},

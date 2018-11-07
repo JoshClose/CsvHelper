@@ -1,5 +1,5 @@
 {
-	"name": "react-static-example-basic",
+	"name": "csvhelper-docs",
 	"version": "1.0.1",
 	"main": "index.js",
 	"license": "MIT",
@@ -11,20 +11,18 @@
 	},
 	"dependencies": {
 		"axios": "^0.18.0",
-		"bulma": "^0.6.2",
+		"bulma": "^0.7.2",
+		"eslint-config-react-tools": "^1.1.6",
+		"extract-text-webpack-plugin": "^3.0.2",
 		"font-awesome": "^4.7.0",
 		"highlight.js": "^9.12.0",
-		"marked": "^0.3.16",
+		"marked": "^0.5.1",
+		"node-sass": "^4.7.2",
 		"react": "^16.0.0",
 		"react-dom": "^16.0.0",
 		"react-router": "^4.2.0",
-		"react-static": "^5.5.11"
-	},
-	"devDependencies": {
-		"eslint-config-react-tools": "1.x.x",
-		"extract-text-webpack-plugin": "^3.0.2",
-		"node-sass": "^4.7.2",
-		"sass-loader": "^6.0.6",
-		"serve": "^6.1.0"
+		"react-static": "^5.9.12",
+		"sass-loader": "^7.1.0",
+		"serve": "^10.0.2"
 	}
 }
