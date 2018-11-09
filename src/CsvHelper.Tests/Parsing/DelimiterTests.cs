@@ -17,22 +17,41 @@ namespace CsvHelper.Tests.Parsing
 		[TestMethod]
 		public void MultipleCharDelimiterWithPartOfDelimiterInFieldTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var parser = new CsvParser( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var parser = new CsvParser(reader))
 			{
-				writer.Write( "1&|$2&3&|$4\r\n" );
+				writer.Write("1&|$2&3&|$4\r\n");
 				writer.Flush();
 				stream.Position = 0;
 
 				parser.Configuration.Delimiter = "&|$";
 				var line = parser.Read();
 
-				Assert.AreEqual( 3, line.Length );
-				Assert.AreEqual( "1", line[0] );
-				Assert.AreEqual( "2&3", line[1] );
-				Assert.AreEqual( "4", line[2] );
+				Assert.AreEqual(3, line.Length);
+				Assert.AreEqual("1", line[0]);
+				Assert.AreEqual("2&3", line[1]);
+				Assert.AreEqual("4", line[2]);
+			}
+		}
+
+		[TestMethod]
+		public void NullDelimiterTest()
+		{
+			var s = new StringBuilder();
+			s.Append("1\02\03\r\n");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.Delimiter = "\0";
+
+				var line = parser.Read();
+
+				Assert.AreEqual(3, line.Length);
+				Assert.AreEqual("1", line[0]);
+				Assert.AreEqual("2", line[1]);
+				Assert.AreEqual("3", line[2]);
 			}
 		}
 	}

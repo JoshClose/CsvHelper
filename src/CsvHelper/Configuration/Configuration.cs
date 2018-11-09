@@ -160,11 +160,6 @@ namespace CsvHelper.Configuration
 					throw new ConfigurationException("Carriage return is not a valid delimiter.");
 				}
 
-				if (value == "\0")
-				{
-					throw new ConfigurationException("Null is not a valid delimiter.");
-				}
-
 				if (value == Convert.ToString(quote))
 				{
 					throw new ConfigurationException("You can not use the quote as a delimiter.");
