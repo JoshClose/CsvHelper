@@ -1,5 +1,76 @@
 # Change Log
 
+### 9.0.0
+
+This release contains changes from 8.3.0 and 8.2.0.
+
+### 8.3.0
+
+This has been unlisted in nuget because of a breaking change before it. The changes are in 9.0.0.
+
+#### Features
+
+- Removed restriction that was disallowing the null char '\0' to be used as a delimiter.
+
+### 8.2.0
+
+This has been unlisted in nuget because of a breaking change. The changes are in 9.0.0.
+
+#### Features
+
+- Added Optional config to factory builder.
+- Added `OptionalAttribute`.
+
+#### Breaking Changes
+
+- Added `IHasMapOptions : IHasOptional`.
+- Added `MemberMapBuilder : IHasOptional`.
+- Added `MemberMapBuilder : IHasOptionalOptions`.
+
+### 8.1.1
+
+#### Features
+
+- Configuration functions are available on a static class `ConfigurationFunctions`.
+
+#### Bug Fixes
+
+- Fixed issue where `IgnoreBlankLines` wasn't being checked in `GetField<T>(int index, ITypeConverter converter)`.
+
+### 8.1.0
+
+#### Features
+
+- Added `IsOptional` mapping option.
+
+### 8.0.0
+
+#### Features
+
+- Added Unity build.
+- Added `IsOptional` mapping option.
+
+#### Bug Fixes
+
+- Added missing interface methods to configs.
+- Fixed issue with parsing when only CR is used and fields are quoted.
+- Fixed issue where `GetField` was calling the `ObjectResolver`.
+- Made the contexts not serializable in exceptions.
+- Fixed issue with `ObjectResolver` fallback causing a `StackOverflowException`.
+
+#### Breaking Changes
+
+- Added `IReaderConfiguration.IgnoreReferences.
+- Added `IWriterConfiguration.IgnoreReferences.
+
+### 7.1.1
+
+#### Bug Fixes
+
+- Added constructor to `CsvWriter` that allows for `leaveOpen` to be set.
+- Made `CsvWriter.Dispos`e able to be called multiple times.
+- Added `ConfigureAwait(false)` to all async calls.
+
 ### 7.1.0
 
 #### Features
