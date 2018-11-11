@@ -60,8 +60,8 @@ This has been unlisted in nuget because of a breaking change. The changes are in
 
 #### Breaking Changes
 
-- Added `IReaderConfiguration.IgnoreReferences.
-- Added `IWriterConfiguration.IgnoreReferences.
+- Added `IReaderConfiguration.IgnoreReferences`.
+- Added `IWriterConfiguration.IgnoreReferences`.
 
 ### 7.1.1
 
