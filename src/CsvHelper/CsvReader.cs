@@ -174,6 +174,12 @@ namespace CsvHelper
 					continue;
 				}
 
+				if (memberMap.Data.IsIndexSet && !memberMap.Data.IsNameSet)
+				{
+					// If there is only an index set, we don't want to validate the header name.
+					continue;
+				}
+
 				var index = GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true);
 				var isValid = index != -1 || memberMap.Data.IsOptional;
 				Configuration.HeaderValidated?.Invoke(isValid, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context);

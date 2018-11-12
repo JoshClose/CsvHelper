@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class HeaderValidationTests
-    {
+	public class HeaderValidationTests
+	{
 		[TestMethod]
 		public void CorrectHeadersTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "Id,Name" ) ) )
+			using (var csv = new CsvReader(new StringReader("Id,Name")))
 			{
 				csv.Read();
 				csv.ReadHeader();
@@ -26,71 +26,71 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertiesTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>( () => csv.ValidateHeader<Test>() );
+				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<Test>());
 			}
 		}
 
 		[TestMethod]
 		public void ReferencesTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>( () => csv.ValidateHeader<HasReference>() );
+				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<HasReference>());
 			}
 		}
 
 		[TestMethod]
 		public void ConstructorParametersTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>( () => csv.ValidateHeader<HasConstructor>() );
+				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<HasConstructor>());
 			}
 		}
 
 		[TestMethod]
 		public void PropertiesGetRecordTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
-				Assert.ThrowsException<ValidationException>( () => csv.GetRecord( typeof( Test ) ) );
+				Assert.ThrowsException<ValidationException>(() => csv.GetRecord(typeof(Test)));
 			}
 		}
 
 		[TestMethod]
 		public void PropertiesGetRecordGenericTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
-				Assert.ThrowsException<ValidationException>( () => csv.GetRecord<Test>() );
+				Assert.ThrowsException<ValidationException>(() => csv.GetRecord<Test>());
 			}
 		}
 
 		[TestMethod]
 		public void PropertiesGetRecordsTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
-				Assert.ThrowsException<ValidationException>( () => csv.GetRecords( typeof( Test ) ).ToList() );
+				Assert.ThrowsException<ValidationException>(() => csv.GetRecords(typeof(Test)).ToList());
 			}
 		}
 
 		[TestMethod]
 		public void PropertiesGetRecordsGenericTest()
 		{
-			using( var csv = new CsvReader( new StringReader( "bad data" ) ) )
+			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
-				Assert.ThrowsException<ValidationException>( () => csv.GetRecords<Test>().ToList() );
+				Assert.ThrowsException<ValidationException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}
 
@@ -98,14 +98,14 @@ namespace CsvHelper.Tests
 		public void PrivateSetterTest()
 		{
 			var data = new StringBuilder();
-			data.AppendLine( "Number" );
-			data.AppendLine( "1" );
-			using( var csv = new CsvReader( new StringReader( data.ToString() ) ) )
+			data.AppendLine("Number");
+			data.AppendLine("1");
+			using (var csv = new CsvReader(new StringReader(data.ToString())))
 			{
 				var records = csv.GetRecords<HasPrivateSetter>().ToList();
 				var record = records[0];
-				Assert.AreEqual( 1, record.Number );
-				Assert.AreEqual( 2, record.Double );
+				Assert.AreEqual(1, record.Number);
+				Assert.AreEqual(2, record.Double);
 			}
 		}
 
@@ -113,15 +113,41 @@ namespace CsvHelper.Tests
 		public void IgnorePropertyTest()
 		{
 			var data = new StringBuilder();
-			data.AppendLine( "Id" );
-			data.AppendLine( "1" );
-			using( var csv = new CsvReader( new StringReader( data.ToString() ) ) )
+			data.AppendLine("Id");
+			data.AppendLine("1");
+			using (var csv = new CsvReader(new StringReader(data.ToString())))
 			{
 				csv.Configuration.RegisterClassMap<HasIngoredPropertyMap>();
 				var records = csv.GetRecords<Test>().ToList();
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.IsNull( record.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.IsNull(record.Name);
+			}
+		}
+
+		[TestMethod]
+		public void HasIndexNoNameTest()
+		{
+			using (var csv = new CsvReader(new StringReader("Id")))
+			{
+				csv.Configuration.RegisterClassMap<HasIndexNoNameMap>();
+
+				csv.Read();
+				csv.ReadHeader();
+				csv.ValidateHeader<Test>();
+			}
+		}
+
+		[TestMethod]
+		public void HasIndexAndNameTest()
+		{
+			using (var csv = new CsvReader(new StringReader("Id")))
+			{
+				csv.Configuration.RegisterClassMap<HasIndexAndNameMap>();
+
+				csv.Read();
+				csv.ReadHeader();
+				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<Test>());
 			}
 		}
 
@@ -143,7 +169,7 @@ namespace CsvHelper.Tests
 
 			public string Name { get; private set; }
 
-			public HasConstructor( int Id, string Name )
+			public HasConstructor(int Id, string Name)
 			{
 				this.Id = Id;
 				this.Name = Name;
@@ -162,8 +188,26 @@ namespace CsvHelper.Tests
 			public HasIngoredPropertyMap()
 			{
 				AutoMap();
-				Map( m => m.Name ).Ignore();
+				Map(m => m.Name).Ignore();
 			}
 		}
-    }
+
+		private sealed class HasIndexNoNameMap : ClassMap<Test>
+		{
+			public HasIndexNoNameMap()
+			{
+				Map(m => m.Id).Index(0);
+				Map(m => m.Name).Index(1);
+			}
+		}
+
+		private sealed class HasIndexAndNameMap : ClassMap<Test>
+		{
+			public HasIndexAndNameMap()
+			{
+				Map(m => m.Id).Index(0).Name("Id");
+				Map(m => m.Name).Index(1).Name("Name");
+			}
+		}
+	}
 }
