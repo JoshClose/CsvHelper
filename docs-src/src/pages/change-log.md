@@ -1,5 +1,12 @@
 # Change Log
 
+### 9.0.1
+
+#### Bug Fixes
+
+- Fixed issue where `leaveOpen` parameter in `CsvParser` constructor was hard coded.
+- Fixed issue where header validation was being ran on properties that only had an index mapped.
+
 ### 9.0.0
 
 This release contains changes from 8.3.0 and 8.2.0.
