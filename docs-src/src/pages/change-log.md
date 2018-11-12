@@ -1,5 +1,11 @@
 # Change Log
 
+### 9.0.2
+
+#### Bug Fixes
+
+- Fixed issue where `WriteAsync` wasn't calling `SanitizeForInjection`.
+
 ### 9.0.1
 
 #### Bug Fixes
