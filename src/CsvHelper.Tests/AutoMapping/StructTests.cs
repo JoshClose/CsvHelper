@@ -60,18 +60,17 @@ namespace CsvHelper.Tests.AutoMapping
 			}
 		}
 
+		public class A
+		{
+			public B Simple1 { get; set; }
+			public string Title { get; set; }
+			public B Simple2 { get; set; }
+		}
+
 		public struct B
 		{
 			public int Id { get; set; }
 			public string Name { get; set; }
-		}
-
-		public class A
-		{
-			public B Simple1 { get; set; }
-
-			public string Title { get; set; }
-			public B Simple2 { get; set; }
 		}
 	}
 }

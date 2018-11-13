@@ -284,7 +284,7 @@ namespace CsvHelper.Configuration
 
 				var memberTypeInfo = member.MemberType().GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof(DefaultTypeConverter);
-				if (isDefaultConverter && (memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct()))
+				if (isDefaultConverter)
 				{
 					// If the type is not one covered by our type converters
 					// and it has a parameterless constructor, create a
@@ -303,6 +303,12 @@ namespace CsvHelper.Configuration
 					mapParents.AddLast(type);
 					var refMapType = typeof(DefaultClassMap<>).MakeGenericType(member.MemberType());
 					var refMap = (ClassMap)ReflectionHelper.CreateInstance(refMapType);
+
+					if (memberTypeInfo.HasConstructor() && !memberTypeInfo.HasParameterlessConstructor() && !memberTypeInfo.IsUserDefinedStruct())
+					{
+						AutoMapConstructorParameters(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
+					}
+
 					// Need to use Max here for nested types.
 					AutoMapMembers(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
@@ -320,7 +326,7 @@ namespace CsvHelper.Configuration
 						map.ReferenceMaps.Add(referenceMap);
 					}
 				}
-				else if (!isDefaultConverter)
+				else
 				{
 					// Only add the member map if it can be converted later on.
 					// If the member will use the default converter, don't add it because
