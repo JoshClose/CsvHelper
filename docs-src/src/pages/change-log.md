@@ -1,5 +1,11 @@
 # Change Log
 
+### 9.1.0
+
+#### Features
+
+- Allow parameterless constructor on classes and reference property classes when auto mapping.
+
 ### 9.0.2
 
 #### Bug Fixes
