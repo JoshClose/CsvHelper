@@ -24,7 +24,7 @@
 		<!-- NuGet -->
 		<PackageId>CsvHelper</PackageId>
 		<PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
-		<PackageReleaseNotes>http://joshclose.github.io/CsvHelper/#change-log</PackageReleaseNotes>
+		<PackageReleaseNotes>https://joshclose.github.io/CsvHelper/change-log</PackageReleaseNotes>
 		<PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
 		<PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
 		<PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
