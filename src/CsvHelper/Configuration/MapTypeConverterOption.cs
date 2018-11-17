@@ -86,7 +86,7 @@ namespace CsvHelper.Configuration
 					memberMap.Data.TypeConverterOptions.BooleanTrueValues.Clear();
 				}
 
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange( booleanValues );
+				memberMap.Data.TypeConverterOptions.BooleanTrueValues.UnionWith( booleanValues );
 			}
 			else
 			{
@@ -95,7 +95,7 @@ namespace CsvHelper.Configuration
 					memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
 				}
 
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange( booleanValues );
+				memberMap.Data.TypeConverterOptions.BooleanFalseValues.UnionWith( booleanValues );
 			}
 
 			return memberMap;
@@ -124,7 +124,7 @@ namespace CsvHelper.Configuration
 				memberMap.Data.TypeConverterOptions.NullValues.Clear();
 			}
 
-			memberMap.Data.TypeConverterOptions.NullValues.AddRange( nullValues );
+			memberMap.Data.TypeConverterOptions.NullValues.UnionWith( nullValues );
 
 			return memberMap;
 		}

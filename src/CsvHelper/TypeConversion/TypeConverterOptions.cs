@@ -44,21 +44,21 @@ namespace CsvHelper.TypeConversion
         public string[] Formats { get; set; }
 
         /// <summary>
-        /// Gets the list of values that can be
+        /// Gets the set of values that can be
         /// used to represent a boolean of true.
         /// </summary>
-        public List<string> BooleanTrueValues { get; } = new List<string>(defaultBooleanTrueValues);
+        public HashSet<string> BooleanTrueValues { get; } = new HashSet<string>(defaultBooleanTrueValues);
 
         /// <summary>
-        /// Gets the list of values that can be
+        /// Gets the set of values that can be
         /// used to represent a boolean of false.
         /// </summary>
-        public List<string> BooleanFalseValues { get; } = new List<string>(defaultBooleanFalseValues);
+        public HashSet<string> BooleanFalseValues { get; } = new HashSet<string>(defaultBooleanFalseValues);
 
         /// <summary>
-        /// Gets the list of values that can be used to represent a null value.
+        /// Gets the set of values that can be used to represent a null value.
         /// </summary>
-        public List<string> NullValues { get; } = new List<string>(defaultNullValues);
+        public HashSet<string> NullValues { get; } = new HashSet<string>(defaultNullValues);
 
         /// <summary>
         /// Merges TypeConverterOptions by applying the values of sources in order on to each other.
@@ -114,20 +114,17 @@ namespace CsvHelper.TypeConversion
 
                 if (!defaultBooleanTrueValues.SequenceEqual(source.BooleanTrueValues))
                 {
-                    options.BooleanTrueValues.Clear();
-                    options.BooleanTrueValues.AddRange(source.BooleanTrueValues);
+                    options.BooleanTrueValues.UnionWith(source.BooleanTrueValues);
                 }
 
                 if (!defaultBooleanFalseValues.SequenceEqual(source.BooleanFalseValues))
                 {
-                    options.BooleanFalseValues.Clear();
-                    options.BooleanFalseValues.AddRange(source.BooleanFalseValues);
+                    options.BooleanFalseValues.UnionWith(source.BooleanFalseValues);
                 }
 
                 if (!defaultNullValues.SequenceEqual(source.NullValues))
                 {
-                    options.NullValues.Clear();
-                    options.NullValues.AddRange(source.NullValues);
+                    options.NullValues.UnionWith(source.NullValues);
                 }
             }
 
