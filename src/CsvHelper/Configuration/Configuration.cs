@@ -75,7 +75,7 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		public virtual Action<CsvHelperException> ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
+		public virtual Func<CsvHelperException, bool> ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to

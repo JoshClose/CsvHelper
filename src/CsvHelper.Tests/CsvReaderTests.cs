@@ -724,6 +724,7 @@ namespace CsvHelper.Tests
 			csv.Configuration.ReadingExceptionOccurred = ( ex ) =>
 			{
 				callbackCount++;
+				return false;
 			};
 
 			var records = csv.GetRecords<TestBoolean>().ToList();

@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		Action<CsvHelperException> ReadingExceptionOccurred { get; set; }
+		Func<CsvHelperException, bool> ReadingExceptionOccurred { get; set; }
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.

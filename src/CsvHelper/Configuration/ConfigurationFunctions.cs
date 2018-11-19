@@ -51,9 +51,9 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Throws the given <paramref name="exception"/>.
 		/// </summary>
-		public static void ReadingExceptionOccurred(CsvHelperException exception)
+		public static bool ReadingExceptionOccurred(CsvHelperException exception)
 		{
-			throw exception;
+			return true;
 		}
 
 		/// <summary>
