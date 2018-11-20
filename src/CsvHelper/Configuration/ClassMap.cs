@@ -274,7 +274,7 @@ namespace CsvHelper.Configuration
 
 			foreach (var member in members)
 			{
-				var typeConverterType = configuration.TypeConverterCache.GetConverter(member.MemberType()).GetType();
+				var typeConverterType = configuration.TypeConverterCache.GetConverter(member).GetType();
 
 				if (configuration.HasHeaderRecord && enumerableConverters.Contains(typeConverterType))
 				{
