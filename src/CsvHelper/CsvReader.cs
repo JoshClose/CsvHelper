@@ -1234,6 +1234,11 @@ namespace CsvHelper
 				throw new ReaderException(context, "There is no header record to determine the index by name.");
 			}
 
+			if (context.HeaderRecord == null)
+			{
+				throw new ReaderException(context, "The header has not been read. You must call ReadHeader() before any fields can be retrieved by name.");
+			}
+
 			// Caching the named index speeds up mappings that use ConvertUsing tremendously.
 			var nameKey = string.Join("_", names) + index;
 			if (context.NamedIndexCache.ContainsKey(nameKey))

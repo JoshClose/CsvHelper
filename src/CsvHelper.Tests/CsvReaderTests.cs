@@ -181,6 +181,7 @@ namespace CsvHelper.Tests
 			var reader = new CsvReader( parserMock );
 			reader.Configuration.MissingFieldFound = null;
 			reader.Read();
+			reader.ReadHeader();
 
 			Assert.IsNull( reader.GetField<string>( "blah" ) );
 		}
@@ -197,6 +198,7 @@ namespace CsvHelper.Tests
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
 
 			try
 			{
@@ -205,7 +207,7 @@ namespace CsvHelper.Tests
 			}
 			catch( MissingFieldException ex )
 			{
-				Assert.AreEqual( $"Field with names ['blah'] at index '0' does not exist. You can ignore missing fields by setting {nameof( reader.Configuration.MissingFieldFound )} to null.", ex.Message );
+				Assert.AreEqual( $"Field with name 'blah' does not exist. You can ignore missing fields by setting {nameof( reader.Configuration.MissingFieldFound )} to null.", ex.Message );
 			}
 		}
 

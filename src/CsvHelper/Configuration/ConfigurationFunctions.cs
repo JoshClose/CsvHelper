@@ -32,12 +32,23 @@ namespace CsvHelper.Configuration
 		{
 			var messagePostfix = $"You can ignore missing fields by setting {nameof(MissingFieldFound)} to null.";
 
-			if (headerNames != null && headerNames.Length > 0)
+			// Get by index.
+
+			if (headerNames == null || headerNames.Length == 0)
 			{
-				throw new MissingFieldException(context, $"Field with names ['{string.Join("', '", headerNames)}'] at index '{index}' does not exist. {messagePostfix}");
+				throw new MissingFieldException(context, $"Field at index '{index}' does not exist. {messagePostfix}");
 			}
 
-			throw new MissingFieldException(context, $"Field at index '{index}' does not exist. {messagePostfix}");
+			// Get by name.
+
+			var indexText = index > 0 ? $" at field index '{index}'" : string.Empty;
+
+			if (headerNames.Length == 1)
+			{
+				throw new MissingFieldException(context, $"Field with name '{headerNames[0]}'{indexText} does not exist. {messagePostfix}");
+			}
+
+			throw new MissingFieldException(context, $"Field containing names '{string.Join("' or '", headerNames)}'{indexText} does not exist. {messagePostfix}");
 		}
 
 		/// <summary>
