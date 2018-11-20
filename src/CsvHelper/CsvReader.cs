@@ -1380,6 +1380,8 @@ namespace CsvHelper
 				throw new ReaderException(context, "No header record was found.");
 			}
 
+			context.NamedIndexes.Clear();
+
 			for (var i = 0; i < context.HeaderRecord.Length; i++)
 			{
 				var name = context.ReaderConfiguration.PrepareHeaderForMatch(context.HeaderRecord[i]);

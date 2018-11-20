@@ -114,5 +114,61 @@ namespace CsvHelper.Tests.Reading
 			csv.ReadHeader();
 			csv.ReadHeader();
 		}
+
+		[TestMethod]
+		public void ReadHeaderResetsNamedIndexesTest()
+		{
+			var parser = new ParserMock
+			{
+				new [] { "Id", "Name" },
+				new [] { "Name", "Id" },
+			};
+			var csv = new CsvReader(parser);
+			csv.Read();
+			csv.ReadHeader();
+
+			Assert.AreEqual(0, csv.Context.NamedIndexes["Id"][0]);
+			Assert.AreEqual(1, csv.Context.NamedIndexes["Name"][0]);
+
+			csv.GetField("Id");
+			csv.GetField("Name");
+
+			csv.Read();
+			csv.ReadHeader();
+
+			Assert.AreEqual(1, csv.Context.NamedIndexes["Id"][0]);
+			Assert.AreEqual(0, csv.Context.NamedIndexes["Name"][0]);
+		}
+
+		[TestMethod]
+		public void MultipleReadHeaderCallsWorksWithNamedIndexCacheTest()
+		{
+			var parser = new ParserMock
+			{
+				new [] { "Id", "Name", "Id", "Name" },
+				new [] { "1", "one", "2", "two" },
+				new [] { "Name", "Id", "Name", "Id" },
+				new [] { "three", "3", "four", "4" },
+			};
+			var csv = new CsvReader(parser);
+
+			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
+
+			Assert.AreEqual(1, csv.GetField<int>("Id"));
+			Assert.AreEqual("one", csv.GetField("Name"));
+			Assert.AreEqual(2, csv.GetField<int>("Id", 1));
+			Assert.AreEqual("two", csv.GetField("Name", 1));
+
+			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
+
+			Assert.AreEqual(3, csv.GetField<int>("Id"));
+			Assert.AreEqual("three", csv.GetField("Name"));
+			Assert.AreEqual(4, csv.GetField<int>("Id", 1));
+			Assert.AreEqual("four", csv.GetField("Name", 1));
+		}
 	}
 }
