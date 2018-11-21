@@ -84,6 +84,13 @@ namespace CsvHelper.Configuration
 		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = ConfigurationFunctions.ShouldSkipRecord;
 
 		/// <summary>
+		/// Gets or sets a value indicating if a line break found in a quote field should
+		/// be considered bad data. True to consider a line break bad data, otherwise false.
+		/// Defaults to false.
+		/// </summary>
+		public virtual bool LineBreakInQuotedFieldIsBadData { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if fields should be sanitized
 		/// to prevent malicious injection. This covers MS Excel, 
 		/// Google Sheets and Open Office Calc.

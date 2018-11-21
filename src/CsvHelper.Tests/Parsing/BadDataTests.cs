@@ -83,5 +83,38 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual( "2\"two", record[1] );
 			}
 		}
+
+		[TestMethod]
+		public void LineBreakInQuotedFieldIsBadDataCrTest()
+		{
+			using (var reader = new StringReader("\"a\rb\""))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.LineBreakInQuotedFieldIsBadData = true;
+				Assert.ThrowsException<BadDataException>(() => parser.Read());
+			}
+		}
+
+		[TestMethod]
+		public void LineBreakInQuotedFieldIsBadDataLfTest()
+		{
+			using (var reader = new StringReader("\"a\nb\""))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.LineBreakInQuotedFieldIsBadData = true;
+				Assert.ThrowsException<BadDataException>(() => parser.Read());
+			}
+		}
+
+		[TestMethod]
+		public void LineBreakInQuotedFieldIsBadDataCrLfTest()
+		{
+			using (var reader = new StringReader("\"a\r\nb\""))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.LineBreakInQuotedFieldIsBadData = true;
+				Assert.ThrowsException<BadDataException>(() => parser.Read());
+			}
+		}
 	}
 }

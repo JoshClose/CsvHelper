@@ -42,6 +42,13 @@ namespace CsvHelper.Configuration
 		Action<ReadingContext> BadDataFound { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if a line break found in a quote field should
+		/// be considered bad data. True to consider a line break bad data, otherwise false.
+		/// Defaults to false.
+		/// </summary>
+		bool LineBreakInQuotedFieldIsBadData { get; set; }
+
+		/// <summary>
 		/// Gets or sets the character used to denote
 		/// a line that is commented out. Default is '#'.
 		/// </summary>
