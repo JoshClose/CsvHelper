@@ -810,6 +810,11 @@ namespace CsvHelper
 				{
 					if (c == '\r' || (c == '\n' && cPrev != '\r'))
 					{
+						if (context.ParserConfiguration.LineBreakInQuotedFieldIsBadData)
+						{
+							context.ParserConfiguration.BadDataFound?.Invoke(context);
+						}
+
 						// Inside a quote \r\n is just another character to absorb.
 						context.RawRow++;
 					}
