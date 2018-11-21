@@ -894,6 +894,45 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void InsideNoSpacesQuotesFieldHasEscapedQuotesTest()
+		{
+			using (var reader = new StringReader("\"a \"\"b\"\" c\""))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual("a \"b\" c", record[0]);
+			}
+		}
+
+		[TestMethod]
+		public void InsideQuotesBothSpacesFieldHasEscapedQuotesTest()
+		{
+			using (var reader = new StringReader("\" a \"\"b\"\" c \"\r\n"))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual("a \"b\" c", record[0]);
+			}
+		}
+
+		[TestMethod]
+		public void InsideQuotesBothSpacesFieldHasEscapedQuotesNoNewLineTest()
+		{
+			using (var reader = new StringReader("\" a \"\"b\"\" c \""))
+			using (var parser = new CsvParser(reader))
+			{
+				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
+				var record = parser.Read();
+
+				Assert.AreEqual("a \"b\" c", record[0]);
+			}
+		}
+
+		[TestMethod]
 		public void ReadingTest()
 		{
 			using( var stream = new MemoryStream() )

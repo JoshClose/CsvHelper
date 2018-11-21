@@ -554,14 +554,12 @@ namespace CsvHelper
 		protected virtual bool ReadQuotedField()
 		{
 			var inQuotes = true;
+			var quoteCount = 1;
 			// Set the start of the field to after the quote.
 			fieldReader.SetFieldStart();
 
-			var inSpaces = false;
 			while (true)
 			{
-				// 1,"2" ,3
-
 				var cPrev = c;
 
 				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
@@ -576,35 +574,68 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 
 				// Trim start inside quotes.
-				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes && cPrev == context.ParserConfiguration.Quote)
+				if (quoteCount == 1 && c == ' ' && cPrev == context.ParserConfiguration.Quote && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
 					ReadSpaces();
 					cPrev = ' ';
 					fieldReader.SetFieldStart(-1);
 				}
 
-				// Trim end inside of quotes.
-				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
+				// Trim end inside quotes.
+				if (inQuotes && c == ' ')
 				{
-					inSpaces = true;
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-				}
-				else if (inSpaces && c != ' ')
-				{
-					// Hit a non-space char.
-					// Need to determine if it's the end of the field or another char.
-					inSpaces = false;
+					ReadSpaces();
+					cPrev = ' ';
+
 					if (c == context.ParserConfiguration.Quote)
 					{
-						fieldReader.SetFieldStart(-1);
+						inQuotes = !inQuotes;
+						quoteCount++;
+
+						cPrev = c;
+
+						if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
+						{
+							// End of file.
+							fieldReader.SetFieldStart();
+							fieldReader.SetFieldEnd();
+							context.RecordBuilder.Add(fieldReader.GetField());
+
+							return true;
+						}
+
+						c = fieldReader.GetChar();
+
+						if (c == context.ParserConfiguration.Quote)
+						{
+							// If we find a second quote, this isn't the end of the field.
+							// We need to keep the spaces in this case.
+
+							inQuotes = !inQuotes;
+							quoteCount++;
+
+							fieldReader.SetFieldEnd(-1);
+							fieldReader.AppendField();
+							fieldReader.SetFieldStart();
+
+							continue;
+						}
+						else
+						{
+							// If there isn't a second quote, this is the end of the field.
+							// We need to ignore the spaces.
+							fieldReader.SetFieldStart(-1);
+						}
 					}
 				}
 
 				if (c == context.ParserConfiguration.Quote)
 				{
 					inQuotes = !inQuotes;
+					quoteCount++;
 
 					if (!inQuotes)
 					{
@@ -790,7 +821,7 @@ namespace CsvHelper
 				}
 			}
 		}
-			
+
 		/// <summary>
 		/// Reads until the delimeter is done.
 		/// </summary>
@@ -867,6 +898,11 @@ namespace CsvHelper
 		/// <returns>The field start offset.</returns>
 		protected virtual int ReadLineEnding()
 		{
+			if (c != '\r' && c != '\n')
+			{
+				throw new InvalidOperationException($"Tried reading a line ending when the current char is not a \\r or \\n.");
+			}
+
 			var fieldStartOffset = 0;
 			if (c == '\r')
 			{
@@ -893,6 +929,11 @@ namespace CsvHelper
 		/// <returns>The field start offset.</returns>
 		protected virtual async Task<int> ReadLineEndingAsync()
 		{
+			if (c != '\r' && c != '\n')
+			{
+				throw new InvalidOperationException("Tried reading a line ending when the current char is not a \\r or \\n.");
+			}
+
 			var fieldStartOffset = 0;
 			if (c == '\r')
 			{
