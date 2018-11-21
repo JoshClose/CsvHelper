@@ -160,6 +160,8 @@ namespace CsvHelper.Tests.Reading
 					{
 						columnCountChangeExceptionCount++;
 					}
+
+					return false;
 				};
 				var records = csv.GetRecords<Test>().ToList();
 				Assert.AreEqual( 1, missingFieldExceptionCount );

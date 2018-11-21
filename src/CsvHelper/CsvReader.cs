@@ -221,7 +221,10 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException);
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException) ?? true)
+					{
+						throw csvException;
+					}
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -253,7 +256,10 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException);
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException) ?? true)
+					{
+						throw csvException;
+					}
 				}
 
 				context.ColumnCount = context.Record.Length;
@@ -975,7 +981,17 @@ namespace CsvHelper
 			{
 				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
+				if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+				{
+					if (ex is CsvHelperException)
+					{
+						throw;
+					}
+					else
+					{
+						throw csvHelperException;
+					}
+				}
 
 				record = default;
 			}
@@ -1033,7 +1049,17 @@ namespace CsvHelper
 			{
 				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-				context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
+				if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+				{
+					if (ex is CsvHelperException)
+					{
+						throw;
+					}
+					else
+					{
+						throw csvHelperException;
+					}
+				}
 
 				record = default;
 			}
@@ -1075,7 +1101,17 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					{
+						if (ex is CsvHelperException)
+						{
+							throw;
+						}
+						else
+						{
+							throw csvHelperException;
+						}
+					}
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1142,7 +1178,17 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					{
+						if (ex is CsvHelperException)
+						{
+							throw;
+						}
+						else
+						{
+							throw csvHelperException;
+						}
+					}
 
 					// If the callback doesn't throw, keep going.
 					continue;
@@ -1188,7 +1234,17 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException);
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					{
+						if (ex is CsvHelperException)
+						{
+							throw;
+						}
+						else
+						{
+							throw csvHelperException;
+						}
+					}
 
 					// If the callback doesn't throw, keep going.
 					continue;
