@@ -30,7 +30,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<Test>());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<Test>());
 			}
 		}
 
@@ -41,7 +41,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<HasReference>());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<HasReference>());
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<HasConstructor>());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<HasConstructor>());
 			}
 		}
 
@@ -62,7 +62,7 @@ namespace CsvHelper.Tests
 			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
-				Assert.ThrowsException<ValidationException>(() => csv.GetRecord(typeof(Test)));
+				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecord(typeof(Test)));
 			}
 		}
 
@@ -72,7 +72,7 @@ namespace CsvHelper.Tests
 			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
 				csv.Read();
-				Assert.ThrowsException<ValidationException>(() => csv.GetRecord<Test>());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecord<Test>());
 			}
 		}
 
@@ -81,7 +81,7 @@ namespace CsvHelper.Tests
 		{
 			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
-				Assert.ThrowsException<ValidationException>(() => csv.GetRecords(typeof(Test)).ToList());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecords(typeof(Test)).ToList());
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace CsvHelper.Tests
 		{
 			using (var csv = new CsvReader(new StringReader("bad data")))
 			{
-				Assert.ThrowsException<ValidationException>(() => csv.GetRecords<Test>().ToList());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}
 
@@ -147,7 +147,7 @@ namespace CsvHelper.Tests
 
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<ValidationException>(() => csv.ValidateHeader<Test>());
+				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<Test>());
 			}
 		}
 

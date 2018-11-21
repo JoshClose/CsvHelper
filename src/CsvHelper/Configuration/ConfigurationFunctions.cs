@@ -16,13 +16,19 @@ namespace CsvHelper.Configuration
 				return;
 			}
 
-			var message =
-				$"Header matching ['{string.Join("', '", headerNames)}'] names at index {headerNameIndex} was not found. " +
+			var messagePostfix =
 				$"If you are expecting some headers to be missing and want to ignore this validation, " +
 				$"set the configuration {nameof(HeaderValidated)} to null. You can also change the " +
 				$"functionality to do something else, like logging the issue.";
 
-			throw new ValidationException(context, message);
+			var indexText = headerNameIndex > 0 ? $" at header name index {headerNameIndex}" : string.Empty;
+
+			if (headerNames.Length == 1)
+			{
+				throw new HeaderValidationException(context, headerNames, headerNameIndex, $"Header with name '{headerNames[0]}'{indexText} was not found. {messagePostfix}");
+			}
+
+			throw new HeaderValidationException(context, headerNames, headerNameIndex, $"Header containing names '{string.Join("' or '", headerNames)}'{indexText} was not found. {messagePostfix}");
 		}
 
 		/// <summary>
