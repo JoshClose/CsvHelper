@@ -16,6 +16,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class Configuration : IReaderConfiguration, IWriterConfiguration
 	{
+		private char escape = '"';
 		private string delimiter = ",";
 		private char quote = '"';
 		private string quoteString = "\"";
@@ -172,6 +173,36 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Gets or sets the escape character used to escape a quote inside a field.
+		/// Default is '"'.
+		/// </summary>
+		public virtual char Escape
+		{
+			get { return escape; }
+			set
+			{
+				if (value == '\n')
+				{
+					throw new ConfigurationException("Newline is not a valid escape.");
+				}
+
+				if (value == '\r')
+				{
+					throw new ConfigurationException("Carriage return is not a valid escape.");
+				}
+
+				if (value.ToString() == delimiter)
+				{
+					throw new ConfigurationException("You can not use the delimiter as an escape.");
+				}
+
+				escape = value;
+
+				doubleQuoteString = escape + quoteString;
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the character used to quote fields.
 		/// Default is '"'.
 		/// </summary>
@@ -203,7 +234,7 @@ namespace CsvHelper.Configuration
 				quote = value;
 
 				quoteString = Convert.ToString(value, cultureInfo);
-				doubleQuoteString = quoteString + quoteString;
+				doubleQuoteString = escape + quoteString;
 			}
 		}
 
