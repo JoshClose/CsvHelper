@@ -1299,8 +1299,8 @@ namespace CsvHelper
 			var nameKey = string.Join("_", names) + index;
 			if (context.NamedIndexCache.ContainsKey(nameKey))
 			{
-				var tuple = context.NamedIndexCache[nameKey];
-				return context.NamedIndexes[tuple.Item1][tuple.Item2];
+				(var cachedName, var cachedIndex) = context.NamedIndexCache[nameKey];
+				return context.NamedIndexes[cachedName][cachedIndex];
 			}
 
 			// Check all possible names for this field.
@@ -1328,7 +1328,7 @@ namespace CsvHelper
 				return -1;
 			}
 
-			context.NamedIndexCache.Add(nameKey, new Tuple<string, int>(name, index));
+			context.NamedIndexCache.Add(nameKey, (name, index));
 
 			return context.NamedIndexes[name][index];
 		}

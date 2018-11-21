@@ -17,7 +17,7 @@ namespace CsvHelper
 	public class ReadingContext : IDisposable
 	{
 		private bool disposed;
-		private Configuration.Configuration configuration;
+		private readonly Configuration.Configuration configuration;
 
 		/// <summary>
 		/// Gets the raw record builder.
@@ -42,7 +42,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Getse the named indexes cache.
 		/// </summary>
-		public Dictionary<string, Tuple<string, int>> NamedIndexCache = new Dictionary<string, Tuple<string, int>>();
+		public Dictionary<string, (string, int)> NamedIndexCache = new Dictionary<string, (string, int)>();
 
 		/// <summary>
 		/// Gets the type converter options cache.
