@@ -31,30 +31,31 @@ namespace CsvHelper.Tests.Mocks
 
 		public ParserMock()
 		{
-			context = new ReadingContext( new StringReader( string.Empty ), new CsvHelper.Configuration.Configuration(), false );
+			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.Configuration(), false);
 			rows = new Queue<string[]>();
 		}
 
-		public ParserMock( Queue<string[]> rows )
+		public ParserMock(Queue<string[]> rows)
 		{
-			context = new ReadingContext( new StringReader( string.Empty ), new CsvHelper.Configuration.Configuration(), false );
+			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.Configuration(), false);
 			this.rows = rows;
 		}
 
 		public string[] Read()
 		{
-		    context.Row++;
+			context.Row++;
 			return rows.Dequeue();
 		}
 
 		public Task<string[]> ReadAsync()
 		{
-			throw new NotImplementedException();
+			context.Row++;
+			return Task.FromResult(rows.Dequeue());
 		}
 
-		public void Add( params string[] row )
+		public void Add(params string[] row)
 		{
-			rows.Enqueue( row );
+			rows.Enqueue(row);
 		}
 
 		public IEnumerator<string[]> GetEnumerator()

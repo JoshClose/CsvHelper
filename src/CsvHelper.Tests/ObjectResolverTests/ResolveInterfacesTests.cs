@@ -19,19 +19,20 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		[TestCleanup]
 		public void Cleanup()
 		{
-			ObjectResolver.Current = new ObjectResolver( type => true, ReflectionHelper.CreateInstanceWithoutContractResolver );
+			ObjectResolver.Current = new ObjectResolver(type => true, ReflectionHelper.CreateInstanceWithoutContractResolver);
 		}
 
 		[TestMethod]
 		public void InterfaceReferenceMappingTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "AId,BId,CId,DId" );
-				writer.WriteLine( "1,2,3,4" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId,DId");
+				writer.WriteLine("1,2,3,4");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -45,13 +46,14 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		[TestMethod]
 		public void InterfacePropertySubMappingTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "AId,BId,CId,DId" );
-				writer.WriteLine( "1,2,3,4" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId,DId");
+				writer.WriteLine("1,2,3,4");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -65,13 +67,14 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		[TestMethod]
 		public void InterfaceAutoMappingTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "AId,BId,CId,DId" );
-				writer.WriteLine( "1,2,3,4" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId,DId");
+				writer.WriteLine("1,2,3,4");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -89,34 +92,34 @@ namespace CsvHelper.Tests.ObjectResolverTests
 
 			public bool UseFallback { get; set; }
 
-			public object Resolve( Type type, params object[] constructorArgs )
+			public object Resolve(Type type, params object[] constructorArgs)
 			{
-				if( type == typeof( IA ) )
+				if (type == typeof(IA))
 				{
 					return new A();
 				}
 
-				if( type == typeof( IB ) )
+				if (type == typeof(IB))
 				{
 					return new B();
 				}
 
-				if( type == typeof( IC ) )
+				if (type == typeof(IC))
 				{
 					return new C();
 				}
 
-				if( type == typeof( ID ) )
+				if (type == typeof(ID))
 				{
 					return new D();
 				}
 
-				return ReflectionHelper.CreateInstanceWithoutContractResolver( type, constructorArgs );
+				return ReflectionHelper.CreateInstanceWithoutContractResolver(type, constructorArgs);
 			}
 
-			public T Resolve<T>( params object[] constructorArgs )
+			public T Resolve<T>(params object[] constructorArgs)
 			{
-				return (T)Resolve( typeof( T ), constructorArgs );
+				return (T)Resolve(typeof(T), constructorArgs);
 			}
 		}
 
@@ -176,10 +179,10 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		{
 			public ASubPropertyMap()
 			{
-				Map( m => m.AId );
-				Map( m => m.B.BId );
-				Map( m => m.B.C.CId );
-				Map( m => m.B.C.D.DId );
+				Map(m => m.AId);
+				Map(m => m.B.BId);
+				Map(m => m.B.C.CId);
+				Map(m => m.B.C.D.DId);
 			}
 		}
 
@@ -187,8 +190,8 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		{
 			public AMap()
 			{
-				Map( m => m.AId );
-				References<BMap>( m => m.B );
+				Map(m => m.AId);
+				References<BMap>(m => m.B);
 			}
 		}
 
@@ -196,8 +199,8 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		{
 			public BMap()
 			{
-				Map( m => m.BId );
-				References<CMap>( m => m.C );
+				Map(m => m.BId);
+				References<CMap>(m => m.C);
 			}
 		}
 
@@ -205,8 +208,8 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		{
 			public CMap()
 			{
-				Map( m => m.CId );
-				References<DMap>( m => m.D );
+				Map(m => m.CId);
+				References<DMap>(m => m.D);
 			}
 		}
 
@@ -214,7 +217,7 @@ namespace CsvHelper.Tests.ObjectResolverTests
 		{
 			public DMap()
 			{
-				Map( m => m.DId );
+				Map(m => m.DId);
 			}
 		}
 	}

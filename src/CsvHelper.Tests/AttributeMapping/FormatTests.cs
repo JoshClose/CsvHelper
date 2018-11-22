@@ -10,18 +10,19 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class FormatTests
+	public class FormatTests
 	{
 		[TestMethod]
 		public void FormatTest()
 		{
-			using( var reader = new StringReader( "Id,Name\r\n1,one\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<FormatTestClass>().ToList();
 				var actual = csv.Configuration.Maps.Find<FormatTestClass>().MemberMaps[1].Data.TypeConverterOptions.Formats[0];
 
-				Assert.AreEqual( "abc", actual );
+				Assert.AreEqual("abc", actual);
 			}
 		}
 
@@ -29,7 +30,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			[Format( "abc" )]
+			[Format("abc")]
 			public string Name { get; set; }
 		}
 	}

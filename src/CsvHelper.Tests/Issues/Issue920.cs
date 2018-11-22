@@ -15,25 +15,26 @@ namespace CsvHelper.Tests.Issues
 		[TestMethod]
 		public void Test1()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "A,B" );
-				writer.WriteLine( "1,one" );
-				writer.WriteLine( "2,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("A,B");
+				writer.WriteLine("1,one");
+				writer.WriteLine("2,two");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.GetConstructor = type =>
-					type.GetConstructors( BindingFlags.NonPublic | BindingFlags.Instance )
-					.OrderBy( c => c.GetParameters().Length )
+					type.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
+					.OrderBy(c => c.GetParameters().Length)
 					.First();
 				csv.Configuration.IncludePrivateMembers = true;
 				var records = csv.GetRecords<Sample>().ToList();
 
-				Assert.AreEqual( 2, records.Count );
+				Assert.AreEqual(2, records.Count);
 			}
 		}
 
@@ -44,7 +45,7 @@ namespace CsvHelper.Tests.Issues
 
 			private Sample() { }
 
-			public Sample( int a, string b )
+			public Sample(int a, string b)
 			{
 				A = a;
 				B = b;

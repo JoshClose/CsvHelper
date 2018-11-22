@@ -22,15 +22,16 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void DefaultValueTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csvReader = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name,Order" );
-				writer.WriteLine( ",," );
-				writer.WriteLine( "2,two,2" );
-				writer.WriteLine( ",three," );
+				csvReader.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name,Order");
+				writer.WriteLine(",,");
+				writer.WriteLine("2,two,2");
+				writer.WriteLine(",three,");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -39,28 +40,29 @@ namespace CsvHelper.Tests
 				var records = csvReader.GetRecords<Test>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual( -1, record.Id );
-				Assert.AreEqual( null, record.Name );
-				Assert.AreEqual( -2, record.Order );
+				Assert.AreEqual(-1, record.Id);
+				Assert.AreEqual(null, record.Name);
+				Assert.AreEqual(-2, record.Order);
 
 				record = records[1];
-				Assert.AreEqual( 2, record.Id );
-				Assert.AreEqual( "two", record.Name );
+				Assert.AreEqual(2, record.Id);
+				Assert.AreEqual("two", record.Name);
 			}
 		}
 
 		[TestMethod]
 		public void DefaultStringValueTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csvReader = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csvReader = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name,Order" );
-				writer.WriteLine( ",," );
-				writer.WriteLine( "2,two,2" );
-				writer.WriteLine( ",three," );
+				csvReader.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name,Order");
+				writer.WriteLine(",,");
+				writer.WriteLine("2,two,2");
+				writer.WriteLine(",three,");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -69,13 +71,13 @@ namespace CsvHelper.Tests
 				var records = csvReader.GetRecords<Test>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual( -1, record.Id );
-				Assert.AreEqual( null, record.Name );
-				Assert.AreEqual( -2, record.Order );
+				Assert.AreEqual(-1, record.Id);
+				Assert.AreEqual(null, record.Name);
+				Assert.AreEqual(-2, record.Order);
 
 				record = records[1];
-				Assert.AreEqual( 2, record.Id );
-				Assert.AreEqual( "two", record.Name );
+				Assert.AreEqual(2, record.Id);
+				Assert.AreEqual("two", record.Name);
 			}
 		}
 
@@ -92,9 +94,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMap()
 			{
-				Map( m => m.Id ).Default( -1 );
-				Map( m => m.Name ).Default( (string)null );
-				Map( m => m.Order ).Default( -2 );
+				Map(m => m.Id).Default(-1);
+				Map(m => m.Name).Default((string)null);
+				Map(m => m.Order).Default(-2);
 			}
 		}
 
@@ -102,9 +104,9 @@ namespace CsvHelper.Tests
 		{
 			public TestStringMap()
 			{
-				Map( m => m.Id ).Default( "-1" );
-				Map( m => m.Name ).Default( null );
-				Map( m => m.Order ).Default( "-2" );
+				Map(m => m.Id).Default("-1");
+				Map(m => m.Name).Default(null);
+				Map(m => m.Order).Default("-2");
 			}
 		}
 	}

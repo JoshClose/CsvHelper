@@ -20,6 +20,7 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine(",one");
 				writer.Flush();
@@ -39,6 +40,7 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,");
 				writer.Flush();
@@ -64,6 +66,7 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine(",one");
 				writer.Flush();

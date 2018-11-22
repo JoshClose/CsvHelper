@@ -9,18 +9,19 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class IgnoreTests
-    {
+	public class IgnoreTests
+	{
 		[TestMethod]
 		public void IgnoreTest()
 		{
-			using( var reader = new StringReader( "Id,Name\r\n1,one\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<IgnoreTestClass>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "one", records[0].Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("one", records[0].Name);
 			}
 		}
 

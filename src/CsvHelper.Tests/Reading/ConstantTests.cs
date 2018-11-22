@@ -21,54 +21,55 @@ namespace CsvHelper.Tests.Reading
 		public void ConstantAlwaysReturnsSameValueTest()
 		{
 			var rows = new Queue<string[]>();
-			rows.Enqueue( new[] { "Id", "Name" } );
-			rows.Enqueue( new[] { "1", "one" } );
-			rows.Enqueue( new[] { "2", "two" } );
-			rows.Enqueue( null );
-			var parser = new ParserMock( rows );
+			rows.Enqueue(new[] { "Id", "Name" });
+			rows.Enqueue(new[] { "1", "one" });
+			rows.Enqueue(new[] { "2", "two" });
+			rows.Enqueue(null);
+			var parser = new ParserMock(rows);
 
-			var csv = new CsvReader( parser );
+			var csv = new CsvReader(parser);
 			csv.Configuration.RegisterClassMap<TestStringMap>();
 			var records = csv.GetRecords<Test>().ToList();
 
-			Assert.AreEqual( 1, records[0].Id );
-			Assert.AreEqual( "constant", records[0].Name );
-			Assert.AreEqual( 2, records[1].Id );
-			Assert.AreEqual( "constant", records[1].Name );
+			Assert.AreEqual(1, records[0].Id);
+			Assert.AreEqual("constant", records[0].Name);
+			Assert.AreEqual(2, records[1].Id);
+			Assert.AreEqual("constant", records[1].Name);
 		}
 
 		[TestMethod]
 		public void ConstantIsNullTest()
 		{
 			var rows = new Queue<string[]>();
-			rows.Enqueue( new[] { "Id", "Name" } );
-			rows.Enqueue( new[] { "1", "one" } );
-			rows.Enqueue( new[] { "2", "two" } );
-			rows.Enqueue( null );
-			var parser = new ParserMock( rows );
+			rows.Enqueue(new[] { "Id", "Name" });
+			rows.Enqueue(new[] { "1", "one" });
+			rows.Enqueue(new[] { "2", "two" });
+			rows.Enqueue(null);
+			var parser = new ParserMock(rows);
 
-			var csv = new CsvReader( parser );
+			var csv = new CsvReader(parser);
 			csv.Configuration.RegisterClassMap<TestNullMap>();
 			var records = csv.GetRecords<Test>().ToList();
 
-			Assert.AreEqual( 1, records[0].Id );
-			Assert.IsNull( records[0].Name );
-			Assert.AreEqual( 2, records[1].Id );
-			Assert.IsNull( records[1].Name );
+			Assert.AreEqual(1, records[0].Id);
+			Assert.IsNull(records[0].Name);
+			Assert.AreEqual(2, records[1].Id);
+			Assert.IsNull(records[1].Name);
 		}
 
 		[TestMethod]
 		public void IntConstantTest()
 		{
-			using( var reader = new StringReader( "1,one\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("1,one\r\n"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<TestIntMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual( -1, records[0].Id );
-				Assert.AreEqual( "one", records[0].Name );
+				Assert.AreEqual(-1, records[0].Id);
+				Assert.AreEqual("one", records[0].Name);
 			}
 		}
 
@@ -82,8 +83,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			public TestStringMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).Constant( "constant" );
+				Map(m => m.Id);
+				Map(m => m.Name).Constant("constant");
 			}
 		}
 
@@ -91,8 +92,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			public TestNullMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).Constant( null );
+				Map(m => m.Id);
+				Map(m => m.Name).Constant(null);
 			}
 		}
 
@@ -100,8 +101,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			public TestIntMap()
 			{
-				Map( m => m.Id ).Constant( -1 );
-				Map( m => m.Name );
+				Map(m => m.Id).Constant(-1);
+				Map(m => m.Name);
 			}
 		}
 	}

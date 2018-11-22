@@ -9,15 +9,16 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.Issues
 {
 	[TestClass]
-    public class Issue1073
-    {
+	public class Issue1073
+	{
 		[TestMethod]
-        public void GetFieldTest()
+		public void GetFieldTest()
 		{
 			var originalResolver = ObjectResolver.Current;
 			try
 			{
-				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) => {
+				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) =>
+				{
 					Assert.Fail();
 					return null;
 				});
@@ -28,6 +29,7 @@ namespace CsvHelper.Tests.Issues
 				using (var reader = new StringReader(s.ToString()))
 				using (var csv = new CsvReader(reader))
 				{
+					csv.Configuration.Delimiter = ",";
 					csv.Read();
 					csv.ReadHeader();
 					while (csv.Read())
@@ -49,7 +51,8 @@ namespace CsvHelper.Tests.Issues
 			var originalResolver = ObjectResolver.Current;
 			try
 			{
-				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) => {
+				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) =>
+				{
 					Assert.Fail();
 					return null;
 				});
@@ -67,5 +70,5 @@ namespace CsvHelper.Tests.Issues
 				ObjectResolver.Current = originalResolver;
 			}
 		}
-    }
+	}
 }

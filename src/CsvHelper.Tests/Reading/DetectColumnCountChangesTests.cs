@@ -19,18 +19,18 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void ConsistentColumnsWithDetectColumnChangesTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Column 1,Column 2" );
-				writer.WriteLine( "1,2" );
+				writer.WriteLine("Column 1,Column 2");
+				writer.WriteLine("1,2");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.DetectColumnCountChanges = true;
-				while( !csv.Read() )
+				while (!csv.Read())
 				{
 				}
 			}
@@ -39,55 +39,57 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void InconsistentColumnsMultipleRowsTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Column 1,Column 2" );
-				writer.WriteLine( "1,2" ); // Valid
-				writer.WriteLine( "1,2,3" ); // Error - too many fields
-				writer.WriteLine( "1,2" ); // Valid
-				writer.WriteLine( "1" ); // Error - not enough fields
-				writer.WriteLine( "1,2,3,4" ); // Error - too many fields
-				writer.WriteLine( "1,2" ); // Valid
-				writer.WriteLine( "1,2" ); // Valid
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Column 1,Column 2");
+				writer.WriteLine("1,2"); // Valid
+				writer.WriteLine("1,2,3"); // Error - too many fields
+				writer.WriteLine("1,2"); // Valid
+				writer.WriteLine("1"); // Error - not enough fields
+				writer.WriteLine("1,2,3,4"); // Error - too many fields
+				writer.WriteLine("1,2"); // Valid
+				writer.WriteLine("1,2"); // Valid
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.DetectColumnCountChanges = true;
 				var failCount = 0;
 
-				while( true )
+				while (true)
 				{
 					try
 					{
-						if( !csv.Read() )
+						if (!csv.Read())
 						{
 							break;
 						}
 					}
-					catch( BadDataException )
+					catch (BadDataException)
 					{
 						failCount++;
 					}
 				}
 
 				// Expect only 3 errors
-				Assert.AreEqual<int>( 3, failCount );
+				Assert.AreEqual<int>(3, failCount);
 			}
 		}
 
 		[TestMethod]
 		public void InconsistentColumnsSmallerTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,2,3,4" );
-				writer.WriteLine( "5,6,7" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,2,3,4");
+				writer.WriteLine("5,6,7");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -99,7 +101,7 @@ namespace CsvHelper.Tests.Reading
 					csv.Read();
 					Assert.Fail();
 				}
-				catch( BadDataException )
+				catch (BadDataException)
 				{
 				}
 			}
@@ -108,13 +110,14 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void InconsistentColumnsTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Column 1,Column 2" );
-				writer.WriteLine( "1,2,3" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Column 1,Column 2");
+				writer.WriteLine("1,2,3");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -126,7 +129,7 @@ namespace CsvHelper.Tests.Reading
 					csv.Read();
 					Assert.Fail();
 				}
-				catch( BadDataException )
+				catch (BadDataException)
 				{
 				}
 			}
@@ -135,13 +138,14 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void WillThrowOnMissingFieldStillWorksTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,2,3" );
-				writer.WriteLine( "4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,2,3");
+				writer.WriteLine("4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -150,13 +154,13 @@ namespace CsvHelper.Tests.Reading
 				csv.Configuration.HeaderValidated = null;
 				csv.Configuration.DetectColumnCountChanges = true;
 				csv.Configuration.RegisterClassMap<TestMap>();
-				csv.Configuration.ReadingExceptionOccurred = ( ex ) =>
+				csv.Configuration.ReadingExceptionOccurred = (ex) =>
 				{
-					if( ex is MissingFieldException )
+					if (ex is MissingFieldException)
 					{
 						missingFieldExceptionCount++;
 					}
-					else if( ex is BadDataException )
+					else if (ex is BadDataException)
 					{
 						columnCountChangeExceptionCount++;
 					}
@@ -164,8 +168,8 @@ namespace CsvHelper.Tests.Reading
 					return false;
 				};
 				var records = csv.GetRecords<Test>().ToList();
-				Assert.AreEqual( 1, missingFieldExceptionCount );
-				Assert.AreEqual( 1, columnCountChangeExceptionCount );
+				Assert.AreEqual(1, missingFieldExceptionCount);
+				Assert.AreEqual(1, columnCountChangeExceptionCount);
 			}
 		}
 
@@ -179,8 +183,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			public TestMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name );
+				Map(m => m.Id);
+				Map(m => m.Name);
 			}
 		}
 	}

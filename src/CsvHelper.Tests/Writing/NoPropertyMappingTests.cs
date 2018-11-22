@@ -19,11 +19,12 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void NoPropertyWithHeaderAndNameTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Id = 1 },
@@ -31,7 +32,7 @@ namespace CsvHelper.Tests.Writing
 				};
 
 				csv.Configuration.RegisterClassMap<TestWithNameMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 
 				writer.Flush();
 				stream.Position = 0;
@@ -39,22 +40,23 @@ namespace CsvHelper.Tests.Writing
 				var result = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "Id,Constant,Name" );
-				expected.AppendLine( "1,const," );
-				expected.AppendLine( "2,const," );
+				expected.AppendLine("Id,Constant,Name");
+				expected.AppendLine("1,const,");
+				expected.AppendLine("2,const,");
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
 
 		[TestMethod]
 		public void NoPropertyWithHeaderAndNoNameTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Id = 1 },
@@ -62,7 +64,7 @@ namespace CsvHelper.Tests.Writing
 				};
 
 				csv.Configuration.RegisterClassMap<TestWithNoNameMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 
 				writer.Flush();
 				stream.Position = 0;
@@ -70,22 +72,23 @@ namespace CsvHelper.Tests.Writing
 				var result = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "Id," );
-				expected.AppendLine( "1,const" );
-				expected.AppendLine( "2,const" );
+				expected.AppendLine("Id,");
+				expected.AppendLine("1,const");
+				expected.AppendLine("2,const");
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
 
 		[TestMethod]
 		public void NoPropertyWithNoHeaderAndNameTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Id = 1 },
@@ -94,7 +97,7 @@ namespace CsvHelper.Tests.Writing
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<TestWithNameMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 
 				writer.Flush();
 				stream.Position = 0;
@@ -102,21 +105,22 @@ namespace CsvHelper.Tests.Writing
 				var result = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "1,const," );
-				expected.AppendLine( "2,const," );
+				expected.AppendLine("1,const,");
+				expected.AppendLine("2,const,");
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
 
 		[TestMethod]
 		public void NoPropertyWithNoHeaderAndNoNameTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Id = 1 },
@@ -125,7 +129,7 @@ namespace CsvHelper.Tests.Writing
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<TestWithNoNameMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 
 				writer.Flush();
 				stream.Position = 0;
@@ -133,21 +137,22 @@ namespace CsvHelper.Tests.Writing
 				var result = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "1,const" );
-				expected.AppendLine( "2,const" );
+				expected.AppendLine("1,const");
+				expected.AppendLine("2,const");
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
 
 		[TestMethod]
 		public void OutOfOrderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -156,7 +161,7 @@ namespace CsvHelper.Tests.Writing
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<TestMapOutOfOrderWithEmptyFieldsMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 
 				writer.Flush();
 				stream.Position = 0;
@@ -164,10 +169,10 @@ namespace CsvHelper.Tests.Writing
 				var result = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "one,,,1" );
-				expected.AppendLine( "two,,,2" );
+				expected.AppendLine("one,,,1");
+				expected.AppendLine("two,,,2");
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
 
@@ -182,9 +187,9 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestWithNameMap()
 			{
-				Map( m => m.Id );
-				Map().Name( "Constant" ).Constant( "const" );
-				Map( m => m.Name );
+				Map(m => m.Id);
+				Map().Name("Constant").Constant("const");
+				Map(m => m.Name);
 			}
 		}
 
@@ -192,8 +197,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestWithNoNameMap()
 			{
-				Map( m => m.Id );
-				Map().Constant( "const" );
+				Map(m => m.Id);
+				Map().Constant("const");
 			}
 		}
 
@@ -201,10 +206,10 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestMapOutOfOrderWithEmptyFieldsMap()
 			{
-				Map( m => m.Name ).Index( 0 );
-				Map().Index( 1 ).Constant( null );
-				Map().Index( 2 ).Constant( string.Empty );
-				Map( m => m.Id ).Index( 3 );
+				Map(m => m.Name).Index(0);
+				Map().Index(1).Constant(null);
+				Map().Index(2).Constant(string.Empty);
+				Map(m => m.Id).Index(3);
 			}
 		}
 	}

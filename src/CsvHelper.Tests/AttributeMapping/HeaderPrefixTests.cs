@@ -10,33 +10,35 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class HeaderPrefixTests
-    {
+	public class HeaderPrefixTests
+	{
 		[TestMethod]
-        public void DefaultHeaderPrefixTest()
+		public void DefaultHeaderPrefixTest()
 		{
-			using( var reader = new StringReader( "Id,B.Name,C.Name\r\n1,b,c" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,B.Name,C.Name\r\n1,b,c"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ADefault>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "b", records[0].B.Name );
-				Assert.AreEqual( "c", records[0].C.Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("b", records[0].B.Name);
+				Assert.AreEqual("c", records[0].C.Name);
 			}
 		}
 
 		[TestMethod]
 		public void CustomHeaderPrefixTest()
 		{
-			using( var reader = new StringReader( "Id,B_Name,C_Name\r\n1,b,c" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,B_Name,C_Name\r\n1,b,c"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ACustom>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "b", records[0].B.Name );
-				Assert.AreEqual( "c", records[0].C.Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("b", records[0].B.Name);
+				Assert.AreEqual("c", records[0].C.Name);
 			}
 		}
 
@@ -55,10 +57,10 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			[HeaderPrefixAttribute( "B_" )]
+			[HeaderPrefixAttribute("B_")]
 			public B B { get; set; }
 
-			[HeaderPrefixAttribute( "C_" )]
+			[HeaderPrefixAttribute("C_")]
 			public C C { get; set; }
 		}
 
@@ -71,5 +73,5 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public string Name { get; set; }
 		}
-    }
+	}
 }

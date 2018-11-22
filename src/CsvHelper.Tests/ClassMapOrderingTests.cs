@@ -37,17 +37,18 @@ namespace CsvHelper.Tests
 				},
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<ContainerClassMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
-				Assert.AreEqual( "First,Second,Third", reader.ReadLine() );
+				Assert.AreEqual("First,Second,Third", reader.ReadLine());
 			}
 		}
 
@@ -69,7 +70,7 @@ namespace CsvHelper.Tests
 		{
 			public ContainerClassMap()
 			{
-				References<ThirdClassMap>( m => m.Contents );
+				References<ThirdClassMap>(m => m.Contents);
 			}
 		}
 
@@ -77,9 +78,9 @@ namespace CsvHelper.Tests
 		{
 			public ThirdClassMap()
 			{
-				References<FirstClassMap>( m => m.First );
-				References<SecondClassMap>( m => m.Second );
-				Map( m => m.Third );
+				References<FirstClassMap>(m => m.First);
+				References<SecondClassMap>(m => m.Second);
+				Map(m => m.Third);
 			}
 		}
 
@@ -92,7 +93,7 @@ namespace CsvHelper.Tests
 		{
 			public SecondClassMap()
 			{
-				Map( m => m.Second );
+				Map(m => m.Second);
 			}
 		}
 
@@ -105,7 +106,7 @@ namespace CsvHelper.Tests
 		{
 			public FirstClassMap()
 			{
-				Map( m => m.First );
+				Map(m => m.First);
 			}
 		}
 	}

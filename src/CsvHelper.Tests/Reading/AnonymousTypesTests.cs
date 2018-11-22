@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.Reading
 {
 	[TestClass]
-    public class AnonymousTypesTests
-    {
+	public class AnonymousTypesTests
+	{
 		[TestMethod]
 		public void ValueTypeSingleRecordTest()
 		{
@@ -20,23 +20,24 @@ namespace CsvHelper.Tests.Reading
 				Name = string.Empty
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.Name);
 			}
 		}
 
@@ -49,22 +50,23 @@ namespace CsvHelper.Tests.Reading
 				Name = string.Empty
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.Name);
 			}
 		}
 
@@ -77,22 +79,23 @@ namespace CsvHelper.Tests.Reading
 				Name = string.Empty
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.Name);
 			}
 
 		}
@@ -105,23 +108,24 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( 1, record.Reference.Id );
-				Assert.AreEqual( "one", record.Reference.Name );
+				Assert.AreEqual(1, record.Reference.Id);
+				Assert.AreEqual("one", record.Reference.Name);
 			}
 		}
 
@@ -133,22 +137,23 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Reference.Id );
-				Assert.AreEqual( "one", record.Reference.Name );
+				Assert.AreEqual(1, record.Reference.Id);
+				Assert.AreEqual("one", record.Reference.Name);
 			}
 		}
 
@@ -160,22 +165,23 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Reference.Id );
-				Assert.AreEqual( "one", record.Reference.Name );
+				Assert.AreEqual(1, record.Reference.Id);
+				Assert.AreEqual("one", record.Reference.Name);
 			}
 		}
 
@@ -189,25 +195,26 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "A,Id,Name,B" );
-				writer.WriteLine( "-1,1,one,b" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("A,Id,Name,B");
+				writer.WriteLine("-1,1,one,b");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( -1, record.A );
-				Assert.AreEqual( "b", record.B );
-				Assert.AreEqual( 1, record.Reference.Id );
-				Assert.AreEqual( "one", record.Reference.Name );
+				Assert.AreEqual(-1, record.A);
+				Assert.AreEqual("b", record.B);
+				Assert.AreEqual(1, record.Reference.Id);
+				Assert.AreEqual("one", record.Reference.Name);
 			}
 		}
 
@@ -221,24 +228,25 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "A,Id,Name,B" );
-				writer.WriteLine( "-1,1,one,b" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("A,Id,Name,B");
+				writer.WriteLine("-1,1,one,b");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( -1, record.A );
-				Assert.AreEqual( "b", record.B );
-				Assert.AreEqual( 1, record.Reference.Id );
-				Assert.AreEqual( "one", record.Reference.Name );
+				Assert.AreEqual(-1, record.A);
+				Assert.AreEqual("b", record.B);
+				Assert.AreEqual(1, record.Reference.Id);
+				Assert.AreEqual("one", record.Reference.Name);
 			}
 		}
 
@@ -252,24 +260,25 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "-1,b,1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("-1,b,1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( -1, record.A );
-				Assert.AreEqual( "b", record.B );
-				Assert.AreEqual( 1, record.Reference.Id );
-				Assert.AreEqual( "one", record.Reference.Name );
+				Assert.AreEqual(-1, record.A);
+				Assert.AreEqual("b", record.B);
+				Assert.AreEqual(1, record.Reference.Id);
+				Assert.AreEqual("one", record.Reference.Name);
 			}
 		}
 
@@ -285,23 +294,24 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.AnonymousReference.Name);
 			}
 		}
 
@@ -317,22 +327,23 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.AnonymousReference.Name);
 			}
 		}
 
@@ -348,22 +359,23 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.AnonymousReference.Name);
 			}
 		}
 
@@ -382,23 +394,24 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.AnonymousReference2.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.AnonymousReference.AnonymousReference2.Name);
 			}
 		}
 
@@ -417,22 +430,23 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.AnonymousReference2.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.AnonymousReference.AnonymousReference2.Name);
 			}
 		}
 
@@ -451,22 +465,23 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.AnonymousReference2.Name );
+				Assert.AreEqual(1, record.Id);
+				Assert.AreEqual("one", record.AnonymousReference.AnonymousReference2.Name);
 			}
 		}
 
@@ -482,24 +497,25 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name,A" );
-				writer.WriteLine( "1,one,2" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name,A");
+				writer.WriteLine("1,one,2");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( 2, record.A );
-				Assert.AreEqual( 1, record.AnonymousReference.Reference.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.Reference.Name );
+				Assert.AreEqual(2, record.A);
+				Assert.AreEqual(1, record.AnonymousReference.Reference.Id);
+				Assert.AreEqual("one", record.AnonymousReference.Reference.Name);
 			}
 		}
 
@@ -515,23 +531,24 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name,A" );
-				writer.WriteLine( "1,one,2" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name,A");
+				writer.WriteLine("1,one,2");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 2, record.A );
-				Assert.AreEqual( 1, record.AnonymousReference.Reference.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.Reference.Name );
+				Assert.AreEqual(2, record.A);
+				Assert.AreEqual(1, record.AnonymousReference.Reference.Id);
+				Assert.AreEqual("one", record.AnonymousReference.Reference.Name);
 			}
 		}
 
@@ -547,23 +564,24 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "2,1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("2,1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 2, record.A );
-				Assert.AreEqual( 1, record.AnonymousReference.Reference.Id );
-				Assert.AreEqual( "one", record.AnonymousReference.Reference.Name );
+				Assert.AreEqual(2, record.A);
+				Assert.AreEqual(1, record.AnonymousReference.Reference.Id);
+				Assert.AreEqual("one", record.AnonymousReference.Reference.Name);
 			}
 		}
 
@@ -575,25 +593,26 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Child()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "ParentId,ChildId,ParentName,ChildName" );
-				writer.WriteLine( "1,2,one,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("ParentId,ChildId,ParentName,ChildName");
+				writer.WriteLine("1,2,one,two");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
-				var record = csv.GetRecord( definition );
+				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual( 1, record.Reference.ParentId );
-				Assert.AreEqual( "one", record.Reference.ParentName );
-				Assert.AreEqual( 2, record.Reference.ChildId );
-				Assert.AreEqual( "two", record.Reference.ChildName );
+				Assert.AreEqual(1, record.Reference.ParentId);
+				Assert.AreEqual("one", record.Reference.ParentName);
+				Assert.AreEqual(2, record.Reference.ChildId);
+				Assert.AreEqual("two", record.Reference.ChildName);
 			}
 		}
 
@@ -605,24 +624,25 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Child()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "ParentId,ChildId,ParentName,ChildName" );
-				writer.WriteLine( "1,2,one,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("ParentId,ChildId,ParentName,ChildName");
+				writer.WriteLine("1,2,one,two");
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Reference.ParentId );
-				Assert.AreEqual( "one", record.Reference.ParentName );
-				Assert.AreEqual( 2, record.Reference.ChildId );
-				Assert.AreEqual( "two", record.Reference.ChildName );
+				Assert.AreEqual(1, record.Reference.ParentId);
+				Assert.AreEqual("one", record.Reference.ParentName);
+				Assert.AreEqual(2, record.Reference.ChildId);
+				Assert.AreEqual("two", record.Reference.ChildName);
 			}
 		}
 
@@ -634,24 +654,25 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Child()
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,one,2,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,one,2,two");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.HasHeaderRecord = false;
-				var records = csv.GetRecords( definition ).ToList();
-				Assert.AreEqual( 1, records.Count );
+				var records = csv.GetRecords(definition).ToList();
+				Assert.AreEqual(1, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual( 1, record.Reference.ChildId );
-				Assert.AreEqual( "one", record.Reference.ChildName );
-				Assert.AreEqual( 2, record.Reference.ParentId );
-				Assert.AreEqual( "two", record.Reference.ParentName );
+				Assert.AreEqual(1, record.Reference.ChildId);
+				Assert.AreEqual("one", record.Reference.ChildName);
+				Assert.AreEqual(2, record.Reference.ParentId);
+				Assert.AreEqual("two", record.Reference.ParentName);
 			}
 		}
 
@@ -680,5 +701,5 @@ namespace CsvHelper.Tests.Reading
 
 			public string ChildName { get; set; }
 		}
-    }
+	}
 }

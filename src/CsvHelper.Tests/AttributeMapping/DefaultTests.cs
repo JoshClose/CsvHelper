@@ -10,18 +10,19 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class DefaultTests
-    {
+	public class DefaultTests
+	{
 		[TestMethod]
 		public void DefaultTest()
 		{
-			using( var reader = new StringReader( "Id,Name\r\n1,\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,Name\r\n1,\r\n"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<DefaultTestClass>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "one", records[0].Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("one", records[0].Name);
 			}
 		}
 
@@ -29,7 +30,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			[Default( "one" )]
+			[Default("one")]
 			public string Name { get; set; }
 		}
 	}

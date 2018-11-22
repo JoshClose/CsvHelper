@@ -15,33 +15,34 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReferencesWithPrefixTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<AMap>();
 
-				writer.WriteLine( "Id,BPrefix_Id,C.CId" );
-				writer.WriteLine( "a1,b1,c1" );
-				writer.WriteLine( "a2,b2,c2" );
-				writer.WriteLine( "a3,b3,c3" );
-				writer.WriteLine( "a4,b4,c4" );
+				writer.WriteLine("Id,BPrefix_Id,C.CId");
+				writer.WriteLine("a1,b1,c1");
+				writer.WriteLine("a2,b2,c2");
+				writer.WriteLine("a3,b3,c3");
+				writer.WriteLine("a4,b4,c4");
 				writer.Flush();
 				stream.Position = 0;
 
 				var list = csv.GetRecords<A>().ToList();
 
-				Assert.IsNotNull( list );
-				Assert.AreEqual( 4, list.Count );
+				Assert.IsNotNull(list);
+				Assert.AreEqual(4, list.Count);
 
-				for( var i = 0; i < 4; i++ )
+				for (var i = 0; i < 4; i++)
 				{
 					var rowId = i + 1;
 					var row = list[i];
-					Assert.AreEqual( "a" + rowId, row.Id );
-					Assert.AreEqual( "b" + rowId, row.B.Id );
-					Assert.AreEqual( "c" + rowId, row.B.C.Id );
+					Assert.AreEqual("a" + rowId, row.Id);
+					Assert.AreEqual("b" + rowId, row.B.Id);
+					Assert.AreEqual("c" + rowId, row.B.C.Id);
 				}
 			}
 		}
@@ -69,8 +70,8 @@ namespace CsvHelper.Tests
 		{
 			public AMap()
 			{
-				Map( m => m.Id );
-				References<BMap>( m => m.B ).Prefix( "BPrefix_" );
+				Map(m => m.Id);
+				References<BMap>(m => m.B).Prefix("BPrefix_");
 			}
 		}
 
@@ -78,8 +79,8 @@ namespace CsvHelper.Tests
 		{
 			public BMap()
 			{
-				Map( m => m.Id );
-				References<CMap>( m => m.C ).Prefix();
+				Map(m => m.Id);
+				References<CMap>(m => m.C).Prefix();
 			}
 		}
 
@@ -87,7 +88,7 @@ namespace CsvHelper.Tests
 		{
 			public CMap()
 			{
-				Map( m => m.Id ).Name( "CId" );
+				Map(m => m.Id).Name("CId");
 			}
 		}
 	}

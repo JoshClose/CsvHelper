@@ -24,13 +24,14 @@ namespace CsvHelper.Tests
 			};
 
 			string csv;
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csvWriter = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvWriter = new CsvWriter(writer))
 			{
+				csvWriter.Configuration.Delimiter = ",";
 				csvWriter.Configuration.RegisterClassMap<MultipleNamesClassMap>();
-				csvWriter.WriteRecords( records );
+				csvWriter.WriteRecords(records);
 
 				writer.Flush();
 				stream.Position = 0;
@@ -43,18 +44,19 @@ namespace CsvHelper.Tests
 			expected += "1,one\r\n";
 			expected += "2,two\r\n";
 
-			Assert.IsNotNull( csv );
-			Assert.AreEqual( expected, csv );
+			Assert.IsNotNull(csv);
+			Assert.AreEqual(expected, csv);
 		}
 
 		[TestMethod]
 		public void SameNameMultipleTimesTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<SameNameMultipleTimesClass>
 				{
 					new SameNameMultipleTimesClass
@@ -65,13 +67,13 @@ namespace CsvHelper.Tests
 					}
 				};
 				csv.Configuration.RegisterClassMap<SameNameMultipleTimesClassMap>();
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				var text = reader.ReadToEnd();
 				var expected = "ColumnName,ColumnName,ColumnName\r\n1,2,3\r\n";
-				Assert.AreEqual( expected, text );
+				Assert.AreEqual(expected, text);
 			}
 		}
 
@@ -79,10 +81,10 @@ namespace CsvHelper.Tests
 		public void ConvertUsingTest()
 		{
 			string result;
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
 				var records = new List<TestClass>
 				{
@@ -91,24 +93,24 @@ namespace CsvHelper.Tests
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<ConvertUsingMap>();
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				result = reader.ReadToEnd();
 			}
 
-			Assert.AreEqual( "Converted1\r\n", result );
+			Assert.AreEqual("Converted1\r\n", result);
 		}
 
 		[TestMethod]
 		public void ConvertUsingBlockTest()
 		{
 			string result;
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
 				var records = new List<TestClass>
 				{
@@ -117,24 +119,24 @@ namespace CsvHelper.Tests
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<ConvertUsingBlockMap>();
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				result = reader.ReadToEnd();
 			}
 
-			Assert.AreEqual( "Converted1\r\n", result );
+			Assert.AreEqual("Converted1\r\n", result);
 		}
 
 		[TestMethod]
 		public void ConvertUsingConstantTest()
 		{
 			string result;
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
 				var records = new List<TestClass>
 				{
@@ -143,14 +145,14 @@ namespace CsvHelper.Tests
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<ConvertUsingConstantMap>();
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				result = reader.ReadToEnd();
 			}
 
-			Assert.AreEqual( "Constant\r\n", result );
+			Assert.AreEqual("Constant\r\n", result);
 		}
 
 		private class SameNameMultipleTimesClass
@@ -166,9 +168,9 @@ namespace CsvHelper.Tests
 		{
 			public SameNameMultipleTimesClassMap()
 			{
-				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
-				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
-				Map( m => m.Name3 ).Name( "ColumnName" ).NameIndex( 0 );
+				Map(m => m.Name1).Name("ColumnName").NameIndex(1);
+				Map(m => m.Name2).Name("ColumnName").NameIndex(2);
+				Map(m => m.Name3).Name("ColumnName").NameIndex(0);
 			}
 		}
 
@@ -183,8 +185,8 @@ namespace CsvHelper.Tests
 		{
 			public MultipleNamesClassMap()
 			{
-				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
-				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
+				Map(m => m.IntColumn).Name("int1", "int2", "int3");
+				Map(m => m.StringColumn).Name("string1", "string2", "string3");
 			}
 		}
 
@@ -197,7 +199,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( m => $"Converted{m.IntColumn}" );
+				Map(m => m.IntColumn).ConvertUsing(m => $"Converted{m.IntColumn}");
 			}
 		}
 
@@ -205,12 +207,12 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( m =>
-				{
-					var x = "Converted";
-					x += m.IntColumn;
-					return x;
-				} );
+				Map(m => m.IntColumn).ConvertUsing(m =>
+			 {
+				 var x = "Converted";
+				 x += m.IntColumn;
+				 return x;
+			 });
 			}
 		}
 
@@ -218,7 +220,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingConstantMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( m => "Constant" );
+				Map(m => m.IntColumn).ConvertUsing(m => "Constant");
 			}
 		}
 	}

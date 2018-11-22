@@ -10,8 +10,8 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for the <see cref="IParser"/>.
 	/// </summary>
-    public interface IParserConfiguration
-    {
+	public interface IParserConfiguration
+	{
 		/// <summary>
 		/// Gets or sets the size of the buffer
 		/// used for reading CSV files.
@@ -81,7 +81,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
-		/// Default is ",";
+		/// Default is CultureInfo.CurrentCulture.TextInfo.ListSeparator.
 		/// </summary>
 		string Delimiter { get; set; }
 

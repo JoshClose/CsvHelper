@@ -15,34 +15,35 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void NestedReferencesClassMappingTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<AMap>();
 
-				writer.WriteLine( "AId,BId,CId,DId" );
-				writer.WriteLine( "a1,b1,c1,d1" );
-				writer.WriteLine( "a2,b2,c2,d2" );
-				writer.WriteLine( "a3,b3,c3,d3" );
-				writer.WriteLine( "a4,b4,c4,d4" );
+				writer.WriteLine("AId,BId,CId,DId");
+				writer.WriteLine("a1,b1,c1,d1");
+				writer.WriteLine("a2,b2,c2,d2");
+				writer.WriteLine("a3,b3,c3,d3");
+				writer.WriteLine("a4,b4,c4,d4");
 				writer.Flush();
 				stream.Position = 0;
 
 				var list = csv.GetRecords<A>().ToList();
 
-				Assert.IsNotNull( list );
-				Assert.AreEqual( 4, list.Count );
+				Assert.IsNotNull(list);
+				Assert.AreEqual(4, list.Count);
 
-				for( var i = 0; i < 4; i++ )
+				for (var i = 0; i < 4; i++)
 				{
 					var rowId = i + 1;
 					var row = list[i];
-					Assert.AreEqual( "a" + rowId, row.Id );
-					Assert.AreEqual( "b" + rowId, row.B.Id );
-					Assert.AreEqual( "c" + rowId, row.B.C.Id );
-					Assert.AreEqual( "d" + rowId, row.B.C.D.Id );
+					Assert.AreEqual("a" + rowId, row.Id);
+					Assert.AreEqual("b" + rowId, row.B.Id);
+					Assert.AreEqual("c" + rowId, row.B.C.Id);
+					Assert.AreEqual("d" + rowId, row.B.C.D.Id);
 				}
 			}
 		}
@@ -77,8 +78,8 @@ namespace CsvHelper.Tests
 		{
 			public AMap()
 			{
-				Map( m => m.Id ).Name( "AId" );
-				References<BMap>( m => m.B );
+				Map(m => m.Id).Name("AId");
+				References<BMap>(m => m.B);
 			}
 		}
 
@@ -86,8 +87,8 @@ namespace CsvHelper.Tests
 		{
 			public BMap()
 			{
-				Map( m => m.Id ).Name( "BId" );
-				References<CMap>( m => m.C );
+				Map(m => m.Id).Name("BId");
+				References<CMap>(m => m.C);
 			}
 		}
 
@@ -95,8 +96,8 @@ namespace CsvHelper.Tests
 		{
 			public CMap()
 			{
-				Map( m => m.Id ).Name( "CId" );
-				References<DMap>( m => m.D );
+				Map(m => m.Id).Name("CId");
+				References<DMap>(m => m.D);
 			}
 		}
 
@@ -104,7 +105,7 @@ namespace CsvHelper.Tests
 		{
 			public DMap()
 			{
-				Map( m => m.Id ).Name( "DId" );
+				Map(m => m.Id).Name("DId");
 			}
 		}
 

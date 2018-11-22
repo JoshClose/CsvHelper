@@ -19,11 +19,12 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void StringConstantTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -31,27 +32,28 @@ namespace CsvHelper.Tests.Writing
 				};
 
 				csv.Configuration.RegisterClassMap<TestStringMap>();
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "Id,Name" );
-				expected.AppendLine( "1,constant" );
-				expected.AppendLine( "2,constant" );
+				expected.AppendLine("Id,Name");
+				expected.AppendLine("1,constant");
+				expected.AppendLine("2,constant");
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
-		
+
 		[TestMethod]
 		public void NullConstantTest()
 		{
-			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -59,19 +61,20 @@ namespace CsvHelper.Tests.Writing
 
 				csv.Configuration.RegisterClassMap<TestNullMap>();
 				csv.Configuration.HasHeaderRecord = false;
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 
-				Assert.AreEqual( "1,\r\n", writer.ToString() );
+				Assert.AreEqual("1,\r\n", writer.ToString());
 			}
 		}
 
 		[TestMethod]
 		public void IntConstantTest()
 		{
-			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -80,10 +83,10 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.RegisterClassMap<TestIntMap>();
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.SanitizeForInjection = false;
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 
-				Assert.AreEqual( "-1,one\r\n", writer.ToString() );
+				Assert.AreEqual("-1,one\r\n", writer.ToString());
 			}
 		}
 
@@ -97,8 +100,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestIntMap()
 			{
-				Map( m => m.Id ).Constant( -1 );
-				Map( m => m.Name );
+				Map(m => m.Id).Constant(-1);
+				Map(m => m.Name);
 			}
 		}
 
@@ -106,8 +109,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestNullMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).Constant( null );
+				Map(m => m.Id);
+				Map(m => m.Name).Constant(null);
 			}
 		}
 
@@ -115,8 +118,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestStringMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).Constant( "constant" );
+				Map(m => m.Id);
+				Map(m => m.Name).Constant("constant");
 			}
 		}
 	}

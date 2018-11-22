@@ -10,14 +10,15 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class CsvWriterBoxedTypesTests
-    {
+	public class CsvWriterBoxedTypesTests
+	{
 		[TestMethod]
 		public void TypeMixedWithBoxedTypeTest()
 		{
-			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var recordsTyped = new List<A>
 				{
 					new A { Id = 1, Name = "one" },
@@ -29,18 +30,18 @@ namespace CsvHelper.Tests
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<AMap>();
-				csv.WriteRecords( recordsTyped );
-				csv.WriteRecords( recordsBoxed );
+				csv.WriteRecords(recordsTyped);
+				csv.WriteRecords(recordsBoxed);
 				writer.Flush();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "1,one" );
-				expected.AppendLine( "2,two" );
+				expected.AppendLine("1,one");
+				expected.AppendLine("2,two");
 
-				Assert.AreEqual( expected.ToString(), writer.ToString() );
+				Assert.AreEqual(expected.ToString(), writer.ToString());
 			}
 		}
-    }
+	}
 
 	public class A
 	{
@@ -53,8 +54,8 @@ namespace CsvHelper.Tests
 	{
 		public AMap()
 		{
-			Map( m => m.Id ).Index( 0 );
-			Map( m => m.Name ).Index( 1 );
+			Map(m => m.Id).Index(0);
+			Map(m => m.Name).Index(1);
 		}
 	}
 }

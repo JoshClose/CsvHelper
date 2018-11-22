@@ -19,33 +19,35 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void ReadTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "P3,P1,P2" );
-				writer.WriteLine( "p3,p1,p2" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("P3,P1,P2");
+				writer.WriteLine("p3,p1,p2");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.RegisterClassMap<AMap>();
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual( "p1", records[0].P1 );
-				Assert.AreEqual( "p2", records[0].B.P2 );
-				Assert.AreEqual( "p3", records[0].B.C.P3 );
+				Assert.AreEqual("p1", records[0].P1);
+				Assert.AreEqual("p2", records[0].B.P2);
+				Assert.AreEqual("p3", records[0].B.C.P3);
 			}
 		}
 
 		[TestMethod]
 		public void WriteTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<A>()
 				{
 					new A
@@ -63,7 +65,7 @@ namespace CsvHelper.Tests.Mappings
 				};
 
 				csv.Configuration.RegisterClassMap<AMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -71,7 +73,7 @@ namespace CsvHelper.Tests.Mappings
 				expected += "p3,p1,p2\r\n";
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual( expected, result );
+				Assert.AreEqual(expected, result);
 			}
 		}
 
@@ -80,7 +82,7 @@ namespace CsvHelper.Tests.Mappings
 		{
 			var config = new CsvHelper.Configuration.Configuration();
 			var map = config.AutoMap<A>();
-			map.Map( m => m.B.C.P3 ).Index( 3 );
+			map.Map(m => m.B.C.P3).Index(3);
 		}
 
 		[TestMethod]
@@ -110,9 +112,9 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public AMap()
 			{
-				Map( m => m.B.C.P3 ).Index( 0 );
-				Map( m => m.P1 ).Index( 1 );
-				Map( m => m.B.P2 ).Index( 2 );
+				Map(m => m.B.C.P3).Index(0);
+				Map(m => m.P1).Index(1);
+				Map(m => m.B.P2).Index(2);
 			}
 		}
 
@@ -121,7 +123,7 @@ namespace CsvHelper.Tests.Mappings
 			public AAutoMap()
 			{
 				AutoMap();
-				Map( m => m.B.C.P3 ).Index( 3 );
+				Map(m => m.B.C.P3).Index(3);
 			}
 		}
 	}

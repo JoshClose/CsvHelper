@@ -25,6 +25,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
@@ -46,6 +47,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
@@ -67,6 +69,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;

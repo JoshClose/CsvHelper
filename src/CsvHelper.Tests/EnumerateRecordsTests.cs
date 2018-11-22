@@ -10,19 +10,20 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class EnumerateRecordsTests
-    {
+	public class EnumerateRecordsTests
+	{
 		[TestMethod]
 		public void BasicTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
-				writer.WriteLine( "2,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
+				writer.WriteLine("2,two");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -36,17 +37,17 @@ namespace CsvHelper.Tests
 				};
 
 				var count = 1;
-				foreach( var r in csv.EnumerateRecords( record ) )
+				foreach (var r in csv.EnumerateRecords(record))
 				{
-					if( count == 1 )
+					if (count == 1)
 					{
-						Assert.AreEqual( 1, r.Id );
-						Assert.AreEqual( "one", r.Name );
+						Assert.AreEqual(1, r.Id);
+						Assert.AreEqual("one", r.Name);
 					}
-					else if( count == 2 )
+					else if (count == 2)
 					{
-						Assert.AreEqual( 2, r.Id );
-						Assert.AreEqual( "two", r.Name );
+						Assert.AreEqual(2, r.Id);
+						Assert.AreEqual("two", r.Name);
 					}
 
 					count++;
@@ -55,16 +56,17 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-        public void UnUsedPropertyTest()
+		public void UnUsedPropertyTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
-				writer.WriteLine( "2,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
+				writer.WriteLine("2,two");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -79,19 +81,19 @@ namespace CsvHelper.Tests
 				};
 
 				var count = 1;
-				foreach( var r in csv.EnumerateRecords( record ) )
+				foreach (var r in csv.EnumerateRecords(record))
 				{
-					if( count == 1 )
+					if (count == 1)
 					{
-						Assert.AreEqual( 1, r.Id );
-						Assert.AreEqual( "one", r.Name );
-						Assert.AreEqual( "nothing", r.UnUsed );
+						Assert.AreEqual(1, r.Id);
+						Assert.AreEqual("one", r.Name);
+						Assert.AreEqual("nothing", r.UnUsed);
 					}
-					else if( count == 2 )
+					else if (count == 2)
 					{
-						Assert.AreEqual( 2, r.Id );
-						Assert.AreEqual( "two", r.Name );
-						Assert.AreEqual( "nothing", r.UnUsed );
+						Assert.AreEqual(2, r.Id);
+						Assert.AreEqual("two", r.Name);
+						Assert.AreEqual("nothing", r.UnUsed);
 					}
 
 					count++;
@@ -102,14 +104,15 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReferenceTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Id,Name" );
-				writer.WriteLine( "1,one" );
-				writer.WriteLine( "2,two" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Id,Name");
+				writer.WriteLine("1,one");
+				writer.WriteLine("2,two");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -126,17 +129,17 @@ namespace CsvHelper.Tests
 				};
 
 				var count = 1;
-				foreach( var r in csv.EnumerateRecords( record ) )
+				foreach (var r in csv.EnumerateRecords(record))
 				{
-					if( count == 1 )
+					if (count == 1)
 					{
-						Assert.AreEqual( 1, r.Id );
-						Assert.AreEqual( "one", r.Reference.Name );
+						Assert.AreEqual(1, r.Id);
+						Assert.AreEqual("one", r.Reference.Name);
 					}
-					else if( count == 2 )
+					else if (count == 2)
 					{
-						Assert.AreEqual( 2, r.Id );
-						Assert.AreEqual( "two", r.Reference.Name );
+						Assert.AreEqual(2, r.Id);
+						Assert.AreEqual("two", r.Reference.Name);
 					}
 
 					count++;
@@ -171,5 +174,5 @@ namespace CsvHelper.Tests
 		{
 			public string Name { get; set; }
 		}
-    }
+	}
 }

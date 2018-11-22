@@ -30,6 +30,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.WriteLine("2,two");
@@ -57,6 +58,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("AId,BId");
 				writer.WriteLine("1,2");
 				writer.Flush();
@@ -81,6 +83,7 @@ namespace CsvHelper.Tests.AutoMapping
 			s.AppendLine("1,one");
 			using (var csv = new CsvReader(new StringReader(s.ToString())))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
 				var records = csv.GetRecords<SimpleReferenceHasNoDefaultConstructor>().ToList();
 				var row = records[0];
@@ -97,6 +100,7 @@ namespace CsvHelper.Tests.AutoMapping
 			s.AppendLine("1,one");
 			using (var csv = new CsvReader(new StringReader(s.ToString())))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
 				var records = csv.GetRecords<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>().ToList();
 				var row = records[0];
@@ -113,6 +117,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Simple>
 				{
 					new Simple { Id = 1, Name = "one" }
@@ -139,6 +144,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<A>
 				{
 					new A
@@ -170,6 +176,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<SimpleReferenceHasNoDefaultConstructor>
 				{
 					new SimpleReferenceHasNoDefaultConstructor
@@ -195,6 +202,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>
 				{
 					new SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor(1, new NoDefaultConstructor("one"))

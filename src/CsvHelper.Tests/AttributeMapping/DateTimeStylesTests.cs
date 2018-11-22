@@ -11,18 +11,19 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class DateTimeStylesTests
-    {
+	public class DateTimeStylesTests
+	{
 		[TestMethod]
 		public void DateTimeStylesTest()
 		{
-			using( var reader = new StringReader( "Id,Name\r\n1,one\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<DateTimeStylesTestClass>().ToList();
 				var actual = csv.Configuration.Maps.Find<DateTimeStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.DateTimeStyle;
 
-				Assert.AreEqual( DateTimeStyles.AdjustToUniversal, actual );
+				Assert.AreEqual(DateTimeStyles.AdjustToUniversal, actual);
 			}
 		}
 
@@ -30,7 +31,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			[DateTimeStyles( DateTimeStyles.AdjustToUniversal )]
+			[DateTimeStyles(DateTimeStyles.AdjustToUniversal)]
 			public string Name { get; set; }
 		}
 	}

@@ -10,9 +10,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests
 {
-    using System.Threading;
+	using System.Threading;
 
-    [TestClass]
+	[TestClass]
 	public class CsvWriterFormatTests
 	{
 		[TestMethod]
@@ -21,72 +21,73 @@ namespace CsvHelper.Tests
 			var record = new TestRecord
 			{
 				IntColumn = 1,
-				DateColumn = new DateTime( 2012, 10, 1, 12, 12, 12 ),
+				DateColumn = new DateTime(2012, 10, 1, 12, 12, 12),
 				DecimalColumn = 150.99m,
 				FirstColumn = "first column",
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream ) { AutoFlush = true };
-			var csv = new CsvWriter( writer );
-			csv.Configuration.CultureInfo = new CultureInfo( "en-US" );
+			var writer = new StreamWriter(stream) { AutoFlush = true };
+			var csv = new CsvWriter(writer);
+			csv.Configuration.Delimiter = ",";
+			csv.Configuration.CultureInfo = new CultureInfo("en-US");
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
-			csv.WriteRecord( record );
-		    csv.NextRecord();
+			csv.WriteRecord(record);
+			csv.NextRecord();
 
 			stream.Position = 0;
-			var reader = new StreamReader( stream );
+			var reader = new StreamReader(stream);
 			var csvFile = reader.ReadToEnd();
 			var expected = "first column,0001,10/1/2012,$150.99\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+			Assert.AreEqual(expected, csvFile);
 		}
 
-	    [TestMethod]
-	    public void WriteFieldShouldQuoteNoTest()
-	    {
-		    var stream = new MemoryStream();
-		    var writer = new StreamWriter( stream ) { AutoFlush = true };
-		    var csv = new CsvWriter( writer );
+		[TestMethod]
+		public void WriteFieldShouldQuoteNoTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter(stream) { AutoFlush = true };
+			var csv = new CsvWriter(writer);
 
-		    csv.WriteField( "a \"b\" c", false );
-		    csv.NextRecord();
+			csv.WriteField("a \"b\" c", false);
+			csv.NextRecord();
 
-		    stream.Position = 0;
-		    var reader = new StreamReader( stream );
-		    var csvFile = reader.ReadToEnd();
-		    var expected = "a \"b\" c\r\n";
+			stream.Position = 0;
+			var reader = new StreamReader(stream);
+			var csvFile = reader.ReadToEnd();
+			var expected = "a \"b\" c\r\n";
 
-		    Assert.AreEqual( expected, csvFile );
-	    }
+			Assert.AreEqual(expected, csvFile);
+		}
 
-	    [TestMethod]
-	    public void WriteFieldShouldQuoteYesTest()
-	    {
-		    var stream = new MemoryStream();
-		    var writer = new StreamWriter( stream ) { AutoFlush = true };
-		    var csv = new CsvWriter( writer );
+		[TestMethod]
+		public void WriteFieldShouldQuoteYesTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter(stream) { AutoFlush = true };
+			var csv = new CsvWriter(writer);
 
-		    csv.WriteField( "a \"b\" c", true );
-		    csv.NextRecord();
+			csv.WriteField("a \"b\" c", true);
+			csv.NextRecord();
 
-		    stream.Position = 0;
-		    var reader = new StreamReader( stream );
-		    var csvFile = reader.ReadToEnd();
-		    var expected = "\"a \"\"b\"\" c\"\r\n";
+			stream.Position = 0;
+			var reader = new StreamReader(stream);
+			var csvFile = reader.ReadToEnd();
+			var expected = "\"a \"\"b\"\" c\"\r\n";
 
-		    Assert.AreEqual( expected, csvFile );
-	    }
+			Assert.AreEqual(expected, csvFile);
+		}
 
-	    [TestMethod]
+		[TestMethod]
 		public void WriteRecordWithReferencesTest()
 		{
 			var record = new Person
 			{
 				FirstName = "First Name",
 				LastName = "Last Name",
-				Updated = new DateTime( 2012, 10, 1, 12, 12, 12, 123 ),
+				Updated = new DateTime(2012, 10, 1, 12, 12, 12, 123),
 				HomeAddress = new Address
 				{
 					Street = "Home Street",
@@ -104,20 +105,21 @@ namespace CsvHelper.Tests
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream ) { AutoFlush = true };
-			var csv = new CsvWriter( writer );
+			var writer = new StreamWriter(stream) { AutoFlush = true };
+			var csv = new CsvWriter(writer);
+			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<PersonMap>();
 
-			csv.WriteRecord( record );
-	        csv.NextRecord();
+			csv.WriteRecord(record);
+			csv.NextRecord();
 
 			stream.Position = 0;
-			var reader = new StreamReader( stream );
+			var reader = new StreamReader(stream);
 			var csvFile = reader.ReadToEnd();
 
 			var expected = "First Name,Last Name,2012-10-01 12:12:12.123,Home Street,Home City,Home State,02201,Work Street,Work City,Work State,04100\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+			Assert.AreEqual(expected, csvFile);
 		}
 
 		private class TestRecord
@@ -135,10 +137,10 @@ namespace CsvHelper.Tests
 		{
 			public TestRecordMap()
 			{
-				Map( m => m.IntColumn ).Name( "Int Column" ).Index( 1 ).TypeConverterOption.Format( "0000" );
-				Map( m => m.DateColumn ).Index( 2 ).TypeConverterOption.Format( "d" );
-				Map( m => m.DecimalColumn ).Index( 3 ).TypeConverterOption.Format( "c" );
-				Map( m => m.FirstColumn ).Index( 0 );
+				Map(m => m.IntColumn).Name("Int Column").Index(1).TypeConverterOption.Format("0000");
+				Map(m => m.DateColumn).Index(2).TypeConverterOption.Format("d");
+				Map(m => m.DecimalColumn).Index(3).TypeConverterOption.Format("c");
+				Map(m => m.FirstColumn).Index(0);
 			}
 		}
 
@@ -170,11 +172,11 @@ namespace CsvHelper.Tests
 		{
 			public PersonMap()
 			{
-				Map( m => m.FirstName );
-				Map( m => m.LastName );
-				Map( m => m.Updated ).TypeConverterOption.Format( "yyyy-MM-dd HH:mm:ss.fff" );
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
+				Map(m => m.FirstName);
+				Map(m => m.LastName);
+				Map(m => m.Updated).TypeConverterOption.Format("yyyy-MM-dd HH:mm:ss.fff");
+				References<HomeAddressMap>(m => m.HomeAddress);
+				References<WorkAddressMap>(m => m.WorkAddress);
 			}
 		}
 
@@ -182,10 +184,10 @@ namespace CsvHelper.Tests
 		{
 			public HomeAddressMap()
 			{
-				Map( m => m.Street ).Name( "HomeStreet" );
-				Map( m => m.City ).Name( "HomeCity" );
-				Map( m => m.State ).Name( "HomeState" );
-				Map( m => m.Zip ).Name( "HomeZip" ).TypeConverterOption.Format( "00000" );
+				Map(m => m.Street).Name("HomeStreet");
+				Map(m => m.City).Name("HomeCity");
+				Map(m => m.State).Name("HomeState");
+				Map(m => m.Zip).Name("HomeZip").TypeConverterOption.Format("00000");
 			}
 		}
 
@@ -193,10 +195,10 @@ namespace CsvHelper.Tests
 		{
 			public WorkAddressMap()
 			{
-				Map( m => m.Street ).Name( "WorkStreet" );
-				Map( m => m.City ).Name( "WorkCity" );
-				Map( m => m.State ).Name( "WorkState" );
-				Map( m => m.Zip ).Name( "WorkZip" ).TypeConverterOption.Format( "00000" );
+				Map(m => m.Street).Name("WorkStreet");
+				Map(m => m.City).Name("WorkCity");
+				Map(m => m.State).Name("WorkState");
+				Map(m => m.Zip).Name("WorkZip").TypeConverterOption.Format("00000");
 			}
 		}
 

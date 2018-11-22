@@ -10,24 +10,25 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class ReferenceTests
-    {
+	public class ReferenceTests
+	{
 		[TestMethod]
 		public void ReferenceTest()
 		{
-			using( var reader = new StringReader( "id,name\r\n1,one\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("id,name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ReferenceTestClassA>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "one", records[0].B.Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("one", records[0].B.Name);
 			}
 		}
 
 		private class ReferenceTestClassA
 		{
-			[Name( "id" )]
+			[Name("id")]
 			public int Id { get; set; }
 
 			public ReferenceTestClassB B { get; set; }
@@ -35,7 +36,7 @@ namespace CsvHelper.Tests.AttributeMapping
 
 		private class ReferenceTestClassB
 		{
-			[Name( "name" )]
+			[Name("name")]
 			public string Name { get; set; }
 		}
 	}

@@ -10,80 +10,82 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.Mappings
 {
 	[TestClass]
-    public class RuntimeMapping
-    {    
+	public class RuntimeMapping
+	{
 		[TestMethod]
 		public void ConstantTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "AId,BId,CId" );
-				writer.WriteLine( "1,2,3" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId");
+				writer.WriteLine("1,2,3");
 				writer.Flush();
 				stream.Position = 0;
 
 				var map = new DefaultClassMap<A>();
-				var type = typeof( A );
-				var member = type.GetProperty( "AId" );
-				map.Map( type, member ).Constant( 4 );
+				var type = typeof(A);
+				var member = type.GetProperty("AId");
+				map.Map(type, member).Constant(4);
 
-				csv.Configuration.RegisterClassMap( map );
+				csv.Configuration.RegisterClassMap(map);
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual( 4, records[0].AId );
+				Assert.AreEqual(4, records[0].AId);
 			}
 		}
 
 		[TestMethod]
 		public void DefaultTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var writer = new StreamWriter( stream ) )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "AId,BId,CId" );
-				writer.WriteLine( ",2,3" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId");
+				writer.WriteLine(",2,3");
 				writer.Flush();
 				stream.Position = 0;
 
 				var map = new DefaultClassMap<A>();
-				var type = typeof( A );
-				var member = type.GetProperty( "AId" );
-				map.Map( type, member ).Default( 4 );
-				
-				csv.Configuration.RegisterClassMap( map );
+				var type = typeof(A);
+				var member = type.GetProperty("AId");
+				map.Map(type, member).Default(4);
+
+				csv.Configuration.RegisterClassMap(map);
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual( 4, records[0].AId );
+				Assert.AreEqual(4, records[0].AId);
 			}
 		}
 
 		[TestMethod]
 		public void ConstantValueTypeNullTest()
 		{
-			Assert.ThrowsException<ArgumentException>( () => new ConstantValueTypeNullMap() );
+			Assert.ThrowsException<ArgumentException>(() => new ConstantValueTypeNullMap());
 		}
 
 		[TestMethod]
 		public void ConstantTypeMismatchTest()
 		{
-			Assert.ThrowsException<ArgumentException>( () => new ConstantTypeMismatchMap() );
+			Assert.ThrowsException<ArgumentException>(() => new ConstantTypeMismatchMap());
 		}
 
 		[TestMethod]
 		public void DefaultValueTypeNullTest()
 		{
-			Assert.ThrowsException<ArgumentException>( () => new DefaultValueTypeNullMap() );
+			Assert.ThrowsException<ArgumentException>(() => new DefaultValueTypeNullMap());
 		}
 
 		[TestMethod]
 		public void DefaultTypeMismatchTest()
 		{
-			Assert.ThrowsException<ArgumentException>( () => new DefaultTypeMismatchMap() );
+			Assert.ThrowsException<ArgumentException>(() => new DefaultTypeMismatchMap());
 		}
 
 		private class A
@@ -114,7 +116,7 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public ConstantValueTypeNullMap()
 			{
-				Map( m => m.AId ).Constant( null );
+				Map(m => m.AId).Constant(null);
 			}
 		}
 
@@ -122,15 +124,15 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public ConstantTypeMismatchMap()
 			{
-				Map( m => m.AId ).Constant( (uint)1 );
+				Map(m => m.AId).Constant((uint)1);
 			}
 		}
-		
+
 		private class DefaultValueTypeNullMap : ClassMap<A>
 		{
 			public DefaultValueTypeNullMap()
 			{
-				Map( m => m.AId ).Constant( null );
+				Map(m => m.AId).Constant(null);
 			}
 		}
 
@@ -138,7 +140,7 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public DefaultTypeMismatchMap()
 			{
-				Map( m => m.AId ).Constant( (uint)1 );
+				Map(m => m.AId).Constant((uint)1);
 			}
 		}
 	}

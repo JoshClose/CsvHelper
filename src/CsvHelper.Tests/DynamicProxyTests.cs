@@ -20,30 +20,31 @@ namespace CsvHelper.Tests
 		{
 			var list = new List<TestClass>();
 			var proxyGenerator = new Castle.DynamicProxy.ProxyGenerator();
-			for( var i = 0; i < 1; i++ )
+			for (var i = 0; i < 1; i++)
 			{
 				var proxy = proxyGenerator.CreateClassProxy<TestClass>();
 				proxy.Id = i + 1;
 				proxy.Name = "name" + proxy.Id;
-				list.Add( proxy );
+				list.Add(proxy);
 			}
 
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<TestClassMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
 				var data = reader.ReadToEnd();
 				var expected = new StringBuilder();
-				expected.AppendLine( "id,name" );
-				expected.AppendLine( "1,name1" );
+				expected.AppendLine("id,name");
+				expected.AppendLine("1,name1");
 
-				Assert.AreEqual( expected.ToString(), data );
+				Assert.AreEqual(expected.ToString(), data);
 			}
 		}
 
@@ -54,12 +55,12 @@ namespace CsvHelper.Tests
 			public string Name { get; set; }
 		}
 
-		private sealed class TestClassMap : ClassMap<TestClass> 
+		private sealed class TestClassMap : ClassMap<TestClass>
 		{
 			public TestClassMap()
 			{
-				Map( m => m.Id ).Name( "id" );
-				Map( m => m.Name ).Name( "name" );
+				Map(m => m.Id).Name("id");
+				Map(m => m.Name).Name("name");
 			}
 		}
 	}

@@ -18,23 +18,24 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void WriteDynamicExpandoObjectsTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<dynamic>();
 				dynamic obj = new ExpandoObject();
 				obj.Id = 1;
 				obj.Name = "one";
-				list.Add( obj );
+				list.Add(obj);
 
 				obj = new ExpandoObject();
 				obj.Id = 2;
 				obj.Name = "two";
-				list.Add( obj );
+				list.Add(obj);
 
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -42,40 +43,41 @@ namespace CsvHelper.Tests.Writing
 				expected += "1,one\r\n";
 				expected += "2,two\r\n";
 
-				Assert.AreEqual( expected, reader.ReadToEnd() );
+				Assert.AreEqual(expected, reader.ReadToEnd());
 			}
 		}
 
 		[TestMethod]
 		public void WriteDynamicExpandoObjectTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				dynamic obj = new ExpandoObject();
 				obj.Id = 1;
 				obj.Name = "one";
 
-				csv.WriteRecord( obj );
-                csv.NextRecord();
+				csv.WriteRecord(obj);
+				csv.NextRecord();
 
 				obj = new ExpandoObject();
 				obj.Id = 2;
 				obj.Name = "two";
 
-				csv.WriteRecord( obj );
+				csv.WriteRecord(obj);
 				csv.NextRecord();
 
-                writer.Flush();
+				writer.Flush();
 				stream.Position = 0;
 
 				var expected = "Id,Name\r\n";
 				expected += "1,one\r\n";
 				expected += "2,two\r\n";
 
-				Assert.AreEqual( expected, reader.ReadToEnd() );
+				Assert.AreEqual(expected, reader.ReadToEnd());
 			}
 		}
 	}

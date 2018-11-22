@@ -16,7 +16,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class Configuration : IReaderConfiguration, IWriterConfiguration
 	{
-		private string delimiter = ",";
+		private string delimiter = CultureInfo.CurrentCulture.TextInfo.ListSeparator;
 		private char quote = '"';
 		private string quoteString = "\"";
 		private string doubleQuoteString = "\"\"";
@@ -150,7 +150,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
-		/// Default is ",";
+		/// Default is CultureInfo.CurrentCulture.TextInfo.ListSeparator.
 		/// </summary>
 		public virtual string Delimiter
 		{

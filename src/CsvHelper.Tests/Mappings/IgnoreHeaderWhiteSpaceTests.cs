@@ -19,21 +19,22 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void Blah()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "The Id,The Name" );
-				writer.WriteLine( "1,one" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("The Id,The Name");
+				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
 				csv.Configuration.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "one", records[0].Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("one", records[0].Name);
 			}
 		}
 
@@ -47,8 +48,8 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public TestMap()
 			{
-				Map( m => m.Id ).Name( "The Id" );
-				Map( m => m.Name ).Name( "The Name" );
+				Map(m => m.Id).Name("The Id");
+				Map(m => m.Name).Name("The Name");
 			}
 		}
 	}

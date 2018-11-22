@@ -15,185 +15,191 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-    [TestClass]
-    public class TypeConverterOptionsFactoryTests
-    {
-        [TestInitialize]
-        public void TestInitialize()
-        {
+	[TestClass]
+	public class TypeConverterOptionsFactoryTests
+	{
+		[TestInitialize]
+		public void TestInitialize()
+		{
 			CultureInfo.CurrentCulture = new CultureInfo("en-US");
-        }
+		}
 
-        [TestMethod]
-        public void AddGetRemoveTest()
-        {
-            var customOptions = new TypeConverterOptions
-            {
-                Formats = new string[] { "custom" },
-            };
-	        var typeConverterOptionsFactory = new TypeConverterOptionsCache();
+		[TestMethod]
+		public void AddGetRemoveTest()
+		{
+			var customOptions = new TypeConverterOptions
+			{
+				Formats = new string[] { "custom" },
+			};
+			var typeConverterOptionsFactory = new TypeConverterOptionsCache();
 
 			typeConverterOptionsFactory.AddOptions<string>(customOptions);
-            var options = typeConverterOptionsFactory.GetOptions<string>();
+			var options = typeConverterOptionsFactory.GetOptions<string>();
 
-            Assert.AreEqual(customOptions.Formats, options.Formats);
+			Assert.AreEqual(customOptions.Formats, options.Formats);
 
-            typeConverterOptionsFactory.RemoveOptions<string>();
+			typeConverterOptionsFactory.RemoveOptions<string>();
 
-            options = typeConverterOptionsFactory.GetOptions<string>();
+			options = typeConverterOptionsFactory.GetOptions<string>();
 
-            Assert.AreNotEqual(customOptions.Formats, options.Formats);
-        }
+			Assert.AreNotEqual(customOptions.Formats, options.Formats);
+		}
 
-        [TestMethod]
-        public void GetFieldTest()
-        {
+		[TestMethod]
+		public void GetFieldTest()
+		{
 			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvReader = new CsvReader(reader))
-            {
-                writer.WriteLine("\"1,234\",\"5,678\"");
-                writer.Flush();
-                stream.Position = 0;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvReader = new CsvReader(reader))
+			{
+				csvReader.Configuration.Delimiter = ",";
+				writer.WriteLine("\"1,234\",\"5,678\"");
+				writer.Flush();
+				stream.Position = 0;
 
-	            csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
-                csvReader.Configuration.HasHeaderRecord = false;
-                csvReader.Read();
-                Assert.AreEqual(1234, csvReader.GetField<int>(0));
-                Assert.AreEqual(5678, csvReader.GetField(typeof(int), 1));
-            }
-        }
+				csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
+				csvReader.Configuration.HasHeaderRecord = false;
+				csvReader.Read();
+				Assert.AreEqual(1234, csvReader.GetField<int>(0));
+				Assert.AreEqual(5678, csvReader.GetField(typeof(int), 1));
+			}
+		}
 
-        [TestMethod]
-        public void GetRecordsTest()
-        {
+		[TestMethod]
+		public void GetRecordsTest()
+		{
 			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvReader = new CsvReader(reader))
-            {
-                writer.WriteLine("\"1,234\",\"5,678\"");
-                writer.Flush();
-                stream.Position = 0;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvReader = new CsvReader(reader))
+			{
+				csvReader.Configuration.Delimiter = ",";
+				writer.WriteLine("\"1,234\",\"5,678\"");
+				writer.Flush();
+				stream.Position = 0;
 
-	            csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
-                csvReader.Configuration.HasHeaderRecord = false;
-                csvReader.GetRecords<Test>().ToList();
-            }
-        }
+				csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
+				csvReader.Configuration.HasHeaderRecord = false;
+				csvReader.GetRecords<Test>().ToList();
+			}
+		}
 
-        [TestMethod]
-        public void GetRecordsAppliedWhenMappedTest()
-        {
+		[TestMethod]
+		public void GetRecordsAppliedWhenMappedTest()
+		{
 			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvReader = new CsvReader(reader))
-            {
-                writer.WriteLine("\"1,234\",\"$5,678\"");
-                writer.Flush();
-                stream.Position = 0;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvReader = new CsvReader(reader))
+			{
+				csvReader.Configuration.Delimiter = ",";
+				writer.WriteLine("\"1,234\",\"$5,678\"");
+				writer.Flush();
+				stream.Position = 0;
 
-	            csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
-                csvReader.Configuration.HasHeaderRecord = false;
-                csvReader.Configuration.RegisterClassMap<TestMap>();
-                csvReader.GetRecords<Test>().ToList();
-            }
-        }
+				csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
+				csvReader.Configuration.HasHeaderRecord = false;
+				csvReader.Configuration.RegisterClassMap<TestMap>();
+				csvReader.GetRecords<Test>().ToList();
+			}
+		}
 
-        [TestMethod]
-        public void WriteFieldTest()
-        {
+		[TestMethod]
+		public void WriteFieldTest()
+		{
 			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvWriter = new CsvWriter(writer))
-            {
-	            csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
-                csvWriter.WriteField(1234);
-                csvWriter.NextRecord();
-                writer.Flush();
-                stream.Position = 0;
-                var record = reader.ReadToEnd();
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvWriter = new CsvWriter(writer))
+			{
+				csvWriter.Configuration.Delimiter = ",";
+				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
+				csvWriter.WriteField(1234);
+				csvWriter.NextRecord();
+				writer.Flush();
+				stream.Position = 0;
+				var record = reader.ReadToEnd();
 
-                Assert.AreEqual("\"$1,234.00\"\r\n", record);
-            }
-        }
+				Assert.AreEqual("\"$1,234.00\"\r\n", record);
+			}
+		}
 
-        [TestMethod]
-        public void WriteRecordsTest()
-        {
+		[TestMethod]
+		public void WriteRecordsTest()
+		{
 			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvWriter = new CsvWriter(writer))
-            {
-                var list = new List<Test>
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvWriter = new CsvWriter(writer))
+			{
+				csvWriter.Configuration.Delimiter = ",";
+				var list = new List<Test>
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-	            csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
-                csvWriter.Configuration.HasHeaderRecord = false;
-                csvWriter.WriteRecords(list);
-                writer.Flush();
-                stream.Position = 0;
-                var record = reader.ReadToEnd();
+				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
+				csvWriter.Configuration.HasHeaderRecord = false;
+				csvWriter.WriteRecords(list);
+				writer.Flush();
+				stream.Position = 0;
+				var record = reader.ReadToEnd();
 
-                Assert.AreEqual("\"$1,234.00\",\"$5,678.00\"\r\n", record);
-            }
-        }
+				Assert.AreEqual("\"$1,234.00\",\"$5,678.00\"\r\n", record);
+			}
+		}
 
-        [TestMethod]
-        public void WriteRecordsAppliedWhenMappedTest()
-        {
+		[TestMethod]
+		public void WriteRecordsAppliedWhenMappedTest()
+		{
 			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var csvWriter = new CsvWriter(writer))
-            {
-                var list = new List<Test>
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csvWriter = new CsvWriter(writer))
+			{
+				csvWriter.Configuration.Delimiter = ",";
+				var list = new List<Test>
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-	            csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>( options );
-                csvWriter.Configuration.HasHeaderRecord = false;
-                csvWriter.Configuration.RegisterClassMap<TestMap>();
-                csvWriter.WriteRecords(list);
-                writer.Flush();
-                stream.Position = 0;
-                var record = reader.ReadToEnd();
+				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
+				csvWriter.Configuration.HasHeaderRecord = false;
+				csvWriter.Configuration.RegisterClassMap<TestMap>();
+				csvWriter.WriteRecords(list);
+				writer.Flush();
+				stream.Position = 0;
+				var record = reader.ReadToEnd();
 
-                Assert.AreEqual("\"$1,234.00\",\"5,678.00\"\r\n", record);
-            }
-        }
+				Assert.AreEqual("\"$1,234.00\",\"5,678.00\"\r\n", record);
+			}
+		}
 
-        private class Test
-        {
-            public int Number { get; set; }
+		private class Test
+		{
+			public int Number { get; set; }
 
-            public int NumberOverridenInMap { get; set; }
-        }
+			public int NumberOverridenInMap { get; set; }
+		}
 
-        private sealed class TestMap : ClassMap<Test>
-        {
-            public TestMap()
-            {
-	            Map( m => m.Number );
-	            Map( m => m.NumberOverridenInMap ).TypeConverterOption.NumberStyles( NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol ).TypeConverterOption.Format( "N" );
-            }
-        }
-    }
+		private sealed class TestMap : ClassMap<Test>
+		{
+			public TestMap()
+			{
+				Map(m => m.Number);
+				Map(m => m.NumberOverridenInMap).TypeConverterOption.NumberStyles(NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol).TypeConverterOption.Format("N");
+			}
+		}
+	}
 }
