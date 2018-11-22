@@ -14,8 +14,8 @@ namespace CsvHelper.Expressions
 	/// <summary>
 	/// Base implementation for classes that write records.
 	/// </summary>
-    public abstract class RecordWriter
-    {
+	public abstract class RecordWriter
+	{
 		/// <summary>
 		/// Gets the writer.
 		/// </summary>
@@ -30,24 +30,24 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given writer.
 		/// </summary>
 		/// <param name="writer">The writer.</param>
-		public RecordWriter( CsvWriter writer )
+		public RecordWriter(CsvWriter writer)
 		{
 			Writer = writer;
-			ExpressionManager = ObjectResolver.Current.Resolve<ExpressionManager>( writer );
-        }
+			ExpressionManager = ObjectResolver.Current.Resolve<ExpressionManager>(writer);
+		}
 
 		/// <summary>
 		/// Writes the record to the current row.
 		/// </summary>
 		/// <typeparam name="T">Type of the record.</typeparam>
 		/// <param name="record">The record.</param>
-		public void Write<T>( T record )
+		public void Write<T>(T record)
 		{
 			try
 			{
-				GetWriteDelegate( record )( record );
+				GetWriteDelegate(record)(record);
 			}
-			catch( TargetInvocationException ex )
+			catch (TargetInvocationException ex)
 			{
 				throw ex.InnerException;
 			}
@@ -59,11 +59,11 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected Action<T> GetWriteDelegate<T>( T record )
+		protected Action<T> GetWriteDelegate<T>(T record)
 		{
-			var type = typeof( T );
+			var type = typeof(T);
 			var typeKeyName = type.AssemblyQualifiedName;
-			if( type == typeof( object ) )
+			if (type == typeof(object))
 			{
 				type = record.GetType();
 				typeKeyName += $"|{type.AssemblyQualifiedName}";
@@ -71,9 +71,9 @@ namespace CsvHelper.Expressions
 
 			int typeKey = typeKeyName.GetHashCode();
 
-			if( !Writer.Context.TypeActions.TryGetValue( typeKey, out Delegate action ) )
+			if (!Writer.Context.TypeActions.TryGetValue(typeKey, out Delegate action))
 			{
-				Writer.Context.TypeActions[typeKey] = action = CreateWriteDelegate( record );
+				Writer.Context.TypeActions[typeKey] = action = CreateWriteDelegate(record);
 			}
 
 			return (Action<T>)action;
@@ -85,7 +85,7 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected abstract Action<T> CreateWriteDelegate<T>( T record );
+		protected abstract Action<T> CreateWriteDelegate<T>(T record);
 
 		/// <summary>
 		/// Combines the delegates into a single multicast delegate.
@@ -94,9 +94,9 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <param name="delegates">The delegates to combine.</param>
 		/// <returns>A multicast delegate combined from the given delegates.</returns>
-		protected virtual Action<T> CombineDelegates<T>( IEnumerable<Action<T>> delegates )
+		protected virtual Action<T> CombineDelegates<T>(IEnumerable<Action<T>> delegates)
 		{
-			return (Action<T>)delegates.Aggregate<Delegate, Delegate>( null, Delegate.Combine );
+			return (Action<T>)delegates.Aggregate<Delegate, Delegate>(null, Delegate.Combine);
 		}
 	}
 }

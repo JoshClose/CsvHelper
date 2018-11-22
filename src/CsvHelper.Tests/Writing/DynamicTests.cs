@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.Writing
@@ -78,6 +79,66 @@ namespace CsvHelper.Tests.Writing
 				expected += "2,two\r\n";
 
 				Assert.AreEqual(expected, reader.ReadToEnd());
+			}
+		}
+
+		[TestMethod]
+		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingTest()
+		{
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
+			{
+				csv.Configuration.Delimiter = ",";
+
+				dynamic obj = new ExpandoObject();
+				obj.Id = 1;
+				obj.Name = "one";
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				obj = new ExpandoObject();
+				obj.Name = "two";
+				obj.Id = 2;
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				var expected = "Id,Name\r\n";
+				expected += "1,one\r\n";
+				expected += "2,two\r\n";
+
+				Assert.AreEqual(expected, writer.ToString());
+			}
+		}
+
+		[TestMethod]
+		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingTest()
+		{
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
+			{
+				csv.Configuration.Delimiter = ",";
+
+				dynamic obj = new DynamicObjectMock();
+				obj.Id = 1;
+				obj.Name = "one";
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				obj = new ExpandoObject();
+				obj.Name = "two";
+				obj.Id = 2;
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				var expected = "Id,Name\r\n";
+				expected += "1,one\r\n";
+				expected += "2,two\r\n";
+
+				Assert.AreEqual(expected, writer.ToString());
 			}
 		}
 	}

@@ -55,16 +55,17 @@ namespace CsvHelper.Tests.Reading
 					return header;
 				};
 
-				var records = csv.GetRecords<dynamic>();
-				var enumerator = records.GetEnumerator();
-				enumerator.MoveNext();
-				Assert.AreEqual("1", enumerator.Current.Id);
-				Assert.AreEqual("2", enumerator.Current.Blank1);
-				Assert.AreEqual(null, enumerator.Current.Blank2);
-				enumerator.MoveNext();
-				Assert.AreEqual("3", enumerator.Current.Id);
-				Assert.AreEqual(null, enumerator.Current.Blank1);
-				Assert.AreEqual(null, enumerator.Current.Blank2);
+				var records = csv.GetRecords<dynamic>().ToList();
+
+				var record = records[0];
+				Assert.AreEqual("1", record.Id);
+				Assert.AreEqual("2", record.Blank1);
+				Assert.AreEqual(null, record.Blank2);
+
+				record = records[1];
+				Assert.AreEqual("3", record.Id);
+				Assert.AreEqual(null, record.Blank1);
+				Assert.AreEqual(null, record.Blank2);
 			}
 		}
 	}

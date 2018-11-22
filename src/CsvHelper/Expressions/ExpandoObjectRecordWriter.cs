@@ -19,7 +19,7 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given writer.
 		/// </summary>
 		/// <param name="writer">The writer.</param>
-		public ExpandoObjectRecordWriter( CsvWriter writer ) : base( writer ) { }
+		public ExpandoObjectRecordWriter(CsvWriter writer) : base(writer) { }
 
 		/// <summary>
 		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
@@ -27,14 +27,15 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected override Action<T> CreateWriteDelegate<T>( T record )
+		protected override Action<T> CreateWriteDelegate<T>(T record)
 		{
 			Action<T> action = r =>
 			{
 				var dict = (IDictionary<string, object>)r;
-				foreach( var val in dict.Values )
+				var values = dict.OrderBy(pair => pair.Key).Select(pair => pair.Value);
+				foreach (var val in values)
 				{
-					Writer.WriteField( val );
+					Writer.WriteField(val);
 				}
 			};
 
