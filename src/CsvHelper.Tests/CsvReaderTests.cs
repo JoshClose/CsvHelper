@@ -568,7 +568,7 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				csv.Configuration.Delimiter = ",";
-				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => header.ToLower();
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
@@ -588,7 +588,7 @@ namespace CsvHelper.Tests
 			queue.Enqueue(null);
 			var parserMock = new ParserMock(queue);
 			var reader = new CsvReader(parserMock);
-			reader.Configuration.PrepareHeaderForMatch = header => Regex.Replace(header, @"\s", string.Empty);
+			reader.Configuration.PrepareHeaderForMatch = (header, index) => Regex.Replace(header, @"\s", string.Empty);
 			var data = reader.GetRecords<TestDefaultValues>().ToList();
 			Assert.IsNotNull(data);
 			Assert.AreEqual(1, data.Count);
@@ -826,7 +826,7 @@ namespace CsvHelper.Tests
 			var parserMock = new ParserMock(queue);
 			var reader = new CsvReader(parserMock);
 			reader.Configuration.MissingFieldFound = null;
-			reader.Configuration.PrepareHeaderForMatch = header => header.Trim();
+			reader.Configuration.PrepareHeaderForMatch = (header, index) => header.Trim();
 			reader.Read();
 			reader.ReadHeader();
 			reader.Read();

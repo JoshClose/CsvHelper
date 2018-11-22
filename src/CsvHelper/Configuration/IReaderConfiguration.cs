@@ -67,7 +67,7 @@ namespace CsvHelper.Configuration
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
-		Func<string, string> PrepareHeaderForMatch { get; set; }
+		Func<string, int, string> PrepareHeaderForMatch { get; set; }
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create

@@ -51,7 +51,7 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = header => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
 				var records = csv.GetRecords<ValueTypesParamsDontMatchProps>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -77,7 +77,7 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = header => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
 				var records = csv.GetRecords<MultipleConstructors>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = header => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
 				csv.Configuration.GetConstructor = type => type.GetConstructors().First();
 				var records = csv.GetRecords<MultipleConstructors>().ToList();
 
@@ -129,7 +129,7 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = header => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
 				csv.Configuration.ShouldUseConstructorParameters = type =>
 					!type.IsUserDefinedStruct()
 					&& !type.IsInterface

@@ -1305,10 +1305,11 @@ namespace CsvHelper
 
 			// Check all possible names for this field.
 			string name = null;
-			foreach (var n in names)
+			for (var i = 0; i < names.Length; i++)
 			{
+				var n = names[i];
 				// Get the list of indexes for this name.
-				var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch(n);
+				var fieldName = context.ReaderConfiguration.PrepareHeaderForMatch(n, i);
 				if (context.NamedIndexes.ContainsKey(fieldName))
 				{
 					name = fieldName;
@@ -1440,7 +1441,7 @@ namespace CsvHelper
 
 			for (var i = 0; i < context.HeaderRecord.Length; i++)
 			{
-				var name = context.ReaderConfiguration.PrepareHeaderForMatch(context.HeaderRecord[i]);
+				var name = context.ReaderConfiguration.PrepareHeaderForMatch(context.HeaderRecord[i], i);
 				if (context.NamedIndexes.ContainsKey(name))
 				{
 					context.NamedIndexes[name].Add(i);

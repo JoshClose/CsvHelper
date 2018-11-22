@@ -84,7 +84,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var csv = new CsvReader(new StringReader(s.ToString())))
 			{
 				csv.Configuration.Delimiter = ",";
-				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => header.ToLower();
 				var records = csv.GetRecords<SimpleReferenceHasNoDefaultConstructor>().ToList();
 				var row = records[0];
 				Assert.AreEqual(1, row.Id);
@@ -101,7 +101,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var csv = new CsvReader(new StringReader(s.ToString())))
 			{
 				csv.Configuration.Delimiter = ",";
-				csv.Configuration.PrepareHeaderForMatch = header => header.ToLower();
+				csv.Configuration.PrepareHeaderForMatch = (header, index) => header.ToLower();
 				var records = csv.GetRecords<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>().ToList();
 				var row = records[0];
 				Assert.AreEqual(1, row.Id);

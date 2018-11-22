@@ -84,7 +84,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Returns the <paramref name="header"/> as given.
 		/// </summary>
-		public static string PrepareHeaderForMatch(string header)
+		public static string PrepareHeaderForMatch(string header, int index)
 		{
 			return header;
 		}
