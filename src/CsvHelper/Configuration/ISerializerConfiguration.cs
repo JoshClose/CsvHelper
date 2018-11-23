@@ -22,6 +22,12 @@ namespace CsvHelper.Configuration
 		char Quote { get; set; }
 
 		/// <summary>
+		/// Gets or sets the escape character used to escape a quote inside a field.
+		/// Default is '"'.
+		/// </summary>
+		char Escape { get; set; }
+
+		/// <summary>
 		/// Gets or sets the field trimming options.
 		/// </summary>
 		TrimOptions TrimOptions { get; set; }

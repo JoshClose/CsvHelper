@@ -8,9 +8,9 @@
 		<Authors>Josh Close</Authors>
 
 		<!-- Build -->
-		<Version>9.2.3</Version>
-		<FileVersion>9.0.0.0</FileVersion>
-		<AssemblyVersion>9.0.0.0</AssemblyVersion>
+		<Version>10.0.0-beta02</Version>
+		<FileVersion>10.0.0.0</FileVersion>
+		<AssemblyVersion>10.0.0.0</AssemblyVersion>
 		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
 		<LangVersion>7.1</LangVersion>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

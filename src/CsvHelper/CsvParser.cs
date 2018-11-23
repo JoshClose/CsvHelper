@@ -582,7 +582,7 @@ namespace CsvHelper
 				}
 
 				// Trim end inside quotes.
-				if (inQuotes && c == ' ')
+				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
@@ -590,7 +590,7 @@ namespace CsvHelper
 					ReadSpaces();
 					cPrev = ' ';
 
-					if (c == context.ParserConfiguration.Quote)
+					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
 					{
 						inQuotes = !inQuotes;
 						quoteCount++;
@@ -632,7 +632,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (c == context.ParserConfiguration.Quote)
+				if (inQuotes && c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
 				{
 					inQuotes = !inQuotes;
 					quoteCount++;
