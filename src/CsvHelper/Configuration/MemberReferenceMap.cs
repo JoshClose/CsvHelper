@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace CsvHelper.Configuration
@@ -11,7 +12,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a reference member mapping to a class.
 	/// </summary>
-	[DebuggerDisplay( "Member = {Data.Member}, Prefix = {Data.Prefix}" )]
+	[DebuggerDisplay( "Member = {Data.Member}, Prefix = {Data.Prefix}, Skip = {Data.Skip}" )]
 	public class MemberReferenceMap
 	{
 		private readonly MemberReferenceMapData data;
@@ -53,12 +54,21 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		/// <summary>
-		/// Get the largest index for the
-		/// members and references.
+        /// <summary>
+		/// Specifies an expression to be used to set this reference to it's default.
 		/// </summary>
-		/// <returns>The max index.</returns>
-		internal int GetMaxIndex()
+		/// <param name="skipExpression">The skip expression.</param>
+        public virtual void Skip(Func<IReaderRow, bool> skipExpression)
+        {
+            data.Skip = (Expression<Func<IReaderRow, bool>>)(x => skipExpression(x));
+        }
+
+        /// <summary>
+        /// Get the largest index for the
+        /// members and references.
+        /// </summary>
+        /// <returns>The max index.</returns>
+        internal int GetMaxIndex()
 		{
 			return data.Mapping.GetMaxIndex();
 		}

@@ -141,7 +141,16 @@ namespace CsvHelper.Expressions
 					referenceBody = CreateInstanceAndAssignMembers(referenceMap.Data.Member.MemberType(), referenceAssignments);
 				}
 
-				assignments.Add(Expression.Bind(referenceMap.Data.Member, referenceBody));
+                if (referenceMap.Data.Skip != null)
+                {
+                    Expression exp = Expression.Invoke(referenceMap.Data.Skip, Expression.Constant(reader));
+                    var condition = Expression.Condition(exp, Expression.Default(referenceMap.Data.Member.MemberType()), referenceBody);
+                    assignments.Add(Expression.Bind(referenceMap.Data.Member, condition));
+                }
+                else
+                {
+                    assignments.Add(Expression.Bind(referenceMap.Data.Member, referenceBody));
+                }
 			}
 		}
 
