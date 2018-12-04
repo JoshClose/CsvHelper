@@ -326,7 +326,7 @@ namespace CsvHelper.Tests
 			using (var csvWriter = new CsvWriter(writer))
 			{
 				csvWriter.Configuration.Delimiter = ",";
-				csvWriter.Configuration.QuoteAllFields = true;
+				csvWriter.Configuration.ShouldQuote = (field, context) => true;
 				csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
 				csvWriter.WriteRecord(record);
 				csvWriter.NextRecord();
@@ -360,7 +360,7 @@ namespace CsvHelper.Tests
 			using (var csvWriter = new CsvWriter(writer))
 			{
 				csvWriter.Configuration.Delimiter = ",";
-				csvWriter.Configuration.QuoteNoFields = true;
+				csvWriter.Configuration.ShouldQuote = (field, context) => false;
 				csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
 				csvWriter.WriteRecord(record);
 				csvWriter.NextRecord();
@@ -476,7 +476,7 @@ namespace CsvHelper.Tests
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer))
 			{
-				csv.Configuration.QuoteAllFields = true;
+				csv.Configuration.ShouldQuote = (field, context) => true;
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one,two"
@@ -500,7 +500,7 @@ namespace CsvHelper.Tests
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer))
 			{
-				csv.Configuration.QuoteAllFields = true;
+				csv.Configuration.ShouldQuote = (field, context) => true;
 				var record = new TestSinglePropertyRecord
 				{
 					Name = "one\"two"

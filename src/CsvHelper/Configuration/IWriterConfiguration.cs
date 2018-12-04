@@ -15,27 +15,6 @@ namespace CsvHelper.Configuration
     public interface IWriterConfiguration : ISerializerConfiguration
     {
 		/// <summary>
-		/// Gets or sets a value indicating whether all fields are quoted when writing,
-		/// or just ones that have to be. <see cref="QuoteAllFields"/> and
-		/// <see cref="QuoteNoFields"/> cannot be true at the same time. Turning one
-		/// on will turn the other off.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if all fields should be quoted; otherwise, <c>false</c>.
-		/// </value>
-		bool QuoteAllFields { get; set; }
-
-		/// <summary>
-		/// Gets or sets a value indicating whether no fields are quoted when writing.
-		/// <see cref="QuoteAllFields"/> and <see cref="QuoteNoFields"/> cannot be true 
-		/// at the same time. Turning one on will turn the other off.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if [quote no fields]; otherwise, <c>false</c>.
-		/// </value>
-		bool QuoteNoFields { get; set; }
-
-		/// <summary>
 		/// Gets a string representation of the currently configured Quote character.
 		/// </summary>
 		/// <value>
@@ -44,23 +23,19 @@ namespace CsvHelper.Configuration
 		string QuoteString { get; }
 
 		/// <summary>
-		/// Gets an array characters that require
-		/// the field to be quoted.
-		/// </summary>
-		char[] QuoteRequiredChars { get; }
-
-		/// <summary>
-		/// Builds the values for the RequiredQuoteChars property.
-		/// </summary>
-		Func<char[]> BuildRequiredQuoteChars { get; set; }
-
-		/// <summary>
 		/// Gets a string representation of two of the currently configured Quote characters.
 		/// </summary>
 		/// <value>
 		/// The new double quote string.
 		/// </value>
 		string DoubleQuoteString { get; }
+
+		/// <summary>
+		/// Gets or sets a function that is used to determine if a field should get quoted 
+		/// when writing.
+		/// Arguments: field, context
+		/// </summary>
+		Func<string, WritingContext, bool> ShouldQuote { get; set; }
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.

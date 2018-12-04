@@ -6,6 +6,8 @@ namespace CsvHelper.Configuration
 	/// <summary>Holds the default callback methods for delegate members of <c>CsvHelper.Configuration.Configuration</c>.</summary>
 	public static class ConfigurationFunctions
 	{
+		private static readonly char[] quoteChars = new char[] { '\r', '\n' };
+
 		/// <summary>
 		/// Throws a <see cref="ValidationException"/> if <paramref name="isValid"/> is <c>false</c>.
 		/// </summary>
@@ -71,6 +73,28 @@ namespace CsvHelper.Configuration
 		public static bool ReadingExceptionOccurred(CsvHelperException exception)
 		{
 			return true;
+		}
+
+		/// <summary>
+		/// Returns true if the field contains a <see cref="IWriterConfiguration.QuoteString"/>,
+		/// starts with a space, ends with a space, contains \r or \n, or contains
+		/// the <see cref="ISerializerConfiguration.Delimiter"/>.
+		/// </summary>
+		/// <param name="field">The field.</param>
+		/// <param name="context">The context.</param>
+		/// <returns></returns>
+		public static bool ShouldQuote(string field, WritingContext context)
+		{
+			var shouldQuote = !string.IsNullOrEmpty(field) && 
+			(
+				field.Contains(context.WriterConfiguration.QuoteString) // Contains quote
+				|| field[0] == ' ' // Starts with a space
+				|| field[field.Length - 1] == ' ' // Ends with a space
+				|| field.IndexOfAny(quoteChars) > -1 // Contains chars that require quotes
+				|| (context.WriterConfiguration.Delimiter.Length > 0 && field.Contains(context.WriterConfiguration.Delimiter)) // Contains delimiter
+			);
+
+			return shouldQuote;
 		}
 
 		/// <summary>

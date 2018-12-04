@@ -21,10 +21,7 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private string quoteString = "\"";
 		private string doubleQuoteString = "\"\"";
-		private char[] quoteRequiredChars;
 		private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-		private bool quoteAllFields;
-		private bool quoteNoFields;
 		private readonly ClassMapCollection maps;
 
 		/// <summary>
@@ -174,8 +171,6 @@ namespace CsvHelper.Configuration
 				}
 
 				delimiter = value;
-
-				quoteRequiredChars = BuildRequiredQuoteChars();
 			}
 		}
 
@@ -262,10 +257,11 @@ namespace CsvHelper.Configuration
 		public virtual string DoubleQuoteString => doubleQuoteString;
 
 		/// <summary>
-		/// Gets an array characters that require
-		/// the field to be quoted.
+		/// Gets or sets a function that is used to determine if a field should get quoted
+		/// when writing.
+		/// Arguments: field, context
 		/// </summary>
-		public virtual char[] QuoteRequiredChars => quoteRequiredChars;
+		public Func<string, WritingContext, bool> ShouldQuote { get; set; } = ConfigurationFunctions.ShouldQuote;
 
 		/// <summary>
 		/// Gets or sets the character used to denote
@@ -285,51 +281,6 @@ namespace CsvHelper.Configuration
 		/// Default is 2048.
 		/// </summary>
 		public virtual int BufferSize { get; set; } = 2048;
-
-		/// <summary>
-		/// Gets or sets a value indicating whether all fields are quoted when writing,
-		/// or just ones that have to be. <see cref="QuoteAllFields"/> and
-		/// <see cref="QuoteNoFields"/> cannot be true at the same time. Turning one
-		/// on will turn the other off.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if all fields should be quoted; otherwise, <c>false</c>.
-		/// </value>
-		public virtual bool QuoteAllFields
-		{
-			get { return quoteAllFields; }
-			set
-			{
-				quoteAllFields = value;
-				if (quoteAllFields && quoteNoFields)
-				{
-					// Both can't be true at the same time.
-					quoteNoFields = false;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Gets or sets a value indicating whether no fields are quoted when writing.
-		/// <see cref="QuoteAllFields"/> and <see cref="QuoteNoFields"/> cannot be true 
-		/// at the same time. Turning one on will turn the other off.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> if [quote no fields]; otherwise, <c>false</c>.
-		/// </value>
-		public virtual bool QuoteNoFields
-		{
-			get { return quoteNoFields; }
-			set
-			{
-				quoteNoFields = value;
-				if (quoteNoFields && quoteAllFields)
-				{
-					// Both can't be true at the same time.
-					quoteAllFields = false;
-				}
-			}
-		}
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the number of bytes should
@@ -387,11 +338,6 @@ namespace CsvHelper.Configuration
 		public virtual Func<Type, string, string> ReferenceHeaderPrefix { get; set; }
 
 		/// <summary>
-		/// Builds the values for the RequiredQuoteChars property.
-		/// </summary>
-		public virtual Func<char[]> BuildRequiredQuoteChars { get; set; }
-
-		/// <summary>
 		/// The configured <see cref="ClassMap"/>s.
 		/// </summary>
 		public virtual ClassMapCollection Maps => maps;
@@ -411,14 +357,6 @@ namespace CsvHelper.Configuration
 		public Configuration()
 		{
 			maps = new ClassMapCollection(this);
-
-			BuildRequiredQuoteChars = () =>
-			{
-				return delimiter.Length > 1 ?
-					new[] { '\r', '\n' } :
-					new[] { '\r', '\n', delimiter[0] };
-			};
-			quoteRequiredChars = BuildRequiredQuoteChars();
 		}
 
 		/// <summary>

@@ -112,26 +112,12 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		public virtual void WriteField(string field)
 		{
-			var shouldQuote = context.WriterConfiguration.QuoteAllFields;
-
 			if (field != null && (context.WriterConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 			{
 				field = field.Trim();
 			}
 
-			if (!context.WriterConfiguration.QuoteNoFields && !string.IsNullOrEmpty(field))
-			{
-				if (shouldQuote // Quote all fields
-					|| field.Contains(context.WriterConfiguration.QuoteString) // Contains quote
-					|| field[0] == ' ' // Starts with a space
-					|| field[field.Length - 1] == ' ' // Ends with a space
-					|| field.IndexOfAny(context.WriterConfiguration.QuoteRequiredChars) > -1 // Contains chars that require quotes
-					|| (context.WriterConfiguration.Delimiter.Length > 0 && field.Contains(context.WriterConfiguration.Delimiter)) // Contains delimiter
-					|| context.WriterConfiguration.AllowComments && context.Record.Count == 0 && field[0] == context.WriterConfiguration.Comment) // Comments are on first field starts with comment char
-				{
-					shouldQuote = true;
-				}
-			}
+			var shouldQuote = context.WriterConfiguration.ShouldQuote(field, context);
 
 			WriteField(field, shouldQuote);
 		}

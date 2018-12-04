@@ -78,7 +78,7 @@ namespace CsvHelper.Tests.Parsing
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual("\"#no comment\"\r\n", result);
+				Assert.AreEqual("#no comment\r\n", result);
 			}
 		}
 
