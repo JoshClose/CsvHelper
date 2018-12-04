@@ -1,6 +1,5 @@
 rmdir /S /Q NuGet
 
-dotnet pack src\CsvHelper -c release -o ..\..\NuGet\Pack
-dotnet pack src\CsvHelper -c release -o ..\..\NuGet\Symbols --include-symbols
+dotnet pack src\CsvHelper -c release -o ..\..\NuGet --include-symbols -p:SymbolPackageFormat=snupkg
 
 pause

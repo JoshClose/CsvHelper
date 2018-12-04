@@ -4,7 +4,7 @@
 
 #### Bug Fixes
 
-- Fixed issue with leavOpen not being used in the context's dispose.
+- Fixed issue with leaveOpen not being used in the context's dispose.
 
 ### 11.0.0
 

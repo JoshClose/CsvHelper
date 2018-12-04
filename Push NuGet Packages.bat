@@ -1,4 +1,3 @@
-dotnet nuget push NuGet\Pack\*.nupkg -s nuget.org
-dotnet nuget push NuGet\Symbols\*.symbols.nupkg -s https://nuget.smbsrc.net/
+dotnet nuget push NuGet\*.nupkg -s https://api.nuget.org/v3/index.json
 
 pause
