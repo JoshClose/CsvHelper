@@ -1,5 +1,85 @@
 # Change Log
 
+### 11.0.1
+
+#### Bug Fixes
+
+- Fixed issue with leavOpen not being used in the context's dispose.
+
+### 11.0.0
+
+#### Features
+
+- Removed config options `QuoteAllFields`, `QuoteNoFields`, `QuoteRequiredChars`, and `BuildREquiredQuoteChars` in favor of `ShouldQuote` function.
+
+#### Breaking Changes
+
+- Removed `IWriterConfiguration.QuoteAllFields`.
+- Removed `IWriterConfiguration.QuoteNoFields`.
+- Removed `IWriterConfiguration.QuoteRequiredChars`.
+- Removed `IWriterConfiguration.BuildRequiredQuoteChars`.
+- Removed `Configuration.QuoteAllFields`.
+- Removed `Configuration.QuoteNoFields`.
+- Removed `Configuration.QuoteRequiredChars`.
+- Removed `Configuration.BuildRequiredQuoteChars`.
+- Added `Func<string, WritingContext, bool> IWriterConfiguration.ShouldQuote`.
+- Added `Func<string, WritingContext, bool> Configuration.ShouldQuote`.
+
+### 10.0.0
+
+#### Features
+
+- Added a more friendly header validation message.
+- Separated header and field validation exceptions.
+- Added data properties to validation classes.
+- Changed Configuration.ReadingExceptionOccurred to not throw an exception and return a boolean whether it should throw an exception. The caller will throw if true.
+- Changed `NamedIndexCache` type from `Tuple<string, int>` to `(string, int)`.
+- Config option to consider a line break in a quoted field as bad data.
+- Changed delimiter default value from ',' to CultureInfo.CurrentCulture.TextInfo.ListSeparator.
+- PrepareHeaderForMatch now passes in the header name and index.
+- Dynamic records will now have null properties for missing fields.
+- Write ExpandoObject and IDynamicMetaObjectProvider object properties in ascending order to ensure order of property creation doesn't matter.
+- Added escape character configuration.
+- Added IDataReader implementation. This allows for easily loading a DataTable.
+
+### Breaking Changes
+
+- `ValidationException` is now `abstract`.
+- `IReaderConfiguration.ReadingExceptionOccurred` type changed from `Action<CsvHelperException>` to `Func<CsvHelperException, bool>`.
+- `Configuration.ReadingExceptionOccurred` type changed from `Action<CsvHelperException>` to `Func<CsvHelperException, bool>`.
+- Changed `NamedIndexCache` type from `Tuple<string, int>` to `(string, int)`. This adds a dependency to `System.ValueTuple` on .NET 4.5.
+- Added `bool IParserConfiguration.LineBreakInQuotedFieldIsBadData`.
+- Added `bool Configuration.LineBreakInQuotedFieldIsBadData`.
+- Changed `IReaderConfiguration.PrepareHeaderForMatch` type from `Func<string, string>` to `Func<string, int, string>`.
+- Changed `Configuration.PrepareHeaderForMatch` type from `Func<string, string>` to `Func<string, int, string>`.
+- Added `char ISerializerConfiguration.Escape`.
+- Added `char IParserConfiguration.Escape`.
+- Added `char Configuration.Escape`.
+
+### 9.2.3
+
+#### Bug Fixes
+
+- Fixed issue where TrimOptions.InsideQuotes would fail when there were escaped quotes in the field.
+
+### 9.2.2
+
+#### Bug Fixes
+
+- Fixed issue where NamedIndexes wasn't being reset on ReadHeader call.
+
+### 9.2.1
+
+#### Bug Fixes
+
+- Fixed issue where a TypeConverterAttribute isn't being used when on a reference.
+
+### 9.2.0
+
+#### Features
+
+- More clear exception messages when reading and a missing field is found.
+
 ### 9.1.0
 
 #### Features
