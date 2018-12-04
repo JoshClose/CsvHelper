@@ -62,7 +62,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the reusable member map data.
 		/// </summary>
-		public MemberMapData ReusableMemberMapData = new MemberMapData( null );
+		public MemberMapData ReusableMemberMapData = new MemberMapData(null);
 
 		/// <summary>
 		/// Gets the <see cref="TextReader"/> that is read from.
@@ -191,10 +191,10 @@ namespace CsvHelper
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the TextReader should be left open when disposing.</param>
-		public ReadingContext( TextReader reader, Configuration.Configuration configuration, bool leaveOpen )
+		public ReadingContext(TextReader reader, Configuration.Configuration configuration, bool leaveOpen)
 		{
-			Reader = reader ?? throw new ArgumentNullException( nameof( reader ) );
-			this.configuration = configuration ?? throw new ArgumentNullException( nameof( configuration ) );
+			Reader = reader ?? throw new ArgumentNullException(nameof(reader));
+			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 			LeaveOpen = leaveOpen;
 			Buffer = new char[0];
 		}
@@ -203,24 +203,24 @@ namespace CsvHelper
 		/// Clears the specified caches.
 		/// </summary>
 		/// <param name="cache">The caches to clear.</param>
-		public virtual void ClearCache( Caches cache )
+		public virtual void ClearCache(Caches cache)
 		{
-			if( ( cache & Caches.NamedIndex ) == Caches.NamedIndex )
+			if ((cache & Caches.NamedIndex) == Caches.NamedIndex)
 			{
 				NamedIndexCache.Clear();
 			}
 
-			if( ( cache & Caches.ReadRecord ) == Caches.ReadRecord )
+			if ((cache & Caches.ReadRecord) == Caches.ReadRecord)
 			{
 				CreateRecordFuncs.Clear();
 			}
 
-			if( ( cache & Caches.TypeConverterOptions ) == Caches.TypeConverterOptions )
+			if ((cache & Caches.TypeConverterOptions) == Caches.TypeConverterOptions)
 			{
 				TypeConverterOptionsCache.Clear();
 			}
 
-			if( ( cache & Caches.RawRecord ) == Caches.RawRecord )
+			if ((cache & Caches.RawRecord) == Caches.RawRecord)
 			{
 				RawRecordBuilder.Clear();
 			}
@@ -232,22 +232,22 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose( true );
-			GC.SuppressFinalize( this );
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
-		protected virtual void Dispose( bool disposing )
+		protected virtual void Dispose(bool disposing)
 		{
-			if( disposed )
+			if (disposed)
 			{
 				return;
 			}
 
-			if( disposing )
+			if (disposing)
 			{
 				Reader?.Dispose();
 			}

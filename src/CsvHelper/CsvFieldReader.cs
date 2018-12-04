@@ -279,7 +279,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose(true);
+			Dispose(!context?.LeaveOpen ?? true);
 			GC.SuppressFinalize(this);
 		}
 
