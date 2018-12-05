@@ -28,6 +28,7 @@
 		<PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
 		<PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
 		<PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
+		<!--<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>-->
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
