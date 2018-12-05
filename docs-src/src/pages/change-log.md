@@ -1,5 +1,11 @@
 # Change Log
 
+### 12.0.1
+
+#### Bug Fixes
+
+- Fixed issue where writing a dynamic object would still sort the header when no sort was specified.
+
 ### 12.0.0
 
 #### Features
