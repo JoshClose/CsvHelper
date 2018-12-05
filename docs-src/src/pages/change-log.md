@@ -1,5 +1,16 @@
 # Change Log
 
+### 12.0.0
+
+#### Features
+
+- Added config option for sorting dynamic object properties when writing. Defaults to property value set order.
+
+#### Breaking Changes
+
+- Added `IComparer<string> IWriterConfiguration.DynamicPropertySort`.
+- Added `IComparer<string> Configuration.DynamicPropertySort`.
+
 ### 11.0.1
 
 #### Bug Fixes
