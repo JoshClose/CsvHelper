@@ -360,7 +360,12 @@ namespace CsvHelper
 			}
 
 			var metaObject = record.GetMetaObject(Expression.Constant(record));
-			var names = metaObject.GetDynamicMemberNames().OrderBy(name => name);
+			var names = metaObject.GetDynamicMemberNames();
+			if (Configuration.DynamicPropertySort != null)
+			{
+				names = names.OrderBy(name => name, Configuration.DynamicPropertySort);
+			}
+
 			foreach (var name in names)
 			{
 				WriteField(name);

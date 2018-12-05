@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper.Tests.Mocks;
+using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.Writing
@@ -91,8 +92,8 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.Delimiter = ",";
 
 				dynamic obj = new ExpandoObject();
-				obj.Id = 1;
 				obj.Name = "one";
+				obj.Id = 1;
 
 				csv.WriteRecord(obj);
 				csv.NextRecord();
@@ -104,8 +105,8 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteRecord(obj);
 				csv.NextRecord();
 
-				var expected = "Id,Name\r\n";
-				expected += "1,one\r\n";
+				var expected = "Name,Id\r\n";
+				expected += "one,1\r\n";
 				expected += "two,2\r\n";
 
 				Assert.AreEqual(expected, writer.ToString());
@@ -121,8 +122,8 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.Delimiter = ",";
 
 				dynamic obj = new DynamicObjectMock();
-				obj.Id = 1;
 				obj.Name = "one";
+				obj.Id = 1;
 
 				csv.WriteRecord(obj);
 				csv.NextRecord();
@@ -134,8 +135,8 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteRecord(obj);
 				csv.NextRecord();
 
-				var expected = "Id,Name\r\n";
-				expected += "1,one\r\n";
+				var expected = "Name,Id\r\n";
+				expected += "one,1\r\n";
 				expected += "two,2\r\n";
 
 				Assert.AreEqual(expected, writer.ToString());
@@ -152,15 +153,15 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
 
 				dynamic obj = new ExpandoObject();
-				obj.Id = 1;
 				obj.Name = "one";
+				obj.Id = 1;
 
 				csv.WriteRecord(obj);
 				csv.NextRecord();
 
 				obj = new ExpandoObject();
-				obj.Name = "two";
 				obj.Id = 2;
+				obj.Name = "two";
 
 				csv.WriteRecord(obj);
 				csv.NextRecord();
@@ -183,15 +184,15 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
 
 				dynamic obj = new DynamicObjectMock();
-				obj.Id = 1;
 				obj.Name = "one";
+				obj.Id = 1;
 
 				csv.WriteRecord(obj);
 				csv.NextRecord();
 
 				obj = new ExpandoObject();
-				obj.Name = "two";
 				obj.Id = 2;
+				obj.Name = "two";
 
 				csv.WriteRecord(obj);
 				csv.NextRecord();
