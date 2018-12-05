@@ -106,7 +106,7 @@ namespace CsvHelper.Tests.Writing
 
 				var expected = "Id,Name\r\n";
 				expected += "1,one\r\n";
-				expected += "2,two\r\n";
+				expected += "two,2\r\n";
 
 				Assert.AreEqual(expected, writer.ToString());
 			}
@@ -119,6 +119,68 @@ namespace CsvHelper.Tests.Writing
 			using (var csv = new CsvWriter(writer))
 			{
 				csv.Configuration.Delimiter = ",";
+
+				dynamic obj = new DynamicObjectMock();
+				obj.Id = 1;
+				obj.Name = "one";
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				obj = new ExpandoObject();
+				obj.Name = "two";
+				obj.Id = 2;
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				var expected = "Id,Name\r\n";
+				expected += "1,one\r\n";
+				expected += "two,2\r\n";
+
+				Assert.AreEqual(expected, writer.ToString());
+			}
+		}
+
+		[TestMethod]
+		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingWithDynamicSortTest()
+		{
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
+			{
+				csv.Configuration.Delimiter = ",";
+				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
+
+				dynamic obj = new ExpandoObject();
+				obj.Id = 1;
+				obj.Name = "one";
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				obj = new ExpandoObject();
+				obj.Name = "two";
+				obj.Id = 2;
+
+				csv.WriteRecord(obj);
+				csv.NextRecord();
+
+				var expected = "Id,Name\r\n";
+				expected += "1,one\r\n";
+				expected += "2,two\r\n";
+
+				Assert.AreEqual(expected, writer.ToString());
+			}
+		}
+
+		[TestMethod]
+		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingWithDynamicSortTest()
+		{
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
+			{
+				csv.Configuration.Delimiter = ",";
+				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
 
 				dynamic obj = new DynamicObjectMock();
 				obj.Id = 1;

@@ -31,8 +31,14 @@ namespace CsvHelper.Expressions
 		{
 			Action<T> action = r =>
 			{
-				var dict = (IDictionary<string, object>)r;
-				var values = dict.OrderBy(pair => pair.Key).Select(pair => pair.Value);
+				var dict = ((IDictionary<string, object>)r).AsEnumerable();
+
+				if (Writer.Configuration.DynamicPropertySort != null)
+				{
+					dict = dict.OrderBy(pair => pair.Key, Writer.Configuration.DynamicPropertySort);
+				}
+
+				var values = dict.Select(pair => pair.Value);
 				foreach (var val in values)
 				{
 					Writer.WriteField(val);

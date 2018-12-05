@@ -42,7 +42,12 @@ namespace CsvHelper.Expressions
 
 				var parameterExpression = Expression.Parameter(typeof(T), "record");
 				var metaObject = provider.GetMetaObject(parameterExpression);
-				var memberNames = metaObject.GetDynamicMemberNames().OrderBy(name => name);
+				var memberNames = metaObject.GetDynamicMemberNames();
+				if (Writer.Configuration.DynamicPropertySort != null)
+				{
+					memberNames = memberNames.OrderBy(name => name, Writer.Configuration.DynamicPropertySort);
+				}
+
 				foreach (var name in memberNames)
 				{
 					var value = GetValue(name, provider);

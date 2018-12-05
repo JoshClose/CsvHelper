@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace CsvHelper.Configuration
 {
@@ -164,5 +165,13 @@ namespace CsvHelper.Configuration
 		/// reference member's member.
 		/// </summary>
 		bool UseNewObjectForNullReferenceMembers { get; set; }
+
+		/// <summary>
+		/// Gets or sets the comparer used to order the properties
+		/// of dynamic objects when writing. The default is null,
+		/// which will preserve the order the object properties
+		/// were created with.
+		/// </summary>
+		IComparer<string> DynamicPropertySort { get; set; }
 	}
 }

@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -133,6 +134,14 @@ namespace CsvHelper.Configuration
 		/// Chooses the constructor to use for constuctor mapping.
 		/// </summary>
 		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = ConfigurationFunctions.GetConstructor;
+
+		/// <summary>
+		/// Gets or sets the comparer used to order the properties
+		/// of dynamic objects when writing. The default is null,
+		/// which will preserve the order the object properties
+		/// were created with.
+		/// </summary>
+		public virtual IComparer<string> DynamicPropertySort { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether references
