@@ -157,7 +157,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
-		/// Default is CultureInfo.CurrentCulture.TextInfo.ListSeparator.
+		/// Default is CultureInfo.TextInfo.ListSeparator.
 		/// </summary>
 		public virtual string Delimiter
 		{
@@ -306,6 +306,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.
+		/// Default is <see cref="System.Globalization.CultureInfo.CurrentCulture"/>.
 		/// </summary>
 		public virtual CultureInfo CultureInfo
 		{
@@ -361,11 +362,22 @@ namespace CsvHelper.Configuration
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
 		/// <summary>
-		/// Creates a new CsvConfiguration.
+		/// Initializes a new instance of the <see cref="Configuration"/> class.
 		/// </summary>
-		public Configuration()
+		public Configuration() : this(CultureInfo.CurrentCulture) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Configuration"/> class
+		/// using the given <see cref="System.Globalization.CultureInfo"/>. Since <see cref="Delimiter"/>
+		/// uses <see cref="CultureInfo"/> for it's default, the given <see cref="System.Globalization.CultureInfo"/>
+		/// will be used instead.
+		/// </summary>
+		/// <param name="cultureInfo">The culture information.</param>
+		public Configuration(CultureInfo cultureInfo)
 		{
 			maps = new ClassMapCollection(this);
+			this.cultureInfo = cultureInfo;
+			delimiter = cultureInfo.TextInfo.ListSeparator;
 		}
 
 		/// <summary>
