@@ -17,14 +17,15 @@
     <Deterministic>False</Deterministic>
   </PropertyGroup>
 
-  <!-- Note: Portable PDB's are disabled for now since ApiApprover breaks because of this -->
-  <!-- <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <DebugType>pdbonly</DebugType>
-  </PropertyGroup> -->
-  
+  <!-- CSharp language -->
+  <PropertyGroup>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+
   <!-- Enforce portable pdb format -->
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DebugType>portable</DebugType>
+    <!-- Debug symbols are required for ApiApprover -->
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
