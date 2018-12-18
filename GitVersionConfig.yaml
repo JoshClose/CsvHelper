@@ -1,0 +1,3 @@
+mode: ContinuousDeployment
+assembly-versioning-scheme: MajorMinorPatch 
+next-version: 12.1.0
