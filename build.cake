@@ -9,6 +9,7 @@ Parameters["Company"] = "Josh Close";
 Parameters["RepositoryUrl"] = string.Format("https://github.com/{0}/{1}", "JoshClose", GetBuildServerVariable("SolutionName"));
 Parameters["StartYear"] = "2010";
 Parameters["UseVisualStudioPrerelease"] = "false";
+Parameters["TestTargetFramework"] = "netcoreapp2.0";
 
 // Note: the rest of the variables should be coming from the build server,
 // see `/deployment/cake/*-variables.cake` for customization options

@@ -4,11 +4,13 @@
   -->
 
   <PropertyGroup>
-    <Authors>Catel</Authors>
-    <PackageIconUrl>https://github.com/Catel/Assets/raw/master/packages/logo.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/Catel/Catel</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/Catel/Catel/blob/develop/LICENSE</PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/Catel/Catel</RepositoryUrl>
+    <Authors>Josh Close and contributors</Authors>
+    <PackageReleaseNotes>https://joshclose.github.io/CsvHelper/change-log</PackageReleaseNotes>
+    <PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
+    <!--<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>-->
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
    
 </Project>

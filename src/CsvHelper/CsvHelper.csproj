@@ -8,12 +8,6 @@
     <PackageVersion>12.1.0-alpha0001</PackageVersion>
     <Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
     <PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
-    <PackageReleaseNotes>https://joshclose.github.io/CsvHelper/change-log</PackageReleaseNotes>
-    <PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
-    <!--<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>-->
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   
   <PropertyGroup>
