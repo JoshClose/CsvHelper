@@ -1,6 +1,8 @@
 # CsvHelper
 
 [![Join the chat at https://gitter.im/CsvHelper/Lobby](https://badges.gitter.im/CsvHelper/Lobby.svg)](https://gitter.im/CsvHelper/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Backers on Open Collective](https://opencollective.com/csvhelper/backers/badge.svg)](#backers)
+[![Sponsors on Open Collective](https://opencollective.com/csvhelper/sponsors/badge.svg)](#sponsors) 
 
 A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.
 
@@ -53,3 +55,24 @@ make working with CSV files easier for people.
 [Amazon Wish List](https://amzn.com/w/36WDXJGN8KQO6)
 
 <sub>* Disclaimer: All gifts go directly to Josh Close and are not considered compensation in any form.</sub>
+
+## Credits
+
+### Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+
+<a href="https://github.com/JoshClose/CsvHelper/graphs/contributors"><img src="https://opencollective.com/csvhelper/contributors.svg?width=890&button=false" /></a>
+
+### Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/csvhelper#backer)]
+
+<a href="https://opencollective.com/csvhelper#backers" target="_blank"><img src="https://opencollective.com/csvhelper/backers.svg?width=890"></a>
+
+### Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/csvhelper#sponsor)]
+
+<a href="https://opencollective.com/csvhelper/sponsor/0/website" target="_blank"><img src="https://opencollective.com/csvhelper/sponsor/0/avatar.svg"></a>
+
