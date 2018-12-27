@@ -317,10 +317,10 @@ var Home = function (_Component) {
 									),
 									_react2.default.createElement(
 										"div",
-										{ className: "field is-grouped" },
+										{ className: "columns is-variable is-2" },
 										_react2.default.createElement(
 											"div",
-											{ className: "control" },
+											{ className: "column is-narrow" },
 											_react2.default.createElement(
 												"a",
 												{ className: "button is-large is-success", href: "https://www.nuget.org/packages/CsvHelper/" },
@@ -338,7 +338,7 @@ var Home = function (_Component) {
 										),
 										_react2.default.createElement(
 											"div",
-											{ className: "control" },
+											{ className: "column is-narrow" },
 											_react2.default.createElement(
 												_reactStatic.Link,
 												{ className: "button is-large is-link", to: "/getting-started" },
@@ -2768,4 +2768,4 @@ function toComment(sourceMap) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.aab1509e.js.map
+//# sourceMappingURL=static.7299be0d.js.map
