@@ -8,9 +8,17 @@ A library for reading and writing CSV files. Extremely fast, flexible, and easy 
 
 ## Install
 
-To install CsvHelper, run the following command in the Package Manager Console
+### Package Manager Console
 
-    PM> Install-Package CsvHelper
+```
+PM> Install-Package CsvHelper
+```
+
+### .NET CLI Console
+
+```
+> dotnet add package CsvHelper
+```
 
 ## Documentation
 
