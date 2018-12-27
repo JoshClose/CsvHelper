@@ -41,10 +41,7 @@ renderer.code = function (code, lang) {
 	return wrapInColumns(`<pre><code class="${lang}">${code}</code></pre>`);
 }
 renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${htmlEncode(text)}</span></h${level}>`;
-renderer.link = (href, title, text) => {
-	//console.log("href", href);
-	return `<a href="/${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
-}
+renderer.link = (href, title, text) => `<a href="/${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
 renderer.list = (body, ordered) => {
 	return ordered
 		? `<div class="content"><ol>${body}</ol></div>`
