@@ -1,0 +1,3 @@
+# ClassMap<TClass> Class
+
+Coming soon...

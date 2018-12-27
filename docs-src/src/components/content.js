@@ -1,8 +1,8 @@
-import React, { Component } from "react"
-import { withSiteData, withRouteData } from 'react-static'
-import marked from "marked"
-import highlight from "highlight.js"
-import "highlight.js/styles/vs.css"
+import React, { Component } from "react";
+import { withSiteData, withRouteData } from "react-static";
+import marked from "marked";
+import highlight from "highlight.js";
+import "highlight.js/styles/vs.css";
 
 // https://github.com/EmilTholin/react-static-markdown-example
 
@@ -38,16 +38,26 @@ renderer.code = function (code, lang) {
 		code = this.options.highlight(code, lang) || code;
 	}
 
-	return wrapInColumns(`<pre><code class="box ${lang}">${code}</code></pre>`);
+	return wrapInColumns(`<pre><code class="${lang}">${code}</code></pre>`);
 }
 renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${htmlEncode(text)}</span></h${level}>`;
-renderer.link = (href, title, text) => `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_blank"}">${text}</a>`;
+renderer.link = (href, title, text) => `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
 renderer.list = (body, ordered) => {
 	return ordered
-		? `<div class="content"><ol>${body}</ol></div>` :
-		`<div class="content"><ul>${body}</ul></div>`;
+		? `<div class="content"><ol>${body}</ol></div>`
+		: `<div class="content"><ul>${body}</ul></div>`;
 };
 renderer.paragraph = text => wrapInColumns(`<p>${text}</p>`);
+renderer.table = (header, body) => {
+	const replacedHeader = header.replace(/<\/?tr>|<\/?th>|&nbsp;|\s/ig, "");
+	const tableClass = replacedHeader.length > 0 ? "" : "has-empty-head";
+
+	return `<table class="table ${tableClass}">
+	<thead>${header}</thead>
+	<tbody>${body}</tbody>
+</table>`;
+}
+
 marked.setOptions({
 	renderer,
 	highlight: (code, language, callback) => {
@@ -65,9 +75,7 @@ const Content = ({ className, data }) => {
 	const markdown = marked(data);
 
 	return (
-		<div className="container">
-			<div className={className} dangerouslySetInnerHTML={{ __html: markdown }}></div>
-		</div>
+		<div className={className} dangerouslySetInnerHTML={{ __html: markdown }}></div>
 	)
 }
 

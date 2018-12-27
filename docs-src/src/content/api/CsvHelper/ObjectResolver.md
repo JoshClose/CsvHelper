@@ -1,0 +1,3 @@
+# ObjectResolverClass
+
+Coming soon...

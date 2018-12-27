@@ -1,0 +1,3 @@
+# ConstantAttribute Class
+
+Coming soon...

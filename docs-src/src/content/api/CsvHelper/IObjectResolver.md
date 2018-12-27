@@ -1,0 +1,3 @@
+# IObjectResolver Interface
+
+Coming soon...

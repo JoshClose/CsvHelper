@@ -1,0 +1,3 @@
+# IHasNameIndexOptions<TClass, TMember> Interface
+
+Coming soon...

@@ -1,0 +1,3 @@
+# IDictionaryGenericConverter Interface
+
+Coming soon...

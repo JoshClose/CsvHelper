@@ -1,0 +1,3 @@
+# MemberTypes Enum
+
+Coming soon...

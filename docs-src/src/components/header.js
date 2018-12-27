@@ -1,5 +1,7 @@
-import React, { Component } from "react"
-import { Link } from "react-static"
+import React, { Component } from "react";
+import { Link } from "react-static";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGithub, faTwitter } from "@fortawesome/free-brands-svg-icons";
 
 export default class Header extends Component {
 
@@ -7,10 +9,10 @@ export default class Header extends Component {
 		return (
 			<header className="header">
 				<nav className="navbar is-light">
-					<div className="container">
+					<div className="container is-fluid">
 						<div className="navbar-brand">
 							<Link className="navbar-item" to="/">
-								<img src="/images/logo-header.png" width="66" height="28" />
+								<img src="/images/logo.svg" width="66" height="28" />
 							</Link>
 
 							<div className="navbar-burger burger">
@@ -22,64 +24,22 @@ export default class Header extends Component {
 
 						<div className="navbar-menu">
 							<div className="navbar-start">
-								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/reading">Reading</Link>
-									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/reading#getting-all-records">Getting All Records</Link>
-										<Link className="navbar-item" to="/reading#reading-records">Reading Records</Link>
-										<Link className="navbar-item" to="/reading#getting-a-single-record">Getting a Single Record</Link>
-										<Link className="navbar-item" to="/reading#getting-fields">Getting Fields</Link>
-										<Link className="navbar-item" to="/reading#malformed-field-fallback">Malformed Field Fallback</Link>
-										<Link className="navbar-item" to="/reading#reading-context">Reading Context</Link>
-										<Link className="navbar-item" to="/reading#configuration">Configuration</Link>
-									</div>
-								</div>
-								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/writing">Writing</Link>
-									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/writing#writing-all-records">Writing All Records</Link>
-										<Link className="navbar-item" to="/writing#writing-a-single-record">Writing a Single Record</Link>
-										<Link className="navbar-item" to="/writing#writing-fields">Writing Fields</Link>
-										<Link className="navbar-item" to="/writing#ending-the-row">Ending the Row</Link>
-										<Link className="navbar-item" to="/writing#writing-context">Writing Context</Link>
-										<Link className="navbar-item" to="/writing#configuration">Configuration</Link>
-									</div>
-								</div>
-								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/mapping">Mapping</Link>
-									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/mapping#reference-mapping">Reference Mapping</Link>
-										<Link className="navbar-item" to="/mapping#auto-mapping">Auto Mapping</Link>
-										<Link className="navbar-item" to="/mapping#options">Options</Link>
-									</div>
-								</div>
-								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/configuration">Configuration</Link>
-									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/configuration#malicious-injection-protection">Malicious Injection Protection</Link>
-										<Link className="navbar-item" to="/configuration#headers">Headers</Link>
-										<Link className="navbar-item" to="/configuration#mapping">Mapping</Link>
-										<Link className="navbar-item" to="/configuration#constructor-mapping">Constructor Mapping</Link>
-										<Link className="navbar-item" to="/configuration#error-handling">Error Handling</Link>
-										<Link className="navbar-item" to="/configuration#type-conversion">Type Conversion</Link>
-										<Link className="navbar-item" to="/configuration#reading">Reading</Link>
-										<Link className="navbar-item" to="/configuration#parsing">Parsing</Link>
-										<Link className="navbar-item" to="/configuration#writing">Writing</Link>
-										<Link className="navbar-item" to="/configuration#formatting">Formatting</Link>
-									</div>
-								</div>
-								<div className="navbar-item has-dropdown is-hoverable">
-									<Link className="navbar-link" to="/type-conversion">Type Conversion</Link>
-									<div className="navbar-dropdown">
-									</div>
-								</div>
-								<div className="navbar-item has-dropdown is-hoverable">
-									<div className="navbar-link">Misc</div>
-									<div className="navbar-dropdown">
-										<Link className="navbar-item" to="/examples">Examples</Link>
-										<Link className="navbar-item" to="/change-log">Change Log</Link>
-									</div>
-								</div>
+								<Link className="navbar-item" to="/getting-started">Getting Started</Link>
+								<Link className="navbar-item" to="/examples">Examples</Link>
+								<Link className="navbar-item" to="/api">API</Link>
+								<Link className="navbar-item" to="/change-log">Change Log</Link>
+							</div>
+							<div className="navbar-end">
+								<a className="navbar-item" href="https://twitter.com/JoshClose">
+									<span className="icon">
+										<FontAwesomeIcon icon={faTwitter} />
+									</span>
+								</a>
+								<a className="navbar-item" href="https://github.com/JoshClose/CsvHelper">
+									<span className="icon">
+										<FontAwesomeIcon icon={faGithub} />
+									</span>
+								</a>
 							</div>
 						</div>
 					</div>

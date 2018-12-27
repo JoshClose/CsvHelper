@@ -1,0 +1,3 @@
+# MemberReferenceMapData Class
+
+Coming soon...

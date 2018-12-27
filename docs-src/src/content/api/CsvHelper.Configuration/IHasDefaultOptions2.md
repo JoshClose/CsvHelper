@@ -1,0 +1,3 @@
+# IHasDefaultOptions<TClass, TMap> Interface
+
+Coming soon...

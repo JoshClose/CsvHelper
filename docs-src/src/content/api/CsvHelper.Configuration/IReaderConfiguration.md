@@ -1,0 +1,3 @@
+# IReaderConfiguration Interface
+
+Coming soon...

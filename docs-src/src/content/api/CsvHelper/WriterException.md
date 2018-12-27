@@ -1,0 +1,3 @@
+# WriterException Class
+
+Coming soon...

@@ -1,0 +1,3 @@
+# IHasName<TClass, TMember> Interface
+
+Coming soon...

@@ -1,0 +1,3 @@
+# IHasDefault<TClass, TMember> Interface
+
+Coming soon...

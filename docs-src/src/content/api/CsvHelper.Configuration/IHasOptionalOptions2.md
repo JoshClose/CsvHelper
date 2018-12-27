@@ -1,0 +1,3 @@
+# IHasOptionalOptions<TClass, TMember> Interface
+
+Coming soon...

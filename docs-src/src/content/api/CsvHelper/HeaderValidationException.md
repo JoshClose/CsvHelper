@@ -1,0 +1,3 @@
+# HeaderValidationException Class
+
+Coming soon...

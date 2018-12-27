@@ -1,0 +1,3 @@
+# TrimOptions Enum
+
+Coming soon...

@@ -1,0 +1,3 @@
+# CharConverter Class
+
+Coming soon...

@@ -1,0 +1,3 @@
+# ConfigurationException Class
+
+Coming soon...

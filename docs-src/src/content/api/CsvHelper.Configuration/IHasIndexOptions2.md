@@ -1,0 +1,3 @@
+# IHasIndexOptions<TClass, TMember> Interface
+
+Coming soon...

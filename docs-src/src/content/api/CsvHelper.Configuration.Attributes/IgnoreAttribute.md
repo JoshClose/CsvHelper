@@ -1,0 +1,3 @@
+# IgnoreAttribute Class
+
+Coming soon...

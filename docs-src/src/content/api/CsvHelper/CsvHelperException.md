@@ -1,0 +1,3 @@
+# CsvHelperException Class
+
+Coming soon...
