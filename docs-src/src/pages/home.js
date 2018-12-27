@@ -35,8 +35,8 @@ export default class Home extends Component {
 									<h1 className="title is-1">CsvHelper</h1>
 									<h2 className="subtitle">A .NET library for reading and writing CSV files. Extremely fast, flexible, and easy to use.</h2>
 
-									<div className="field is-grouped">
-										<div className="control">
+									<div className="columns is-variable is-2">
+										<div className="column is-narrow">
 											<a className="button is-large is-success" href="https://www.nuget.org/packages/CsvHelper/">
 												<span className="icon">
 													<FontAwesomeIcon icon={faDownload} />
@@ -44,7 +44,7 @@ export default class Home extends Component {
 												<span>Download</span>
 											</a>
 										</div>
-										<div className="control">
+										<div className="column is-narrow">
 											<Link className="button is-large is-link" to="/getting-started">
 												<span className="icon">
 													<FontAwesomeIcon icon={faPlayCircle} />
@@ -53,6 +53,7 @@ export default class Home extends Component {
 											</Link>
 										</div>
 									</div>
+
 								</div>
 								<div className="column">
 									<img src="/images/logo.svg" />
