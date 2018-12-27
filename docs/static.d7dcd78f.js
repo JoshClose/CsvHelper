@@ -822,7 +822,7 @@ var Home = function (_Component) {
 							_react2.default.createElement(
 								"a",
 								{ href: "https://github.com/JoshClose/CsvHelper/graphs/contributors" },
-								_react2.default.createElement("img", { src: "https://camo.githubusercontent.com/be8184ec3d8d1a25fbf40e461eb193d178fb8e5a/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f636f6e7472696275746f72732e7376673f77696474683d38393026627574746f6e3d66616c7365", dataCanonicalSrc: "https://opencollective.com/csvhelper/contributors.svg?width=890&button=false", style: { maxWidth: "100%" } })
+								_react2.default.createElement("img", { src: "https://camo.githubusercontent.com/be8184ec3d8d1a25fbf40e461eb193d178fb8e5a/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f636f6e7472696275746f72732e7376673f77696474683d38393026627574746f6e3d66616c7365", "data-canonical-src": "https://opencollective.com/csvhelper/contributors.svg?width=890&button=false", style: { maxWidth: "100%" } })
 							),
 							_react2.default.createElement("br", null),
 							_react2.default.createElement("br", null),
@@ -937,7 +937,7 @@ var Home = function (_Component) {
 							_react2.default.createElement(
 								"a",
 								{ href: "https://opencollective.com/csvhelper#backers", rel: "nofollow" },
-								_react2.default.createElement("img", { src: "https://camo.githubusercontent.com/47a6bf22fd6cbdd06e076c8710fcfe422e333e86/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f6261636b6572732e7376673f77696474683d383930", "data-canonical-src": "https://opencollective.com/csvhelper/backers.svg?width=890", style: { maxWidth: "100%;" } })
+								_react2.default.createElement("img", { src: "https://camo.githubusercontent.com/47a6bf22fd6cbdd06e076c8710fcfe422e333e86/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f6261636b6572732e7376673f77696474683d383930", "data-canonical-src": "https://opencollective.com/csvhelper/backers.svg?width=890", style: { maxWidth: "100%" } })
 							),
 							_react2.default.createElement(
 								"h3",
@@ -948,7 +948,7 @@ var Home = function (_Component) {
 							_react2.default.createElement(
 								"a",
 								{ href: "https://opencollective.com/csvhelper/sponsor/0/website", rel: "nofollow" },
-								_react2.default.createElement("img", { src: "https://camo.githubusercontent.com/8c4b18a584bc3d249062d169f460ee2d3b8f7373/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f73706f6e736f722f302f6176617461722e737667", "data-canonical-src": "https://opencollective.com/csvhelper/sponsor/0/avatar.svg", style: { maxWidth: "100%;" } })
+								_react2.default.createElement("img", { src: "https://camo.githubusercontent.com/8c4b18a584bc3d249062d169f460ee2d3b8f7373/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f73706f6e736f722f302f6176617461722e737667", "data-canonical-src": "https://opencollective.com/csvhelper/sponsor/0/avatar.svg", style: { maxWidth: "100%" } })
 							)
 						)
 					)
@@ -1121,7 +1121,7 @@ __webpack_require__(28);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// https://github.com/EmilTholin/react-static-markdown-example
+var isMarkedInitialized = false;
 
 function wrapInColumns(text) {
 	return "<div class=\"columns\"><div class=\"column\">" + text + "</div></div>";
@@ -1138,65 +1138,83 @@ function toSeoFriendly(text) {
 	return result;
 }
 
-_highlight3.default.configure({
-	languages: ["cs"]
-});
-var renderer = new _marked2.default.Renderer();
-renderer.blockquote = function (quote) {
-	return "<div class=\"content\"><blockquote>" + quote + "</blockquote></div>";
-};
-// For some reason using `this` here when this
-// is a lambda function, `this` is undefined,
-// so using a normal function.
-renderer.code = function (code, lang) {
-	if (this.options.highlight) {
-		code = this.options.highlight(code, lang) || code;
+function initializeMarked(isDev) {
+	if (isMarkedInitialized === true) {
+		return;
 	}
 
-	return wrapInColumns("<pre><code class=\"" + lang + "\">" + code + "</code></pre>");
-};
-renderer.heading = function (text, level) {
-	return "<h" + level + " id=\"" + toSeoFriendly(text) + "\" class=\"title is-" + level + "\"><span>" + htmlEncode(text) + "</span></h" + level + ">";
-};
-renderer.link = function (href, title, text) {
-	return "<a href=\"/" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_self") + "\">" + text + "</a>";
-};
-renderer.list = function (body, ordered) {
-	return ordered ? "<div class=\"content\"><ol>" + body + "</ol></div>" : "<div class=\"content\"><ul>" + body + "</ul></div>";
-};
-renderer.paragraph = function (text) {
-	return wrapInColumns("<p>" + text + "</p>");
-};
-renderer.table = function (header, body) {
-	var replacedHeader = header.replace(/<\/?tr>|<\/?th>|&nbsp;|\s/ig, "");
-	var tableClass = replacedHeader.length > 0 ? "" : "has-empty-head";
+	console.log("initializing marked");
 
-	return "<table class=\"table " + tableClass + "\">\n\t<thead>" + header + "</thead>\n\t<tbody>" + body + "</tbody>\n</table>";
-};
+	isMarkedInitialized = true;
 
-_marked2.default.setOptions({
-	renderer: renderer,
-	highlight: function highlight(code, language, callback) {
-		//code = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-		var h = _highlight3.default;
-		if (language) {
-			return _highlight3.default.highlight(language, code, true).value;
+	_highlight3.default.configure({
+		languages: ["cs"]
+	});
+	var renderer = new _marked2.default.Renderer();
+	renderer.blockquote = function (quote) {
+		return "<div class=\"content\"><blockquote>" + quote + "</blockquote></div>";
+	};
+	// For some reason using `this` here when this
+	// is a lambda function, `this` is undefined,
+	// so using a normal function.
+	renderer.code = function (code, lang) {
+		if (this.options.highlight) {
+			code = this.options.highlight(code, lang) || code;
 		}
 
-		return _highlight3.default.highlightAuto(code).value;
-	}
-});
+		return wrapInColumns("<pre><code class=\"" + lang + "\">" + code + "</code></pre>");
+	};
+	renderer.heading = function (text, level) {
+		return "<h" + level + " id=\"" + toSeoFriendly(text) + "\" class=\"title is-" + level + "\"><span>" + htmlEncode(text) + "</span></h" + level + ">";
+	};
+	renderer.link = function (href, title, text) {
+		//console.log("href", href);
+		// if (!href.startsWith("http") && !isDev) {
+		// 	href = `/CsvHelper${href}`;
+		// }
+
+		return "<a href=\"" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_self") + "\">" + text + "</a>";
+	};
+	renderer.list = function (body, ordered) {
+		return ordered ? "<div class=\"content\"><ol>" + body + "</ol></div>" : "<div class=\"content\"><ul>" + body + "</ul></div>";
+	};
+	renderer.paragraph = function (text) {
+		return wrapInColumns("<p>" + text + "</p>");
+	};
+	renderer.table = function (header, body) {
+		var replacedHeader = header.replace(/<\/?tr>|<\/?th>|&nbsp;|\s/ig, "");
+		var tableClass = replacedHeader.length > 0 ? "" : "has-empty-head";
+
+		return "\n\t\t\t<table class=\"table " + tableClass + "\">\n\t\t\t\t<thead>" + header + "</thead>\n\t\t\t\t<tbody>" + body + "</tbody>\n\t\t\t</table>\n\t\t";
+	};
+
+	_marked2.default.setOptions({
+		renderer: renderer,
+		highlight: function highlight(code, language, callback) {
+			//code = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			var h = _highlight3.default;
+			if (language) {
+				return _highlight3.default.highlight(language, code, true).value;
+			}
+
+			return _highlight3.default.highlightAuto(code).value;
+		}
+	});
+}
 
 var Content = function Content(_ref) {
 	var className = _ref.className,
-	    data = _ref.data;
+	    data = _ref.data,
+	    isDev = _ref.isDev;
+
+	initializeMarked(isDev);
 
 	var markdown = (0, _marked2.default)(data);
 
 	return _react2.default.createElement("div", { className: className, dangerouslySetInnerHTML: { __html: markdown } });
 };
 
-exports.default = (0, _reactStatic.withRouteData)(Content);
+exports.default = (0, _reactStatic.withSiteData)((0, _reactStatic.withRouteData)(Content));
 
 /***/ }),
 /* 11 */
@@ -2767,4 +2785,4 @@ function toComment(sourceMap) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.145487c1.js.map
+//# sourceMappingURL=static.d7dcd78f.js.map
