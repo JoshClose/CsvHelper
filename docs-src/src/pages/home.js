@@ -272,7 +272,7 @@ export default class Home extends Component {
 							<hr />
 
 							<a href="https://github.com/JoshClose/CsvHelper/graphs/contributors">
-								<img src="https://camo.githubusercontent.com/be8184ec3d8d1a25fbf40e461eb193d178fb8e5a/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f636f6e7472696275746f72732e7376673f77696474683d38393026627574746f6e3d66616c7365" dataCanonicalSrc="https://opencollective.com/csvhelper/contributors.svg?width=890&amp;button=false" style={{ maxWidth: "100%" }} />
+								<img src="https://camo.githubusercontent.com/be8184ec3d8d1a25fbf40e461eb193d178fb8e5a/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f636f6e7472696275746f72732e7376673f77696474683d38393026627574746f6e3d66616c7365" data-canonical-src="https://opencollective.com/csvhelper/contributors.svg?width=890&amp;button=false" style={{ maxWidth: "100%" }} />
 							</a>
 
 							<br /><br />
@@ -330,14 +330,14 @@ export default class Home extends Component {
 							<hr />
 
 							<a href="https://opencollective.com/csvhelper#backers" rel="nofollow">
-								<img src="https://camo.githubusercontent.com/47a6bf22fd6cbdd06e076c8710fcfe422e333e86/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f6261636b6572732e7376673f77696474683d383930" data-canonical-src="https://opencollective.com/csvhelper/backers.svg?width=890" style={{ maxWidth: "100%;" }} />
+								<img src="https://camo.githubusercontent.com/47a6bf22fd6cbdd06e076c8710fcfe422e333e86/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f6261636b6572732e7376673f77696474683d383930" data-canonical-src="https://opencollective.com/csvhelper/backers.svg?width=890" style={{ maxWidth: "100%" }} />
 							</a>
 
 							<h3 className="title is-3">Sponsers</h3>
 							<hr />
 
 							<a href="https://opencollective.com/csvhelper/sponsor/0/website" rel="nofollow">
-								<img src="https://camo.githubusercontent.com/8c4b18a584bc3d249062d169f460ee2d3b8f7373/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f73706f6e736f722f302f6176617461722e737667" data-canonical-src="https://opencollective.com/csvhelper/sponsor/0/avatar.svg" style={{ maxWidth: "100%;" }} />
+								<img src="https://camo.githubusercontent.com/8c4b18a584bc3d249062d169f460ee2d3b8f7373/68747470733a2f2f6f70656e636f6c6c6563746976652e636f6d2f63737668656c7065722f73706f6e736f722f302f6176617461722e737667" data-canonical-src="https://opencollective.com/csvhelper/sponsor/0/avatar.svg" style={{ maxWidth: "100%" }} />
 							</a>
 						</div>
 					</div>

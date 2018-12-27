@@ -43,7 +43,9 @@ function createRoutesFromTocItem(item, routes) {
 
 export default {
 	siteRoot: "https://joshclose.github.io",
-	basePath: "/CsvHelper/",
+	stagingSiteRoot: "http://localhost:3001",
+	basePath: "CsvHelper",
+	stagingBasePath: "CsvHelper",
 	Document: ({ Html, Head, Body, children, siteData, renderMeta }) => (
 		<Html lang="en-US">
 			<Head>
