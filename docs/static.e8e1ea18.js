@@ -1058,7 +1058,6 @@ var Documentation = function (_Component) {
 		value: function render() {
 			var sidebarBottom = this.state.sidebarBottom;
 
-			console.log("props", this.props);
 
 			return _react2.default.createElement(
 				"div",
@@ -1160,7 +1159,8 @@ renderer.heading = function (text, level) {
 	return "<h" + level + " id=\"" + toSeoFriendly(text) + "\" class=\"title is-" + level + "\"><span>" + htmlEncode(text) + "</span></h" + level + ">";
 };
 renderer.link = function (href, title, text) {
-	return "<a href=\"" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_self") + "\">" + text + "</a>";
+	console.log("href", href);
+	return "<a href=\"/" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_self") + "\">" + text + "</a>";
 };
 renderer.list = function (body, ordered) {
 	return ordered ? "<div class=\"content\"><ol>" + body + "</ol></div>" : "<div class=\"content\"><ul>" + body + "</ul></div>";
@@ -2768,4 +2768,4 @@ function toComment(sourceMap) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.7299be0d.js.map
+//# sourceMappingURL=static.e8e1ea18.js.map
