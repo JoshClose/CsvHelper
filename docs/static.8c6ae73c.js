@@ -1168,10 +1168,10 @@ function initializeMarked(isDev) {
 		return "<h" + level + " id=\"" + toSeoFriendly(text) + "\" class=\"title is-" + level + "\"><span>" + htmlEncode(text) + "</span></h" + level + ">";
 	};
 	renderer.link = function (href, title, text) {
-		//console.log("href", href);
-		// if (!href.startsWith("http") && !isDev) {
-		// 	href = `/CsvHelper${href}`;
-		// }
+		if (!href.startsWith("http") && !isDev) {
+			var separator = href.startsWith("/") ? "" : "/";
+			href = "/CsvHelper" + separator + href;
+		}
 
 		return "<a href=\"" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_self") + "\">" + text + "</a>";
 	};
@@ -2785,4 +2785,4 @@ function toComment(sourceMap) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.d7dcd78f.js.map
+//# sourceMappingURL=static.8c6ae73c.js.map
