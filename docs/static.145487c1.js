@@ -67,7 +67,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/CsvHelper/";
+/******/ 	__webpack_require__.p = "https://joshclose.github.io/CsvHelper/";
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = 13);
@@ -1159,7 +1159,6 @@ renderer.heading = function (text, level) {
 	return "<h" + level + " id=\"" + toSeoFriendly(text) + "\" class=\"title is-" + level + "\"><span>" + htmlEncode(text) + "</span></h" + level + ">";
 };
 renderer.link = function (href, title, text) {
-	console.log("href", href);
 	return "<a href=\"/" + href + "\" target=\"" + (/^[\/#].*/.test(href) ? "_self" : "_self") + "\">" + text + "</a>";
 };
 renderer.list = function (body, ordered) {
@@ -2768,4 +2767,4 @@ function toComment(sourceMap) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.e8e1ea18.js.map
+//# sourceMappingURL=static.145487c1.js.map
