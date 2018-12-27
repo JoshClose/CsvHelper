@@ -35,7 +35,6 @@ class Documentation extends Component {
 
 	render() {
 		const { sidebarBottom } = this.state;
-		console.log("props", this.props);
 
 		return (
 			<div className="documentation container is-fluid">
