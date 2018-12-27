@@ -10,6 +10,7 @@ namespace CsvHelper
 	/// Types of caches.
 	/// </summary>
 	[Flags]
+	[Serializable]
 	public enum Caches
     {
 		/// <summary>
