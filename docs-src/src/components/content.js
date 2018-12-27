@@ -51,10 +51,10 @@ function initializeMarked(isDev) {
 	}
 	renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${htmlEncode(text)}</span></h${level}>`;
 	renderer.link = (href, title, text) => {
-		//console.log("href", href);
-		// if (!href.startsWith("http") && !isDev) {
-		// 	href = `/CsvHelper${href}`;
-		// }
+		if (!href.startsWith("http") && !isDev) {
+			const separator = href.startsWith("/") ? "" : "/";
+			href = `/CsvHelper${separator}${href}`;
+		}
 
 		return `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
 	};
