@@ -1,0 +1,38 @@
+body
+{
+	padding-top: 120px;
+}
+
+h1
+{
+	background: url(../images/logo.png) top left no-repeat;
+	height: 260px;
+	text-indent: -9999px;
+	width: 612px;
+}
+
+h1, h2, h3, h4, h5, h6
+{
+	margin-top: -50px;
+	padding-top: 50px;
+}
+
+.navbar-brand img
+{
+	margin-top: -5px;
+	height: 30px;
+	width: 30px;
+}
+
+@media (max-width: 768px)
+{
+	#github-fork-me img
+	{
+		display: none;
+	}
+}
+
+ol.linenums li
+{
+	list-style-type: decimal;
+}
