@@ -4,24 +4,20 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Reflection;
-using System.Linq.Expressions;
-using System.Dynamic;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 
 namespace CsvHelper
 {
-	/// <summary>
-	/// Reads data that was parsed from <see cref="IParser" />.
-	/// </summary>
-	public class CsvReader : IReader
+    /// <summary>
+    /// Reads data that was parsed from <see cref="IParser" />.
+    /// </summary>
+    public class CsvReader : IReader
 	{
 		private readonly Lazy<RecordManager> recordManager;
 		private ReadingContext context;
@@ -144,57 +140,99 @@ namespace CsvHelper
 		/// <param name="map">The map to validate against.</param>
 		protected virtual void ValidateHeader(ClassMap map)
 		{
-			foreach (var parameter in map.ParameterMaps)
-			{
-				if (parameter.ConstructorTypeMap != null)
-				{
-					ValidateHeader(parameter.ConstructorTypeMap);
-				}
-				else if (parameter.ReferenceMap != null)
-				{
-					ValidateHeader(parameter.ReferenceMap.Data.Mapping);
-				}
-				else
-				{
-					var index = GetFieldIndex(parameter.Data.Name, 0, true);
-					Configuration.HeaderValidated?.Invoke(index != -1, new[] { parameter.Data.Name }, 0, context);
-				}
-			}
-
-			foreach (var memberMap in map.MemberMaps)
-			{
-				if (memberMap.Data.Ignore || !CanRead(memberMap))
-				{
-					continue;
-				}
-
-				if (memberMap.Data.ReadingConvertExpression != null || memberMap.Data.IsConstantSet)
-				{
-					// If ConvertUsing and Constant don't require a header.
-					continue;
-				}
-
-				if (memberMap.Data.IsIndexSet && !memberMap.Data.IsNameSet)
-				{
-					// If there is only an index set, we don't want to validate the header name.
-					continue;
-				}
-
-				var index = GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true);
-				var isValid = index != -1 || memberMap.Data.IsOptional;
-				Configuration.HeaderValidated?.Invoke(isValid, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context);
-			}
-
-			foreach (var referenceMap in map.ReferenceMaps)
-			{
-				if (!CanRead(referenceMap))
-				{
-					continue;
-				}
-
-				ValidateHeader(referenceMap.Data.Mapping);
-			}
+            ValidateHeaderForParameterMaps(map.ParameterMaps);
+            ValidateHeaderForMemberMaps(map.MemberMaps);
+            ValidateHeaderForReferenceMaps(map.ReferenceMaps);
 		}
+
+        private void ValidateHeaderForParameterMaps(IEnumerable<ParameterMap> parameterMaps)
+        {
+            IList<string> missingHeaderNames = new List<string>(0);
+            foreach (var parameter in parameterMaps)
+            {
+                if (parameter.ConstructorTypeMap != null)
+                {
+                    ValidateHeader(parameter.ConstructorTypeMap);
+                }
+                else if (parameter.ReferenceMap != null)
+                {
+                    ValidateHeader(parameter.ReferenceMap.Data.Mapping);
+                }
+                else
+                {
+                    string name = parameter.Data.Name;
+                    var index = GetFieldIndex(name, 0, true);
+                    try
+                    {
+                        Configuration.HeaderValidated?.Invoke(index != -1, new[] { name }, 0, context);
+                    }
+                    catch (HeaderValidationException)
+                    {
+                        missingHeaderNames.Add(name);
+                    }
+                }
+
+                if (missingHeaderNames.Any())
+                {
+                    throw new HeaderValidationException(context, missingHeaderNames.ToArray(), null, $"The following header name(s) are missing: '{string.Join("', '", missingHeaderNames)}'.");
+                }
+            }
+        }
+
+        private void ValidateHeaderForMemberMaps(IEnumerable<MemberMap> memberMaps)
+        {
+            IList<string> missingHeaderNames = new List<string>(0);
+            foreach (var memberMap in memberMaps)
+            {
+                var data = memberMap.Data;
+                var names = data.Names;
+
+                if (!ShouldValidateMemberMapHeader(memberMap))
+                {
+                    continue;
+                }
+
+                var index = GetFieldIndex(names.ToArray(), data.NameIndex, true);
+                var isValid = index != -1 || data.IsOptional;
+
+                try
+                {
+                    Configuration.HeaderValidated?.Invoke(isValid, names.ToArray(), data.NameIndex, context);
+                }
+                catch (HeaderValidationException)
+                {
+                    foreach (var name in names)
+                    {
+                        missingHeaderNames.Add(name); // Note: length appears to always be 1.
+                    }
+                }
+            }
+
+            if (missingHeaderNames.Any())
+            {
+                throw new HeaderValidationException(context, missingHeaderNames.ToArray(), null, $"The following header name(s) are missing: '{string.Join("', '", missingHeaderNames)}'.");
+            }
+        }
+
+        private bool ShouldValidateMemberMapHeader(MemberMap memberMap)
+        {
+            var data = memberMap.Data;
+            return !data.Ignore && CanRead(memberMap)
+                && data.ReadingConvertExpression == null // No header required.
+                && !data.IsConstantSet // No header required.
+                && (!data.IsIndexSet || data.IsNameSet); // Don't want to validate the header name.
+        }
+
+        private void ValidateHeaderForReferenceMaps(IEnumerable<MemberReferenceMap> referenceMaps)
+        {
+            foreach (var referenceMap in referenceMaps)
+            {
+                if (CanRead(referenceMap))
+                {
+                    ValidateHeader(referenceMap.Data.Mapping);
+                }
+            }
+        }
 
 		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.

@@ -152,14 +152,63 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private class Test
+        [TestMethod]
+        public void MissingSomeNamesTest()
+        {
+            using (var csv = new CsvReader(new StringReader("Id,Name")))
+            {
+                try
+                {
+                    csv.Read();
+                    csv.ReadHeader();
+                    csv.ValidateHeader<Test2>();
+                    Assert.Fail();
+                }
+                catch (HeaderValidationException e)
+                {
+                    Assert.AreEqual("The following header name(s) are missing: 'Number', 'Price'.", e.Message);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void MissingSomeNamesWithConstructorTest()
+        {
+            try
+            {
+                using (var csv = new CsvReader(new StringReader("Name")))
+                {
+                    csv.Read();
+                    csv.ReadHeader();
+                    csv.ValidateHeader<HasConstructor>();
+                    Assert.Fail();
+                }
+            }
+            catch (HeaderValidationException e)
+            {
+                Assert.AreEqual("The following header name(s) are missing: 'Id'.", e.Message);
+            }
+        }
+
+        private class Test
 		{
 			public int Id { get; set; }
 
 			public string Name { get; set; }
 		}
 
-		private class HasReference
+        private class Test2
+        {
+            public int Id { get; set; }
+
+            public string Name { get; set; }
+
+            public int Number { get; set; }
+
+            public float Price { get; set; }
+        }
+
+        private class HasReference
 		{
 			public Test Reference { get; set; }
 		}
