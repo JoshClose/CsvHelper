@@ -1,3 +1,0 @@
-# IHasTypeConverterOptions<TClass, TMember> Interface
-
-Coming soon...

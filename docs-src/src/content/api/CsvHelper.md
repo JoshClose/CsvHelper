@@ -5,11 +5,11 @@
 - | -
 [BadDataException](/api/CsvHelper/BadDataException) | Represents errors that occur due to bad data.
 [CsvDataReader](/api/CsvHelper/CsvDataReader) | Provides a means of reading a CSV file forward-only by using CsvReader.
-[CsvFieldReader](/api/CsvHelper/CsvFieldReader) | Reads fields from a System.IO.TextReader.
+[CsvFieldReader](/api/CsvHelper/CsvFieldReader) | Reads fields from a ``System.IO.TextReader`` .
 [CsvHelperException](/api/CsvHelper/CsvHelperException) | Represents errors that occur in CsvHelper.
 [CsvParser](/api/CsvHelper/CsvParser) | Parses a CSV file.
-[CsvReader](/api/CsvHelper/CsvReader) | Reads data that was parsed from CsvHelper.IParser.
-[CsvSerializer](/api/CsvSerializer) | Defines methods used to serialize data into a CSV file.
+[CsvReader](/api/CsvHelper/CsvReader) | Reads data that was parsed from ``CsvHelper.IParser`` .
+[CsvSerializer](/api/CsvHelper/CsvSerializer) | Defines methods used to serialize data into a CSV file.
 [CsvWriter](/api/CsvHelper/CsvWriter) | Used to write CSV files.
 [Factory](/api/CsvHelper/Factory) | Creates CsvHelper classes.
 [FieldValidationException](/api/CsvHelper/FieldValidationException) | Represents a user supplied field validation failure.
@@ -18,8 +18,9 @@
 [ObjectResolver](/api/CsvHelper/ObjectResolver) | Creates objects from a given type.
 [ParserException](/api/CsvHelper/ParserException) | Represents errors that occur while parsing a CSV file.
 [ReaderException](/api/CsvHelper/ReaderException) | Represents errors that occur while reading a CSV file.
-[ReadingContext](/api/CsvHelper/ReadingException) | CSV reading state.
+[ReadingContext](/api/CsvHelper/ReadingContext) | CSV reading state.
 [RecordBuilder](/api/CsvHelper/RecordBuilder) | Builds CSV records.
+[ReflectionExtensions](/api/CsvHelper/ReflectionExtensions) | Extensions to help with reflection.
 [ValidationException](/api/CsvHelper/ValidationException) | Represents a user supplied validation failure.
 [WriterException](/api/CsvHelper/WriterException) | Represents errors that occur while writing a CSV file.
 [WritingContext](/api/CsvHelper/WritingContext) | CSV writing state.

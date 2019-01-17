@@ -1,3 +1,0 @@
-# IHasConvertUsing<TClass, TMember> Interface
-
-Coming soon...

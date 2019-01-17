@@ -1,3 +1,0 @@
-# IHasMap<TClass> Interface
-
-Coming soon...

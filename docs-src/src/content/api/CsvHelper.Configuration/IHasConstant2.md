@@ -1,3 +1,0 @@
-# IHasConstant<TClass, TMember> Interface
-
-Coming soon...

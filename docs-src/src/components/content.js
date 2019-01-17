@@ -35,10 +35,13 @@ function initializeMarked(isDev) {
 	highlight.configure({
 		languages: ["cs"]
 	});
+
 	const renderer = new marked.Renderer();
+
 	renderer.blockquote = quote => {
 		return `<div class="content"><blockquote>${quote}</blockquote></div>`;
-	}
+	};
+
 	// For some reason using `this` here when this
 	// is a lambda function, `this` is undefined,
 	// so using a normal function.
@@ -47,9 +50,11 @@ function initializeMarked(isDev) {
 			code = this.options.highlight(code, lang) || code;
 		}
 
-		return wrapInColumns(`<pre><code class="${lang}">${code}</code></pre>`);
-	}
-	renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${htmlEncode(text)}</span></h${level}>`;
+		return `<div class="columns"><div class="column" style="overflow-x: auto"><pre><code class="${lang}">${code}</code></pre></div></div>`;
+	};
+
+	renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${text}</span></h${level}>`;
+
 	renderer.link = (href, title, text) => {
 		if (!href.startsWith("http") && !isDev) {
 			const separator = href.startsWith("/") ? "" : "/";
@@ -58,12 +63,15 @@ function initializeMarked(isDev) {
 
 		return `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
 	};
+
 	renderer.list = (body, ordered) => {
 		return ordered
 			? `<div class="content"><ol>${body}</ol></div>`
 			: `<div class="content"><ul>${body}</ul></div>`;
 	};
+
 	renderer.paragraph = text => wrapInColumns(`<p>${text}</p>`);
+
 	renderer.table = (header, body) => {
 		const replacedHeader = header.replace(/<\/?tr>|<\/?th>|&nbsp;|\s/ig, "");
 		const tableClass = replacedHeader.length > 0 ? "" : "has-empty-head";

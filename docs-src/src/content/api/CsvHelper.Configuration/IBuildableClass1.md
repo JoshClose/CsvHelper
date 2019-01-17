@@ -1,3 +1,0 @@
-# IBuildableClass<TClass> Interface
-
-Coming soon...

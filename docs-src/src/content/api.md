@@ -1,6 +1,7 @@
 # CsvHelper Namespaces
 
-Namespaces | &nbsp;
+## Namespaces
+&nbsp; | &nbsp;
 - | -
 [CsvHelper](/api/CsvHelper) | Core classes used to read and write CSV data.
 [CsvHelper.Configuration](/api/CsvHelper.Configuration) | Classes used to configure how CsvHelper behaves when reading and writing.

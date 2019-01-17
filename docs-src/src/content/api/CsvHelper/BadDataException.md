@@ -5,25 +5,15 @@ Namespace: [CsvHelper](/api/CsvHelper)
 Represents errors that occur due to bad data.
 
 ```cs
-[Serializable]
-public class BadDataException : CsvHelper.CsvHelperException
+[System.SerializableAttribute]
+public class BadDataException : CsvHelperException, ISerializable
 ```
+
+Inheritance Object -> Exception -> CsvHelperException -> BadDataException
 
 ## Constructors
 &nbsp; | &nbsp;
 - | -
-CsvHelperException() | 
-CsvHelperException([CsvHelper.ReadingContext](/api/CsvHelper/ReadingContext)) | 
-CsvHelperException([CsvHelper.ReadingContext](/api/CsvHelper/ReadingContext), string) | 
-CsvHelperException([CsvHelper.ReadingContext](/api/CsvHelper/ReadingContext), string, System.Exception) | 
-CsvHelperException([CsvHelper.WritingContext](/api/CsvHelper/WritingContext)) | 
-CsvHelperException([CsvHelper.WritingContext](/api/CsvHelper/WritingContext), string) | 
-CsvHelperException([CsvHelper.WritingContext](/api/CsvHelper/WritingContext), string, System.Exception) | 
-CsvHelperException(string) | 
-CsvHelperException(string, System.Exception) | 
-
-## Properties
-&nbsp; | &nbsp;
-- | -
-[ReadingContext](/api/CsvHelper/ReadingContext) | Gets the context used when reading.
-[WritingContext](/api/CsvHelper/WritingContext) | Gets the context used when writing.
+BadDataException(ReadingContext) | Initializes a new instance of the ``CsvHelper.BadDataException`` class.
+BadDataException(ReadingContext, String) | Initializes a new instance of the ``CsvHelper.BadDataException`` class with a specified error message.
+BadDataException(ReadingContext, String, Exception) | Initializes a new instance of the ``CsvHelper.BadDataException`` class with a specified error message and a reference to the inner exception that is the cause of this exception.

@@ -1,3 +1,0 @@
-# DefaultClassMap<T> Class
-
-Coming soon...

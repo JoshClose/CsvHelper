@@ -116,6 +116,10 @@
 						"path": "api/CsvHelper/RecordBuilder"
 					},
 					{
+						"title": "ReflectionExtensions",
+						"path": "api/CsvHelper/ReflectionExtensions"
+					},
+					{
 						"title": "ValidationException",
 						"path": "api/CsvHelper/ValidationException"
 					},
@@ -138,8 +142,8 @@
 						"path": "api/CsvHelper.Configuration/ClassMap"
 					},
 					{
-						"title": "ClassMap<TClass>",
-						"path": "api/CsvHelper.Configuration/ClassMap1"
+						"title": "ClassMap`1",
+						"path": "api/CsvHelper.Configuration/ClassMap`1"
 					},
 					{
 						"title": "ClassMapCollection",
@@ -158,80 +162,80 @@
 						"path": "api/CsvHelper.Configuration/ConfigurationFunctions"
 					},
 					{
-						"title": "DefaultClassMap<T>",
-						"path": "api/CsvHelper.Configuration/DefaultClassMap1"
+						"title": "DefaultClassMap`1",
+						"path": "api/CsvHelper.Configuration/DefaultClassMap`1"
 					},
 					{
-						"title": "IBuildableClass<TClass>",
-						"path": "api/CsvHelper.Configuration/IBuildableClass1"
+						"title": "IBuildableClass`1",
+						"path": "api/CsvHelper.Configuration/IBuildableClass`1"
 					},
 					{
-						"title": "IHasConstant<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasConstant2"
+						"title": "IHasConstant`2",
+						"path": "api/CsvHelper.Configuration/IHasConstant`2"
 					},
 					{
-						"title": "IHasConvertUsing<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasConvertUsing2"
+						"title": "IHasConvertUsing`2",
+						"path": "api/CsvHelper.Configuration/IHasConvertUsing`2"
 					},
 					{
-						"title": "IHasDefault<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasDefault2"
+						"title": "IHasDefault`2",
+						"path": "api/CsvHelper.Configuration/IHasDefault`2"
 					},
 					{
-						"title": "IHasDefaultOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasDefaultOptions2"
+						"title": "IHasDefaultOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasDefaultOptions`2"
 					},
 					{
-						"title": "IHasIndex<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasIndex2"
+						"title": "IHasIndex`2",
+						"path": "api/CsvHelper.Configuration/IHasIndex`2"
 					},
 					{
-						"title": "IHasIndexOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasIndexOptions2"
+						"title": "IHasIndexOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasIndexOptions`2"
 					},
 					{
-						"title": "IHasMap<TClass>",
-						"path": "api/CsvHelper.Configuration/IHasMap1"
+						"title": "IHasMap`1",
+						"path": "api/CsvHelper.Configuration/IHasMap`1"
 					},
 					{
-						"title": "IHasMapOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasMapOptions2"
+						"title": "IHasMapOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasMapOptions`2"
 					},
 					{
-						"title": "IHasName<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasName2"
+						"title": "IHasName`2",
+						"path": "api/CsvHelper.Configuration/IHasName`2"
 					},
 					{
-						"title": "IHasNameIndex<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasNameIndex2"
+						"title": "IHasNameIndex`2",
+						"path": "api/CsvHelper.Configuration/IHasNameIndex`2"
 					},
 					{
-						"title": "IHasNameIndexOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasNameIndexOptions2"
+						"title": "IHasNameIndexOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasNameIndexOptions`2"
 					},
 					{
-						"title": "IHasNameOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasNameOptions2"
+						"title": "IHasNameOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasNameOptions`2"
 					},
 					{
-						"title": "IHasOptional<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasOptional2"
+						"title": "IHasOptional`2",
+						"path": "api/CsvHelper.Configuration/IHasOptional`2"
 					},
 					{
-						"title": "IHasOptionalOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasOptionalOptions2"
+						"title": "IHasOptionalOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasOptionalOptions`2"
 					},
 					{
-						"title": "IHasTypeConverter<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasTypeConverter2"
+						"title": "IHasTypeConverter`2",
+						"path": "api/CsvHelper.Configuration/IHasTypeConverter`2"
 					},
 					{
-						"title": "IHasTypeConverterOptions<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasTypeConverterOptions2"
+						"title": "IHasTypeConverterOptions`2",
+						"path": "api/CsvHelper.Configuration/IHasTypeConverterOptions`2"
 					},
 					{
-						"title": "IHasValidate<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/IHasValidate2"
+						"title": "IHasValidate`2",
+						"path": "api/CsvHelper.Configuration/IHasValidate`2"
 					},
 					{
 						"title": "IParserConfiguration",
@@ -258,8 +262,8 @@
 						"path": "api/CsvHelper.Configuration/MemberMap"
 					},
 					{
-						"title": "MemberMap<TClass, TMember>",
-						"path": "api/CsvHelper.Configuration/MemberMap2"
+						"title": "MemberMap`2",
+						"path": "api/CsvHelper.Configuration/MemberMap`2"
 					},
 					{
 						"title": "MemberMapCollection",
@@ -458,6 +462,10 @@
 					{
 						"title": "ByteArrayConverter",
 						"path": "api/CsvHelper.TypeConversion/ByteArrayConverter"
+					},
+					{
+						"title": "ByteArrayConverterOptions",
+						"path": "api/CsvHelper.TypeConversion/ByteArrayConverterOptions"
 					},
 					{
 						"title": "ByteConverter",
