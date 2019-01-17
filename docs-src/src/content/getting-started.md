@@ -69,7 +69,7 @@ just change how our properties match against the header names.
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader))
 {	
-	csv.Configuration.PrepareHeaderForMatch = (string header) => header.ToLower();
+	csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.ToLower();
 	var records = csv.GetRecords<Foo>();
 }
 ```
