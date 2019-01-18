@@ -1,10 +1,26 @@
 @charset "utf-8";
 @import "../../node_modules/bulma/bulma";
+@import "./toc";
 
-pre
+html, body, #root
 {
-	padding: 0;
-	overflow: visible;
+	height: 100%;
+}
+
+#root
+{
+	display: flex;
+	flex-direction: column;
+}
+
+.body
+{
+	flex: 1 0 auto;
+}
+
+.footer
+{
+	flex-shrink: 0;
 }
 
 .title::before
@@ -13,21 +29,6 @@ pre
 	display: block;
 	height: 3.25rem;
 	margin: -3.25rem 0 0;
-}
-
-.layout
-{
-	.fork-me-on-github
-	{
-		img
-		{
-			position: fixed;
-			top: 0;
-			right: 0;
-			border: 0;
-			z-index: 50;
-		}
-	}
 }
 
 .header
@@ -42,14 +43,51 @@ pre
 	}
 }
 
-.home
+.container-content
 {
-	h1 span
+	flex-grow: 1;
+	flex-shrink: 1;
+	overflow: hidden;
+	position: relative;
+}
+
+.container-left, .container-right
+{		
+	flex-basis: 350px;
+	flex-grow: 0;
+	flex-shrink: 0;
+	// height: calc(100vh - 4rem);
+	//position: relative;
+}
+
+.container-right
+{
+	order: 3;
+}
+
+@media screen and (min-width: $tablet)
+{	
+	.sidebar
 	{
-		background: url(../../public/images/logo.png) top left no-repeat;
-		display: block;
-		height: 260px;
-		text-indent: -9999px;
-		width: 612px;
+		position: fixed;
+		top: 80px;
+		bottom: 0;
+		overflow-y: auto;
+	}
+
+	.toc
+	{
+		width: 326px;
+	}
+}
+
+.table.has-empty-head
+{ 
+	margin-top: -15px;
+
+	thead th
+	{
+		line-height: 0;
+		padding: 0;
 	}
 }

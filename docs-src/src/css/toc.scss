@@ -1,0 +1,52 @@
+@media screen and (min-width: $tablet)
+{	
+	.toc
+	{
+		width: 326px;
+	}
+}
+
+.toc
+{
+	.toc-item
+	{
+		margin-bottom: 0.5em;
+		position: relative;
+
+		a
+		{
+			color: $text;
+
+			&:hover
+			{
+				color: $link;
+			}
+		}
+
+		.toc-item-toggle
+		{
+			bottom: 0;
+			display: flex;
+			justify-content: flex-end;
+			left: 0;
+			position: absolute;
+			right: 0;
+			top: 0;			
+		}		
+
+		.toc-item-name
+		{
+			position: relative;
+		}		
+
+		&.is-current
+		{
+			background: $link;
+
+			a
+			{
+				color: $white;
+			}
+		}
+	}
+}
