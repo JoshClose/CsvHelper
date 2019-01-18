@@ -115,7 +115,7 @@ Task("Build")
     .IsDependentOn("CleanupCode")
     .Does(async () =>
 {
-    var enableSonar = !string.IsNullOrWhiteSpace(SonarUrl);
+    var enableSonar = !SonarDisabled && !string.IsNullOrWhiteSpace(SonarUrl);
     if (enableSonar)
     {
         SonarBegin(new SonarBeginSettings 
@@ -138,7 +138,7 @@ Task("Build")
     }
     else
     {
-        Information("Skipping Sonar integration since url is not specified");
+        Information("Skipping Sonar integration since url is not specified or it has been explicitly disabled");
     }
 
     BuildComponents();
@@ -147,7 +147,7 @@ Task("Build")
     BuildWpfApps();
     BuildDockerImages();
 
-    if (!string.IsNullOrWhiteSpace(SonarUrl))
+    if (enableSonar)
     {
         SonarEnd(new SonarEndSettings 
         {

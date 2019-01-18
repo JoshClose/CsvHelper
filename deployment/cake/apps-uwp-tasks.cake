@@ -207,8 +207,18 @@ private void DeployUwpApps()
 
         LogSeparator("Deploying UWP app '{0}'", uwpApp);
 
-        // TODO: How to Deploy?
-        Warning("Deploying of UWP apps is not yet implemented, please deploy '{0}' manually", uwpApp);
+        var artifactsDirectory = GetArtifactsDirectory(OutputRootDirectory);
+        var appxUploadFileName = GetAppxUploadFileName(artifactsDirectory, uwpApp, VersionMajorMinorPatch);
+
+        Information("Creating Windows Store app submission");
+
+        CreateWindowsStoreAppSubmission(appxUploadFileName, new WindowsStoreAppSubmissionSettings
+        {
+            ApplicationId = WindowsStoreAppId,
+            ClientId = WindowsStoreClientId,
+            ClientSecret = WindowsStoreClientSecret,
+            TenantId = WindowsStoreTenantId
+        });        
     }
 }
 

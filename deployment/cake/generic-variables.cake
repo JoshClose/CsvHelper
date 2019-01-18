@@ -71,6 +71,7 @@ var RepositoryBranchName = GetBuildServerVariable("RepositoryBranchName");
 var RepositoryCommitId = GetBuildServerVariable("RepositoryCommitId");
 
 // SonarQube
+var SonarDisabled = bool.Parse(GetBuildServerVariable("SonarDisabled", "False"));
 var SonarUrl = GetBuildServerVariable("SonarUrl");
 var SonarUsername = GetBuildServerVariable("SonarUsername");
 var SonarPassword = GetBuildServerVariable("SonarPassword");
