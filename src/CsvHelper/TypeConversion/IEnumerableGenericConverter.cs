@@ -34,8 +34,7 @@ namespace CsvHelper.TypeConversion
 				var nameIndex = 0;
 				while( true )
 				{
-					object field;
-					if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+                    if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field ) )
 					{
 						break;
 					}

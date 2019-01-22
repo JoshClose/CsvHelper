@@ -53,8 +53,7 @@ namespace CsvHelper.TypeConversion
 
 			for( var i = memberMapData.Index; i <= indexEnd; i++ )
 			{
-				string field;
-				if( row.TryGetField( i, out field ) )
+                if( row.TryGetField( i, out string field ) )
 				{
 					dictionary.Add( row.Context.HeaderRecord[i], field );
 				}

@@ -54,8 +54,7 @@ namespace CsvHelper.TypeConversion
 				var nameIndex = 0;
 				while( true )
 				{
-					string field;
-					if( !row.TryGetField( memberMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+                    if( !row.TryGetField( memberMapData.Names.FirstOrDefault(), nameIndex, out string field ) )
 					{
 						break;
 					}
@@ -73,8 +72,7 @@ namespace CsvHelper.TypeConversion
 
 				for( var i = memberMapData.Index; i <= indexEnd; i++ )
 				{
-					string field;
-					if( row.TryGetField( i, out field ) )
+                    if( row.TryGetField( i, out string field ) )
 					{
 						list.Add( field );
 					}

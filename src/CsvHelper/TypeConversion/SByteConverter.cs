@@ -23,8 +23,7 @@ namespace CsvHelper.TypeConversion
 		{
 			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Integer;
 
-			sbyte sb;
-			if( sbyte.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out sb ) )
+            if( sbyte.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var sb ) )
 			{
 				return sb;
 			}
