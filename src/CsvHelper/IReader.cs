@@ -4,7 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 namespace CsvHelper

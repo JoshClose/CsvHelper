@@ -1,5 +1,4 @@
 ﻿using CsvHelper.DocsGenerator.Infos;
-using System.Linq;
 
 namespace CsvHelper.DocsGenerator.Generators
 {

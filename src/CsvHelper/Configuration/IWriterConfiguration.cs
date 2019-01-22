@@ -5,7 +5,6 @@
 using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
-using System.Reflection;
 using System.Collections.Generic;
 
 namespace CsvHelper.Configuration

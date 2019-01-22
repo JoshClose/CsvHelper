@@ -4,15 +4,11 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Text.RegularExpressions;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Reflection;
-using System.Linq.Expressions;
-using System.Dynamic;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 

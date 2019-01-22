@@ -4,8 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion

@@ -10,9 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests
 {
-	using System.Threading;
-
-	[TestClass]
+    [TestClass]
 	public class CsvWriterFormatTests
 	{
 		[TestMethod]

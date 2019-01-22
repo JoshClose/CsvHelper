@@ -1,7 +1,5 @@
-﻿using CsvHelper.DocsGenerator.Formatters;
-using CsvHelper.DocsGenerator.Infos;
+﻿using CsvHelper.DocsGenerator.Infos;
 using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace CsvHelper.DocsGenerator.Generators
