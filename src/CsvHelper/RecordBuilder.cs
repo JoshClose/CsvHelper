@@ -32,7 +32,7 @@ namespace CsvHelper
 		public RecordBuilder() : this( DEFAULT_CAPACITY ) { }
 
 		/// <summary>
-		/// Creatse a new <see cref="RecordBuilder"/> using the given capacity.
+		/// Creates a new <see cref="RecordBuilder"/> using the given capacity.
 		/// </summary>
 		/// <param name="capacity">The initial capacity.</param>
 		public RecordBuilder( int capacity )

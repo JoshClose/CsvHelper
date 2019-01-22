@@ -14,7 +14,7 @@ namespace CsvHelper.Expressions
 	public class ObjectRecordCreator : RecordCreator
 	{
 		/// <summary>
-		/// Initializes a new instnace using the given reader.
+		/// Initializes a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader"></param>
 		public ObjectRecordCreator(CsvReader reader) : base(reader) { }
@@ -38,7 +38,7 @@ namespace CsvHelper.Expressions
 
 			if (map.ParameterMaps.Count > 0)
 			{
-				// This is a constructor paramter type.
+				// This is a constructor parameter type.
 				var arguments = new List<Expression>();
 				ExpressionManager.CreateConstructorArgumentExpressionsForMapping(map, arguments);
 

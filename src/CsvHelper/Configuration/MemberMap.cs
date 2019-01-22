@@ -98,7 +98,7 @@ namespace CsvHelper.Configuration
 		/// Ignore the member when reading and writing.
 		/// If this member has already been mapped as a reference
 		/// member, either by a class map, or by automapping, calling
-		/// this method will not ingore all the child members down the
+		/// this method will not ignore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
 		public virtual MemberMap Ignore()
@@ -112,7 +112,7 @@ namespace CsvHelper.Configuration
 		/// Ignore the member when reading and writing.
 		/// If this member has already been mapped as a reference
 		/// member, either by a class map, or by automapping, calling
-		/// this method will not ingore all the child members down the
+		/// this method will not ignore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>

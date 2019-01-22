@@ -33,7 +33,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if the name was
-		/// explicitly set. True if it was explicity set,
+		/// explicitly set. True if it was explicitly set,
 		/// otherwise false.
 		/// </summary>
 		public virtual bool IsNameSet { get; set; }

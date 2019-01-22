@@ -8,7 +8,7 @@ using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 // This file is generated from a T4 template.
-// Modifiying it directly won't do you any good.
+// Modifying it directly won't do you any good.
 
 namespace CsvHelper
 {
@@ -545,7 +545,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Reads until the field is not quoted and a delimeter is found.
+		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual bool ReadQuotedField()
@@ -703,7 +703,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Reads until the field is not quoted and a delimeter is found.
+		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual async Task<bool> ReadQuotedFieldAsync()
@@ -861,7 +861,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Reads until the delimeter is done.
+		/// Reads until the delimiter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
@@ -896,7 +896,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Reads until the delimeter is done.
+		/// Reads until the delimiter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>

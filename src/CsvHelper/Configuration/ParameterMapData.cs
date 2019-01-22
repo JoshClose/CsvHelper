@@ -9,7 +9,7 @@ using System.Reflection;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// The constructor paramter data for the map.
+	/// The constructor parameter data for the map.
 	/// </summary>
 	[DebuggerDisplay( "Index = {Index}, Name = {Name}, Parameter = {Parameter}" )]
 	public class ParameterMapData

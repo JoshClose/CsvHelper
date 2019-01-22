@@ -76,7 +76,7 @@ namespace CsvHelper.Configuration
 		Func<Type, bool> ShouldUseConstructorParameters { get; set; }
 
 		/// <summary>
-		/// Chooses the constructor to use for constuctor mapping.
+		/// Chooses the constructor to use for constructor mapping.
 		/// </summary>
 		Func<Type, ConstructorInfo> GetConstructor { get; set; }
 

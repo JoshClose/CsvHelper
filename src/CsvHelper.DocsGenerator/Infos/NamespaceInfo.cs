@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
-	[DebuggerDisplay("Name = {Assembly.n}")]
+	[DebuggerDisplay("Name = {Name}")]
 	public class NamespaceInfo : Info
 	{
 		public AssemblyInfo Assembly { get; protected set; }

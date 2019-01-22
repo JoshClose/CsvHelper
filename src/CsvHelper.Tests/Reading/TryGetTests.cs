@@ -98,7 +98,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
-			// fails for an emptry string for a date.
+			// fails for an empty string for a date.
 			var data = new[] { " " };
 			var queue = new Queue<string[]>();
 			queue.Enqueue( data );
@@ -120,7 +120,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
-			// fails for an emptry string for a date.
+			// fails for an empty string for a date.
 			var data = new[] { " " };
 			var queue = new Queue<string[]>();
 			queue.Enqueue( data );
