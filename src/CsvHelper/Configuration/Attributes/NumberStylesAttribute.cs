@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class NumberStylesAttribute : Attribute
-    {        
+	{
 		/// <summary>
 		/// Gets the number styles.
 		/// </summary>
@@ -28,5 +28,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			NumberStyles = numberStyles;
 		}
-    }
+	}
 }

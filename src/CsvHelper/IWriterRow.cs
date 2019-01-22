@@ -11,7 +11,7 @@ namespace CsvHelper
 	/// <summary>
 	/// Defines methods used to write a CSV row.
 	/// </summary>
-    public interface IWriterRow
+	public interface IWriterRow
 	{
 		/// <summary>
 		/// Gets the writing context.
@@ -91,17 +91,17 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		void WriteField<T, TConverter>( T field );
 
-        /// <summary>
-        /// Writes a comment.
-        /// </summary>
-        /// <param name="comment">The comment to write.</param>
-        void WriteComment( string comment );
+		/// <summary>
+		/// Writes a comment.
+		/// </summary>
+		/// <param name="comment">The comment to write.</param>
+		void WriteComment( string comment );
 
-        /// <summary>
-        /// Writes the header record from the given members.
-        /// </summary>
-        /// <typeparam name="T">The type of the record.</typeparam>
-        void WriteHeader<T>();
+		/// <summary>
+		/// Writes the header record from the given members.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		void WriteHeader<T>();
 
 		/// <summary>
 		/// Writes the header record from the given members.

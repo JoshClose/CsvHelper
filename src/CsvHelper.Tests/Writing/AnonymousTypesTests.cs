@@ -9,8 +9,8 @@ using System.IO;
 namespace CsvHelper.Tests.Writing
 {
 	[TestClass]
-    public class AnonymousTypesTests
-    {
+	public class AnonymousTypesTests
+	{
 		[TestMethod]
 		public void AnonymouseIEnumerableTest()
 		{

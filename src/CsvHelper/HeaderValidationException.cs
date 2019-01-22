@@ -9,8 +9,8 @@ namespace CsvHelper
 	/// <summary>
 	/// Represents a header validation failure.
 	/// </summary>
-    public class HeaderValidationException : ValidationException
-    {
+	public class HeaderValidationException : ValidationException
+	{
 		/// <summary>
 		/// Gets the header names that are mapped to a CSV field that couldn't be found.
 		/// </summary>

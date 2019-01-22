@@ -1,7 +1,7 @@
 ﻿namespace CsvHelper.DocsGenerator
 {
-    public enum EncodingType
-    {
+	public enum EncodingType
+	{
 		// Generic&ltParameter&gt;
 		Html = 0,
 
@@ -10,5 +10,5 @@
 
 		// Generic{Parameter}
 		Xml = 2
-    }
+	}
 }

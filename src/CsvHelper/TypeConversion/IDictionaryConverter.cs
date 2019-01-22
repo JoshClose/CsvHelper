@@ -11,8 +11,8 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts an <see cref="IDictionary"/> to and from a <see cref="string"/>.
 	/// </summary>
-    public class IDictionaryConverter : DefaultTypeConverter
-    {
+	public class IDictionaryConverter : DefaultTypeConverter
+	{
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
@@ -53,7 +53,7 @@ namespace CsvHelper.TypeConversion
 
 			for( var i = memberMapData.Index; i <= indexEnd; i++ )
 			{
-                if( row.TryGetField( i, out string field ) )
+				if( row.TryGetField( i, out string field ) )
 				{
 					dictionary.Add( row.Context.HeaderRecord[i], field );
 				}

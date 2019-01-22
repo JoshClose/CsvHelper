@@ -11,10 +11,10 @@ using System.Text;
 namespace CsvHelper.Tests.DataTableTests
 {
 	[TestClass]
-    public class CsvDataReaderTests
-    {
+	public class CsvDataReaderTests
+	{
 		[TestMethod]
-        public void GetValuesTest()
+		public void GetValuesTest()
 		{
 			var s = new StringBuilder();
 			s.AppendLine("Boolean,Byte,Bytes,Char,Chars,DateTime,Decimal,Double,Float,Guid,Short,Int,Long,Null");

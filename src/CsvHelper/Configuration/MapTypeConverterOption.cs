@@ -11,17 +11,17 @@ namespace CsvHelper.Configuration
 	/// Sets type converter options on a member map.
 	/// </summary>
 	public class MapTypeConverterOption
-    {
-	    private readonly MemberMap memberMap;
+	{
+		private readonly MemberMap memberMap;
 
 		/// <summary>
 		/// Creates a new instance using the given <see cref="MemberMap"/>.
 		/// </summary>
 		/// <param name="memberMap">The member map the options are being applied to.</param>
 		public MapTypeConverterOption( MemberMap memberMap )
-	    {
-		    this.memberMap = memberMap;
-	    }
+		{
+			this.memberMap = memberMap;
+		}
 
 		/// <summary>
 		/// The <see cref="CultureInfo"/> used when type converting.

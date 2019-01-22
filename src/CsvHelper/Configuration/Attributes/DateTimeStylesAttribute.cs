@@ -28,5 +28,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			DateTimeStyles = dateTimeStyles;
 		}
-    }
+	}
 }

@@ -12,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// The constructor paramter data for the map.
 	/// </summary>
 	[DebuggerDisplay( "Index = {Index}, Name = {Name}, Parameter = {Parameter}" )]
-    public class ParameterMapData
-    {
+	public class ParameterMapData
+	{
 		/// <summary>
 		/// Gets the <see cref="ParameterInfo"/> that the data
 		/// is associated with.

@@ -23,7 +23,7 @@ namespace CsvHelper.TypeConversion
 		{
 			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Integer;
 
-            if( ulong.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var ul ) )
+			if( ulong.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var ul ) )
 			{
 				return ul;
 			}

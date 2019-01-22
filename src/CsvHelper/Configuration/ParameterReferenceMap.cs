@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration
 	/// Mapping info for a reference parameter mapping to a class.
 	/// </summary>
 	public class ParameterReferenceMap
-    {
+	{
 		private readonly ParameterReferenceMapData data;
 
 		/// <summary>

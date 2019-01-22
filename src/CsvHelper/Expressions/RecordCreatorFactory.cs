@@ -10,8 +10,8 @@ namespace CsvHelper.Expressions
 	/// <summary>
 	/// Factory to create record creators.
 	/// </summary>
-    public class RecordCreatorFactory
-    {
+	public class RecordCreatorFactory
+	{
 		private readonly CsvReader reader;
 
 		/// <summary>
@@ -27,7 +27,7 @@ namespace CsvHelper.Expressions
 		/// Creates a record creator for the given record type.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-        public virtual RecordCreator MakeRecordCreator( Type recordType )
+		public virtual RecordCreator MakeRecordCreator( Type recordType )
 		{
 			if( recordType == typeof( object ) )
 			{
@@ -41,5 +41,5 @@ namespace CsvHelper.Expressions
 
 			return new ObjectRecordCreator( reader );
 		}
-    }
+	}
 }

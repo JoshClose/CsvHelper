@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class TypeConverterAttribute : Attribute
-    {    
+	{
 		/// <summary>
 		/// Gets the type converter.
 		/// </summary>
@@ -37,5 +37,5 @@ namespace CsvHelper.Configuration.Attributes
 				throw new ArgumentException( $"Type '{typeConverterType.FullName}' does not implement {nameof( ITypeConverter )}" );
 			}
 		}
-    }
+	}
 }

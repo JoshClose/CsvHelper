@@ -10,8 +10,8 @@ using System.IO;
 namespace CsvHelper.Tests.Writing
 {
 	[TestClass]
-    public class InterfaceTests
-    {
+	public class InterfaceTests
+	{
 		[TestMethod]
 		public void WriteRecordsGenericTest()
 		{

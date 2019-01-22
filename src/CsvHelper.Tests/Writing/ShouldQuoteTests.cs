@@ -8,8 +8,8 @@ using System.IO;
 namespace CsvHelper.Tests.Writing
 {
 	[TestClass]
-    public class ShouldQuoteTests
-    {    
+	public class ShouldQuoteTests
+	{    
 		[TestMethod]
 		public void QuoteAllFieldsTest()
 		{

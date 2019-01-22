@@ -11,7 +11,7 @@ namespace CsvHelper.Expressions
 	/// Base implementation for classes that create records.
 	/// </summary>
 	public abstract class RecordCreator
-    {
+	{
 		/// <summary>
 		/// The reader.
 		/// </summary>
@@ -86,5 +86,5 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
 		protected abstract Delegate CreateCreateRecordDelegate( Type recordType );
-    }
+	}
 }

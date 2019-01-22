@@ -12,8 +12,8 @@ namespace CsvHelper.Expressions
 	/// <summary>
 	/// Hydrates members of an existing record.
 	/// </summary>
-    public class RecordHydrator
-    {
+	public class RecordHydrator
+	{
 		private readonly CsvReader reader;
 		private readonly ExpressionManager expressionManager;
 
@@ -32,7 +32,7 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-        public void Hydrate<T>( T record )
+		public void Hydrate<T>( T record )
 		{
 			try
 			{

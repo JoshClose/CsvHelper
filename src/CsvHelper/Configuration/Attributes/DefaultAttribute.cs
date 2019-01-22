@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class DefaultAttribute : Attribute
-    {        
+	{
 		/// <summary>
 		/// Gets the default value.
 		/// </summary>
@@ -27,5 +27,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			Default = defaultValue;
 		}
-    }
+	}
 }

@@ -12,8 +12,8 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts an <see cref="IEnumerable"/> to and from a <see cref="string"/>.
 	/// </summary>
-    public class IEnumerableConverter : DefaultTypeConverter
-    {
+	public class IEnumerableConverter : DefaultTypeConverter
+	{
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 				var nameIndex = 0;
 				while( true )
 				{
-                    if( !row.TryGetField( memberMapData.Names.FirstOrDefault(), nameIndex, out string field ) )
+					if( !row.TryGetField( memberMapData.Names.FirstOrDefault(), nameIndex, out string field ) )
 					{
 						break;
 					}
@@ -72,7 +72,7 @@ namespace CsvHelper.TypeConversion
 
 				for( var i = memberMapData.Index; i <= indexEnd; i++ )
 				{
-                    if( row.TryGetField( i, out string field ) )
+					if( row.TryGetField( i, out string field ) )
 					{
 						list.Add( field );
 					}

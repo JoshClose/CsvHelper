@@ -12,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// The configuration data for the reference map.
 	/// </summary>
 	[DebuggerDisplay( "Prefix = {Prefix}, Parameter = {Parameter}" )]
-    public class ParameterReferenceMapData
-    {
+	public class ParameterReferenceMapData
+	{
 		private string prefix;
 
 		/// <summary>

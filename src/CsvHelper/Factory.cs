@@ -83,16 +83,16 @@ namespace CsvHelper
 		public virtual IWriter CreateWriter( TextWriter writer )
 		{
 			return new CsvWriter( writer );
-        }
+		}
 
-        /// <summary>
-        /// Access point for fluent interface to dynamically build a <see cref="ClassMap{T}"/>
-        /// </summary>
-        /// <typeparam name="T">Type you will be making a class map for</typeparam>
-        /// <returns>Options to further configure the <see cref="ClassMap{T}"/></returns>
-        public IHasMap<T> CreateClassMapBuilder<T>()
-	    {
-	        return new ClassMapBuilder<T>();
-	    }
-    }
+		/// <summary>
+		/// Access point for fluent interface to dynamically build a <see cref="ClassMap{T}"/>
+		/// </summary>
+		/// <typeparam name="T">Type you will be making a class map for</typeparam>
+		/// <returns>Options to further configure the <see cref="ClassMap{T}"/></returns>
+		public IHasMap<T> CreateClassMapBuilder<T>()
+		{
+			return new ClassMapBuilder<T>();
+		}
+	}
 }

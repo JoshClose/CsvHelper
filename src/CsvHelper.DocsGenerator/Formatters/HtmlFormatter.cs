@@ -5,8 +5,8 @@ using System.Reflection;
 
 namespace CsvHelper.DocsGenerator.Formatters
 {
-    public class HtmlFormatter
-    {        
+	public class HtmlFormatter
+	{
 		public string Format(Type type, bool generateLinks = false, bool isCodeBlock = false)
 		{
 			var symbols = isCodeBlock ? Symbols.Code : Symbols.Html;
@@ -90,5 +90,5 @@ namespace CsvHelper.DocsGenerator.Formatters
 		{
 			return memberInfo.Name;
 		}
-    }
+	}
 }

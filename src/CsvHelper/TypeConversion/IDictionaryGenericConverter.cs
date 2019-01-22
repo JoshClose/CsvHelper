@@ -12,7 +12,7 @@ namespace CsvHelper.TypeConversion
 	/// Converts an <see cref="IDictionary{TKey, TValue}"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class IDictionaryGenericConverter : IDictionaryConverter
-    {
+	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>

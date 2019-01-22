@@ -7,8 +7,8 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for the <see cref="ISerializer"/>.
 	/// </summary>
-    public interface ISerializerConfiguration
-    {
+	public interface ISerializerConfiguration
+	{
 		/// <summary>
 		/// Gets or sets the delimiter used to separate fields.
 		/// Default is ',';

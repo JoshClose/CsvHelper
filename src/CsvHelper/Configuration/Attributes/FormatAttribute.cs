@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class FormatAttribute : Attribute
-    {
+	{
 		/// <summary>
 		/// Gets the formats.
 		/// </summary>
@@ -34,5 +34,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			Formats = formats;
 		}
-    }
+	}
 }

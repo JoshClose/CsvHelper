@@ -2,9 +2,9 @@
 
 namespace CsvHelper.DocsGenerator
 {
-    public class LinkGenerator
-    {
-        public string GenerateLink(Type type)
+	public class LinkGenerator
+	{
+		public string GenerateLink(Type type)
 		{
 			if (type.Namespace.StartsWith("CsvHelper"))
 			{

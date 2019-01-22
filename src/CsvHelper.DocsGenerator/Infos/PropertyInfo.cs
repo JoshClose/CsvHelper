@@ -4,8 +4,8 @@ using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
-    public class PropertyInfo : Info
-    {
+	public class PropertyInfo : Info
+	{
 		public List<System.Reflection.ParameterInfo> IndexParameters { get; protected set; }
 
 		public TypeInfo Type { get; protected set; }
@@ -20,5 +20,5 @@ namespace CsvHelper.DocsGenerator.Infos
 
 			IndexParameters = propertyInfo.GetIndexParameters().ToList();
 		}
-    }
+	}
 }

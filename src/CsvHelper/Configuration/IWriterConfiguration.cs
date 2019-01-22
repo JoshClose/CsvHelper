@@ -12,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for the <see cref="IWriter"/>.
 	/// </summary>
-    public interface IWriterConfiguration : ISerializerConfiguration
-    {
+	public interface IWriterConfiguration : ISerializerConfiguration
+	{
 		/// <summary>
 		/// Gets a string representation of the currently configured Quote character.
 		/// </summary>

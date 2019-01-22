@@ -8,8 +8,8 @@ using System.Dynamic;
 
 namespace CsvHelper.Tests.Mocks
 {
-    public class DynamicObjectMock : DynamicObject
-    {
+	public class DynamicObjectMock : DynamicObject
+	{
 		private Dictionary<string, object> dictionary = new Dictionary<string, object>();
 
 		public override bool TryGetMember(GetMemberBinder binder, out object result)

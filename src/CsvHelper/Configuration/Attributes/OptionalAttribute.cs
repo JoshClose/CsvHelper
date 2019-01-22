@@ -11,6 +11,6 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class OptionalAttribute : Attribute
-    {        
-    }
+	{        
+	}
 }

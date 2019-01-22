@@ -24,7 +24,7 @@ namespace CsvHelper.TypeConversion
 		{
 			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo;
 
-            var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
+			var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
 			if( memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact( text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span ) )
 			{
 				return span;

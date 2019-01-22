@@ -11,8 +11,8 @@ using System.Linq;
 namespace CsvHelper.Tests.ObjectResolverTests
 {
 	[TestClass]
-    public class ResolverSingleTypeTests
-    {
+	public class ResolverSingleTypeTests
+	{
 		[TestCleanup]
 		public void Cleanup()
 		{
@@ -55,5 +55,5 @@ namespace CsvHelper.Tests.ObjectResolverTests
 
 			public string Name { get; set; }
 		}
-    }
+	}
 }

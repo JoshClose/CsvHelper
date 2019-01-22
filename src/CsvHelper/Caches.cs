@@ -12,7 +12,7 @@ namespace CsvHelper
 	[Flags]
 	[Serializable]
 	public enum Caches
-    {
+	{
 		/// <summary>
 		/// None.
 		/// </summary>
@@ -21,7 +21,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Named index.
 		/// </summary>
-        NamedIndex = 1,
+		NamedIndex = 1,
 
 		/// <summary>
 		/// Delegate that creates objects when reading.
@@ -42,5 +42,5 @@ namespace CsvHelper
 		/// Raw record.
 		/// </summary>
 		RawRecord = 16
-    }
+	}
 }

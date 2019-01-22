@@ -203,8 +203,8 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				writer.WriteRecord( new Simple() );
-                writer.NextRecord();
-                Assert.Fail();
+			    writer.NextRecord();
+			    Assert.Fail();
 			}
 			catch( CsvHelperException ex )
 			{

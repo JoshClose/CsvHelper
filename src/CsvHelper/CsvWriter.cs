@@ -587,7 +587,7 @@ namespace CsvHelper
 
 			if (disposing)
 			{
-                serializer?.Dispose();
+				serializer?.Dispose();
 			}
 
 			serializer = null;

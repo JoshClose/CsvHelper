@@ -7,7 +7,7 @@ using System.Xml.Linq;
 namespace CsvHelper.DocsGenerator.Infos
 {
 	public class TypeInfo : Info
-    {
+	{
 		private static readonly LinkGenerator linkGenerator = new LinkGenerator();
 
 		public Type Type { get; protected set; }

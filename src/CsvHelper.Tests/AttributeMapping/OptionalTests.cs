@@ -10,10 +10,10 @@ using System.Linq;
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class OptionalTests
-    {
+	public class OptionalTests
+	{
 		[TestMethod]
-        public void OptionalTest()
+		public void OptionalTest()
 		{
 			var parser = new ParserMock
 			{
@@ -38,5 +38,5 @@ namespace CsvHelper.Tests.AttributeMapping
 			[Optional]
 			public string Name { get; set; }
 		}
-    }
+	}
 }

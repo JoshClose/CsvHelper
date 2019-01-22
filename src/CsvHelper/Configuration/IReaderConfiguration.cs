@@ -12,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for the <see cref="IReader"/>.
 	/// </summary>
-    public interface IReaderConfiguration : IParserConfiguration
-    {
+	public interface IReaderConfiguration : IParserConfiguration
+	{
 		/// <summary>
 		/// Gets or sets a value indicating if the
 		/// CSV file has a header record.
@@ -180,5 +180,5 @@ namespace CsvHelper.Configuration
 	    /// <param name="type">The type to generate for the map.</param>
 	    /// <returns>The generate map.</returns>
 	    ClassMap AutoMap( Type type );
-    }
+	}
 }

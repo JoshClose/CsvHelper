@@ -4,8 +4,8 @@ using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
-    public class ConstructorInfo : Info
-    {
+	public class ConstructorInfo : Info
+	{
 		public System.Reflection.ConstructorInfo Constructor { get; private set; }
 
 		public List<System.Reflection.ParameterInfo> Parameters { get; private set; }

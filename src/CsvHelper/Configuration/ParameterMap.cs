@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	[DebuggerDisplay( "Data = {Data}" )]
 	public class ParameterMap
-    {
+	{
 		/// <summary>
 		/// Gets the parameter map data.
 		/// </summary>

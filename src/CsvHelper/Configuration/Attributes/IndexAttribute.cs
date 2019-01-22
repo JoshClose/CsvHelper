@@ -13,8 +13,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// indexes.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-    public class IndexAttribute : Attribute
-    {        
+	public class IndexAttribute : Attribute
+	{
 		/// <summary>
 		/// Gets the index.
 		/// </summary>
@@ -38,5 +38,5 @@ namespace CsvHelper.Configuration.Attributes
 			Index = index;
 			IndexEnd = indexEnd;
 		}
-    }
+	}
 }

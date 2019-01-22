@@ -74,7 +74,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException();
 			}
 
-            if( !typeConverterOptions.TryGetValue( type, out var options ) )
+			if( !typeConverterOptions.TryGetValue( type, out var options ) )
 			{
 				options = new TypeConverterOptions();
 				typeConverterOptions.Add( type, options );

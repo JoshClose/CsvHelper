@@ -7,8 +7,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CsvHelper.Tests.AutoMapping
 {
 	[TestClass]
-    public class CircularReferenceTests
-    {
+	public class CircularReferenceTests
+	{
 		[TestMethod]
 		public void SelfCircularDependencyTest()
 		{
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.AutoMapping
 		private class A
 		{
 			public string Id { get; set; }
-			
+
 			public B B1 { get; set; }
 
 			public B B2 { get; set; }

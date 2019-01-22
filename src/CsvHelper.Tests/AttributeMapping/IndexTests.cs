@@ -9,8 +9,8 @@ using System.Linq;
 
 namespace CsvHelper.Tests.AttributeMapping
 {
-    public class IndexTests
-    {
+	public class IndexTests
+	{
 		[TestMethod]
 		public void IndexTest()
 		{

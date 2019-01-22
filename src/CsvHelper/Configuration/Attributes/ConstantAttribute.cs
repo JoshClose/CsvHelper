@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class ConstantAttribute : Attribute
-    {        
+	{
 		/// <summary>
 		/// Gets the constant.
 		/// </summary>
@@ -29,5 +29,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			Constant = constant;
 		}
-    }
+	}
 }

@@ -8,8 +8,8 @@ using System.IO;
 namespace CsvHelper.Tests.Serializing
 {
 	[TestClass]
-    public class SanitizationTests
-    {    
+	public class SanitizationTests
+	{
 		[TestMethod]
 		public void NoQuoteTest()
 		{

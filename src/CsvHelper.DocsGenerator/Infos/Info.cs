@@ -9,8 +9,8 @@ using System.Xml.Linq;
 namespace CsvHelper.DocsGenerator.Infos
 {
 	[DebuggerDisplay("Name = {Name}, DisplayName = {DisplayName}, Namespace = {NameSpace}, FullName = {FullName}")]
-    public abstract class Info
-    {
+	public abstract class Info
+	{
 		//private string fullName;
 		//private string fullHtmlName;
 		//private string fullCodeName;

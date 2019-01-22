@@ -23,7 +23,7 @@ namespace CsvHelper.TypeConversion
 		{
 			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Float;
 
-            if( double.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d ) )
+			if( double.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d ) )
 			{
 				return d;
 			}

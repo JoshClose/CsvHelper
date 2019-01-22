@@ -172,7 +172,7 @@ namespace CsvHelper.Tests
 				StringColumn = stringColumn;
 			}
 		}
-		
+
 		private sealed class TestMappingDefaultClass : ClassMap<TestClass>
 		{
 			public TestMappingDefaultClass()

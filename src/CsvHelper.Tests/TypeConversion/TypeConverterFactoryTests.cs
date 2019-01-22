@@ -50,7 +50,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			Assert.IsInstanceOfType( converter, typeof( ByteConverter ) );
 		}
-		
+
 		[TestMethod]
 		public void GetConverterForByteArrayTest()
 		{

@@ -12,8 +12,8 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts an <see cref="Array"/> to and from a <see cref="string"/>.
 	/// </summary>
-    public class ArrayConverter : IEnumerableConverter
-    {
+	public class ArrayConverter : IEnumerableConverter
+	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
@@ -33,7 +33,7 @@ namespace CsvHelper.TypeConversion
 				var nameIndex = 0;
 				while( true )
 				{
-                    if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field ) )
+					if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field ) )
 					{
 						break;
 					}

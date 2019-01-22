@@ -25,7 +25,7 @@ namespace CsvHelper.TypeConversion
 				text = text.Trim();
 			}
 
-            if( char.TryParse( text, out var c ) )
+			if( char.TryParse( text, out var c ) )
 			{
 				return c;
 			}

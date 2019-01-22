@@ -9,8 +9,8 @@ using System.IO;
 namespace CsvHelper.Tests.Parsing
 {
 	[TestClass]
-    public class EscapeCharacterTests
-    {
+	public class EscapeCharacterTests
+	{
 		[TestMethod]
 		public void EscapeTest()
 		{

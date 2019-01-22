@@ -10,8 +10,8 @@ using System.IO;
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class DisposeTests
-    {
+	public class DisposeTests
+	{
 		[TestMethod]
 		public void WriterFlushOnDisposeTest()
 		{

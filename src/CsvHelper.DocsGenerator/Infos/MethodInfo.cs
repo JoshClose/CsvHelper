@@ -5,8 +5,8 @@ using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
-    public class MethodInfo : Info
-    {
+	public class MethodInfo : Info
+	{
 		public System.Reflection.MethodInfo Method { get; private set; }
 
 		public List<System.Reflection.ParameterInfo> Parameters { get; private set; }

@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class NameAttribute : Attribute
-    {        
+	{
 		/// <summary>
 		/// Gets the names.
 		/// </summary>
@@ -57,5 +57,5 @@ namespace CsvHelper.Configuration.Attributes
 
 			Names = names;
 		}
-    }
+	}
 }

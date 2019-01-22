@@ -3,8 +3,8 @@ using System.Linq;
 
 namespace CsvHelper.DocsGenerator.Generators
 {
-    public class TypeGenerator : DocumentGenerator
-    {
+	public class TypeGenerator : DocumentGenerator
+	{
 		public TypeGenerator(TypeInfo typeInfo) : base(typeInfo) { }
 
 		protected override void GenerateContent()

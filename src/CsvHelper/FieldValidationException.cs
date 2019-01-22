@@ -10,7 +10,7 @@ namespace CsvHelper
 	/// Represents a user supplied field validation failure.
 	/// </summary>
 	public class FieldValidationException : ValidationException
-    {
+	{
 		/// <summary>
 		/// Gets the field that failed validation.
 		/// </summary>

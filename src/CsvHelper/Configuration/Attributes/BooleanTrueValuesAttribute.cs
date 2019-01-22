@@ -11,11 +11,11 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class BooleanTrueValuesAttribute : Attribute
-    {
+	{
 		/// <summary>
 		/// Gets the true values.
 		/// </summary>
-        public string[] TrueValues { get; private set; }
+		public string[] TrueValues { get; private set; }
 
 		/// <summary>
 		/// The string values used to represent a boolean true when converting.
@@ -34,5 +34,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			TrueValues = trueValues;
 		}
-    }
+	}
 }

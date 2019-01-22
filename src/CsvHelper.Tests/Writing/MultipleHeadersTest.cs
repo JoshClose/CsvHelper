@@ -10,8 +10,8 @@ using System.Text;
 namespace CsvHelper.Tests.Writing
 {
 	[TestClass]
-    public class MultipleHeadersTest
-    {    
+	public class MultipleHeadersTest
+	{    
 		[TestMethod]
 		public void GenericTypeTest()
 		{
@@ -79,5 +79,5 @@ namespace CsvHelper.Tests.Writing
 		{
 			public string Name { get; set; }
 		}
-    }
+	}
 }

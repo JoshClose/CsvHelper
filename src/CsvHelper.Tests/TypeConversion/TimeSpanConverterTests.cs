@@ -34,7 +34,7 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.AreEqual( "1", converter.ConvertToString( 1, null, propertyMapData ) );
 			Assert.AreEqual( "", converter.ConvertToString( null, null, propertyMapData ) );
 		}
-		
+
 		[TestMethod]
 		public void ComponentModelCompatibilityTest()
 		{
