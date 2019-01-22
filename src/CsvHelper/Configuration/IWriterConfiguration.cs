@@ -5,7 +5,6 @@
 using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
-using System.Reflection;
 using System.Collections.Generic;
 
 namespace CsvHelper.Configuration
@@ -13,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for the <see cref="IWriter"/>.
 	/// </summary>
-    public interface IWriterConfiguration : ISerializerConfiguration
-    {
+	public interface IWriterConfiguration : ISerializerConfiguration
+	{
 		/// <summary>
 		/// Gets a string representation of the currently configured Quote character.
 		/// </summary>

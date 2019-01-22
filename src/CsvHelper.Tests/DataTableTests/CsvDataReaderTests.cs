@@ -4,20 +4,17 @@
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.DataTableTests
 {
 	[TestClass]
-    public class CsvDataReaderTests
-    {
+	public class CsvDataReaderTests
+	{
 		[TestMethod]
-        public void GetValuesTest()
+		public void GetValuesTest()
 		{
 			var s = new StringBuilder();
 			s.AppendLine("Boolean,Byte,Bytes,Char,Chars,DateTime,Decimal,Double,Float,Guid,Short,Int,Long,Null");

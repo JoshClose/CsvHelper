@@ -10,12 +10,12 @@ namespace CsvHelper.Configuration
 	/// Options for trimming of fields.
 	/// </summary>
 	[Flags]
-    public enum TrimOptions
-    {
+	public enum TrimOptions
+	{
 		/// <summary>
 		/// No trimming.
 		/// </summary>
-        None = 0,
+		None = 0,
 
 		/// <summary>
 		/// Trims the whitespace around a field.
@@ -26,5 +26,5 @@ namespace CsvHelper.Configuration
 		/// Trims the whitespace inside of quotes around a field.
 		/// </summary>
 		InsideQuotes = 2
-    }
+	}
 }

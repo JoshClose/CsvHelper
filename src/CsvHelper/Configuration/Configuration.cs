@@ -131,7 +131,7 @@ namespace CsvHelper.Configuration
 		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;
 
 		/// <summary>
-		/// Chooses the constructor to use for constuctor mapping.
+		/// Chooses the constructor to use for constructor mapping.
 		/// </summary>
 		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = ConfigurationFunctions.GetConstructor;
 

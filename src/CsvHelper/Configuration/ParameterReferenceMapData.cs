@@ -2,13 +2,9 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.Collections.Generic;
+
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Configuration
 {
@@ -16,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// The configuration data for the reference map.
 	/// </summary>
 	[DebuggerDisplay( "Prefix = {Prefix}, Parameter = {Parameter}" )]
-    public class ParameterReferenceMapData
-    {
+	public class ParameterReferenceMapData
+	{
 		private string prefix;
 
 		/// <summary>

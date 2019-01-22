@@ -68,7 +68,7 @@ namespace CsvHelper.TypeConversion
 
 			return base.ConvertFromString( text, row, memberMapData );
 		}
-		
+
 		private string ByteArrayToHexString( byte[] byteArray )
 		{
 			var hexString = new StringBuilder();

@@ -24,8 +24,7 @@ namespace CsvHelper.TypeConversion
 		{
 			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Float;
 
-			float f;
-			if( float.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out f ) )
+			if( float.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var f ) )
 			{
 				return f;
 			}

@@ -4,8 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -14,7 +12,7 @@ namespace CsvHelper.TypeConversion
 	/// Converts an <see cref="IDictionary{TKey, TValue}"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class IDictionaryGenericConverter : IDictionaryConverter
-    {
+	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>

@@ -1,19 +1,16 @@
-﻿using CsvHelper.DocsGenerator.Formatters;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
 	[DebuggerDisplay("Name = {Name}, DisplayName = {DisplayName}, Namespace = {NameSpace}, FullName = {FullName}")]
-    public abstract class Info
-    {
+	public abstract class Info
+	{
 		//private string fullName;
 		//private string fullHtmlName;
 		//private string fullCodeName;

@@ -67,10 +67,10 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Creates an instance of the object resolver using the given can create function
-		/// and creat function.
+		/// and create function.
 		/// </summary>
-		/// <param name="canResolve">A function that returns a value indicating if the resolver 
-		/// is able to resolve the given type. True if the type can be 
+		/// <param name="canResolve">A function that returns a value indicating if the resolver
+		/// is able to resolve the given type. True if the type can be
 		/// resolved, otherwise false.</param>
 		/// <param name="resolveFunction">The function that creates an object from a given type.</param>
 		/// <param name="useFallback">A value indicating if the resolver's <see cref="CanResolve"/>

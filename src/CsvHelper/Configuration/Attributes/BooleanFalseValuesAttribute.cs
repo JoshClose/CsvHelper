@@ -3,10 +3,6 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Configuration.Attributes
 {
@@ -15,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
 	public class BooleanFalseValuesAttribute : Attribute
-    {        
+	{
 		/// <summary>
 		/// Gets the false values.
 		/// </summary>
@@ -38,5 +34,5 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			FalseValues = falseValues;
 		}
-    }
+	}
 }

@@ -5,19 +5,15 @@
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class OptionalTests
-    {
+	public class OptionalTests
+	{
 		[TestMethod]
-        public void OptionalTest()
+		public void OptionalTest()
 		{
 			var parser = new ParserMock
 			{
@@ -42,5 +38,5 @@ namespace CsvHelper.Tests.AttributeMapping
 			[Optional]
 			public string Name { get; set; }
 		}
-    }
+	}
 }

@@ -1,19 +1,16 @@
 ﻿using CsvHelper.DocsGenerator.Formatters;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator
 {
-    public static class Extensions
-    {
+	public static class Extensions
+	{
 		// Assembly
 
 		public static string GetHtmlName(Assembly assembly)
@@ -143,7 +140,7 @@ namespace CsvHelper.DocsGenerator
 		{
 			return GetSummary($"F:{field.GetFullName()}");
 		}
-		
+
 		// Constructor
 
 		public static string GetHtmlName(this ConstructorInfo constructor)

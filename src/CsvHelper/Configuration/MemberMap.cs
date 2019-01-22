@@ -4,10 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using CsvHelper.TypeConversion;
@@ -101,7 +98,7 @@ namespace CsvHelper.Configuration
 		/// Ignore the member when reading and writing.
 		/// If this member has already been mapped as a reference
 		/// member, either by a class map, or by automapping, calling
-		/// this method will not ingore all the child members down the
+		/// this method will not ignore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
 		public virtual MemberMap Ignore()
@@ -115,7 +112,7 @@ namespace CsvHelper.Configuration
 		/// Ignore the member when reading and writing.
 		/// If this member has already been mapped as a reference
 		/// member, either by a class map, or by automapping, calling
-		/// this method will not ingore all the child members down the
+		/// this method will not ignore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>

@@ -3,7 +3,6 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CsvHelper.Configuration;
@@ -13,8 +12,8 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts an <see cref="Array"/> to and from a <see cref="string"/>.
 	/// </summary>
-    public class ArrayConverter : IEnumerableConverter
-    {
+	public class ArrayConverter : IEnumerableConverter
+	{
 		/// <summary>
 		/// Converts the string to an object.
 		/// </summary>
@@ -34,8 +33,7 @@ namespace CsvHelper.TypeConversion
 				var nameIndex = 0;
 				while( true )
 				{
-					object field;
-					if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+					if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field ) )
 					{
 						break;
 					}

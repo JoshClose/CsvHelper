@@ -3,22 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.TypeConversion;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// The constructor paramter data for the map.
+	/// The constructor parameter data for the map.
 	/// </summary>
 	[DebuggerDisplay( "Index = {Index}, Name = {Name}, Parameter = {Parameter}" )]
-    public class ParameterMapData
-    {
+	public class ParameterMapData
+	{
 		/// <summary>
 		/// Gets the <see cref="ParameterInfo"/> that the data
 		/// is associated with.

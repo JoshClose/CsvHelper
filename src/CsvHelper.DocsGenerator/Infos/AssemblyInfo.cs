@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
 	[DebuggerDisplay("Name = {Name}")]
 	public class AssemblyInfo : Info
-    {
+	{
 		public Assembly Assembly { get; protected set; }
 
 		public List<NamespaceInfo> Namespaces { get; private set; }
@@ -29,5 +26,5 @@ namespace CsvHelper.DocsGenerator.Infos
 				select new NamespaceInfo(this, g.Key, g.ToList(), xmlDocs)
 			).ToList();
 		}
-    }
+	}
 }

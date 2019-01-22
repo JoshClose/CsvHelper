@@ -3,15 +3,12 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 // This file is generated from a T4 template.
-// Modifiying it directly won't do you any good.
+// Modifying it directly won't do you any good.
 
 namespace CsvHelper
 {
@@ -77,7 +74,7 @@ namespace CsvHelper
 			this.fieldReader = fieldReader ?? throw new ArgumentNullException(nameof(fieldReader));
 			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException($"For {nameof(FieldReader)} to be used in {nameof(CsvParser)}, {nameof(FieldReader.Context)} must also implement {nameof(ReadingContext)}.");
 		}
-			
+
 		/// <summary>
 		/// Reads a record from the CSV file.
 		/// </summary>
@@ -97,7 +94,7 @@ namespace CsvHelper
 				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
 		}
-			
+
 		/// <summary>
 		/// Reads a record from the CSV file asynchronously.
 		/// </summary>
@@ -117,7 +114,7 @@ namespace CsvHelper
 				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
 		}
-			
+
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
@@ -148,7 +145,7 @@ namespace CsvHelper
 			context = null;
 			disposed = true;
 		}
-			
+
 		/// <summary>
 		/// Reads a line of the CSV file.
 		/// </summary>
@@ -213,7 +210,7 @@ namespace CsvHelper
 
 			return context.RecordBuilder.ToArray();
 		}
-			
+
 		/// <summary>
 		/// Reads a line of the CSV file.
 		/// </summary>
@@ -278,7 +275,7 @@ namespace CsvHelper
 
 			return context.RecordBuilder.ToArray();
 		}
-			
+
 		/// <summary>
 		/// Reads a blank line. This accounts for empty lines
 		/// and commented out lines.
@@ -313,7 +310,7 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 			}
 		}
-			
+
 		/// <summary>
 		/// Reads a blank line. This accounts for empty lines
 		/// and commented out lines.
@@ -348,7 +345,7 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 			}
 		}
-			
+
 		/// <summary>
 		/// Reads until a delimiter or line ending is found.
 		/// </summary>
@@ -447,7 +444,7 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 			}
 		}
-			
+
 		/// <summary>
 		/// Reads until a delimiter or line ending is found.
 		/// </summary>
@@ -546,9 +543,9 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 			}
 		}
-			
+
 		/// <summary>
-		/// Reads until the field is not quoted and a delimeter is found.
+		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual bool ReadQuotedField()
@@ -704,9 +701,9 @@ namespace CsvHelper
 				}
 			}
 		}
-			
+
 		/// <summary>
-		/// Reads until the field is not quoted and a delimeter is found.
+		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual async Task<bool> ReadQuotedFieldAsync()
@@ -862,9 +859,9 @@ namespace CsvHelper
 				}
 			}
 		}
-			
+
 		/// <summary>
-		/// Reads until the delimeter is done.
+		/// Reads until the delimiter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
@@ -897,9 +894,9 @@ namespace CsvHelper
 
 			return true;
 		}
-			
+
 		/// <summary>
-		/// Reads until the delimeter is done.
+		/// Reads until the delimiter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
@@ -932,7 +929,7 @@ namespace CsvHelper
 
 			return true;
 		}
-			
+
 		/// <summary>
 		/// Reads until the line ending is done.
 		/// </summary>
@@ -963,7 +960,7 @@ namespace CsvHelper
 
 			return fieldStartOffset;
 		}
-			
+
 		/// <summary>
 		/// Reads until the line ending is done.
 		/// </summary>
@@ -994,7 +991,7 @@ namespace CsvHelper
 
 			return fieldStartOffset;
 		}
-			
+
 		/// <summary>
 		/// Reads until a non-space character is found.
 		/// </summary>
@@ -1020,7 +1017,7 @@ namespace CsvHelper
 
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Reads until a non-space character is found.
 		/// </summary>

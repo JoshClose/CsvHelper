@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.DocsGenerator
 {
-    public class LinkGenerator
-    {
-        public string GenerateLink(Type type)
+	public class LinkGenerator
+	{
+		public string GenerateLink(Type type)
 		{
 			if (type.Namespace.StartsWith("CsvHelper"))
 			{

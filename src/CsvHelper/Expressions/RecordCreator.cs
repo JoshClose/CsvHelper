@@ -2,7 +2,6 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
 using System;
 using System.Reflection;
 
@@ -12,7 +11,7 @@ namespace CsvHelper.Expressions
 	/// Base implementation for classes that create records.
 	/// </summary>
 	public abstract class RecordCreator
-    {
+	{
 		/// <summary>
 		/// The reader.
 		/// </summary>
@@ -87,5 +86,5 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
 		protected abstract Delegate CreateCreateRecordDelegate( Type recordType );
-    }
+	}
 }

@@ -3,9 +3,6 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CsvHelper
@@ -77,7 +74,7 @@ namespace CsvHelper
 		void SetFieldEnd(int offset = 0);
 
 		/// <summary>
-		/// Sets the raw recodr start to the current buffer position;
+		/// Sets the raw record start to the current buffer position;
 		/// </summary>
 		/// <param name="offset">An offset for the raw record start.
 		/// The offset should be less than 1.</param>

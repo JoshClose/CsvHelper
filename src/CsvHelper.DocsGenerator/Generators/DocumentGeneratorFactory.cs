@@ -1,10 +1,9 @@
 ﻿using CsvHelper.DocsGenerator.Infos;
-using System;
 
 namespace CsvHelper.DocsGenerator.Generators
 {
-    public class DocumentGeneratorFactory
-    {    
+	public class DocumentGeneratorFactory
+	{
 		public DocumentGenerator Create(AssemblyInfo assemblyInfo)
 		{
 			return new AssemblyGenerator(assemblyInfo);
@@ -19,5 +18,5 @@ namespace CsvHelper.DocsGenerator.Generators
 		{
 			return new TypeGenerator(typeInfo);
 		}
-    }
+	}
 }
