@@ -63,7 +63,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void MapIgnoreTest()
 		{
-			var map = new TestMappingIngoreClass();
+			var map = new TestMappingIgnoreClass();
 			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.MemberMaps.Count );
@@ -203,9 +203,9 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingIngoreClass : ClassMap<TestClass>
+		private sealed class TestMappingIgnoreClass : ClassMap<TestClass>
 		{
-			public TestMappingIngoreClass()
+			public TestMappingIgnoreClass()
 			{
 				Map( m => m.GuidColumn ).Ignore();
 				Map( m => m.IntColumn );

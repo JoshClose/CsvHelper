@@ -49,7 +49,7 @@ namespace CsvHelper.Expressions
 			{
 				if (parameterMap.ConstructorTypeMap != null)
 				{
-					// Constructor paramater type.
+					// Constructor parameter type.
 					var arguments = new List<Expression>();
 					CreateConstructorArgumentExpressionsForMapping(parameterMap.ConstructorTypeMap, arguments);
 					var constructorExpression = Expression.New(reader.Configuration.GetConstructor(parameterMap.ConstructorTypeMap.ClassType), arguments);

@@ -94,7 +94,7 @@ namespace CsvHelper.Tests.Configuration
 
 		//this one is kind of hacky, but i'm not sure how else to test it more robustly since the function gets converted to an expression inside the CsvClassMap
 		[TestMethod]
-		public void ClassMapBuilderAddsConvertUsingFunctionCorectly()
+		public void ClassMapBuilderAddsConvertUsingFunctionCorrectly()
 		{
 			var fakeRow = new BuilderRowFake();
 			Assert.AreEqual(ConvertExpression(fakeRow).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<Func<IReaderRow, FakeInnerClass>>).Compile()(fakeRow).E); //6

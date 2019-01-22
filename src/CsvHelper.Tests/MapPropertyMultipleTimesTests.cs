@@ -15,7 +15,7 @@ namespace CsvHelper.Tests
 	public class MapPropertyMultipleTimesTests
 	{
 		[TestMethod]
-		public void MapProperitesToMultipleFieldsWhenWritingTest()
+		public void MapPropertiesToMultipleFieldsWhenWritingTest()
 		{
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

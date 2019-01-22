@@ -12,7 +12,7 @@ namespace CsvHelper.Tests.Writing
 	public class AnonymousTypesTests
 	{
 		[TestMethod]
-		public void AnonymouseIEnumerableTest()
+		public void AnonymousIEnumerableTest()
 		{
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvWriter( writer ) )

@@ -89,7 +89,7 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
-		public void SingleFieldAndMultipoleRowsAndLastRowHasNoLineEndingTest()
+		public void SingleFieldAndMultipleRowsAndLastRowHasNoLineEndingTest()
 		{
 			var s = new StringBuilder();
 			s.Append("1\r");

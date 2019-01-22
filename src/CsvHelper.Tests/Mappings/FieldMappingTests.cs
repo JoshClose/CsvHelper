@@ -187,7 +187,7 @@ namespace CsvHelper.Tests.Mappings
 		}
 
 		[TestMethod]
-		public void ReadPrivatreFieldsWithMappingTest()
+		public void ReadPrivateFieldsWithMappingTest()
 		{
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))

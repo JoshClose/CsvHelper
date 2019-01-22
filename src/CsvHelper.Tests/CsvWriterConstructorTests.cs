@@ -12,7 +12,7 @@ namespace CsvHelper.Tests
 	public class CsvWriterConstructorTests
 	{
 		[TestMethod]
-		public void EnsureInternalsAreSetupWhenPasingWriterAndConfigTest()
+		public void EnsureInternalsAreSetupWhenPassingWriterAndConfigTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var writer = new StreamWriter( stream ) )
