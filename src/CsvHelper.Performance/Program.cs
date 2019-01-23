@@ -149,8 +149,7 @@ namespace CsvHelper.Performance
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
-				string[] row;
-				while ((row = parser.Read()) != null)
+                while (parser.Read() != null)
 				{
 				}
 			}
