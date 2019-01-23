@@ -168,11 +168,6 @@ namespace CsvHelper
 			return memberExpression;
 		}
 
-		private static T Default<T>()
-		{
-			return default(T);
-		}
-
 		private static Delegate CreateInstanceDelegate(Type type, params object[] args)
 		{
 			Delegate compiled;
