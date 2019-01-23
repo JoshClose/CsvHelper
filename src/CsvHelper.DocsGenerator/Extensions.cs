@@ -209,7 +209,7 @@ namespace CsvHelper.DocsGenerator
 
 		private static Type GetType(string typeName)
 		{
-			Type type = null;
+			Type type;
 			if (typeName.StartsWith("CsvHelper"))
 			{
 				var assembly = Assembly.GetAssembly(typeof(CsvHelperException));
@@ -243,7 +243,7 @@ namespace CsvHelper.DocsGenerator
 					string text;
 					if (node.NodeType == XmlNodeType.Element)
 					{
-						var typeName = string.Empty;
+						string typeName;
 						var el = (XElement)node;
 						switch (el.Name.ToString())
 						{
