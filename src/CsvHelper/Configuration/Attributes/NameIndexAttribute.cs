@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// index of the name used when there
 	/// are multiple names that are the same.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class NameIndexAttribute : Attribute
 	{
 		/// <summary>

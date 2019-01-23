@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// The string values used to represent a boolean true when converting.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class BooleanTrueValuesAttribute : Attribute
 	{
 		/// <summary>

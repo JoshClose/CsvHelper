@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// reading and writing. This value will always be used no matter
 	/// what other mapping configurations are specified.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class ConstantAttribute : Attribute
 	{
 		/// <summary>

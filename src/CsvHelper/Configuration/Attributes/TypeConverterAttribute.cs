@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// Specifies the <see cref="TypeConverter"/> to use
 	/// when converting the member to and from a CSV field.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class TypeConverterAttribute : Attribute
 	{
 		/// <summary>

@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// Appends a prefix to the header of each field of the reference member.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class HeaderPrefixAttribute : Attribute
 	{
 		/// <summary>

@@ -10,7 +10,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The default value that will be used when reading when
 	/// the CSV field is empty.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class DefaultAttribute : Attribute
 	{
 		/// <summary>

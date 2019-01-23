@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The <see cref="NumberStyles"/> to use when type converting.
 	/// This is used when doing any number conversions.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class NumberStylesAttribute : Attribute
 	{
 		/// <summary>

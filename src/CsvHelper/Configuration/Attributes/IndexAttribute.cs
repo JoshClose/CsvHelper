@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// will be written in the order of the field
 	/// indexes.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class IndexAttribute : Attribute
 	{
 		/// <summary>

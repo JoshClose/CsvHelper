@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// This will override the global <see cref="Configuration.CultureInfo"/>
 	/// setting.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class CultureInfoAttribute : Attribute
 	{
 		/// <summary>

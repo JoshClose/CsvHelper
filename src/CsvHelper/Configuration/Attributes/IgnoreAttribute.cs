@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// this method will not ignore all the child members down the
 	/// tree that have already been mapped.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class IgnoreAttribute : Attribute
 	{
 	}

@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// field in the header record.
 	/// The first name will be used.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class NameAttribute : Attribute
 	{
 		/// <summary>

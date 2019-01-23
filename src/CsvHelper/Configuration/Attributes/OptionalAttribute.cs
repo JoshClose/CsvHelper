@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// Ignore the member when reading if no matching field name can be found.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field )]
 	public class OptionalAttribute : Attribute
 	{
 	}

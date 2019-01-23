@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The <see cref="DateTimeStyles"/> to use when type converting.
 	/// This is used when doing any <see cref="DateTime"/> conversions.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field )]
 	public class DateTimeStylesAttribute : Attribute
 	{
 		/// <summary>
