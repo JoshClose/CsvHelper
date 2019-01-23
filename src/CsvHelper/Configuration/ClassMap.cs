@@ -386,7 +386,7 @@ namespace CsvHelper.Configuration
 
 					if (CheckForCircularReference(parameter.ParameterType, mapParents))
 					{
-						throw new InvalidOperationException($"A circular reference was detected in constructor paramter '{parameter.Name}'." +
+						throw new InvalidOperationException($"A circular reference was detected in constructor parameter '{parameter.Name}'." +
 															  "Since all parameters must be supplied for a constructor, this parameter can't be skipped.");
 					}
 
