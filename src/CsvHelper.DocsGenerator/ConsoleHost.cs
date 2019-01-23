@@ -18,7 +18,7 @@ namespace CsvHelper.DocsGenerator
 		/// Returns a Task that completes when shutdown is triggered via the given token, Ctrl+C or SIGTERM.
 		/// </summary>
 		/// <param name="token">The token to trigger shutdown.</param>
-		public static async Task WaitForShutdownAsync(CancellationToken token = default(CancellationToken))
+		public static async Task WaitForShutdownAsync(CancellationToken token = default)
 		{
 			var done = new ManualResetEventSlim(false);
 			using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
@@ -43,7 +43,7 @@ namespace CsvHelper.DocsGenerator
 		/// </summary>
 		/// <param name="host">The <see cref="IConsoleHost"/> to run.</param>
 		/// <param name="token">The token to trigger shutdown.</param>
-		public static async Task WaitAsync(CancellationToken token = default(CancellationToken))
+		public static async Task WaitAsync(CancellationToken token = default)
 		{
 			//Wait for the token shutdown if it can be cancelled
 			if (token.CanBeCanceled)
