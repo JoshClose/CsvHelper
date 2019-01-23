@@ -173,9 +173,7 @@ namespace CsvHelper
 			Delegate compiled;
 			if (type.GetTypeInfo().IsValueType)
 			{
-				var method = typeof(ReflectionHelper).GetMethod("Default", BindingFlags.Static | BindingFlags.NonPublic);
-				method = method.MakeGenericMethod(type);
-				compiled = Expression.Lambda(Expression.Call(method)).Compile();
+				compiled = Expression.Lambda(Expression.Default(type)).Compile();
 			}
 			else
 			{
