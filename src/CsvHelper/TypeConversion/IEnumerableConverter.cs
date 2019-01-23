@@ -23,8 +23,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The string representation of the object.</returns>
 		public override string ConvertToString( object value, IWriterRow row, MemberMapData memberMapData )
 		{
-			var list = value as IEnumerable;
-			if( list == null )
+            if( !( value is IEnumerable list ) )
 			{
 				return base.ConvertToString( value, row, memberMapData );
 			}

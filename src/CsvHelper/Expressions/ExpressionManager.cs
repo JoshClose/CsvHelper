@@ -263,14 +263,14 @@ namespace CsvHelper.Expressions
 			if (mapping.MemberMaps.Any(mm => mm == memberMap))
 			{
 				// The member is on this level.
-				if (memberMap.Data.Member is PropertyInfo)
+				if (memberMap.Data.Member is PropertyInfo property)
 				{
-					return Expression.Property(recordExpression, (PropertyInfo)memberMap.Data.Member);
+					return Expression.Property(recordExpression, property);
 				}
 
-				if (memberMap.Data.Member is FieldInfo)
+				if (memberMap.Data.Member is FieldInfo field)
 				{
-					return Expression.Field(recordExpression, (FieldInfo)memberMap.Data.Member);
+					return Expression.Field(recordExpression, field);
 				}
 			}
 

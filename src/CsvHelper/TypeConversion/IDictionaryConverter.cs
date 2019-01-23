@@ -22,8 +22,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The string representation of the object.</returns>
 		public override string ConvertToString( object value, IWriterRow row, MemberMapData memberMapData )
 		{
-			var dictionary = value as IDictionary;
-			if( dictionary == null )
+            if( !( value is IDictionary dictionary ) )
 			{
 				return base.ConvertToString( value, row, memberMapData );
 			}
