@@ -31,7 +31,7 @@ namespace CsvHelper.Configuration
 		string DoubleQuoteString { get; }
 
 		/// <summary>
-		/// Gets or sets a function that is used to determine if a field should get quoted 
+		/// Gets or sets a function that is used to determine if a field should get quoted
 		/// when writing.
 		/// Arguments: field, context
 		/// </summary>
@@ -157,7 +157,7 @@ namespace CsvHelper.Configuration
 	    ClassMap AutoMap( Type type );
 
 		/// <summary>
-		/// Gets or sets a value indicating that during writing if a new 
+		/// Gets or sets a value indicating that during writing if a new
 		/// object should be created when a reference member is null.
 		/// True to create a new object and use it's defaults for the
 		/// fields, or false to leave the fields empty for all the

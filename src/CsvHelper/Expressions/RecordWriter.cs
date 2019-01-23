@@ -52,7 +52,7 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Gets the delegate to write the given record. 
+		/// Gets the delegate to write the given record.
 		/// If the delegate doesn't exist, one will be created and cached.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>

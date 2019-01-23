@@ -66,7 +66,7 @@ namespace CsvHelper
 		IWriter CreateWriter( TextWriter writer );
 
 		/// <summary>
-		/// Provides a fluent interface for dynamically creating <see cref="ClassMap{T}"/>s 
+		/// Provides a fluent interface for dynamically creating <see cref="ClassMap{T}"/>s
 		/// </summary>
 		/// <typeparam name="T">Type of class to map</typeparam>
 		/// <returns>Next available options</returns>

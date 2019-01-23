@@ -27,7 +27,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.
-		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/> 
+		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/>
 		/// for the headers to be read.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
@@ -35,7 +35,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.
-		/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/> 
+		/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/>
 		/// for the headers to be read.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
@@ -71,7 +71,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Enumerates the records hydrating the given record instance with row data.
-		/// The record instance is re-used and not cleared on each enumeration. 
+		/// The record instance is re-used and not cleared on each enumeration.
 		/// This only works for streaming rows. If any methods are called on the projection
 		/// that force the evaluation of the IEnumerable, such as ToList(), the entire list
 		/// will contain the same instance of the record, which is the last row.

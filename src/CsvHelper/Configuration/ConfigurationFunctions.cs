@@ -89,7 +89,7 @@ namespace CsvHelper.Configuration
 		/// <returns></returns>
 		public static bool ShouldQuote(string field, WritingContext context)
 		{
-			var shouldQuote = !string.IsNullOrEmpty(field) && 
+			var shouldQuote = !string.IsNullOrEmpty(field) &&
 			(
 				field.Contains(context.WriterConfiguration.QuoteString) // Contains quote
 				|| field[0] == ' ' // Starts with a space
@@ -135,7 +135,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns the type's constructor with the most parameters. 
+		/// Returns the type's constructor with the most parameters.
 		/// If two constructors have the same number of parameters, then
 		/// there is no guarantee which one will be returned. If you have
 		/// that situation, you should probably implement this function yourself.

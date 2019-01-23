@@ -95,7 +95,7 @@ namespace CsvHelper.TypeConversion
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class
-		/// with a specified error message and a reference to the inner exception that 
+		/// with a specified error message and a reference to the inner exception that
 		/// is the cause of this exception.
 		/// </summary>
 		/// <param name="typeConverter">The type converter.</param>
@@ -113,7 +113,7 @@ namespace CsvHelper.TypeConversion
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class
-		/// with a specified error message and a reference to the inner exception that 
+		/// with a specified error message and a reference to the inner exception that
 		/// is the cause of this exception.
 		/// </summary>
 		/// <param name="typeConverter">The type converter.</param>

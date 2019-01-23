@@ -65,7 +65,7 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Gets the delegate to create a record for the given record type. 
+		/// Gets the delegate to create a record for the given record type.
 		/// If the delegate doesn't exist, one will be created and cached.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>

@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// at the index of the name if there was a
 	/// header specified. It will look for the
 	/// first name match in the order listed.
-	/// When writing, sets the name of the 
+	/// When writing, sets the name of the
 	/// field in the header record.
 	/// The first name will be used.
 	/// </summary>
@@ -28,7 +28,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// at the index of the name if there was a
 		/// header specified. It will look for the
 		/// first name match in the order listed.
-		/// When writing, sets the name of the 
+		/// When writing, sets the name of the
 		/// field in the header record.
 		/// The first name will be used.
 		/// </summary>
@@ -43,7 +43,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// at the index of the name if there was a
 		/// header specified. It will look for the
 		/// first name match in the order listed.
-		/// When writing, sets the name of the 
+		/// When writing, sets the name of the
 		/// field in the header record.
 		/// The first name will be used.
 		/// </summary>

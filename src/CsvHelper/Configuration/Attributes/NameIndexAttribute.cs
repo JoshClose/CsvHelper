@@ -7,8 +7,8 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// When reading, is used to get the 
-	/// index of the name used when there 
+	/// When reading, is used to get the
+	/// index of the name used when there
 	/// are multiple names that are the same.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
@@ -20,8 +20,8 @@ namespace CsvHelper.Configuration.Attributes
 		public int NameIndex { get; private set; }
 
 		/// <summary>
-		/// When reading, is used to get the 
-		/// index of the name used when there 
+		/// When reading, is used to get the
+		/// index of the name used when there
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="nameIndex">The name index.</param>

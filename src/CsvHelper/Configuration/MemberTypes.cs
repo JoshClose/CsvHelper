@@ -7,7 +7,7 @@ using System;
 namespace CsvHelper.Configuration
 {
 	/// <summary>
-	/// Flags for the type of members that 
+	/// Flags for the type of members that
 	/// can be used for auto mapping.
 	/// </summary>
 	[Flags]

@@ -204,7 +204,7 @@ namespace CsvHelper.DocsGenerator
 		{
 			return GetSummary($"M:{XmlDocFormat(method)}");
 		}
-			   
+
 		// Private
 
 		private static Type GetType(string typeName)

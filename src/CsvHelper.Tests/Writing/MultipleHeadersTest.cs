@@ -11,7 +11,7 @@ namespace CsvHelper.Tests.Writing
 {
 	[TestClass]
 	public class MultipleHeadersTest
-	{    
+	{
 		[TestMethod]
 		public void GenericTypeTest()
 		{

@@ -91,7 +91,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if fields should be sanitized
-		/// to prevent malicious injection. This covers MS Excel, 
+		/// to prevent malicious injection. This covers MS Excel,
 		/// Google Sheets and Open Office Calc.
 		/// </summary>
 		public virtual bool SanitizeForInjection { get; set; }
@@ -353,7 +353,7 @@ namespace CsvHelper.Configuration
 		public virtual ClassMapCollection Maps => maps;
 
 		/// <summary>
-		/// Gets or sets a value indicating that during writing if a new 
+		/// Gets or sets a value indicating that during writing if a new
 		/// object should be created when a reference member is null.
 		/// True to create a new object and use it's defaults for the
 		/// fields, or false to leave the fields empty for all the

@@ -26,8 +26,8 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes a field that has already been converted to a
 		/// <see cref="string"/> from an <see cref="ITypeConverter"/>.
-		/// If the field is null, it won't get written. A type converter 
-		/// will always return a string, even if field is null. If the 
+		/// If the field is null, it won't get written. A type converter
+		/// will always return a string, even if field is null. If the
 		/// converter returns a null, it means that the converter has already
 		/// written data, and the returned value should not be written.
 		/// </summary>

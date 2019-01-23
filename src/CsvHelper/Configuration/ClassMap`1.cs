@@ -71,7 +71,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Meant for internal use only. 
+		/// Meant for internal use only.
 		/// Maps a member to another class map. When this is used, accessing a property through
 		/// sub-property mapping later won't work. You can only use one or the other. When using
 		/// this, ConvertUsing will also not work.

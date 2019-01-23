@@ -60,7 +60,7 @@ namespace CsvHelper.Configuration
 		/// Specifies the <see cref="TypeConverter"/> to use
 		/// when converting the member to and from a CSV field.
 		/// </summary>
-		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
+		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the
 		/// <see cref="TypeConverter"/> to use.</typeparam>
 		IHasTypeConverterOptions<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter;
 	}
@@ -145,7 +145,7 @@ namespace CsvHelper.Configuration
 		/// at the index of the name if there was a
 		/// header specified. It will look for the
 		/// first name match in the order listed.
-		/// When writing, sets the name of the 
+		/// When writing, sets the name of the
 		/// field in the header record.
 		/// The first name will be used.
 		/// </summary>
@@ -174,8 +174,8 @@ namespace CsvHelper.Configuration
 	public interface IHasNameIndex<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
-		/// When reading, is used to get the 
-		/// index of the name used when there 
+		/// When reading, is used to get the
+		/// index of the name used when there
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
@@ -258,8 +258,8 @@ namespace CsvHelper.Configuration
 	public interface IHasConstant<TClass, TMember> : IBuildableClass<TClass>
 	{
 		/// <summary>
-		/// The constant value that will be used for every record when 
-		/// reading and writing. This value will always be used no matter 
+		/// The constant value that will be used for every record when
+		/// reading and writing. This value will always be used no matter
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="value">The constant value.</param>

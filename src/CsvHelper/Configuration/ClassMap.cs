@@ -129,8 +129,8 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Auto maps all members for the given type. If a member 
-		/// is mapped again it will override the existing map.
+		/// Auto maps all members for the given type. If a member
+		/// is mapped again it will override the existing map
 		/// </summary>
 		public virtual void AutoMap()
 		{
@@ -138,8 +138,8 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Auto maps all members for the given type. If a member 
-		/// is mapped again it will override the existing map.
+		/// Auto maps all members for the given type. If a member
+		/// is mapped again it will override the existing map
 		/// </summary>
 		/// <param name="configuration">The configuration.</param>
 		public virtual void AutoMap(Configuration configuration)

@@ -7,8 +7,8 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// The constant value that will be used for every record when 
-	/// reading and writing. This value will always be used no matter 
+	/// The constant value that will be used for every record when
+	/// reading and writing. This value will always be used no matter
 	/// what other mapping configurations are specified.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
@@ -20,8 +20,8 @@ namespace CsvHelper.Configuration.Attributes
 		public object Constant { get; private set; }
 
 		/// <summary>
-		/// The constant value that will be used for every record when 
-		/// reading and writing. This value will always be used no matter 
+		/// The constant value that will be used for every record when
+		/// reading and writing. This value will always be used no matter
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constant">The constant.</param>

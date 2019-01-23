@@ -336,8 +336,8 @@ namespace CsvHelper
 		/// </returns>
 		public string GetName(int i)
 		{
-			return csv.Configuration.HasHeaderRecord 
-				? csv.Context.HeaderRecord[i] 
+			return csv.Configuration.HasHeaderRecord
+				? csv.Context.HeaderRecord[i]
 				: string.Empty;
 		}
 

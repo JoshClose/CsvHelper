@@ -34,7 +34,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if fields should be sanitized
-		/// to prevent malicious injection. This covers MS Excel, 
+		/// to prevent malicious injection. This covers MS Excel,
 		/// Google Sheets and Open Office Calc.
 		/// </summary>
 		bool SanitizeForInjection { get; set; }

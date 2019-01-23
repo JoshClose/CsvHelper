@@ -146,8 +146,8 @@ namespace CsvHelper
 		T GetField<T>( string name );
 
 		/// <summary>
-		/// Gets the field converted to <see cref="Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -177,8 +177,8 @@ namespace CsvHelper
 		T GetField<T>( string name, ITypeConverter converter );
 
 		/// <summary>
-		/// Gets the field converted to <see cref="Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
@@ -209,8 +209,8 @@ namespace CsvHelper
 		T GetField<T, TConverter>( string name ) where TConverter : ITypeConverter;
 
 		/// <summary>
-		/// Gets the field converted to <see cref="Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
@@ -239,8 +239,8 @@ namespace CsvHelper
 		bool TryGetField( Type type, string name, out object field );
 
 		/// <summary>
-		/// Gets the field converted to <see cref="System.Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="System.Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
@@ -303,8 +303,8 @@ namespace CsvHelper
 		bool TryGetField<T>( string name, out T field );
 
 		/// <summary>
-		/// Gets the field converted to <see cref="Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>

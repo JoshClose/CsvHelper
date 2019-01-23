@@ -49,8 +49,8 @@ namespace CsvHelper
 		public bool UseFallback { get; private set; }
 
 		/// <summary>
-		/// A function that returns a value indicating if the resolver 
-		/// is able to resolve the given type. True if the type can be 
+		/// A function that returns a value indicating if the resolver
+		/// is able to resolve the given type. True if the type can be
 		/// resolved, otherwise false.
 		/// </summary>
 		public Func<Type, bool> CanResolve { get; private set; }

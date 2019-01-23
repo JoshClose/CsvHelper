@@ -167,7 +167,7 @@ namespace CsvHelper.Configuration
 					SetMapDefaults( parameterMap.ReferenceMap.Data.Mapping );
 				}
 				else
-				{ 
+				{
 					if( parameterMap.Data.TypeConverter == null )
 					{
 						parameterMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter( parameterMap.Data.Parameter.ParameterType );

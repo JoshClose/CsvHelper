@@ -194,7 +194,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.
-		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/> 
+		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/>
 		/// for the headers to be read.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
@@ -231,7 +231,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.
-		/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/> 
+		/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/>
 		/// for the headers to be read.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
@@ -512,8 +512,8 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the field converted to <see cref="System.Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="System.Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -571,8 +571,8 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the field converted to <see cref="System.Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="System.Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -621,8 +621,8 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the field converted to <see cref="System.Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="System.Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the field.</typeparam>
@@ -669,8 +669,8 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the field converted to <see cref="System.Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="System.Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the field.</param>
@@ -804,8 +804,8 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the field converted to <see cref="System.Type"/> T at position 
-		/// (column) name and the index instance of that field. The index 
+		/// Gets the field converted to <see cref="System.Type"/> T at position
+		/// (column) name and the index instance of that field. The index
 		/// is used when there are multiple columns with the same header name.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -1196,7 +1196,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Enumerates the records hydrating the given record instance with row data.
-		/// The record instance is re-used and not cleared on each enumeration. 
+		/// The record instance is re-used and not cleared on each enumeration.
 		/// This only works for streaming rows. If any methods are called on the projection
 		/// that force the evaluation of the IEnumerable, such as ToList(), the entire list
 		/// will contain the same instance of the record, which is the last row.

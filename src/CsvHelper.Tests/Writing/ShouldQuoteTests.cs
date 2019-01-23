@@ -9,7 +9,7 @@ namespace CsvHelper.Tests.Writing
 {
 	[TestClass]
 	public class ShouldQuoteTests
-	{    
+	{
 		[TestMethod]
 		public void QuoteAllFieldsTest()
 		{
