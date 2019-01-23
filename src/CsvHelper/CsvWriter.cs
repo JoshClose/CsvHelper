@@ -174,7 +174,7 @@ namespace CsvHelper
 		{
 			var type = field == null ? typeof(string) : field.GetType();
 			context.ReusableMemberMapData.TypeConverter = converter;
-			if (!context.TypeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
+			if (!context.TypeConverterOptionsCache.TryGetValue(type, out var typeConverterOptions))
 			{
 				typeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = context.WriterConfiguration.CultureInfo }, context.WriterConfiguration.TypeConverterOptionsCache.GetOptions(type));
 				context.TypeConverterOptionsCache.Add(type, typeConverterOptions);

@@ -438,7 +438,7 @@ namespace CsvHelper
 
 			context.ReusableMemberMapData.Index = index;
 			context.ReusableMemberMapData.TypeConverter = converter;
-			if (!context.TypeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
+			if (!context.TypeConverterOptionsCache.TryGetValue(type, out var typeConverterOptions))
 			{
 				typeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = context.ReaderConfiguration.CultureInfo }, context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(type));
 				context.TypeConverterOptionsCache.Add(type, typeConverterOptions);

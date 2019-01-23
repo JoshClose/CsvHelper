@@ -29,14 +29,14 @@ namespace CsvHelper.Tests.DataTableTests
 				Assert.AreEqual(true, dataReader.GetBoolean(0));
 				Assert.AreEqual(1, dataReader.GetByte(1));
 
-				byte[] byteBuffer = new byte[2];
+				var byteBuffer = new byte[2];
 				dataReader.GetBytes(2, 0, byteBuffer, 0, byteBuffer.Length);
 				Assert.AreEqual(0x1, byteBuffer[0]);
 				Assert.AreEqual(0x2, byteBuffer[1]);
 
 				Assert.AreEqual('a', dataReader.GetChar(3));
 
-				char[] charBuffer = new char[2];
+				var charBuffer = new char[2];
 				dataReader.GetChars(4, 0, charBuffer, 0, charBuffer.Length);
 				Assert.AreEqual('a', charBuffer[0]);
 				Assert.AreEqual('b', charBuffer[1]);

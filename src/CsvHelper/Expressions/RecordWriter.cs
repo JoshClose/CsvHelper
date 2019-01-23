@@ -67,9 +67,9 @@ namespace CsvHelper.Expressions
 				typeKeyName += $"|{type.AssemblyQualifiedName}";
 			}
 
-			int typeKey = typeKeyName.GetHashCode();
+			var typeKey = typeKeyName.GetHashCode();
 
-			if (!Writer.Context.TypeActions.TryGetValue(typeKey, out Delegate action))
+			if (!Writer.Context.TypeActions.TryGetValue(typeKey, out var action))
 			{
 				Writer.Context.TypeActions[typeKey] = action = CreateWriteDelegate(record);
 			}

@@ -243,7 +243,7 @@ namespace CsvHelper.DocsGenerator
 					string text;
 					if (node.NodeType == XmlNodeType.Element)
 					{
-						string typeName = string.Empty;
+						var typeName = string.Empty;
 						var el = (XElement)node;
 						switch (el.Name.ToString())
 						{
