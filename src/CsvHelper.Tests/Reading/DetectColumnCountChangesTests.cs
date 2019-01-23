@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.Reading
 				}
 
 				// Expect only 3 errors
-				Assert.AreEqual<int>(3, failCount);
+				Assert.AreEqual(3, failCount);
 			}
 		}
 
