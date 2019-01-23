@@ -17,9 +17,6 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public class TypeConverterCache
 	{
-		private static TypeConverterCache current = new TypeConverterCache();
-		private static readonly object locker = new object();
-
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
 
 		/// <summary>
