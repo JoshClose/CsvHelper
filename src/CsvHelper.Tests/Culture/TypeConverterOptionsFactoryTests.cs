@@ -28,7 +28,7 @@ namespace CsvHelper.Tests.Culture
 			var config = new CsvHelper.Configuration.Configuration();
 			var customOptions = new TypeConverterOptions
 			{
-				Formats = new string[] { "custom" },
+				Formats = new[] { "custom" },
 			};
 			config.TypeConverterOptionsCache.AddOptions<string>(customOptions);
 			var options = config.TypeConverterOptionsCache.GetOptions<string>();
@@ -135,7 +135,7 @@ namespace CsvHelper.Tests.Culture
 			using (var csvWriter = new CsvWriter(writer))
 			{
 				csvWriter.Configuration.Delimiter = ",";
-				var options = new TypeConverterOptions { Formats = new string[] { "c" } };
+				var options = new TypeConverterOptions { Formats = new[] { "c" } };
 				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvWriter.WriteField(1234);
 				csvWriter.NextRecord();
@@ -160,7 +160,7 @@ namespace CsvHelper.Tests.Culture
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-				var options = new TypeConverterOptions { Formats = new string[] { "c" } };
+				var options = new TypeConverterOptions { Formats = new[] { "c" } };
 				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.WriteRecords(list);
@@ -185,7 +185,7 @@ namespace CsvHelper.Tests.Culture
 				{
 					new Test { Number = 1234, NumberOverridenInMap = 5678 },
 				};
-				var options = new TypeConverterOptions { Formats = new string[] { "c" } };
+				var options = new TypeConverterOptions { Formats = new[] { "c" } };
 				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.Configuration.RegisterClassMap<TestMap>();

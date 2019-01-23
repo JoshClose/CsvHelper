@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <param name="nullValue">The null values.</param>
 		public NullValuesAttribute( string nullValue )
 		{
-			NullValues = new string[] { nullValue };
+			NullValues = new[] { nullValue };
 		}
 
 		/// <summary>

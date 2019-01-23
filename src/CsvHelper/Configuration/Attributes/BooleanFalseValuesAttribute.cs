@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <param name="falseValue">The false values.</param>
 		public BooleanFalseValuesAttribute( string falseValue )
 		{
-			FalseValues = new string[] { falseValue };
+			FalseValues = new[] { falseValue };
 		}
 
 		/// <summary>

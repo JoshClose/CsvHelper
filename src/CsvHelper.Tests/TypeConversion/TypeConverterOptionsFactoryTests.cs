@@ -27,7 +27,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var customOptions = new TypeConverterOptions
 			{
-				Formats = new string[] { "custom" },
+				Formats = new[] { "custom" },
 			};
 			var typeConverterOptionsFactory = new TypeConverterOptionsCache();
 
@@ -112,7 +112,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteFieldTest()
 		{
-			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
+			var options = new TypeConverterOptions { Formats = new[] { "c" } };
 
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -134,7 +134,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteRecordsTest()
 		{
-			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
+			var options = new TypeConverterOptions { Formats = new[] { "c" } };
 
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -160,7 +160,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void WriteRecordsAppliedWhenMappedTest()
 		{
-			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
+			var options = new TypeConverterOptions { Formats = new[] { "c" } };
 
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

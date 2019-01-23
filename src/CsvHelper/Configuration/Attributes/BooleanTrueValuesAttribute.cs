@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <param name="trueValue"></param>
 		public BooleanTrueValuesAttribute( string trueValue )
 		{
-			TrueValues = new string[] { trueValue };
+			TrueValues = new[] { trueValue };
 		}
 
 		/// <summary>

@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <param name="name">The name</param>
 		public NameAttribute( string name )
 		{
-			Names = new string[] { name };
+			Names = new[] { name };
 		}
 
 		/// <summary>

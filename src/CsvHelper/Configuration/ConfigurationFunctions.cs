@@ -10,7 +10,7 @@ namespace CsvHelper.Configuration
 	/// <summary>Holds the default callback methods for delegate members of <c>CsvHelper.Configuration.Configuration</c>.</summary>
 	public static class ConfigurationFunctions
 	{
-		private static readonly char[] quoteChars = new char[] { '\r', '\n' };
+		private static readonly char[] quoteChars = new[] { '\r', '\n' };
 
 		/// <summary>
 		/// Throws a <see cref="ValidationException"/> if <paramref name="isValid"/> is <c>false</c>.

@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <param name="format">The format.</param>
 		public FormatAttribute( string format )
 		{
-			Formats = new string[] { format };
+			Formats = new[] { format };
 		}
 
 		/// <summary>

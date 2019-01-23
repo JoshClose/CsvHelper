@@ -325,13 +325,13 @@ namespace CsvHelper.Expressions
 		public virtual BlockExpression CreateInstanceAndAssignMembers(Type recordType, List<MemberAssignment> assignments)
 		{
 			var expressions = new List<Expression>();
-			var createInstanceMethod = typeof(ReflectionHelper).GetMethod(nameof(ReflectionHelper.CreateInstance), new Type[] { typeof(Type), typeof(object[]) });
+			var createInstanceMethod = typeof(ReflectionHelper).GetMethod(nameof(ReflectionHelper.CreateInstance), new[] { typeof(Type), typeof(object[]) });
 			var instanceExpression = Expression.Convert(Expression.Call(createInstanceMethod, Expression.Constant(recordType), Expression.Constant(new object[0])), recordType);
 			var variableExpression = Expression.Variable(instanceExpression.Type, "instance");
 			expressions.Add(Expression.Assign(variableExpression, instanceExpression));
 			expressions.AddRange(assignments.Select(b => Expression.Assign(Expression.MakeMemberAccess(variableExpression, b.Member), b.Expression)));
 			expressions.Add(variableExpression);
-			var variables = new ParameterExpression[] { variableExpression };
+			var variables = new[] { variableExpression };
 			var blockExpression = Expression.Block(variables, expressions);
 
 			return blockExpression;

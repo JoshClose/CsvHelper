@@ -94,7 +94,7 @@ namespace CsvHelper.Tests
 		public void ConvertUsingCovarianceTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new string[] { "1", "2" } );
+			queue.Enqueue( new[] { "1", "2" } );
 			queue.Enqueue( null );
 
 			var parserMock = new ParserMock( queue );
