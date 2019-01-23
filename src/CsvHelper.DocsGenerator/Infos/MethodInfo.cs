@@ -7,11 +7,11 @@ namespace CsvHelper.DocsGenerator.Infos
 {
 	public class MethodInfo : Info
 	{
-		public System.Reflection.MethodInfo Method { get; private set; }
+		public System.Reflection.MethodInfo Method { get; }
 
-		public List<System.Reflection.ParameterInfo> Parameters { get; private set; }
+		public List<System.Reflection.ParameterInfo> Parameters { get; }
 
-		public List<Type> GenericArguments { get; private set; }
+		public List<Type> GenericArguments { get; }
 
 		public MethodInfo(System.Reflection.MethodInfo methodInfo, XElement xmlDocs)
 		{

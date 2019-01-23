@@ -167,9 +167,9 @@ namespace CsvHelper.Tests
 
 		private class HasConstructor
 		{
-			public int Id { get; private set; }
+			public int Id { get; }
 
-			public string Name { get; private set; }
+			public string Name { get; }
 
 			public HasConstructor(int Id, string Name)
 			{

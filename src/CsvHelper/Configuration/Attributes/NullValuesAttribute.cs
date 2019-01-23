@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the null values.
 		/// </summary>
-		public string[] NullValues { get; private set; }
+		public string[] NullValues { get; }
 
 		/// <summary>
 		/// The string values used to represent null when converting.

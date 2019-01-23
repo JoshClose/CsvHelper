@@ -32,7 +32,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// The type of the class this map is for.
 		/// </summary>
-		public virtual Type ClassType { get; private set; }
+		public virtual Type ClassType { get; }
 
 		/// <summary>
 		/// The class constructor parameter mappings.

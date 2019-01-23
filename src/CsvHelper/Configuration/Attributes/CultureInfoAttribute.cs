@@ -18,7 +18,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the culture info.
 		/// </summary>
-		public CultureInfo CultureInfo { get; private set; }
+		public CultureInfo CultureInfo { get; }
 
 		/// <summary>
 		/// The <see cref="CultureInfo"/> used when type converting.

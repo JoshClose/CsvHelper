@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the prefix.
 		/// </summary>
-		public string Prefix { get; private set; }
+		public string Prefix { get; }
 
 		/// <summary>
 		/// Appends a prefix to the header of each field of the reference member.

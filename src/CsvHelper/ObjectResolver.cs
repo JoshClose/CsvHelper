@@ -46,19 +46,19 @@ namespace CsvHelper
 		/// CsvHelper's object creation. True to fallback, otherwise false.
 		/// Default value is true.
 		/// </summary>
-		public bool UseFallback { get; private set; }
+		public bool UseFallback { get; }
 
 		/// <summary>
 		/// A function that returns a value indicating if the resolver
 		/// is able to resolve the given type. True if the type can be
 		/// resolved, otherwise false.
 		/// </summary>
-		public Func<Type, bool> CanResolve { get; private set; }
+		public Func<Type, bool> CanResolve { get; }
 
 		/// <summary>
 		/// The function that creates an object from a given type.
 		/// </summary>
-		public Func<Type, object[], object> ResolveFunction { get; private set; }
+		public Func<Type, object[], object> ResolveFunction { get; }
 
 		/// <summary>
 		/// Creates an instance of the object resolver using default values.

@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the true values.
 		/// </summary>
-		public string[] TrueValues { get; private set; }
+		public string[] TrueValues { get; }
 
 		/// <summary>
 		/// The string values used to represent a boolean true when converting.

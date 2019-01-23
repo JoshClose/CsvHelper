@@ -18,7 +18,7 @@ namespace CsvHelper.TypeConversion
 		/// <value>
 		/// The type of the nullable.
 		/// </value>
-		public Type NullableType { get; private set; }
+		public Type NullableType { get; }
 
 		/// <summary>
 		/// Gets the underlying type of the nullable.
@@ -26,7 +26,7 @@ namespace CsvHelper.TypeConversion
 		/// <value>
 		/// The underlying type.
 		/// </value>
-		public Type UnderlyingType { get; private set; }
+		public Type UnderlyingType { get; }
 
 		/// <summary>
 		/// Gets the type converter for the underlying type.
@@ -34,7 +34,7 @@ namespace CsvHelper.TypeConversion
 		/// <value>
 		/// The type converter.
 		/// </value>
-		public ITypeConverter UnderlyingTypeConverter { get; private set; }
+		public ITypeConverter UnderlyingTypeConverter { get; }
 
 		/// <summary>
 		/// Creates a new <see cref="NullableConverter"/> for the given <see cref="Nullable{T}"/> <see cref="Type"/>.

@@ -33,12 +33,12 @@ namespace CsvHelper.Configuration
 		/// Gets the <see cref="MemberInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual MemberInfo Member { get; private set; }
+		public virtual MemberInfo Member { get; }
 
 		/// <summary>
 		/// Gets the mapping this is a reference for.
 		/// </summary>
-		public ClassMap Mapping { get; private set; }
+		public ClassMap Mapping { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MemberReferenceMapData"/> class.

@@ -17,12 +17,12 @@ namespace CsvHelper.Expressions
 		/// <summary>
 		/// Gets the writer.
 		/// </summary>
-		protected CsvWriter Writer { get; private set; }
+		protected CsvWriter Writer { get; }
 
 		/// <summary>
 		/// The expression manager.
 		/// </summary>
-		protected ExpressionManager ExpressionManager { get; private set; }
+		protected ExpressionManager ExpressionManager { get; }
 
 		/// <summary>
 		/// Initializes a new instance using the given writer.

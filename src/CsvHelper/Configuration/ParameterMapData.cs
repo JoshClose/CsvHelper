@@ -18,7 +18,7 @@ namespace CsvHelper.Configuration
 		/// Gets the <see cref="ParameterInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual ParameterInfo Parameter { get; private set; }
+		public virtual ParameterInfo Parameter { get; }
 
 		/// <summary>
 		/// Gets or sets the type converter.

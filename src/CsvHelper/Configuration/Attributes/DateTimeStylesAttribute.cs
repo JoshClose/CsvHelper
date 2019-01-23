@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the date time styles.
 		/// </summary>
-		public DateTimeStyles DateTimeStyles { get; private set; }
+		public DateTimeStyles DateTimeStyles { get; }
 
 		/// <summary>
 		/// The <see cref="DateTimeStyles"/> to use when type converting.

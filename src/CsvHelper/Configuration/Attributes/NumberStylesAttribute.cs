@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the number styles.
 		/// </summary>
-		public NumberStyles NumberStyles { get; private set; }
+		public NumberStyles NumberStyles { get; }
 
 		/// <summary>
 		/// The <see cref="NumberStyles"/> to use when type converting.

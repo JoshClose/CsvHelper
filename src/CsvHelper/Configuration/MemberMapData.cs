@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration
 		/// Gets the <see cref="MemberInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual MemberInfo Member { get; private set; }
+		public virtual MemberInfo Member { get; }
 
 		/// <summary>
 		/// Gets the list of column names.

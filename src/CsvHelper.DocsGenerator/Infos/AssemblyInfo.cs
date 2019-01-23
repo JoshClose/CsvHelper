@@ -11,7 +11,7 @@ namespace CsvHelper.DocsGenerator.Infos
 	{
 		public Assembly Assembly { get; protected set; }
 
-		public List<NamespaceInfo> Namespaces { get; private set; }
+		public List<NamespaceInfo> Namespaces { get; }
 
 		public AssemblyInfo(Assembly assembly, XElement xmlDocs)
 		{

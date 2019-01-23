@@ -14,13 +14,13 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the header names that are mapped to a CSV field that couldn't be found.
 		/// </summary>
-		public string[] HeaderNames { get; private set; }
+		public string[] HeaderNames { get; }
 
 		/// <summary>
 		/// Gets the header name index that is mapped to a CSV field that couldn't be found.
 		/// The index is used when a CSV header has multiple header names with the same value.
 		/// </summary>
-		public int? HeaderNameIndex { get; private set; }
+		public int? HeaderNameIndex { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ValidationException"/> class.

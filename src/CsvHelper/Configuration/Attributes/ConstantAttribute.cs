@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the constant.
 		/// </summary>
-		public object Constant { get; private set; }
+		public object Constant { get; }
 
 		/// <summary>
 		/// The constant value that will be used for every record when

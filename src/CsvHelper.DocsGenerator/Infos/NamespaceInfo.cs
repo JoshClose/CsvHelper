@@ -12,13 +12,13 @@ namespace CsvHelper.DocsGenerator.Infos
 
 		public string Namespace { get; protected set; }
 
-		public List<TypeInfo> Types { get; private set; } = new List<TypeInfo>();
+		public List<TypeInfo> Types { get; } = new List<TypeInfo>();
 
-		public List<TypeInfo> Classes { get; private set; } = new List<TypeInfo>();
+		public List<TypeInfo> Classes { get; } = new List<TypeInfo>();
 
-		public List<TypeInfo> Interfaces { get; private set; } = new List<TypeInfo>();
+		public List<TypeInfo> Interfaces { get; } = new List<TypeInfo>();
 
-		public List<TypeInfo> Enums { get; private set; } = new List<TypeInfo>();
+		public List<TypeInfo> Enums { get; } = new List<TypeInfo>();
 
 		public NamespaceInfo(AssemblyInfo assemblyInfo, string @namespace, List<Type> types, XElement xmlDocs)
 		{

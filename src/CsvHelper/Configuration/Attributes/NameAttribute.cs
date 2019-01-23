@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the names.
 		/// </summary>
-		public string[] Names { get; private set; }
+		public string[] Names { get; }
 
 		/// <summary>
 		/// When reading, is used to get the field

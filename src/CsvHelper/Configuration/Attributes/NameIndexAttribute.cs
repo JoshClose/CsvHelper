@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// The name index.
 		/// </summary>
-		public int NameIndex { get; private set; }
+		public int NameIndex { get; }
 
 		/// <summary>
 		/// When reading, is used to get the

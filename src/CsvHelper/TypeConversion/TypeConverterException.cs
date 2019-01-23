@@ -16,22 +16,22 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// The text used in ConvertFromString.
 		/// </summary>
-		public string Text { get; private set; }
+		public string Text { get; }
 
 		/// <summary>
 		/// The value used in ConvertToString.
 		/// </summary>
-		public object Value { get; private set; }
+		public object Value { get; }
 
 		/// <summary>
 		/// The type converter.
 		/// </summary>
-		public ITypeConverter TypeConverter { get; private set; }
+		public ITypeConverter TypeConverter { get; }
 
 		/// <summary>
 		/// The member map data used in ConvertFromString and ConvertToString.
 		/// </summary>
-		public MemberMapData MemberMapData { get; private set; }
+		public MemberMapData MemberMapData { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="TypeConverterException"/> class.

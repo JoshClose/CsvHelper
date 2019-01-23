@@ -18,12 +18,12 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the index.
 		/// </summary>
-		public int Index { get; private set; }
+		public int Index { get; }
 
 		/// <summary>
 		/// Gets the index end.
 		/// </summary>
-		public int IndexEnd { get; private set; }
+		public int IndexEnd { get; }
 
 		/// <summary>
 		/// When reading, is used to get the field at

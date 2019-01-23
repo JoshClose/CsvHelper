@@ -147,9 +147,9 @@ namespace CsvHelper.Tests.Reading
 
 		private class ValueTypesParamsMatchProps
 		{
-			public int Id { get; private set; }
+			public int Id { get; }
 
-			public string Name { get; private set; }
+			public string Name { get; }
 
 			public ValueTypesParamsMatchProps(int Id, string Name)
 			{
@@ -160,9 +160,9 @@ namespace CsvHelper.Tests.Reading
 
 		private class ValueTypesParamsDontMatchProps
 		{
-			public int Id { get; private set; }
+			public int Id { get; }
 
-			public string Name { get; private set; }
+			public string Name { get; }
 
 			public ValueTypesParamsDontMatchProps(int id, string name)
 			{
@@ -173,9 +173,9 @@ namespace CsvHelper.Tests.Reading
 
 		private class MultipleConstructors
 		{
-			public int Id { get; private set; }
+			public int Id { get; }
 
-			public string Name { get; private set; }
+			public string Name { get; }
 
 			public MultipleConstructors(int id)
 			{
@@ -196,9 +196,9 @@ namespace CsvHelper.Tests.Reading
 
 		private class MultipleConstructorsWithDefault
 		{
-			public int Id { get; private set; }
+			public int Id { get; }
 
-			public string Name { get; private set; }
+			public string Name { get; }
 
 			public MultipleConstructorsWithDefault() { }
 

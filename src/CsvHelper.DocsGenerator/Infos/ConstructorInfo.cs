@@ -6,9 +6,9 @@ namespace CsvHelper.DocsGenerator.Infos
 {
 	public class ConstructorInfo : Info
 	{
-		public System.Reflection.ConstructorInfo Constructor { get; private set; }
+		public System.Reflection.ConstructorInfo Constructor { get; }
 
-		public List<System.Reflection.ParameterInfo> Parameters { get; private set; }
+		public List<System.Reflection.ParameterInfo> Parameters { get; }
 
 		public ConstructorInfo(System.Reflection.ConstructorInfo constructorInfo, XElement xmlDocs)
 		{

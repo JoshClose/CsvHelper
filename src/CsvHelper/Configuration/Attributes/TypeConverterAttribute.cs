@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the type converter.
 		/// </summary>
-		public ITypeConverter TypeConverter { get; private set; }
+		public ITypeConverter TypeConverter { get; }
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use

@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the formats.
 		/// </summary>
-		public string[] Formats { get; private set; }
+		public string[] Formats { get; }
 
 		/// <summary>
 		/// The string format to be used when type converting.

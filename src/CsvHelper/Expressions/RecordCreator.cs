@@ -15,12 +15,12 @@ namespace CsvHelper.Expressions
 		/// <summary>
 		/// The reader.
 		/// </summary>
-		protected CsvReader Reader { get; private set; }
+		protected CsvReader Reader { get; }
 
 		/// <summary>
 		/// The expression manager.
 		/// </summary>
-		protected ExpressionManager ExpressionManager { get; private set; }
+		protected ExpressionManager ExpressionManager { get; }
 
 		/// <summary>
 		/// Initializes a new instance using the given reader.

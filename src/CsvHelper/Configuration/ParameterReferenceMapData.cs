@@ -36,12 +36,12 @@ namespace CsvHelper.Configuration
 		/// Gets the <see cref="ParameterInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual ParameterInfo Parameter { get; private set; }
+		public virtual ParameterInfo Parameter { get; }
 
 		/// <summary>
 		/// Gets the mapping this is a reference for.
 		/// </summary>
-		public ClassMap Mapping { get; private set; }
+		public ClassMap Mapping { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ParameterReferenceMapData"/> class.

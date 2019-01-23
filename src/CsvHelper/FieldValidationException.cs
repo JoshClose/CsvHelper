@@ -14,7 +14,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the field that failed validation.
 		/// </summary>
-		public string Field { get; private set; }
+		public string Field { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ValidationException"/> class.
