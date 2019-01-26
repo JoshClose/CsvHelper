@@ -15,6 +15,7 @@ namespace CsvHelper
 	public class CsvDataReader : IDataReader
 	{
 		private readonly CsvReader csv;
+        private bool skipNextRead;
 
 		/// <summary>
 		/// Gets the column with the specified index.
@@ -100,6 +101,10 @@ namespace CsvHelper
 			{
 				csv.ReadHeader();
 			}
+            else
+            {
+                skipNextRead = true;
+            }
 		}
 
 		/// <summary>
@@ -492,15 +497,21 @@ namespace CsvHelper
 			return false;
 		}
 
-		/// <summary>
-		/// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
-		/// </summary>
-		/// <returns>
-		/// true if there are more rows; otherwise, false.
-		/// </returns>
-		public bool Read()
-		{
-			return csv.Read();
-		}
-	}
+        /// <summary>
+        /// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
+        /// </summary>
+        /// <returns>
+        /// true if there are more rows; otherwise, false.
+        /// </returns>
+        public bool Read()
+        {
+            if (skipNextRead)
+            {
+                skipNextRead = false;
+                return true;
+            }
+
+            return csv.Read();
+        }
+    }
 }

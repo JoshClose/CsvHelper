@@ -132,5 +132,28 @@ namespace CsvHelper.Tests.DataTableTests
 				Assert.AreEqual(0, dataTable.Rows.Count);
 			}
 		}
+
+		[TestMethod]
+		public void ReadWithNoHeader()
+        {
+            var s = new StringBuilder();
+            s.AppendLine("1,one");
+            s.AppendLine("2,two");
+            using (var reader = new StringReader(s.ToString()))
+            using (var csv = new CsvReader(reader))
+            {
+                csv.Configuration.HasHeaderRecord = false;
+                csv.Configuration.Delimiter = ",";
+                var dataReader = new CsvDataReader(csv);
+
+                dataReader.Read();
+                Assert.AreEqual(1, dataReader.GetInt32(0));
+                Assert.AreEqual("one", dataReader.GetString(1));
+
+                dataReader.Read();
+                Assert.AreEqual(2, dataReader.GetInt32(0));
+                Assert.AreEqual("two", dataReader.GetString(1));
+            }
+        }
 	}
 }
