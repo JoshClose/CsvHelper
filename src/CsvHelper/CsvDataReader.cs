@@ -455,19 +455,22 @@ namespace CsvHelper
 		/// </returns>
 		public object GetValue(int i)
 		{
-			return csv.GetField(i);
-		}
+            return IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
+        }
 
-		/// <summary>
-		/// Populates an array of objects with the column values of the current record.
-		/// </summary>
-		/// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
-		/// <returns>
-		/// The number of instances of <see cref="T:System.Object"></see> in the array.
-		/// </returns>
-		public int GetValues(object[] values)
+        /// <summary>
+        /// Populates an array of objects with the column values of the current record.
+        /// </summary>
+        /// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
+        /// <returns>
+        /// The number of instances of <see cref="T:System.Object"></see> in the array.
+        /// </returns>
+        public int GetValues(object[] values)
 		{
-			Array.Copy(csv.Context.Record, values, csv.Context.Record.Length);
+			for (var i = 0; i < csv.Context.Record.Length; i++)
+            {
+                values[i] = IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
+            }
 
 			return csv.Context.Record.Length;
 		}
@@ -483,7 +486,8 @@ namespace CsvHelper
 		{
 			var field = csv.GetField(i);
 			var nullValues = csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues;
-			return string.IsNullOrEmpty(field) || nullValues.Contains(field);
+
+			return nullValues.Contains(field);
 		}
 
 		/// <summary>
