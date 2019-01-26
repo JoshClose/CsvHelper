@@ -56,7 +56,7 @@ export default class Home extends Component {
 
 								</div>
 								<div className="column">
-									<img src="/images/logo.svg" />
+									<img src="https://joshclose.github.io/CsvHelper/images/logo.svg" />
 								</div>
 							</div>
 

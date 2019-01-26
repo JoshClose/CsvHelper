@@ -10,3 +10,7 @@ indent_style = tab:error
 csharp_style_var_for_built_in_types = true:error
 csharp_style_var_when_type_is_apparent = true:error
 csharp_style_var_elsewhere = true:error
+
+end_of_line = crlf:error
+trim_trailing_whitespace = true:error
+insert_final_newline = true:error
