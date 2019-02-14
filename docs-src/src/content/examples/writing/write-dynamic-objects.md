@@ -12,7 +12,7 @@ void Main()
 	record.Name = "one";
 	records.Add(record);
 	
-	using (var writer = new StringWriter())
+	using (var writer = new StreamWriter("path\\to\\file.csv"))
 	using (var csv = new CsvWriter(writer))
 	{
 		csv.WriteRecords(records);
