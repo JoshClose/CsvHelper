@@ -16,8 +16,6 @@ void Main()
 	using (var csv = new CsvWriter(writer))
 	{
 		csv.WriteRecords(records);
-		
-		writer.ToString().Dump();
 	}
 }
 ```
