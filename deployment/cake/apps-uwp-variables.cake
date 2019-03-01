@@ -1,9 +1,9 @@
 #l "./buildserver.cake"
 
-var WindowsStoreAppId = GetBuildServerVariable("WindowsStoreAppId");
-var WindowsStoreClientId = GetBuildServerVariable("WindowsStoreClientId");
-var WindowsStoreClientSecret = GetBuildServerVariable("WindowsStoreClientSecret");
-var WindowsStoreTenantId = GetBuildServerVariable("WindowsStoreTenantId");
+var WindowsStoreAppId = GetBuildServerVariable("WindowsStoreAppId", showValue: true);
+var WindowsStoreClientId = GetBuildServerVariable("WindowsStoreClientId", showValue: false);
+var WindowsStoreClientSecret = GetBuildServerVariable("WindowsStoreClientSecret", showValue: false);
+var WindowsStoreTenantId = GetBuildServerVariable("WindowsStoreTenantId", showValue: false);
 
 //-------------------------------------------------------------
 

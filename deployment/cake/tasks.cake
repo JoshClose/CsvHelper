@@ -56,11 +56,7 @@ private void BuildTestProjects()
             PlatformTarget = PlatformTarget.MSIL
         };
 
-        var toolPath = GetVisualStudioPath(msBuildSettings.ToolVersion);
-        if (!string.IsNullOrWhiteSpace(toolPath))
-        {
-            msBuildSettings.ToolPath = toolPath;
-        }
+        ConfigureMsBuild(msBuildSettings, testProject);
 
         // Always disable SourceLink
         msBuildSettings.WithProperty("EnableSourceLink", "false");

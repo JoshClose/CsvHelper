@@ -132,19 +132,8 @@ private void BuildComponents()
             PlatformTarget = PlatformTarget.MSIL
         };
 
-        var toolPath = GetVisualStudioPath(msBuildSettings.ToolVersion);
-        if (!string.IsNullOrWhiteSpace(toolPath))
-        {
-            msBuildSettings.ToolPath = toolPath;
-        }
-
-        // msBuildSettings.AddFileLogger(new MSBuildFileLogger
-        // {
-        //     //Verbosity = msBuildSettings.Verbosity,
-        //     Verbosity = Verbosity.Diagnostic,
-        //     LogFile = System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_build.log", component))
-        // });
-
+        ConfigureMsBuild(msBuildSettings, component);
+        
         // Note: we need to set OverridableOutputPath because we need to be able to respect
         // AppendTargetFrameworkToOutputPath which isn't possible for global properties (which
         // are properties passed in using the command line)
@@ -239,16 +228,6 @@ private void PackageComponents()
 
         var projectDirectory = string.Format("./src/{0}", component);
         var projectFileName = string.Format("{0}/{1}.csproj", projectDirectory, component);
-
-        var projectFileContents = FileReadText(projectFileName);
-        if (!string.IsNullOrWhiteSpace(projectFileContents))
-        {
-            if (projectFileContents.ToLower().Contains("uap10.0"))
-            {
-                Warning("UAP 10.0 is detected as one of the target frameworks, make sure to install the latest version of .NET Core in order to pack UAP 10.0 assemblies. See https://github.com/dotnet/cli/issues/9303 for more info");
-            }
-        }
-
         var outputDirectory = string.Format("{0}/{1}/", OutputRootDirectory, component);
         Information("Output directory: '{0}'", outputDirectory);
 
@@ -275,13 +254,18 @@ private void PackageComponents()
         Information(string.Empty);
 
         // Step 2: Go packaging!
+        Information("Using 'msbuild' to package '{0}'", component);
 
-        Information("Using 'dotnet pack' to package '{0}'", component);
-
-        var msBuildSettings = new DotNetCoreMSBuildSettings
-        {
-            //Verbosity = DotNetCoreVerbosity.Diagnostic // DotNetCoreVerbosity.Minimal,
+        var msBuildSettings = new MSBuildSettings {
+            Verbosity = Verbosity.Quiet,
+            //Verbosity = Verbosity.Diagnostic,
+            ToolVersion = MSBuildToolVersion.Default,
+            Configuration = ConfigurationName,
+            MSBuildPlatform = MSBuildPlatform.x86, // Always require x86, see platform for actual target platform
+            PlatformTarget = PlatformTarget.MSIL
         };
+
+        ConfigureMsBuild(msBuildSettings, component, "pack");
 
         // Note: we need to set OverridableOutputPath because we need to be able to respect
         // AppendTargetFrameworkToOutputPath which isn't possible for global properties (which
@@ -304,32 +288,20 @@ private void PackageComponents()
             msBuildSettings.WithProperty("RepositoryUrl", repositoryUrl);
             msBuildSettings.WithProperty("RevisionId", RepositoryCommitId);
         }
-
+        
         // Fix for .NET Core 3.0, see https://github.com/dotnet/core-sdk/issues/192, it
         // uses obj/release instead of [outputdirectory]
         msBuildSettings.WithProperty("DotNetPackIntermediateOutputPath", outputDirectory);
-
-        // msBuildSettings.AddFileLogger(new MSBuildFileLoggerSettings
-        // {
-        //     Verbosity = DotNetCoreVerbosity.Diagnostic,
-        //     LogFile = System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_pack.log", component))
-        // });
-
-        var packSettings = new DotNetCorePackSettings
-        {
-            MSBuildSettings = msBuildSettings,
-            OutputDirectory = OutputRootDirectory,
-            Configuration = ConfigurationName,
-            NoBuild = true,
-            Verbosity = msBuildSettings.Verbosity
-        };
-
-        DotNetCorePack(projectFileName, packSettings);
         
+        msBuildSettings.WithProperty("NoBuild", "true");
+        msBuildSettings.Targets.Add("Pack");
+
+        MSBuild(projectFileName, msBuildSettings);
+
         LogSeparator();
     }
 
-    var codeSign = (!IsCiBuild && !string.IsNullOrWhiteSpace(CodeSignCertificateSubjectName));
+    var codeSign = (!IsCiBuild && !IsLocalBuild && !string.IsNullOrWhiteSpace(CodeSignCertificateSubjectName));
     if (codeSign)
     {
         // For details, see https://docs.microsoft.com/en-us/nuget/create-packages/sign-a-package

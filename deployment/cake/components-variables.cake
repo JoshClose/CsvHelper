@@ -1,7 +1,7 @@
 #l "buildserver.cake"
 
-var NuGetRepositoryUrl = GetBuildServerVariable("NuGetRepositoryUrl");
-var NuGetRepositoryApiKey = GetBuildServerVariable("NuGetRepositoryApiKey");
+var NuGetRepositoryUrl = GetBuildServerVariable("NuGetRepositoryUrl", showValue: true);
+var NuGetRepositoryApiKey = GetBuildServerVariable("NuGetRepositoryApiKey", showValue: false);
 
 //-------------------------------------------------------------
 

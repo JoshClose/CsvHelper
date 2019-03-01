@@ -46,11 +46,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- https://github.com/dotnet/sdk/issues/810 - the temporary project has the wrong file extension -->
-    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="..\*.cs">
       <SonarQubeExclude>true</SonarQubeExclude>

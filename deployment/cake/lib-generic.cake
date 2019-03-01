@@ -55,33 +55,121 @@ private void RestoreNuGetPackages(Cake.Core.IO.FilePath solutionOrProjectFileNam
     }
 }
 
-private string GetVisualStudioPath(MSBuildToolVersion toolVersion)
+//-------------------------------------------------------------
+
+private void ConfigureMsBuild(MSBuildSettings msBuildSettings, string projectName, 
+    string action = "build", bool? allowVsPrerelease = null)
 {
-    if (UseVisualStudioPrerelease)
+    var toolPath = GetVisualStudioPath(allowVsPrerelease);
+    if (!string.IsNullOrWhiteSpace(toolPath))
     {
-        Debug("Checking for installation of Visual Studio preview");
-
-        var path = @"C:\Program Files (x86)\Microsoft Visual Studio\Preview\Professional\MSBuild\15.0\Bin\msbuild.exe";
-
-        if (System.IO.File.Exists(path))
-        {
-            Information("Using Visual Studio preview");
-
-            return path;
-        }
+        msBuildSettings.ToolPath = toolPath;
     }
 
-    // For now don't use overrides
-    return null;
-    // switch (toolVersion)
-    // {
-    //     case MSBuildToolVersion.Default:
-    //         // Latest, so don't override
-    //         return null;
+    // Use as much CPU as possible
+    msBuildSettings.MaxCpuCount = 0;
+    
+    // Enable for file logging
+    msBuildSettings.AddFileLogger(new MSBuildFileLogger
+    {
+        Verbosity = msBuildSettings.Verbosity,
+        //Verbosity = Verbosity.Diagnostic,
+        LogFile = System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_{1}.log", projectName, action))
+    });
 
-    //     default:
-    //         throw new ArgumentOutOfRangeException(nameof(toolVersion), toolVersion);
-    // }
+    // Enable for bin logging
+    msBuildSettings.BinaryLogger = new MSBuildBinaryLogSettings
+    {
+        Enabled = true,
+        Imports = MSBuildBinaryLogImports.Embed,
+        FileName = System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_{1}.binlog", projectName, action))
+    };
+}
+
+//-------------------------------------------------------------
+
+private void ConfigureMsBuildForDotNetCore(DotNetCoreMSBuildSettings msBuildSettings, string projectName, 
+    string action = "build", bool? allowVsPrerelease = null)
+{
+    var toolPath = GetVisualStudioPath(allowVsPrerelease);
+    if (!string.IsNullOrWhiteSpace(toolPath))
+    {
+        msBuildSettings.ToolPath = toolPath;
+    }
+
+    // Use as much CPU as possible
+    msBuildSettings.MaxCpuCount = 0;
+    
+    // Enable for file logging
+    msBuildSettings.AddFileLogger(new MSBuildFileLoggerSettings
+    {
+        Verbosity = msBuildSettings.Verbosity,
+        //Verbosity = Verbosity.Diagnostic,
+        LogFile = System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_{1}.log", projectName, action))
+    });
+
+    // Enable for bin logging
+    //msBuildSettings.BinaryLogger = new MSBuildBinaryLogSettings
+    //{
+    //    Enabled = true,
+    //    Imports = MSBuildBinaryLogImports.Embed,
+    //    FileName = System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_{1}.binlog", projectName, action))
+    //};
+    
+    // Note: this only works for direct .net core msbuild usage, not when this is
+    // being wrapped in a tool (such as 'dotnet pack')
+    var binLogArgs = string.Format("-bl:\"{0}\";ProjectImports=Embed", 
+        System.IO.Path.Combine(OutputRootDirectory, string.Format(@"MsBuild_{0}_{1}.binlog", projectName, action)));
+
+    msBuildSettings.ArgumentCustomization = args => args.Append(binLogArgs);
+}
+
+//-------------------------------------------------------------
+
+private string GetVisualStudioPath(bool? allowVsPrerelease = null)
+{
+    if ((allowVsPrerelease ?? true) && UseVisualStudioPrerelease)
+    {
+        Debug("Checking for installation of Visual Studio 2019 preview");
+
+        var pathFor2019Preview = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\MSBuild\Current\Bin\msbuild.exe";
+        if (System.IO.File.Exists(pathFor2019Preview))
+        {
+           Information("Using Visual Studio 2019 preview, note that SonarQube will be disabled since it's not (yet) compatible with VS2019");
+           SonarDisabled = true;
+           return pathFor2019Preview;
+        }
+
+        Debug("Checking for installation of Visual Studio 2017 preview");
+
+        var pathFor2017Preview = @"C:\Program Files (x86)\Microsoft Visual Studio\Preview\Professional\MSBuild\15.0\Bin\msbuild.exe";
+        if (System.IO.File.Exists(pathFor2017Preview))
+        {
+            Information("Using Visual Studio 2017 preview");
+            return pathFor2017Preview;
+        }
+    }
+    
+    Debug("Checking for installation of Visual Studio 2019");
+
+    var pathFor2019 = @"C:\Program Files (x86)\Microsoft Visual Studio\2019\MSBuild\Current\Bin\msbuild.exe";
+    if (System.IO.File.Exists(pathFor2019))
+    {
+       Information("Using Visual Studio 2019");
+       return pathFor2019;
+    }
+
+    Debug("Checking for installation of Visual Studio 2017");
+
+    var pathFor2017 = @"C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe";
+    if (System.IO.File.Exists(pathFor2017))
+    {
+        Information("Using Visual Studio 2017");
+        return pathFor2017;
+    }
+
+    // Failed
+    return null;
 }
 
 //-------------------------------------------------------------

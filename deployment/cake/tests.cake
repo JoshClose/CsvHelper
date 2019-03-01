@@ -2,8 +2,8 @@
 #l "tests-nunit.cake"
 #l "buildserver.cake"
 
-var TestFramework = GetBuildServerVariable("TestFramework", "nunit");
-var TestTargetFramework = GetBuildServerVariable("TestTargetFramework", "net46");
+var TestFramework = GetBuildServerVariable("TestFramework", "nunit", showValue: true);
+var TestTargetFramework = GetBuildServerVariable("TestTargetFramework", "net46", showValue: true);
 
 //-------------------------------------------------------------
 

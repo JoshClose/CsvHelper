@@ -18,7 +18,7 @@ Dictionary<string, string> _buildServerVariableCache = null;
 
 //-------------------------------------------------------------
 
-public string GetBuildServerVariable(string variableName, string defaultValue = null)
+public string GetBuildServerVariable(string variableName, string defaultValue = null, bool showValue = false)
 {
     if (_buildServerVariableCache == null)
     {
@@ -29,8 +29,15 @@ public string GetBuildServerVariable(string variableName, string defaultValue = 
 
     if (!_buildServerVariableCache.TryGetValue(cacheKey, out string value))
     {
-        value = GetBuildServerVariableForCache(variableName, defaultValue);
-           
+        value = GetBuildServerVariableForCache(variableName, defaultValue, showValue);
+        //if (value != defaultValue &&
+        //    !string.IsNullOrEmpty(value) && 
+        //    !string.IsNullOrEmpty(defaultValue))
+        //{
+            var valueForLog = showValue ? value : "********";
+            Information("{0}: '{1}'", variableName, valueForLog);
+        //}
+        
         _buildServerVariableCache[cacheKey] = value;
     }
     //else
@@ -43,7 +50,7 @@ public string GetBuildServerVariable(string variableName, string defaultValue = 
 
 //-------------------------------------------------------------
 
-private string GetBuildServerVariableForCache(string variableName, string defaultValue = null)
+private string GetBuildServerVariableForCache(string variableName, string defaultValue = null, bool showValue = false)
 {
     var argumentValue = Argument(variableName, "non-existing");
     if (argumentValue != "non-existing")
