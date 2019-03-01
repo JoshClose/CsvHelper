@@ -3,14 +3,12 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 // This file is generated from a T4 template.
-// Modifiying it directly won't do you any good.
+// Modifying it directly won't do you any good.
 
 namespace CsvHelper
 {
@@ -32,7 +30,7 @@ namespace CsvHelper
 		/// True if the buffer is empty, otherwise false.
 		/// </summary>
 		public virtual bool IsBufferEmpty => context.BufferPosition >= context.CharsRead;
-			
+
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
@@ -80,7 +78,7 @@ namespace CsvHelper
 
 			return true;
 		}
-			
+
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
@@ -128,7 +126,7 @@ namespace CsvHelper
 
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
 		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.
@@ -246,7 +244,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Sets the raw recodr start to the current buffer position;
+		/// Sets the raw record start to the current buffer position;
 		/// </summary>
 		/// <param name="offset">An offset for the raw record start.
 		/// The offset should be less than 1.</param>

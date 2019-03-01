@@ -5,6 +5,7 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6445B2A3-9E05-4ABF-AE2E-C875773B277A}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		..\.gitignore = ..\.gitignore
 		CsvHelper.sln.DotSettings = CsvHelper.sln.DotSettings
 		Directory.build.project.props = Directory.build.project.props
@@ -28,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Tests", "CsvHelpe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Performance", "CsvHelper.Performance\CsvHelper.Performance.csproj", "{9DC1A5EB-4E87-4449-B5B2-241ACD5121E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.DocsGenerator", "CsvHelper.DocsGenerator\CsvHelper.DocsGenerator.csproj", "{6D03F78E-DBB8-460D-AB0C-6ED519D3FC7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.DocsGenerator", "CsvHelper.DocsGenerator\CsvHelper.DocsGenerator.csproj", "{6D03F78E-DBB8-460D-AB0C-6ED519D3FC7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

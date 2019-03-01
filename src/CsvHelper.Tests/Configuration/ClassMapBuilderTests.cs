@@ -3,11 +3,8 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -97,7 +94,7 @@ namespace CsvHelper.Tests.Configuration
 
 		//this one is kind of hacky, but i'm not sure how else to test it more robustly since the function gets converted to an expression inside the CsvClassMap
 		[TestMethod]
-		public void ClassMapBuilderAddsConvertUsingFunctionCorectly()
+		public void ClassMapBuilderAddsConvertUsingFunctionCorrectly()
 		{
 			var fakeRow = new BuilderRowFake();
 			Assert.AreEqual(ConvertExpression(fakeRow).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<Func<IReaderRow, FakeInnerClass>>).Compile()(fakeRow).E); //6

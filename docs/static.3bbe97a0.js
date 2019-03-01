@@ -359,7 +359,7 @@ var Home = function (_Component) {
 								_react2.default.createElement(
 									"div",
 									{ className: "column" },
-									_react2.default.createElement("img", { src: "/images/logo.svg" })
+									_react2.default.createElement("img", { src: "https://joshclose.github.io/CsvHelper/images/logo.svg" })
 								)
 							),
 							_react2.default.createElement(
@@ -2793,4 +2793,4 @@ function toComment(sourceMap) {
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=static.ef068bbe.js.map
+//# sourceMappingURL=static.3bbe97a0.js.map

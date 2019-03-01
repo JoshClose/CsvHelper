@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
-    public class MethodInfo : Info
-    {
+	public class MethodInfo : Info
+	{
 		public System.Reflection.MethodInfo Method { get; private set; }
 
 		public List<System.Reflection.ParameterInfo> Parameters { get; private set; }

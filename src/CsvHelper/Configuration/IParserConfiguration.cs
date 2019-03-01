@@ -69,7 +69,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if quotes should be
-		/// ingored when parsing and treated like any other character.
+		/// ignored when parsing and treated like any other character.
 		/// </summary>
 		bool IgnoreQuotes { get; set; }
 

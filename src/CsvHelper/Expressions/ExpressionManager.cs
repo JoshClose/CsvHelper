@@ -9,8 +9,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Expressions
 {
@@ -51,7 +49,7 @@ namespace CsvHelper.Expressions
 			{
 				if (parameterMap.ConstructorTypeMap != null)
 				{
-					// Constructor paramter type.
+					// Constructor parameter type.
 					var arguments = new List<Expression>();
 					CreateConstructorArgumentExpressionsForMapping(parameterMap.ConstructorTypeMap, arguments);
 					var constructorExpression = Expression.New(reader.Configuration.GetConstructor(parameterMap.ConstructorTypeMap.ClassType), arguments);

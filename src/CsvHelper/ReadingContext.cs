@@ -40,7 +40,7 @@ namespace CsvHelper
 		public Dictionary<string, List<int>> NamedIndexes = new Dictionary<string, List<int>>();
 
 		/// <summary>
-		/// Getse the named indexes cache.
+		/// Gets the named indexes cache.
 		/// </summary>
 		public Dictionary<string, (string, int)> NamedIndexCache = new Dictionary<string, (string, int)>();
 
@@ -176,7 +176,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Gets all the characters of the record including
-		/// quotes, delimeters, and line endings.
+		/// quotes, delimiters, and line endings.
 		/// </summary>
 		public string RawRecord => RawRecordBuilder.ToString();
 

@@ -2,7 +2,6 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +12,8 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts an <see cref="IEnumerable"/> to and from a <see cref="string"/>.
 	/// </summary>
-    public class IEnumerableConverter : DefaultTypeConverter
-    {
+	public class IEnumerableConverter : DefaultTypeConverter
+	{
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
@@ -55,8 +54,7 @@ namespace CsvHelper.TypeConversion
 				var nameIndex = 0;
 				while( true )
 				{
-					string field;
-					if( !row.TryGetField( memberMapData.Names.FirstOrDefault(), nameIndex, out field ) )
+					if( !row.TryGetField( memberMapData.Names.FirstOrDefault(), nameIndex, out string field ) )
 					{
 						break;
 					}
@@ -74,8 +72,7 @@ namespace CsvHelper.TypeConversion
 
 				for( var i = memberMapData.Index; i <= indexEnd; i++ )
 				{
-					string field;
-					if( row.TryGetField( i, out field ) )
+					if( row.TryGetField( i, out string field ) )
 					{
 						list.Add( field );
 					}

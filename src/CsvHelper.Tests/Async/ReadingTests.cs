@@ -5,7 +5,6 @@
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Async

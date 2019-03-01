@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CsvHelper.DocsGenerator
+﻿namespace CsvHelper.DocsGenerator
 {
-    public enum EncodingType
-    {
+	public enum EncodingType
+	{
 		// Generic&ltParameter&gt;
 		Html = 0,
 
@@ -16,5 +10,5 @@ namespace CsvHelper.DocsGenerator
 
 		// Generic{Parameter}
 		Xml = 2
-    }
+	}
 }

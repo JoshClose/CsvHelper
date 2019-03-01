@@ -1,15 +1,10 @@
 ﻿using CsvHelper.DocsGenerator.Infos;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.DocsGenerator.Generators
 {
-    public class TypeGenerator : DocumentGenerator
-    {
+	public class TypeGenerator : DocumentGenerator
+	{
 		public TypeGenerator(TypeInfo typeInfo) : base(typeInfo) { }
 
 		protected override void GenerateContent()

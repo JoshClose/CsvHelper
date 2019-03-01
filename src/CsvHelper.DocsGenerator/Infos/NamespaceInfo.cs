@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace CsvHelper.DocsGenerator.Infos
 {
 	[DebuggerDisplay("Name = {Name}")]
 	public class NamespaceInfo : Info
-    {
+	{
 		public AssemblyInfo Assembly { get; protected set; }
 
 		public string Namespace { get; protected set; }
@@ -23,7 +20,7 @@ namespace CsvHelper.DocsGenerator.Infos
 
 		public List<TypeInfo> Enums { get; private set; } = new List<TypeInfo>();
 
-        public NamespaceInfo(AssemblyInfo assemblyInfo, string @namespace, List<Type> types, XElement xmlDocs)
+		public NamespaceInfo(AssemblyInfo assemblyInfo, string @namespace, List<Type> types, XElement xmlDocs)
 		{
 			Assembly = assemblyInfo;
 
@@ -48,5 +45,5 @@ namespace CsvHelper.DocsGenerator.Infos
 				}
 			}
 		}
-    }
+	}
 }

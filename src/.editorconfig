@@ -1,0 +1,10 @@
+# EditorConfig: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*.cs]
+indent_style = tab:error
+end_of_line = crlf:error
+trim_trailing_whitespace = true:error
+insert_final_newline = true:error

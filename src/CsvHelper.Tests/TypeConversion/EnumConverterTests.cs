@@ -4,8 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Globalization;
-using System.IO;
-using System.Text;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.TypeConversion;

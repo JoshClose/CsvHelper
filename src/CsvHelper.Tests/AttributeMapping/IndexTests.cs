@@ -4,17 +4,13 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.AttributeMapping
 {
-    public class IndexTests
-    {
+	public class IndexTests
+	{
 		[TestMethod]
 		public void IndexTest()
 		{

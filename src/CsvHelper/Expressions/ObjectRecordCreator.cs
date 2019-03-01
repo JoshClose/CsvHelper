@@ -2,15 +2,9 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Expressions
 {
@@ -20,7 +14,7 @@ namespace CsvHelper.Expressions
 	public class ObjectRecordCreator : RecordCreator
 	{
 		/// <summary>
-		/// Initializes a new instnace using the given reader.
+		/// Initializes a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader"></param>
 		public ObjectRecordCreator(CsvReader reader) : base(reader) { }
@@ -44,7 +38,7 @@ namespace CsvHelper.Expressions
 
 			if (map.ParameterMaps.Count > 0)
 			{
-				// This is a constructor paramter type.
+				// This is a constructor parameter type.
 				var arguments = new List<Expression>();
 				ExpressionManager.CreateConstructorArgumentExpressionsForMapping(map, arguments);
 

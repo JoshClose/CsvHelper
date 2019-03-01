@@ -5,17 +5,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Linq.Expressions;
 using System.Dynamic;
-using Microsoft.CSharp.RuntimeBinder;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 
@@ -86,8 +82,8 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes a field that has already been converted to a
 		/// <see cref="string"/> from an <see cref="ITypeConverter"/>.
-		/// If the field is null, it won't get written. A type converter 
-		/// will always return a string, even if field is null. If the 
+		/// If the field is null, it won't get written. A type converter
+		/// will always return a string, even if field is null. If the
 		/// converter returns a null, it means that the converter has already
 		/// written data, and the returned value should not be written.
 		/// </summary>
@@ -136,7 +132,7 @@ namespace CsvHelper
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
 		public virtual void WriteField(string field, bool shouldQuote)
 		{
-			// All quotes must be doubled.       
+			// All quotes must be doubled.
 			if (shouldQuote && !string.IsNullOrEmpty(field))
 			{
 				field = field.Replace(context.WriterConfiguration.QuoteString, context.WriterConfiguration.DoubleQuoteString);

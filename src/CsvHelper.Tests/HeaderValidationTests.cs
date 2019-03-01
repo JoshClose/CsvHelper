@@ -4,12 +4,9 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests
 {
@@ -122,7 +119,7 @@ namespace CsvHelper.Tests
 			data.AppendLine("1");
 			using (var csv = new CsvReader(new StringReader(data.ToString())))
 			{
-				csv.Configuration.RegisterClassMap<HasIngoredPropertyMap>();
+				csv.Configuration.RegisterClassMap<HasIgnoredPropertyMap>();
 				var records = csv.GetRecords<Test>().ToList();
 				var record = records[0];
 				Assert.AreEqual(1, record.Id);
@@ -188,9 +185,9 @@ namespace CsvHelper.Tests
 			public int Double => Number * 2;
 		}
 
-		private sealed class HasIngoredPropertyMap : ClassMap<Test>
+		private sealed class HasIgnoredPropertyMap : ClassMap<Test>
 		{
-			public HasIngoredPropertyMap()
+			public HasIgnoredPropertyMap()
 			{
 				AutoMap();
 				Map(m => m.Name).Ignore();

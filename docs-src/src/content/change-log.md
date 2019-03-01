@@ -1,5 +1,17 @@
 # Change Log
 
+### 12.1.1
+
+#### Bug Fixes
+
+- Fixed issue where `CsvReader.ReadAsync` wasn't behaving the same as `CsvReader.Read`.
+
+### 12.1.0
+
+#### Features
+
+- Added constructor to `Configuration` to pass in the `CultureInfo`. When passing a culture in, the `Delimiter` will be set to `CultureInfo.TextInfo.ListSeparator`.
+
 ### 12.0.1
 
 #### Bug Fixes
