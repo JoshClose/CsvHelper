@@ -105,23 +105,23 @@ namespace CsvHelper
 			}
 		}
 
-        /// <summary>
-        /// Writes a new line to the CSV file.
-        /// </summary>
-        public virtual void WriteLine()
-        {
-            // Don't forget about the async method below!
+		/// <summary>
+		/// Writes a new line to the CSV file.
+		/// </summary>
+		public virtual void WriteLine()
+		{
+			// Don't forget about the async method below!
 
-            context.Writer.Write("\r\n");
-        }
+			context.Writer.Write("\r\n");
+		}
 
-        /// <summary>
-        /// Writes a new line to the CSV file.
-        /// </summary>
-        public virtual async Task WriteLineAsync()
-        {
-            await context.Writer.WriteAsync("\r\n").ConfigureAwait(false);
-        }
+		/// <summary>
+		/// Writes a new line to the CSV file.
+		/// </summary>
+		public virtual async Task WriteLineAsync()
+		{
+			await context.Writer.WriteAsync("\r\n").ConfigureAwait(false);
+		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
