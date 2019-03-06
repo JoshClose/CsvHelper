@@ -66,6 +66,58 @@ namespace CsvHelper.Tests.Mappings
 		}
 
 		[TestMethod]
+		public void ConstantNullableTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
+			{
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId,NullableNum");
+				writer.WriteLine("1,2,3,1");
+				writer.Flush();
+				stream.Position = 0;
+
+				var map = new DefaultClassMap<A>();
+				var type = typeof(A);
+				var member = type.GetProperty("NullableNum");
+				map.Map(type, member).Constant(4);
+
+				csv.Configuration.RegisterClassMap(map);
+				var records = csv.GetRecords<A>().ToList();
+
+				Assert.AreEqual(4, records[0].NullableNum);
+			}
+		}
+
+		[TestMethod]
+		public void DefaultNullableTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader))
+			{
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("AId,BId,CId,NullableNum");
+				writer.WriteLine("1,2,3,");
+				writer.Flush();
+				stream.Position = 0;
+
+				var map = new DefaultClassMap<A>();
+				var type = typeof(A);
+				var member = type.GetProperty("NullableNum");
+				map.Map(type, member).Default(4);
+
+				csv.Configuration.RegisterClassMap(map);
+				var records = csv.GetRecords<A>().ToList();
+
+				Assert.AreEqual(4, records[0].NullableNum);
+			}
+		}
+
+		[TestMethod]
 		public void ConstantValueTypeNullTest()
 		{
 			Assert.ThrowsException<ArgumentException>(() => new ConstantValueTypeNullMap());
@@ -92,6 +144,8 @@ namespace CsvHelper.Tests.Mappings
 		private class A
 		{
 			public int AId { get; set; }
+
+			public int? NullableNum { get; set; }
 
 			public B B { get; set; }
 		}

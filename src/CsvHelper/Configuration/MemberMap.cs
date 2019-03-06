@@ -135,9 +135,9 @@ namespace CsvHelper.Configuration
 				throw new ArgumentException( $"Member of type '{Data.Member.MemberType().FullName}' can't have a default value of null." );
 			}
 
-			if( defaultValue != null && defaultValue.GetType() != Data.Member.MemberType() )
+			if( defaultValue != null && !Data.Member.MemberType().IsAssignableFrom(defaultValue.GetType()))
 			{
-				throw new ArgumentException( $"Default of type '{defaultValue.GetType().FullName}' does not match member of type '{Data.Member.MemberType().FullName}'." );
+				throw new ArgumentException( $"Default of type '{defaultValue.GetType().FullName}' is not assignable to '{Data.Member.MemberType().FullName}'." );
 			}
 
 			Data.Default = defaultValue;
@@ -174,9 +174,9 @@ namespace CsvHelper.Configuration
 				throw new ArgumentException( $"Member of type '{Data.Member.MemberType().FullName}' can't have a constant value of null." );
 			}
 
-			if( constantValue != null && constantValue.GetType() != Data.Member.MemberType() )
+			if( constantValue != null && !Data.Member.MemberType().IsAssignableFrom(constantValue.GetType()))
 			{
-				throw new ArgumentException( $"Constant of type '{constantValue.GetType().FullName}' does not match member of type '{Data.Member.MemberType().FullName}'." );
+				throw new ArgumentException( $"Constant of type '{constantValue.GetType().FullName}' is not assignable to '{Data.Member.MemberType().FullName}'." );
 			}
 
 			Data.Constant = constantValue;
