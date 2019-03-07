@@ -71,7 +71,25 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		private class Test
+	    [TestMethod]
+        public void ConstantReturnsMappingValueWhenMemberIsMissingInHeaderTest()
+	    {
+	        var rows = new Queue<string[]>();
+	        rows.Enqueue(new[] { "Id" });
+	        rows.Enqueue(new[] { "1" });
+	        rows.Enqueue(null);
+	        var parser = new ParserMock(rows);
+
+	        var csv = new CsvReader(parser);
+	        csv.Configuration.RegisterClassMap<TestStringMap>();
+	        var records = csv.GetRecords<Test>().ToList();
+
+	        Assert.AreEqual(1, records[0].Id);
+	        Assert.AreEqual("constant", records[0].Name);
+        }
+
+
+        private class Test
 		{
 			public int Id { get; set; }
 			public string Name { get; set; }

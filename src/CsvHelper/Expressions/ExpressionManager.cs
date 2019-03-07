@@ -168,7 +168,12 @@ namespace CsvHelper.Expressions
 				return null;
 			}
 
-			int index;
+		    if (memberMap.Data.IsConstantSet)
+		    {
+		        return Expression.Convert(Expression.Constant(memberMap.Data.Constant), memberMap.Data.Member.MemberType());
+		    }
+
+            int index;
 			if (memberMap.Data.IsNameSet || reader.Context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet)
 			{
 				// Use the name.
@@ -211,11 +216,7 @@ namespace CsvHelper.Expressions
 			Expression typeConverterFieldExpression = Expression.Call(typeConverterExpression, nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
 			typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
 
-			if (memberMap.Data.IsConstantSet)
-			{
-				fieldExpression = Expression.Convert(Expression.Constant(memberMap.Data.Constant), memberMap.Data.Member.MemberType());
-			}
-			else if (memberMap.Data.IsDefaultSet)
+			if (memberMap.Data.IsDefaultSet)
 			{
 				// Create default value expression.
 				Expression defaultValueExpression;

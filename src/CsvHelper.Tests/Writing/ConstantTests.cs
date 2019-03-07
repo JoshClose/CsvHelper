@@ -88,7 +88,36 @@ namespace CsvHelper.Tests.Writing
 			}
 		}
 
-		private class Test
+	    [TestMethod]
+	    public void ConstantReturnsMappingValueWhenValueIsMissingTest()
+	    {
+	        using (var stream = new MemoryStream())
+	        using (var reader = new StreamReader(stream))
+	        using (var writer = new StreamWriter(stream))
+	        using (var csv = new CsvWriter(writer))
+	        {
+	            csv.Configuration.Delimiter = ",";
+	            var records = new List<Test>
+	            {
+	                new Test { Id = 1 },
+	            };
+
+	            csv.Configuration.RegisterClassMap<TestStringMap>();
+	            csv.WriteRecords(records);
+	            writer.Flush();
+	            stream.Position = 0;
+
+	            var expected = new StringBuilder();
+	            expected.AppendLine("Id,Name");
+	            expected.AppendLine("1,constant");
+
+	            var result = reader.ReadToEnd();
+
+	            Assert.AreEqual(expected.ToString(), result);
+	        }
+	    }
+
+        private class Test
 		{
 			public int Id { get; set; }
 			public string Name { get; set; }
