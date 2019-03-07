@@ -132,7 +132,18 @@ namespace CsvHelper.Tests
 			Assert.AreEqual( true, config.Maps[typeof( A )].MemberMaps[0].Data.Ignore );
 		}
 
-		private class A
+	    [TestMethod]
+	    public void PropertyMapConstantTest()
+	    {
+	        var map = new TestMappingConstantClass();
+	        //map.CreateMap();
+
+	        Assert.AreEqual(1, map.MemberMaps.Count);
+
+	        Assert.IsTrue(map.MemberMaps[0].Data.IsConstantSet);
+        }
+
+        private class A
 		{
 			public int AId { get; set; }
 		}
@@ -163,6 +174,7 @@ namespace CsvHelper.Tests
 			public string StringColumn { get; set; }
 			public int IntColumn { get; set; }
 			public Guid GuidColumn { get; set; }
+            public string ConstantColumn { get; set; }
 			public string NotUsedColumn { get; set; }
 
 			public TestClass(){}
@@ -232,5 +244,13 @@ namespace CsvHelper.Tests
 				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
 			}
 		}
+
+	    private sealed class TestMappingConstantClass : ClassMap<TestClass>
+	    {
+	        public TestMappingConstantClass()
+	        {
+	            Map(m => m.ConstantColumn).Constant("constant");
+            }
+	    }
 	}
 }
