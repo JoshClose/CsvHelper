@@ -202,7 +202,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Ignore the member when reading if no matching field name can be found.
 		/// </summary>
-		public virtual MemberMap<TClass, TMember> Optional()
+		public virtual new MemberMap<TClass, TMember> Optional()
 		{
 			Data.IsOptional = true;
 

@@ -65,7 +65,35 @@ namespace CsvHelper.Tests.Mappings
 			}
 		}
 
-		[TestMethod]
+        [TestMethod]
+        public void OptionalTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var csv = new CsvReader(reader))
+            {
+                csv.Configuration.Delimiter = ",";
+                writer.WriteLine("BId,CId");
+                writer.WriteLine("2,3");
+                writer.Flush();
+                stream.Position = 0;
+
+                var map = new DefaultClassMap<A>();
+                map.AutoMap();
+
+                var type = typeof(A);
+                var member = type.GetProperty("AId");
+                map.Map(type, member).Optional();
+
+                csv.Configuration.RegisterClassMap(map);
+                var records = csv.GetRecords<A>().ToList();
+
+                Assert.AreEqual(0, records[0].AId);
+            }
+        }
+
+        [TestMethod]
 		public void ConstantValueTypeNullTest()
 		{
 			Assert.ThrowsException<ArgumentException>(() => new ConstantValueTypeNullMap());

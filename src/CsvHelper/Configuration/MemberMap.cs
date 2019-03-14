@@ -210,11 +210,21 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		/// <summary>
-		/// Specifies an expression to be used to validate a field when reading.
-		/// </summary>
-		/// <param name="validateExpression"></param>
-		public virtual MemberMap Validate( Func<string, bool> validateExpression )
+        /// <summary>
+        /// Ignore the member when reading if no matching field name can be found.
+        /// </summary>
+        public virtual MemberMap Optional()
+        {
+            Data.IsOptional = true;
+
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies an expression to be used to validate a field when reading.
+        /// </summary>
+        /// <param name="validateExpression"></param>
+        public virtual MemberMap Validate( Func<string, bool> validateExpression )
 		{
 			Data.ValidateExpression = (Expression<Func<string, bool>>)( x => validateExpression( x ) );
 
