@@ -1,6 +1,8 @@
 # CsvHelper.Configuration.Attributes Namespace
 
 ## Classes
+
+### Member level attributes
 &nbsp; | &nbsp;
 - | -
 [BooleanFalseValuesAttribute](/api/CsvHelper.Configuration.Attributes/BooleanFalseValuesAttribute) | The string values used to represent a boolean false when converting.
@@ -19,3 +21,19 @@
 [NumberStylesAttribute](/api/CsvHelper.Configuration.Attributes/NumberStylesAttribute) | The ``CsvHelper.Configuration.Attributes.NumberStylesAttribute.NumberStyles`` to use when type converting. This is used when doing any number conversions.
 [OptionalAttribute](/api/CsvHelper.Configuration.Attributes/OptionalAttribute) | Ignore the member when reading if no matching field name can be found.
 [TypeConverterAttribute](/api/CsvHelper.Configuration.Attributes/TypeConverterAttribute) | Specifies the ``CsvHelper.Configuration.Attributes.TypeConverterAttribute.TypeConverter`` to use when converting the member to and from a CSV field.
+
+### Class level attributes
+&nbsp; | &nbsp;
+- | -
+[AllowCommentsAttribute](/api/CsvHelper.Configuration.Attributes/AllowCommentsAttribute) | A value indicating if comments are allowed.
+[CommentAttribute](/api/CsvHelper.Configuration.Attributes/CommentAttribute) | The character used to denote a line that is commented out.
+[CultureInfoAttribute](/api/CsvHelper.Configuration.Attributes/CultureInfoAttribute) | Default for type converting, this set the global ``CsvHelper.Configuration.Configuration.CultureInfo`` setting.
+[DelimiterAttribute](/api/CsvHelper.Configuration.Attributes/DelimiterAttribute) | The delimiter used to separate fields.
+[EncodingAttribute](/api/CsvHelper.Configuration.Attributes/EncodingAttribute) | The encoding used when counting bytes.
+[EscapeAttribute](/api/CsvHelper.Configuration.Attributes/EscapeAttribute) | The escape character used to escape a quote inside a field.
+[HasHeaderRecordAttribute](/api/CsvHelper.Configuration.Attributes/HasHeaderRecordAttribute) | A value indicating if the CSV file has a header record.
+[IgnoreBlankLinesAttribute](/api/CsvHelper.Configuration.Attributes/IgnoreBlankLinesAttribute) | A value indicating if blank lines should be ignored when reading.
+[IgnoreQuotesAttribute](/api/CsvHelper.Configuration.Attributes/IgnoreQuotesAttribute) | A value indicating if quotes should be ignored when parsing and treated like any other character.
+[IncludePrivateMembersAttribute](/api/CsvHelper.Configuration.Attributes/IncludePrivateMembersAttribute) | A value indicating if private member should be read from and written to.
+[QuoteAttribute](/api/CsvHelper.Configuration.Attributes/QuoteAttribute) | The character used to quote fields.
+[TrimOptionsAttribute](/api/CsvHelper.Configuration.Attributes/TrimOptionsAttribute) | The fields trimming options.

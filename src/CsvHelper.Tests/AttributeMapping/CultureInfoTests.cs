@@ -28,11 +28,34 @@ namespace CsvHelper.Tests.AttributeMapping
 			}
 		}
 
+		[TestMethod]
+		public void CultureInfoClassLevelTest()
+		{
+			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader))
+			{
+				csv.Configuration.Delimiter = ",";
+				var records = csv.GetRecords<CultureInfoClassLevelTestClass>().ToList();
+				var expected = CultureInfo.GetCultureInfo("jp");
+				var actual = csv.Configuration.CultureInfo;
+
+				Assert.AreEqual(expected, actual);
+			}
+		}
+
 		private class CultureInfoTestClass
 		{
 			public int Id { get; set; }
 
 			[CultureInfo("jp")]
+			public string Name { get; set; }
+		}
+
+		[CultureInfo("jp")]
+		private class CultureInfoClassLevelTestClass
+		{
+			public int Id { get; set; }
+
 			public string Name { get; set; }
 		}
 	}

@@ -10,9 +10,9 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// The <see cref="CultureInfo"/> used when type converting.
 	/// This will override the global <see cref="Configuration.CultureInfo"/>
-	/// setting.
+	/// setting. Or set the same if the attribute is specified on class level.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
 	public class CultureInfoAttribute : Attribute
 	{
 		/// <summary>
@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// The <see cref="CultureInfo"/> used when type converting.
 		/// This will override the global <see cref="Configuration.CultureInfo"/>
-		/// setting.
+		/// setting. Or set the same if the attribute is specified on class level.
 		/// </summary>
 		/// <param name="culture">The culture.</param>
 		public CultureInfoAttribute( string culture )

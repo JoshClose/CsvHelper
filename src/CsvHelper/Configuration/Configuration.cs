@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-
+using CsvHelper.Configuration.Attributes;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -481,6 +481,73 @@ namespace CsvHelper.Configuration
 			maps.Add(map);
 
 			return map;
+		}
+
+		/// <summary>
+		/// Applies class level attribute to configuration.
+		/// </summary>
+		/// <param name="type">Type with attributes.</param>
+		public virtual void ApplyClassAttributes(Type type)
+		{
+			if (type.GetCustomAttribute(typeof(CultureInfoAttribute)) is CultureInfoAttribute cultureInfoAttribute)
+			{
+				CultureInfo = cultureInfoAttribute.CultureInfo;
+			}
+
+			if (type.GetCustomAttribute(typeof(DelimiterAttribute)) is DelimiterAttribute delimiterAttribute)
+			{
+				Delimiter = delimiterAttribute.Delimiter;
+			}
+
+			if (type.GetCustomAttribute(typeof(EscapeAttribute)) is EscapeAttribute escapeAttribute)
+			{
+				Escape = escapeAttribute.Escape;
+			}
+
+			if (type.GetCustomAttribute(typeof(QuoteAttribute)) is QuoteAttribute quoteAttribute)
+			{
+				Quote = quoteAttribute.Quote;
+			}
+
+			if (type.GetCustomAttribute(typeof(CommentAttribute)) is CommentAttribute commentAttribute)
+			{
+				Comment = commentAttribute.Comment;
+			}
+
+			if (type.GetCustomAttribute(typeof(AllowCommentsAttribute)) is AllowCommentsAttribute allowCommentsAttribute)
+			{
+				AllowComments = allowCommentsAttribute.AllowComments;
+			}
+
+			if (type.GetCustomAttribute(typeof(EncodingAttribute)) is EncodingAttribute encodingAttribute)
+			{
+				Encoding = encodingAttribute.Encoding;
+			}
+
+			if (type.GetCustomAttribute(typeof(HasHeaderRecordAttribute)) is HasHeaderRecordAttribute hasHeaderRecordAttribute)
+			{
+				HasHeaderRecord = hasHeaderRecordAttribute.HasHeaderRecord;
+			}
+
+			if (type.GetCustomAttribute(typeof(TrimOptionsAttribute)) is TrimOptionsAttribute trimOptionsAttribute)
+			{
+				TrimOptions = trimOptionsAttribute.TrimOptions;
+			}
+
+			if (type.GetCustomAttribute(typeof(IgnoreQuotesAttribute)) is IgnoreQuotesAttribute ignoreQuotesAttribute)
+			{
+				IgnoreQuotes = ignoreQuotesAttribute.IgnoreQuotes;
+			}
+
+			if (type.GetCustomAttribute(typeof(IncludePrivateMembersAttribute)) is IncludePrivateMembersAttribute includePrivateMembersAttribute)
+			{
+				IncludePrivateMembers = includePrivateMembersAttribute.IncludePrivateMembers;
+			}
+
+			if (type.GetCustomAttribute(typeof(IgnoreBlankLinesAttribute)) is IgnoreBlankLinesAttribute ignoreBlankLinesAttribute)
+			{
+				IgnoreBlankLines = ignoreBlankLinesAttribute.IgnoreBlankLines;
+			}
 		}
 	}
 }

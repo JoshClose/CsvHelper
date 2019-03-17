@@ -180,5 +180,11 @@ namespace CsvHelper.Configuration
 	    /// <param name="type">The type to generate for the map.</param>
 	    /// <returns>The generate map.</returns>
 	    ClassMap AutoMap( Type type );
+
+	    /// <summary>
+	    /// Applies class level attribute to configuration.
+	    /// </summary>
+	    /// <param name="type">Type with attributes.</param>
+	    void ApplyClassAttributes( Type type );
 	}
 }

@@ -1,0 +1,29 @@
+﻿// Copyright 2009-2019 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using System;
+
+namespace CsvHelper.Configuration.Attributes
+{
+    /// <summary>
+    /// A value indicating if the CSV file has a header record.
+    /// </summary>
+    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    public class HasHeaderRecordAttribute : Attribute
+    {
+        /// <summary>
+        /// Gets a value indicating if the CSV file has a header record.
+        /// </summary>
+        public bool HasHeaderRecord { get; private set; }
+
+        /// <summary>
+        /// A value indicating if the CSV file has a header record.
+        /// </summary>
+        /// <param name="hasHeaderRecord">A value indicating if the CSV file has a header record.</param>
+        public HasHeaderRecordAttribute( bool hasHeaderRecord )
+        {
+            HasHeaderRecord = hasHeaderRecord;
+        }
+    }
+}

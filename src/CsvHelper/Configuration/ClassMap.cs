@@ -153,6 +153,8 @@ namespace CsvHelper.Configuration
 													 "WriteRecords which acts on a list of records?");
 			}
 
+			configuration.ApplyClassAttributes( type );
+
 			var mapParents = new LinkedList<Type>();
 			if (configuration.ShouldUseConstructorParameters(type))
 			{
