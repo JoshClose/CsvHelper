@@ -192,9 +192,14 @@ namespace CsvHelper.Expressions
 			// Validate the field.
 			if (memberMap.Data.ValidateExpression != null)
 			{
-				var validateExpression = Expression.IsFalse(Expression.Invoke(memberMap.Data.ValidateExpression, fieldExpression));
-				var validationExceptionConstructor = typeof(FieldValidationException).GetConstructors().OrderBy(c => c.GetParameters().Length).First();
-				var newValidationExceptionExpression = Expression.New(validationExceptionConstructor, Expression.Constant(reader.Context), fieldExpression);
+                var exceptionMessage = memberMap.Data.ExceptionMessage;
+                if (string.IsNullOrEmpty(exceptionMessage))
+                {
+                    exceptionMessage = $"Field '{memberMap.Data.Member.Name}' is not valid.";
+                }
+                var validateExpression = Expression.IsFalse(Expression.Invoke(memberMap.Data.ValidateExpression, fieldExpression));
+				var validationExceptionConstructor = typeof(FieldValidationException).GetConstructors().OrderBy(c => c.GetParameters().Length).ToList()[1];
+				var newValidationExceptionExpression = Expression.New(validationExceptionConstructor, Expression.Constant(reader.Context), fieldExpression, Expression.Constant(exceptionMessage));
 				var throwExpression = Expression.Throw(newValidationExceptionExpression);
 				fieldExpression = Expression.Block(
 					// If the validate method returns false, throw an exception.

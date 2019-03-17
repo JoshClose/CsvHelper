@@ -116,11 +116,16 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public virtual bool IsOptional { get; set; }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MemberMapData"/> class.
-		/// </summary>
-		/// <param name="member">The member.</param>
-		public MemberMapData( MemberInfo member )
+        /// <summary>
+        /// Gets or sets an exception message specified when field validation fails.
+        /// </summary>
+        public virtual string ExceptionMessage { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MemberMapData"/> class.
+        /// </summary>
+        /// <param name="member">The member.</param>
+        public MemberMapData( MemberInfo member )
 		{
 			Member = member;
 		}

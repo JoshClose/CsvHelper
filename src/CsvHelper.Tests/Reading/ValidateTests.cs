@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
+using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
@@ -29,11 +30,34 @@ namespace CsvHelper.Tests.Reading
 
 				csv.Configuration.MissingFieldFound = null;
 				csv.Configuration.RegisterClassMap<ValidateMap>();
-				Assert.ThrowsException<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
-			}
+                System.Action action = () => csv.GetRecords<Test>().ToList();
+                action.Should().Throw<FieldValidationException>().WithMessage($"Field '{nameof(Test.Id)}' is not valid.");
+
+            }
 		}
 
-		[TestMethod]
+        [TestMethod]
+        public void ValidateWithExceptionMessageTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            using (var reader = new StreamReader(stream))
+            using (var csv = new CsvReader(reader))
+            {
+                csv.Configuration.Delimiter = ",";
+                writer.WriteLine("Id,Name");
+                writer.WriteLine(",one");
+                writer.Flush();
+                stream.Position = 0;
+
+                csv.Configuration.MissingFieldFound = null;
+                csv.Configuration.RegisterClassMap<ValidateWithExceptionMessageMap>();
+                System.Action action = () => csv.GetRecords<Test>().ToList();
+                action.Should().Throw<FieldValidationException>().WithMessage("Exception Message.");
+            }
+        }
+
+        [TestMethod]
 		public void LogInsteadTest()
 		{
 			using (var stream = new MemoryStream())
@@ -95,7 +119,16 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		private sealed class LogInsteadMap : ClassMap<Test>
+        private sealed class ValidateWithExceptionMessageMap : ClassMap<Test>
+        {
+            public ValidateWithExceptionMessageMap()
+            {
+                Map(m => m.Id).Validate(field => !string.IsNullOrEmpty(field), "Exception Message.");
+                Map(m => m.Name);
+            }
+        }
+
+        private sealed class LogInsteadMap : ClassMap<Test>
 		{
 			public LogInsteadMap(StringBuilder logger)
 			{

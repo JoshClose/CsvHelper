@@ -8,6 +8,7 @@
 		</PropertyGroup>
 
 		<ItemGroup>
+				<PackageReference Include="FluentAssertions" Version="5.6.0" />
 				<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
 				<PackageReference Include="Moq" Version="4.7.99" />
 				<PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
