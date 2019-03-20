@@ -112,7 +112,7 @@ namespace CsvHelper
 		{
 			// Don't forget about the async method below!
 
-			context.Writer.WriteLine();
+			context.Writer.Write("\r\n");
 		}
 
 		/// <summary>
@@ -120,7 +120,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual async Task WriteLineAsync()
 		{
-			await context.Writer.WriteLineAsync().ConfigureAwait(false);
+			await context.Writer.WriteAsync("\r\n").ConfigureAwait(false);
 		}
 
 		/// <summary>
