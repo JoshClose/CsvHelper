@@ -102,5 +102,5 @@ namespace CsvHelper.Configuration
 		/// not checked.
 		/// </summary>
 		int MaxFieldSize { get; set; }
-    }
+	}
 }
