@@ -443,8 +443,7 @@ namespace CsvHelper
 
 				if (context.ParserConfiguration.MaxFieldSize > 0)
 				{
-					var fieldStart = context.FieldStartPosition;
-					var fieldSize = context.CharPosition - fieldStart;
+					var fieldSize = context.RawRecordEndPosition - context.FieldStartPosition;
 					if (context.ParserConfiguration.MaxFieldSize < fieldSize)
 					{
 						throw new MaxFieldSizeException(Context, "Field size exceeded maximum field size.");
