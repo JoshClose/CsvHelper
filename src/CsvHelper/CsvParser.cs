@@ -441,6 +441,16 @@ namespace CsvHelper
 					return true;
 				}
 
+				if (context.ParserConfiguration.MaxFieldSize > 0)
+				{
+					var fieldStart = context.FieldStartPosition;
+					var fieldSize = context.CharPosition - fieldStart;
+					if (context.ParserConfiguration.MaxFieldSize < fieldSize)
+					{
+						throw new MaxFieldSizeException(Context, "Field size exceeded maximum field size.");
+					}
+				}
+
 				c = fieldReader.GetChar();
 			}
 		}

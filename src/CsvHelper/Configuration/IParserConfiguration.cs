@@ -95,5 +95,12 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the field trimming options.
 		/// </summary>
 		TrimOptions TrimOptions { get; set; }
-	}
+
+		/// <summary>
+		/// Gets or sets the maximum size of a field.
+		/// Defaults to 0, indicating maximum field size is
+		/// not checked.
+		/// </summary>
+		int MaxFieldSize { get; set; }
+    }
 }

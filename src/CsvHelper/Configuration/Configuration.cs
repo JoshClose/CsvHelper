@@ -362,6 +362,13 @@ namespace CsvHelper.Configuration
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
 		/// <summary>
+		/// Gets or sets the maximum size of a field.
+		/// Defaults to 0, indicating maximum field size is
+		/// not checked.
+		/// </summary>
+		public virtual int MaxFieldSize { get; set; } = 0;
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="Configuration"/> class.
 		/// </summary>
 		public Configuration() : this(CultureInfo.CurrentCulture) { }
