@@ -1,12 +1,56 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <AssemblyName>CsvHelper.Tests</AssemblyName>
+    <RootNamespace>CsvHelper.Tests</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <PackageId>CsvHelper.Tests</PackageId>
+    <PackageVersion>1.0.0-alpha0001</PackageVersion>
+    <Description></Description>
+    <PackageTags></PackageTags>
+    <SonarQubeExclude>true</SonarQubeExclude>
+  </PropertyGroup>
 
   <PropertyGroup>
+    <!-- App specific -->
     <OutputType>Exe</OutputType>
-    <TargetFramework>net45</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fody" Version="3.3.3" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MethodTimer.Fody" Version="2.2.2" PrivateAssets="all" />
+    <PackageReference Include="ModuleInit.Fody" Version="1.8.3" PrivateAssets="all" />
+    <PackageReference Include="Obsolete.Fody" Version="4.4.3" PrivateAssets="all" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Update="NETStandard.Library" Version="2.0.1" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CsvHelper\CsvHelper.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="*.approved.cs;*.received.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props')" />
 </Project>

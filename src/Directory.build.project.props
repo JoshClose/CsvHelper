@@ -1,0 +1,16 @@
+<Project>
+  <!-- 
+    This file applies to all projects automatically, this file contains all the project specific data
+  -->
+
+  <PropertyGroup>
+    <Authors>Josh Close and contributors</Authors>
+    <PackageReleaseNotes>https://joshclose.github.io/CsvHelper/change-log</PackageReleaseNotes>
+    <PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
+    <!--<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>-->
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+   
+</Project>
