@@ -5,6 +5,7 @@
 using System.Reflection;
 using CsvHelper.TypeConversion;
 using System.Linq.Expressions;
+using System;
 
 namespace CsvHelper.Configuration
 {
@@ -129,5 +130,9 @@ namespace CsvHelper.Configuration
 		{
 			Member = member;
 		}
+        /// <summary>
+        /// Gets or sets the expression used to execute when validation fails.
+        /// </summary>
+        public virtual Expression ValidateMessageExpression { get;set;}
 	}
 }

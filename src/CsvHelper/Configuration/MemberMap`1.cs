@@ -224,12 +224,11 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to validate a field when reading along with specified exception message.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-        /// <param name="exceptionMsg"></param>
-		public virtual new MemberMap Validate(Func<string, bool> validateExpression, string exceptionMsg)
+        /// <param name="validateMessageExpression"></param>
+		public virtual new MemberMap<TClass, TMember> Validate(Func<string, bool> validateExpression, Func<string, string> validateMessageExpression)
         {
-            Data.ExceptionMessage = exceptionMsg;
             Data.ValidateExpression = (Expression<Func<string, bool>>)(x => validateExpression(x));
-
+            Data.ValidateMessageExpression = (Expression<Func<string, string>>)((x) => validateMessageExpression(x));
             return this;
         }
     }

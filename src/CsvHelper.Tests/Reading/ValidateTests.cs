@@ -53,7 +53,7 @@ namespace CsvHelper.Tests.Reading
                 csv.Configuration.MissingFieldFound = null;
                 csv.Configuration.RegisterClassMap<ValidateWithExceptionMessageMap>();
                 System.Action action = () => csv.GetRecords<Test>().ToList();
-                action.Should().Throw<FieldValidationException>().WithMessage("Exception Message.");
+                action.Should().Throw<FieldValidationException>().WithMessage($"Validation failed: Field '{nameof(Test.Id)}' cannot contain spaces.");
             }
         }
 
@@ -123,8 +123,15 @@ namespace CsvHelper.Tests.Reading
         {
             public ValidateWithExceptionMessageMap()
             {
-                Map(m => m.Id).Validate(field => !string.IsNullOrEmpty(field), "Exception Message.");
+                Map(m => m.Id).Validate(field => !string.IsNullOrEmpty(field), field => $"Validation failed: Field '{field}' cannot contain spaces.");
                 Map(m => m.Name);
+            }
+
+            private bool ValidateMe(string field)
+            {
+                if(string.IsNullOrEmpty(field))
+                    throw new CustomException();
+                return true;
             }
         }
 

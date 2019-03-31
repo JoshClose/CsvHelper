@@ -192,8 +192,13 @@ namespace CsvHelper.Expressions
 			// Validate the field.
 			if (memberMap.Data.ValidateExpression != null)
 			{
-                var exceptionMessage = memberMap.Data.ExceptionMessage;
-                if (string.IsNullOrEmpty(exceptionMessage))
+                var exceptionMessage = "";
+                if(memberMap.Data.ValidateMessageExpression != null)
+                {
+                    var validateMsgExpression = (Expression<Func<string, string>>)memberMap.Data.ValidateMessageExpression;
+                    exceptionMessage = validateMsgExpression.Compile().Invoke(memberMap.Data.Member.Name);
+                }
+                else
                 {
                     exceptionMessage = $"Field '{memberMap.Data.Member.Name}' is not valid.";
                 }
