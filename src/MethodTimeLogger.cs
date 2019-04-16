@@ -1,4 +1,5 @@
 using System.Reflection;
+using Catel.Logging;
 using System;
 
 /// <summary>
@@ -14,8 +15,14 @@ internal static class MethodTimeLogger
 
     public static void Log(Type type, string methodName, long milliseconds, string message)
     {
-        if (type == null)
+        if (type is null)
         {
+            return;
+        }
+
+        if (milliseconds == 0)
+        {
+            // Don't log superfast methods
             return;
         }
 
@@ -26,9 +33,8 @@ internal static class MethodTimeLogger
             finalMessage += $" | {message}";
         }
 
-        // Your favorite logging engine here
-        // var logger = LogManager.GetLogger(type);
-        // logger.Debug(finalMessage);
+        var logger = LogManager.GetLogger(type);
+        logger.Debug(finalMessage);
     }
     #endregion
 }

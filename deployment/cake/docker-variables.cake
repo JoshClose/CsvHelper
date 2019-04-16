@@ -1,5 +1,6 @@
 #l "buildserver.cake"
 
+var DockerEngineUrl = GetBuildServerVariable("DockerEngineUrl", showValue: true);
 var DockerRegistryUrl = GetBuildServerVariable("DockerRegistryUrl", showValue: true);
 var DockerRegistryUserName = GetBuildServerVariable("DockerRegistryUserName", showValue: false);
 var DockerRegistryPassword = GetBuildServerVariable("DockerRegistryPassword", showValue: false);

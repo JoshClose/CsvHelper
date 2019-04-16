@@ -108,9 +108,10 @@
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
-    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\net\**\*.xaml" />
     <Page Include="Platforms\net\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\net\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
   
   <!-- .NET Standard 2.0 -->
@@ -119,9 +120,10 @@
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <Compile Include="Platforms\netstandard2.0\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\netstandard2.0\**\*.xaml" />
     <Page Include="Platforms\netstandard2.0\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\netstandard2.0\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\netstandard2.0\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
 
   <!-- .NET 4.5 -->
@@ -141,9 +143,10 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net451' OR '$(TargetFramework)' == 'net452'">
-    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\net\**\*.xaml" />
     <Page Include="Platforms\net\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\net\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
 
   <!-- .NET 4.6 -->
@@ -163,9 +166,10 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net461' OR '$(TargetFramework)' == 'net462'">
-    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\net\**\*.xaml" />
     <Page Include="Platforms\net\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\net\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
 
   <!-- .NET 4.7 -->
@@ -175,9 +179,10 @@
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
-    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\net\**\*.xaml" />
     <Page Include="Platforms\net\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\net\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\net\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
   
   <!-- UAP 10.0 -->
@@ -186,10 +191,16 @@
     <DefineConstants>$(DefineConstants);UAP;NETFX_CORE;UWP;WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
   
-  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0' ">
-    <Compile Include="Platforms\uap10.0\**\*.cs" DependentUpon="%(Filename)" />
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'uap10.0.16299' ">
+    <EnableDefaultXamlItems>true</EnableDefaultXamlItems>
+    <DefineConstants>$(DefineConstants);UAP;UAP_16299;NETFX_CORE;UWP;WINDOWS_UWP</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0' OR '$(TargetFramework)' == 'uap10.0.16299'">
+    <None Remove="Platforms\uap10.0\**\*.xaml" />
     <Page Include="Platforms\uap10.0\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\uap10.0\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\uap10.0\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
 
   <!-- Xamarin.iOS -->
@@ -198,9 +209,10 @@
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(TargetFramework)' == 'xamarin.ios10' ">
-    <Compile Include="Platforms\xamarin.ios\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\xamarin.ios\**\*.xaml" />
     <Page Include="Platforms\xamarin.ios\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\xamarin.ios\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\xamarin.ios\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
 
   <!-- Xamarin.Android -->
@@ -209,9 +221,10 @@
   </PropertyGroup>
   
   <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid70' ">
-    <Compile Include="Platforms\xamarin.android\**\*.cs" DependentUpon="%(Filename)" />
+    <None Remove="Platforms\xamarin.android\**\*.xaml" />
     <Page Include="Platforms\xamarin.android\**\*.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Compile Update="Platforms\xamarin.ioandroid\**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+    <Compile Include="Platforms\xamarin.android\**\*.cs" DependentUpon="%(Filename)" />
   </ItemGroup>
   
 </Project>
