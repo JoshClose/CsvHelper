@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -12,8 +12,8 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Configuration used for the <see cref="IReader"/>.
 	/// </summary>
-    public interface IReaderConfiguration : IParserConfiguration
-    {
+	public interface IReaderConfiguration : IParserConfiguration
+	{
 		/// <summary>
 		/// Gets or sets a value indicating if the
 		/// CSV file has a header record.
@@ -27,7 +27,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: isValid, headerNames, headerNameIndex, context
 		/// </summary>
-		Action<bool, string[], int, IReadingContext> HeaderValidated { get; set; }
+		Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		/// like logging the issue instead of throwing an exception.
 		/// Arguments: headerNames, index, context
 		/// </summary>
-		Action<string[], int, IReadingContext> MissingFieldFound { get; set; }
+		Action<string[], int, ReadingContext> MissingFieldFound { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a reading exception occurs.
@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// logging the issue.
 		/// Arguments: exception
 		/// </summary>
-		Action<CsvHelperException> ReadingExceptionOccurred { get; set; }
+		Func<CsvHelperException, bool> ReadingExceptionOccurred { get; set; }
 
 		/// <summary>
 		/// Gets or sets the culture info used to read an write CSV files.
@@ -67,7 +67,7 @@ namespace CsvHelper.Configuration
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
 		/// </summary>
-		Func<string, string> PrepareHeaderForMatch { get; set; }
+		Func<string, int, string> PrepareHeaderForMatch { get; set; }
 
 		/// <summary>
 		/// Generates header field value when dynamic headers are used.
@@ -84,9 +84,16 @@ namespace CsvHelper.Configuration
 		Func<Type, bool> ShouldUseConstructorParameters { get; set; }
 
 		/// <summary>
-		/// Chooses the constructor to use for constuctor mapping.
+		/// Chooses the constructor to use for constructor mapping.
 		/// </summary>
 		Func<Type, ConstructorInfo> GetConstructor { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether references
+		/// should be ignored when auto mapping. True to ignore
+		/// references, otherwise false. Default is false.
+		/// </summary>
+		bool IgnoreReferences { get; set; }
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to
@@ -181,5 +188,5 @@ namespace CsvHelper.Configuration
 	    /// <param name="type">The type to generate for the map.</param>
 	    /// <returns>The generate map.</returns>
 	    ClassMap AutoMap( Type type );
-    }
+	}
 }

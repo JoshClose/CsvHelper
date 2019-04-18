@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -14,15 +14,16 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void ReadWithoutMapTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "A,B" );
-				writer.WriteLine( "1,one" );
-				writer.WriteLine( "Y,Z" );
-				writer.WriteLine( "two,2" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("A,B");
+				writer.WriteLine("1,one");
+				writer.WriteLine("Y,Z");
+				writer.WriteLine("two,2");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -30,30 +31,31 @@ namespace CsvHelper.Tests.Reading
 				csv.ReadHeader();
 				csv.Read();
 
-				Assert.AreEqual( 1, csv.GetField<int>( "A" ) );
-				Assert.AreEqual( "one", csv.GetField( "B" ) );
+				Assert.AreEqual(1, csv.GetField<int>("A"));
+				Assert.AreEqual("one", csv.GetField("B"));
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
 
-				Assert.AreEqual( "two", csv.GetField( "Y" ) );
-				Assert.AreEqual( 2, csv.GetField<int>( "Z" ) );
+				Assert.AreEqual("two", csv.GetField("Y"));
+				Assert.AreEqual(2, csv.GetField<int>("Z"));
 			}
 		}
 
 		[TestMethod]
 		public void ReadWithMapTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "A,B" );
-				writer.WriteLine( "1,one" );
-				writer.WriteLine( "Y,Z" );
-				writer.WriteLine( "two,2" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("A,B");
+				writer.WriteLine("1,one");
+				writer.WriteLine("Y,Z");
+				writer.WriteLine("two,2");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -66,8 +68,8 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var alphaRecord = csv.GetRecord<Alpha>();
 
-				Assert.AreEqual( 1, alphaRecord.A );
-				Assert.AreEqual( "one", alphaRecord.B );
+				Assert.AreEqual(1, alphaRecord.A);
+				Assert.AreEqual("one", alphaRecord.B);
 
 				csv.Read();
 				csv.ReadHeader();
@@ -75,8 +77,8 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var omegaRecord = csv.GetRecord<Omega>();
 
-				Assert.AreEqual( "two", omegaRecord.Y );
-				Assert.AreEqual( 2, omegaRecord.Z );
+				Assert.AreEqual("two", omegaRecord.Y);
+				Assert.AreEqual(2, omegaRecord.Z);
 			}
 		}
 
@@ -96,8 +98,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			public AlphaMap()
 			{
-				Map( m => m.A );
-				Map( m => m.B );
+				Map(m => m.A);
+				Map(m => m.B);
 			}
 		}
 
@@ -105,8 +107,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			public OmegaMap()
 			{
-				Map( m => m.Y );
-				Map( m => m.Z );
+				Map(m => m.Y);
+				Map(m => m.Z);
 			}
 		}
 	}

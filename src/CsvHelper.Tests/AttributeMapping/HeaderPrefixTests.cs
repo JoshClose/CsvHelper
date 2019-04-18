@@ -1,42 +1,44 @@
-﻿using CsvHelper.Configuration.Attributes;
+﻿// Copyright 2009-2019 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.AttributeMapping
 {
 	[TestClass]
-    public class HeaderPrefixTests
-    {
+	public class HeaderPrefixTests
+	{
 		[TestMethod]
-        public void DefaultHeaderPrefixTest()
+		public void DefaultHeaderPrefixTest()
 		{
-			using( var reader = new StringReader( "Id,B.Name,C.Name\r\n1,b,c" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,B.Name,C.Name\r\n1,b,c"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ADefault>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "b", records[0].B.Name );
-				Assert.AreEqual( "c", records[0].C.Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("b", records[0].B.Name);
+				Assert.AreEqual("c", records[0].C.Name);
 			}
 		}
 
 		[TestMethod]
 		public void CustomHeaderPrefixTest()
 		{
-			using( var reader = new StringReader( "Id,B_Name,C_Name\r\n1,b,c" ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var reader = new StringReader("Id,B_Name,C_Name\r\n1,b,c"))
+			using (var csv = new CsvReader(reader))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ACustom>().ToList();
 
-				Assert.AreEqual( 1, records[0].Id );
-				Assert.AreEqual( "b", records[0].B.Name );
-				Assert.AreEqual( "c", records[0].C.Name );
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("b", records[0].B.Name);
+				Assert.AreEqual("c", records[0].C.Name);
 			}
 		}
 
@@ -55,10 +57,10 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			[HeaderPrefixAttribute( "B_" )]
+			[HeaderPrefixAttribute("B_")]
 			public B B { get; set; }
 
-			[HeaderPrefixAttribute( "C_" )]
+			[HeaderPrefixAttribute("C_")]
 			public C C { get; set; }
 		}
 
@@ -71,5 +73,5 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public string Name { get; set; }
 		}
-    }
+	}
 }

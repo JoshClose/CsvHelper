@@ -1,11 +1,9 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -28,8 +26,7 @@ namespace CsvHelper.Tests.Reading
 			var reader = new CsvReader( parserMock );
 			reader.Read();
 
-			int field;
-			var got = reader.TryGetField( 0, out field );
+			var got = reader.TryGetField( 0, out int field );
 			Assert.IsFalse( got );
 			Assert.AreEqual( default( int ), field );
 		}
@@ -47,9 +44,9 @@ namespace CsvHelper.Tests.Reading
 
 			var reader = new CsvReader( parserMock );
 			reader.Read();
+			reader.ReadHeader();
 
-			int field;
-			var got = reader.TryGetField( "One", out field );
+			var got = reader.TryGetField( "One", out int field );
 			Assert.IsFalse( got );
 			Assert.AreEqual( default( int ), field );
 		}
@@ -70,8 +67,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			int field;
-			var got = reader.TryGetField( 0, out field );
+			var got = reader.TryGetField( 0, out int field );
 			Assert.IsTrue( got );
 			Assert.AreEqual( 1, field );
 		}
@@ -92,8 +88,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			int field;
-			var got = reader.TryGetField( "One", out field );
+			var got = reader.TryGetField( "One", out int field );
 			Assert.IsTrue( got );
 			Assert.AreEqual( 1, field );
 		}
@@ -103,7 +98,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
-			// fails for an emptry string for a date.
+			// fails for an empty string for a date.
 			var data = new[] { " " };
 			var queue = new Queue<string[]>();
 			queue.Enqueue( data );
@@ -114,8 +109,7 @@ namespace CsvHelper.Tests.Reading
 			reader.Configuration.HasHeaderRecord = false;
 			reader.Read();
 
-			DateTime field;
-			var got = reader.TryGetField( 0, out field );
+			var got = reader.TryGetField( 0, out DateTime field );
 
 			Assert.IsFalse( got );
 			Assert.AreEqual( DateTime.MinValue, field );
@@ -126,7 +120,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
-			// fails for an emptry string for a date.
+			// fails for an empty string for a date.
 			var data = new[] { " " };
 			var queue = new Queue<string[]>();
 			queue.Enqueue( data );
@@ -137,8 +131,7 @@ namespace CsvHelper.Tests.Reading
 			reader.Configuration.HasHeaderRecord = false;
 			reader.Read();
 
-			DateTime? field;
-			var got = reader.TryGetField( 0, out field );
+			var got = reader.TryGetField( 0, out DateTime? field );
 
 			Assert.IsFalse( got );
 			Assert.IsNull( field );
@@ -156,8 +149,8 @@ namespace CsvHelper.Tests.Reading
 			var reader = new CsvReader( parserMock );
 			reader.Configuration.MissingFieldFound = null;
 			reader.Read();
-			string field;
-			Assert.IsFalse( reader.TryGetField( "test", out field ) );
+			reader.ReadHeader();
+			Assert.IsFalse( reader.TryGetField( "test", out string field ) );
 		}
 
 		[TestMethod]
@@ -173,8 +166,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			int field;
-			var got = reader.TryGetField( "Two", 0, out field );
+			var got = reader.TryGetField( "Two", 0, out int field );
 			Assert.IsTrue( got );
 			Assert.AreEqual( 2, field );
 

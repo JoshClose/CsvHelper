@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -63,7 +63,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void MapIgnoreTest()
 		{
-			var map = new TestMappingIngoreClass();
+			var map = new TestMappingIgnoreClass();
 			//map.CreateMap();
 
 			Assert.AreEqual( 3, map.MemberMaps.Count );
@@ -172,7 +172,7 @@ namespace CsvHelper.Tests
 				StringColumn = stringColumn;
 			}
 		}
-		
+
 		private sealed class TestMappingDefaultClass : ClassMap<TestClass>
 		{
 			public TestMappingDefaultClass()
@@ -203,9 +203,9 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		private sealed class TestMappingIngoreClass : ClassMap<TestClass>
+		private sealed class TestMappingIgnoreClass : ClassMap<TestClass>
 		{
-			public TestMappingIngoreClass()
+			public TestMappingIgnoreClass()
 			{
 				Map( m => m.GuidColumn ).Ignore();
 				Map( m => m.IntColumn );

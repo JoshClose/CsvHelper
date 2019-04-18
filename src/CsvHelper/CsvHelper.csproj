@@ -1,87 +1,88 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+  <PropertyGroup>
+    <TargetFrameworks>net45;net46;net47;netstandard2.0</TargetFrameworks>
+    <AssemblyName>CsvHelper</AssemblyName>
+    <RootNamespace>CsvHelper</RootNamespace>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <PackageId>CsvHelper</PackageId>
+    <PackageVersion>12.1.0-alpha0001</PackageVersion>
+    <Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
+    <PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <!-- SonarQube requires a project guid -->
+    <ProjectGuid>9D72E078-8534-4BFC-87F4-74FECFE427F7</ProjectGuid>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <!-- Sign -->
+    <AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>  
+  </PropertyGroup>
 
-	<PropertyGroup>
-		<!-- Assembly -->
-		<AssemblyTitle>CsvHelper</AssemblyTitle>
-		<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-		<Copyright>Copyright © 2009-2017 Josh Close and Contributors</Copyright>
-		<Authors>Josh Close</Authors>
+  <ItemGroup>
+    <PackageReference Include="Fody" Version="3.3.3" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MethodTimer.Fody" Version="2.2.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="ModuleInit.Fody" Version="1.8.3" PrivateAssets="all" />
+    <PackageReference Include="Obsolete.Fody" Version="4.4.3" PrivateAssets="all" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+  </ItemGroup>
+  
+  <!-- .NET 4.5 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+  </ItemGroup>
+  
+  <!-- .NET 4.6 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+  </ItemGroup>
+  
+  <!-- .NET 4.7 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net47'">
+  </ItemGroup>
+  
+  <!-- .NET Core 3.0 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
+  </ItemGroup>
+  
+  <!-- UAP 10.0 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'uap10.0'">
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.2" />
+  </ItemGroup>
 
-		<!-- Build -->
-		<Version>4.0.3</Version>
-		<FileVersion>4.0.0.0</FileVersion>
-		<AssemblyVersion>4.0.0.0</AssemblyVersion>
-		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
-		<LangVersion>7.1</LangVersion>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<AssemblyName>CsvHelper</AssemblyName>
+  <!-- .NET Standard 2.0 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+  </ItemGroup>
 
-		<!-- Sign -->
-		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
-		<SignAssembly>true</SignAssembly>
-		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+  <ItemGroup>
+    <PackageReference Update="NETStandard.Library" Version="2.0.1" />
+  </ItemGroup>
 
-		<!-- NuGet -->
-		<PackageId>CsvHelper</PackageId>
-		<PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
-		<PackageReleaseNotes>http://joshclose.github.io/CsvHelper/#change-log</PackageReleaseNotes>
-		<PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
-		<PackageProjectUrl>https://github.com/JoshClose/CsvHelper</PackageProjectUrl>
-		<PackageLicenseUrl>https://raw.githubusercontent.com/JoshClose/CsvHelper/master/LICENSE.txt</PackageLicenseUrl>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-	</PropertyGroup>
+  <ItemGroup>
+    <None Remove="CsvFieldReader.cs.bak" />
+    <None Remove="CsvParser.cs.bak" />
+  </ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.4.0" />
-		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-		<Reference Include="Microsoft.CSharp" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Remove="CsvFieldReader.cs.bak" />
-		<None Remove="CsvParser.cs.bak" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Update="CsvFieldReader.tt">
-	    <Generator>TextTemplatingFileGenerator</Generator>
-	    <LastGenOutput>CsvFieldReader.cs</LastGenOutput>
-	  </None>
-	  <None Update="CsvParser.tt">
-	    <Generator>TextTemplatingFileGenerator</Generator>
-	    <LastGenOutput>CsvParser.cs</LastGenOutput>
-	  </None>
-	  <None Update="T4Methods.tt">
-	    <Generator>TextTemplatingFileGenerator</Generator>
-	    <LastGenOutput>T4Methods.cs</LastGenOutput>
-	  </None>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Update="CsvFieldReader.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>CsvFieldReader.tt</DependentUpon>
-	  </Compile>
-	  <Compile Update="CsvParser.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>CsvParser.tt</DependentUpon>
-	  </Compile>
-	  <Compile Update="T4Methods.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>T4Methods.tt</DependentUpon>
-	  </Compile>
-	</ItemGroup>
-
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+ 
+  <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props')" />
+  <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.mat.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.mat.props')" />
 </Project>

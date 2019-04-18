@@ -1,12 +1,10 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Globalization;
 using CsvHelper.Configuration;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace CsvHelper.TypeConversion
 {
@@ -29,8 +27,7 @@ namespace CsvHelper.TypeConversion
 				return string.Empty;
 			}
 
-			var formattable = value as IFormattable;
-			if( formattable != null )
+			if( value is IFormattable formattable )
 			{
 				var format = memberMapData.TypeConverterOptions.Formats?.FirstOrDefault();
 				return formattable.ToString( format, memberMapData.TypeConverterOptions.CultureInfo );
@@ -53,7 +50,7 @@ namespace CsvHelper.TypeConversion
 				$"    Text: '{text}'\r\n" +
 				$"    MemberType: {memberMapData.Member?.MemberType().FullName}\r\n" +
 				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
-		throw new TypeConverterException( (ReadingContext)row.Context, "The conversion cannot be performed." );
+			throw new TypeConverterException( this, memberMapData, text, (ReadingContext)row.Context, message );
 		}
 	}
 }

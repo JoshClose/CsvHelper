@@ -1,23 +1,25 @@
-﻿using CsvHelper.Configuration;
+﻿// Copyright 2009-2019 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class CsvWriterBoxedTypesTests
-    {
+	public class CsvWriterBoxedTypesTests
+	{
 		[TestMethod]
 		public void TypeMixedWithBoxedTypeTest()
 		{
-			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var recordsTyped = new List<A>
 				{
 					new A { Id = 1, Name = "one" },
@@ -29,18 +31,18 @@ namespace CsvHelper.Tests
 
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<AMap>();
-				csv.WriteRecords( recordsTyped );
-				csv.WriteRecords( recordsBoxed );
+				csv.WriteRecords(recordsTyped);
+				csv.WriteRecords(recordsBoxed);
 				writer.Flush();
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "1,one" );
-				expected.AppendLine( "2,two" );
+				expected.AppendLine("1,one");
+				expected.AppendLine("2,two");
 
-				Assert.AreEqual( expected.ToString(), writer.ToString() );
+				Assert.AreEqual(expected.ToString(), writer.ToString());
 			}
 		}
-    }
+	}
 
 	public class A
 	{
@@ -53,8 +55,8 @@ namespace CsvHelper.Tests
 	{
 		public AMap()
 		{
-			Map( m => m.Id ).Index( 0 );
-			Map( m => m.Name ).Index( 1 );
+			Map(m => m.Id).Index(0);
+			Map(m => m.Name).Index(1);
 		}
 	}
 }

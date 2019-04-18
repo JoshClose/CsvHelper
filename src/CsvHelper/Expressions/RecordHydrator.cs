@@ -1,22 +1,19 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Expressions
 {
 	/// <summary>
 	/// Hydrates members of an existing record.
 	/// </summary>
-    public class RecordHydrator
-    {
+	public class RecordHydrator
+	{
 		private readonly CsvReader reader;
 		private readonly ExpressionManager expressionManager;
 
@@ -27,7 +24,7 @@ namespace CsvHelper.Expressions
 		public RecordHydrator( CsvReader reader )
 		{
 			this.reader = reader;
-			expressionManager = new ExpressionManager( reader );
+			expressionManager = ObjectResolver.Current.Resolve<ExpressionManager>( reader );
 		}
 
 		/// <summary>
@@ -35,7 +32,7 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-        public void Hydrate<T>( T record )
+		public void Hydrate<T>( T record )
 		{
 			try
 			{
@@ -102,12 +99,10 @@ namespace CsvHelper.Expressions
 					continue;
 				}
 
-				var referenceBindings = new List<MemberBinding>();
-				expressionManager.CreateMemberBindingsForMapping( referenceMap.Data.Mapping, referenceMap.Data.Member.MemberType(), referenceBindings );
+				var referenceAssignments = new List<MemberAssignment>();
+				expressionManager.CreateMemberAssignmentsForMapping( referenceMap.Data.Mapping, referenceAssignments );
 
-				// This is in case an IContractResolver is being used.
-				var type = ReflectionHelper.CreateInstance( referenceMap.Data.Member.MemberType() ).GetType();
-				var referenceBody = Expression.MemberInit( Expression.New( type ), referenceBindings );
+				var referenceBody = expressionManager.CreateInstanceAndAssignMembers( referenceMap.Data.Member.MemberType(), referenceAssignments );
 
 				var memberTypeParameter = Expression.Parameter( referenceMap.Data.Member.MemberType(), "referenceMember" );
 				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, referenceMap.Data.Member );

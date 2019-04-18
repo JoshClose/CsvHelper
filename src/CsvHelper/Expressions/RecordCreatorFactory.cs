@@ -1,21 +1,17 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Expressions
 {
 	/// <summary>
 	/// Factory to create record creators.
 	/// </summary>
-    public class RecordCreatorFactory
-    {
+	public class RecordCreatorFactory
+	{
 		private readonly CsvReader reader;
 
 		/// <summary>
@@ -31,7 +27,7 @@ namespace CsvHelper.Expressions
 		/// Creates a record creator for the given record type.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-        public RecordCreator MakeRecordCreator( Type recordType )
+		public virtual RecordCreator MakeRecordCreator( Type recordType )
 		{
 			if( recordType == typeof( object ) )
 			{
@@ -45,5 +41,5 @@ namespace CsvHelper.Expressions
 
 			return new ObjectRecordCreator( reader );
 		}
-    }
+	}
 }

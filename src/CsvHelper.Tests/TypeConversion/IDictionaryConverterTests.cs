@@ -1,19 +1,14 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
+
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -23,36 +18,38 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullWriteTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Dictionary = new Dictionary<string, int> { { "Prop1", 1 }, { "Prop2", 2 }, { "Prop3", 3 } } }
 				};
 				csv.Configuration.HasHeaderRecord = false;
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual( ",1,2,3,\r\n", result );
+				Assert.AreEqual(",1,2,3,\r\n", result);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Prop1,Prop2,Prop3,Prop4,Prop5" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Prop1,Prop2,Prop3,Prop4,Prop5");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -62,22 +59,22 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var dict = records[0].Dictionary;
 
-				Assert.AreEqual( 3, dict.Count );
-				Assert.AreEqual( "2", dict["Prop2"] );
-				Assert.AreEqual( "3", dict["Prop3"] );
-				Assert.AreEqual( "4", dict["Prop4"] );
+				Assert.AreEqual(3, dict.Count);
+				Assert.AreEqual("2", dict["Prop2"]);
+				Assert.AreEqual("3", dict["Prop3"]);
+				Assert.AreEqual("4", dict["Prop4"]);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadNoHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,2,3,4,5" );
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -88,7 +85,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( ReaderException )
+				catch (ReaderException)
 				{
 					// You can't read into a dictionary without a header.
 					// You need to header value to use as the key.
@@ -99,13 +96,14 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullReadWithHeaderIndexDifferentNamesTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,Dictionary1,Dictionary2,Dictionary3,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,Dictionary1,Dictionary2,Dictionary3,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -116,23 +114,23 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].Dictionary;
 
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( "2", list["Dictionary1"] );
-				Assert.AreEqual( "3", list["Dictionary2"] );
-				Assert.AreEqual( "4", list["Dictionary3"] );
+				Assert.AreEqual(3, list.Count);
+				Assert.AreEqual("2", list["Dictionary1"]);
+				Assert.AreEqual("3", list["Dictionary2"]);
+				Assert.AreEqual("4", list["Dictionary3"]);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadWithHeaderIndexSameNamesTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,Dictionary,Dictionary,Dictionary,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -143,7 +141,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( ReaderException )
+				catch (ReaderException)
 				{
 					// Can't have same name with Dictionary.
 				}
@@ -153,13 +151,13 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullReadWithDefaultHeaderDifferentNamesTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,Dictionary1,Dictionary2,Dictionary3,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				writer.WriteLine("Before,Dictionary1,Dictionary2,Dictionary3,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -171,7 +169,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( ReaderException )
+				catch (ReaderException)
 				{
 					// Indexes must be specified for dictionaries.
 				}
@@ -181,13 +179,14 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullReadWithDefaultHeaderSameNamesTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,Dictionary,Dictionary,Dictionary,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -198,7 +197,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( ReaderException )
+				catch (ReaderException)
 				{
 					// Headers can't have the same name.
 				}
@@ -208,13 +207,14 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullReadWithNamedHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,Dictionary,Dictionary,Dictionary,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -225,7 +225,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( ReaderException )
+				catch (ReaderException)
 				{
 					// Header's can't have the same name.
 				}
@@ -235,13 +235,14 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullReadWithHeaderListItemsScattered()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,Dictionary,A,Dictionary,B,Dictionary,After" );
-				writer.WriteLine( "1,2,3,4,5,6,7" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,Dictionary,A,Dictionary,B,Dictionary,After");
+				writer.WriteLine("1,2,3,4,5,6,7");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -252,7 +253,7 @@ namespace CsvHelper.Tests.TypeConversion
 					var records = csv.GetRecords<Test>().ToList();
 					Assert.Fail();
 				}
-				catch( ReaderException )
+				catch (ReaderException)
 				{
 					// Header's can't have the same name.
 				}
@@ -270,9 +271,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestIndexMap()
 			{
-				Map( m => m.Before ).Index( 0 );
-				Map( m => m.Dictionary ).Index( 1, 3 );
-				Map( m => m.After ).Index( 4 );
+				Map(m => m.Before).Index(0);
+				Map(m => m.Dictionary).Index(1, 3);
+				Map(m => m.After).Index(4);
 			}
 		}
 
@@ -280,9 +281,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestNamedMap()
 			{
-				Map( m => m.Before ).Name( "Before" );
-				Map( m => m.Dictionary ).Name( "Dictionary" );
-				Map( m => m.After ).Name( "After" );
+				Map(m => m.Before).Name("Before");
+				Map(m => m.Dictionary).Name("Dictionary");
+				Map(m => m.After).Name("After");
 			}
 		}
 
@@ -290,9 +291,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestDefaultMap()
 			{
-				Map( m => m.Before );
-				Map( m => m.Dictionary );
-				Map( m => m.After );
+				Map(m => m.Before);
+				Map(m => m.Dictionary);
+				Map(m => m.After);
 			}
 		}
 	}

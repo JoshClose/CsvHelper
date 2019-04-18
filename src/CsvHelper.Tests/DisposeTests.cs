@@ -1,16 +1,17 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿// Copyright 2009-2019 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Tests.Mocks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.Tests
 {
 	[TestClass]
-    public class DisposeTests
-    {
+	public class DisposeTests
+	{
 		[TestMethod]
 		public void WriterFlushOnDisposeTest()
 		{
@@ -38,6 +39,16 @@ namespace CsvHelper.Tests
 
 				Assert.AreEqual( "A", writer.ToString() );
 			}
+		}
+
+		[TestMethod]
+		public void DisposeShouldBeCallableMultipleTimes()
+		{
+			var parserMock = new ParserMock( new Queue<string[]>() );
+			var reader = new CsvReader( parserMock );
+
+			reader.Dispose();
+			reader.Dispose();
 		}
 	}
 }

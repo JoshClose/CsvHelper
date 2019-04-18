@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -24,10 +24,8 @@ namespace CsvHelper.TypeConversion
 		{
 			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo;
 
-			TimeSpan span;
-
 			var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
-			if( memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact( text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out span ) )
+			if( memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact( text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span ) )
 			{
 				return span;
 			}

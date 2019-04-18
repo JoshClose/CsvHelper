@@ -1,10 +1,9 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -12,8 +11,8 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts an <see cref="IDictionary"/> to and from a <see cref="string"/>.
 	/// </summary>
-    public class IDictionaryConverter : DefaultTypeConverter
-    {
+	public class IDictionaryConverter : DefaultTypeConverter
+	{
 		/// <summary>
 		/// Converts the object to a string.
 		/// </summary>
@@ -54,8 +53,7 @@ namespace CsvHelper.TypeConversion
 
 			for( var i = memberMapData.Index; i <= indexEnd; i++ )
 			{
-				string field;
-				if( row.TryGetField( i, out field ) )
+				if( row.TryGetField( i, out string field ) )
 				{
 					dictionary.Add( row.Context.HeaderRecord[i], field );
 				}

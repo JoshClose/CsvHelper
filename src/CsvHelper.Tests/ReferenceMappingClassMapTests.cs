@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -131,14 +131,30 @@ namespace CsvHelper.Tests
 			{
 				Map( m => m.FirstName );
 				Map( m => m.LastName );
-				Map( m => m.HomeAddress.Street ).Name( "HomeStreet" );
-				Map( m => m.HomeAddress.City ).Name( "HomeCity" );
-				Map( m => m.HomeAddress.State ).Name( "HomeState" );
-				Map( m => m.HomeAddress.Zip ).Name( "HomeZip" );
-				Map( m => m.WorkAddress.Street ).Name( "WorkStreet" );
-				Map( m => m.WorkAddress.City ).Name( "WorkCity" );
-				Map( m => m.WorkAddress.State ).Name( "WorkState" );
-				Map( m => m.WorkAddress.Zip ).Name( "WorkZip" );
+				References<HomeAddressMap>( m => m.HomeAddress );
+				References<WorkAddressMap>( m => m.WorkAddress );
+			}
+		}
+
+		private sealed class HomeAddressMap : ClassMap<Address>
+		{
+			public HomeAddressMap()
+			{
+				Map( m => m.Street ).Name( "HomeStreet" );
+				Map( m => m.City ).Name( "HomeCity" );
+				Map( m => m.State ).Name( "HomeState" );
+				Map( m => m.Zip ).Name( "HomeZip" );
+			}
+		}
+
+		private sealed class WorkAddressMap : ClassMap<Address>
+		{
+			public WorkAddressMap()
+			{
+				Map(m => m.Street).Name( "WorkStreet" );
+				Map(m => m.City).Name( "WorkCity" );
+				Map(m => m.State).Name( "WorkState" );
+				Map(m => m.Zip).Name( "WorkZip" );
 			}
 		}
 
@@ -146,14 +162,8 @@ namespace CsvHelper.Tests
 		{
 			public OnlyReferencesMap()
 			{
-				Map( m => m.HomeAddress.Street ).Name( "HomeStreet" );
-				Map( m => m.HomeAddress.City ).Name( "HomeCity" );
-				Map( m => m.HomeAddress.State ).Name( "HomeState" );
-				Map( m => m.HomeAddress.Zip ).Name( "HomeZip" );
-				Map( m => m.WorkAddress.Street ).Name( "WorkStreet" );
-				Map( m => m.WorkAddress.City ).Name( "WorkCity" );
-				Map( m => m.WorkAddress.State ).Name( "WorkState" );
-				Map( m => m.WorkAddress.Zip ).Name( "WorkZip" );
+				References<HomeAddressMap>( m => m.HomeAddress );
+				References<WorkAddressMap>( m => m.WorkAddress );
 			}
 		}
 	}

@@ -1,16 +1,14 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections;
 using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Moq;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Reflection;
 
@@ -25,26 +23,26 @@ namespace CsvHelper.Tests.TypeConversion
 			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
-			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
+			var context = new ReadingContext(new StringReader(string.Empty), config, false)
 			{
 				Record = currentRecord
 			};
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.Context ).Returns( context );
-			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new MemberMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
+			rowMock.Setup(m => m.Configuration).Returns(config);
+			rowMock.Setup(m => m.Context).Returns(context);
+			rowMock.Setup(m => m.GetField(It.IsAny<Type>(), It.IsAny<int>())).Returns<Type, int>((type, index) => Convert.ToInt32(currentRecord[index]));
+			var data = new MemberMapData(typeof(Test).GetTypeInfo().GetProperty("List"))
 			{
 				Index = 2
 			};
 			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var converter = new CollectionGenericConverter();
-			var list = (List<int?>)converter.ConvertFromString( "1", rowMock.Object, data );
+			var list = (List<int?>)converter.ConvertFromString("1", rowMock.Object, data);
 
-			Assert.AreEqual( 3, list.Count );
-			Assert.AreEqual( 1, list[0] );
-			Assert.AreEqual( 2, list[1] );
-			Assert.AreEqual( 3, list[2] );
+			Assert.AreEqual(3, list.Count);
+			Assert.AreEqual(1, list[0]);
+			Assert.AreEqual(2, list[1]);
+			Assert.AreEqual(3, list[2]);
 		}
 
 		[TestMethod]
@@ -53,14 +51,14 @@ namespace CsvHelper.Tests.TypeConversion
 			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
-			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
+			var context = new ReadingContext(new StringReader(string.Empty), config, false)
 			{
 				Record = currentRecord
 			};
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.Context ).Returns( context );
-			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new MemberMapData( typeof( Test ).GetProperty( "List" ) )
+			rowMock.Setup(m => m.Configuration).Returns(config);
+			rowMock.Setup(m => m.Context).Returns(context);
+			rowMock.Setup(m => m.GetField(It.IsAny<Type>(), It.IsAny<int>())).Returns<Type, int>((type, index) => Convert.ToInt32(currentRecord[index]));
+			var data = new MemberMapData(typeof(Test).GetProperty("List"))
 			{
 				Index = 2,
 				IndexEnd = 3
@@ -68,33 +66,34 @@ namespace CsvHelper.Tests.TypeConversion
 			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var converter = new CollectionGenericConverter();
-			var list = (List<int?>)converter.ConvertFromString( "1", rowMock.Object, data );
+			var list = (List<int?>)converter.ConvertFromString("1", rowMock.Object, data);
 
-			Assert.AreEqual( 2, list.Count );
-			Assert.AreEqual( 1, list[0] );
-			Assert.AreEqual( 2, list[1] );
+			Assert.AreEqual(2, list.Count);
+			Assert.AreEqual(1, list[0]);
+			Assert.AreEqual(2, list[1]);
 		}
 
 		[TestMethod]
 		public void FullWriteTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { List = new List<int?> { 1, 2, 3 } }
 				};
 				csv.Configuration.HasHeaderRecord = false;
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual( "1,2,3\r\n", result );
+				Assert.AreEqual("1,2,3\r\n", result);
 			}
 		}
 
@@ -107,7 +106,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestIndexMap()
 			{
-				Map( m => m.List ).Index( 1, 3 );
+				Map(m => m.List).Index(1, 3);
 			}
 		}
 
@@ -115,7 +114,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestNamedMap()
 			{
-				Map( m => m.List ).Name( "List" );
+				Map(m => m.List).Name("List");
 			}
 		}
 
@@ -123,7 +122,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestDefaultMap()
 			{
-				Map( m => m.List );
+				Map(m => m.List);
 			}
 		}
 	}

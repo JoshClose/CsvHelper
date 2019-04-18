@@ -1,11 +1,21 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CsvHelper.Configuration;
+﻿// Copyright 2009-2019 Josh Close and Contributors
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.AutoMapping
 {
 	[TestClass]
-    public class CircularReferenceTests
-    {
+	public class CircularReferenceTests
+	{
+		[TestMethod]
+		public void SelfCircularDependencyTest()
+		{
+			var config = new CsvHelper.Configuration.Configuration();
+			var map = config.AutoMap<SelfCircularA>();
+		}
+
 		[TestMethod]
 		public void CircularDependencyTest()
 		{
@@ -27,6 +37,23 @@ namespace CsvHelper.Tests.AutoMapping
 			Assert.AreEqual( 3, map.ReferenceMaps.Count );
 		}
 
+		private class SelfCircularA
+		{
+			public SelfCircularB Circular { get; set; }
+		}
+
+		private class SelfCircularB
+		{
+			public SelfCircularB Self { get; set; }
+
+			public SelfCircularC C { get; set; }
+		}
+
+		private class SelfCircularC
+		{
+			public string Id { get; set; }
+		}
+
 		private class ACircular
 		{
 			public string Id { get; set; }
@@ -44,7 +71,7 @@ namespace CsvHelper.Tests.AutoMapping
 		private class A
 		{
 			public string Id { get; set; }
-			
+
 			public B B1 { get; set; }
 
 			public B B2 { get; set; }

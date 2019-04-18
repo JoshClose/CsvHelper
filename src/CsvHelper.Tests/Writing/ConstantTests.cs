@@ -1,13 +1,11 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
+
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -19,11 +17,12 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void StringConstantTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -31,27 +30,28 @@ namespace CsvHelper.Tests.Writing
 				};
 
 				csv.Configuration.RegisterClassMap<TestStringMap>();
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				var expected = new StringBuilder();
-				expected.AppendLine( "Id,Name" );
-				expected.AppendLine( "1,constant" );
-				expected.AppendLine( "2,constant" );
+				expected.AppendLine("Id,Name");
+				expected.AppendLine("1,constant");
+				expected.AppendLine("2,constant");
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
-		
+
 		[TestMethod]
 		public void NullConstantTest()
 		{
-			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -59,19 +59,20 @@ namespace CsvHelper.Tests.Writing
 
 				csv.Configuration.RegisterClassMap<TestNullMap>();
 				csv.Configuration.HasHeaderRecord = false;
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 
-				Assert.AreEqual( "1,\r\n", writer.ToString() );
+				Assert.AreEqual("1,\r\n", writer.ToString());
 			}
 		}
 
 		[TestMethod]
 		public void IntConstantTest()
 		{
-			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" },
@@ -80,10 +81,10 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.RegisterClassMap<TestIntMap>();
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.SanitizeForInjection = false;
-				csv.WriteRecords( records );
+				csv.WriteRecords(records);
 				writer.Flush();
 
-				Assert.AreEqual( "-1,one\r\n", writer.ToString() );
+				Assert.AreEqual("-1,one\r\n", writer.ToString());
 			}
 		}
 
@@ -97,8 +98,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestIntMap()
 			{
-				Map( m => m.Id ).Constant( -1 );
-				Map( m => m.Name );
+				Map(m => m.Id).Constant(-1);
+				Map(m => m.Name);
 			}
 		}
 
@@ -106,8 +107,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestNullMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).Constant( null );
+				Map(m => m.Id);
+				Map(m => m.Name).Constant(null);
 			}
 		}
 
@@ -115,8 +116,8 @@ namespace CsvHelper.Tests.Writing
 		{
 			public TestStringMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.Name ).Constant( "constant" );
+				Map(m => m.Id);
+				Map(m => m.Name).Constant("constant");
 			}
 		}
 	}

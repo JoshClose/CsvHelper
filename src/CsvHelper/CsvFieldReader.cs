@@ -1,16 +1,14 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 // This file is generated from a T4 template.
-// Modifiying it directly won't do you any good.
+// Modifying it directly won't do you any good.
 
 namespace CsvHelper
 {
@@ -19,20 +17,20 @@ namespace CsvHelper
 	/// </summary>
 	public partial class CsvFieldReader : IFieldReader
 	{
-		private IReadingContext context;
+		private ReadingContext context;
 		private bool disposed;
 
 		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		public virtual IReadingContext Context => context;
+		public virtual ReadingContext Context => context;
 
 		/// <summary>
 		/// Gets a value indicating if the buffer is empty.
 		/// True if the buffer is empty, otherwise false.
 		/// </summary>
 		public virtual bool IsBufferEmpty => context.BufferPosition >= context.CharsRead;
-			
+
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
@@ -40,36 +38,36 @@ namespace CsvHelper
 		/// False if all the data has been read.</returns>
 		public virtual bool FillBuffer()
 		{
-			if( !IsBufferEmpty )
+			if (!IsBufferEmpty)
 			{
-				throw new InvalidOperationException( $"The buffer can't be filled if it's not empty." );
+				throw new InvalidOperationException($"The buffer can't be filled if it's not empty.");
 			}
 
-			if( context.Buffer.Length == 0 )
+			if (context.Buffer.Length == 0)
 			{
 				context.Buffer = new char[context.ParserConfiguration.BufferSize];
 			}
 
-			if( context.CharsRead > 0 )
+			if (context.CharsRead > 0)
 			{
 				// Create a new buffer with extra room for what is left from
 				// the old buffer. Copy the remaining contents onto the new buffer.
-				var charactersUsed = Math.Min( context.FieldStartPosition, context.RawRecordStartPosition );
+				var charactersUsed = Math.Min(context.FieldStartPosition, context.RawRecordStartPosition);
 				var bufferLeft = context.CharsRead - charactersUsed;
 				var bufferUsed = context.CharsRead - bufferLeft;
 				var tempBuffer = new char[bufferLeft + context.ParserConfiguration.BufferSize];
-				Array.Copy( context.Buffer, charactersUsed, tempBuffer, 0, bufferLeft );
+				Array.Copy(context.Buffer, charactersUsed, tempBuffer, 0, bufferLeft);
 				context.Buffer = tempBuffer;
 
 				context.BufferPosition = context.BufferPosition - bufferUsed;
 				context.FieldStartPosition = context.FieldStartPosition - bufferUsed;
-				context.FieldEndPosition = Math.Max( context.FieldEndPosition - bufferUsed, 0 );
+				context.FieldEndPosition = Math.Max(context.FieldEndPosition - bufferUsed, 0);
 				context.RawRecordStartPosition = context.RawRecordStartPosition - bufferUsed;
 				context.RawRecordEndPosition = context.RawRecordEndPosition - bufferUsed;
 			}
 
-			context.CharsRead = context.Reader.Read( context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize );
-			if( context.CharsRead == 0 )
+			context.CharsRead = context.Reader.Read(context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize);
+			if (context.CharsRead == 0)
 			{
 				// End of file
 				return false;
@@ -80,7 +78,7 @@ namespace CsvHelper
 
 			return true;
 		}
-			
+
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
@@ -88,36 +86,36 @@ namespace CsvHelper
 		/// False if all the data has been read.</returns>
 		public virtual async Task<bool> FillBufferAsync()
 		{
-			if( !IsBufferEmpty )
+			if (!IsBufferEmpty)
 			{
-				throw new InvalidOperationException( $"The buffer can't be filled if it's not empty." );
+				throw new InvalidOperationException($"The buffer can't be filled if it's not empty.");
 			}
 
-			if( context.Buffer.Length == 0 )
+			if (context.Buffer.Length == 0)
 			{
 				context.Buffer = new char[context.ParserConfiguration.BufferSize];
 			}
 
-			if( context.CharsRead > 0 )
+			if (context.CharsRead > 0)
 			{
 				// Create a new buffer with extra room for what is left from
 				// the old buffer. Copy the remaining contents onto the new buffer.
-				var charactersUsed = Math.Min( context.FieldStartPosition, context.RawRecordStartPosition );
+				var charactersUsed = Math.Min(context.FieldStartPosition, context.RawRecordStartPosition);
 				var bufferLeft = context.CharsRead - charactersUsed;
 				var bufferUsed = context.CharsRead - bufferLeft;
 				var tempBuffer = new char[bufferLeft + context.ParserConfiguration.BufferSize];
-				Array.Copy( context.Buffer, charactersUsed, tempBuffer, 0, bufferLeft );
+				Array.Copy(context.Buffer, charactersUsed, tempBuffer, 0, bufferLeft);
 				context.Buffer = tempBuffer;
 
 				context.BufferPosition = context.BufferPosition - bufferUsed;
 				context.FieldStartPosition = context.FieldStartPosition - bufferUsed;
-				context.FieldEndPosition = Math.Max( context.FieldEndPosition - bufferUsed, 0 );
+				context.FieldEndPosition = Math.Max(context.FieldEndPosition - bufferUsed, 0);
 				context.RawRecordStartPosition = context.RawRecordStartPosition - bufferUsed;
 				context.RawRecordEndPosition = context.RawRecordEndPosition - bufferUsed;
 			}
 
-			context.CharsRead = await context.Reader.ReadAsync( context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize );
-			if( context.CharsRead == 0 )
+			context.CharsRead = await context.Reader.ReadAsync(context.Buffer, context.BufferPosition, context.ParserConfiguration.BufferSize).ConfigureAwait(false);
+			if (context.CharsRead == 0)
 			{
 				// End of file
 				return false;
@@ -128,14 +126,14 @@ namespace CsvHelper
 
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
 		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.
 		/// </summary>
 		/// <param name="reader">The text reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvFieldReader( TextReader reader, Configuration.Configuration configuration ) : this( reader, configuration, false ) { }
+		public CsvFieldReader(TextReader reader, Configuration.Configuration configuration) : this(reader, configuration, false) { }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
@@ -145,9 +143,9 @@ namespace CsvHelper
 		/// <param name="reader">The text reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the <see cref="TextReader"/> should be left open when disposing.</param>
-		public CsvFieldReader( TextReader reader, Configuration.Configuration configuration, bool leaveOpen )
+		public CsvFieldReader(TextReader reader, Configuration.Configuration configuration, bool leaveOpen)
 		{
-			context = new ReadingContext( reader, configuration, leaveOpen );
+			context = new ReadingContext(reader, configuration, leaveOpen);
 		}
 
 		/// <summary>
@@ -172,9 +170,9 @@ namespace CsvHelper
 		{
 			AppendField();
 
-			if( context.IsFieldBad )
+			if (context.IsFieldBad)
 			{
-				context.ParserConfiguration.BadDataFound?.Invoke( context );
+				context.ParserConfiguration.BadDataFound?.Invoke(context);
 			}
 
 			context.IsFieldBad = false;
@@ -190,18 +188,31 @@ namespace CsvHelper
 		/// </summary>
 		public virtual void AppendField()
 		{
-			if( context.ParserConfiguration.CountBytes )
+			if (context.ParserConfiguration.CountBytes)
 			{
-				context.BytePosition += context.ParserConfiguration.Encoding.GetByteCount( context.Buffer, context.RawRecordStartPosition, context.BufferPosition - context.RawRecordStartPosition );
+				context.BytePosition += context.ParserConfiguration.Encoding.GetByteCount(context.Buffer, context.RawRecordStartPosition, context.BufferPosition - context.RawRecordStartPosition);
 			}
 
-			context.RawRecordBuilder.Append( new string( context.Buffer, context.RawRecordStartPosition, context.RawRecordEndPosition - context.RawRecordStartPosition ) );
+			context.RawRecordBuilder.Append(new string(context.Buffer, context.RawRecordStartPosition, context.RawRecordEndPosition - context.RawRecordStartPosition));
 			context.RawRecordStartPosition = context.RawRecordEndPosition;
 
 			var length = context.FieldEndPosition - context.FieldStartPosition;
-			context.FieldBuilder.Append( new string( context.Buffer, context.FieldStartPosition, length ) );
+			context.FieldBuilder.Append(new string(context.Buffer, context.FieldStartPosition, length));
 			context.FieldStartPosition = context.BufferPosition;
 			context.FieldEndPosition = 0;
+		}
+
+		/// <summary>
+		/// Move's the buffer position according to the given offset.
+		/// </summary>
+		/// <param name="offset">The offset to move the buffer.</param>
+		public virtual void SetBufferPosition(int offset = 0)
+		{
+			var position = context.BufferPosition + offset;
+			if (position >= 0)
+			{
+				context.BufferPosition = position;
+			}
 		}
 
 		/// <summary>
@@ -209,10 +220,10 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="offset">An offset for the field start.
 		/// The offset should be less than 1.</param>
-		public virtual void SetFieldStart( int offset = 0 )
+		public virtual void SetFieldStart(int offset = 0)
 		{
 			var position = context.BufferPosition + offset;
-			if( position >= 0 )
+			if (position >= 0)
 			{
 				context.FieldStartPosition = position;
 			}
@@ -223,24 +234,24 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="offset">An offset for the field start.
 		/// The offset should be less than 1.</param>
-		public virtual void SetFieldEnd( int offset = 0 )
+		public virtual void SetFieldEnd(int offset = 0)
 		{
 			var position = context.BufferPosition + offset;
-			if( position >= 0 )
+			if (position >= 0)
 			{
 				context.FieldEndPosition = position;
 			}
 		}
 
 		/// <summary>
-		/// Sets the raw recodr start to the current buffer position;
+		/// Sets the raw record start to the current buffer position;
 		/// </summary>
 		/// <param name="offset">An offset for the raw record start.
 		/// The offset should be less than 1.</param>
-		public virtual void SetRawRecordStart( int offset )
+		public virtual void SetRawRecordStart(int offset)
 		{
 			var position = context.BufferPosition + offset;
-			if( position >= 0 )
+			if (position >= 0)
 			{
 				context.RawRecordStartPosition = position;
 			}
@@ -251,10 +262,10 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="offset">An offset for the raw record end.
 		/// The offset should be less than 1.</param>
-		public virtual void SetRawRecordEnd( int offset )
+		public virtual void SetRawRecordEnd(int offset)
 		{
 			var position = context.BufferPosition + offset;
-			if( position >= 0 )
+			if (position >= 0)
 			{
 				context.RawRecordEndPosition = position;
 			}
@@ -266,22 +277,22 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose( true );
-			GC.SuppressFinalize( this );
+			Dispose(!context?.LeaveOpen ?? true);
+			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		/// <param name="disposing">True if the instance needs to be disposed of.</param>
-		protected virtual void Dispose( bool disposing )
+		protected virtual void Dispose(bool disposing)
 		{
-			if( disposed )
+			if (disposed)
 			{
 				return;
 			}
 
-			if( disposing )
+			if (disposing)
 			{
 				context?.Dispose();
 			}

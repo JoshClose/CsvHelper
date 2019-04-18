@@ -1,13 +1,10 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.Collections;
+
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -57,7 +54,15 @@ namespace CsvHelper.Tests
 			public AMap()
 			{
 				Map( m => m.Id ).Index( 1 );
-				Map( m => m.B.Id ).Index( 0 );
+				References<BMap>( m => m.B );
+			}
+		}
+
+		private sealed class BMap : ClassMap<B>
+		{
+			public BMap()
+			{
+				Map( m => m.Id ).Index( 0 );
 			}
 		}
 	}

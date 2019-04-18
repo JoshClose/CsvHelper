@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -33,7 +33,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a value indicating if the name was
-		/// explicitly set. True if it was explicity set,
+		/// explicitly set. True if it was explicitly set,
 		/// otherwise false.
 		/// </summary>
 		public virtual bool IsNameSet { get; set; }
@@ -110,6 +110,11 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the expression use to validate a field.
 		/// </summary>
 		public virtual Expression ValidateExpression { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if a field is optional.
+		/// </summary>
+		public virtual bool IsOptional { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MemberMapData"/> class.

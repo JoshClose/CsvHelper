@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -25,27 +25,27 @@ namespace CsvHelper.Tests.TypeConversion
 			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var rowMock = new Mock<IReaderRow>();
-			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
+			var context = new ReadingContext(new StringReader(string.Empty), config, false)
 			{
 				Record = currentRecord
 			};
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.Context ).Returns( context );
-			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new MemberMapData( typeof( Test ).GetTypeInfo().GetProperty( "List" ) )
+			rowMock.Setup(m => m.Configuration).Returns(config);
+			rowMock.Setup(m => m.Context).Returns(context);
+			rowMock.Setup(m => m.GetField(It.IsAny<Type>(), It.IsAny<int>())).Returns<Type, int>((type, index) => Convert.ToInt32(currentRecord[index]));
+			var data = new MemberMapData(typeof(Test).GetTypeInfo().GetProperty("List"))
 			{
 				Index = 2
 			};
 			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var converter = new IEnumerableGenericConverter();
-			var enumerable = (IEnumerable<int?>)converter.ConvertFromString( "1", rowMock.Object, data );
+			var enumerable = (IEnumerable<int?>)converter.ConvertFromString("1", rowMock.Object, data);
 			var list = enumerable.ToList();
 
-			Assert.AreEqual( 3, list.Count );
-			Assert.AreEqual( 1, list[0] );
-			Assert.AreEqual( 2, list[1] );
-			Assert.AreEqual( 3, list[2] );
+			Assert.AreEqual(3, list.Count);
+			Assert.AreEqual(1, list[0]);
+			Assert.AreEqual(2, list[1]);
+			Assert.AreEqual(3, list[2]);
 		}
 
 		[TestMethod]
@@ -54,14 +54,14 @@ namespace CsvHelper.Tests.TypeConversion
 			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
-			var context = new ReadingContext( new StringReader( string.Empty ), config, false )
+			var context = new ReadingContext(new StringReader(string.Empty), config, false)
 			{
 				Record = currentRecord
 			};
-			rowMock.Setup( m => m.Configuration ).Returns( config );
-			rowMock.Setup( m => m.Context ).Returns( context );
-			rowMock.Setup( m => m.GetField( It.IsAny<Type>(), It.IsAny<int>() ) ).Returns<Type, int>( ( type, index ) => Convert.ToInt32( currentRecord[index] ) );
-			var data = new MemberMapData( typeof( Test ).GetProperty( "List" ) )
+			rowMock.Setup(m => m.Configuration).Returns(config);
+			rowMock.Setup(m => m.Context).Returns(context);
+			rowMock.Setup(m => m.GetField(It.IsAny<Type>(), It.IsAny<int>())).Returns<Type, int>((type, index) => Convert.ToInt32(currentRecord[index]));
+			var data = new MemberMapData(typeof(Test).GetProperty("List"))
 			{
 				Index = 2,
 				IndexEnd = 3
@@ -69,23 +69,24 @@ namespace CsvHelper.Tests.TypeConversion
 			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var converter = new IEnumerableGenericConverter();
-			var enumerable = (IEnumerable<int?>)converter.ConvertFromString( "1", rowMock.Object, data );
+			var enumerable = (IEnumerable<int?>)converter.ConvertFromString("1", rowMock.Object, data);
 			var list = enumerable.ToList();
 
-			Assert.AreEqual( 2, list.Count );
-			Assert.AreEqual( 1, list[0] );
-			Assert.AreEqual( 2, list[1] );
+			Assert.AreEqual(2, list.Count);
+			Assert.AreEqual(1, list[0]);
+			Assert.AreEqual(2, list[1]);
 		}
 
 		[TestMethod]
 		public void FullReadNoHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -95,23 +96,24 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( 2, list[0] );
-				Assert.AreEqual( 3, list[1] );
-				Assert.AreEqual( 4, list[2] );
+				Assert.AreEqual(3, list.Count);
+				Assert.AreEqual(2, list[0]);
+				Assert.AreEqual(3, list[1]);
+				Assert.AreEqual(4, list[2]);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadWithHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,List,List,List,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,List,List,List,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -121,23 +123,24 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( 2, list[0] );
-				Assert.AreEqual( 3, list[1] );
-				Assert.AreEqual( 4, list[2] );
+				Assert.AreEqual(3, list.Count);
+				Assert.AreEqual(2, list[0]);
+				Assert.AreEqual(3, list[1]);
+				Assert.AreEqual(4, list[2]);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadWithDefaultHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,List,List,List,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,List,List,List,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -147,23 +150,24 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( 2, list[0] );
-				Assert.AreEqual( 3, list[1] );
-				Assert.AreEqual( 4, list[2] );
+				Assert.AreEqual(3, list.Count);
+				Assert.AreEqual(2, list[0]);
+				Assert.AreEqual(3, list[1]);
+				Assert.AreEqual(4, list[2]);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadWithNamedHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,List,List,List,After" );
-				writer.WriteLine( "1,2,3,4,5" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,List,List,List,After");
+				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -173,23 +177,24 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( 2, list[0] );
-				Assert.AreEqual( 3, list[1] );
-				Assert.AreEqual( 4, list[2] );
+				Assert.AreEqual(3, list.Count);
+				Assert.AreEqual(2, list[0]);
+				Assert.AreEqual(3, list[1]);
+				Assert.AreEqual(4, list[2]);
 			}
 		}
 
 		[TestMethod]
 		public void FullReadWithHeaderListItemsScattered()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				writer.WriteLine( "Before,List,A,List,B,List,After" );
-				writer.WriteLine( "1,2,3,4,5,6,7" );
+				csv.Configuration.Delimiter = ",";
+				writer.WriteLine("Before,List,A,List,B,List,After");
+				writer.WriteLine("1,2,3,4,5,6,7");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -199,60 +204,62 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual( 3, list.Count );
-				Assert.AreEqual( 2, list[0] );
-				Assert.AreEqual( 4, list[1] );
-				Assert.AreEqual( 6, list[2] );
+				Assert.AreEqual(3, list.Count);
+				Assert.AreEqual(2, list[0]);
+				Assert.AreEqual(4, list[1]);
+				Assert.AreEqual(6, list[2]);
 			}
 		}
 
 		[TestMethod]
 		public void FullWriteNoHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { List = new List<int?> { 1, 2, 3 } }
 				};
 				csv.Configuration.HasHeaderRecord = false;
 				csv.Configuration.RegisterClassMap<TestIndexMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual( ",1,2,3,\r\n", result );
+				Assert.AreEqual(",1,2,3,\r\n", result);
 			}
 		}
 
 		[TestMethod]
 		public void FullWriteWithHeaderTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { List = new List<int?> { 1, 2, 3 } }
 				};
 				csv.Configuration.RegisterClassMap<TestIndexMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
 				var result = reader.ReadToEnd();
 				var expected = new StringBuilder();
-				expected.AppendLine( "Before,List1,List2,List3,After" );
-				expected.AppendLine( ",1,2,3," );
+				expected.AppendLine("Before,List1,List2,List3,After");
+				expected.AppendLine(",1,2,3,");
 
-				Assert.AreEqual( expected.ToString(), result );
+				Assert.AreEqual(expected.ToString(), result);
 			}
 		}
 
@@ -267,9 +274,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestIndexMap()
 			{
-				Map( m => m.Before ).Index( 0 );
-				Map( m => m.List ).Index( 1, 3 );
-				Map( m => m.After ).Index( 4 );
+				Map(m => m.Before).Index(0);
+				Map(m => m.List).Index(1, 3);
+				Map(m => m.After).Index(4);
 			}
 		}
 
@@ -277,9 +284,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestNamedMap()
 			{
-				Map( m => m.Before ).Name( "Before" );
-				Map( m => m.List ).Name( "List" );
-				Map( m => m.After ).Name( "After" );
+				Map(m => m.Before).Name("Before");
+				Map(m => m.List).Name("List");
+				Map(m => m.After).Name("After");
 			}
 		}
 
@@ -287,9 +294,9 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			public TestDefaultMap()
 			{
-				Map( m => m.Before );
-				Map( m => m.List );
-				Map( m => m.After );
+				Map(m => m.Before);
+				Map(m => m.List);
+				Map(m => m.After);
 			}
 		}
 	}

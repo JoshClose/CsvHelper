@@ -1,9 +1,8 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
@@ -12,12 +11,12 @@ namespace CsvHelper
 	/// <summary>
 	/// Defines methods used to write a CSV row.
 	/// </summary>
-    public interface IWriterRow
+	public interface IWriterRow
 	{
 		/// <summary>
 		/// Gets the writing context.
 		/// </summary>
-		IWritingContext Context { get; }
+		WritingContext Context { get; }
 
 		/// <summary>
 		/// Gets or sets the configuration.
@@ -47,8 +46,8 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Writes the field to the CSV file. This will
-		/// ignore any need to quote and ignore the
-		/// <see cref="CsvHelper.Configuration.Configuration.QuoteAllFields"/>
+		/// ignore any need to quote and ignore
+		/// <see cref="CsvHelper.Configuration.Configuration.ShouldQuote"/>
 		/// and just quote based on the shouldQuote
 		/// parameter.
 		/// When all fields are written for a record,
@@ -92,17 +91,17 @@ namespace CsvHelper
 		/// <param name="field">The field to write.</param>
 		void WriteField<T, TConverter>( T field );
 
-        /// <summary>
-        /// Writes a comment.
-        /// </summary>
-        /// <param name="comment">The comment to write.</param>
-        void WriteComment( string comment );
+		/// <summary>
+		/// Writes a comment.
+		/// </summary>
+		/// <param name="comment">The comment to write.</param>
+		void WriteComment( string comment );
 
-        /// <summary>
-        /// Writes the header record from the given members.
-        /// </summary>
-        /// <typeparam name="T">The type of the record.</typeparam>
-        void WriteHeader<T>();
+		/// <summary>
+		/// Writes the header record from the given members.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		void WriteHeader<T>();
 
 		/// <summary>
 		/// Writes the header record from the given members.

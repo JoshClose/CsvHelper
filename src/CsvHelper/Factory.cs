@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -83,16 +83,16 @@ namespace CsvHelper
 		public virtual IWriter CreateWriter( TextWriter writer )
 		{
 			return new CsvWriter( writer );
-        }
+		}
 
-        /// <summary>
-        /// Access point for fluent interface to dynamically build a <see cref="ClassMap{T}"/>
-        /// </summary>
-        /// <typeparam name="T">Type you will be making a class map for</typeparam>
-        /// <returns>Options to further configure the <see cref="ClassMap{T}"/></returns>
-        public IHasMap<T> CreateClassMapBuilder<T>()
-	    {
-	        return new ClassMapBuilder<T>();
-	    }
-    }
+		/// <summary>
+		/// Access point for fluent interface to dynamically build a <see cref="ClassMap{T}"/>
+		/// </summary>
+		/// <typeparam name="T">Type you will be making a class map for</typeparam>
+		/// <returns>Options to further configure the <see cref="ClassMap{T}"/></returns>
+		public IHasMap<T> CreateClassMapBuilder<T>()
+		{
+			return new ClassMapBuilder<T>();
+		}
+	}
 }

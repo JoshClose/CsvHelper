@@ -1,12 +1,10 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
+
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -37,17 +35,18 @@ namespace CsvHelper.Tests
 				},
 			};
 
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
 			{
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<ContainerClassMap>();
-				csv.WriteRecords( list );
+				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
 
-				Assert.AreEqual( "First,Second,Third", reader.ReadLine() );
+				Assert.AreEqual("First,Second,Third", reader.ReadLine());
 			}
 		}
 
@@ -69,9 +68,17 @@ namespace CsvHelper.Tests
 		{
 			public ContainerClassMap()
 			{
-				Map( m => m.Contents.First.First );
-				Map( m => m.Contents.Second.Second );
-				Map( m => m.Contents.Third );
+				References<ThirdClassMap>(m => m.Contents);
+			}
+		}
+
+		private sealed class ThirdClassMap : ClassMap<ThirdClass>
+		{
+			public ThirdClassMap()
+			{
+				References<FirstClassMap>(m => m.First);
+				References<SecondClassMap>(m => m.Second);
+				Map(m => m.Third);
 			}
 		}
 
@@ -84,7 +91,7 @@ namespace CsvHelper.Tests
 		{
 			public SecondClassMap()
 			{
-				Map( m => m.Second );
+				Map(m => m.Second);
 			}
 		}
 
@@ -97,7 +104,7 @@ namespace CsvHelper.Tests
 		{
 			public FirstClassMap()
 			{
-				Map( m => m.First );
+				Map(m => m.First);
 			}
 		}
 	}

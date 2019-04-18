@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,42 +15,34 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReferencesWithPrefixTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvReader( reader ) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
 			{
-				csv.Configuration.ReferenceHeaderPrefix = ( type, name ) =>
-				{
-					if( name == "B" )
-					{
-						return "BPrefix_";
-					}
-
-					return $"{type.Name}.";
-				};
+				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<AMap>();
 
-				writer.WriteLine( "Id,BPrefix_Id,C.CId" );
-				writer.WriteLine( "a1,b1,c1" );
-				writer.WriteLine( "a2,b2,c2" );
-				writer.WriteLine( "a3,b3,c3" );
-				writer.WriteLine( "a4,b4,c4" );
+				writer.WriteLine("Id,BPrefix_Id,C.CId");
+				writer.WriteLine("a1,b1,c1");
+				writer.WriteLine("a2,b2,c2");
+				writer.WriteLine("a3,b3,c3");
+				writer.WriteLine("a4,b4,c4");
 				writer.Flush();
 				stream.Position = 0;
 
 				var list = csv.GetRecords<A>().ToList();
 
-				Assert.IsNotNull( list );
-				Assert.AreEqual( 4, list.Count );
+				Assert.IsNotNull(list);
+				Assert.AreEqual(4, list.Count);
 
-				for( var i = 0; i < 4; i++ )
+				for (var i = 0; i < 4; i++)
 				{
 					var rowId = i + 1;
 					var row = list[i];
-					Assert.AreEqual( "a" + rowId, row.Id );
-					Assert.AreEqual( "b" + rowId, row.B.Id );
-					Assert.AreEqual( "c" + rowId, row.B.C.Id );
+					Assert.AreEqual("a" + rowId, row.Id);
+					Assert.AreEqual("b" + rowId, row.B.Id);
+					Assert.AreEqual("c" + rowId, row.B.C.Id);
 				}
 			}
 		}
@@ -78,9 +70,25 @@ namespace CsvHelper.Tests
 		{
 			public AMap()
 			{
-				Map( m => m.Id );
-				Map( m => m.B.Id );
-				Map( m => m.B.C.Id ).Name( "CId" );
+				Map(m => m.Id);
+				References<BMap>(m => m.B).Prefix("BPrefix_");
+			}
+		}
+
+		private sealed class BMap : ClassMap<B>
+		{
+			public BMap()
+			{
+				Map(m => m.Id);
+				References<CMap>(m => m.C).Prefix();
+			}
+		}
+
+		private sealed class CMap : ClassMap<C>
+		{
+			public CMap()
+			{
+				Map(m => m.Id).Name("CId");
 			}
 		}
 	}

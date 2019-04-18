@@ -1,8 +1,7 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
 using System.Globalization;
 using CsvHelper.Configuration;
 
@@ -22,14 +21,12 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
 		{
-			bool b;
-			if( bool.TryParse( text, out b ) )
+			if( bool.TryParse( text, out var b ) )
 			{
 				return b;
 			}
 
-			short sh;
-			if( short.TryParse( text, out sh ) )
+			if( short.TryParse( text, out var sh ) )
 			{
 				if( sh == 0 )
 				{

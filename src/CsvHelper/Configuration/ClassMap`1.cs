@@ -1,14 +1,10 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
@@ -72,6 +68,22 @@ namespace CsvHelper.Configuration
 			member = stack.Pop();
 
 			return (MemberMap<TClass, TMember>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
+		}
+
+		/// <summary>
+		/// Meant for internal use only. 
+		/// Maps a member to another class map. When this is used, accessing a property through
+		/// sub-property mapping later won't work. You can only use one or the other. When using
+		/// this, ConvertUsing will also not work.
+		/// </summary>
+		/// <typeparam name="TClassMap">The type of the class map.</typeparam>
+		/// <param name="expression">The expression.</param>
+		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
+		/// <returns>The reference mapping for the member.</returns>
+		public virtual MemberReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
+		{
+			var member = ReflectionHelper.GetMember( expression );
+			return References( typeof( TClassMap ), member, constructorArgs );
 		}
 	}
 }

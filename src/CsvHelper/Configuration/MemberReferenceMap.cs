@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2017 Josh Close and Contributors
+﻿// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -34,6 +34,23 @@ namespace CsvHelper.Configuration
 			}
 
 			data = new MemberReferenceMapData( member, mapping );
+		}
+
+		/// <summary>
+		/// Appends a prefix to the header of each field of the reference member.
+		/// </summary>
+		/// <param name="prefix">The prefix to be prepended to headers of each reference member.</param>
+		/// <returns>The current <see cref="MemberReferenceMap" /></returns>
+		public MemberReferenceMap Prefix( string prefix = null )
+		{
+			if( string.IsNullOrEmpty( prefix ) )
+			{
+				prefix = data.Member.Name + ".";
+			}
+
+			data.Prefix = prefix;
+
+			return this;
 		}
 
 		/// <summary>
