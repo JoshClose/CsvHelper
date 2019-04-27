@@ -41,7 +41,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual("two", records[1].StringColumn);
 		}
 
-        [TestMethod]
+		[TestMethod]
 		public void ReadWithConvertUsingWithIgnoreTest()
 		{
 			var data = new List<string[]>
@@ -377,7 +377,7 @@ namespace CsvHelper.Tests
 				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
 			}
 		}
-        
+
 		private sealed class ConvertUsingClassMap : ClassMap<MultipleNamesClass>
 		{
 			public ConvertUsingClassMap()

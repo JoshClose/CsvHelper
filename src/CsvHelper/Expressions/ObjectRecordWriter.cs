@@ -66,13 +66,13 @@ namespace CsvHelper.Expressions
 					// The user is providing the expression to do the conversion.
 					fieldExpression = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameterConverted );
 
-                    if( type.GetTypeInfo().IsClass )
+					if( type.GetTypeInfo().IsClass )
 					{
 						var areEqualExpression = Expression.Equal( fieldExpression, Expression.Constant( null ) );
 						fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
 					}
 				}
-                else if( memberMap.Data.IsConstantSet )
+				else if( memberMap.Data.IsConstantSet )
 				{
 					if( memberMap.Data.Constant == null )
 					{

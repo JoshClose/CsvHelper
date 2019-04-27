@@ -55,7 +55,6 @@ namespace CsvHelper.Tests.Writing
 			using (var csv = new CsvWriter(writer))
 			{
 				csv.Configuration.Delimiter = ",";
-                csv.Configuration.IgnoreReferences = true;
 				var list = new List<Test>
 				{
 					new Test { Id = 1, Name = "Bob", Required = "Hello world" },

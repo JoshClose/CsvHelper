@@ -101,7 +101,7 @@ namespace CsvHelper.Tests
 			Assert.AreEqual("Converted1\r\n", result);
 		}
 
-        [TestMethod]
+		[TestMethod]
 		public void ConvertUsingWithIgnoreTest()
 		{
 			string result;
@@ -113,10 +113,10 @@ namespace CsvHelper.Tests
 				var records = new List<MultipleNamesClass>
 				{
 					new MultipleNamesClass
-                    {
-                        IntColumn = 1,
-                        StringColumn = "Hello world"
-                    }
+					{
+						IntColumn = 1,
+						StringColumn = "Hello world"
+					}
 				};
 
 				csv.Configuration.HasHeaderRecord = false;
@@ -243,7 +243,7 @@ namespace CsvHelper.Tests
 			 });
 			}
 		}
-        
+
 		private sealed class ConvertUsingConstantMap : ClassMap<TestClass>
 		{
 			public ConvertUsingConstantMap()
