@@ -59,18 +59,20 @@ namespace CsvHelper.Expressions
 					continue;
 				}
 
-                if( memberMap.Data.WritingConvertExpression != null )
-				{
-					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameterConverted );
-					exp = Expression.Call( Expression.Constant( Writer ), nameof( Writer.WriteConvertedField ), null, exp );
-					delegates.Add( Expression.Lambda<Action<T>>( exp, recordParameter ).Compile() );
-					continue;
-				}
-
 				Expression fieldExpression;
 
-				if( memberMap.Data.IsConstantSet )
+				if( memberMap.Data.WritingConvertExpression != null )
+				{
+					// The user is providing the expression to do the conversion.
+					fieldExpression = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameterConverted );
+
+                    if( type.GetTypeInfo().IsClass )
+					{
+						var areEqualExpression = Expression.Equal( fieldExpression, Expression.Constant( null ) );
+						fieldExpression = Expression.Condition( areEqualExpression, Expression.Constant( string.Empty ), fieldExpression );
+					}
+				}
+                else if( memberMap.Data.IsConstantSet )
 				{
 					if( memberMap.Data.Constant == null )
 					{

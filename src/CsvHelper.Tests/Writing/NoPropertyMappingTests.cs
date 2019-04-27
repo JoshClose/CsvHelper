@@ -47,6 +47,39 @@ namespace CsvHelper.Tests.Writing
 		}
 
 		[TestMethod]
+		public void NoPropertyWithHeaderAndNameWithConvertUsingTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
+			{
+				csv.Configuration.Delimiter = ",";
+                csv.Configuration.IgnoreReferences = true;
+				var list = new List<Test>
+				{
+					new Test { Id = 1, Name = "Bob", Required = "Hello world" },
+					new Test { Id = 2, Required = "Hello world" }
+				};
+
+				csv.Configuration.RegisterClassMap<TestWithNameAndRequiredAndConvertUsingMap>();
+				csv.WriteRecords(list);
+
+				writer.Flush();
+				stream.Position = 0;
+
+				var result = reader.ReadToEnd();
+
+				var expected = new StringBuilder();
+				expected.AppendLine("Id,Constant,Name,Required");
+				expected.AppendLine("1,const,Bob,Hello world");
+				expected.AppendLine("2,const,,Hello world");
+
+				Assert.AreEqual(expected.ToString(), result);
+			}
+		}
+
+		[TestMethod]
 		public void NoPropertyWithHeaderAndNoNameTest()
 		{
 			using (var stream = new MemoryStream())
@@ -179,6 +212,8 @@ namespace CsvHelper.Tests.Writing
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+
+			public string Required { get; set; }
 		}
 
 		private sealed class TestWithNameMap : ClassMap<Test>
@@ -188,6 +223,17 @@ namespace CsvHelper.Tests.Writing
 				Map(m => m.Id);
 				Map().Name("Constant").Constant("const");
 				Map(m => m.Name);
+			}
+		}
+
+		private sealed class TestWithNameAndRequiredAndConvertUsingMap : ClassMap<Test>
+		{
+			public TestWithNameAndRequiredAndConvertUsingMap()
+			{
+				Map(m => m.Id);
+				Map().Name("Constant").Constant("const");
+				Map(m => m.Name).ConvertUsing(m => m.Name);
+				Map(m => m.Required);
 			}
 		}
 
