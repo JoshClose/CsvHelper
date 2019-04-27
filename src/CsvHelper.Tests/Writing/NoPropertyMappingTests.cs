@@ -57,11 +57,11 @@ namespace CsvHelper.Tests.Writing
 				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
-					new Test { Id = 1, Name = "Bob", Required = "Hello world" },
-					new Test { Id = 2, Required = "Hello world" }
+					new Test { Id = 1, Name = "Bob" },
+					new Test { Id = 2 }
 				};
 
-				csv.Configuration.RegisterClassMap<TestWithNameAndRequiredAndConvertUsingMap>();
+				csv.Configuration.RegisterClassMap<TestWithNameAndConvertUsingMap>();
 				csv.WriteRecords(list);
 
 				writer.Flush();
@@ -70,9 +70,9 @@ namespace CsvHelper.Tests.Writing
 				var result = reader.ReadToEnd();
 
 				var expected = new StringBuilder();
-				expected.AppendLine("Id,Constant,Name,Required");
-				expected.AppendLine("1,const,Bob,Hello world");
-				expected.AppendLine("2,const,,Hello world");
+				expected.AppendLine("Id,Constant,Name");
+				expected.AppendLine("1,const,Bob");
+				expected.AppendLine("2,const,");
 
 				Assert.AreEqual(expected.ToString(), result);
 			}
@@ -211,8 +211,6 @@ namespace CsvHelper.Tests.Writing
 			public int Id { get; set; }
 
 			public string Name { get; set; }
-
-			public string Required { get; set; }
 		}
 
 		private sealed class TestWithNameMap : ClassMap<Test>
@@ -225,14 +223,13 @@ namespace CsvHelper.Tests.Writing
 			}
 		}
 
-		private sealed class TestWithNameAndRequiredAndConvertUsingMap : ClassMap<Test>
+		private sealed class TestWithNameAndConvertUsingMap : ClassMap<Test>
 		{
-			public TestWithNameAndRequiredAndConvertUsingMap()
+			public TestWithNameAndConvertUsingMap()
 			{
 				Map(m => m.Id);
 				Map().Name("Constant").Constant("const");
 				Map(m => m.Name).ConvertUsing(m => m.Name);
-				Map(m => m.Required);
 			}
 		}
 
