@@ -54,17 +54,17 @@ namespace CsvHelper.Expressions
 
 			foreach( var memberMap in members )
 			{
-				if( memberMap.Data.WritingConvertExpression != null )
+				if( !Writer.CanWrite( memberMap ) )
+				{
+					continue;
+				}
+
+                if( memberMap.Data.WritingConvertExpression != null )
 				{
 					// The user is providing the expression to do the conversion.
 					Expression exp = Expression.Invoke( memberMap.Data.WritingConvertExpression, recordParameterConverted );
 					exp = Expression.Call( Expression.Constant( Writer ), nameof( Writer.WriteConvertedField ), null, exp );
 					delegates.Add( Expression.Lambda<Action<T>>( exp, recordParameter ).Compile() );
-					continue;
-				}
-
-				if( !Writer.CanWrite( memberMap ) )
-				{
 					continue;
 				}
 

@@ -101,6 +101,36 @@ namespace CsvHelper.Tests
 			Assert.AreEqual("Converted1\r\n", result);
 		}
 
+        [TestMethod]
+		public void ConvertUsingWithIgnoreTest()
+		{
+			string result;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer))
+			{
+				var records = new List<MultipleNamesClass>
+				{
+					new MultipleNamesClass
+                    {
+                        IntColumn = 1,
+                        StringColumn = "Hello world"
+                    }
+				};
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.RegisterClassMap<ConvertUsingWithIgnoreMap>();
+				csv.WriteRecords(records);
+				writer.Flush();
+				stream.Position = 0;
+
+				result = reader.ReadToEnd();
+			}
+
+			Assert.AreEqual("2\r\n", result);
+		}
+
 		[TestMethod]
 		public void ConvertUsingBlockTest()
 		{
@@ -213,12 +243,21 @@ namespace CsvHelper.Tests
 			 });
 			}
 		}
-
+        
 		private sealed class ConvertUsingConstantMap : ClassMap<TestClass>
 		{
 			public ConvertUsingConstantMap()
 			{
 				Map(m => m.IntColumn).ConvertUsing(m => "Constant");
+			}
+		}
+
+		private sealed class ConvertUsingWithIgnoreMap : ClassMap<MultipleNamesClass>
+		{
+			public ConvertUsingWithIgnoreMap()
+			{
+				Map(m => m.IntColumn).ConvertUsing(m => (m.IntColumn * 2).ToString());
+				Map(m => m.StringColumn).Ignore(true).ConvertUsing(m => m.StringColumn);
 			}
 		}
 	}
