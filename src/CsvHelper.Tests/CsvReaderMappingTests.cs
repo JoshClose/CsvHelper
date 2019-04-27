@@ -41,6 +41,30 @@ namespace CsvHelper.Tests
 			Assert.AreEqual("two", records[1].StringColumn);
 		}
 
+        [TestMethod]
+		public void ReadWithConvertUsingWithIgnoreTest()
+		{
+			var data = new List<string[]>
+			{
+				new[] { "int2", "string.3" },
+				new[] { "1", "one" },
+				null
+			};
+
+			var queue = new Queue<string[]>(data);
+			var parserMock = new ParserMock(queue);
+
+			var csvReader = new CsvReader(parserMock);
+			csvReader.Configuration.RegisterClassMap<ConvertUsingWithIgnoreClassMap>();
+
+			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
+
+			Assert.IsNotNull(records);
+			Assert.AreEqual(1, records.Count);
+			Assert.AreEqual(1, records[0].IntColumn);
+			Assert.IsNull(records[0].StringColumn);
+		}
+
 		[TestMethod]
 		public void ReadMultipleNamesTest()
 		{
@@ -353,13 +377,22 @@ namespace CsvHelper.Tests
 				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
 			}
 		}
-
+        
 		private sealed class ConvertUsingClassMap : ClassMap<MultipleNamesClass>
 		{
 			public ConvertUsingClassMap()
 			{
 				Map( m => m.IntColumn ).Name( "int2" );
 				Map( m => m.StringColumn ).ConvertUsing( row => row.GetField( "string.3" ) );
+			}
+		}
+
+		private sealed class ConvertUsingWithIgnoreClassMap : ClassMap<MultipleNamesClass>
+		{
+			public ConvertUsingWithIgnoreClassMap()
+			{
+				Map( m => m.IntColumn ).Name( "int2" );
+				Map( m => m.StringColumn ).Ignore(true).ConvertUsing( row => row.GetField( "string.3" ) );
 			}
 		}
 

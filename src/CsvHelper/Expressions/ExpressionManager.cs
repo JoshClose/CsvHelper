@@ -150,16 +150,16 @@ namespace CsvHelper.Expressions
 		/// <param name="memberMap">The mapping for the member.</param>
 		public virtual Expression CreateGetFieldExpression(MemberMap memberMap)
 		{
+			if (!reader.CanRead(memberMap))
+			{
+				return null;
+			}
+
 			if (memberMap.Data.ReadingConvertExpression != null)
 			{
 				// The user is providing the expression to do the conversion.
 				Expression exp = Expression.Invoke(memberMap.Data.ReadingConvertExpression, Expression.Constant(reader));
 				return Expression.Convert(exp, memberMap.Data.Member.MemberType());
-			}
-
-			if (!reader.CanRead(memberMap))
-			{
-				return null;
 			}
 
 			if (memberMap.Data.TypeConverter == null)
