@@ -30,7 +30,7 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="ModuleInit.Fody" Version="1.8.3" PrivateAssets="all" />
     <PackageReference Include="Obsolete.Fody" Version="4.4.3" PrivateAssets="all" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   
   <!-- .NET 4.5 -->
