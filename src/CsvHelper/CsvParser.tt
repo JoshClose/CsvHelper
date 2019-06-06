@@ -14,7 +14,7 @@ using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 // This file is generated from a T4 template.
-// Modifiying it directly won't do you any good.
+// Modifying it directly won't do you any good.
 
 namespace CsvHelper
 {
@@ -84,7 +84,7 @@ namespace CsvHelper
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
 		/// Reads a record from the CSV file<#= isAsync ? " asynchronously" : string.Empty #>.
 		/// </summary>
@@ -104,8 +104,8 @@ namespace CsvHelper
 				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
 			}
 		}
-		<# } 
-		#>	
+		<# }
+		#>
 		/// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
@@ -140,7 +140,7 @@ namespace CsvHelper
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
 		/// Reads a line of the CSV file.
 		/// </summary>
@@ -205,13 +205,13 @@ namespace CsvHelper
 
 			return context.RecordBuilder.ToArray();
 		}
-		<# 
+		<#
 		}
-		
+
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
 		/// Reads a blank line. This accounts for empty lines
 		/// and commented out lines.
@@ -246,13 +246,13 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 			}
 		}
-		<# 
+		<#
 		}
 
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
 		/// Reads until a delimiter or line ending is found.
 		/// </summary>
@@ -351,15 +351,15 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 			}
 		}
-		<# 
+		<#
 		}
 
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
-		/// Reads until the field is not quoted and a delimeter is found.
+		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual <#= AsyncType("bool", isAsync) #> ReadQuotedField<#= AsyncPostfix(isAsync) #>()
@@ -515,15 +515,15 @@ namespace CsvHelper
 				}
 			}
 		}
-		<# 
+		<#
 		}
 
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
-		/// Reads until the delimeter is done.
+		/// Reads until the delimiter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
@@ -550,19 +550,26 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 				if (c != context.ParserConfiguration.Delimiter[i])
 				{
+					if (c == context.ParserConfiguration.Delimiter[0])
+                    {
+                        fieldReader.SetFieldEnd(-1);
+                        i = 0;
+                        continue;
+                    }
+
 					return false;
 				}
 			}
 
 			return true;
 		}
-		<# 
+		<#
 		}
 
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
-		#>	
+		#>
 		/// <summary>
 		/// Reads until the line ending is done.
 		/// </summary>
@@ -593,14 +600,14 @@ namespace CsvHelper
 
 			return fieldStartOffset;
 		}
-		<# 
-		} 
+		<#
+		}
 
 		for (var i = 0; i < 2; i++)
 		{
 			var isAsync = i != 0;
 		#>
-	
+
 		/// <summary>
 		/// Reads until a non-space character is found.
 		/// </summary>

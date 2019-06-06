@@ -1,9 +1,12 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2017 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
@@ -121,7 +124,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose(!context?.LeaveOpen ?? true);
+			Dispose(!context.LeaveOpen);
 			GC.SuppressFinalize(this);
 		}
 
@@ -579,7 +582,7 @@ namespace CsvHelper
 				}
 
 				// Trim end inside quotes.
-				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
+				if (inQuotes && c == ' ')
 				{
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
@@ -587,7 +590,7 @@ namespace CsvHelper
 					ReadSpaces();
 					cPrev = ' ';
 
-					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
+					if (c == context.ParserConfiguration.Quote)
 					{
 						inQuotes = !inQuotes;
 						quoteCount++;
@@ -629,7 +632,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (inQuotes && c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
+				if (c == context.ParserConfiguration.Quote)
 				{
 					inQuotes = !inQuotes;
 					quoteCount++;
@@ -888,6 +891,13 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 				if (c != context.ParserConfiguration.Delimiter[i])
 				{
+					if (c == context.ParserConfiguration.Delimiter[0])
+                    {
+                        fieldReader.SetFieldEnd(-1);
+                        i = 0;
+                        continue;
+                    }
+
 					return false;
 				}
 			}
@@ -923,6 +933,13 @@ namespace CsvHelper
 				c = fieldReader.GetChar();
 				if (c != context.ParserConfiguration.Delimiter[i])
 				{
+					if (c == context.ParserConfiguration.Delimiter[0])
+                    {
+                        fieldReader.SetFieldEnd(-1);
+                        i = 0;
+                        continue;
+                    }
+
 					return false;
 				}
 			}
