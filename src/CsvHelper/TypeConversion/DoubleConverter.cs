@@ -26,7 +26,11 @@ namespace CsvHelper.TypeConversion
 			if( double.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d ) )
 			{
 				return d;
-			}
+			} else if (string.IsNullOrEmpty(text))
+            {
+                double zeroValue = 0;
+                return zeroValue;
+            }
 
 			return base.ConvertFromString( text, row, memberMapData );
 		}
