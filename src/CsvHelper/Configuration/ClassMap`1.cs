@@ -31,7 +31,7 @@ namespace CsvHelper.Configuration
 			var stack = ReflectionHelper.GetMembers( expression );
 			if( stack.Count == 0 )
 			{
-				throw new InvalidOperationException( "No members were found in expression '{expression}'." );
+				throw new InvalidOperationException( $"No members were found in expression '{expression}'." );
 			}
 
 			ClassMap currentClassMap = this;
@@ -56,7 +56,7 @@ namespace CsvHelper.Configuration
 					}
 					else
 					{
-						throw new InvalidOperationException( "The given expression was not a property or a field." );
+						throw new InvalidOperationException( $"The given expression: {expression} was not a property or a field." );
 					}
 
 					var referenceMap = currentClassMap.References( mapType, member );

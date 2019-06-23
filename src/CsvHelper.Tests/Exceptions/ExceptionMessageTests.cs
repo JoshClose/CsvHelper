@@ -3,7 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 
+using System;
 using System.Linq;
+using CsvHelper.Configuration;
+using CsvHelper.Tests.AutoMapping;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -203,12 +206,27 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				writer.WriteRecord( new Simple() );
-			    writer.NextRecord();
-			    Assert.Fail();
+				writer.NextRecord();
+				Assert.Fail();
 			}
 			catch( CsvHelperException ex )
 			{
 				Assert.AreEqual( 1, ex.WritingContext.Row );
+			}
+		}
+
+		[TestMethod]
+		public void MemberMapMessageTest()
+		{
+			var config = new CsvHelper.Configuration.Configuration();
+			try
+			{
+				config.RegisterClassMap<SimpleWithMethodMap>();
+				Assert.Fail();
+			}
+			catch( InvalidOperationException ex )
+			{
+				Assert.AreEqual("No members were found in expression 'm => m.NameMethod()'.", ex.Message );
 			}
 		}
 
@@ -233,6 +251,19 @@ namespace CsvHelper.Tests.Exceptions
 			public int Id { get; set; }
 
 			public string Name { get; set; }
+		}
+
+		private class SimpleWithMethod : Simple
+		{
+			public string NameMethod() => Name;
+		}
+
+		private sealed class SimpleWithMethodMap : ClassMap<SimpleWithMethod>
+		{
+			public SimpleWithMethodMap()
+			{
+				Map(m => m.NameMethod());
+			}
 		}
 	}
 }
