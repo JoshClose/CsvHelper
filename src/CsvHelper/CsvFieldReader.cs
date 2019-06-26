@@ -129,7 +129,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
-		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.
+		/// <see cref="TextReader"/> and <see cref="Configuration"/>.
 		/// </summary>
 		/// <param name="reader">The text reader.</param>
 		/// <param name="configuration">The configuration.</param>
@@ -137,7 +137,7 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
-		/// <see cref="TextReader"/>, <see cref="Configuration.Configuration"/>
+		/// <see cref="TextReader"/>, <see cref="Configuration"/>
 		/// and leaveOpen flag.
 		/// </summary>
 		/// <param name="reader">The text reader.</param>

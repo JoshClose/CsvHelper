@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace CsvHelper.Configuration
 {
-	/// <summary>Holds the default callback methods for delegate members of <c>CsvHelper.Configuration.Configuration</c>.</summary>
+	/// <summary>Holds the default callback methods for delegate members of <see cref="Configuration"/>.</summary>
 	public static class ConfigurationFunctions
 	{
 		private static readonly char[] quoteChars = new char[] { '\r', '\n' };
@@ -38,7 +38,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Throws a <c>MissingFieldException</c>.
+		/// Throws a <see cref="MissingFieldException"/>.
 		/// </summary>
 		public static void MissingFieldFound(string[] headerNames, int index, ReadingContext context)
 		{
