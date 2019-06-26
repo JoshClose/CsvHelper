@@ -108,7 +108,7 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Closes the <see cref="T:System.Data.IDataReader"></see> Object.
+		/// Closes the <see cref="IDataReader" /> Object.
 		/// </summary>
 		public void Close()
 		{
@@ -201,11 +201,11 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Returns an <see cref="T:System.Data.IDataReader"></see> for the specified column ordinal.
+		/// Returns an <see cref="IDataReader" /> for the specified column ordinal.
 		/// </summary>
 		/// <param name="i">The index of the field to find.</param>
 		/// <returns>
-		/// The <see cref="T:System.Data.IDataReader"></see> for the specified column ordinal.
+		/// The <see cref="IDataReader" /> for the specified column ordinal.
 		/// </returns>
 		public IDataReader GetData(int i)
 		{
@@ -261,11 +261,11 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Gets the <see cref="T:System.Type"></see> information corresponding to the type of <see cref="T:System.Object"></see> that would be returned from <see cref="M:System.Data.IDataRecord.GetValue(System.Int32)"></see>.
+		/// Gets the <see cref="Type" /> information corresponding to the type of <see cref="Object" /> that would be returned from <see cref="IDataRecord.GetValue(System.Int32)" />.
 		/// </summary>
 		/// <param name="i">The index of the field to find.</param>
 		/// <returns>
-		/// The <see cref="T:System.Type"></see> information corresponding to the type of <see cref="T:System.Object"></see> that would be returned from <see cref="M:System.Data.IDataRecord.GetValue(System.Int32)"></see>.
+		/// The <see cref="Type" /> information corresponding to the type of <see cref="Object" /> that would be returned from <see cref="IDataRecord.GetValue(System.Int32)" />.
 		/// </returns>
 		public Type GetFieldType(int i)
 		{
@@ -341,8 +341,8 @@ namespace CsvHelper
 		/// </returns>
 		public string GetName(int i)
 		{
-			return csv.Configuration.HasHeaderRecord 
-				? csv.Context.HeaderRecord[i] 
+			return csv.Configuration.HasHeaderRecord
+				? csv.Context.HeaderRecord[i]
 				: string.Empty;
 		}
 
@@ -359,10 +359,10 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Returns a <see cref="T:System.Data.DataTable"></see> that describes the column metadata of the <see cref="T:System.Data.IDataReader"></see>.
+		/// Returns a <see cref="DataTable" /> that describes the column metadata of the <see cref="IDataReader" />.
 		/// </summary>
 		/// <returns>
-		/// A <see cref="T:System.Data.DataTable"></see> that describes the column metadata.
+		/// A <see cref="DataTable" /> that describes the column metadata.
 		/// </returns>
 		public DataTable GetSchemaTable()
 		{
@@ -451,7 +451,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="i">The index of the field to find.</param>
 		/// <returns>
-		/// The <see cref="T:System.Object"></see> which will contain the field value upon return.
+		/// The <see cref="Object" /> which will contain the field value upon return.
 		/// </returns>
 		public object GetValue(int i)
 		{
@@ -461,9 +461,9 @@ namespace CsvHelper
         /// <summary>
         /// Populates an array of objects with the column values of the current record.
         /// </summary>
-        /// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
+        /// <param name="values">An array of <see cref="Object" /> to copy the attribute fields into.</param>
         /// <returns>
-        /// The number of instances of <see cref="T:System.Object"></see> in the array.
+        /// The number of instances of <see cref="Object" /> in the array.
         /// </returns>
         public int GetValues(object[] values)
 		{
@@ -502,7 +502,7 @@ namespace CsvHelper
 		}
 
         /// <summary>
-        /// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
+        /// Advances the <see cref="IDataReader" /> to the next record.
         /// </summary>
         /// <returns>
         /// true if there are more rows; otherwise, false.

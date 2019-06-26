@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Maps class members to CSV fields.
 	/// </summary>
-	/// <typeparam name="TClass">The <see cref="System.Type"/> of class to map.</typeparam>
+	/// <typeparam name="TClass">The <see cref="Type"/> of class to map.</typeparam>
 	public abstract class ClassMap<TClass> : ClassMap
 	{
 		/// <summary>
