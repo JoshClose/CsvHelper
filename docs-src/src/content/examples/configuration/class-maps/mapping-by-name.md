@@ -32,8 +32,8 @@ public sealed class FooMap : ClassMap<Foo>
 {
 	public FooMap()
 	{
-		Map(m => m.Id).Name("ColumnA");
-		Map(m => m.Name).Name("ColumnB");
+		Map(m => m.Id).Name("Column1");
+		Map(m => m.Name).Name("Column2");
 	}
 }
 ```
