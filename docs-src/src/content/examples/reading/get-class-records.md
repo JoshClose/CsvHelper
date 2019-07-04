@@ -2,6 +2,8 @@
 
 Convert CSV rows into class objects.
 
+Sometimes OS settings for CSV's overwrites the default comma delimiter. If you experience problems try setting the delimiter manually - `csv.Configuration.Delimiter = ",";`
+
 ###### Data
 ```
 Id,Name
