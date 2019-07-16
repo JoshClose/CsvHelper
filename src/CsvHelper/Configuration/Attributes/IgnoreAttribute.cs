@@ -14,7 +14,13 @@ namespace CsvHelper.Configuration.Attributes
 	/// tree that have already been mapped.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class IgnoreAttribute : Attribute
+	public class IgnoreAttribute : Attribute, IMemberMapper
 	{
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.Ignore = true;
+        }
+
+    }
 }

@@ -4,19 +4,16 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 
+
 namespace CsvHelper.Configuration.Attributes
 {
-	/// <summary>
-	/// Ignore the member when reading if no matching field name can be found.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-	public class OptionalAttribute : Attribute, IMemberMapper
-	{
-
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.IsOptional = true;
-        }
+    /// <summary>
+    /// A base class that enables pluggable
+    /// configuration of member mapping.
+    /// </summary>
+    public interface IMemberReferenceMapper
+    {
+        void ApplyTo(MemberReferenceMap referenceMap);
 
     }
 }

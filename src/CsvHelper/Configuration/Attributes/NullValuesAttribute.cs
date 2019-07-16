@@ -10,7 +10,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The string values used to represent null when converting.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class NullValuesAttribute : Attribute
+	public class NullValuesAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the null values.
@@ -34,5 +34,12 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			NullValues = nullValues;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.TypeConverterOptions.NullValues.Clear();
+            memberMap.Data.TypeConverterOptions.NullValues.AddRange(NullValues);
+        }
+
+    }
 }

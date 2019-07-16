@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// are multiple names that are the same.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class NameIndexAttribute : Attribute
+	public class NameIndexAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// The name index.
@@ -29,5 +29,11 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			NameIndex = nameIndex;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.NameIndex = NameIndex;
+        }
+
+    }
 }

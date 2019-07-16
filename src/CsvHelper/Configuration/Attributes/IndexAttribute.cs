@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// indexes.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class IndexAttribute : Attribute
+	public class IndexAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the index.
@@ -38,5 +38,13 @@ namespace CsvHelper.Configuration.Attributes
 			Index = index;
 			IndexEnd = indexEnd;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.Index = Index;
+            memberMap.Data.IndexEnd = IndexEnd;
+            memberMap.Data.IsIndexSet = true;
+        }
+
+    }
 }

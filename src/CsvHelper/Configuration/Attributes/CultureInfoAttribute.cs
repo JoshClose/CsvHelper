@@ -13,7 +13,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// setting.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class CultureInfoAttribute : Attribute
+	public class CultureInfoAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the culture info.
@@ -30,5 +30,11 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			CultureInfo = CultureInfo.GetCultureInfo( culture );
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.TypeConverterOptions.CultureInfo = CultureInfo;
+        }
+
+    }
 }
