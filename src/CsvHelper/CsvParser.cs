@@ -386,7 +386,6 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-					fieldReader.SetRawRecordStart(-1);
 				}
 				else if (inSpaces && c != ' ')
 				{
