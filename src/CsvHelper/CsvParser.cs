@@ -787,7 +787,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (c == context.ParserConfiguration.Quote)
+				if (c == context.ParserConfiguration.Quote || c == context.ParserConfiguration.Escape)
 				{
 					inQuotes = !inQuotes;
 					quoteCount++;
