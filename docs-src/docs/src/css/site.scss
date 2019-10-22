@@ -1,0 +1,93 @@
+@charset "utf-8";
+@import "../../node_modules/bulma/bulma";
+@import "./toc";
+
+html, body, #root
+{
+	height: 100%;
+}
+
+#root
+{
+	display: flex;
+	flex-direction: column;
+}
+
+.body
+{
+	flex: 1 0 auto;
+}
+
+.footer
+{
+	flex-shrink: 0;
+}
+
+.title::before
+{
+	content: "";
+	display: block;
+	height: 3.25rem;
+	margin: -3.25rem 0 0;
+}
+
+.header
+{
+	.navbar:first-child
+	{
+		position: fixed !important;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 40;
+	}
+}
+
+.container-content
+{
+	flex-grow: 1;
+	flex-shrink: 1;
+	overflow: hidden;
+	position: relative;
+}
+
+.container-left, .container-right
+{		
+	flex-basis: 350px;
+	flex-grow: 0;
+	flex-shrink: 0;
+	// height: calc(100vh - 4rem);
+	//position: relative;
+}
+
+.container-right
+{
+	order: 3;
+}
+
+@media screen and (min-width: $tablet)
+{	
+	.sidebar
+	{
+		position: fixed;
+		top: 80px;
+		bottom: 0;
+		overflow-y: auto;
+	}
+
+	.toc
+	{
+		width: 326px;
+	}
+}
+
+.table.has-empty-head
+{ 
+	margin-top: -15px;
+
+	thead th
+	{
+		line-height: 0;
+		padding: 0;
+	}
+}
