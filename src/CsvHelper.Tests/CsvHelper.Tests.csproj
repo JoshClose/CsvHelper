@@ -1,58 +1,21 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
-  <PropertyGroup>
-    <!--<TargetFrameworks>netstandard1.5;net20;net35;net40;net45;net451;portable-net40+sl5+win8+wpa81+wp8</TargetFrameworks>-->
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-    <AssemblyName>CsvHelper.Tests</AssemblyName>
-    <RootNamespace>CsvHelper.Tests</RootNamespace>
-    <DefaultLanguage>en-US</DefaultLanguage>
-    <PackageId>CsvHelper.Tests</PackageId>
-    <PackageVersion>1.0.0-alpha0001</PackageVersion>
-    <Description></Description>
-    <PackageTags></PackageTags>
-    <SonarQubeExclude>true</SonarQubeExclude>
-    <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <PackageReference Include="Fody" Version="3.3.3" PrivateAssets="all">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MethodTimer.Fody" Version="2.2.2" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
-    <PackageReference Include="ModuleInit.Fody" Version="1.8.3" PrivateAssets="all" />
-    <PackageReference Include="Moq" Version="4.7.99" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
-    <PackageReference Include="Obsolete.Fody" Version="4.4.3" PrivateAssets="all" />
-  </ItemGroup>
+		<PropertyGroup>
+				<!--<TargetFrameworks>netstandard1.5;net20;net35;net40;net45;net451;portable-net40+sl5+win8+wpa81+wp8</TargetFrameworks>-->
+				<TargetFramework>netcoreapp2.0</TargetFramework>
+				<SignAssembly>True</SignAssembly>
+				<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+		</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Update="NETStandard.Library" Version="2.0.1" />
-  </ItemGroup>
+		<ItemGroup>
+				<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+				<PackageReference Include="Moq" Version="4.7.99" />
+				<PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
+				<PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
+		</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CsvHelper\CsvHelper.csproj" />
-  </ItemGroup>
+		<ItemGroup>
+		  <ProjectReference Include="..\CsvHelper\CsvHelper.csproj" />
+		</ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="*.approved.cs;*.received.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <Import Project="$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props" Condition="Exists('$(MSBuildProjectDirectory)\..\Directory.build.shared.explicit.props')" />
 </Project>
