@@ -14,6 +14,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper", "src\CsvHelper\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Tests", "tests\CsvHelper.Tests\CsvHelper.Tests.csproj", "{6859ECD8-81AE-4E74-A926-5726AAD7EE81}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "build\_build.csproj", "{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +70,16 @@ Global
 		{6859ECD8-81AE-4E74-A926-5726AAD7EE81}.Release|x64.Build.0 = Release|Any CPU
 		{6859ECD8-81AE-4E74-A926-5726AAD7EE81}.Release|x86.ActiveCfg = Release|Any CPU
 		{6859ECD8-81AE-4E74-A926-5726AAD7EE81}.Release|x86.Build.0 = Release|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Release|ARM.ActiveCfg = Release|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Release|x64.ActiveCfg = Release|Any CPU
+		{B0E9C5E1-8A40-4BF7-AF08-6A6E179446A5}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
