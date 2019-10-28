@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Nuke.Common;
+using Nuke.Common.CI;
 using Nuke.Common.Execution;
 using Nuke.Common.Git;
 using Nuke.Common.ProjectModel;
@@ -28,6 +29,9 @@ class Build : NukeBuild
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+
+    [Parameter("NuGet server URL.")] readonly string NugetSource = "https://api.nuget.org/v3/index.json";
+    [Parameter("API Key for the NuGet server.")] readonly string NugetApiKey;
 
     [Solution] readonly Solution Solution;
     [GitRepository] readonly GitRepository GitRepository;
@@ -87,7 +91,7 @@ class Build : NukeBuild
         });
 
     Target Test => _ => _
-        .DependsOn(Clean, Compile)
+        .DependsOn(Compile)
         .Executes(() =>
         {
             DotNetTest(s => s
@@ -99,7 +103,7 @@ class Build : NukeBuild
         });
 
     Target Pack => _ => _
-        .DependsOn(Test)
+        .DependsOn(Clean, Test)
 		.Requires(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
@@ -117,11 +121,16 @@ class Build : NukeBuild
 
     Target Push => _ => _
         .DependsOn(Pack)
-		.Requires(() => Configuration == Configuration.Release)
+        .Consumes(Pack)
+        .Requires(() => Configuration == Configuration.Release)
         .Executes(() =>
         {
             DotNetNuGetPush(s => s
-				.SetSymbolSource("https://api.nuget.org/v3/index.json")
-			);
+				.SetSource(NugetSource)
+				.SetApiKey(NugetApiKey)
+				.CombineWith(ArtifactsDirectory.GlobFiles("*.nupkg"), (s, v) => s
+					.SetTargetPath(v)
+				)
+            );
         });
 }
