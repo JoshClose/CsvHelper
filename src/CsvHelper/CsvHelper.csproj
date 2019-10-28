@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net45;net47</TargetFrameworks>
 		<AssemblyName>CsvHelper</AssemblyName>
 		<RootNamespace>CsvHelper</RootNamespace>
 		<DefaultLanguage>en-US</DefaultLanguage>
@@ -13,37 +13,21 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+		<PackageReference Update="NETStandard.Library" Version="2.0.1" />
 	</ItemGroup>
 
 	<!-- .NET 4.5 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-	</ItemGroup>
-
-	<!-- .NET 4.6 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
 	</ItemGroup>
 
 	<!-- .NET 4.7 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
 	</ItemGroup>
 
-	<!-- .NET Core 3.0 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
-	</ItemGroup>
-
-	<!-- UAP 10.0 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'uap10.0'">
-		<PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.2" />
-	</ItemGroup>
-
 	<!-- .NET Standard 2.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Update="NETStandard.Library" Version="2.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
