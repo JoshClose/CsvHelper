@@ -3,7 +3,9 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.Configuration;
@@ -43,6 +45,30 @@ namespace CsvHelper.Tests.TypeConversion
 
 		private class Converter : Int32Converter
 		{
+		}
+		
+		
+		[TestMethod]
+		public void CustomUriConverter()
+		{
+			var sw = new StringWriter();
+			var entries = new[] {(new {Uri = new Uri("http://host/path")})};
+			using (var cw = new CsvWriter(sw))
+			{
+				cw.Configuration.Delimiter = ";";
+				cw.Configuration.TypeConverterCache.AddConverter<Uri>(new MyUriConverter());
+				cw.WriteRecords(entries);
+			}
+			Assert.AreEqual("Uri\r\nhttp://host/path\r\n", sw.ToString());
+		}
+
+		private class MyUriConverter : DefaultTypeConverter
+		{
+			public override object ConvertFromString(string text,IReaderRow row,MemberMapData memberMapData) => 
+				new Uri(text);
+
+			// public override string ConvertToString(object value,IWriterRow row,MemberMapData memberMapData) => 
+			//     value is Uri uri ? uri.ToString() : base.ConvertToString(value, row, memberMapData);
 		}
 	}
 }
