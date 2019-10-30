@@ -4,7 +4,7 @@
 root = true
 
 [*.cs]
-indent_style = tab:error
-end_of_line = crlf:error
-trim_trailing_whitespace = true:error
-insert_final_newline = true:error
+indent_style = tab
+end_of_line = crlf
+trim_trailing_whitespace = true
+insert_final_newline = true
