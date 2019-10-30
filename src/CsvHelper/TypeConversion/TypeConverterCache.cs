@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Numerics;
 using System.Reflection;
 
 namespace CsvHelper.TypeConversion
@@ -200,6 +201,7 @@ namespace CsvHelper.TypeConversion
 
         private void CreateDefaultConverters()
         {
+            AddConverter(typeof(BigInteger), new BigIntegerConverter());
             AddConverter(typeof(bool), new BooleanConverter());
             AddConverter(typeof(byte), new ByteConverter());
             AddConverter(typeof(byte[]), new ByteArrayConverter());
@@ -219,6 +221,7 @@ namespace CsvHelper.TypeConversion
             AddConverter(typeof(ushort), new UInt16Converter());
             AddConverter(typeof(uint), new UInt32Converter());
             AddConverter(typeof(ulong), new UInt64Converter());
+			// Collection types need to come after value types.
             AddConverter(typeof(IList), new IEnumerableConverter());
             AddConverter(typeof(ICollection), new IEnumerableConverter());
             AddConverter(typeof(IEnumerable), new IEnumerableConverter());
