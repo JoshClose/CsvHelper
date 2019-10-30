@@ -50,6 +50,38 @@ namespace CsvHelper.Tests.AutoMapping
 		}
 
 		[TestMethod]
+		public void ReaderFloatingCultureDeTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader))
+			{
+				csv.Configuration.Delimiter = ";";
+				csv.Configuration.CultureInfo = CultureInfo.GetCultureInfo("de-DE");
+				writer.WriteLine("Single;Double;Decimal");
+				writer.WriteLine("1,1;+0000002,20;3,30000");
+				writer.WriteLine("-0,1;-0,2;-,3");
+				writer.Flush();
+				stream.Position = 0;
+
+				var list = csv.GetRecords<Numbers>().ToList();
+
+				Assert.IsNotNull(list);
+				Assert.AreEqual(2, list.Count);
+				var row = list[0];
+				Assert.AreEqual(1.1f, row.Single, 0.0001);
+				Assert.AreEqual(2.2d, row.Double, 0.0001);
+				Assert.AreEqual(3.3m, row.Decimal);
+
+				row = list[1];
+				Assert.AreEqual(-0.1f, row.Single, 0.0001);
+				Assert.AreEqual(-0.2d, row.Double, 0.0001);
+				Assert.AreEqual(-0.3m, row.Decimal);
+			}
+		}
+
+		[TestMethod]
 		public void ReaderReferenceTest()
 		{
 			using (var stream = new MemoryStream())
@@ -314,6 +346,13 @@ namespace CsvHelper.Tests.AutoMapping
 				Map(m => m.Id);
 				Map(m => m.Name);
 			}
+		}
+
+		private class Numbers
+		{
+			public float Single { get; set; }
+			public double Double { get; set; }
+			public decimal Decimal { get; set; }
 		}
 
 		private class A
