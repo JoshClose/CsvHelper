@@ -543,7 +543,7 @@ namespace CsvHelper
 			if (index >= context.Record.Length || index < 0)
 			{
 				context.CurrentIndex = index;
-				if( context.ReaderConfiguration.IgnoreBlankLines )
+				if (context.ReaderConfiguration.IgnoreBlankLines)
 				{
 					context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 				}
