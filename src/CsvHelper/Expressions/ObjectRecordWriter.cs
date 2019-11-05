@@ -114,7 +114,7 @@ namespace CsvHelper.Expressions
 				delegates.Add(Expression.Lambda<Action<T>>(writeFieldMethodCall, recordParameter).Compile());
 			}
 
-			var action = CombineDelegates(delegates);
+			var action = CombineDelegates(delegates) ?? new Action<T>((T parameter) => { });
 
 			return action;
 		}
