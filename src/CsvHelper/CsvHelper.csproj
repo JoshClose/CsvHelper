@@ -46,4 +46,23 @@
 		</Compile>
 	</ItemGroup>
 
+	<ItemGroup>
+		<None Update="CsvFieldReader.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>CsvFieldReader.cs</LastGenOutput>
+		</None>
+		<None Update="CsvParser.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>CsvParser.cs</LastGenOutput>
+		</None>
+		<None Update="T4Methods.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>T4Methods.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
 </Project>

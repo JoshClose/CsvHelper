@@ -1,20 +1,17 @@
 ﻿<#
-// Copyright 2009-2017 Josh Close and Contributors
+// Copyright 2009-2019 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 #>
 <#@ include file="T4Methods.tt" #>
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
 // This file is generated from a T4 template.
-// Modifiying it directly won't do you any good.
+// Modifying it directly won't do you any good.
 
 namespace CsvHelper
 {
@@ -112,7 +109,7 @@ namespace CsvHelper
 		/// <filterpriority>2</filterpriority>
 		public virtual void Dispose()
 		{
-			Dispose(!context.LeaveOpen);
+			Dispose(!context?.LeaveOpen ?? true);
 			GC.SuppressFinalize(this);
 		}
 
@@ -293,7 +290,6 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-					fieldReader.SetRawRecordStart(-1);
 				}
 				else if (inSpaces && c != ' ')
 				{
@@ -359,7 +355,7 @@ namespace CsvHelper
 			var isAsync = i != 0;
 		#>	
 		/// <summary>
-		/// Reads until the field is not quoted and a delimeter is found.
+		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
 		protected virtual <#= AsyncType("bool", isAsync) #> ReadQuotedField<#= AsyncPostfix(isAsync) #>()
@@ -393,7 +389,7 @@ namespace CsvHelper
 				}
 
 				// Trim end inside quotes.
-				if (inQuotes && c == ' ')
+				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
@@ -401,7 +397,7 @@ namespace CsvHelper
 					ReadSpaces();
 					cPrev = ' ';
 
-					if (c == context.ParserConfiguration.Quote)
+					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
 					{
 						inQuotes = !inQuotes;
 						quoteCount++;
@@ -443,7 +439,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (c == context.ParserConfiguration.Quote)
+				if (inQuotes && c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
 				{
 					inQuotes = !inQuotes;
 					quoteCount++;
@@ -523,7 +519,7 @@ namespace CsvHelper
 			var isAsync = i != 0;
 		#>	
 		/// <summary>
-		/// Reads until the delimeter is done.
+		/// Reads until the delimiter is done.
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>

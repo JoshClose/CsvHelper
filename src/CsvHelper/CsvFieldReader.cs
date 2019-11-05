@@ -30,7 +30,7 @@ namespace CsvHelper
 		/// True if the buffer is empty, otherwise false.
 		/// </summary>
 		public virtual bool IsBufferEmpty => context.BufferPosition >= context.CharsRead;
-
+			
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
@@ -78,7 +78,7 @@ namespace CsvHelper
 
 			return true;
 		}
-
+			
 		/// <summary>
 		/// Fills the buffer.
 		/// </summary>
@@ -126,7 +126,7 @@ namespace CsvHelper
 
 			return true;
 		}
-
+		
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
 		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.
