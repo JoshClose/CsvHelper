@@ -101,6 +101,36 @@ namespace CsvHelper
 		}
 
 		/// <summary>
+		/// Walk up the inheritance tree collecting properties. This will get a unique set or properties in the
+		/// case where parents have the same property names as children.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> to get properties for.</param>
+		/// <param name="flags">The flags for getting the properties.</param>
+		/// <param name="overwrite">If true, parent class properties that are hidden by `new` child properties will be overwritten.</param>
+		public static List<PropertyInfo> GetUniqueProperties(Type type, BindingFlags flags, bool overwrite = false)
+		{
+			var properties = new Dictionary<string, PropertyInfo>();
+
+			flags |= BindingFlags.DeclaredOnly;
+			var currentType = type;
+			while (currentType != null)
+			{
+				var currentProperties = currentType.GetProperties(flags);
+				foreach (var property in currentProperties)
+				{
+					if (!properties.ContainsKey(property.Name) || overwrite)
+					{
+						properties[property.Name] = property;
+					}
+				}
+
+				currentType = currentType.BaseType;
+			}
+
+			return properties.Values.ToList();
+		}
+
+		/// <summary>
 		/// Gets the property from the expression.
 		/// </summary>
 		/// <typeparam name="TModel">The type of the model.</typeparam>

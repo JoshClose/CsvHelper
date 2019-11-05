@@ -249,8 +249,16 @@ namespace CsvHelper.Configuration
 				// exists on and use that PropertyInfo instead. This is so we can get the private
 				// set method for the property.
 				var properties = new List<PropertyInfo>();
-				foreach (var property in type.GetProperties(flags))
+				foreach (var property in ReflectionHelper.GetUniqueProperties(type, flags))
 				{
+					if (properties.Any(p => p.Name == property.Name))
+					{
+						// Multiple properties could have the same name if a child class property
+						// is hiding a parent class property by using `new`. It's possible that
+						// the order of the properties returned 
+						continue;
+					}
+
 					properties.Add(ReflectionHelper.GetDeclaringProperty(type, property, flags));
 				}
 
