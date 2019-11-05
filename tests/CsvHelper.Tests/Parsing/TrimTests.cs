@@ -20,8 +20,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a,b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  a,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -29,6 +30,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -40,8 +42,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a,b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  a,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -49,6 +52,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -60,8 +64,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a b c,d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  a b c,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -69,6 +74,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -80,8 +86,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a b c,d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  a b c,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -89,6 +96,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -100,8 +108,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "a  ,b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("a  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -109,6 +118,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -120,8 +130,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "a  ,b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("a  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -129,6 +140,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -140,8 +152,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "a b c  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("a b c  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -149,6 +162,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -160,8 +174,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "a b c  ,d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("a b c  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -169,6 +184,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -180,9 +196,10 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a  ,b\r\n";
 				parser.Configuration.Delimiter = ",";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  a  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -190,6 +207,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -201,8 +219,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a  ,b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  a  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -210,6 +229,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -221,8 +241,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a b c  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  a b c  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -230,6 +251,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -241,8 +263,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a b c  ,d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  a b c  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -250,6 +273,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -261,8 +285,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a\",b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  \"a\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -270,6 +295,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -281,8 +307,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a\",b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  \"a\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -290,6 +317,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -301,8 +329,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a b c\",d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  \"a b c\",d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -310,6 +339,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -321,8 +351,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a b c\",d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  \"a b c\",d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -330,6 +361,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -341,8 +373,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a\"  ,b";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"a\"  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -350,6 +383,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -361,8 +395,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a\"  ,b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"a\"  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -370,6 +405,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -381,8 +417,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a b c\"  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"a b c\"  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -390,6 +427,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -401,8 +439,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a b c\"  ,d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"a b c\"  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -410,6 +449,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -421,8 +461,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a\"  ,b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  \"a\"  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -430,6 +471,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -441,8 +483,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a\"  ,b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  \"a\"  ,b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -450,6 +493,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -461,8 +505,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a b c\"  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  \"a b c\"  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -470,6 +515,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -481,8 +527,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"a b c\"  ,d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  \"a b c\"  ,d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -490,6 +537,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -501,8 +549,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a b c  ,  d e f  \r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  a b c  ,  d e f  ");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -511,6 +560,7 @@ namespace CsvHelper.Tests.Parsing
 
 				Assert.AreEqual("a b c", record[0]);
 				Assert.AreEqual("d e f", record[1]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -522,8 +572,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  a b c  ,  d e f  ";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  a b c  ,  d e f  ");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -532,6 +583,7 @@ namespace CsvHelper.Tests.Parsing
 
 				Assert.AreEqual("a b c", record[0]);
 				Assert.AreEqual("d e f", record[1]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -543,8 +595,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a\",b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"  a\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -552,6 +605,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -563,8 +617,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a\",b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"  a\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -572,6 +627,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -583,8 +639,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a b c\",b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"  a b c\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -592,6 +649,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -603,8 +661,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a b c\",b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"  a b c\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -612,6 +671,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -623,8 +683,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\" a ,b c\",b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\" a ,b c\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -632,6 +693,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a ,b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -643,8 +705,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\" a ,b c\",b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\" a ,b c\",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -653,6 +716,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a ,b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -664,9 +728,10 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a  \",b\r\n";
 				parser.Configuration.Delimiter = ",";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"a  \",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -674,6 +739,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -685,8 +751,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a  \",b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"a  \",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -694,6 +761,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -705,8 +773,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a b c  \",d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"a b c  \",d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -714,6 +783,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -725,8 +795,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"a b c  \",d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"a b c  \",d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -734,6 +805,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -745,8 +817,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a  \",b\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"  a  \",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -754,6 +827,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -765,8 +839,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a  \",b";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"  a  \",b");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -774,6 +849,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -785,8 +861,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a b c  \",d\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"  a b c  \",d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -794,6 +871,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -805,8 +883,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a b c  \",d";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"  a b c  \",d");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -814,6 +893,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -825,8 +905,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a b c  \",\"  d e f  \"\r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("\"  a b c  \",\"  d e f  \"");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -835,6 +916,7 @@ namespace CsvHelper.Tests.Parsing
 
 				Assert.AreEqual("a b c", record[0]);
 				Assert.AreEqual("d e f", record[1]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -846,8 +928,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "\"  a b c  \",\"  d e f  \"";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("\"  a b c  \",\"  d e f  \"");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -856,6 +939,7 @@ namespace CsvHelper.Tests.Parsing
 
 				Assert.AreEqual("a b c", record[0]);
 				Assert.AreEqual("d e f", record[1]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -867,8 +951,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"  a b c  \"  ,  \"  d e f  \"  \r\n";
 				parser.Configuration.Delimiter = ",";
-				writer.WriteLine("  \"  a b c  \"  ,  \"  d e f  \"  ");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -877,6 +962,7 @@ namespace CsvHelper.Tests.Parsing
 
 				Assert.AreEqual("a b c", record[0]);
 				Assert.AreEqual("d e f", record[1]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -888,8 +974,9 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
+				var line = "  \"  a b c  \"  ,  \"  d e f  \"  ";
 				parser.Configuration.Delimiter = ",";
-				writer.Write("  \"  a b c  \"  ,  \"  d e f  \"  ");
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -898,6 +985,7 @@ namespace CsvHelper.Tests.Parsing
 
 				Assert.AreEqual("a b c", record[0]);
 				Assert.AreEqual("d e f", record[1]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -909,7 +997,8 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
-				writer.Write("abc");
+				var line = "abc";
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -917,6 +1006,7 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("abc", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
@@ -928,7 +1018,8 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader))
 			{
-				writer.Write("a b");
+				var line = "a b";
+				writer.Write(line);
 				writer.Flush();
 				stream.Position = 0;
 
@@ -936,45 +1027,52 @@ namespace CsvHelper.Tests.Parsing
 				var record = parser.Read();
 
 				Assert.AreEqual("a b", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
 		[TestMethod]
 		public void InsideNoSpacesQuotesFieldHasEscapedQuotesTest()
 		{
-			using (var reader = new StringReader("\"a \"\"b\"\" c\""))
+			var line = "\"a \"\"b\"\" c\"";
+			using (var reader = new StringReader(line))
 			using (var parser = new CsvParser(reader))
 			{
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
 				var record = parser.Read();
 
 				Assert.AreEqual("a \"b\" c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
 		[TestMethod]
 		public void InsideQuotesBothSpacesFieldHasEscapedQuotesTest()
 		{
-			using (var reader = new StringReader("\" a \"\"b\"\" c \"\r\n"))
+			var line = "\" a \"\"b\"\" c \"\r\n";
+			using (var reader = new StringReader(line))
 			using (var parser = new CsvParser(reader))
 			{
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
 				var record = parser.Read();
 
 				Assert.AreEqual("a \"b\" c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
 		[TestMethod]
 		public void InsideQuotesBothSpacesFieldHasEscapedQuotesNoNewLineTest()
 		{
-			using (var reader = new StringReader("\" a \"\"b\"\" c \""))
+			var line = "\" a \"\"b\"\" c \"";
+			using (var reader = new StringReader(line))
 			using (var parser = new CsvParser(reader))
 			{
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
 				var record = parser.Read();
 
 				Assert.AreEqual("a \"b\" c", record[0]);
+				Assert.AreEqual(line, parser.Context.RawRecord);
 			}
 		}
 
