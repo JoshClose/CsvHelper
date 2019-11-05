@@ -699,18 +699,6 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			// DateTimeConverter.ConvertFrom will successfully convert
-			// a white space string to a DateTime.MinValue instead of
-			// returning null, so we need to handle this special case.
-			if (converter is DateTimeConverter)
-			{
-				if (string.IsNullOrWhiteSpace(context.Record[index]))
-				{
-					field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
-					return false;
-				}
-			}
-
 			// TypeConverter.IsValid() just wraps a
 			// ConvertFrom() call in a try/catch, so lets not
 			// do it twice and just do it ourselves.

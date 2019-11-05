@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// A collection that holds <see cref="MemberMap"/>'s.
 	/// </summary>
-	[DebuggerDisplay( "Count = {list.Count}" )]
+	[DebuggerDisplay("Count = {list.Count}")]
 	public class MemberMapCollection : IList<MemberMap>
 	{
 		private readonly List<MemberMap> list = new List<MemberMap>();
@@ -40,13 +40,13 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MemberMapCollection"/> class.
 		/// </summary>
-		public MemberMapCollection() : this( new MemberMapComparer() ) {}
+		public MemberMapCollection() : this(new MemberMapComparer()) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MemberMapCollection"/> class.
 		/// </summary>
 		/// <param name="comparer">The comparer to use when sorting the member maps.</param>
-		public MemberMapCollection( IComparer<MemberMap> comparer )
+		public MemberMapCollection(IComparer<MemberMap> comparer)
 		{
 			this.comparer = comparer;
 		}
@@ -81,20 +81,20 @@ namespace CsvHelper.Configuration
 		/// <param name="item">The object to add to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
 		///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
 		///                 </exception>
-		public virtual void Add( MemberMap item )
+		public virtual void Add(MemberMap item)
 		{
-			list.Add( item );
-			list.Sort( comparer );
+			list.Add(item);
+			list.Sort(comparer);
 		}
 
 		/// <summary>
 		/// Adds a range of items to the <see cref="T:System.Collections.Generic.ICollection`1"/>.
 		/// </summary>
 		/// <param name="collection">The collection to add.</param>
-		public virtual void AddRange( ICollection<MemberMap> collection )
+		public virtual void AddRange(ICollection<MemberMap> collection)
 		{
-			list.AddRange( collection );
-			list.Sort( comparer );
+			list.AddRange(collection);
+			list.Sort(comparer);
 		}
 
 		/// <summary>
@@ -115,18 +115,18 @@ namespace CsvHelper.Configuration
 		/// </returns>
 		/// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
 		///                 </param>
-		public virtual bool Contains( MemberMap item )
+		public virtual bool Contains(MemberMap item)
 		{
-			return list.Contains( item );
+			return list.Contains(item);
 		}
 
 		/// <summary>
 		/// Copies the elements of the <see cref="T:System.Collections.Generic.ICollection`1"/> to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
 		/// </summary>
 		/// <param name="array">The one-dimensional <see cref="T:System.Array"/> that is the destination of the elements copied from <see cref="T:System.Collections.Generic.ICollection`1"/>. The <see cref="T:System.Array"/> must have zero-based indexing.</param><param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param><exception cref="T:System.ArgumentNullException"><paramref name="array"/> is null.</exception><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="arrayIndex"/> is less than 0.</exception><exception cref="T:System.ArgumentException">The number of elements in the source <see cref="T:System.Collections.Generic.ICollection`1"/> is greater than the available space from <paramref name="arrayIndex"/> to the end of the destination <paramref name="array"/>.</exception>
-		public virtual void CopyTo( MemberMap[] array, int arrayIndex )
+		public virtual void CopyTo(MemberMap[] array, int arrayIndex)
 		{
-			list.CopyTo( array, arrayIndex );
+			list.CopyTo(array, arrayIndex);
 		}
 
 		/// <summary>
@@ -138,9 +138,9 @@ namespace CsvHelper.Configuration
 		/// <param name="item">The object to remove from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
 		///                 </param><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.ICollection`1"/> is read-only.
 		///                 </exception>
-		public virtual bool Remove( MemberMap item )
+		public virtual bool Remove(MemberMap item)
 		{
-			return list.Remove( item );
+			return list.Remove(item);
 		}
 
 		/// <summary>
@@ -151,9 +151,9 @@ namespace CsvHelper.Configuration
 		/// </returns>
 		/// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1"/>.
 		///                 </param>
-		public virtual int IndexOf( MemberMap item )
+		public virtual int IndexOf(MemberMap item)
 		{
-			return list.IndexOf( item );
+			return list.IndexOf(item);
 		}
 
 		/// <summary>
@@ -164,9 +164,9 @@ namespace CsvHelper.Configuration
 		///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
 		///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
 		///                 </exception>
-		public virtual void Insert( int index, MemberMap item )
+		public virtual void Insert(int index, MemberMap item)
 		{
-			list.Insert( index, item );
+			list.Insert(index, item);
 		}
 
 		/// <summary>
@@ -176,9 +176,9 @@ namespace CsvHelper.Configuration
 		///                 </param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.
 		///                 </exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.
 		///                 </exception>
-		public virtual void RemoveAt( int index )
+		public virtual void RemoveAt(int index)
 		{
-			list.RemoveAt( index );
+			list.RemoveAt(index);
 		}
 
 		/// <summary>
@@ -203,10 +203,10 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="T">The <see cref="System.Type"/> the member is on.</typeparam>
 		/// <param name="expression">The member expression.</param>
 		/// <returns>The <see cref="MemberMap"/> for the given expression, or null if not found.</returns>
-		public virtual MemberMap Find<T>( Expression<Func<T, object>> expression )
+		public virtual MemberMap Find<T>(Expression<Func<T, object>> expression)
 		{
-			var member = ReflectionHelper.GetMember( expression );
-			return Find( member );
+			var member = ReflectionHelper.GetMember(expression);
+			return Find(member);
 		}
 
 		/// <summary>
@@ -214,16 +214,16 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="member">The member.</param>
 		/// <returns>The <see cref="MemberMap"/> for the given expression, or null if not found.</returns>
-		public virtual MemberMap Find( MemberInfo member )
+		public virtual MemberMap Find(MemberInfo member)
 		{
-			var existingMap = list.SingleOrDefault( m =>
-				m.Data.Member == member ||
-				m.Data.Member != null &&
-				m.Data.Member.Name == member.Name &&
-				(
-					m.Data.Member.DeclaringType.IsAssignableFrom( member.DeclaringType ) ||
-					member.DeclaringType.IsAssignableFrom( m.Data.Member.DeclaringType )
-				)
+			var existingMap = list.SingleOrDefault(m =>
+			   m.Data.Member == member ||
+			   m.Data.Member != null &&
+			   m.Data.Member.Name == member.Name &&
+			   (
+				   m.Data.Member.DeclaringType.IsAssignableFrom(member.DeclaringType) ||
+				   member.DeclaringType.IsAssignableFrom(m.Data.Member.DeclaringType)
+			   )
 			);
 
 			return existingMap;
@@ -235,12 +235,12 @@ namespace CsvHelper.Configuration
 		/// reference maps.
 		/// </summary>
 		/// <param name="mapping">The mapping where the members are added from.</param>
-		public virtual void AddMembers( ClassMap mapping )
+		public virtual void AddMembers(ClassMap mapping)
 		{
-			AddRange( mapping.MemberMaps );
-			foreach( var refmap in mapping.ReferenceMaps )
+			AddRange(mapping.MemberMaps);
+			foreach (var refmap in mapping.ReferenceMaps)
 			{
-				AddMembers( refmap.Data.Mapping );
+				AddMembers(refmap.Data.Mapping);
 			}
 		}
 	}
