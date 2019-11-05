@@ -52,54 +52,54 @@ namespace CsvHelper.Tests
 				null
 			};
 
-			var queue = new Queue<string[]>( data );
-			var parserMock = new ParserMock( queue );
+			var queue = new Queue<string[]>(data);
+			var parserMock = new ParserMock(queue);
 
-			var csvReader = new CsvReader( parserMock );
+			var csvReader = new CsvReader(parserMock);
 			csvReader.Configuration.RegisterClassMap<MultipleNamesClassMap>();
 
 			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
 
-			Assert.IsNotNull( records );
-			Assert.AreEqual( 2, records.Count );
-			Assert.AreEqual( 1, records[0].IntColumn );
-			Assert.AreEqual( "one", records[0].StringColumn );
-			Assert.AreEqual( 2, records[1].IntColumn );
-			Assert.AreEqual( "two", records[1].StringColumn );
+			Assert.IsNotNull(records);
+			Assert.AreEqual(2, records.Count);
+			Assert.AreEqual(1, records[0].IntColumn);
+			Assert.AreEqual("one", records[0].StringColumn);
+			Assert.AreEqual(2, records[1].IntColumn);
+			Assert.AreEqual("two", records[1].StringColumn);
 		}
 
 		[TestMethod]
 		public void ConvertUsingTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "1", "2" } );
-			queue.Enqueue( new[] { "3", "4" } );
-			queue.Enqueue( null );
+			queue.Enqueue(new[] { "1", "2" });
+			queue.Enqueue(new[] { "3", "4" });
+			queue.Enqueue(null);
 
-			var parserMock = new ParserMock( queue );
+			var parserMock = new ParserMock(queue);
 
-			var csvReader = new CsvReader( parserMock );
+			var csvReader = new CsvReader(parserMock);
 			csvReader.Configuration.HasHeaderRecord = false;
 			csvReader.Configuration.RegisterClassMap<ConvertUsingMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.IsNotNull( records );
-			Assert.AreEqual( 2, records.Count );
-			Assert.AreEqual( 3, records[0].IntColumn );
-			Assert.AreEqual( 7, records[1].IntColumn );
+			Assert.IsNotNull(records);
+			Assert.AreEqual(2, records.Count);
+			Assert.AreEqual(3, records[0].IntColumn);
+			Assert.AreEqual(7, records[1].IntColumn);
 		}
 
 		[TestMethod]
 		public void ConvertUsingCovarianceTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new string[] { "1", "2" } );
-			queue.Enqueue( null );
+			queue.Enqueue(new string[] { "1", "2" });
+			queue.Enqueue(null);
 
-			var parserMock = new ParserMock( queue );
+			var parserMock = new ParserMock(queue);
 
-			var csvReader = new CsvReader( parserMock );
+			var csvReader = new CsvReader(parserMock);
 			csvReader.Configuration.HasHeaderRecord = false;
 			csvReader.Configuration.RegisterClassMap<CovarianceClassMap>();
 
@@ -133,116 +133,62 @@ namespace CsvHelper.Tests
 		public void ConvertUsingBlockTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "1", "2" } );
-			queue.Enqueue( new[] { "3", "4" } );
-			queue.Enqueue( null );
+			queue.Enqueue(new[] { "1", "2" });
+			queue.Enqueue(new[] { "3", "4" });
+			queue.Enqueue(null);
 
-			var parserMock = new ParserMock( queue );
+			var parserMock = new ParserMock(queue);
 
-			var csvReader = new CsvReader( parserMock );
+			var csvReader = new CsvReader(parserMock);
 			csvReader.Configuration.HasHeaderRecord = false;
 			csvReader.Configuration.RegisterClassMap<ConvertUsingBlockMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.IsNotNull( records );
-			Assert.AreEqual( 2, records.Count );
-			Assert.AreEqual( 3, records[0].IntColumn );
-			Assert.AreEqual( 7, records[1].IntColumn );
+			Assert.IsNotNull(records);
+			Assert.AreEqual(2, records.Count);
+			Assert.AreEqual(3, records[0].IntColumn);
+			Assert.AreEqual(7, records[1].IntColumn);
 		}
 
 		[TestMethod]
 		public void ConvertUsingConstantTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "1", "2" } );
-			queue.Enqueue( new[] { "3", "4" } );
-			queue.Enqueue( null );
+			queue.Enqueue(new[] { "1", "2" });
+			queue.Enqueue(new[] { "3", "4" });
+			queue.Enqueue(null);
 
-			var parserMock = new ParserMock( queue );
+			var parserMock = new ParserMock(queue);
 
-			var csvReader = new CsvReader( parserMock );
+			var csvReader = new CsvReader(parserMock);
 			csvReader.Configuration.HasHeaderRecord = false;
 			csvReader.Configuration.RegisterClassMap<ConvertUsingConstantMap>();
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.IsNotNull( records );
-			Assert.AreEqual( 2, records.Count );
-			Assert.AreEqual( 1, records[0].IntColumn );
-			Assert.AreEqual( 1, records[1].IntColumn );
+			Assert.IsNotNull(records);
+			Assert.AreEqual(2, records.Count);
+			Assert.AreEqual(1, records[0].IntColumn);
+			Assert.AreEqual(1, records[1].IntColumn);
 		}
 
 		[TestMethod]
 		public void ReadSameNameMultipleTimesTest()
 		{
 			var queue = new Queue<string[]>();
-			queue.Enqueue( new[] { "ColumnName", "ColumnName", "ColumnName" } );
-			queue.Enqueue( new[] { "2", "3", "1" } );
-			queue.Enqueue( null );
-			var parserMock = new ParserMock( queue );
+			queue.Enqueue(new[] { "ColumnName", "ColumnName", "ColumnName" });
+			queue.Enqueue(new[] { "2", "3", "1" });
+			queue.Enqueue(null);
+			var parserMock = new ParserMock(queue);
 
-			var csv = new CsvReader( parserMock );
+			var csv = new CsvReader(parserMock);
 			csv.Configuration.RegisterClassMap<SameNameMultipleTimesClassMap>();
 
 			var records = csv.GetRecords<SameNameMultipleTimesClass>().ToList();
 
-			Assert.IsNotNull( records );
-			Assert.AreEqual( 1, records.Count );
-		}
-
-		[TestMethod]
-		public void OptionalWithExistingColumnTest()
-		{
-			var data = new List<string[]>
-			{
-				new[] { "int", "string" },
-				new[] { "1", "one" },
-				new[] { "2", "two" },
-				null
-			};
-
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
-			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<OptionalFieldClassMap>();
-
-			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
-
 			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(1, records[0].IntColumn);
-			Assert.AreEqual("one", records[0].StringColumn);
-			Assert.AreEqual(2, records[1].IntColumn);
-			Assert.AreEqual("two", records[1].StringColumn);
-		}
-
-		[TestMethod]
-		public void OptionalWithMissingColumnTest()
-		{
-			var data = new List<string[]>
-			{
-				new[] { "string" },
-				new[] { "one" },
-				new[] { "two" },
-			null
-			};
-
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
-			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<OptionalFieldClassMap>();
-
-			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
-
-			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(0, records[0].IntColumn);
-			Assert.AreEqual("one", records[0].StringColumn);
-			Assert.AreEqual(0, records[1].IntColumn);
-			Assert.AreEqual("two", records[1].StringColumn);
+			Assert.AreEqual(1, records.Count);
 		}
 
 		private class CovarianceClass
@@ -254,7 +200,7 @@ namespace CsvHelper.Tests
 		{
 			public CovarianceClassMap()
 			{
-				Map( m => m.Id ).ConvertUsing( row => row.GetField<int>( 0 ) );
+				Map(m => m.Id).ConvertUsing(row => row.GetField<int>(0));
 			}
 		}
 
@@ -290,9 +236,9 @@ namespace CsvHelper.Tests
 		{
 			public SameNameMultipleTimesClassMap()
 			{
-				Map( m => m.Name1 ).Name( "ColumnName" ).NameIndex( 1 );
-				Map( m => m.Name2 ).Name( "ColumnName" ).NameIndex( 2 );
-				Map( m => m.Name3 ).Name( "ColumnName" ).NameIndex( 0 );
+				Map(m => m.Name1).Name("ColumnName").NameIndex(1);
+				Map(m => m.Name2).Name("ColumnName").NameIndex(2);
+				Map(m => m.Name3).Name("ColumnName").NameIndex(0);
 			}
 		}
 
@@ -307,8 +253,8 @@ namespace CsvHelper.Tests
 		{
 			public MultipleNamesClassMap()
 			{
-				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
-				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
+				Map(m => m.IntColumn).Name("int1", "int2", "int3");
+				Map(m => m.StringColumn).Name("string1", "string2", "string3");
 			}
 		}
 
@@ -319,7 +265,7 @@ namespace CsvHelper.Tests
 
 			public string StringColumn { get; set; }
 
-			public ConstructorMappingClass( string stringColumn )
+			public ConstructorMappingClass(string stringColumn)
 			{
 				StringColumn = stringColumn;
 			}
@@ -329,7 +275,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( row => row.GetField<int>( 0 ) + row.GetField<int>( 1 ) );
+				Map(m => m.IntColumn).ConvertUsing(row => row.GetField<int>(0) + row.GetField<int>(1));
 			}
 		}
 
@@ -337,12 +283,12 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( row =>
-				{
-					var x = row.GetField<int>( 0 );
-					var y = row.GetField<int>( 1 );
-					return x + y;
-				} );
+				Map(m => m.IntColumn).ConvertUsing(row =>
+			 {
+				 var x = row.GetField<int>(0);
+				 var y = row.GetField<int>(1);
+				 return x + y;
+			 });
 			}
 		}
 
@@ -350,7 +296,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingConstantMap()
 			{
-				Map( m => m.IntColumn ).ConvertUsing( row => 1 );
+				Map(m => m.IntColumn).ConvertUsing(row => 1);
 			}
 		}
 
@@ -358,19 +304,9 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingClassMap()
 			{
-				Map( m => m.IntColumn ).Name( "int2" );
-				Map( m => m.StringColumn ).ConvertUsing( row => row.GetField( "string.3" ) );
+				Map(m => m.IntColumn).Name("int2");
+				Map(m => m.StringColumn).ConvertUsing(row => row.GetField("string.3"));
 			}
 		}
-
-		private sealed class OptionalFieldClassMap : ClassMap<MultipleNamesClass>
-		{
-			public OptionalFieldClassMap()
-				{
-				Map(m => m.IntColumn).Name("int").Optional();
-				Map(m => m.StringColumn).Name("string");
-			}
-		}
-
 	}
 }

@@ -175,6 +175,11 @@ namespace CsvHelper.Expressions
 				index = reader.GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional);
 				if (index == -1)
 				{
+					if (memberMap.Data.IsDefaultSet)
+					{
+						return CreateDefaultExpression(memberMap, Expression.Constant(string.Empty));
+					}
+
 					// Skip if the index was not found.
 					return null;
 				}
@@ -203,47 +208,17 @@ namespace CsvHelper.Expressions
 				);
 			}
 
-			// Convert the field.
-			var typeConverterExpression = Expression.Constant(memberMap.Data.TypeConverter);
-			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Context.ReaderConfiguration.CultureInfo }, reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
-
-			// Create type converter expression.
-			Expression typeConverterFieldExpression = Expression.Call(typeConverterExpression, nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
-			typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
-
 			if (memberMap.Data.IsConstantSet)
 			{
 				fieldExpression = Expression.Convert(Expression.Constant(memberMap.Data.Constant), memberMap.Data.Member.MemberType());
 			}
 			else if (memberMap.Data.IsDefaultSet)
 			{
-				// Create default value expression.
-				Expression defaultValueExpression;
-				if (memberMap.Data.Member.MemberType() != typeof(string) && memberMap.Data.Default != null && memberMap.Data.Default.GetType() == typeof(string))
-				{
-					// The default is a string but the member type is not. Use a converter.
-					defaultValueExpression = Expression.Call(typeConverterExpression, nameof(ITypeConverter.ConvertFromString), null, Expression.Constant(memberMap.Data.Default), Expression.Constant(reader), Expression.Constant(memberMap.Data));
-				}
-				else
-				{
-					// The member type and default type match.
-					defaultValueExpression = Expression.Constant(memberMap.Data.Default);
-				}
-
-				defaultValueExpression = Expression.Convert(defaultValueExpression, memberMap.Data.Member.MemberType());
-
-				// If null, use string.Empty.
-				var coalesceExpression = Expression.Coalesce(fieldExpression, Expression.Constant(string.Empty));
-
-				// Check if the field is an empty string.
-				var checkFieldEmptyExpression = Expression.Equal(Expression.Convert(coalesceExpression, typeof(string)), Expression.Constant(string.Empty, typeof(string)));
-
-				// Use a default value if the field is an empty string.
-				fieldExpression = Expression.Condition(checkFieldEmptyExpression, defaultValueExpression, typeConverterFieldExpression);
+				return CreateDefaultExpression(memberMap, fieldExpression);
 			}
 			else
 			{
-				fieldExpression = typeConverterFieldExpression;
+				fieldExpression = CreateTypeConverterExpression(memberMap, fieldExpression);
 			}
 
 			return fieldExpression;
@@ -335,6 +310,57 @@ namespace CsvHelper.Expressions
 			var blockExpression = Expression.Block(variables, expressions);
 
 			return blockExpression;
+		}
+
+		/// <summary>
+		/// Creates an expression that converts the field expression using a type converter.
+		/// </summary>
+		/// <param name="memberMap">The mapping for the member.</param>
+		/// <param name="fieldExpression">The field expression.</param>
+		public virtual Expression CreateTypeConverterExpression(MemberMap memberMap, Expression fieldExpression)
+		{
+			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Context.ReaderConfiguration.CultureInfo }, reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
+
+			Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
+			typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
+
+			return typeConverterFieldExpression;
+		}
+
+		/// <summary>
+		/// Creates an default expression if field expression is empty.
+		/// </summary>
+		/// <param name="memberMap">The mapping for the member.</param>
+		/// <param name="fieldExpression">The field expression.</param>
+		public virtual Expression CreateDefaultExpression(MemberMap memberMap, Expression fieldExpression)
+		{
+			var typeConverterExpression = CreateTypeConverterExpression(memberMap, fieldExpression);
+
+			// Create default value expression.
+			Expression defaultValueExpression;
+			if (memberMap.Data.Member.MemberType() != typeof(string) && memberMap.Data.Default != null && memberMap.Data.Default.GetType() == typeof(string))
+			{
+				// The default is a string but the member type is not. Use a converter.
+				defaultValueExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, Expression.Constant(memberMap.Data.Default), Expression.Constant(reader), Expression.Constant(memberMap.Data));
+			}
+			else
+			{
+				// The member type and default type match.
+				defaultValueExpression = Expression.Constant(memberMap.Data.Default);
+			}
+
+			defaultValueExpression = Expression.Convert(defaultValueExpression, memberMap.Data.Member.MemberType());
+
+			// If null, use string.Empty.
+			var coalesceExpression = Expression.Coalesce(fieldExpression, Expression.Constant(string.Empty));
+
+			// Check if the field is an empty string.
+			var checkFieldEmptyExpression = Expression.Equal(Expression.Convert(coalesceExpression, typeof(string)), Expression.Constant(string.Empty, typeof(string)));
+
+			// Use a default value if the field is an empty string.
+			fieldExpression = Expression.Condition(checkFieldEmptyExpression, defaultValueExpression, typeConverterExpression);
+
+			return fieldExpression;
 		}
 	}
 }

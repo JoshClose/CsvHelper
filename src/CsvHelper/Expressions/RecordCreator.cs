@@ -26,10 +26,10 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public RecordCreator( CsvReader reader )
+		public RecordCreator(CsvReader reader)
 		{
 			Reader = reader;
-			ExpressionManager = new ExpressionManager( reader );
+			ExpressionManager = new ExpressionManager(reader);
 		}
 
 		/// <summary>
@@ -40,9 +40,9 @@ namespace CsvHelper.Expressions
 		{
 			try
 			{
-				return ( (Func<T>)GetCreateRecordDelegate( typeof( T ) ) ).Invoke();
+				return ((Func<T>)GetCreateRecordDelegate(typeof(T))).Invoke();
 			}
-			catch( TargetInvocationException ex )
+			catch (TargetInvocationException ex)
 			{
 				throw ex.InnerException;
 			}
@@ -52,13 +52,13 @@ namespace CsvHelper.Expressions
 		/// Create a record of the given type using the current row.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		public object Create( Type recordType )
+		public object Create(Type recordType)
 		{
 			try
 			{
-				return GetCreateRecordDelegate( recordType ).DynamicInvoke();
+				return GetCreateRecordDelegate(recordType).DynamicInvoke();
 			}
-			catch( TargetInvocationException ex )
+			catch (TargetInvocationException ex)
 			{
 				throw ex.InnerException;
 			}
@@ -69,11 +69,11 @@ namespace CsvHelper.Expressions
 		/// If the delegate doesn't exist, one will be created and cached.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		protected virtual Delegate GetCreateRecordDelegate( Type recordType )
+		protected virtual Delegate GetCreateRecordDelegate(Type recordType)
 		{
-			if( !Reader.Context.CreateRecordFuncs.TryGetValue( recordType, out Delegate func ) )
+			if (!Reader.Context.CreateRecordFuncs.TryGetValue(recordType, out Delegate func))
 			{
-				Reader.Context.CreateRecordFuncs[recordType] = func = CreateCreateRecordDelegate( recordType );
+				Reader.Context.CreateRecordFuncs[recordType] = func = CreateCreateRecordDelegate(recordType);
 			}
 
 			return func;
@@ -85,6 +85,6 @@ namespace CsvHelper.Expressions
 		/// reader row.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		protected abstract Delegate CreateCreateRecordDelegate( Type recordType );
+		protected abstract Delegate CreateCreateRecordDelegate(Type recordType);
 	}
 }
