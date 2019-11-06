@@ -163,8 +163,8 @@ export default {
 	},
 	onBuild: async () => {
 		console.log("Copying build to docs folder.");
-		await fs.remove("../docs");
-		await fs.copy("./dist", "../docs")
+		await fs.remove("../../docs");
+		await fs.copy("./dist", "../../docs")
 	},
 	devServer: {
 		port: 3001,

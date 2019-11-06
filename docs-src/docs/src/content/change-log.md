@@ -1,5 +1,38 @@
 # Change Log
 
+### 12.2.1
+
+#### Bug Fixes
+
+- Fixed issue where an "Index out of bounds of the array" exception was happening on TryGetField of type DateTime.
+- Fix `RawRecord` adding spaces if `TrimOptions.Trim` is used.
+
+### 12.2.0
+
+#### Features
+
+- Allow default value when using optional members.
+- Added BigIntConverter.
+- Mapping to member with type `Type` will throw exception by default.
+
+#### Bug Fixes
+
+- Made SingleConverter and DoubleConverter round-trip-able.
+
+### 12.1.3
+
+#### Bug Fixes
+
+- Always write \r\n line endings to be compliant with RFC 4180.
+
+### 12.1.2
+
+#### Bug Fixes
+
+- Fixed issue where CsvDataReader would skip the first row when there is no header record.
+- Fixed CsvDataReader issue where null values weren't being represented as DBNull.Value on GetValue and GetValues methods.
+- Fixed issue with IsDBNull method where an empty string was considered a null.
+
 ### 12.1.1
 
 #### Bug Fixes
