@@ -101,6 +101,12 @@ namespace CsvHelper.Configuration
 		bool IncludePrivateMembers { get; set; }
 
 		/// <summary>
+		/// Gets or sets a bool indicating if the header is in a comment.
+		/// True if the header is in the comment, otherwise false. Default is false.
+		/// </summary>
+		bool IsHeaderComment { get; set; }
+
+		/// <summary>
 		/// Gets or sets a callback that will return the prefix for a reference header.
 		/// Arguments: memberType, memberName
 		/// </summary>

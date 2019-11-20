@@ -278,11 +278,17 @@ namespace CsvHelper.Configuration
         /// </summary>
         public virtual char Comment { get; set; } = '#';
 
-        /// <summary>
-        /// Gets or sets a value indicating if comments are allowed.
-        /// True to allow commented out lines, otherwise false.
-        /// </summary>
-        public virtual bool AllowComments { get; set; }
+		 /// <summary>
+		 /// Gets or sets a bool indicating if the header is in a comment.
+		 /// True if the header is in the comment, otherwise false. Default is false.
+		 /// </summary>
+		 public virtual bool IsHeaderComment { get; set; } = false;
+
+		 /// <summary>
+		 /// Gets or sets a value indicating if comments are allowed.
+		 /// True to allow commented out lines, otherwise false.
+		 /// </summary>
+		 public virtual bool AllowComments { get; set; }
 
         /// <summary>
         /// Gets or sets the size of the buffer

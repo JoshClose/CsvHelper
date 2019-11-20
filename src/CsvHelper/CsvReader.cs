@@ -90,6 +90,18 @@ namespace CsvHelper
 				throw new ReaderException(context, "Configuration.HasHeaderRecord is false.");
 			}
 
+			if (context.ReaderConfiguration.IsHeaderComment)
+			{
+				bool foundHeader = context.Record[0].StartsWith("#");
+				if (!foundHeader)
+				{
+					throw new ReaderException(context, "Record does not start with the character specified in Configuration.Comment.");
+				}
+
+				context.Record[0] = context.Record[0].Substring(1);
+			}
+
+
 			context.HeaderRecord = context.Record;
 			ParseNamedIndexes();
 

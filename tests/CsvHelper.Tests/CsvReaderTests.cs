@@ -57,6 +57,96 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
+		public void HasCommentHeaderRecordTest()
+		{
+			var data1 = new[] { "#One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue(data1);
+			queue.Enqueue(data2);
+
+			var parserMock = new ParserMock(queue);
+
+			var reader = new CsvReader(parserMock);
+
+			reader.Configuration.IsHeaderComment = true;
+			reader.Read();
+			reader.ReadHeader();
+			reader.Read();
+
+			// Check to see if the header record and first record are set properly.
+			Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>("One"));
+			Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>("Two"));
+			Assert.AreEqual(Convert.ToInt32(data2[0]), reader.GetField<int>(0));
+			Assert.AreEqual(Convert.ToInt32(data2[1]), reader.GetField<int>(1));
+		}
+
+		[TestMethod]
+		public void HasCommentHeaderRecordFailTest()
+		{
+			var data1 = new[] { "One", "Two" };
+			var data2 = new[] { "1", "2" };
+			var queue = new Queue<string[]>();
+			queue.Enqueue(data1);
+			queue.Enqueue(data2);
+
+			var parserMock = new ParserMock(queue);
+
+			var reader = new CsvReader(parserMock);
+
+			reader.Configuration.IsHeaderComment = true;
+			reader.Read();
+
+			try
+			{
+				reader.ReadHeader();
+			}
+			catch (ReaderException exc)
+			{
+				Assert.AreEqual("Record does not start with the character specified in Configuration.Comment.", exc.Message);
+			}
+		}
+
+		[TestMethod]
+		public void HasCommentHeaderMultipleRecordsTest()
+		{
+			var queue = new Queue<string[]>();
+			
+			for(int i = 1; i < 5; i++)
+			{
+				queue.Enqueue(new []{"A Value " + i, "B Value " + i });
+			}
+			queue.Enqueue(new[] { "#A Header", "B Header" });
+			for (int i = 5; i < 7; i++)
+			{
+				queue.Enqueue(new[] { "A Value " + i, "B Value " + i });
+			}
+
+			var parserMock = new ParserMock(queue);
+			var reader = new CsvReader(parserMock);
+			reader.Configuration.IsHeaderComment = true;
+
+			for (int i = 1; i < 5; i++)
+			{
+				reader.Read();
+				Assert.AreEqual("A Value " + i, reader.Context.Record[0]);
+				Assert.AreEqual("B Value " + i, reader.Context.Record[1]);
+			}
+
+			reader.Read();
+			reader.ReadHeader();
+			Assert.AreEqual("A Header", reader.Context.Record[0]);
+			Assert.AreEqual("B Header", reader.Context.Record[1]);
+
+			for (int i = 5; i < 7; i++)
+			{
+				reader.Read();
+				Assert.AreEqual("A Value " + i, reader.Context.Record[0]);
+				Assert.AreEqual("B Value " + i, reader.Context.Record[1]);
+			}
+		}
+
+		[TestMethod]
 		public void GetTypeTest()
 		{
 			var data = new[]
