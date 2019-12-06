@@ -1,5 +1,12 @@
 # Change Log
 
+### 12.2.2
+
+#### Bug Fixes
+
+- Fixed issue where multiple properties with the same name were used when a child class property hides a parent class property using the new modifier.
+- Fixed issue where a null reference exception was thrown when writing and all properties are ignored.
+
 ### 12.2.1
 
 #### Bug Fixes
