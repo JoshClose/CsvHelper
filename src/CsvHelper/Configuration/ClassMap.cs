@@ -551,20 +551,17 @@ namespace CsvHelper.Configuration
 
 			if (member.GetCustomAttribute(typeof(BooleanTrueValuesAttribute)) is BooleanTrueValuesAttribute booleanTrueValuesAttribute)
 			{
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.Clear();
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(booleanTrueValuesAttribute.TrueValues);
+				memberMap.Data.TypeConverterOptions.BooleanTrueValues.UnionWith(booleanTrueValuesAttribute.TrueValues);
 			}
 
 			if (member.GetCustomAttribute(typeof(BooleanFalseValuesAttribute)) is BooleanFalseValuesAttribute booleanFalseValuesAttribute)
 			{
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(booleanFalseValuesAttribute.FalseValues);
+				memberMap.Data.TypeConverterOptions.BooleanFalseValues.UnionWith(booleanFalseValuesAttribute.FalseValues);
 			}
 
 			if (member.GetCustomAttribute(typeof(NullValuesAttribute)) is NullValuesAttribute nullValuesAttribute)
 			{
-				memberMap.Data.TypeConverterOptions.NullValues.Clear();
-				memberMap.Data.TypeConverterOptions.NullValues.AddRange(nullValuesAttribute.NullValues);
+				memberMap.Data.TypeConverterOptions.NullValues.UnionWith(nullValuesAttribute.NullValues);
 			}
 		}
 
