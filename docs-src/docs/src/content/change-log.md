@@ -1,5 +1,11 @@
 # Change Log
 
+### 12.2.3
+
+#### Big Fixes
+
+- Changed round trip default format to test if "R" works and use backup of "G9" for float and "G17" for double.
+
 ### 12.2.2
 
 #### Bug Fixes
