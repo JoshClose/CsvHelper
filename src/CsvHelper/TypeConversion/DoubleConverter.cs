@@ -13,6 +13,16 @@ namespace CsvHelper.TypeConversion
     /// </summary>
     public class DoubleConverter : DefaultTypeConverter
     {
+		private string defaultFormat;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DoubleConverter"/> class.
+		/// </summary>
+		public DoubleConverter()
+		{
+			defaultFormat = double.TryParse(double.MaxValue.ToString("R"), out _) ? "R" : "G17";
+		}
+
         /// <summary>
         /// Converts the object to a string.
         /// </summary>
@@ -24,7 +34,7 @@ namespace CsvHelper.TypeConversion
         {
 			if (value is double d && memberMapData.TypeConverterOptions.Formats?.FirstOrDefault() == null)
             {
-                return d.ToString("G17", memberMapData.TypeConverterOptions.CultureInfo);
+                return d.ToString(defaultFormat, memberMapData.TypeConverterOptions.CultureInfo);
             }
 
             return base.ConvertToString(value, row, memberMapData);

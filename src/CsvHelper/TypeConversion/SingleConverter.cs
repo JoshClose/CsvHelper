@@ -14,6 +14,16 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public class SingleConverter : DefaultTypeConverter
 	{
+		private string defaultFormat;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SingleConverter"/> class.
+		/// </summary>
+		public SingleConverter()
+		{
+			defaultFormat = float.TryParse(float.MaxValue.ToString("R"), out _) ? "R" : "G9";
+		}
+
         /// <summary>
         /// Converts the object to a string.
         /// </summary>
@@ -25,7 +35,7 @@ namespace CsvHelper.TypeConversion
         {
             if (value is float d && memberMapData.TypeConverterOptions.Formats?.FirstOrDefault() == null)
             {
-                return d.ToString("G9", memberMapData.TypeConverterOptions.CultureInfo);
+                return d.ToString(defaultFormat, memberMapData.TypeConverterOptions.CultureInfo);
             }
 
             return base.ConvertToString(value, row, memberMapData);
