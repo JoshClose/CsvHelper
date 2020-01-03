@@ -15,7 +15,52 @@ namespace CsvHelper
 	public class CsvDataReader : IDataReader
 	{
 		private readonly CsvReader csv;
-        private bool skipNextRead;
+		private readonly DataTable schemaTable;
+		private bool skipNextRead;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+		/// </summary>
+		/// <param name="csv">The CSV.</param>
+		public CsvDataReader(CsvReader csv)
+		{
+			this.csv = csv;
+
+			csv.Read();
+
+			if (csv.Configuration.HasHeaderRecord)
+			{
+				csv.ReadHeader();
+			}
+			else
+			{
+				skipNextRead = true;
+			}
+
+			schemaTable = GetSchemaTable();
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+		/// </summary>
+		/// <param name="csv">The CSV.</param>
+		/// <param name="schemaTable">The DataTable representing the file schema.</param>
+		public CsvDataReader(CsvReader csv, DataTable schemaTable)
+		{
+			this.csv = csv;
+			this.schemaTable = schemaTable;
+
+			csv.Read();
+
+			if (csv.Configuration.HasHeaderRecord)
+			{
+				csv.ReadHeader();
+			}
+			else
+			{
+				skipNextRead = true;
+			}
+		}
 
 		/// <summary>
 		/// Gets the column with the specified index.
@@ -85,26 +130,6 @@ namespace CsvHelper
 			{
 				return csv.Context.Record.Length;
 			}
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-		/// </summary>
-		/// <param name="csv">The CSV.</param>
-		public CsvDataReader(CsvReader csv)
-		{
-			this.csv = csv;
-
-			csv.Read();
-
-			if (csv.Configuration.HasHeaderRecord)
-			{
-				csv.ReadHeader();
-			}
-            else
-            {
-                skipNextRead = true;
-            }
 		}
 
 		/// <summary>
@@ -341,8 +366,8 @@ namespace CsvHelper
 		/// </returns>
 		public string GetName(int i)
 		{
-			return csv.Configuration.HasHeaderRecord 
-				? csv.Context.HeaderRecord[i] 
+			return csv.Configuration.HasHeaderRecord
+				? csv.Context.HeaderRecord[i]
 				: string.Empty;
 		}
 
@@ -366,72 +391,78 @@ namespace CsvHelper
 		/// </returns>
 		public DataTable GetSchemaTable()
 		{
-			// https://docs.microsoft.com/en-us/dotnet/api/system.data.datatablereader.getschematable?view=netframework-4.7.2
-
-			var dt = new DataTable("SchemaTable");
-			dt.Columns.Add("AllowDBNull", typeof(bool));
-			dt.Columns.Add("AutoIncrementSeed", typeof(long));
-			dt.Columns.Add("AutoIncrementStep", typeof(long));
-			dt.Columns.Add("BaseCatalogName");
-			dt.Columns.Add("BaseColumnName");
-			dt.Columns.Add("BaseColumnNamespace");
-			dt.Columns.Add("BaseSchemaName");
-			dt.Columns.Add("BaseTableName");
-			dt.Columns.Add("BaseTableNamespace");
-			dt.Columns.Add("ColumnName");
-			dt.Columns.Add("ColumnMapping", typeof(MappingType));
-			dt.Columns.Add("ColumnOrdinal", typeof(int));
-			dt.Columns.Add("ColumnSize", typeof(int));
-			dt.Columns.Add("DataType", typeof(Type));
-			dt.Columns.Add("DefaultValue", typeof(object));
-			dt.Columns.Add("Expression");
-			dt.Columns.Add("IsAutoIncrement", typeof(bool));
-			dt.Columns.Add("IsKey", typeof(bool));
-			dt.Columns.Add("IsLong", typeof(bool));
-			dt.Columns.Add("IsReadOnly", typeof(bool));
-			dt.Columns.Add("IsRowVersion", typeof(bool));
-			dt.Columns.Add("IsUnique", typeof(bool));
-			dt.Columns.Add("NumericPrecision", typeof(short));
-			dt.Columns.Add("NumericScale", typeof(short));
-			dt.Columns.Add("ProviderType", typeof(int));
-
-			if (csv.Configuration.HasHeaderRecord)
+			if (this.schemaTable != null)
 			{
-				for (var i = 0; i < csv.Context.HeaderRecord.Length; i++)
-				{
-					var header = csv.Context.HeaderRecord[i];
-					var row = dt.NewRow();
-					row["AllowDBNull"] = true;
-					row["AutoIncrementSeed"] = DBNull.Value;
-					row["AutoIncrementStep"] = DBNull.Value;
-					row["BaseCatalogName"] = null;
-					row["BaseColumnName"] = csv.Context.HeaderRecord[i];
-					row["BaseColumnNamespace"] = null;
-					row["BaseSchemaName"] = null;
-					row["BaseTableName"] = null;
-					row["BaseTableNamespace"] = null;
-					row["ColumnName"] = csv.Context.HeaderRecord[i];
-					row["ColumnMapping"] = MappingType.Element;
-					row["ColumnOrdinal"] = i;
-					row["ColumnSize"] = int.MaxValue;
-					row["DataType"] = typeof(string);
-					row["DefaultValue"] = null;
-					row["Expression"] = null;
-					row["IsAutoIncrement"] = false;
-					row["IsKey"] = false;
-					row["IsLong"] = false;
-					row["IsReadOnly"] = true;
-					row["IsRowVersion"] = false;
-					row["IsUnique"] = false;
-					row["NumericPrecision"] = DBNull.Value;
-					row["NumericScale"] = DBNull.Value;
-					row["ProviderType"] = DbType.String;
-
-					dt.Rows.Add(row);
-				}
+				return this.schemaTable;
 			}
+			else
+			{
+				// https://docs.microsoft.com/en-us/dotnet/api/system.data.datatablereader.getschematable?view=netframework-4.7.2
+				DataTable dt = new DataTable("SchemaTable");
+				dt.Columns.Add("AllowDBNull", typeof(bool));
+				dt.Columns.Add("AutoIncrementSeed", typeof(long));
+				dt.Columns.Add("AutoIncrementStep", typeof(long));
+				dt.Columns.Add("BaseCatalogName");
+				dt.Columns.Add("BaseColumnName");
+				dt.Columns.Add("BaseColumnNamespace");
+				dt.Columns.Add("BaseSchemaName");
+				dt.Columns.Add("BaseTableName");
+				dt.Columns.Add("BaseTableNamespace");
+				dt.Columns.Add("ColumnName");
+				dt.Columns.Add("ColumnMapping", typeof(MappingType));
+				dt.Columns.Add("ColumnOrdinal", typeof(int));
+				dt.Columns.Add("ColumnSize", typeof(int));
+				dt.Columns.Add("DataType", typeof(Type));
+				dt.Columns.Add("DefaultValue", typeof(object));
+				dt.Columns.Add("Expression");
+				dt.Columns.Add("IsAutoIncrement", typeof(bool));
+				dt.Columns.Add("IsKey", typeof(bool));
+				dt.Columns.Add("IsLong", typeof(bool));
+				dt.Columns.Add("IsReadOnly", typeof(bool));
+				dt.Columns.Add("IsRowVersion", typeof(bool));
+				dt.Columns.Add("IsUnique", typeof(bool));
+				dt.Columns.Add("NumericPrecision", typeof(short));
+				dt.Columns.Add("NumericScale", typeof(short));
+				dt.Columns.Add("ProviderType", typeof(int));
 
-			return dt;
+				if (csv.Configuration.HasHeaderRecord)
+				{
+					for (var i = 0; i < csv.Context.HeaderRecord.Length; i++)
+					{
+						var header = csv.Context.HeaderRecord[i];
+						var row = dt.NewRow();
+						row["AllowDBNull"] = true;
+						row["AutoIncrementSeed"] = DBNull.Value;
+						row["AutoIncrementStep"] = DBNull.Value;
+						row["BaseCatalogName"] = null;
+						row["BaseColumnName"] = csv.Context.HeaderRecord[i];
+						row["BaseColumnNamespace"] = null;
+						row["BaseSchemaName"] = null;
+						row["BaseTableName"] = null;
+						row["BaseTableNamespace"] = null;
+						row["ColumnName"] = csv.Context.HeaderRecord[i];
+						row["ColumnMapping"] = MappingType.Element;
+						row["ColumnOrdinal"] = i;
+						row["ColumnSize"] = int.MaxValue;
+						row["DataType"] = typeof(string);
+						row["DefaultValue"] = null;
+						row["Expression"] = null;
+						row["IsAutoIncrement"] = false;
+						row["IsKey"] = false;
+						row["IsLong"] = false;
+						row["IsReadOnly"] = true;
+						row["IsRowVersion"] = false;
+						row["IsUnique"] = false;
+						row["NumericPrecision"] = DBNull.Value;
+						row["NumericScale"] = DBNull.Value;
+						row["ProviderType"] = DbType.String;
+
+						dt.Rows.Add(row);
+					}
+				}
+
+				return dt;
+			}
 		}
 
 		/// <summary>
@@ -455,22 +486,22 @@ namespace CsvHelper
 		/// </returns>
 		public object GetValue(int i)
 		{
-            return IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
-        }
+			return IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
+		}
 
-        /// <summary>
-        /// Populates an array of objects with the column values of the current record.
-        /// </summary>
-        /// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
-        /// <returns>
-        /// The number of instances of <see cref="T:System.Object"></see> in the array.
-        /// </returns>
-        public int GetValues(object[] values)
+		/// <summary>
+		/// Populates an array of objects with the column values of the current record.
+		/// </summary>
+		/// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
+		/// <returns>
+		/// The number of instances of <see cref="T:System.Object"></see> in the array.
+		/// </returns>
+		public int GetValues(object[] values)
 		{
 			for (var i = 0; i < csv.Context.Record.Length; i++)
-            {
-                values[i] = IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
-            }
+			{
+				values[i] = IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
+			}
 
 			return csv.Context.Record.Length;
 		}
@@ -501,21 +532,21 @@ namespace CsvHelper
 			return false;
 		}
 
-        /// <summary>
-        /// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
-        /// </summary>
-        /// <returns>
-        /// true if there are more rows; otherwise, false.
-        /// </returns>
-        public bool Read()
-        {
-            if (skipNextRead)
-            {
-                skipNextRead = false;
-                return true;
-            }
+		/// <summary>
+		/// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
+		/// </summary>
+		/// <returns>
+		/// true if there are more rows; otherwise, false.
+		/// </returns>
+		public bool Read()
+		{
+			if (skipNextRead)
+			{
+				skipNextRead = false;
+				return true;
+			}
 
-            return csv.Read();
-        }
-    }
+			return csv.Read();
+		}
+	}
 }
