@@ -20,7 +20,16 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		public DoubleConverter()
 		{
-			defaultFormat = double.TryParse(double.MaxValue.ToString("R"), out _) ? "R" : "G17";
+			// Have to use a try/catch here because of a bug in .NET that causes a StackOverflowException when calling ToString("R").
+			try
+			{
+				double.Parse(double.MaxValue.ToString("R"));
+				defaultFormat = "R";
+			}
+			catch
+			{
+				defaultFormat = "G17";
+			}
 		}
 
         /// <summary>

@@ -21,7 +21,16 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		public SingleConverter()
 		{
-			defaultFormat = float.TryParse(float.MaxValue.ToString("R"), out _) ? "R" : "G9";
+			// Have to use a try/catch here because of a bug in .NET that causes a StackOverflowException when calling ToString("R").
+			try
+			{
+				float.Parse(float.MaxValue.ToString("R"));
+				defaultFormat = "R";
+			}
+			catch
+			{
+				defaultFormat = "G9";
+			}
 		}
 
         /// <summary>
