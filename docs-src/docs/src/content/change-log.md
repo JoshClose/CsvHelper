@@ -1,5 +1,11 @@
 # Change Log
 
+### 12.3.0
+
+#### Features
+
+- Added UriConverter.
+
 ### 12.2.3
 
 #### Big Fixes
