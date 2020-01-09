@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -41,6 +42,11 @@ namespace CsvHelper.TypeConversion
         /// Gets or sets the string format.
         /// </summary>
         public string[] Formats { get; set; }
+
+		/// <summary>
+		/// Gets or sets the <see cref="UriKind"/>.
+		/// </summary>
+		public UriKind? UriKind { get; set; }
 
         /// <summary>
         /// Gets the list of values that can be
@@ -107,6 +113,11 @@ namespace CsvHelper.TypeConversion
                 {
                     options.Formats = source.Formats;
                 }
+
+				if (source.UriKind != null)
+				{
+					options.UriKind = source.UriKind;
+				}
 
                 // Only change the values if they are different than the defaults.
                 // This means there were explicit changes made to the options.

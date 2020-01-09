@@ -221,6 +221,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(ushort), new UInt16Converter());
 			AddConverter(typeof(uint), new UInt32Converter());
 			AddConverter(typeof(ulong), new UInt64Converter());
+			AddConverter(typeof(Uri), new UriConverter());
 			// Collection types need to come after value types.
 			AddConverter(typeof(IList), new IEnumerableConverter());
 			AddConverter(typeof(ICollection), new IEnumerableConverter());

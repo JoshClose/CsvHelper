@@ -18,7 +18,7 @@ namespace CsvHelper.Configuration
 		/// Creates a new instance using the given <see cref="MemberMap"/>.
 		/// </summary>
 		/// <param name="memberMap">The member map the options are being applied to.</param>
-		public MapTypeConverterOption( MemberMap memberMap )
+		public MapTypeConverterOption(MemberMap memberMap)
 		{
 			this.memberMap = memberMap;
 		}
@@ -29,7 +29,7 @@ namespace CsvHelper.Configuration
 		/// setting.
 		/// </summary>
 		/// <param name="cultureInfo">The culture info.</param>
-		public virtual MemberMap CultureInfo( CultureInfo cultureInfo )
+		public virtual MemberMap CultureInfo(CultureInfo cultureInfo)
 		{
 			memberMap.Data.TypeConverterOptions.CultureInfo = cultureInfo;
 
@@ -41,9 +41,21 @@ namespace CsvHelper.Configuration
 		/// This is used when doing any <see cref="DateTime"/> conversions.
 		/// </summary>
 		/// <param name="dateTimeStyle">The date time style.</param>
-		public virtual MemberMap DateTimeStyles( DateTimeStyles dateTimeStyle )
+		public virtual MemberMap DateTimeStyles(DateTimeStyles dateTimeStyle)
 		{
 			memberMap.Data.TypeConverterOptions.DateTimeStyle = dateTimeStyle;
+
+			return memberMap;
+		}
+
+		/// <summary>
+		/// The <see cref="TimeSpanStyles"/> to use when type converting.
+		/// This is used when doing <see cref="TimeSpan"/> converting.
+		/// </summary>
+		/// <param name="timeSpanStyles">The time span styles.</param>
+		public virtual MemberMap TimespanStyles(TimeSpanStyles timeSpanStyles)
+		{
+			memberMap.Data.TypeConverterOptions.TimeSpanStyle = timeSpanStyles;
 
 			return memberMap;
 		}
@@ -53,7 +65,7 @@ namespace CsvHelper.Configuration
 		/// This is used when doing any number conversions.
 		/// </summary>
 		/// <param name="numberStyle"></param>
-		public virtual MemberMap NumberStyles( NumberStyles numberStyle )
+		public virtual MemberMap NumberStyles(NumberStyles numberStyle)
 		{
 			memberMap.Data.TypeConverterOptions.NumberStyle = numberStyle;
 
@@ -64,9 +76,21 @@ namespace CsvHelper.Configuration
 		/// The string format to be used when type converting.
 		/// </summary>
 		/// <param name="formats">The format.</param>
-		public virtual MemberMap Format( params string[] formats )
+		public virtual MemberMap Format(params string[] formats)
 		{
 			memberMap.Data.TypeConverterOptions.Formats = formats;
+
+			return memberMap;
+		}
+
+		/// <summary>
+		/// The <see cref="UriKind"/> to use when converting.
+		/// This is used when doing <see cref="Uri"/> conversions.
+		/// </summary>
+		/// <param name="uriKind">Kind of the URI.</param>
+		public virtual MemberMap UriKind(UriKind uriKind)
+		{
+			memberMap.Data.TypeConverterOptions.UriKind = uriKind;
 
 			return memberMap;
 		}
@@ -77,25 +101,25 @@ namespace CsvHelper.Configuration
 		/// <param name="isTrue">A value indicating whether true values or false values are being set.</param>
 		/// <param name="clearValues">A value indication if the current values should be cleared before adding the new ones.</param>
 		/// <param name="booleanValues">The string boolean values.</param>
-		public virtual MemberMap BooleanValues( bool isTrue, bool clearValues = true, params string[] booleanValues )
+		public virtual MemberMap BooleanValues(bool isTrue, bool clearValues = true, params string[] booleanValues)
 		{
-			if( isTrue )
+			if (isTrue)
 			{
-				if( clearValues )
+				if (clearValues)
 				{
 					memberMap.Data.TypeConverterOptions.BooleanTrueValues.Clear();
 				}
 
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange( booleanValues );
+				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(booleanValues);
 			}
 			else
 			{
-				if( clearValues )
+				if (clearValues)
 				{
 					memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
 				}
 
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange( booleanValues );
+				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(booleanValues);
 			}
 
 			return memberMap;
@@ -106,9 +130,9 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="nullValues">The values that represent null.</param>
 		/// <returns></returns>
-		public virtual MemberMap NullValues( params string[] nullValues )
+		public virtual MemberMap NullValues(params string[] nullValues)
 		{
-			return NullValues( true, nullValues );
+			return NullValues(true, nullValues);
 		}
 
 		/// <summary>
@@ -117,14 +141,14 @@ namespace CsvHelper.Configuration
 		/// <param name="clearValues">A value indication if the current values should be cleared before adding the new ones.</param>
 		/// <param name="nullValues">The values that represent null.</param>
 		/// <returns></returns>
-		public virtual MemberMap NullValues( bool clearValues, params string[] nullValues )
+		public virtual MemberMap NullValues(bool clearValues, params string[] nullValues)
 		{
-			if( clearValues )
+			if (clearValues)
 			{
 				memberMap.Data.TypeConverterOptions.NullValues.Clear();
 			}
 
-			memberMap.Data.TypeConverterOptions.NullValues.AddRange( nullValues );
+			memberMap.Data.TypeConverterOptions.NullValues.AddRange(nullValues);
 
 			return memberMap;
 		}
