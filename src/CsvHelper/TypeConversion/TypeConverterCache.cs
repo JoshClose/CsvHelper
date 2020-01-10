@@ -101,6 +101,18 @@ namespace CsvHelper.TypeConversion
 			{
 				return typeConverter;
 			}
+			
+			if (type == typeof(double))
+			{
+				AddConverter(typeof(double), new DoubleConverter());
+				return GetConverter(type);
+			}
+
+			if (type == typeof(float))
+			{
+				AddConverter(typeof(float), new SingleConverter());
+				return GetConverter(type);
+			}
 
 			if (typeof(Enum).IsAssignableFrom(type))
 			{
@@ -208,8 +220,6 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(DateTime), new DateTimeConverter());
 			AddConverter(typeof(DateTimeOffset), new DateTimeOffsetConverter());
 			AddConverter(typeof(decimal), new DecimalConverter());
-			AddConverter(typeof(double), new DoubleConverter());
-			AddConverter(typeof(float), new SingleConverter());
 			AddConverter(typeof(Guid), new GuidConverter());
 			AddConverter(typeof(short), new Int16Converter());
 			AddConverter(typeof(int), new Int32Converter());
