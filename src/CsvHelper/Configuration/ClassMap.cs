@@ -21,13 +21,13 @@ namespace CsvHelper.Configuration
 	{
 		private static readonly List<Type> enumerableConverters = new List<Type>
 		{
-			typeof( ArrayConverter ),
-			typeof( CollectionGenericConverter ),
-			typeof( EnumerableConverter ),
-			typeof( IDictionaryConverter ),
-			typeof( IDictionaryGenericConverter ),
-			typeof( IEnumerableConverter ),
-			typeof( IEnumerableGenericConverter )
+			typeof(ArrayConverter),
+			typeof(CollectionGenericConverter),
+			typeof(EnumerableConverter),
+			typeof(IDictionaryConverter),
+			typeof(IDictionaryGenericConverter),
+			typeof(IEnumerableConverter),
+			typeof(IEnumerableGenericConverter)
 		};
 
 		/// <summary>
@@ -484,14 +484,12 @@ namespace CsvHelper.Configuration
 		protected virtual void ApplyAttributes(MemberMap memberMap)
 		{
 			var member = memberMap.Data.Member;
+			var attributes = member.GetCustomAttributes().OfType<IMemberMapper>();
 
-            var attributes = member.GetCustomAttributes().OfType<IMemberMapper>();
-
-            foreach (var attribute in attributes)
-            {
-                attribute.ApplyTo(memberMap);
-            }
-            
+			foreach (var attribute in attributes)
+			{
+				attribute.ApplyTo(memberMap);
+			}
 		}
 
 		/// <summary>
@@ -501,13 +499,12 @@ namespace CsvHelper.Configuration
 		protected virtual void ApplyAttributes(MemberReferenceMap referenceMap)
 		{
 			var member = referenceMap.Data.Member;
-            var attributes = member.GetCustomAttributes().OfType<IMemberReferenceMapper>();
+			var attributes = member.GetCustomAttributes().OfType<IMemberReferenceMapper>();
 
-            foreach (var attribute in attributes)
-            {
-                attribute.ApplyTo(referenceMap);
-            }
-
+			foreach (var attribute in attributes)
+			{
+				attribute.ApplyTo(referenceMap);
+			}
 		}
 	}
 }

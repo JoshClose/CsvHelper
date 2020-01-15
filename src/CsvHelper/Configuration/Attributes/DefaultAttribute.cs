@@ -10,7 +10,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The default value that will be used when reading when
 	/// the CSV field is empty.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class DefaultAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
@@ -23,16 +23,19 @@ namespace CsvHelper.Configuration.Attributes
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value</param>
-		public DefaultAttribute( object defaultValue )
+		public DefaultAttribute(object defaultValue)
 		{
 			Default = defaultValue;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.Default = Default;
-            memberMap.Data.IsDefaultSet = true;
-        }
-
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
+		{
+			memberMap.Data.Default = Default;
+			memberMap.Data.IsDefaultSet = true;
+		}
+	}
 }

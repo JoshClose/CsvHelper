@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// This will override the global <see cref="Configuration.CultureInfo"/>
 	/// setting.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class CultureInfoAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
@@ -26,15 +26,18 @@ namespace CsvHelper.Configuration.Attributes
 		/// setting.
 		/// </summary>
 		/// <param name="culture">The culture.</param>
-		public CultureInfoAttribute( string culture )
+		public CultureInfoAttribute(string culture)
 		{
-			CultureInfo = CultureInfo.GetCultureInfo( culture );
+			CultureInfo = CultureInfo.GetCultureInfo(culture);
 		}
 
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.TypeConverterOptions.CultureInfo = CultureInfo;
-        }
-
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
+		{
+			memberMap.Data.TypeConverterOptions.CultureInfo = CultureInfo;
+		}
+	}
 }

@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// field in the header record.
 	/// The first name will be used.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class NameAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
@@ -33,7 +33,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="name">The name</param>
-		public NameAttribute( string name )
+		public NameAttribute(string name)
 		{
 			Names = new string[] { name };
 		}
@@ -48,22 +48,25 @@ namespace CsvHelper.Configuration.Attributes
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The names.</param>
-		public NameAttribute( params string[] names )
+		public NameAttribute(params string[] names)
 		{
-			if( names == null || names.Length == 0 )
+			if (names == null || names.Length == 0)
 			{
-				throw new ArgumentNullException( nameof( names ) );
+				throw new ArgumentNullException(nameof(names));
 			}
 
 			Names = names;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.Names.Clear();
-            memberMap.Data.Names.AddRange(Names);
-            memberMap.Data.IsNameSet = true;
-        }
-
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
+		{
+			memberMap.Data.Names.Clear();
+			memberMap.Data.Names.AddRange(Names);
+			memberMap.Data.IsNameSet = true;
+		}
+	}
 }

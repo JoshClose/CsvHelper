@@ -58,7 +58,7 @@ namespace CsvHelper
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
-		IEnumerable<T> GetRecords<T>( T anonymousTypeDefinition );
+		IEnumerable<T> GetRecords<T>(T anonymousTypeDefinition);
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
@@ -67,7 +67,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
-		IEnumerable<object> GetRecords( Type type );
+		IEnumerable<object> GetRecords(Type type);
 
 		/// <summary>
 		/// Enumerates the records hydrating the given record instance with row data.
@@ -79,6 +79,6 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to fill each enumeration.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
-		IEnumerable<T> EnumerateRecords<T>( T record );
+		IEnumerable<T> EnumerateRecords<T>(T record);
 	}
 }

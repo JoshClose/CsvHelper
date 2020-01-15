@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// Appends a prefix to the header of each field of the reference member.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class HeaderPrefixAttribute : Attribute, IMemberReferenceMapper
 	{
 		/// <summary>
@@ -26,15 +26,18 @@ namespace CsvHelper.Configuration.Attributes
 		/// Appends a prefix to the header of each field of the reference member.
 		/// </summary>
 		/// <param name="prefix">The prefix.</param>
-		public HeaderPrefixAttribute( string prefix )
+		public HeaderPrefixAttribute(string prefix)
 		{
 			Prefix = prefix;
 		}
 
-        public void ApplyTo(MemberReferenceMap referenceMap)
-        {
-            referenceMap.Data.Prefix = Prefix ?? referenceMap.Data.Member.Name + ".";
-        }
-
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="referenceMap">The reference map.</param>
+		public void ApplyTo(MemberReferenceMap referenceMap)
+		{
+			referenceMap.Data.Prefix = Prefix ?? referenceMap.Data.Member.Name + ".";
+		}
+	}
 }

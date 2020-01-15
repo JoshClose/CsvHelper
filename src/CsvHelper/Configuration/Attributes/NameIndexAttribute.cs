@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// index of the name used when there 
 	/// are multiple names that are the same.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class NameIndexAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
@@ -25,15 +25,18 @@ namespace CsvHelper.Configuration.Attributes
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="nameIndex">The name index.</param>
-		public NameIndexAttribute( int nameIndex )
+		public NameIndexAttribute(int nameIndex)
 		{
 			NameIndex = nameIndex;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.NameIndex = NameIndex;
-        }
-
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
+		{
+			memberMap.Data.NameIndex = NameIndex;
+		}
+	}
 }

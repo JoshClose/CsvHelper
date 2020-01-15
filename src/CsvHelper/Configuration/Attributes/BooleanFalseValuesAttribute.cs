@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// The string values used to represent a boolean false when converting.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class BooleanFalseValuesAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// The string values used to represent a boolean false when converting.
 		/// </summary>
 		/// <param name="falseValue">The false values.</param>
-		public BooleanFalseValuesAttribute( string falseValue )
+		public BooleanFalseValuesAttribute(string falseValue)
 		{
 			FalseValues = new string[] { falseValue };
 		}
@@ -30,16 +30,19 @@ namespace CsvHelper.Configuration.Attributes
 		/// The string values used to represent a boolean false when converting.
 		/// </summary>
 		/// <param name="falseValues">The false values.</param>
-		public BooleanFalseValuesAttribute( params string[] falseValues )
+		public BooleanFalseValuesAttribute(params string[] falseValues)
 		{
 			FalseValues = falseValues;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
-            memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(FalseValues);
-        }
-
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
+		{
+			memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
+			memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(FalseValues);
+		}
+	}
 }

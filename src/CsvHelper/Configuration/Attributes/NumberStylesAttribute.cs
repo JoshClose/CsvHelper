@@ -29,10 +29,13 @@ namespace CsvHelper.Configuration.Attributes
 			NumberStyles = numberStyles;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
         {
             memberMap.Data.TypeConverterOptions.NumberStyle = NumberStyles;
         }
-
     }
 }

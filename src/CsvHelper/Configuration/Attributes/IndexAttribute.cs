@@ -39,12 +39,15 @@ namespace CsvHelper.Configuration.Attributes
 			IndexEnd = indexEnd;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
         {
             memberMap.Data.Index = Index;
             memberMap.Data.IndexEnd = IndexEnd;
             memberMap.Data.IsIndexSet = true;
         }
-
     }
 }

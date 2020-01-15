@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// The string format to be used when type converting.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
 	public class FormatAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// The string format to be used when type converting.
 		/// </summary>
 		/// <param name="format">The format.</param>
-		public FormatAttribute( string format )
+		public FormatAttribute(string format)
 		{
 			Formats = new string[] { format };
 		}
@@ -30,14 +30,18 @@ namespace CsvHelper.Configuration.Attributes
 		/// The string format to be used when type converting.
 		/// </summary>
 		/// <param name="formats">The formats.</param>
-		public FormatAttribute( params string[] formats )
+		public FormatAttribute(params string[] formats)
 		{
 			Formats = formats;
 		}
 
-        public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.TypeConverterOptions.Formats = Formats;
-        }
-    }
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		public void ApplyTo(MemberMap memberMap)
+		{
+			memberMap.Data.TypeConverterOptions.Formats = Formats;
+		}
+	}
 }
