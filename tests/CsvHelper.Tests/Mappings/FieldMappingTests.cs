@@ -377,7 +377,7 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public APrivateMap()
 			{
-				var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture)
+				var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
 				{
 					IncludePrivateMembers = true,
 					MemberTypes = MemberTypes.Fields

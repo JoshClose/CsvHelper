@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.Parsing
 			var s = new StringBuilder();
 			s.Append( "1,2\r\n" );
 			s.Append( "3,4\r\n" );
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture)
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				BufferSize = 4
 			};
@@ -37,7 +37,7 @@ namespace CsvHelper.Tests.Parsing
 			var s = new StringBuilder();
 			s.Append( "\"1\"\r\n" );
 			s.Append( "2\r\n" );
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture)
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				BufferSize = 4
 			};

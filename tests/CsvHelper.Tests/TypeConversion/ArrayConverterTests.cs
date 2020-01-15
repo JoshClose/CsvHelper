@@ -21,7 +21,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ReadConvertNoIndexEndTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext(new StringReader(string.Empty), config, false)
@@ -50,7 +50,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ReadConvertWithIndexEndTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext(new StringReader(string.Empty), config, false)

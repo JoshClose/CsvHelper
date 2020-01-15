@@ -25,7 +25,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// The <see cref="CultureInfo"/> used when type converting.
-		/// This will override the global <see cref="Configuration.CultureInfo"/>
+		/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
 		/// setting.
 		/// </summary>
 		/// <param name="cultureInfo">The culture info.</param>

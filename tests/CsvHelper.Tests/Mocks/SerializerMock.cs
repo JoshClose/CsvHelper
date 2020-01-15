@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public SerializerMock(bool throwExceptionOnWrite = false)
 		{
-			Context = new WritingContext(new StringWriter(), new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture), false);
+			Context = new WritingContext(new StringWriter(), new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture), false);
 			this.throwExceptionOnWrite = throwExceptionOnWrite;
 		}
 

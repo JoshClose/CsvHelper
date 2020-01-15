@@ -17,7 +17,7 @@ namespace CsvHelper.Tests
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			{
-				var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
+				var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 				using( var parser = new CsvParser( reader, config ) )
 				{
 					Assert.AreSame( config, parser.Configuration );

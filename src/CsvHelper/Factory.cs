@@ -19,7 +19,7 @@ namespace CsvHelper
 		/// <param name="reader">The text reader to use for the csv parser.</param>
 		/// <param name="configuration">The configuration to use for the csv parser.</param>
 		/// <returns>The created parser.</returns>
-		public virtual IParser CreateParser(TextReader reader, Configuration.Configuration configuration)
+		public virtual IParser CreateParser(TextReader reader, Configuration.CsvConfiguration configuration)
 		{
 			return new CsvParser(reader, configuration);
 		}
@@ -43,7 +43,7 @@ namespace CsvHelper
 		/// <param name="reader">The text reader to use for the csv reader.</param>
 		/// <param name="configuration">The configuration to use for the reader.</param>
 		/// <returns>The created reader.</returns>
-		public virtual IReader CreateReader(TextReader reader, Configuration.Configuration configuration)
+		public virtual IReader CreateReader(TextReader reader, Configuration.CsvConfiguration configuration)
 		{
 			return new CsvReader(reader, configuration);
 		}
@@ -77,7 +77,7 @@ namespace CsvHelper
 		/// <param name="writer">The text writer to use for the csv writer.</param>
 		/// <param name="configuration">The configuration to use for the writer.</param>
 		/// <returns>The created writer.</returns>
-		public virtual IWriter CreateWriter(TextWriter writer, Configuration.Configuration configuration)
+		public virtual IWriter CreateWriter(TextWriter writer, Configuration.CsvConfiguration configuration)
 		{
 			return new CsvWriter(writer, configuration);
 		}

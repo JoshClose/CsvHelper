@@ -17,7 +17,7 @@ namespace CsvHelper
 	public class ReadingContext : IDisposable
 	{
 		private bool disposed;
-		private readonly Configuration.Configuration configuration;
+		private readonly Configuration.CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets the raw record builder.
@@ -191,7 +191,7 @@ namespace CsvHelper
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the TextReader should be left open when disposing.</param>
-		public ReadingContext(TextReader reader, Configuration.Configuration configuration, bool leaveOpen)
+		public ReadingContext(TextReader reader, Configuration.CsvConfiguration configuration, bool leaveOpen)
 		{
 			Reader = reader ?? throw new ArgumentNullException(nameof(reader));
 			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));

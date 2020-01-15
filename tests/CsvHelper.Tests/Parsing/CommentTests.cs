@@ -14,7 +14,7 @@ namespace CsvHelper.Tests.Parsing
 		[TestMethod]
 		public void CommentThatCrossesBuffersShouldNotAddToFieldTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture)
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				AllowComments = true,
 				BufferSize = 10

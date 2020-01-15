@@ -78,7 +78,7 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void ChangeMemberMapTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var map = config.AutoMap<A>();
 			map.Map(m => m.B.C.P3).Index(3);
 		}

@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.Culture
 		[TestMethod]
 		public void AddGetRemoveTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var customOptions = new TypeConverterOptions
 			{
 				Formats = new string[] { "custom" },

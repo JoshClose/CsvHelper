@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	public class ClassMapCollection
 	{
 		private readonly Dictionary<Type, ClassMap> data = new Dictionary<Type, ClassMap>();
-		private readonly Configuration configuration;
+		private readonly CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets the <see cref="ClassMap"/> for the specified record type.
@@ -53,7 +53,7 @@ namespace CsvHelper.Configuration
 		/// Creates a new instance using the given configuration.
 		/// </summary>
 		/// <param name="configuration">The configuration.</param>
-		public ClassMapCollection( Configuration configuration )
+		public ClassMapCollection( CsvConfiguration configuration )
 		{
 			this.configuration = configuration;
 		}

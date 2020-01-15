@@ -47,7 +47,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the field to the CSV file. This will
 		/// ignore any need to quote and ignore
-		/// <see cref="CsvHelper.Configuration.Configuration.ShouldQuote"/>
+		/// <see cref="CsvHelper.Configuration.CsvConfiguration.ShouldQuote"/>
 		/// and just quote based on the shouldQuote
 		/// parameter.
 		/// When all fields are written for a record,

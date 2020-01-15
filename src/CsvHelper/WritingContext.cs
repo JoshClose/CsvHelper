@@ -17,7 +17,7 @@ namespace CsvHelper
 	{
 		private bool disposed;
 		private TextWriter writer;
-		private Configuration.Configuration configuration;
+		private Configuration.CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets the type actions.
@@ -81,7 +81,7 @@ namespace CsvHelper
 		/// <param name="writer">The writer.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the TextWriter should be left open.</param>
-		public WritingContext(TextWriter writer, Configuration.Configuration configuration, bool leaveOpen)
+		public WritingContext(TextWriter writer, Configuration.CsvConfiguration configuration, bool leaveOpen)
 		{
 			this.writer = writer ?? throw new ArgumentNullException(nameof(writer));
 			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));

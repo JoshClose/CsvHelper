@@ -115,7 +115,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void MapMultipleTypesTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			config.RegisterClassMap<AMap>();
 			config.RegisterClassMap<BMap>();
 
@@ -126,7 +126,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertyMapAccessTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			config.RegisterClassMap<AMap>();
 			config.Maps.Find<A>().Map( m => m.AId ).Ignore();
 

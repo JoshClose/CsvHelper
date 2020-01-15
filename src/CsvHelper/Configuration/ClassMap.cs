@@ -136,7 +136,7 @@ namespace CsvHelper.Configuration
 		/// <param name="culture">The culture.</param>
 		public virtual void AutoMap(CultureInfo culture)
 		{
-			AutoMap(new Configuration(culture));
+			AutoMap(new CsvConfiguration(culture));
 		}
 
 		/// <summary>
@@ -144,7 +144,7 @@ namespace CsvHelper.Configuration
 		/// is mapped again it will override the existing map.
 		/// </summary>
 		/// <param name="configuration">The configuration.</param>
-		public virtual void AutoMap(Configuration configuration)
+		public virtual void AutoMap(CsvConfiguration configuration)
 		{
 			var type = GetGenericType();
 			if (typeof(IEnumerable).IsAssignableFrom(type))
@@ -234,7 +234,7 @@ namespace CsvHelper.Configuration
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapMembers(ClassMap map, Configuration configuration, LinkedList<Type> mapParents, int indexStart = 0)
+		protected virtual void AutoMapMembers(ClassMap map, CsvConfiguration configuration, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
 
@@ -367,7 +367,7 @@ namespace CsvHelper.Configuration
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapConstructorParameters(ClassMap map, Configuration configuration, LinkedList<Type> mapParents, int indexStart = 0)
+		protected virtual void AutoMapConstructorParameters(ClassMap map, CsvConfiguration configuration, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
 			var constructor = configuration.GetConstructor(map.ClassType);
