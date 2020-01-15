@@ -91,21 +91,21 @@ namespace CsvHelper
 
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
-		/// <see cref="TextReader"/> and <see cref="Configuration.Configuration"/>.
+		/// <see cref="TextReader"/> and <see cref="Configuration.CsvConfiguration"/>.
 		/// </summary>
 		/// <param name="reader">The text reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvFieldReader(TextReader reader, Configuration.Configuration configuration) : this(reader, configuration, false) { }
+		public CsvFieldReader(TextReader reader, Configuration.CsvConfiguration configuration) : this(reader, configuration, false) { }
 
 		/// <summary>
 		/// Creates a new <see cref="CsvFieldReader"/> using the given
-		/// <see cref="TextReader"/>, <see cref="Configuration.Configuration"/>
+		/// <see cref="TextReader"/>, <see cref="Configuration.CsvConfiguration"/>
 		/// and leaveOpen flag.
 		/// </summary>
 		/// <param name="reader">The text reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the <see cref="TextReader"/> should be left open when disposing.</param>
-		public CsvFieldReader(TextReader reader, Configuration.Configuration configuration, bool leaveOpen)
+		public CsvFieldReader(TextReader reader, Configuration.CsvConfiguration configuration, bool leaveOpen)
 		{
 			context = new ReadingContext(reader, configuration, leaveOpen);
 		}
