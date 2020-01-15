@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.Configuration;
+using System.Globalization;
 
 namespace CsvHelper.Tests
 {
@@ -48,7 +49,7 @@ namespace CsvHelper.Tests
 		{
 			public AMap()
 			{
-				AutoMap();
+				AutoMap(CultureInfo.InvariantCulture);
 				Map( m => m.Three ).Ignore();
 			}
 		}

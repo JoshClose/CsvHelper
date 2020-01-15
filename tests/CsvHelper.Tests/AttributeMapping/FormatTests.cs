@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		public void FormatTest()
 		{
 			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<FormatTestClass>().ToList();

@@ -5,6 +5,7 @@
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -19,7 +20,7 @@ namespace CsvHelper.Tests.Mappings
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("AId,BId,CId");
@@ -45,7 +46,7 @@ namespace CsvHelper.Tests.Mappings
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("AId,BId,CId");

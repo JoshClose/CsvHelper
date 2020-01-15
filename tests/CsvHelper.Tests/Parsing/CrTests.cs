@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -17,7 +18,7 @@ namespace CsvHelper.Tests.Parsing
 			var s = new StringBuilder();
 			s.Append("1\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -30,7 +31,7 @@ namespace CsvHelper.Tests.Parsing
 			var s = new StringBuilder();
 			s.Append("\"1\"\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -44,7 +45,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("\"1\"\r");
 			s.Append("2");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -61,7 +62,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("\"1\"\r");
 			s.Append("2\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -78,7 +79,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1\r");
 			s.Append("2\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -95,7 +96,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1\r");
 			s.Append("2");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -112,7 +113,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1\r");
 			s.Append("\"2\"");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
@@ -128,7 +129,7 @@ namespace CsvHelper.Tests.Parsing
 			var s = new StringBuilder();
 			s.Append("1,2\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				var row = parser.Read();
@@ -144,7 +145,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,2\r");
 			s.Append("3,4");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				var row = parser.Read();
@@ -164,7 +165,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,2\r");
 			s.Append("3,4\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				var row = parser.Read();
@@ -184,7 +185,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,\"2\"\r");
 			s.Append("3,4\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				var row = parser.Read();
@@ -204,7 +205,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,2\r");
 			s.Append("\"3\",4\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				var row = parser.Read();
@@ -224,7 +225,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("\"1\",\"2\"\r");
 			s.Append("\"3\",\"4\"\r");
 			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				var row = parser.Read();

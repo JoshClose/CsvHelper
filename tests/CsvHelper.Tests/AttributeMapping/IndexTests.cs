@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -15,7 +16,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		public void IndexTest()
 		{
 			using( var reader = new StringReader( "a,1,b,one,c\r\n" ) )
-			using( var csv = new CsvReader( reader ) )
+			using( var csv = new CsvReader(reader, CultureInfo.InvariantCulture) )
 			{
 				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords<IndexTestClass>().ToList();

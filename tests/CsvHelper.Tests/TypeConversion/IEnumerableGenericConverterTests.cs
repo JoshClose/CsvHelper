@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ConvertNoIndexEndTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var rowMock = new Mock<IReaderRow>();
 			var context = new ReadingContext(new StringReader(string.Empty), config, false)
@@ -51,7 +51,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void ConvertWithIndexEndTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration { HasHeaderRecord = false };
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
 			var rowMock = new Mock<IReaderRow>();
 			var currentRecord = new[] { "1", "one", "1", "2", "3" };
 			var context = new ReadingContext(new StringReader(string.Empty), config, false)
@@ -83,7 +83,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("1,2,3,4,5");
@@ -109,7 +109,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,List,List,List,After");
@@ -136,7 +136,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,List,List,List,After");
@@ -163,7 +163,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,List,List,List,After");
@@ -190,7 +190,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,List,A,List,B,List,After");
@@ -217,7 +217,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
@@ -242,7 +242,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>

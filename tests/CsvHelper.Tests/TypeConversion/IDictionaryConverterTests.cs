@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
@@ -20,7 +21,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
@@ -44,7 +45,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Prop1,Prop2,Prop3,Prop4,Prop5");
@@ -71,7 +72,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
@@ -98,7 +99,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary1,Dictionary2,Dictionary3,After");
@@ -126,7 +127,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
 				writer.WriteLine("1,2,3,4,5");
@@ -153,7 +154,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				writer.WriteLine("Before,Dictionary1,Dictionary2,Dictionary3,After");
 				writer.WriteLine("1,2,3,4,5");
@@ -181,7 +182,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
@@ -209,7 +210,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
@@ -237,7 +238,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary,A,Dictionary,B,Dictionary,After");

@@ -24,6 +24,7 @@ namespace CsvHelper.Configuration
         private string doubleQuoteString = "\"\"";
         private CultureInfo cultureInfo = CultureInfo.CurrentCulture;
         private readonly ClassMapCollection maps;
+		private NewLine newLine;
 
         /// <summary>
         /// Gets or sets the <see cref="TypeConverterOptionsCache"/>.
@@ -352,6 +353,33 @@ namespace CsvHelper.Configuration
         /// </summary>
         public virtual ClassMapCollection Maps => maps;
 
+		public virtual NewLine NewLine
+		{
+			get => newLine;
+			set
+			{
+				newLine = value;
+
+				switch (value)
+				{
+					case NewLine.CR:
+						NewLineString = NewLines.CR;
+						break;
+					case NewLine.LF:
+						NewLineString = NewLines.LF;
+						break;
+					case NewLine.Environment:
+						NewLineString = Environment.NewLine;
+						break;
+					default:
+						NewLineString = NewLines.CRLF;
+						break;
+				}
+			}
+		}
+
+		public virtual string NewLineString { get; protected set; }
+
         /// <summary>
         /// Gets or sets a value indicating that during writing if a new 
         /// object should be created when a reference member is null.
@@ -360,11 +388,6 @@ namespace CsvHelper.Configuration
         /// reference member's member.
         /// </summary>
         public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Configuration"/> class.
-        /// </summary>
-        public Configuration() : this(CultureInfo.CurrentCulture) { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Configuration"/> class
@@ -378,6 +401,7 @@ namespace CsvHelper.Configuration
             maps = new ClassMapCollection(this);
             this.cultureInfo = cultureInfo;
             delimiter = cultureInfo.TextInfo.ListSeparator;
+			NewLine = cultureInfo == CultureInfo.InvariantCulture ? NewLine.CRLF : NewLine.Environment;
         }
 
         /// <summary>

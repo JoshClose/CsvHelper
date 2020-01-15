@@ -27,7 +27,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.Configuration.AllowComments = true;
@@ -56,7 +56,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				csvReader.Configuration.AllowComments = true;
@@ -86,7 +86,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.AllowComments = true;
 				csvReader.Configuration.RegisterClassMap<Test1Map>();
@@ -117,7 +117,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.RegisterClassMap<Test1Map>();
 				writer.WriteLine("IntColumn,StringColumn");
@@ -146,7 +146,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				csvReader.Configuration.RegisterClassMap<Test2Map>();
@@ -175,7 +175,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("1,9/24/2012");

@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
@@ -19,7 +20,7 @@ namespace CsvHelper.Tests.Mappings
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("P3,P1,P2");
@@ -42,7 +43,7 @@ namespace CsvHelper.Tests.Mappings
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<A>()
@@ -77,7 +78,7 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void ChangeMemberMapTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			var map = config.AutoMap<A>();
 			map.Map(m => m.B.C.P3).Index(3);
 		}
@@ -119,7 +120,7 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public AAutoMap()
 			{
-				AutoMap();
+				AutoMap(CultureInfo.InvariantCulture);
 				Map(m => m.B.C.P3).Index(3);
 			}
 		}

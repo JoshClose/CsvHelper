@@ -14,6 +14,7 @@ using System.Linq.Expressions;
 using System.Dynamic;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
+using System.Globalization;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -44,14 +45,16 @@ namespace CsvHelper
 		/// Creates a new CSV writer using the given <see cref="TextWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
-		public CsvWriter(TextWriter writer) : this(new CsvSerializer(writer, new Configuration.Configuration(), false)) { }
+		/// <param name="cultureInfo">The culture information.</param>
+		public CsvWriter(TextWriter writer, CultureInfo cultureInfo) : this(new CsvSerializer(writer, new Configuration.Configuration(cultureInfo), false)) { }
 
 		/// <summary>
-		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.
+		/// Creates a new CSV writer using the given <see cref="TextWriter" />.
 		/// </summary>
 		/// <param name="writer">The writer used to write the CSV file.</param>
+		/// <param name="cultureInfo">The culture information.</param>
 		/// <param name="leaveOpen">true to leave the writer open after the CsvWriter object is disposed, otherwise false.</param>
-		public CsvWriter(TextWriter writer, bool leaveOpen) : this(new CsvSerializer(writer, new Configuration.Configuration(), leaveOpen)) { }
+		public CsvWriter(TextWriter writer, CultureInfo cultureInfo, bool leaveOpen) : this(new CsvSerializer(writer, new Configuration.Configuration(cultureInfo), leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new CSV writer using the given <see cref="TextWriter"/>.

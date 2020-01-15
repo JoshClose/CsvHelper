@@ -17,7 +17,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		public void CultureInfoTest()
 		{
 			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<CultureInfoTestClass>().ToList();

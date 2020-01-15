@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -27,7 +28,7 @@ namespace CsvHelper.Tests.Issues
 				s.Append("Id,Name\r\n");
 				s.Append("1,one\r\n");
 				using (var reader = new StringReader(s.ToString()))
-				using (var csv = new CsvReader(reader))
+				using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 				{
 					csv.Configuration.Delimiter = ",";
 					csv.Read();
@@ -58,7 +59,7 @@ namespace CsvHelper.Tests.Issues
 				});
 
 				using (var writer = new StringWriter())
-				using (var csv = new CsvWriter(writer))
+				using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 				{
 					csv.WriteField(1);
 					csv.WriteField("one");

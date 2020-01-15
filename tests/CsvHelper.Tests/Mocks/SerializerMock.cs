@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using CsvHelper.Configuration;
@@ -26,20 +27,20 @@ namespace CsvHelper.Tests.Mocks
 
 		public WritingContext Context { get; }
 
-		public SerializerMock( bool throwExceptionOnWrite = false )
+		public SerializerMock(bool throwExceptionOnWrite = false)
 		{
-			Context = new WritingContext( new StringWriter(), new CsvHelper.Configuration.Configuration(), false );
+			Context = new WritingContext(new StringWriter(), new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture), false);
 			this.throwExceptionOnWrite = throwExceptionOnWrite;
 		}
 
-		public void Write( string[] record )
+		public void Write(string[] record)
 		{
-			if( throwExceptionOnWrite )
+			if (throwExceptionOnWrite)
 			{
-				throw new Exception( "Mock Write exception." );
+				throw new Exception("Mock Write exception.");
 			}
 
-			records.Add( record );
+			records.Add(record);
 		}
 
 		public void WriteLine()
@@ -50,7 +51,7 @@ namespace CsvHelper.Tests.Mocks
 		{
 		}
 
-		public Task WriteAsync( string[] record )
+		public Task WriteAsync(string[] record)
 		{
 			throw new NotImplementedException();
 		}

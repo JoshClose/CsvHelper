@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections;
+using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Writing
@@ -15,7 +16,7 @@ namespace CsvHelper.Tests.Writing
 		public void AnonymousIEnumerableTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 			{
 				IEnumerable records = new ArrayList
 				{

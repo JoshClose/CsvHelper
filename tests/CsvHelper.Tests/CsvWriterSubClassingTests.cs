@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -21,15 +22,15 @@ namespace CsvHelper.Tests
 			};
 
 			var stream = new MemoryStream();
-			var writer = new StreamWriter( stream );
-			var csvWriter = new MyCsvWriter( writer );
+			var writer = new StreamWriter(stream);
+			var csvWriter = new MyCsvWriter(writer);
 
-			csvWriter.WriteRecords( data );
+			csvWriter.WriteRecords(data);
 		}
 
 		private class MyCsvWriter : CsvWriter
 		{
-			public MyCsvWriter( TextWriter writer ) : base( writer ){}
+			public MyCsvWriter(TextWriter writer) : base(writer, CultureInfo.InvariantCulture) { }
 		}
 
 		private class Test

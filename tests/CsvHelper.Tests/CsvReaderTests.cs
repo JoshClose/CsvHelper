@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -527,7 +528,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 
 			var reader = new StreamReader(stream);
-			var csvReader = new CsvReader(reader);
+			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
 			csvReader.Configuration.Delimiter = ",";
 
 			csvReader.Read();
@@ -558,7 +559,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				writer.WriteLine("One,Two,Three");
 				writer.WriteLine("1,2,3");
@@ -612,7 +613,7 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 
 			var reader = new StreamReader(stream);
-			var csvReader = new CsvReader(reader);
+			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
 			csvReader.Configuration.Delimiter = ",";
 
 			var records = csvReader.GetRecords<TestBoolean>().ToList();
@@ -693,7 +694,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("IntColumn,String Column");
@@ -858,7 +859,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.IgnoreBlankLines = false;
@@ -890,7 +891,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Simple1.Id,Simple1.Name,Simple2.Id,Simple2.Name");

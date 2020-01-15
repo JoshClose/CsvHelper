@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
 
@@ -19,14 +20,17 @@ namespace CsvHelper
 		/// <param name="reader">The text reader to use for the csv parser.</param>
 		/// <param name="configuration">The configuration to use for the csv parser.</param>
 		/// <returns>The created parser.</returns>
-		IParser CreateParser( TextReader reader, Configuration.Configuration configuration );
+		IParser CreateParser(TextReader reader, Configuration.Configuration configuration);
 
 		/// <summary>
-		/// Creates an <see cref="IParser"/>.
+		/// Creates an <see cref="IParser" />.
 		/// </summary>
 		/// <param name="reader">The text reader to use for the csv parser.</param>
-		/// <returns>The created parser.</returns>
-		IParser CreateParser( TextReader reader );
+		/// <param name="cultureInfo">The culture information.</param>
+		/// <returns>
+		/// The created parser.
+		/// </returns>
+		IParser CreateParser(TextReader reader, CultureInfo cultureInfo);
 
 		/// <summary>
 		/// Creates an <see cref="IReader"/>.
@@ -34,21 +38,24 @@ namespace CsvHelper
 		/// <param name="reader">The text reader to use for the csv reader.</param>
 		/// <param name="configuration">The configuration to use for the reader.</param>
 		/// <returns>The created reader.</returns>
-		IReader CreateReader( TextReader reader, Configuration.Configuration configuration );
+		IReader CreateReader(TextReader reader, Configuration.Configuration configuration);
 
 		/// <summary>
-		/// Creates an <see cref="IReader"/>.
+		/// Creates an <see cref="IReader" />.
 		/// </summary>
 		/// <param name="reader">The text reader to use for the csv reader.</param>
-		/// <returns>The created reader.</returns>
-		IReader CreateReader( TextReader reader );
+		/// <param name="cultureInfo">The culture information.</param>
+		/// <returns>
+		/// The created reader.
+		/// </returns>
+		IReader CreateReader(TextReader reader, CultureInfo cultureInfo);
 
 		/// <summary>
 		/// Creates an <see cref="IReader"/>.
 		/// </summary>
 		/// <param name="parser">The parser used to create the reader.</param>
 		/// <returns>The created reader.</returns>
-		IReader CreateReader( IParser parser );
+		IReader CreateReader(IParser parser);
 
 		/// <summary>
 		/// Creates an <see cref="IWriter"/>.
@@ -56,14 +63,17 @@ namespace CsvHelper
 		/// <param name="writer">The text writer to use for the csv writer.</param>
 		/// <param name="configuration">The configuration to use for the writer.</param>
 		/// <returns>The created writer.</returns>
-		IWriter CreateWriter( TextWriter writer, Configuration.Configuration configuration );
+		IWriter CreateWriter(TextWriter writer, Configuration.Configuration configuration);
 
 		/// <summary>
-		/// Creates an <see cref="IWriter"/>.
+		/// Creates an <see cref="IWriter" />.
 		/// </summary>
 		/// <param name="writer">The text writer to use for the csv writer.</param>
-		/// <returns>The created writer.</returns>
-		IWriter CreateWriter( TextWriter writer );
+		/// <param name="cultureInfo">The culture information.</param>
+		/// <returns>
+		/// The created writer.
+		/// </returns>
+		IWriter CreateWriter(TextWriter writer, CultureInfo cultureInfo);
 
 		/// <summary>
 		/// Provides a fluent interface for dynamically creating <see cref="ClassMap{T}"/>s 

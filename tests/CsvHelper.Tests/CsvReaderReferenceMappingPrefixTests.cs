@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.Configuration;
+using System.Globalization;
 
 namespace CsvHelper.Tests
 {
@@ -18,7 +19,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<AMap>();

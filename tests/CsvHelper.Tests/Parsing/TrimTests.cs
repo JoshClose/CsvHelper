@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -18,7 +19,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a,b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -40,7 +41,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a,b";
 				parser.Configuration.Delimiter = ",";
@@ -62,7 +63,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a b c,d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -84,7 +85,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a b c,d";
 				parser.Configuration.Delimiter = ",";
@@ -106,7 +107,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "a  ,b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -128,7 +129,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "a  ,b";
 				parser.Configuration.Delimiter = ",";
@@ -150,7 +151,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "a b c  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -172,7 +173,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "a b c  ,d";
 				parser.Configuration.Delimiter = ",";
@@ -194,7 +195,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a  ,b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -217,7 +218,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a  ,b";
 				parser.Configuration.Delimiter = ",";
@@ -239,7 +240,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a b c  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -261,7 +262,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a b c  ,d";
 				parser.Configuration.Delimiter = ",";
@@ -283,7 +284,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a\",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -305,7 +306,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a\",b";
 				parser.Configuration.Delimiter = ",";
@@ -327,7 +328,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a b c\",d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -349,7 +350,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a b c\",d";
 				parser.Configuration.Delimiter = ",";
@@ -371,7 +372,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a\"  ,b";
 				parser.Configuration.Delimiter = ",";
@@ -393,7 +394,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a\"  ,b";
 				parser.Configuration.Delimiter = ",";
@@ -415,7 +416,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a b c\"  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -437,7 +438,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a b c\"  ,d";
 				parser.Configuration.Delimiter = ",";
@@ -459,7 +460,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a\"  ,b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -481,7 +482,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a\"  ,b";
 				parser.Configuration.Delimiter = ",";
@@ -503,7 +504,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a b c\"  ,d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -525,7 +526,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"a b c\"  ,d";
 				parser.Configuration.Delimiter = ",";
@@ -547,7 +548,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a b c  ,  d e f  \r\n";
 				parser.Configuration.Delimiter = ",";
@@ -570,7 +571,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  a b c  ,  d e f  ";
 				parser.Configuration.Delimiter = ",";
@@ -593,7 +594,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a\",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -615,7 +616,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a\",b";
 				parser.Configuration.Delimiter = ",";
@@ -637,7 +638,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a b c\",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -659,7 +660,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a b c\",b";
 				parser.Configuration.Delimiter = ",";
@@ -681,7 +682,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\" a ,b c\",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -703,7 +704,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\" a ,b c\",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -726,7 +727,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a  \",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -749,7 +750,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a  \",b";
 				parser.Configuration.Delimiter = ",";
@@ -771,7 +772,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a b c  \",d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -793,7 +794,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"a b c  \",d";
 				parser.Configuration.Delimiter = ",";
@@ -815,7 +816,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a  \",b\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -837,7 +838,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a  \",b";
 				parser.Configuration.Delimiter = ",";
@@ -859,7 +860,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a b c  \",d\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -881,7 +882,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a b c  \",d";
 				parser.Configuration.Delimiter = ",";
@@ -903,7 +904,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a b c  \",\"  d e f  \"\r\n";
 				parser.Configuration.Delimiter = ",";
@@ -926,7 +927,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "\"  a b c  \",\"  d e f  \"";
 				parser.Configuration.Delimiter = ",";
@@ -949,7 +950,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"  a b c  \"  ,  \"  d e f  \"  \r\n";
 				parser.Configuration.Delimiter = ",";
@@ -972,7 +973,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "  \"  a b c  \"  ,  \"  d e f  \"  ";
 				parser.Configuration.Delimiter = ",";
@@ -995,7 +996,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "abc";
 				writer.Write(line);
@@ -1016,7 +1017,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				var line = "a b";
 				writer.Write(line);
@@ -1036,7 +1037,7 @@ namespace CsvHelper.Tests.Parsing
 		{
 			var line = "\"a \"\"b\"\" c\"";
 			using (var reader = new StringReader(line))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
 				var record = parser.Read();
@@ -1051,7 +1052,7 @@ namespace CsvHelper.Tests.Parsing
 		{
 			var line = "\" a \"\"b\"\" c \"\r\n";
 			using (var reader = new StringReader(line))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
 				var record = parser.Read();
@@ -1066,7 +1067,7 @@ namespace CsvHelper.Tests.Parsing
 		{
 			var line = "\" a \"\"b\"\" c \"";
 			using (var reader = new StringReader(line))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
 				var record = parser.Read();
@@ -1082,7 +1083,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("A,B");

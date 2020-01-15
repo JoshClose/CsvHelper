@@ -6,6 +6,7 @@ using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,7 @@ namespace CsvHelper.Tests.Writing
 			};
 
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.RegisterClassMap<FooMap>();
 				csv.WriteRecords(records);

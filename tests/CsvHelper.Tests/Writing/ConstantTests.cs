@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
@@ -19,7 +20,7 @@ namespace CsvHelper.Tests.Writing
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
@@ -48,7 +49,7 @@ namespace CsvHelper.Tests.Writing
 		public void NullConstantTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>
@@ -69,7 +70,7 @@ namespace CsvHelper.Tests.Writing
 		public void IntConstantTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = new List<Test>

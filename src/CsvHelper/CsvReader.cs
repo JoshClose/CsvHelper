@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
+using System.Globalization;
 
 namespace CsvHelper
 {
@@ -40,28 +41,30 @@ namespace CsvHelper
 		public virtual IParser Parser => parser;
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public CsvReader(TextReader reader) : this(new CsvParser(reader, new Configuration.Configuration(), false)) { }
+		/// <param name="culture">The culture.</param>
+		public CsvReader(TextReader reader, CultureInfo culture) : this(new CsvParser(reader, new Configuration.Configuration(culture), false)) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
+		/// <param name="culture">The culture.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader(TextReader reader, bool leaveOpen) : this(new CsvParser(reader, new Configuration.Configuration(), leaveOpen)) { }
+		public CsvReader(TextReader reader, CultureInfo culture, bool leaveOpen) : this(new CsvParser(reader, new Configuration.Configuration(culture), leaveOpen)) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
-		/// <see cref="CsvHelper.Configuration.Configuration"/> and <see cref="CsvParser"/> as the default parser.
+		/// Creates a new CSV reader using the given <see cref="TextReader" /> and
+		/// <see cref="CsvHelper.Configuration.Configuration" /> and <see cref="CsvParser" /> as the default parser.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		public CsvReader(TextReader reader, Configuration.Configuration configuration) : this(new CsvParser(reader, configuration, false)) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>

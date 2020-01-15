@@ -15,12 +15,6 @@ namespace CsvHelper.Tests.TypeConversion
 	[TestClass]
 	public class TypeConverterOptionsFactoryTests
 	{
-		[TestInitialize]
-		public void TestInitialize()
-		{
-			CultureInfo.CurrentCulture = new CultureInfo("en-US");
-		}
-
 		[TestMethod]
 		public void AddGetRemoveTest()
 		{
@@ -50,7 +44,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("\"1,234\",\"5,678\"");
@@ -73,7 +67,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("\"1,234\",\"5,678\"");
@@ -94,7 +88,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvReader = new CsvReader(reader))
+			using (var csvReader = new CsvReader(reader, new CultureInfo("en-US")))
 			{
 				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("\"1,234\",\"$5,678\"");
@@ -116,7 +110,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, new CultureInfo("en-US")))
 			{
 				csvWriter.Configuration.Delimiter = ",";
 				csvWriter.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
@@ -138,7 +132,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, new CultureInfo("en-US")))
 			{
 				csvWriter.Configuration.Delimiter = ",";
 				var list = new List<Test>
@@ -164,7 +158,7 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, new CultureInfo("en-US")))
 			{
 				csvWriter.Configuration.Delimiter = ",";
 				var list = new List<Test>
@@ -195,7 +189,9 @@ namespace CsvHelper.Tests.TypeConversion
 			public TestMap()
 			{
 				Map(m => m.Number);
-				Map(m => m.NumberOverridenInMap).TypeConverterOption.NumberStyles(NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol).TypeConverterOption.Format("N");
+				Map(m => m.NumberOverridenInMap)
+					.TypeConverterOption.NumberStyles(NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol)
+					.TypeConverterOption.Format("N");
 			}
 		}
 	}

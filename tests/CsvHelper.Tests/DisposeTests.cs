@@ -5,6 +5,7 @@
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests
@@ -17,7 +18,7 @@ namespace CsvHelper.Tests
 		{
 			using( var writer = new StringWriter() )
 			{
-				using( var csv = new CsvWriter( writer ) )
+				using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 				{
 					csv.WriteField( "A" );
 				}
@@ -31,7 +32,7 @@ namespace CsvHelper.Tests
 		{
 			using( var writer = new StringWriter() )
 			{
-				using( var csv = new CsvWriter( writer ) )
+				using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 				{
 					csv.WriteField( "A" );
 					csv.Flush();

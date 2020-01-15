@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,11 +19,11 @@ namespace CsvHelper.Tests
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			{
-				var csvReader = new CsvReader( reader );
+				var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
 
 				Assert.AreSame( csvReader.Configuration, csvReader.Parser.Configuration );
 
-				var config = new CsvHelper.Configuration.Configuration();
+				var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 				var parser = new CsvParser( reader, config );
 				csvReader = new CsvReader( parser );
 
@@ -33,7 +34,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void AddingMappingsWithGenericMethod1Test()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			config.RegisterClassMap<TestClassMappings>();
 
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
@@ -42,7 +43,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void AddingMappingsWithGenericMethod2Test()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			config.RegisterClassMap<TestClassMappings>();
 
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
@@ -51,7 +52,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void AddingMappingsWithNonGenericMethodTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			config.RegisterClassMap( typeof( TestClassMappings ) );
 
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
@@ -60,7 +61,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void AddingMappingsWithInstanceMethodTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			config.RegisterClassMap( new TestClassMappings() );
 
 			Assert.AreEqual( 2, config.Maps[typeof( TestClass )].MemberMaps.Count );
@@ -69,7 +70,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void RegisterClassMapGenericTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 
 			Assert.IsNull( config.Maps[typeof( TestClass )] );
 			config.RegisterClassMap<TestClassMappings>();
@@ -79,7 +80,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void RegisterClassMapNonGenericTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 
 			Assert.IsNull( config.Maps[typeof( TestClass )] );
 			config.RegisterClassMap( typeof( TestClassMappings ) );
@@ -89,7 +90,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void RegisterClassInstanceTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 
 			Assert.IsNull( config.Maps[typeof( TestClass )] );
 			config.RegisterClassMap( new TestClassMappings() );
@@ -99,7 +100,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void UnregisterClassMapGenericTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 
 			Assert.IsNull( config.Maps[typeof( TestClass )] );
 			config.RegisterClassMap<TestClassMappings>();
@@ -112,7 +113,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void UnregisterClassNonMapGenericTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 
 			Assert.IsNull( config.Maps[typeof( TestClass )] );
 			config.RegisterClassMap( typeof( TestClassMappings ) );
@@ -127,7 +128,7 @@ namespace CsvHelper.Tests
 		{
 			try
 			{
-				new CsvHelper.Configuration.Configuration().RegisterClassMap( typeof( TestClass ) );
+				new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture).RegisterClassMap( typeof( TestClass ) );
 				Assert.Fail();
 			}
 			catch( ArgumentException ) {}

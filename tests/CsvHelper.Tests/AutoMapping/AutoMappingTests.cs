@@ -27,7 +27,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
@@ -55,7 +55,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ";";
 				csv.Configuration.CultureInfo = CultureInfo.GetCultureInfo("de-DE");
@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("AId,BId");
@@ -112,7 +112,7 @@ namespace CsvHelper.Tests.AutoMapping
 			var s = new StringBuilder();
 			s.AppendLine("Id,Name");
 			s.AppendLine("1,one");
-			using (var csv = new CsvReader(new StringReader(s.ToString())))
+			using (var csv = new CsvReader(new StringReader(s.ToString()), CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.PrepareHeaderForMatch = (header, index) => header.ToLower();
@@ -129,7 +129,7 @@ namespace CsvHelper.Tests.AutoMapping
 			var s = new StringBuilder();
 			s.AppendLine("Id,Name");
 			s.AppendLine("1,one");
-			using (var csv = new CsvReader(new StringReader(s.ToString())))
+			using (var csv = new CsvReader(new StringReader(s.ToString()), CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.PrepareHeaderForMatch = (header, index) => header.ToLower();
@@ -146,7 +146,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<Simple>
@@ -173,7 +173,7 @@ namespace CsvHelper.Tests.AutoMapping
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<A>
@@ -205,7 +205,7 @@ namespace CsvHelper.Tests.AutoMapping
 		public void WriterReferenceHasNoDefaultConstructorTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<SimpleReferenceHasNoDefaultConstructor>
@@ -231,7 +231,7 @@ namespace CsvHelper.Tests.AutoMapping
 		public void WriterHasNoDefaultConstructorReferenceHasNoDefaultConstructorTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>
@@ -252,7 +252,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapEnumerableTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			try
 			{
 				config.AutoMap(typeof(List<string>));
@@ -264,7 +264,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapWithExistingMapTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			var existingMap = new SimpleMap();
 			config.Maps.Add(existingMap);
 			var data = new
@@ -290,7 +290,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapWithNestedHeaders()
 		{
-			var config = new CsvHelper.Configuration.Configuration
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture)
 			{
 				ReferenceHeaderPrefix = (type, name) => $"{name}."
 			};
@@ -304,7 +304,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapWithDefaultConstructor()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			ClassMap map = config.AutoMap<SimpleReferenceHasNoDefaultConstructor>();
 
 			Assert.AreEqual("Id", map.MemberMaps[0].Data.Names[0]);
@@ -315,7 +315,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void AutoMapWithNoDefaultConstructor()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			var map = config.AutoMap<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>();
 
 			Assert.AreEqual("Id", map.MemberMaps[0].Data.Names[0]);

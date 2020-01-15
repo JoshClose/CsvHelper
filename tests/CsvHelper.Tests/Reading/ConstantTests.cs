@@ -8,6 +8,7 @@ using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using System.Globalization;
 
 namespace CsvHelper.Tests.Reading
 {
@@ -58,7 +59,7 @@ namespace CsvHelper.Tests.Reading
 		public void IntConstantTest()
 		{
 			using (var reader = new StringReader("1,one\r\n"))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.HasHeaderRecord = false;

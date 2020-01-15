@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Parsing
@@ -15,7 +16,7 @@ namespace CsvHelper.Tests.Parsing
 		public void EscapeTest()
 		{
 			using (var reader = new StringReader("\"|\"a|\"\"\r\n"))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Escape = '|';
 				var record = parser.Read();
@@ -27,7 +28,7 @@ namespace CsvHelper.Tests.Parsing
 		public void EscapeNoNewlineTest()
 		{
 			using (var reader = new StringReader("\"|\"a|\"\""))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Escape = '|';
 				var record = parser.Read();
@@ -39,7 +40,7 @@ namespace CsvHelper.Tests.Parsing
 		public void EscapeTrimOutsideTest()
 		{
 			using (var reader = new StringReader(" \"|\"a|\"\" \r\n"))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Escape = '|';
 				parser.Configuration.TrimOptions = TrimOptions.Trim;
@@ -52,7 +53,7 @@ namespace CsvHelper.Tests.Parsing
 		public void EscapeTrimInsideTest()
 		{
 			using (var reader = new StringReader("\" |\"a|\" \"\r\n"))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Escape = '|';
 				parser.Configuration.TrimOptions = TrimOptions.InsideQuotes;
@@ -65,7 +66,7 @@ namespace CsvHelper.Tests.Parsing
 		public void EscapeTrimBothTest()
 		{
 			using (var reader = new StringReader(" \" |\"a|\" \" \r\n"))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Escape = '|';
 				parser.Configuration.TrimOptions = TrimOptions.Trim | TrimOptions.InsideQuotes;
@@ -78,7 +79,7 @@ namespace CsvHelper.Tests.Parsing
 		public void EscapeWriteTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Escape = '|';
 				csv.WriteField("\"a\"");

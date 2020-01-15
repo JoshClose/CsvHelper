@@ -30,7 +30,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
 
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 
 			var date = DateTime.Now.ToString();
@@ -68,7 +68,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
@@ -96,7 +96,7 @@ namespace CsvHelper.Tests
 
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream) { AutoFlush = true })
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<TestRecordNoIndexesMap>();
@@ -137,7 +137,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
@@ -160,7 +160,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
@@ -197,7 +197,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
@@ -218,7 +218,7 @@ namespace CsvHelper.Tests
 		{
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer) { Configuration = { HasHeaderRecord = false } };
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) { Configuration = { HasHeaderRecord = false } };
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 			csv.WriteRecord(new TestRecord());
@@ -244,7 +244,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<TestRecordMap>();
 
@@ -290,7 +290,7 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer);
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 			csv.Configuration.Delimiter = ",";
 			csv.Configuration.RegisterClassMap<PersonMap>();
 
@@ -321,7 +321,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csvWriter.Configuration.Delimiter = ",";
 				csvWriter.Configuration.ShouldQuote = (field, context) => true;
@@ -355,7 +355,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csvWriter.Configuration.Delimiter = ",";
 				csvWriter.Configuration.ShouldQuote = (field, context) => false;
@@ -381,7 +381,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csvWriter.Configuration.Delimiter = ",";
 				csvWriter.Configuration.HasHeaderRecord = true;
@@ -404,7 +404,7 @@ namespace CsvHelper.Tests
 		{
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
-			using (var csvWriter = new CsvWriter(writer))
+			using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csvWriter.Configuration.HasHeaderRecord = false;
 				csvWriter.Configuration.RegisterClassMap<TestRecordMap>();
@@ -425,7 +425,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var record = new TestSinglePropertyRecord
@@ -449,7 +449,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				var record = new TestSinglePropertyRecord
 				{
@@ -472,7 +472,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.ShouldQuote = (field, context) => true;
 				var record = new TestSinglePropertyRecord
@@ -496,7 +496,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.ShouldQuote = (field, context) => true;
 				var record = new TestSinglePropertyRecord
@@ -520,7 +520,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.CultureInfo = CultureInfo.InvariantCulture;
 				csv.Configuration.RegisterClassMap<TestRecordMap>();
@@ -547,7 +547,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				var list = new List<TestPrivateGet>
 				{
@@ -576,7 +576,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.WriteRecord(new { Id = 1, Name = "one" });
@@ -595,7 +595,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.HasHeaderRecord = true;
 				var list = new List<int> { 1, 2, 3 };
@@ -615,7 +615,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.HasHeaderRecord = false;
 				var list = new List<int> { 1, 2, 3 };
@@ -635,7 +635,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<TestStruct>
@@ -671,7 +671,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.RegisterClassMap<TestStructParentMap>();
@@ -713,7 +713,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.ReferenceHeaderPrefix = (type, name) => $"{name}.";
@@ -735,7 +735,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				var list = new List<TestRecord>();
 				csv.WriteRecords(list);
@@ -753,7 +753,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				TestWithStatic.Name = "one";
 				var records = new List<TestWithStatic>
@@ -774,7 +774,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.RegisterClassMap<TestWithStaticMap>();
 
@@ -797,7 +797,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<dynamic>();
@@ -818,7 +818,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<dynamic>();
@@ -842,7 +842,7 @@ namespace CsvHelper.Tests
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.WriteRecords(new List<GetOnly>());
 				writer.Flush();

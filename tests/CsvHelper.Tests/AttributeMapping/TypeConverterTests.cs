@@ -7,6 +7,7 @@ using CsvHelper.Configuration.Attributes;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -19,7 +20,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		public void TypeConverterTest()
 		{
 			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<TypeConverterClass>().ToList();
@@ -37,7 +38,7 @@ namespace CsvHelper.Tests.AttributeMapping
 				new AClass { Id = 1, Name = new BClass() },
 			};
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.WriteRecords(records);
@@ -56,7 +57,7 @@ namespace CsvHelper.Tests.AttributeMapping
 				new AStruct { Id = 1, Name = new BStruct() },
 			};
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.WriteRecords(records);

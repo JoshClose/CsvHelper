@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		public void DefaultHeaderPrefixTest()
 		{
 			using (var reader = new StringReader("Id,B.Name,C.Name\r\n1,b,c"))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ADefault>().ToList();
@@ -31,7 +32,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		public void CustomHeaderPrefixTest()
 		{
 			using (var reader = new StringReader("Id,B_Name,C_Name\r\n1,b,c"))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<ACustom>().ToList();

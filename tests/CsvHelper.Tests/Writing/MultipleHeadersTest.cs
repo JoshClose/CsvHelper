@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -16,7 +17,7 @@ namespace CsvHelper.Tests.Writing
 		public void GenericTypeTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 			{
 				csv.WriteHeader<A>();
 				csv.NextRecord();
@@ -43,7 +44,7 @@ namespace CsvHelper.Tests.Writing
 		public void DynamicTypeTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvWriter( writer ) )
+			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 			{
 				dynamic a = new ExpandoObject();
 				a.Id = 1;

@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void CorrectHeadersTest()
 		{
-			using (var csv = new CsvReader(new StringReader("Id,Name")))
+			using (var csv = new CsvReader(new StringReader("Id,Name"), CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Read();
@@ -28,7 +29,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertiesTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				csv.ReadHeader();
@@ -39,7 +40,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReferencesTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				csv.ReadHeader();
@@ -50,7 +51,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ConstructorParametersTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				csv.ReadHeader();
@@ -61,7 +62,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertiesGetRecordTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecord(typeof(Test)));
@@ -71,7 +72,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertiesGetRecordGenericTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecord<Test>());
@@ -81,7 +82,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertiesGetRecordsTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecords(typeof(Test)).ToList());
 			}
@@ -90,7 +91,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void PropertiesGetRecordsGenericTest()
 		{
-			using (var csv = new CsvReader(new StringReader("bad data")))
+			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecords<Test>().ToList());
 			}
@@ -102,7 +103,7 @@ namespace CsvHelper.Tests
 			var data = new StringBuilder();
 			data.AppendLine("Number");
 			data.AppendLine("1");
-			using (var csv = new CsvReader(new StringReader(data.ToString())))
+			using (var csv = new CsvReader(new StringReader(data.ToString()), CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<HasPrivateSetter>().ToList();
 				var record = records[0];
@@ -117,7 +118,7 @@ namespace CsvHelper.Tests
 			var data = new StringBuilder();
 			data.AppendLine("Id");
 			data.AppendLine("1");
-			using (var csv = new CsvReader(new StringReader(data.ToString())))
+			using (var csv = new CsvReader(new StringReader(data.ToString()), CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.RegisterClassMap<HasIgnoredPropertyMap>();
 				var records = csv.GetRecords<Test>().ToList();
@@ -130,7 +131,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void HasIndexNoNameTest()
 		{
-			using (var csv = new CsvReader(new StringReader("Id")))
+			using (var csv = new CsvReader(new StringReader("Id"), CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.RegisterClassMap<HasIndexNoNameMap>();
 
@@ -143,7 +144,7 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void HasIndexAndNameTest()
 		{
-			using (var csv = new CsvReader(new StringReader("Id")))
+			using (var csv = new CsvReader(new StringReader("Id"), CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.RegisterClassMap<HasIndexAndNameMap>();
 
@@ -189,7 +190,7 @@ namespace CsvHelper.Tests
 		{
 			public HasIgnoredPropertyMap()
 			{
-				AutoMap();
+				AutoMap(CultureInfo.InvariantCulture);
 				Map(m => m.Name).Ignore();
 			}
 		}

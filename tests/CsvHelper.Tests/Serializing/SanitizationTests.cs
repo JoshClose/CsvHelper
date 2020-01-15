@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Serializing
@@ -14,7 +15,7 @@ namespace CsvHelper.Tests.Serializing
 		public void NoQuoteTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvSerializer( writer ) )
+			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
 				csv.Configuration.SanitizeForInjection = true;
 				csv.Write( new[] { "=one" } );
@@ -28,7 +29,7 @@ namespace CsvHelper.Tests.Serializing
 		public void QuoteTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvSerializer( writer ) )
+			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
 				csv.Configuration.SanitizeForInjection = true;
 				csv.Write( new[] { "\"=one\"" } );
@@ -42,7 +43,7 @@ namespace CsvHelper.Tests.Serializing
 		public void NoQuoteChangeEscapeCharacterTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvSerializer( writer ) )
+			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
 				csv.Configuration.SanitizeForInjection = true;
 				csv.Configuration.InjectionEscapeCharacter = '\'';
@@ -57,7 +58,7 @@ namespace CsvHelper.Tests.Serializing
 		public void QuoteChangeEscapeCharacterTest()
 		{
 			using( var writer = new StringWriter() )
-			using( var csv = new CsvSerializer( writer ) )
+			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
 				csv.Configuration.SanitizeForInjection = true;
 				csv.Configuration.InjectionEscapeCharacter = '\'';

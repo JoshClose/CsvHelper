@@ -7,6 +7,7 @@ using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Globalization;
 
 namespace CsvHelper
 {
@@ -29,17 +30,19 @@ namespace CsvHelper
 		public virtual ISerializerConfiguration Configuration => context.SerializerConfiguration;
 
 		/// <summary>
-		/// Creates a new serializer using the given <see cref="TextWriter"/>.
+		/// Creates a new serializer using the given <see cref="TextWriter" />.
 		/// </summary>
-		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
-		public CsvSerializer(TextWriter writer) : this(writer, new Configuration.Configuration(), false) { }
+		/// <param name="writer">The <see cref="TextWriter" /> to write the CSV file data to.</param>
+		/// <param name="cultureInfo">The culture information.</param>
+		public CsvSerializer(TextWriter writer, CultureInfo cultureInfo) : this(writer, new Configuration.Configuration(cultureInfo), false) { }
 
 		/// <summary>
-		/// Creates a new serializer using the given <see cref="TextWriter"/>.
+		/// Creates a new serializer using the given <see cref="TextWriter" />.
 		/// </summary>
-		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
+		/// <param name="writer">The <see cref="TextWriter" /> to write the CSV file data to.</param>
+		/// <param name="cultureInfo">The culture information.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer(TextWriter writer, bool leaveOpen) : this(writer, new Configuration.Configuration(), leaveOpen) { }
+		public CsvSerializer(TextWriter writer, CultureInfo cultureInfo, bool leaveOpen) : this(writer, new Configuration.Configuration(cultureInfo), leaveOpen) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
@@ -112,7 +115,7 @@ namespace CsvHelper
 		{
 			// Don't forget about the async method below!
 
-			context.Writer.Write("\r\n");
+			context.Writer.Write(context.SerializerConfiguration.NewLineString);
 		}
 
 		/// <summary>
@@ -120,7 +123,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual async Task WriteLineAsync()
 		{
-			await context.Writer.WriteAsync("\r\n").ConfigureAwait(false);
+			await context.Writer.WriteAsync(context.SerializerConfiguration.NewLineString).ConfigureAwait(false);
 		}
 
 		/// <summary>

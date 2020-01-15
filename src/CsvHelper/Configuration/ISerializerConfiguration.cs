@@ -48,5 +48,16 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the character used to escape a detected injection.
 		/// </summary>
 		char InjectionEscapeCharacter { get; set; }
+
+		/// <summary>
+		/// Gets or sets the newline to use when writing.
+		/// </summary>
+		NewLine NewLine { get; set; }
+
+		/// <summary>
+		/// Gets the newline string to use when writing. This string is determined
+		/// by the <see cref="NewLine"/> value.
+		/// </summary>
+		string NewLineString { get; }
 	}
 }

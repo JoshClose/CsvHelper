@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 
 namespace CsvHelper.Tests.AutoMapping
 {
@@ -12,14 +13,14 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void SelfCircularDependencyTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			var map = config.AutoMap<SelfCircularA>();
 		}
 
 		[TestMethod]
 		public void CircularDependencyTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			var map = config.AutoMap<ACircular>();
 			Assert.IsNotNull( map );
 			Assert.AreEqual( 1, map.MemberMaps.Count );
@@ -31,7 +32,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestMethod]
 		public void CircularDependencyWithMultiplePropertiesTest()
 		{
-			var config = new CsvHelper.Configuration.Configuration();
+			var config = new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture);
 			var map = config.AutoMap<A>();
 			Assert.AreEqual( 1, map.MemberMaps.Count );
 			Assert.AreEqual( 3, map.ReferenceMaps.Count );

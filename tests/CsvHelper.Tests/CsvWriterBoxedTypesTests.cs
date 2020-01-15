@@ -5,6 +5,7 @@
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -17,7 +18,7 @@ namespace CsvHelper.Tests
 		public void TypeMixedWithBoxedTypeTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var recordsTyped = new List<A>

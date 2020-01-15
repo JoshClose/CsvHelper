@@ -5,6 +5,7 @@
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Writing
@@ -18,7 +19,7 @@ namespace CsvHelper.Tests.Writing
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 			{
 				var records = new List<IRecord>();
 				IRecord record = new Record { A = 1, B = 2 };
@@ -42,7 +43,7 @@ namespace CsvHelper.Tests.Writing
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter( writer ) )
+			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
 			{
 				csv.Configuration.RegisterClassMap<RecordMap>();
 

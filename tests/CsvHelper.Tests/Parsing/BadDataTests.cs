@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,7 +17,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				writer.WriteLine(" a\"bc\",d");
@@ -49,7 +50,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				writer.WriteLine("1,2");
 				writer.WriteLine(" a\"bc\",d");
@@ -72,7 +73,7 @@ namespace CsvHelper.Tests.Parsing
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
 				writer.WriteLine("one,2\"two,three");
@@ -90,7 +91,7 @@ namespace CsvHelper.Tests.Parsing
 		public void LineBreakInQuotedFieldIsBadDataCrTest()
 		{
 			using (var reader = new StringReader("\"a\rb\""))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.LineBreakInQuotedFieldIsBadData = true;
 				Assert.ThrowsException<BadDataException>(() => parser.Read());
@@ -101,7 +102,7 @@ namespace CsvHelper.Tests.Parsing
 		public void LineBreakInQuotedFieldIsBadDataLfTest()
 		{
 			using (var reader = new StringReader("\"a\nb\""))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.LineBreakInQuotedFieldIsBadData = true;
 				Assert.ThrowsException<BadDataException>(() => parser.Read());
@@ -112,7 +113,7 @@ namespace CsvHelper.Tests.Parsing
 		public void LineBreakInQuotedFieldIsBadDataCrLfTest()
 		{
 			using (var reader = new StringReader("\"a\r\nb\""))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.LineBreakInQuotedFieldIsBadData = true;
 				Assert.ThrowsException<BadDataException>(() => parser.Read());

@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,7 +20,7 @@ namespace CsvHelper.Tests.Writing
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				var list = new List<dynamic>();
@@ -51,7 +52,7 @@ namespace CsvHelper.Tests.Writing
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				dynamic obj = new ExpandoObject();
@@ -83,7 +84,7 @@ namespace CsvHelper.Tests.Writing
 		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 
@@ -113,7 +114,7 @@ namespace CsvHelper.Tests.Writing
 		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 
@@ -143,7 +144,7 @@ namespace CsvHelper.Tests.Writing
 		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingWithDynamicSortTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
@@ -174,7 +175,7 @@ namespace CsvHelper.Tests.Writing
 		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingWithDynamicSortTest()
 		{
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));

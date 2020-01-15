@@ -7,6 +7,7 @@ using CsvHelper.TypeConversion;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -129,12 +130,13 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Auto maps all members for the given type. If a member 
+		/// Auto maps all members for the given type. If a member
 		/// is mapped again it will override the existing map.
 		/// </summary>
-		public virtual void AutoMap()
+		/// <param name="culture">The culture.</param>
+		public virtual void AutoMap(CultureInfo culture)
 		{
-			AutoMap(new Configuration());
+			AutoMap(new Configuration(culture));
 		}
 
 		/// <summary>

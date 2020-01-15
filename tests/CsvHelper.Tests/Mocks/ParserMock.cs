@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace CsvHelper.Tests.Mocks
 {
@@ -30,13 +31,13 @@ namespace CsvHelper.Tests.Mocks
 
 		public ParserMock()
 		{
-			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.Configuration(), false);
+			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture), false);
 			rows = new Queue<string[]>();
 		}
 
 		public ParserMock(Queue<string[]> rows)
 		{
-			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.Configuration(), false);
+			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.Configuration(CultureInfo.InvariantCulture), false);
 			this.rows = rows;
 		}
 

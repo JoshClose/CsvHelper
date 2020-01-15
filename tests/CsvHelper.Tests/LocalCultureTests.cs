@@ -20,49 +20,25 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReadRecordsTest()
 		{
-			RunTestInSpecificCulture( ReadRecordsTestBody, "uk-UA" );
+			const string source = "DateTimeColumn;DecimalColumn\r\n" +
+								  "11.11.2010;12,0\r\n";
+
+			var configuration = new CsvHelper.Configuration.Configuration(new CultureInfo("uk-UA"))
+			{
+				Delimiter = ";",
+			};
+			var reader = new CsvReader(new CsvParser(new StringReader(source), configuration));
+
+			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
+
+			Assert.AreEqual(1, records.Count());
+			var record = records.First();
+			Assert.AreEqual(12.0m, record.DecimalColumn);
+			Assert.AreEqual(new DateTime(2010, 11, 11), record.DateTimeColumn);
 		}
 
 		[TestMethod]
 		public void WriteRecordsTest()
-		{
-			RunTestInSpecificCulture( WriteRecordsTestBody, "uk-UA" );
-		}
-
-		private static void RunTestInSpecificCulture( Action action, string cultureName )
-		{
-			var originalCulture = CultureInfo.CurrentCulture;
-			try
-			{
-				CultureInfo.CurrentCulture = new CultureInfo( cultureName );
-				action();
-			}
-			finally
-			{
-				CultureInfo.CurrentCulture = originalCulture;
-			}
-		}
-
-		private static void ReadRecordsTestBody()
-		{
-			const string source = "DateTimeColumn;DecimalColumn\r\n" +
-								  "11.11.2010;12,0\r\n";
-
-			var configuration = new CsvHelper.Configuration.Configuration
-			{
-				Delimiter = ";",
-			};
-			var reader = new CsvReader( new CsvParser( new StringReader( source ), configuration ) );
-
-			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
-
-			Assert.AreEqual( 1, records.Count() );
-			var record = records.First();
-			Assert.AreEqual( 12.0m, record.DecimalColumn );
-			Assert.AreEqual( new DateTime( 2010, 11, 11 ), record.DateTimeColumn );
-		}
-
-		private static void WriteRecordsTestBody()
 		{
 			var records = new List<TestRecordWithDecimal>
 			{
@@ -74,16 +50,16 @@ namespace CsvHelper.Tests
 			};
 
 			var writer = new StringWriter();
-			var csv = new CsvWriter( writer, new CsvHelper.Configuration.Configuration { Delimiter = ";" } );
+			var csv = new CsvWriter(writer, new CsvHelper.Configuration.Configuration(new CultureInfo("uk-UA")) { Delimiter = ";" });
 
-			csv.WriteRecords( records );
+			csv.WriteRecords(records);
 
 			var csvFile = writer.ToString();
 
 			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
 									"12,0;11.11.2010 0:00:00\r\n";
 
-			Assert.AreEqual( expected, csvFile );
+			Assert.AreEqual(expected, csvFile);
 		}
 
 		private class TestRecordWithDecimal
