@@ -10,12 +10,24 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Configuration
 {
-    public class NewLines
+	/// <summary>
+	/// New line constants.
+	/// </summary>
+	public class NewLines
     {
+		/// <summary>
+		/// Windows line feed.
+		/// </summary>
 		public const string CRLF = "\r\n";
 
+		/// <summary>
+		/// Class MAC line feed.
+		/// </summary>
 		public const string CR = "\r";
 
+		/// <summary>
+		/// Unix line feed.
+		/// </summary>
 		public const string LF = "\n";
     }
 }

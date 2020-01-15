@@ -10,11 +10,26 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Configuration
 {
-    public enum NewLine
+	/// <summary>
+	/// Types of new lines.
+	/// </summary>
+	public enum NewLine
     {
-        CRLF = 0,
+		/// <summary>
+		/// Windows line feed.
+		/// </summary>
+		CRLF = 0,
+		/// <summary>
+		/// Classic MAC
+		/// </summary>
 		CR = 1,
+		/// <summary>
+		/// Unix
+		/// </summary>
 		LF = 2,
+		/// <summary>
+		/// Use the <see cref="Environment.NewLine"/> setting.
+		/// </summary>
 		Environment = 3
     }
 }
