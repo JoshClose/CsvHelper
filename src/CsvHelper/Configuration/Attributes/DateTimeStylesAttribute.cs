@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// This is used when doing any <see cref="DateTime"/> conversions.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class DateTimeStylesAttribute : Attribute
+	public class DateTimeStylesAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the date time styles.
@@ -28,5 +28,10 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			DateTimeStyles = dateTimeStyles;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.TypeConverterOptions.DateTimeStyle = DateTimeStyles;
+        }
+    }
 }

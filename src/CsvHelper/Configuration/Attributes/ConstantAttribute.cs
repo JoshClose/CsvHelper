@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// what other mapping configurations are specified.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class ConstantAttribute : Attribute
+	public class ConstantAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the constant.
@@ -29,5 +29,12 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			Constant = constant;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.Constant = Constant;
+            memberMap.Data.IsConstantSet = true;
+        }
+
+    }
 }

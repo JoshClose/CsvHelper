@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// This is used when doing any number conversions.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class NumberStylesAttribute : Attribute
+	public class NumberStylesAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the number styles.
@@ -28,5 +28,11 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			NumberStyles = numberStyles;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.TypeConverterOptions.NumberStyle = NumberStyles;
+        }
+
+    }
 }

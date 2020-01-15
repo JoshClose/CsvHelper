@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// when converting the member to and from a CSV field.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class TypeConverterAttribute : Attribute
+	public class TypeConverterAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the type converter.
@@ -37,5 +37,11 @@ namespace CsvHelper.Configuration.Attributes
 				throw new ArgumentException( $"Type '{typeConverterType.FullName}' does not implement {nameof( ITypeConverter )}" );
 			}
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.TypeConverter = TypeConverter;
+        }
+
+    }
 }

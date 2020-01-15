@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// the CSV field is empty.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class DefaultAttribute : Attribute
+	public class DefaultAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the default value.
@@ -27,5 +27,12 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			Default = defaultValue;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.Default = Default;
+            memberMap.Data.IsDefaultSet = true;
+        }
+
+    }
 }

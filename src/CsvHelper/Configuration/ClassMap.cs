@@ -485,89 +485,13 @@ namespace CsvHelper.Configuration
 		{
 			var member = memberMap.Data.Member;
 
-			if (member.GetCustomAttribute(typeof(IndexAttribute)) is IndexAttribute indexAttribute)
-			{
-				memberMap.Data.Index = indexAttribute.Index;
-				memberMap.Data.IndexEnd = indexAttribute.IndexEnd;
-				memberMap.Data.IsIndexSet = true;
-			}
+            var attributes = member.GetCustomAttributes().OfType<IMemberMapper>();
 
-			if (member.GetCustomAttribute(typeof(NameAttribute)) is NameAttribute nameAttribute)
-			{
-				memberMap.Data.Names.Clear();
-				memberMap.Data.Names.AddRange(nameAttribute.Names);
-				memberMap.Data.IsNameSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(NameIndexAttribute)) is NameIndexAttribute nameIndexAttribute)
-			{
-				memberMap.Data.NameIndex = nameIndexAttribute.NameIndex;
-			}
-
-			if (member.GetCustomAttribute(typeof(IgnoreAttribute)) is IgnoreAttribute ignoreAttribute)
-			{
-				memberMap.Data.Ignore = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(OptionalAttribute)) is OptionalAttribute optionalAttribute)
-			{
-				memberMap.Data.IsOptional = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(DefaultAttribute)) is DefaultAttribute defaultAttribute)
-			{
-				memberMap.Data.Default = defaultAttribute.Default;
-				memberMap.Data.IsDefaultSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(ConstantAttribute)) is ConstantAttribute constantAttribute)
-			{
-				memberMap.Data.Constant = constantAttribute.Constant;
-				memberMap.Data.IsConstantSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(TypeConverterAttribute)) is TypeConverterAttribute typeConverterAttribute)
-			{
-				memberMap.Data.TypeConverter = typeConverterAttribute.TypeConverter;
-			}
-
-			if (member.GetCustomAttribute(typeof(CultureInfoAttribute)) is CultureInfoAttribute cultureInfoAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.CultureInfo = cultureInfoAttribute.CultureInfo;
-			}
-
-			if (member.GetCustomAttribute(typeof(DateTimeStylesAttribute)) is DateTimeStylesAttribute dateTimeStylesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.DateTimeStyle = dateTimeStylesAttribute.DateTimeStyles;
-			}
-
-			if (member.GetCustomAttribute(typeof(NumberStylesAttribute)) is NumberStylesAttribute numberStylesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.NumberStyle = numberStylesAttribute.NumberStyles;
-			}
-
-			if (member.GetCustomAttribute(typeof(FormatAttribute)) is FormatAttribute formatAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.Formats = formatAttribute.Formats;
-			}
-
-			if (member.GetCustomAttribute(typeof(BooleanTrueValuesAttribute)) is BooleanTrueValuesAttribute booleanTrueValuesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.Clear();
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(booleanTrueValuesAttribute.TrueValues);
-			}
-
-			if (member.GetCustomAttribute(typeof(BooleanFalseValuesAttribute)) is BooleanFalseValuesAttribute booleanFalseValuesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(booleanFalseValuesAttribute.FalseValues);
-			}
-
-			if (member.GetCustomAttribute(typeof(NullValuesAttribute)) is NullValuesAttribute nullValuesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.NullValues.Clear();
-				memberMap.Data.TypeConverterOptions.NullValues.AddRange(nullValuesAttribute.NullValues);
-			}
+            foreach (var attribute in attributes)
+            {
+                attribute.ApplyTo(memberMap);
+            }
+            
 		}
 
 		/// <summary>
@@ -577,11 +501,13 @@ namespace CsvHelper.Configuration
 		protected virtual void ApplyAttributes(MemberReferenceMap referenceMap)
 		{
 			var member = referenceMap.Data.Member;
+            var attributes = member.GetCustomAttributes().OfType<IMemberReferenceMapper>();
 
-			if (member.GetCustomAttribute(typeof(HeaderPrefixAttribute)) is HeaderPrefixAttribute headerPrefixAttribute)
-			{
-				referenceMap.Data.Prefix = headerPrefixAttribute.Prefix ?? member.Name + ".";
-			}
+            foreach (var attribute in attributes)
+            {
+                attribute.ApplyTo(referenceMap);
+            }
+
 		}
 	}
 }

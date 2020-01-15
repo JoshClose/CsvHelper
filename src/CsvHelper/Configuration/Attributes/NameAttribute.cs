@@ -16,7 +16,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The first name will be used.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class NameAttribute : Attribute
+	public class NameAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the names.
@@ -57,5 +57,13 @@ namespace CsvHelper.Configuration.Attributes
 
 			Names = names;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.Names.Clear();
+            memberMap.Data.Names.AddRange(Names);
+            memberMap.Data.IsNameSet = true;
+        }
+
+    }
 }

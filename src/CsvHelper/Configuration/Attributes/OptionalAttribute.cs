@@ -10,7 +10,13 @@ namespace CsvHelper.Configuration.Attributes
 	/// Ignore the member when reading if no matching field name can be found.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-	public class OptionalAttribute : Attribute
-	{        
-	}
+	public class OptionalAttribute : Attribute, IMemberMapper
+	{
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.IsOptional = true;
+        }
+
+    }
 }

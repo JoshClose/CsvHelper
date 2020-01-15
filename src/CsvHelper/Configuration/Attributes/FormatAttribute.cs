@@ -10,7 +10,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// The string format to be used when type converting.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class FormatAttribute : Attribute
+	public class FormatAttribute : Attribute, IMemberMapper
 	{
 		/// <summary>
 		/// Gets the formats.
@@ -34,5 +34,10 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			Formats = formats;
 		}
-	}
+
+        public void ApplyTo(MemberMap memberMap)
+        {
+            memberMap.Data.TypeConverterOptions.Formats = Formats;
+        }
+    }
 }
