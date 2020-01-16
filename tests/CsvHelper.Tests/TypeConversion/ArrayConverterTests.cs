@@ -103,30 +103,6 @@ namespace CsvHelper.Tests.TypeConversion
 		}
 
 		[TestMethod]
-		public void FullWriteTest()
-		{
-			using (var stream = new MemoryStream())
-			using (var reader = new StreamReader(stream))
-			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-			{
-				csv.Configuration.Delimiter = ",";
-				var list = new List<Test>
-				{
-					new Test { List = new int?[] { 1, 2, 3 } }
-				};
-				csv.Configuration.HasHeaderRecord = false;
-				csv.WriteRecords(list);
-				writer.Flush();
-				stream.Position = 0;
-
-				var result = reader.ReadToEnd();
-
-				Assert.AreEqual(",1,2,3,\r\n", result);
-			}
-		}
-
-		[TestMethod]
 		public void FullReadNoHeaderTest()
 		{
 			using (var stream = new MemoryStream())
