@@ -44,6 +44,31 @@ namespace CsvHelper.Tests.Async
 			}
 		}
 
+		[TestMethod]
+		public async Task GetRecordsTest()
+		{
+			var parser = new ParserMock
+			{
+				new [] { "Id", "Name" },
+				new [] { "1", "one" },
+				new [] { "2", "two" },
+				null
+			};
+			using (var csv = new CsvReader(parser))
+			{
+				var records = csv.GetRecordsAsync<Simple>().GetAsyncEnumerator();
+				await records.MoveNextAsync();
+
+				Assert.AreEqual(1, records.Current.Id);
+				Assert.AreEqual("one", records.Current.Name);
+
+				await records.MoveNextAsync();
+
+				Assert.AreEqual(2, records.Current.Id);
+				Assert.AreEqual("two", records.Current.Name);
+			}
+		}
+
 		private class Simple
 		{
 			public int Id { get; set; }

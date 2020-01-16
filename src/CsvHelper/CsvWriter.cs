@@ -403,10 +403,10 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
-		/// <param name="records">The list of records to write.</param>
+		/// <param name="records">The records to write.</param>
 		public virtual void WriteRecords(IEnumerable records)
 		{
-			// Changes in this method require changes in method WriteRecords<T>( IEnumerable<T> records ) also.
+			// Changes in this method require changes in method WriteRecords<T>(IEnumerable<T> records) also.
 
 			try
 			{
@@ -456,10 +456,10 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <typeparam name="T">Record type.</typeparam>
-		/// <param name="records">The list of records to write.</param>
+		/// <param name="records">The records to write.</param>
 		public virtual void WriteRecords<T>(IEnumerable<T> records)
 		{
-			// Changes in this method require changes in method WriteRecords( IEnumerable records ) also.
+			// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
 
 			try
 			{
@@ -514,6 +514,128 @@ namespace CsvHelper
 					}
 
 					NextRecord();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw ex as CsvHelperException ?? new WriterException(context, "An unexpected error occurred.", ex);
+			}
+		}
+
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <param name="records">The records to write.</param>
+		public virtual async Task WriteRecordsAsync(IEnumerable records)
+		{
+			// Changes in this method require changes in method WriteRecords<T>(IEnumerable<T> records) also.
+
+			try
+			{
+				foreach (var record in records)
+				{
+					var recordType = record.GetType();
+
+					if (record is IDynamicMetaObjectProvider dynamicObject)
+					{
+						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
+						{
+							WriteDynamicHeader(dynamicObject);
+							await NextRecordAsync().ConfigureAwait(false);
+						}
+					}
+					else
+					{
+						// If records is a List<dynamic>, the header hasn't been written yet.
+						// Write the header based on the record type.
+						var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
+						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
+						{
+							WriteHeader(recordType);
+							await NextRecordAsync().ConfigureAwait(false);
+						}
+					}
+
+					try
+					{
+						recordManager.Value.Write(record);
+					}
+					catch (TargetInvocationException ex)
+					{
+						throw ex.InnerException;
+					}
+
+					await NextRecordAsync().ConfigureAwait(false);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw ex as CsvHelperException ?? new WriterException(context, "An unexpected error occurred.", ex);
+			}
+		}
+
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <typeparam name="T">Record type.</typeparam>
+		/// <param name="records">The records to write.</param>
+		public virtual async Task WriteRecordsAsync<T>(IEnumerable<T> records)
+		{
+			// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
+
+			try
+			{
+				// Write the header. If records is a List<dynamic>, the header won't be written.
+				// This is because typeof( T ) = Object.
+				var recordType = typeof(T);
+				var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
+				if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive && recordType != typeof(object))
+				{
+					WriteHeader(recordType);
+					if (context.HasHeaderBeenWritten)
+					{
+						await NextRecordAsync().ConfigureAwait(false);
+					}
+				}
+
+				var getRecordType = recordType == typeof(object);
+				foreach (var record in records)
+				{
+					if (getRecordType)
+					{
+						recordType = record.GetType();
+					}
+
+					if (record is IDynamicMetaObjectProvider dynamicObject)
+					{
+						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
+						{
+							WriteDynamicHeader(dynamicObject);
+							await NextRecordAsync().ConfigureAwait(false);
+						}
+					}
+					else
+					{
+						// If records is a List<dynamic>, the header hasn't been written yet.
+						// Write the header based on the record type.
+						isPrimitive = recordType.GetTypeInfo().IsPrimitive;
+						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
+						{
+							WriteHeader(recordType);
+							await NextRecordAsync().ConfigureAwait(false);
+						}
+					}
+
+					try
+					{
+						recordManager.Value.Write(record);
+					}
+					catch (TargetInvocationException ex)
+					{
+						throw ex.InnerException;
+					}
+
+					await NextRecordAsync().ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)
