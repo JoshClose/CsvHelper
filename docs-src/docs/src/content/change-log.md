@@ -1,5 +1,64 @@
 # Change Log
 
+### 13.0.0
+
+#### Features
+
+- Added required CultureInfo parameter to any class that uses CultureInfo.
+- Apply member attributes using interface instead of hard coding.
+- Added customizable new line when writing. You can choose from `CRLF`, `CR`, `LF`, or `Environment.NewLine`.
+- Renamed `Configuration` to `CsvConfiguration` to avoid namespace conflicts.
+- Added `GetRecordsAsync` and `WriteRecordsAsync`.
+
+#### Breaking Changes
+
+- `ClassMap.AutoMap()` -> `ClassMap.AutoMap(CultureInfo)`
+- `CsvParser.CsvParser(TextReader)` -> `CsvParser.CsvParser(TextReader, CultureInfo)`
+- `CsvParser.CsvParser(TextReader, bool)` -> `CsvParser.CsvParser(TextReader, CultureInfo, bool)`
+- `CsvReader.CsvReader(TextReader)` -> `CsvReader.CsvReader(TextReader, CultureInfo)`
+- `CsvReader.CsvReader(TextReader, bool)` -> `CsvReader.CsvReader(TextReader, CultureInfo, bool)`
+- `CsvSerializer.CsvSerializer(TextWriter)` -> `CsvSerializer.CsvSerializer(TextWriter, CultureInfo)`
+- `CsvSerializer.CsvSerializer(TextWriter, bool)` -> `CsvSerializer.CsvSerializer(TextWriter, CultureInfo, bool)`
+- `CsvWriter.CsvWriter(TextWriter)` -> `CsvWriter.CsvWriter(TextWriter, CultureInfo)`
+- `CsvWriter.CsvWriter(TextWriter, bool)` -> `CsvWriter.CsvWriter(TextWriter, CultureInfo, bool)`
+- `Factory.CreateParser(TextReader)` -> `Factory.CreateParser(TextReader, CultureInfo)`
+- `Factory.CreateReader(TextReader)` -> `Factory.CreateReader(TextReader, CultureInfo)`
+- `Factory.CreateWriter(TextWriter)` -> `Factory.CreateWriter(TextWriter, CultureInfo)`
+- `IFactory.CreateParser(TextReader)` -> `IFactory.CreateParser(TextReader, CultureInfo)`
+- `IFactory.CreateReader(TextReader)` -> `IFactory.CreateReader(TextReader, CultureInfo)`
+- `IFactory.CreateWriter(TextWriter)` -> `IFactory.CreateWriter(TextWriter, CultureInfo)`
+- Added `ISerializerConfiguration.NewLine`.
+- Added `ISerializerConfiguration.NewLineString`.
+- Added `Configuration.NewLine`.
+- Added `Configuration.NewLineString`.
+- Removed `Configuration.Configuration()` parameterless constructor.
+- Attributes now require the use of `IMemberMapper` or `IMemberReferenceMapper` to be loaded. All existing attributes added these and implemented the interface.
+- Renamed `Configuration` to `CsvConfiguration`.
+- Added `IAsyncEnumerable<T> CsvReader.GetRecordsAsync<T>()`
+- Added `IAsyncEnumerable<T> CsvReader.GetRecordsAsync<T>(T anonymousTypeDefinition)`
+- Added `IAsyncEnumerable<object> CsvReader.GetRecordsAsync(Type type)`
+- Added `IAsyncEnumerable<T> CsvReader.EnumerateRecordsAsync<T>(T record)`
+- Added `Task CsvWriter.WriteRecordsAsync(IEnumerable records)`
+- Added `Task CsvWriter.WriteRecordsAsync<T>(IEnumerable<T> records)`
+- Added `IAsyncEnumerable<T> IReader.GetRecordsAsync<T>()`
+- Added `IAsyncEnumerable<T> IReader.GetRecordsAsync<T>(T anonymousTypeDefinition)`
+- Added `IAsyncEnumerable<object> IReader.GetRecordsAsync(Type type)`
+- Added `IAsyncEnumerable<T> IReader.EnumerateRecordsAsync<T>(T record)`
+- Added `Task IWriter.WriteRecordsAsync(IEnumerable records)`
+- Added `Task IWriter.WriteRecordsAsync<T>(IEnumerable<T> records)`
+
+### 12.3.2
+
+#### Bug Fixes
+
+- Changed double and single converters to only test for format "R" if the user hasn't supplied a format.
+
+### 12.3.1
+
+#### Bug Fixes
+
+- Fix for bug in .NET Framework that causes a StackOverflowException. This needs to be changed back eventually.
+
 ### 12.3.0
 
 #### Features
