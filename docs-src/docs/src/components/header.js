@@ -1,18 +1,21 @@
 import React, { Component } from "react";
+import { withSiteData } from "react-static";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub, faTwitter } from "@fortawesome/free-brands-svg-icons";
 
-export default class Header extends Component {
+class Header extends Component {
 
 	render() {
+		const { basePath } = this.props;
+
 		return (
 			<header className="header">
 				<nav className="navbar is-light">
 					<div className="container is-fluid">
 						<div className="navbar-brand">
 							<Link className="navbar-item" to="/">
-								<img src="/images/logo.svg" width="66" height="28" />
+								<img src={`${basePath}/images/logo.svg`} width="66" height="28" />
 							</Link>
 
 							<div className="navbar-burger burger">
@@ -56,3 +59,5 @@ export default class Header extends Component {
 	}
 
 }
+
+export default withSiteData(Header)

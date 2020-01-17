@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { withSiteData } from "react-static";
 import {
 	faBolt,
 	faBook,
@@ -23,8 +24,11 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 
-export default class Home extends Component {
+class Home extends Component {
+
 	render() {
+		const { basePath } = this.props;
+
 		return (
 			<div className="home">
 				<section className="hero">
@@ -56,7 +60,7 @@ export default class Home extends Component {
 
 								</div>
 								<div className="column">
-									<img src="https://joshclose.github.io/CsvHelper/images/logo.svg" />
+									<img src={`${basePath}/images/logo.svg`} />
 								</div>
 							</div>
 
@@ -345,4 +349,6 @@ export default class Home extends Component {
 			</div>
 		);
 	}
-};
+}
+
+export default withSiteData(Home)
