@@ -7,7 +7,7 @@
 		"build": "react-static build",
 		"bundle": "react-static bundle",
 		"export": "react-static export",
-		"serve": "serve ../../../docs -p 3000 -s"
+		"serve": "serve ../../docs -p 3000 -s"
 	},
 	"dependencies": {
 		"@fortawesome/fontawesome-svg-core": "^1.2.26",
@@ -39,7 +39,6 @@
 		"eslint-plugin-import": "^2.18.2",
 		"eslint-plugin-jsx-a11y": "^6.2.3",
 		"eslint-plugin-react": "^7.14.3",
-		"rimraf": "^3.0.0",
 		"serve": "^11.1.0"
 	}
 }
