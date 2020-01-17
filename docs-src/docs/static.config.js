@@ -1,21 +1,20 @@
 import React from "react";
-import fs from "fs-extra";
-import ExtractTextPlugin from "extract-text-webpack-plugin";
-
+import path from "path"
+import fs from "fs";
 import toc from "./src/data/toc.json";
 
 function createData(name) {
 	const className = name.substring(name.lastIndexOf("/"));
 	const tocKey = name.substring(0, name.indexOf("/"));
 
-	return async () => ({
+	return () => ({
 		className: className,
-		data: await fs.readFile(`./src/content/${name}.md`, "utf-8"),
+		data: fs.readFileSync(`./src/content/${name}.md`, "utf-8"),
 		toc: tocKey ? toc[tocKey] : toc[name]
 	});
 }
 
-function createRoutesFromToc(isDev) {
+function createRoutesFromToc() {
 	const routes = [];
 	Object.entries(toc).forEach(([key, value]) => {
 		createRoutesFromTocItem(value, routes);
@@ -27,8 +26,8 @@ function createRoutesFromToc(isDev) {
 function createRoutesFromTocItem(item, routes) {
 	if (!item.path.includes("#")) {
 		const route = {
-			path: `/${item.path}`,
-			component: "src/pages/documentation",
+			path: `${item.path}`,
+			template: "src/pages/documentation",
 			getData: createData(item.path)
 		};
 		routes.push(route);
@@ -43,10 +42,12 @@ function createRoutesFromTocItem(item, routes) {
 
 export default {
 	siteRoot: "https://joshclose.github.io",
-	stagingSiteRoot: "http://localhost:3001",
-	basePath: "CsvHelper",
 	stagingBasePath: "CsvHelper",
-	Document: ({ Html, Head, Body, children, siteData, renderMeta }) => (
+	basePath: "CsvHelper",
+	// paths: {
+	// 	dist: "../../docs"
+	// },
+	Document: ({ Html, Head, Body, children, state: { siteData, renderMeta } }) => (
 		<Html lang="en-US">
 			<Head>
 				<meta charSet="UTF-8" />
@@ -73,101 +74,31 @@ export default {
 			<Body>{children}</Body>
 		</Html>
 	),
-	getRoutes: async ({ dev }) => {
-		return [
-			{
-				path: "/",
-				component: "src/pages/home"
-			},
-			{
-				path: "/getting-started",
-				component: "src/pages/documentation",
-				getData: createData("getting-started")
-			},
-			{
-				path: "/examples",
-				component: "src/pages/documentation",
-				getData: createData("examples")
-			},
-			{
-				path: "/change-log",
-				component: "src/pages/change-log",
-				getData: createData("change-log")
-			},
-			{
-				is404: true,
-				component: "src/pages/404",
-			},
-			...createRoutesFromToc(dev)
-		]
+	getRoutes: () => {
+		const routes = [
+			...createRoutesFromToc()
+		];
+
+		return routes;
 	},
-	getSiteData: ({ dev }) => ({
-		isDev: dev
-	}),
-	webpack: (config, { defaultLoaders, stage }) => {
-		config.plugins.push(
-			new ExtractTextPlugin({
-				filename: "[name].css"
-			})
-		);
-
-		let loaders = []
-
-		if (stage === 'dev') {
-			loaders = [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'sass-loader' }]
-		} else {
-			loaders = [
-				{
-					loader: 'css-loader',
-					options: {
-						importLoaders: 1,
-						minimize: stage === 'prod',
-						sourceMap: false,
-					},
-				},
-				{
-					loader: 'sass-loader',
-					options: { includePaths: ['src/'] },
-				},
-			]
-
-			// Don't extract css to file during node build process
-			if (stage !== 'node') {
-				loaders = ExtractTextPlugin.extract({
-					fallback: {
-						loader: 'style-loader',
-						options: {
-							sourceMap: false,
-							hmr: false,
-						},
-					},
-					use: loaders,
-				})
-			}
-		}
-
-		config.module.rules = [
+	getSiteData: ({ stage, config }) => {
+		return ({
+			basePath: config.basePath,
+			isDev: stage === "dev"
+		});
+	},
+	plugins: [
+		[
+			require.resolve("react-static-plugin-source-filesystem"),
 			{
-				oneOf: [
-					{
-						test: /\.s(a|c)ss$/,
-						use: loaders,
-					},
-					defaultLoaders.cssLoader,
-					defaultLoaders.jsLoader,
-					defaultLoaders.fileLoader,
-				],
+				location: path.resolve("./src/pages"),
 			},
-		]
-		return config
-	},
-	onBuild: async () => {
-		console.log("Copying build to docs folder.");
-		await fs.remove("../../docs");
-		await fs.copy("./dist", "../../docs")
-	},
+		],
+		require.resolve("react-static-plugin-react-router"),
+		require.resolve("react-static-plugin-sitemap"),
+		require.resolve("react-static-plugin-sass")
+	],
 	devServer: {
-		port: 3001,
 		historyApiFallback: {
 			disableDotRule: true
 		}

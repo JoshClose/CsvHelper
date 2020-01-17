@@ -1,4 +1,5 @@
-import React, { Component } from "react";
+import React, { Component, createRef } from "react";
+import { withRouter } from "react-router";
 import { withSiteData, withRouteData } from "react-static";
 import marked from "marked";
 import highlight from "highlight.js";
@@ -23,12 +24,10 @@ function toSeoFriendly(text) {
 	return result;
 }
 
-function initializeMarked(isDev) {
+function initializeMarked(basePath) {
 	if (isMarkedInitialized === true) {
 		return;
 	}
-
-	console.log("initializing marked");
 
 	isMarkedInitialized = true;
 
@@ -56,9 +55,12 @@ function initializeMarked(isDev) {
 	renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${text}</span></h${level}>`;
 
 	renderer.link = (href, title, text) => {
-		if (!href.startsWith("http") && !isDev) {
-			const separator = href.startsWith("/") ? "" : "/";
-			href = `/CsvHelper${separator}${href}`;
+		if (!href.startsWith("/")) {
+			href = `/${href}`;
+		}
+
+		if (basePath) {
+			href = `/${basePath}${href}`;
 		}
 
 		return `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
@@ -98,14 +100,84 @@ function initializeMarked(isDev) {
 	});
 }
 
-const Content = ({ className, data, isDev }) => {
-	initializeMarked(isDev);
+class Content extends Component {
 
-	const markdown = marked(data);
+	constructor(props) {
+		super(props);
 
-	return (
-		<div className={className} dangerouslySetInnerHTML={{ __html: markdown }}></div>
-	)
+		this.divRef = createRef();
+
+		initializeMarked(this.props.basePath);
+	}
+
+	componentDidMount() {
+		this.intersectionObserver = new IntersectionObserver(this.handleDivObserved);
+		this.intersectionObserver.observe(this.divRef.current);
+	}
+
+	componentDidUpdate(prevProps) {
+		if (prevProps.data !== this.props.data) {
+			this.removeAnchorEventListeners();
+			this.registerAnchorEventListeners();
+		}
+
+		if (prevProps.location !== this.props.location) {
+			this.scroll();
+		}
+	}
+
+	componentWillUnmount() {
+		this.removeAnchorEventListeners();
+	}
+
+	registerAnchorEventListeners() {
+		this.anchors = this.divRef.current.getElementsByTagName("a");
+
+		for (const anchor of this.anchors) {
+			anchor.addEventListener("click", this.handleAnchorClick);
+		}
+	}
+
+	removeAnchorEventListeners() {
+		for (const anchor of this.anchors) {
+			anchor.removeEventListener("click", this.handleAnchorClick);
+		}
+	}
+
+	scroll() {
+		const hash = this.props.location.hash.slice(1);
+		if (hash) {
+			document.getElementById(hash).scrollIntoView();
+		}
+		else {
+			window.scrollTo(0, 0);
+		}
+	}
+
+	handleDivObserved = () => {
+		this.registerAnchorEventListeners();
+		this.scroll();
+	}
+
+	handleAnchorClick = (e) => {
+		const { history } = this.props;
+		const href = e.currentTarget.getAttribute("href");
+
+		if (href[0] === "/") {
+			e.preventDefault();
+			history.push(href);
+		}
+	}
+
+	render() {
+		const { className, data } = this.props;
+
+		const markdown = marked(data);
+
+		return (
+			<div ref={this.divRef} className={className} dangerouslySetInnerHTML={{ __html: markdown }}></div>
+		);
+	}
 }
 
-export default withSiteData(withRouteData(Content));
+export default withSiteData(withRouteData(withRouter(Content)))

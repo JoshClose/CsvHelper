@@ -5,7 +5,7 @@ export default class Footer extends Component {
 		return (
 			<footer className="footer">
 				<div className="has-text-centered">
-					&copy; 2009-2019 Josh Close
+					&copy; 2009-2020 Josh Close
 				</div>
 			</footer>
 		);

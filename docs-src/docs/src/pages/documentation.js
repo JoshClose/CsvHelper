@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import { withRouteData } from "react-static";
-
 import Content from "../components/content";
 import TableOfContents from "../components/table-of-contents";
 
@@ -13,16 +12,26 @@ class Documentation extends Component {
 	componentDidMount() {
 		window.addEventListener("scroll", this.handleWindowScroll);
 
-		this.footerEl = document.querySelector("#root > footer");
-
-		this.updateSidebarBottom();
+		this.intersectionObserver = new IntersectionObserver(this.updateSidebarBottom);
+		this.footerEl = document.querySelector("#root > footer.footer");
+		this.intersectionObserver.observe(this.footerEl);
 	}
 
 	componentWillUnmount() {
 		window.removeEventListener("scroll", this.handleWindowScroll);
+
+		this.intersectionObserver?.unobserve(this.footerEl);
+		delete this.intersectionObserver;
 	}
 
 	updateSidebarBottom() {
+		this.intersectionObserver?.unobserve(this.footerEl);
+		delete this.intersectionObserver;
+
+		if (!this.footerEl) {
+			return;
+		}
+
 		const visibleHeight = window.innerHeight - this.footerEl.getBoundingClientRect().top;
 		const sidebarBottom = Math.max(0, visibleHeight);
 

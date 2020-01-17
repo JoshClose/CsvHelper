@@ -1,17 +1,24 @@
-import React from 'react'
-import { Router } from 'react-static'
-import { hot } from 'react-hot-loader'
-import Routes from 'react-static-routes'
-
-import Layout from "./components/layout"
+import React from "react"
+import { Root, Routes, addPrefetchExcludes } from "react-static"
+import { Switch, Route } from "react-router-dom";
+import Layout from "./components/layout";
 import "./css/site.scss"
 
-const App = () => (
-	<Router scrollToHashDuration={0}>
-		<Layout>
-			<Routes />
-		</Layout>
-	</Router>
-)
+// Any routes that start with "dynamic" will be treated as non-static routes
+addPrefetchExcludes(["dynamic"])
 
-export default hot(module)(App)
+function App(props) {
+	return (
+		<Root>
+			<React.Suspense fallback={<em>Loading...</em>}>
+				<Layout>
+					<Switch>
+						<Route render={() => <Routes />} />
+					</Switch>
+				</Layout>
+			</React.Suspense>
+		</Root>
+	)
+}
+
+export default App

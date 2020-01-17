@@ -595,6 +595,11 @@
 			}
 		]
 	},
+	"change-log": {
+		"title": "Change Log",
+		"path": "change-log",
+		"children": []
+	},
 	"examples": {
 		"title": "Examples",
 		"path": "examples",

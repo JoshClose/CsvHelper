@@ -1,5 +1,7 @@
 import React, { Component, Fragment } from "react";
-import { withRouter, Link, withRouteData } from "react-static";
+import { withRouteData } from "react-static";
+import { withRouter } from "react-router";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import classNames from "classnames";
@@ -95,4 +97,4 @@ class Toc extends Component {
 	}
 };
 
-export default withRouteData(withRouter(Toc));
+export default withRouter(withRouteData(Toc))
