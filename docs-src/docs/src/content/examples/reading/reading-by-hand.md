@@ -1,6 +1,6 @@
 # Reading by Hand
 
-Sometimes it's easier to not try and configure a mapping to match you class definition for various reasons. It's usually only a few more lines of code to just read the rows by hand instead.
+Sometimes it's easier to not try and configure a mapping to match your class definition for various reasons. It's usually only a few more lines of code to just read the rows by hand instead.
 
 ###### Data
 
@@ -15,7 +15,7 @@ Id,Name
 void Main()
 {
     using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
         var records = new List<Foo>();
 		csv.Read();

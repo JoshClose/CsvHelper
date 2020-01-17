@@ -55,12 +55,8 @@ function initializeMarked(basePath) {
 	renderer.heading = (text, level) => `<h${level} id="${toSeoFriendly(text)}" class="title is-${level}"><span>${text}</span></h${level}>`;
 
 	renderer.link = (href, title, text) => {
-		if (!href.startsWith("/")) {
-			href = `/${href}`;
-		}
-
 		if (basePath) {
-			href = `/${basePath}${href}`;
+			href = `${basePath}${href}`;
 		}
 
 		return `<a href="${href}" target="${/^[\/#].*/.test(href) ? "_self" : "_self"}">${text}</a>`;
@@ -160,8 +156,11 @@ class Content extends Component {
 	}
 
 	handleAnchorClick = (e) => {
-		const { history } = this.props;
-		const href = e.currentTarget.getAttribute("href");
+		const { history, basePath } = this.props;
+		let href = e.currentTarget.getAttribute("href");
+		if (href.startsWith(basePath)) {
+			href = href.replace(basePath, "");
+		}
 
 		if (href[0] === "/") {
 			e.preventDefault();

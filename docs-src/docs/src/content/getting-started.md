@@ -15,6 +15,10 @@ PM> Install-Package CsvHelper
 > dotnet add package CsvHelper
 ```
 
+## CultureInfo
+
+CsvHelper requires you to specify the `CultureInfo` that you want to use. The culture is used to determine the default delimiter, default line ending, and formatting when type converting. You can change the configuration of any of these too if you like. Choose the appropriate culture for your data. `InvariantCulture` will be the most portable for writing a file and reading it back again, so that will be used in most of the examples.
+
 ## Reading a CSV File
 <hr />
 
@@ -40,7 +44,7 @@ If our class property names match our CSV file header names, we can read the fil
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {	
 	var records = csv.GetRecords<Foo>();
 }
@@ -67,7 +71,7 @@ just change how our properties match against the header names.
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {	
 	csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.ToLower();
 	var records = csv.GetRecords<Foo>();
@@ -91,7 +95,7 @@ First we need to tell the reader that there is no header record, using configura
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {	
 	csv.Configuration.HasHeaderRecord = false;
 	var records = csv.GetRecords<Foo>();
@@ -152,7 +156,7 @@ To use the mapping, we need to register it in the configuration.
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {	
 	csv.Configuration.RegisterClassMap<FooMap>();
 	var records = csv.GetRecords<Foo>();
@@ -190,7 +194,7 @@ We can write the records to a file without any configuration.
 
 ```cs
 using (var writer = new StreamWriter("path\\to\\file.csv"))
-using (var csv = new CsvWriter(writer))
+using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 {	
 	csv.WriteRecords(records);
 }

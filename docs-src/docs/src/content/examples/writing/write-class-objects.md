@@ -11,7 +11,7 @@ void Main()
 	};
 	
 	using (var writer = new StreamWriter("path\\to\\file.csv"))
-	using (var csv = new CsvWriter(writer))
+	using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 	{
 		csv.WriteRecords(records);
 	}

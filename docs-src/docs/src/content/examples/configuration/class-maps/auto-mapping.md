@@ -15,7 +15,7 @@ Id,The Name
 void Main()
 {	   
 	using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
         csv.Configuration.RegisterClassMap<FooMap>();
         var records = csv.GetRecords<Foo>();
@@ -32,7 +32,7 @@ public sealed class FooMap : ClassMap<Foo>
 {
 	public FooMap()
 	{
-		AutoMap();
+		AutoMap(CultureInfo.InvariantCulture);
 		Map(m => m.Name).Name("The Name");
 	}
 }

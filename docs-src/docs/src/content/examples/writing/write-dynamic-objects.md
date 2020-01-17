@@ -13,7 +13,7 @@ void Main()
 	records.Add(record);
 	
 	using (var writer = new StringWriter())
-	using (var csv = new CsvWriter(writer))
+	using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 	{
 		csv.WriteRecords(records);
 		

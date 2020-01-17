@@ -757,6 +757,10 @@
 				"path": "getting-started#installation"
 			},
 			{
+				"title": "CultureInfo",
+				"path": "getting-started#cultureinfo"
+			},
+			{
 				"title": "Reading a CSV File",
 				"path": "getting-started#reading-a-csv-file"
 			},

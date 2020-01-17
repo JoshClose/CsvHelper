@@ -15,7 +15,7 @@ Column1,Column2
 void Main()
 {
 	using (var reader = new StreamReader("path\\to\\file.csv"))
-	using (var csv = new CsvReader(reader))
+	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 	{
 		csv.Configuration.RegisterClassMap<FooMap>();
 		var records = csv.GetRecords<Foo>();

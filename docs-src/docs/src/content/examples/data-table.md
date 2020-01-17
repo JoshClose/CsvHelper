@@ -8,7 +8,7 @@ Loading a `DataTable` in CsvHelper is simple. By default, a table will be loaded
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {
 	// Do any configuration to `CsvReader` before creating CsvDataReader.
 	using (var dr = new CsvDataReader(csv))
@@ -23,7 +23,7 @@ If you want to specify columns and column types, the data table will be loaded w
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {
 	// Do any configuration to `CsvReader` before creating CsvDataReader.
 	using (var dr = new CsvDataReader(csv))

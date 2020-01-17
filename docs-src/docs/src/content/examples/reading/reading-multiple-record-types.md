@@ -15,7 +15,7 @@ B,07a0fca2-1b1c-4e44-b1be-c2b05da5afc7,bar
 void Main()
 {
     using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
 		csv.Configuration.HasHeaderRecord = false;
 		csv.Configuration.RegisterClassMap<FooMap>();

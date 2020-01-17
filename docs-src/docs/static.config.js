@@ -91,7 +91,14 @@ export default {
 				location: path.resolve("./src/pages"),
 			},
 		],
-		require.resolve("react-static-plugin-react-router"),
+		[
+			require.resolve("react-static-plugin-react-router"),
+			{
+				RouterProps: {
+					basename: process.env.NODE_ENV === "production" ? "/CsvHelper" : ""
+				}
+			}
+		],
 		require.resolve("react-static-plugin-sitemap"),
 		require.resolve("react-static-plugin-sass")
 	],

@@ -15,7 +15,7 @@ Id,Name,Json
 void Main()
 {
 	using (var reader = new StreamReader("path\\to\\file.csv"))
-	using (var csv = new CsvReader(reader))
+	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 	{
 		csv.Configuration.RegisterClassMap<FooMap>();
 		csv.GetRecords<Foo>().ToList().Dump();
