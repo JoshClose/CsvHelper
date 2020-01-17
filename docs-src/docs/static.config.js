@@ -44,9 +44,9 @@ export default {
 	siteRoot: "https://joshclose.github.io",
 	stagingBasePath: "CsvHelper",
 	basePath: "CsvHelper",
-	paths: {
-		dist: "../../docs"
-	},
+	// paths: {
+	// 	dist: "../../docs"
+	// },
 	Document: ({ Html, Head, Body, children, state: { siteData, renderMeta } }) => (
 		<Html lang="en-US">
 			<Head>
