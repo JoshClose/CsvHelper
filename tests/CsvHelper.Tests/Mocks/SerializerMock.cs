@@ -51,6 +51,11 @@ namespace CsvHelper.Tests.Mocks
 		{
 		}
 
+		public ValueTask DisposeAsync()
+		{
+			return new ValueTask();
+		}
+
 		public Task WriteAsync(string[] record)
 		{
 			throw new NotImplementedException();

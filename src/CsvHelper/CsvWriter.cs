@@ -719,5 +719,40 @@ namespace CsvHelper
 			context = null;
 			disposed = true;
 		}
+
+#if NET47 || NETSTANDARD
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <filterpriority>2</filterpriority>
+		public async ValueTask DisposeAsync()
+		{
+			await DisposeAsync(!context?.LeaveOpen ?? true).ConfigureAwait(false);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
+		protected virtual async ValueTask DisposeAsync(bool disposing)
+		{
+			if (disposed)
+			{
+				return;
+			}
+
+			await FlushAsync().ConfigureAwait(false);
+
+			if (disposing)
+			{
+				serializer?.DisposeAsync();
+			}
+
+			serializer = null;
+			context = null;
+			disposed = true;
+		}
+#endif
 	}
 }
