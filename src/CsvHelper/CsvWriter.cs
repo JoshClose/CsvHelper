@@ -744,9 +744,9 @@ namespace CsvHelper
 
 			await FlushAsync().ConfigureAwait(false);
 
-			if (disposing)
+			if (disposing && serializer != null)
 			{
-				serializer?.DisposeAsync();
+				await serializer.DisposeAsync().ConfigureAwait(false);
 			}
 
 			serializer = null;

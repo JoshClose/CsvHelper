@@ -178,7 +178,7 @@ namespace CsvHelper
 				return;
 			}
 
-			if (disposing)
+			if (disposing && context != null)
 			{
 				await context.DisposeAsync().ConfigureAwait(false);
 			}
