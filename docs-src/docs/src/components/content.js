@@ -171,7 +171,7 @@ class Content extends Component {
 	render() {
 		const { className, data } = this.props;
 
-		const markdown = marked(data);
+		const markdown = data ? marked(data) : "";
 
 		return (
 			<div ref={this.divRef} className={className} dangerouslySetInnerHTML={{ __html: markdown }}></div>
