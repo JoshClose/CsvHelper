@@ -1,5 +1,23 @@
 # Change Log
 
+### 14.0.0
+
+#### Features
+
+- Added `IAsyncDispose` on writing classes.
+
+#### Breaking Changes
+
+- Dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` added to `net45`.
+- Dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` added to `net47`.
+- Dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` added to `netstandard2.0`.
+- `IWriter` added interface `IAsyncDisposable` for `net47` and `netstandard2.1`.
+- `ISerializer` added interface `IAsyncDisposable` for `net47` and `netstandard2.1`.
+- `WritingContext` added interface `IAsyncDisposable` for `net47` and `netstandard2.1`.
+- `CsvWriter` added methods `public async ValueTask DisposeAsync()` and `protected virtual async ValueTask DisposeAsync(bool disposing)` for `net47` and `netstandard`.
+- `CsvSerializer` added methods `public async ValueTask DisposeAsync()` and `protected virtual async ValueTask DisposeAsync(bool disposing)` for `net47` and `netstandard`.
+- `WritingContext` added methods `public async ValueTask DisposeAsync()` and `protected virtual async ValueTask DisposeAsync(bool disposing)` for `net47` and `netstandard`.
+
 ### 13.0.0
 
 #### Features
