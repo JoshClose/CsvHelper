@@ -10,8 +10,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitVersion.CommandLine.DotNetCore" Version="5.0.1" />
-		<PackageReference Include="Microsoft.Build" Version="16.4.0" />
+		<PackageReference Include="GitVersion.CommandLine" Version="5.1.3" />
 		<PackageReference Include="Nuke.Common" Version="0.23.7" />
 	</ItemGroup>
 

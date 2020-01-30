@@ -29,13 +29,19 @@ class Build : NukeBuild
 
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
+    [Parameter("NuGet server URL.")]
+	readonly string NugetSource = "https://api.nuget.org/v3/index.json";
+    [Parameter("API Key for the NuGet server.")]
+	readonly string NugetApiKey;
+	[Parameter("Version to use for package.")]
+	readonly string Version;
 
-    [Parameter("NuGet server URL.")] readonly string NugetSource = "https://api.nuget.org/v3/index.json";
-    [Parameter("API Key for the NuGet server.")] readonly string NugetApiKey;
-
-    [Solution] readonly Solution Solution;
-    [GitRepository] readonly GitRepository GitRepository;
-    [GitVersion] readonly GitVersion GitVersion;
+    [Solution]
+	readonly Solution Solution;
+    [GitRepository]
+	readonly GitRepository GitRepository;
+    [GitVersion]
+	readonly GitVersion GitVersion;
 	
     AbsolutePath SourceDirectory => RootDirectory / "src";
     AbsolutePath TestsDirectory => RootDirectory / "tests";
@@ -69,8 +75,8 @@ class Build : NukeBuild
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                .SetFileVersion(GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(GitVersion.InformationalVersion)
+                .SetFileVersion(Version ?? GitVersion.AssemblySemFileVer)
+                .SetInformationalVersion(Version ?? GitVersion.InformationalVersion)
 			);
 
             DotNetPublish(s => s
@@ -78,8 +84,8 @@ class Build : NukeBuild
 				.EnableNoBuild()
 				.SetConfiguration(Configuration)
 				.SetAssemblyVersion(GitVersion.AssemblySemVer)
-				.SetFileVersion(GitVersion.AssemblySemFileVer)
-				.SetInformationalVersion(GitVersion.InformationalVersion)
+				.SetFileVersion(Version ?? GitVersion.AssemblySemFileVer)
+				.SetInformationalVersion(Version ?? GitVersion.InformationalVersion)
 				.CombineWith(
 					from project in new[] { CsvHelperProject }
 					from framework in project.GetTargetFrameworks()
@@ -113,7 +119,7 @@ class Build : NukeBuild
 				.SetProject(Solution)
                 .SetConfiguration(Configuration)
                 .SetOutputDirectory(ArtifactsDirectory)
-                .SetVersion(GitVersion.NuGetVersionV2)
+                .SetVersion(Version ?? GitVersion.NuGetVersionV2)
 				.SetIncludeSymbols(true)
 				.SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
             );
