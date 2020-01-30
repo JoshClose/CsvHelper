@@ -8,9 +8,9 @@
 
 #### Breaking Changes
 
-- Dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` added to `net45`.
-- Dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` added to `net47`.
-- Dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` added to `netstandard2.0`.
+- Added dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` to `net45`.
+- Added dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` to `net47`.
+- Added dependency `<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.3" />` to `netstandard2.0`.
 - `IWriter` added interface `IAsyncDisposable` for `net47` and `netstandard2.1`.
 - `ISerializer` added interface `IAsyncDisposable` for `net47` and `netstandard2.1`.
 - `WritingContext` added interface `IAsyncDisposable` for `net47` and `netstandard2.1`.
@@ -22,6 +22,7 @@
 
 #### Features
 
+- Added `netstandard2.1` build.
 - Added required CultureInfo parameter to any class that uses CultureInfo.
 - Apply member attributes using interface instead of hard coding.
 - Added customizable new line when writing. You can choose from `CRLF`, `CR`, `LF`, or `Environment.NewLine`.
@@ -30,6 +31,10 @@
 
 #### Breaking Changes
 
+- Removed dependency `<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />` from `netstandard2.0`.
+- Removed dependency `<PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />` from `netstandard2.1`.
+- Added dependency `<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />` to `net47`.
+- Added dependency `<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />` to `netstandard2.0`.
 - `ClassMap.AutoMap()` -> `ClassMap.AutoMap(CultureInfo)`
 - `CsvParser.CsvParser(TextReader)` -> `CsvParser.CsvParser(TextReader, CultureInfo)`
 - `CsvParser.CsvParser(TextReader, bool)` -> `CsvParser.CsvParser(TextReader, CultureInfo, bool)`
