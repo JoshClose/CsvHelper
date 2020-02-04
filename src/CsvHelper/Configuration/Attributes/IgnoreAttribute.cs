@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Reflection;
 
 namespace CsvHelper.Configuration.Attributes
 {
@@ -14,7 +15,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// tree that have already been mapped.
 	/// </summary>
 	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class IgnoreAttribute : Attribute, IMemberMapper
+	public class IgnoreAttribute : Attribute, IMemberMapper, IMemberReferenceMapper
 	{
 		/// <summary>
 		/// Applies configuration to the given <see cref="MemberMap" />.
@@ -24,5 +25,18 @@ namespace CsvHelper.Configuration.Attributes
         {
             memberMap.Data.Ignore = true;
         }
-    }
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// </summary>
+		/// <param name="referenceMap">The reference map.</param>
+		/// <exception cref="NotImplementedException"></exception>
+		public void ApplyTo(MemberReferenceMap referenceMap)
+		{
+			foreach (var memberMap in referenceMap.Data.Mapping.MemberMaps)
+			{
+				ApplyTo(memberMap);
+			}
+		}
+	}
 }
