@@ -743,7 +743,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-					ReadSpaces();
+					await ReadSpacesAsync().ConfigureAwait(false);
 					cPrev = ' ';
 
 					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
