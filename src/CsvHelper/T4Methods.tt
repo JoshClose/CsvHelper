@@ -32,4 +32,14 @@
 	{
 		return isAsync ? "await " : string.Empty;
 	}
+
+	private string CancellationTokenDeclaration(bool isAsync)
+	{
+		return isAsync ? "CancellationToken cancellationToken = default " : string.Empty;
+	}
+
+	private string CancellationTokenParameter(bool isAsync)
+	{
+		return isAsync ? "cancellationToken" : string.Empty;
+	}
 #>

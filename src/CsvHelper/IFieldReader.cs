@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CsvHelper
@@ -35,7 +36,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>True if there is more data left.
 		/// False if all the data has been read.</returns>
-		Task<bool> FillBufferAsync();
+		Task<bool> FillBufferAsync(CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Gets the next char as an <see cref="int"/>.

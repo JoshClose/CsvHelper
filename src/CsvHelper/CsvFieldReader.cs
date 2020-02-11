@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
+using System.Threading;
 
 // This file is generated from a T4 template.
 // Modifying it directly won't do you any good.
@@ -84,7 +85,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>True if there is more data left.
 		/// False if all the data has been read.</returns>
-		public virtual async Task<bool> FillBufferAsync()
+		public virtual async Task<bool> FillBufferAsync(CancellationToken cancellationToken = default )
 		{
 			if (!IsBufferEmpty)
 			{

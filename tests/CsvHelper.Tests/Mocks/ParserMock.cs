@@ -9,6 +9,7 @@ using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Threading;
 
 namespace CsvHelper.Tests.Mocks
 {
@@ -47,7 +48,7 @@ namespace CsvHelper.Tests.Mocks
 			return rows.Dequeue();
 		}
 
-		public Task<string[]> ReadAsync()
+		public Task<string[]> ReadAsync(CancellationToken cancellationToken = default)
 		{
 			context.Row++;
 			return Task.FromResult(rows.Dequeue());

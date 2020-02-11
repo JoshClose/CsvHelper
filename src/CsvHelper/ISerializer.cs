@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Threading;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 
@@ -36,7 +37,8 @@ namespace CsvHelper
 		/// Writes a record to the CSV file.
 		/// </summary>
 		/// <param name="record">The record to write.</param>
-		Task WriteAsync( string[] record );
+		/// <param name="cancellationToken">The cancellation token.</param>
+		Task WriteAsync( string[] record, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Writes a new line to the CSV file.
@@ -46,6 +48,6 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes a new line to the CSV file.
 		/// </summary>
-		Task WriteLineAsync();
+		Task WriteLineAsync(CancellationToken cancellationToken = default);
 	}
 }

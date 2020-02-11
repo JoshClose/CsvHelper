@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 using System.Globalization;
+using System.Threading;
 
 namespace CsvHelper
 {
@@ -238,11 +239,11 @@ namespace CsvHelper
 		/// for the headers to be read.
 		/// </summary>
 		/// <returns>True if there are more records, otherwise false.</returns>
-		public virtual async Task<bool> ReadAsync()
+		public virtual async Task<bool> ReadAsync(CancellationToken cancellationToken = default)
 		{
 			do
 			{
-				context.Record = await parser.ReadAsync().ConfigureAwait(false);
+				context.Record = await parser.ReadAsync(cancellationToken).ConfigureAwait(false);
 			}
 			while (context.Record != null && Configuration.ShouldSkipRecord(context.Record));
 
@@ -1249,14 +1250,14 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IAsyncEnumerable{T}" /> of records.</returns>
-		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>()
+		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>(CancellationToken cancellationToken = default)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
-				if (!await ReadAsync().ConfigureAwait(false))
+				if (!await ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
 					yield break;
 				}
@@ -1265,7 +1266,7 @@ namespace CsvHelper
 				ValidateHeader<T>();
 			}
 
-			while (await ReadAsync().ConfigureAwait(false))
+			while (await ReadAsync(cancellationToken).ConfigureAwait(false))
 			{
 				T record;
 				try
@@ -1303,8 +1304,9 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
-		public virtual IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition)
+		public virtual IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition, CancellationToken cancellationToken = default)
 		{
 			if (anonymousTypeDefinition == null)
 			{
@@ -1316,7 +1318,7 @@ namespace CsvHelper
 				throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
 			}
 
-			return GetRecordsAsync<T>();
+			return GetRecordsAsync<T>(cancellationToken);
 		}
 
 		/// <summary>
@@ -1325,15 +1327,16 @@ namespace CsvHelper
 		/// should not be used when using this.
 		/// </summary>
 		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
-		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type)
+		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type, CancellationToken cancellationToken = default)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
-				if (!await ReadAsync().ConfigureAwait(false))
+				if (!await ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
 					yield break;
 				}
@@ -1342,7 +1345,7 @@ namespace CsvHelper
 				ValidateHeader(type);
 			}
 
-			while (await ReadAsync().ConfigureAwait(false))
+			while (await ReadAsync(cancellationToken).ConfigureAwait(false))
 			{
 				object record;
 				try
@@ -1382,15 +1385,16 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to fill each enumeration.</param>
+		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
-		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record)
+		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, CancellationToken cancellationToken = default)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
-				if (!await ReadAsync().ConfigureAwait(false))
+				if (!await ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
 					yield break;
 				}
@@ -1399,7 +1403,7 @@ namespace CsvHelper
 				ValidateHeader<T>();
 			}
 
-			while (await ReadAsync().ConfigureAwait(false))
+			while (await ReadAsync(cancellationToken).ConfigureAwait(false))
 			{
 				try
 				{

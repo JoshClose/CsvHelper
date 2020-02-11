@@ -15,6 +15,7 @@ using System.Dynamic;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 using System.Globalization;
+using System.Threading;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -219,9 +220,9 @@ namespace CsvHelper
 		/// <summary>
 		/// Serializes the row to the <see cref="TextWriter"/>.
 		/// </summary>
-		public virtual async Task FlushAsync()
+		public virtual async Task FlushAsync(CancellationToken cancellationToken = default)
 		{
-			await serializer.WriteAsync(context.Record.ToArray()).ConfigureAwait(false);
+			await serializer.WriteAsync(context.Record.ToArray(), cancellationToken).ConfigureAwait(false);
 			context.Record.Clear();
 		}
 
@@ -249,12 +250,12 @@ namespace CsvHelper
 		/// Ends writing of the current record and starts a new record.
 		/// This automatically flushes the writer.
 		/// </summary>
-		public virtual async Task NextRecordAsync()
+		public virtual async Task NextRecordAsync(CancellationToken cancellationToken = default)
 		{
 			try
 			{
-				await FlushAsync().ConfigureAwait(false);
-				await serializer.WriteLineAsync().ConfigureAwait(false);
+				await FlushAsync(cancellationToken).ConfigureAwait(false);
+				await serializer.WriteLineAsync(cancellationToken).ConfigureAwait(false);
 				context.Row++;
 			}
 			catch (Exception ex)
@@ -526,7 +527,8 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The records to write.</param>
-		public virtual async Task WriteRecordsAsync(IEnumerable records)
+		/// <param name="cancellationToken">The cancellation token.</param>
+		public virtual async Task WriteRecordsAsync(IEnumerable records, CancellationToken cancellationToken = default)
 		{
 			// Changes in this method require changes in method WriteRecords<T>(IEnumerable<T> records) also.
 
@@ -541,7 +543,7 @@ namespace CsvHelper
 						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
 						{
 							WriteDynamicHeader(dynamicObject);
-							await NextRecordAsync().ConfigureAwait(false);
+							await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 						}
 					}
 					else
@@ -552,7 +554,7 @@ namespace CsvHelper
 						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
 						{
 							WriteHeader(recordType);
-							await NextRecordAsync().ConfigureAwait(false);
+							await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 						}
 					}
 
@@ -565,7 +567,7 @@ namespace CsvHelper
 						throw ex.InnerException;
 					}
 
-					await NextRecordAsync().ConfigureAwait(false);
+					await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)
@@ -579,7 +581,8 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">Record type.</typeparam>
 		/// <param name="records">The records to write.</param>
-		public virtual async Task WriteRecordsAsync<T>(IEnumerable<T> records)
+		/// <param name="cancellationToken">The cancellation token.</param>
+		public virtual async Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default)
 		{
 			// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
 
@@ -594,7 +597,7 @@ namespace CsvHelper
 					WriteHeader(recordType);
 					if (context.HasHeaderBeenWritten)
 					{
-						await NextRecordAsync().ConfigureAwait(false);
+						await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 					}
 				}
 
@@ -611,7 +614,7 @@ namespace CsvHelper
 						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
 						{
 							WriteDynamicHeader(dynamicObject);
-							await NextRecordAsync().ConfigureAwait(false);
+							await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 						}
 					}
 					else
@@ -622,7 +625,7 @@ namespace CsvHelper
 						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
 						{
 							WriteHeader(recordType);
-							await NextRecordAsync().ConfigureAwait(false);
+							await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 						}
 					}
 
@@ -635,7 +638,7 @@ namespace CsvHelper
 						throw ex.InnerException;
 					}
 
-					await NextRecordAsync().ConfigureAwait(false);
+					await NextRecordAsync(cancellationToken).ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)

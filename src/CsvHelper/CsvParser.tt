@@ -9,6 +9,7 @@ using System;
 using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Globalization;
 
 // This file is generated from a T4 template.
@@ -89,13 +90,13 @@ namespace CsvHelper
 		/// Reads a record from the CSV file<#= isAsync ? " asynchronously" : string.Empty #>.
 		/// </summary>
 		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
-		public virtual <#= AsyncType("string[]", isAsync) #> Read<#= AsyncPostfix(isAsync) #>()
+		public virtual <#= AsyncType("string[]", isAsync) #> Read<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			try
 			{
 				context.ClearCache(Caches.RawRecord);
 
-				var row = <#= Await(isAsync) #>ReadLine<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+				var row = <#= Await(isAsync) #>ReadLine<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 
 				return row;
 			}
@@ -145,7 +146,7 @@ namespace CsvHelper
 		/// Reads a line of the CSV file.
 		/// </summary>
 		/// <returns>The CSV line.</returns>
-		protected virtual <#= AsyncType("string[]", isAsync) #> ReadLine<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType("string[]", isAsync) #> ReadLine<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			context.RecordBuilder.Clear();
 			context.Row++;
@@ -153,7 +154,7 @@ namespace CsvHelper
 
 			while (true)
 			{
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					if (context.RecordBuilder.Length > 0)
@@ -171,7 +172,7 @@ namespace CsvHelper
 
 				if (context.RecordBuilder.Length == 0 && ((c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments) || c == '\r' || c == '\n'))
 				{
-					<#= Await(isAsync) #>ReadBlankLine<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					<#= Await(isAsync) #>ReadBlankLine<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					if (!context.ParserConfiguration.IgnoreBlankLines)
 					{
 						break;
@@ -183,20 +184,20 @@ namespace CsvHelper
 				// Trim start outside of quotes.
 				if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 				{
-					<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					fieldReader.SetFieldStart(-1);
 				}
 
 				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
 				{
-					if (<#= Await(isAsync) #>ReadQuotedField<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+					if (<#= Await(isAsync) #>ReadQuotedField<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 					{
 						break;
 					}
 				}
 				else
 				{
-					if (<#= Await(isAsync) #>ReadField<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+					if (<#= Await(isAsync) #>ReadField<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 					{
 						break;
 					}
@@ -216,7 +217,7 @@ namespace CsvHelper
 		/// Reads a blank line. This accounts for empty lines
 		/// and commented out lines.
 		/// </summary>
-		protected virtual <#= AsyncType(null, isAsync) #> ReadBlankLine<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType(null, isAsync) #> ReadBlankLine<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			if (context.ParserConfiguration.IgnoreBlankLines)
 			{
@@ -227,7 +228,7 @@ namespace CsvHelper
 			{
 				if (c == '\r' || c == '\n')
 				{
-					<#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					<#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					fieldReader.SetFieldStart();
 					return;
 				}
@@ -237,7 +238,7 @@ namespace CsvHelper
 				// need to set the field start every char.
 				fieldReader.SetFieldStart();
 
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					return;
@@ -257,11 +258,11 @@ namespace CsvHelper
 		/// Reads until a delimiter or line ending is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual <#= AsyncType("bool", isAsync) #> ReadField<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType("bool", isAsync) #> ReadField<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			if (c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n')
 			{
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
@@ -310,7 +311,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 
 					// End of field.
-					if (<#= Await(isAsync) #>ReadDelimiter<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+					if (<#= Await(isAsync) #>ReadDelimiter<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 					{
 						// Set the end of the field to the char before the delimiter.
 						context.RecordBuilder.Add(fieldReader.GetField());
@@ -322,7 +323,7 @@ namespace CsvHelper
 				{
 					// End of line.
 					fieldReader.SetFieldEnd(-1);
-					var offset = <#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					var offset = <#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					fieldReader.SetRawRecordEnd(offset);
 					context.RecordBuilder.Add(fieldReader.GetField());
 
@@ -332,7 +333,7 @@ namespace CsvHelper
 					return true;
 				}
 
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
@@ -361,7 +362,7 @@ namespace CsvHelper
 		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual <#= AsyncType("bool", isAsync) #> ReadQuotedField<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType("bool", isAsync) #> ReadQuotedField<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			var inQuotes = true;
 			var quoteCount = 1;
@@ -372,7 +373,7 @@ namespace CsvHelper
 			{
 				var cPrev = c;
 
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
@@ -386,7 +387,7 @@ namespace CsvHelper
 				// Trim start inside quotes.
 				if (quoteCount == 1 && c == ' ' && cPrev == context.ParserConfiguration.Quote && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
-					<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					cPrev = ' ';
 					fieldReader.SetFieldStart(-1);
 				}
@@ -397,7 +398,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-					ReadSpaces();
+					<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					cPrev = ' ';
 
 					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
@@ -407,7 +408,7 @@ namespace CsvHelper
 
 						cPrev = c;
 
-						if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+						if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 						{
 							// End of file.
 							fieldReader.SetFieldStart();
@@ -477,7 +478,7 @@ namespace CsvHelper
 					// Trim end outside of quotes.
 					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
-						<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+						<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 						fieldReader.SetFieldStart(-1);
 					}
 
@@ -485,7 +486,7 @@ namespace CsvHelper
 					{
 						fieldReader.SetFieldEnd(-1);
 
-						if (<#= Await(isAsync) #>ReadDelimiter<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+						if (<#= Await(isAsync) #>ReadDelimiter<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 						{
 							// Add an extra offset because of the end quote.
 							context.RecordBuilder.Add(fieldReader.GetField());
@@ -496,7 +497,7 @@ namespace CsvHelper
 					else if (c == '\r' || c == '\n')
 					{
 						fieldReader.SetFieldEnd(-1);
-						var offset = <#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+						var offset = <#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 						fieldReader.SetRawRecordEnd(offset);
 						context.RecordBuilder.Add(fieldReader.GetField());
 
@@ -509,7 +510,7 @@ namespace CsvHelper
 					{
 						// We're out of quotes. Read the reset of
 						// the field like a normal field.
-						return <#= Await(isAsync) #>ReadField<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+						return <#= Await(isAsync) #>ReadField<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>;
 					}
 				}
 			}
@@ -526,7 +527,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
-		protected virtual <#= AsyncType("bool", isAsync) #> ReadDelimiter<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType("bool", isAsync) #> ReadDelimiter<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			if (c != context.ParserConfiguration.Delimiter[0])
 			{
@@ -540,7 +541,7 @@ namespace CsvHelper
 
 			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					return false;
@@ -566,7 +567,7 @@ namespace CsvHelper
 		/// Reads until the line ending is done.
 		/// </summary>
 		/// <returns>The field start offset.</returns>
-		protected virtual <#= AsyncType("int", isAsync) #> ReadLineEnding<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType("int", isAsync) #> ReadLineEnding<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			if (c != '\r' && c != '\n')
 			{
@@ -576,7 +577,7 @@ namespace CsvHelper
 			var fieldStartOffset = 0;
 			if (c == '\r')
 			{
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					return fieldStartOffset;
@@ -605,7 +606,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>True if there is more data to read.
 		/// False if the end of the file has been reached.</returns>
-		protected virtual <#= AsyncType("bool", isAsync) #> ReadSpaces<#= AsyncPostfix(isAsync) #>()
+		protected virtual <#= AsyncType("bool", isAsync) #> ReadSpaces<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenDeclaration(isAsync) #>)
 		{
 			while (true)
 			{
@@ -614,7 +615,7 @@ namespace CsvHelper
 					break;
 				}
 
-				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>)
+				if (fieldReader.IsBufferEmpty && !<#= Await(isAsync) #>fieldReader.FillBuffer<#= AsyncPostfix(isAsync) #>(<#= CancellationTokenParameter(isAsync) #>)<#= ConfigureAwait(isAsync) #>)
 				{
 					// End of file.
 					return false;

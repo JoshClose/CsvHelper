@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using CsvHelper.Configuration;
 
@@ -56,12 +57,12 @@ namespace CsvHelper.Tests.Mocks
 			return new ValueTask();
 		}
 
-		public Task WriteAsync(string[] record)
+		public Task WriteAsync(string[] record, CancellationToken cancellationToken = default)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task WriteLineAsync()
+		public Task WriteLineAsync(CancellationToken cancellationToken = default)
 		{
 			throw new NotImplementedException();
 		}

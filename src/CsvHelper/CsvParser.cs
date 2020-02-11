@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Globalization;
 
 // This file is generated from a T4 template.
@@ -102,13 +103,13 @@ namespace CsvHelper
 		/// Reads a record from the CSV file asynchronously.
 		/// </summary>
 		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
-		public virtual async Task<string[]> ReadAsync()
+		public virtual async Task<string[]> ReadAsync(CancellationToken cancellationToken = default )
 		{
 			try
 			{
 				context.ClearCache(Caches.RawRecord);
 
-				var row = await ReadLineAsync().ConfigureAwait(false);
+				var row = await ReadLineAsync(cancellationToken).ConfigureAwait(false);
 
 				return row;
 			}
@@ -218,7 +219,7 @@ namespace CsvHelper
 		/// Reads a line of the CSV file.
 		/// </summary>
 		/// <returns>The CSV line.</returns>
-		protected virtual async Task<string[]> ReadLineAsync()
+		protected virtual async Task<string[]> ReadLineAsync(CancellationToken cancellationToken = default )
 		{
 			context.RecordBuilder.Clear();
 			context.Row++;
@@ -226,7 +227,7 @@ namespace CsvHelper
 
 			while (true)
 			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					if (context.RecordBuilder.Length > 0)
@@ -244,7 +245,7 @@ namespace CsvHelper
 
 				if (context.RecordBuilder.Length == 0 && ((c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments) || c == '\r' || c == '\n'))
 				{
-					await ReadBlankLineAsync().ConfigureAwait(false);
+					await ReadBlankLineAsync(cancellationToken).ConfigureAwait(false);
 					if (!context.ParserConfiguration.IgnoreBlankLines)
 					{
 						break;
@@ -256,20 +257,20 @@ namespace CsvHelper
 				// Trim start outside of quotes.
 				if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 				{
-					await ReadSpacesAsync().ConfigureAwait(false);
+					await ReadSpacesAsync(cancellationToken).ConfigureAwait(false);
 					fieldReader.SetFieldStart(-1);
 				}
 
 				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
 				{
-					if (await ReadQuotedFieldAsync().ConfigureAwait(false))
+					if (await ReadQuotedFieldAsync(cancellationToken).ConfigureAwait(false))
 					{
 						break;
 					}
 				}
 				else
 				{
-					if (await ReadFieldAsync().ConfigureAwait(false))
+					if (await ReadFieldAsync(cancellationToken).ConfigureAwait(false))
 					{
 						break;
 					}
@@ -318,7 +319,7 @@ namespace CsvHelper
 		/// Reads a blank line. This accounts for empty lines
 		/// and commented out lines.
 		/// </summary>
-		protected virtual async Task ReadBlankLineAsync()
+		protected virtual async Task ReadBlankLineAsync(CancellationToken cancellationToken = default )
 		{
 			if (context.ParserConfiguration.IgnoreBlankLines)
 			{
@@ -329,7 +330,7 @@ namespace CsvHelper
 			{
 				if (c == '\r' || c == '\n')
 				{
-					await ReadLineEndingAsync().ConfigureAwait(false);
+					await ReadLineEndingAsync(cancellationToken).ConfigureAwait(false);
 					fieldReader.SetFieldStart();
 					return;
 				}
@@ -339,7 +340,7 @@ namespace CsvHelper
 				// need to set the field start every char.
 				fieldReader.SetFieldStart();
 
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					return;
@@ -451,11 +452,11 @@ namespace CsvHelper
 		/// Reads until a delimiter or line ending is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual async Task<bool> ReadFieldAsync()
+		protected virtual async Task<bool> ReadFieldAsync(CancellationToken cancellationToken = default )
 		{
 			if (c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n')
 			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
@@ -504,7 +505,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 
 					// End of field.
-					if (await ReadDelimiterAsync().ConfigureAwait(false))
+					if (await ReadDelimiterAsync(cancellationToken).ConfigureAwait(false))
 					{
 						// Set the end of the field to the char before the delimiter.
 						context.RecordBuilder.Add(fieldReader.GetField());
@@ -516,7 +517,7 @@ namespace CsvHelper
 				{
 					// End of line.
 					fieldReader.SetFieldEnd(-1);
-					var offset = await ReadLineEndingAsync().ConfigureAwait(false);
+					var offset = await ReadLineEndingAsync(cancellationToken).ConfigureAwait(false);
 					fieldReader.SetRawRecordEnd(offset);
 					context.RecordBuilder.Add(fieldReader.GetField());
 
@@ -526,7 +527,7 @@ namespace CsvHelper
 					return true;
 				}
 
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
@@ -707,7 +708,7 @@ namespace CsvHelper
 		/// Reads until the field is not quoted and a delimiter is found.
 		/// </summary>
 		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual async Task<bool> ReadQuotedFieldAsync()
+		protected virtual async Task<bool> ReadQuotedFieldAsync(CancellationToken cancellationToken = default )
 		{
 			var inQuotes = true;
 			var quoteCount = 1;
@@ -718,7 +719,7 @@ namespace CsvHelper
 			{
 				var cPrev = c;
 
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					fieldReader.SetFieldEnd();
@@ -732,7 +733,7 @@ namespace CsvHelper
 				// Trim start inside quotes.
 				if (quoteCount == 1 && c == ' ' && cPrev == context.ParserConfiguration.Quote && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
 				{
-					await ReadSpacesAsync().ConfigureAwait(false);
+					await ReadSpacesAsync(cancellationToken).ConfigureAwait(false);
 					cPrev = ' ';
 					fieldReader.SetFieldStart(-1);
 				}
@@ -743,7 +744,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-					ReadSpaces();
+					await ReadSpacesAsync(cancellationToken).ConfigureAwait(false);
 					cPrev = ' ';
 
 					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
@@ -753,7 +754,7 @@ namespace CsvHelper
 
 						cPrev = c;
 
-						if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+						if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 						{
 							// End of file.
 							fieldReader.SetFieldStart();
@@ -823,7 +824,7 @@ namespace CsvHelper
 					// Trim end outside of quotes.
 					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 					{
-						await ReadSpacesAsync().ConfigureAwait(false);
+						await ReadSpacesAsync(cancellationToken).ConfigureAwait(false);
 						fieldReader.SetFieldStart(-1);
 					}
 
@@ -831,7 +832,7 @@ namespace CsvHelper
 					{
 						fieldReader.SetFieldEnd(-1);
 
-						if (await ReadDelimiterAsync().ConfigureAwait(false))
+						if (await ReadDelimiterAsync(cancellationToken).ConfigureAwait(false))
 						{
 							// Add an extra offset because of the end quote.
 							context.RecordBuilder.Add(fieldReader.GetField());
@@ -842,7 +843,7 @@ namespace CsvHelper
 					else if (c == '\r' || c == '\n')
 					{
 						fieldReader.SetFieldEnd(-1);
-						var offset = await ReadLineEndingAsync().ConfigureAwait(false);
+						var offset = await ReadLineEndingAsync(cancellationToken).ConfigureAwait(false);
 						fieldReader.SetRawRecordEnd(offset);
 						context.RecordBuilder.Add(fieldReader.GetField());
 
@@ -855,7 +856,7 @@ namespace CsvHelper
 					{
 						// We're out of quotes. Read the reset of
 						// the field like a normal field.
-						return await ReadFieldAsync().ConfigureAwait(false);
+						return await ReadFieldAsync(cancellationToken).ConfigureAwait(false);
 					}
 				}
 			}
@@ -901,7 +902,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>True if a delimiter was read. False if the sequence of
 		/// chars ended up not being the delimiter.</returns>
-		protected virtual async Task<bool> ReadDelimiterAsync()
+		protected virtual async Task<bool> ReadDelimiterAsync(CancellationToken cancellationToken = default )
 		{
 			if (c != context.ParserConfiguration.Delimiter[0])
 			{
@@ -915,7 +916,7 @@ namespace CsvHelper
 
 			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					return false;
@@ -966,7 +967,7 @@ namespace CsvHelper
 		/// Reads until the line ending is done.
 		/// </summary>
 		/// <returns>The field start offset.</returns>
-		protected virtual async Task<int> ReadLineEndingAsync()
+		protected virtual async Task<int> ReadLineEndingAsync(CancellationToken cancellationToken = default )
 		{
 			if (c != '\r' && c != '\n')
 			{
@@ -976,7 +977,7 @@ namespace CsvHelper
 			var fieldStartOffset = 0;
 			if (c == '\r')
 			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					return fieldStartOffset;
@@ -1024,7 +1025,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <returns>True if there is more data to read.
 		/// False if the end of the file has been reached.</returns>
-		protected virtual async Task<bool> ReadSpacesAsync()
+		protected virtual async Task<bool> ReadSpacesAsync(CancellationToken cancellationToken = default )
 		{
 			while (true)
 			{
@@ -1033,7 +1034,7 @@ namespace CsvHelper
 					break;
 				}
 
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
+				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync(cancellationToken).ConfigureAwait(false))
 				{
 					// End of file.
 					return false;

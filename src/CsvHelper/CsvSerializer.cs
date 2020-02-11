@@ -8,6 +8,7 @@ using CsvHelper.Configuration;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Globalization;
+using System.Threading;
 
 namespace CsvHelper
 {
@@ -91,20 +92,21 @@ namespace CsvHelper
 		/// Writes a record to the CSV file.
 		/// </summary>
 		/// <param name="record">The record to write.</param>
-		public virtual async Task WriteAsync(string[] record)
+		/// <param name="cancellationToken">The cancellation token.</param>
+		public virtual async Task WriteAsync(string[] record, CancellationToken cancellationToken = default)
 		{
 			for (var i = 0; i < record.Length; i++)
 			{
 				if (i > 0)
 				{
-					await context.Writer.WriteAsync(context.SerializerConfiguration.Delimiter).ConfigureAwait(false);
+					await context.Writer.WriteAsync(context.SerializerConfiguration.Delimiter, cancellationToken).ConfigureAwait(false);
 				}
 
 				var field = Configuration.SanitizeForInjection
 					? SanitizeForInjection(record[i])
 					: record[i];
 
-				await context.Writer.WriteAsync(field).ConfigureAwait(false);
+				await context.Writer.WriteAsync(field, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -121,9 +123,9 @@ namespace CsvHelper
 		/// <summary>
 		/// Writes a new line to the CSV file.
 		/// </summary>
-		public virtual async Task WriteLineAsync()
+		public virtual async Task WriteLineAsync(CancellationToken cancellationToken = default)
 		{
-			await context.Writer.WriteAsync(context.SerializerConfiguration.NewLineString).ConfigureAwait(false);
+			await context.Writer.WriteAsync(context.SerializerConfiguration.NewLineString, cancellationToken).ConfigureAwait(false);
 		}
 
 		/// <summary>
