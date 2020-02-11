@@ -29,7 +29,7 @@ namespace CsvHelper
 #endif
 		{
 #if NETSTANDARD2_1
-			return reader.ReadAsync(buffer.AsMemory().Slice(index, count), cancellationToken);
+			return reader.ReadAsync(buffer.AsMemory(index, count), cancellationToken);
 #else
 			cancellationToken.ThrowIfCancellationRequested();
 			return reader.ReadAsync(buffer, index, count);
