@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace CsvHelper
@@ -1250,7 +1251,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <returns>An <see cref="IAsyncEnumerable{T}" /> of records.</returns>
-		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>(CancellationToken cancellationToken = default)
+		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
@@ -1329,7 +1330,7 @@ namespace CsvHelper
 		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
 		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
-		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type, CancellationToken cancellationToken = default)
+		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
@@ -1387,7 +1388,7 @@ namespace CsvHelper
 		/// <param name="record">The record to fill each enumeration.</param>
 		/// <param name="cancellationToken">The cancellation token.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
-		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, CancellationToken cancellationToken = default)
+		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
