@@ -397,7 +397,7 @@ namespace CsvHelper
 					fieldReader.SetFieldEnd(-1);
 					fieldReader.AppendField();
 					fieldReader.SetFieldStart(-1);
-					ReadSpaces();
+					<#= Await(isAsync) #>ReadSpaces<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
 					cPrev = ' ';
 
 					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
