@@ -15,7 +15,7 @@ namespace CsvHelper
 	public class CsvDataReader : IDataReader
 	{
 		private readonly CsvReader csv;
-        private bool skipNextRead;
+		private bool skipNextRead;
 
 		/// <summary>
 		/// Gets the column with the specified index.
@@ -101,10 +101,10 @@ namespace CsvHelper
 			{
 				csv.ReadHeader();
 			}
-            else
-            {
-                skipNextRead = true;
-            }
+			else
+			{
+				skipNextRead = true;
+			}
 		}
 
 		/// <summary>
@@ -341,8 +341,8 @@ namespace CsvHelper
 		/// </returns>
 		public string GetName(int i)
 		{
-			return csv.Configuration.HasHeaderRecord 
-				? csv.Context.HeaderRecord[i] 
+			return csv.Configuration.HasHeaderRecord
+				? csv.Context.HeaderRecord[i]
 				: string.Empty;
 		}
 
@@ -455,22 +455,22 @@ namespace CsvHelper
 		/// </returns>
 		public object GetValue(int i)
 		{
-            return IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
-        }
+			return IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
+		}
 
-        /// <summary>
-        /// Populates an array of objects with the column values of the current record.
-        /// </summary>
-        /// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
-        /// <returns>
-        /// The number of instances of <see cref="T:System.Object"></see> in the array.
-        /// </returns>
-        public int GetValues(object[] values)
+		/// <summary>
+		/// Populates an array of objects with the column values of the current record.
+		/// </summary>
+		/// <param name="values">An array of <see cref="T:System.Object"></see> to copy the attribute fields into.</param>
+		/// <returns>
+		/// The number of instances of <see cref="T:System.Object"></see> in the array.
+		/// </returns>
+		public int GetValues(object[] values)
 		{
-			for (var i = 0; i < csv.Context.Record.Length; i++)
-            {
-                values[i] = IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
-            }
+			for (var i = 0; i < values.Length; i++)
+			{
+				values[i] = IsDBNull(i) ? DBNull.Value : (object)csv.GetField(i);
+			}
 
 			return csv.Context.Record.Length;
 		}
@@ -501,21 +501,21 @@ namespace CsvHelper
 			return false;
 		}
 
-        /// <summary>
-        /// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
-        /// </summary>
-        /// <returns>
-        /// true if there are more rows; otherwise, false.
-        /// </returns>
-        public bool Read()
-        {
-            if (skipNextRead)
-            {
-                skipNextRead = false;
-                return true;
-            }
+		/// <summary>
+		/// Advances the <see cref="T:System.Data.IDataReader"></see> to the next record.
+		/// </summary>
+		/// <returns>
+		/// true if there are more rows; otherwise, false.
+		/// </returns>
+		public bool Read()
+		{
+			if (skipNextRead)
+			{
+				skipNextRead = false;
+				return true;
+			}
 
-            return csv.Read();
-        }
-    }
+			return csv.Read();
+		}
+	}
 }
