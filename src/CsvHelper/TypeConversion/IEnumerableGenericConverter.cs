@@ -21,25 +21,25 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var type = memberMapData.Member.MemberType().GetGenericArguments()[0];
-			var listType = typeof( List<> );
-			listType = listType.MakeGenericType( type );
-			var list = (IList)ReflectionHelper.CreateInstance( listType );
+			var listType = typeof(List<>);
+			listType = listType.MakeGenericType(type);
+			var list = (IList)ReflectionHelper.CreateInstance(listType);
 
-			if( memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet )
+			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{
 				// Use the name.
 				var nameIndex = 0;
-				while( true )
+				while (true)
 				{
-					if( !row.TryGetField( type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field ) )
+					if (!row.TryGetField(type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field))
 					{
 						break;
 					}
 
-					list.Add( field );
+					list.Add(field);
 					nameIndex++;
 				}
 			}
@@ -50,11 +50,11 @@ namespace CsvHelper.TypeConversion
 					? row.Context.Record.Length - 1
 					: memberMapData.IndexEnd;
 
-				for( var i = memberMapData.Index; i <= indexEnd; i++ )
+				for (var i = memberMapData.Index; i <= indexEnd; i++)
 				{
-					var field = row.GetField( type, i );
+					var field = row.GetField(type, i);
 
-					list.Add( field );
+					list.Add(field);
 				}
 			}
 

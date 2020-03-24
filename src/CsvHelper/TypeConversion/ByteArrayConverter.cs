@@ -21,14 +21,14 @@ namespace CsvHelper.TypeConversion
 		/// Creates a new ByteArrayConverter using the given <see cref="ByteArrayConverterOptions"/>.
 		/// </summary>
 		/// <param name="options">The options.</param>
-		public ByteArrayConverter( ByteArrayConverterOptions options = ByteArrayConverterOptions.Hexadecimal | ByteArrayConverterOptions.HexInclude0x )
+		public ByteArrayConverter(ByteArrayConverterOptions options = ByteArrayConverterOptions.Hexadecimal | ByteArrayConverterOptions.HexInclude0x)
 		{
 			// Defaults to the literal format used by C# for whole numbers, and SQL Server for binary data.
 			this.options = options;
 			ValidateOptions();
 
-			HexStringPrefix = ( options & ByteArrayConverterOptions.HexDashes ) == ByteArrayConverterOptions.HexDashes ? "-" : string.Empty;
-			ByteLength = ( options & ByteArrayConverterOptions.HexDashes ) == ByteArrayConverterOptions.HexDashes ? (byte)3 : (byte)2;
+			HexStringPrefix = (options & ByteArrayConverterOptions.HexDashes) == ByteArrayConverterOptions.HexDashes ? "-" : string.Empty;
+			ByteLength = (options & ByteArrayConverterOptions.HexDashes) == ByteArrayConverterOptions.HexDashes ? (byte)3 : (byte)2;
 		}
 
 		/// <summary>
@@ -38,16 +38,16 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, IWriterRow row, MemberMapData memberMapData )
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
-			if( value is byte[] byteArray )
+			if (value is byte[] byteArray)
 			{
-				return ( options & ByteArrayConverterOptions.Base64 ) == ByteArrayConverterOptions.Base64
-					? Convert.ToBase64String( byteArray )
-					: ByteArrayToHexString( byteArray );
+				return (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
+					? Convert.ToBase64String(byteArray)
+					: ByteArrayToHexString(byteArray);
 			}
 
-			return base.ConvertToString( value, row, memberMapData );
+			return base.ConvertToString(value, row, memberMapData);
 		}
 
 		/// <summary>
@@ -57,53 +57,53 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			if( text != null )
+			if (text != null)
 			{
-				return ( options & ByteArrayConverterOptions.Base64 ) == ByteArrayConverterOptions.Base64
-					? Convert.FromBase64String( text )
-					: HexStringToByteArray( text );
+				return (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
+					? Convert.FromBase64String(text)
+					: HexStringToByteArray(text);
 			}
 
-			return base.ConvertFromString( text, row, memberMapData );
+			return base.ConvertFromString(text, row, memberMapData);
 		}
 
-		private string ByteArrayToHexString( byte[] byteArray )
+		private string ByteArrayToHexString(byte[] byteArray)
 		{
 			var hexString = new StringBuilder();
 
-			if( ( options & ByteArrayConverterOptions.HexInclude0x ) == ByteArrayConverterOptions.HexInclude0x )
+			if ((options & ByteArrayConverterOptions.HexInclude0x) == ByteArrayConverterOptions.HexInclude0x)
 			{
-				hexString.Append( "0x" );
+				hexString.Append("0x");
 			}
 
-			if( byteArray.Length >= 1 )
+			if (byteArray.Length >= 1)
 			{
-				hexString.Append( byteArray[0].ToString( "X2" ) );
+				hexString.Append(byteArray[0].ToString("X2"));
 			}
 
-			for( var i = 1; i < byteArray.Length; i++ )
+			for (var i = 1; i < byteArray.Length; i++)
 			{
-				hexString.Append( HexStringPrefix + byteArray[i].ToString( "X2" ) );
+				hexString.Append(HexStringPrefix + byteArray[i].ToString("X2"));
 			}
 
 			return hexString.ToString();
 		}
 
-		private byte[] HexStringToByteArray( string hex )
+		private byte[] HexStringToByteArray(string hex)
 		{
-			var has0x = hex.StartsWith( "0x" );
+			var has0x = hex.StartsWith("0x");
 
-			var length = has0x 
-				? ( hex.Length - 1 ) / ByteLength 
+			var length = has0x
+				? (hex.Length - 1) / ByteLength
 				: hex.Length + 1 / ByteLength;
 			var byteArray = new byte[length];
 			var has0xOffset = has0x ? 1 : 0;
 
-			for( var stringIndex = has0xOffset * 2; stringIndex < hex.Length; stringIndex += ByteLength )
+			for (var stringIndex = has0xOffset * 2; stringIndex < hex.Length; stringIndex += ByteLength)
 			{
-				byteArray[( stringIndex - has0xOffset ) / ByteLength] = Convert.ToByte( hex.Substring( stringIndex, 2 ), 16 );
+				byteArray[(stringIndex - has0xOffset) / ByteLength] = Convert.ToByte(hex.Substring(stringIndex, 2), 16);
 			}
 
 			return byteArray;
@@ -111,11 +111,11 @@ namespace CsvHelper.TypeConversion
 
 		private void ValidateOptions()
 		{
-			if( ( options & ByteArrayConverterOptions.Base64 ) == ByteArrayConverterOptions.Base64 )
+			if ((options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64)
 			{
-				if( ( options & ( ByteArrayConverterOptions.HexInclude0x | ByteArrayConverterOptions.HexDashes | ByteArrayConverterOptions.Hexadecimal ) ) != ByteArrayConverterOptions.None )
+				if ((options & (ByteArrayConverterOptions.HexInclude0x | ByteArrayConverterOptions.HexDashes | ByteArrayConverterOptions.Hexadecimal)) != ByteArrayConverterOptions.None)
 				{
-					throw new ConfigurationException( $"{nameof( ByteArrayConverter )} must be configured exclusively with HexDecimal options, or exclusively with Base64 options.  Was {options.ToString()}" )
+					throw new ConfigurationException($"{nameof(ByteArrayConverter)} must be configured exclusively with HexDecimal options, or exclusively with Base64 options.  Was {options.ToString()}")
 					{
 						Data = { { "options", options } }
 					};

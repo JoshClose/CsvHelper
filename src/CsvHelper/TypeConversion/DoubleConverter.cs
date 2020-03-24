@@ -44,7 +44,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Float;
+			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Float | NumberStyles.AllowThousands;
 
 			if (double.TryParse(text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d))
 			{

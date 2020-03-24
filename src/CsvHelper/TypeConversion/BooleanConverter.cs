@@ -19,43 +19,43 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			if( bool.TryParse( text, out var b ) )
+			if (bool.TryParse(text, out var b))
 			{
 				return b;
 			}
 
-			if( short.TryParse( text, out var sh ) )
+			if (short.TryParse(text, out var sh))
 			{
-				if( sh == 0 )
+				if (sh == 0)
 				{
 					return false;
 				}
-				if( sh == 1 )
+				if (sh == 1)
 				{
 					return true;
 				}
 			}
 
-			var t = ( text ?? string.Empty ).Trim();
-			foreach( var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues )
+			var t = (text ?? string.Empty).Trim();
+			foreach (var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues)
 			{
-				if( memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( trueValue, t, CompareOptions.IgnoreCase ) == 0 )
+				if (memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare(trueValue, t, CompareOptions.IgnoreCase) == 0)
 				{
 					return true;
 				}
 			}
 
-			foreach( var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues )
+			foreach (var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues)
 			{
-				if( memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare( falseValue, t, CompareOptions.IgnoreCase ) == 0 )
+				if (memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare(falseValue, t, CompareOptions.IgnoreCase) == 0)
 				{
 					return false;
 				}
 			}
 
-			return base.ConvertFromString( text, row, memberMapData );
+			return base.ConvertFromString(text, row, memberMapData);
 		}
 	}
 }

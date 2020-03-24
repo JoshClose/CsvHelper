@@ -20,23 +20,23 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var keyType = memberMapData.Member.MemberType().GetGenericArguments()[0];
 			var valueType = memberMapData.Member.MemberType().GetGenericArguments()[1];
-			var dictionaryType = typeof( Dictionary<,> );
-			dictionaryType = dictionaryType.MakeGenericType( keyType, valueType );
-			var dictionary = (IDictionary)ReflectionHelper.CreateInstance( dictionaryType );
+			var dictionaryType = typeof(Dictionary<,>);
+			dictionaryType = dictionaryType.MakeGenericType(keyType, valueType);
+			var dictionary = (IDictionary)ReflectionHelper.CreateInstance(dictionaryType);
 
 			var indexEnd = memberMapData.IndexEnd < memberMapData.Index
 				? row.Context.Record.Length - 1
 				: memberMapData.IndexEnd;
 
-			for( var i = memberMapData.Index; i <= indexEnd; i++ )
+			for (var i = memberMapData.Index; i <= indexEnd; i++)
 			{
-				var field = row.GetField( valueType, i );
+				var field = row.GetField(valueType, i);
 
-				dictionary.Add( row.Context.HeaderRecord[i], field );
+				dictionary.Add(row.Context.HeaderRecord[i], field);
 			}
 
 			return dictionary;

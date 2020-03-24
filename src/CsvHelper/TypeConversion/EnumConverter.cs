@@ -19,12 +19,12 @@ namespace CsvHelper.TypeConversion
 		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type of the Enum.</param>
-		public EnumConverter( Type type )
+		public EnumConverter(Type type)
 		{
-			var isAssignableFrom = typeof( Enum ).GetTypeInfo().IsAssignableFrom( type.GetTypeInfo() );
-			if( !typeof( Enum ).IsAssignableFrom( type ) )
+			var isAssignableFrom = typeof(Enum).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
+			if (!typeof(Enum).IsAssignableFrom(type))
 			{
-				throw new ArgumentException( $"'{type.FullName}' is not an Enum." );
+				throw new ArgumentException($"'{type.FullName}' is not an Enum.");
 			}
 
 			this.type = type;
@@ -37,15 +37,15 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			try
 			{
-				return Enum.Parse( type, text, true );
+				return Enum.Parse(type, text, true);
 			}
 			catch
 			{
-				return base.ConvertFromString( text, row, memberMapData );
+				return base.ConvertFromString(text, row, memberMapData);
 			}
 		}
 	}

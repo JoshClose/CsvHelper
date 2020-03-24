@@ -19,16 +19,16 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Float;
+			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Number;
 
-			if( decimal.TryParse( text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d ) )
+			if (decimal.TryParse(text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d))
 			{
 				return d;
 			}
 
-			return base.ConvertFromString( text, row, memberMapData );
+			return base.ConvertFromString(text, row, memberMapData);
 		}
 	}
 }

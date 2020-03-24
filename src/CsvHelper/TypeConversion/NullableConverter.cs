@@ -42,16 +42,16 @@ namespace CsvHelper.TypeConversion
 		/// <param name="type">The nullable type.</param>
 		/// <param name="typeConverterFactory">The type converter factory.</param>
 		/// <exception cref="System.ArgumentException">type is not a nullable type.</exception>
-		public NullableConverter( Type type, TypeConverterCache typeConverterFactory )
+		public NullableConverter(Type type, TypeConverterCache typeConverterFactory)
 		{
 			NullableType = type;
-			UnderlyingType = Nullable.GetUnderlyingType( type );
-			if( UnderlyingType == null )
+			UnderlyingType = Nullable.GetUnderlyingType(type);
+			if (UnderlyingType == null)
 			{
-				throw new ArgumentException( "type is not a nullable type." );
+				throw new ArgumentException("type is not a nullable type.");
 			}
 
-			UnderlyingTypeConverter = typeConverterFactory.GetConverter( UnderlyingType );
+			UnderlyingTypeConverter = typeConverterFactory.GetConverter(UnderlyingType);
 		}
 
 		/// <summary>
@@ -61,22 +61,22 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			if( string.IsNullOrEmpty( text ) )
+			if (string.IsNullOrEmpty(text))
 			{
 				return null;
 			}
 
-			foreach( var nullValue in memberMapData.TypeConverterOptions.NullValues )
+			foreach (var nullValue in memberMapData.TypeConverterOptions.NullValues)
 			{
-				if( text == nullValue )
+				if (text == nullValue)
 				{
 					return null;
 				}
 			}
 
-			return UnderlyingTypeConverter.ConvertFromString( text, row, memberMapData );
+			return UnderlyingTypeConverter.ConvertFromString(text, row, memberMapData);
 		}
 
 		/// <summary>
@@ -86,9 +86,9 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row"></param>
 		/// <param name="memberMapData"></param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, IWriterRow row, MemberMapData memberMapData )
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
-			return UnderlyingTypeConverter.ConvertToString( value, row, memberMapData );
+			return UnderlyingTypeConverter.ConvertToString(value, row, memberMapData);
 		}
 	}
 }

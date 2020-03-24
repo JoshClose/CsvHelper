@@ -20,22 +20,22 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo;
 
 			var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
-			if( memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact( text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span ) )
+			if (memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span))
 			{
 				return span;
 			}
 
-			if( memberMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse( text, formatProvider, out span ) )
+			if (memberMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse(text, formatProvider, out span))
 			{
 				return span;
 			}
 
-			return base.ConvertFromString( text, row, memberMapData );
+			return base.ConvertFromString(text, row, memberMapData);
 		}
 	}
 }

@@ -20,17 +20,17 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString( object value, IWriterRow row, MemberMapData memberMapData )
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
 			var dictionary = value as IDictionary;
-			if( dictionary == null )
+			if (dictionary == null)
 			{
-				return base.ConvertToString( value, row, memberMapData );
+				return base.ConvertToString(value, row, memberMapData);
 			}
 
-			foreach( DictionaryEntry entry in dictionary )
+			foreach (DictionaryEntry entry in dictionary)
 			{
-				row.WriteField( entry.Value );
+				row.WriteField(entry.Value);
 			}
 
 			return null;
@@ -43,7 +43,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString( string text, IReaderRow row, MemberMapData memberMapData )
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var dictionary = new Dictionary<string, string>();
 
@@ -51,11 +51,11 @@ namespace CsvHelper.TypeConversion
 				? row.Context.Record.Length - 1
 				: memberMapData.IndexEnd;
 
-			for( var i = memberMapData.Index; i <= indexEnd; i++ )
+			for (var i = memberMapData.Index; i <= indexEnd; i++)
 			{
-				if( row.TryGetField( i, out string field ) )
+				if (row.TryGetField(i, out string field))
 				{
-					dictionary.Add( row.Context.HeaderRecord[i], field );
+					dictionary.Add(row.Context.HeaderRecord[i], field);
 				}
 			}
 
