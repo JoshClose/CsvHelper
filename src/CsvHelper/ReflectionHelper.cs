@@ -59,10 +59,11 @@ namespace CsvHelper
 				}
 			}
 
-			var typeNames = new List<string>();
-			typeNames.Add(type.AssemblyQualifiedName);
-			typeNames.AddRange(args.Select(a => a.GetType().AssemblyQualifiedName));
-			var key = string.Join("|", typeNames).GetHashCode();
+			var typeHashCodes =
+				new List<Type> { type }
+				.Union(args.Select(a => a.GetType()))
+				.Select(t => t.UnderlyingSystemType.GetHashCode());
+			var key = string.Join("|", typeHashCodes).GetHashCode();
 
 			Delegate func;
 			lock (locker)
