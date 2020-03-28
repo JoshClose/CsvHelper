@@ -81,17 +81,22 @@ namespace CsvHelper.Tests.Reflection
 		private static object RunGenericCreateInstance(Type type)
 		{
 			MethodInfo methodInfo =
-				type.GetMethods(BindingFlags.Public | BindingFlags.Static)
+				typeof(ReflectionHelper)
+				.GetMethods(BindingFlags.Public | BindingFlags.Static)
 				.FirstOrDefault(m =>
 					m.Name.Equals(@"CreateInstance", StringComparison.Ordinal)
 					&& m.IsGenericMethod)
 				?.MakeGenericMethod(type);
 
+
 			Debug.Assert(
 				methodInfo != null,
 				@"The generic method instance should not be null.");
 
-			return methodInfo.Invoke(null, null);
+
+			return methodInfo.Invoke(
+				null,
+				new [] { Array.Empty<object>() });
 		}
 
 		private static Type GenerateDynamicType()
