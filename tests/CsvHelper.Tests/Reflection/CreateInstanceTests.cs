@@ -104,11 +104,11 @@ namespace CsvHelper.Tests.Reflection
 					assemblyName,
 					AssemblyBuilderAccess.Run);
 
-			ModuleBuilder moudleBuilder =
+			ModuleBuilder moduleBuilder =
 				assemblyBuilder.DefineDynamicModule(assemblyName.Name);
 
 			TypeBuilder typeBuilder =
-				moudleBuilder.DefineType(
+				moduleBuilder.DefineType(
 					"DynamicTypeForCsvHelperTest",
 					 TypeAttributes.Public);
 
