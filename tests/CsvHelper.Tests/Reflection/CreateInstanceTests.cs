@@ -43,15 +43,8 @@ namespace CsvHelper.Tests.Reflection
 			Type type1 = GenerateDynamicType();
 			Type type2 = GenerateDynamicType();
 
-			Debug.Assert(
-				type1.AssemblyQualifiedName.Equals(
-					type2.AssemblyQualifiedName,
-					StringComparison.Ordinal),
-				@"The two generated dynamic types should have same assembly qualified name.");
-
-			Debug.Assert(
-				type1.GetHashCode() != type2.GetHashCode(),
-				@"The two generated dynamic types should have different hash codes.");
+			Debug.Assert(type1.AssemblyQualifiedName.Equals(type2.AssemblyQualifiedName, StringComparison.Ordinal), @"The two generated dynamic types should have same assembly qualified name.");
+			Debug.Assert(type1.GetHashCode() != type2.GetHashCode(), @"The two generated dynamic types should have different hash codes.");
 
 			var instance1 = ReflectionHelper.CreateInstance(type1);
 
@@ -80,42 +73,22 @@ namespace CsvHelper.Tests.Reflection
 
 		private static object RunGenericCreateInstance(Type type)
 		{
-			MethodInfo methodInfo =
-				typeof(ReflectionHelper)
+			var methodInfo = typeof(ReflectionHelper)
 				.GetMethods(BindingFlags.Public | BindingFlags.Static)
-				.FirstOrDefault(m =>
-					m.Name.Equals(@"CreateInstance", StringComparison.Ordinal)
-					&& m.IsGenericMethod)
-				?.MakeGenericMethod(type);
+				.FirstOrDefault(m => m.Name.Equals(@"CreateInstance", StringComparison.Ordinal) && m.IsGenericMethod)?
+				.MakeGenericMethod(type);
 
+			Debug.Assert(methodInfo != null, @"The generic method instance should not be null.");
 
-			Debug.Assert(
-				methodInfo != null,
-				@"The generic method instance should not be null.");
-
-
-			return methodInfo.Invoke(
-				null,
-				new [] { Array.Empty<object>() });
+			return methodInfo.Invoke(null, new[] { new object[0] });
 		}
 
 		private static Type GenerateDynamicType()
 		{
-			AssemblyName assemblyName =
-				new AssemblyName("DynamicAssemblyForCsvHelperTest");
-
-			AssemblyBuilder assemblyBuilder =
-				AssemblyBuilder.DefineDynamicAssembly(
-					assemblyName,
-					AssemblyBuilderAccess.Run);
-
-			ModuleBuilder moduleBuilder =
-				assemblyBuilder.DefineDynamicModule(assemblyName.Name);
-
-			TypeBuilder typeBuilder =
-				moduleBuilder.DefineType(
-					"DynamicTypeForCsvHelperTest",
-					 TypeAttributes.Public);
+			var assemblyName = new AssemblyName("DynamicAssemblyForCsvHelperTest");
+			var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+			var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName.Name);
+			var typeBuilder = moduleBuilder.DefineType("DynamicTypeForCsvHelperTest", TypeAttributes.Public);
 
 			return typeBuilder.CreateType();
 		}

@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +19,7 @@ namespace CsvHelper.Tests
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			CultureInfo.CurrentCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 		}
 
 		[TestMethod]

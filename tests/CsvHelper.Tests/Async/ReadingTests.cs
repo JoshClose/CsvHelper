@@ -44,6 +44,7 @@ namespace CsvHelper.Tests.Async
 			}
 		}
 
+#if NETCOREAPP2_1
 		[TestMethod]
 		public async Task GetRecordsTest()
 		{
@@ -68,6 +69,7 @@ namespace CsvHelper.Tests.Async
 				Assert.AreEqual("two", records.Current.Name);
 			}
 		}
+#endif
 
 		private class Simple
 		{

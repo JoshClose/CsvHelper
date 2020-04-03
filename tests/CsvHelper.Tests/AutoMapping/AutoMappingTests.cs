@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -18,7 +19,7 @@ namespace CsvHelper.Tests.AutoMapping
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			CultureInfo.CurrentCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 		}
 
 		[TestMethod]

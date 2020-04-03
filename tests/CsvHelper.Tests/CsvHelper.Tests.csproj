@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--<TargetFrameworks>netcoreapp3.0;netcoreapp2.0;net45;net47</TargetFrameworks>-->
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net472;net452</TargetFrameworks>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
@@ -12,7 +11,6 @@
 		<PackageReference Include="Moq" Version="4.7.99" />
 		<PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
 		<PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
-		<PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
 	</ItemGroup>
 
 	<ItemGroup>

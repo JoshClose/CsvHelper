@@ -12,6 +12,7 @@ using CsvHelper.TypeConversion;
 using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 using System.Dynamic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Threading;
 
 namespace CsvHelper.Tests
 {
@@ -21,7 +22,7 @@ namespace CsvHelper.Tests
 		[TestInitialize]
 		public void TestInitialize()
 		{
-			CultureInfo.CurrentCulture = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 		}
 
 		[TestMethod]
