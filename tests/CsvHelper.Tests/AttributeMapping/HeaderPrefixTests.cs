@@ -43,6 +43,21 @@ namespace CsvHelper.Tests.AttributeMapping
 			}
 		}
 
+		[TestMethod]
+		public void InheritedHeaderPrefixTest()
+		{
+			using (var reader = new StringReader("Id,D.B.Name,D.C.Name\r\n1,b,c"))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				csv.Configuration.Delimiter = ",";
+				var records = csv.GetRecords<ADefaultInherited>().ToList();
+
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("b", records[0].D.B.Name);
+				Assert.AreEqual("c", records[0].D.C.Name);
+			}
+		}
+
 		private class ADefault
 		{
 			public int Id { get; set; }
@@ -73,6 +88,24 @@ namespace CsvHelper.Tests.AttributeMapping
 		private class C
 		{
 			public string Name { get; set; }
+		}
+
+		private class D
+		{
+			[HeaderPrefixAttribute]
+			public B B { get; set; }
+
+			[HeaderPrefixAttribute]
+			public C C { get; set; }
+		}
+
+		private class ADefaultInherited
+		{
+			public int Id { get; set; }
+
+			[HeaderPrefixAttribute]
+			public D D { get; set; }
+
 		}
 	}
 }
