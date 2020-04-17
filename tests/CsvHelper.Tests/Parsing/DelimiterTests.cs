@@ -52,5 +52,22 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual("3", line[2]);
 			}
 		}
+
+		[TestMethod]
+		public void FirstCharOfDelimiterNextToDelimiterTest()
+		{
+			var s = new StringBuilder();
+			s.AppendLine("1!#2!!#3");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
+			{
+				parser.Configuration.Delimiter = "!#";
+				var row = parser.Read();
+
+				Assert.AreEqual("1", row[0]);
+				Assert.AreEqual("2!", row[1]);
+				Assert.AreEqual("3", row[2]);
+			}
+		}
 	}
 }

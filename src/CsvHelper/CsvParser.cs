@@ -878,6 +878,8 @@ namespace CsvHelper
 				return true;
 			}
 
+			var originalC = c;
+			var charsRead = 0;
 			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
 				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
@@ -887,8 +889,12 @@ namespace CsvHelper
 				}
 
 				c = fieldReader.GetChar();
+				charsRead++;
 				if (c != context.ParserConfiguration.Delimiter[i])
 				{
+					c = originalC;
+					fieldReader.SetBufferPosition(-charsRead);
+
 					return false;
 				}
 			}
