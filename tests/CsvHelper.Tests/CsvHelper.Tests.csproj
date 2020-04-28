@@ -4,6 +4,7 @@
 		<TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net472;net452</TargetFrameworks>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

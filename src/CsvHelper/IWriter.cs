@@ -7,6 +7,7 @@ using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CsvHelper
 {
@@ -65,5 +66,18 @@ namespace CsvHelper
 		/// <typeparam name="T">Record type.</typeparam>
 		/// <param name="records">The records to write.</param>
 		Task WriteRecordsAsync<T>(IEnumerable<T> records);
+
+#if NET47 || NETSTANDARD
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <typeparam name="T">Record type.</typeparam>
+		/// <param name="records">The records to write.</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <remarks>
+		/// This method uses IAsyncEnumerable as data source, so calls to MoveNextAsync() during enumeration are non-blocking
+		/// </remarks>
+		Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default);
+#endif
 	}
 }

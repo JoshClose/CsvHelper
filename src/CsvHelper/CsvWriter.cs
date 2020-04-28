@@ -15,6 +15,7 @@ using System.Dynamic;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 using System.Globalization;
+using System.Threading;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -534,38 +535,7 @@ namespace CsvHelper
 			{
 				foreach (var record in records)
 				{
-					var recordType = record.GetType();
-
-					if (record is IDynamicMetaObjectProvider dynamicObject)
-					{
-						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
-						{
-							WriteDynamicHeader(dynamicObject);
-							await NextRecordAsync().ConfigureAwait(false);
-						}
-					}
-					else
-					{
-						// If records is a List<dynamic>, the header hasn't been written yet.
-						// Write the header based on the record type.
-						var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
-						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
-						{
-							WriteHeader(recordType);
-							await NextRecordAsync().ConfigureAwait(false);
-						}
-					}
-
-					try
-					{
-						recordManager.Value.Write(record);
-					}
-					catch (TargetInvocationException ex)
-					{
-						throw ex.InnerException;
-					}
-
-					await NextRecordAsync().ConfigureAwait(false);
+					await WriteNextRecordInternalAsync(record, null).ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)
@@ -585,63 +555,103 @@ namespace CsvHelper
 
 			try
 			{
-				// Write the header. If records is a List<dynamic>, the header won't be written.
-				// This is because typeof( T ) = Object.
-				var recordType = typeof(T);
-				var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
-				if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive && recordType != typeof(object))
-				{
-					WriteHeader(recordType);
-					if (context.HasHeaderBeenWritten)
-					{
-						await NextRecordAsync().ConfigureAwait(false);
-					}
-				}
+				await WriteHeaderInternalAsync<T>();
 
-				var getRecordType = recordType == typeof(object);
+				var recordType = typeof(T) != typeof(object) ? typeof(T) : null;
+
 				foreach (var record in records)
 				{
-					if (getRecordType)
-					{
-						recordType = record.GetType();
-					}
-
-					if (record is IDynamicMetaObjectProvider dynamicObject)
-					{
-						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
-						{
-							WriteDynamicHeader(dynamicObject);
-							await NextRecordAsync().ConfigureAwait(false);
-						}
-					}
-					else
-					{
-						// If records is a List<dynamic>, the header hasn't been written yet.
-						// Write the header based on the record type.
-						isPrimitive = recordType.GetTypeInfo().IsPrimitive;
-						if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
-						{
-							WriteHeader(recordType);
-							await NextRecordAsync().ConfigureAwait(false);
-						}
-					}
-
-					try
-					{
-						recordManager.Value.Write(record);
-					}
-					catch (TargetInvocationException ex)
-					{
-						throw ex.InnerException;
-					}
-
-					await NextRecordAsync().ConfigureAwait(false);
+					await WriteNextRecordInternalAsync(record, recordType).ConfigureAwait(false);
 				}
 			}
 			catch (Exception ex)
 			{
 				throw ex as CsvHelperException ?? new WriterException(context, "An unexpected error occurred.", ex);
 			}
+		}
+
+#if NET47 || NETSTANDARD
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <typeparam name="T">Record type.</typeparam>
+		/// <param name="records">The records to write.</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <remarks>
+		/// This method uses IAsyncEnumerable as data source, so calls to MoveNextAsync() during enumeration are non-blocking
+		/// </remarks>
+		public virtual async Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)
+		{
+			// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
+
+			try
+			{
+				await WriteHeaderInternalAsync<T>();
+
+				var recordType = typeof(T) != typeof(object) ? typeof(T) : null;
+
+				await foreach (var record in records.WithCancellation(cancellationToken).ConfigureAwait(false))
+				{
+					await WriteNextRecordInternalAsync(record, recordType).ConfigureAwait(false);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw ex as CsvHelperException ?? new WriterException(context, "An unexpected error occurred.", ex);
+			}
+		}
+#endif
+
+		private async Task WriteHeaderInternalAsync<T>()
+		{
+			// Write the header. If records is a List<dynamic>, the header won't be written.
+			// This is because typeof( T ) = Object.
+			var recordType = typeof(T);
+			var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
+			if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive && recordType != typeof(object))
+			{
+				WriteHeader(recordType);
+				if (context.HasHeaderBeenWritten)
+				{
+					await NextRecordAsync().ConfigureAwait(false);
+				}
+			}
+		}
+
+		private async Task WriteNextRecordInternalAsync<T>(T record, Type recordType)
+		{
+			recordType ??= record.GetType();
+
+			if (record is IDynamicMetaObjectProvider dynamicObject)
+			{
+				if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten)
+				{
+					WriteDynamicHeader(dynamicObject);
+					await NextRecordAsync().ConfigureAwait(false);
+				}
+			}
+			else
+			{
+				// If records is a List<dynamic>, the header hasn't been written yet.
+				// Write the header based on the record type.
+				var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
+				if (context.WriterConfiguration.HasHeaderRecord && !context.HasHeaderBeenWritten && !isPrimitive)
+				{
+					WriteHeader(recordType);
+					await NextRecordAsync().ConfigureAwait(false);
+				}
+			}
+
+			try
+			{
+				recordManager.Value.Write(record);
+			}
+			catch (TargetInvocationException ex)
+			{
+				throw ex.InnerException;
+			}
+
+			await NextRecordAsync().ConfigureAwait(false);
 		}
 
 		/// <summary>
