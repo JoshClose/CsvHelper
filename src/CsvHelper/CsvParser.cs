@@ -294,7 +294,8 @@ namespace CsvHelper
 			{
 				if (c == '\r' || c == '\n')
 				{
-					ReadLineEnding();
+					var offset = ReadLineEnding();
+					fieldReader.SetBufferPosition(offset);
 					fieldReader.SetFieldStart();
 					return;
 				}
@@ -329,7 +330,8 @@ namespace CsvHelper
 			{
 				if (c == '\r' || c == '\n')
 				{
-					await ReadLineEndingAsync().ConfigureAwait(false);
+					var offset = await ReadLineEndingAsync().ConfigureAwait(false);
+					fieldReader.SetBufferPosition(offset);
 					fieldReader.SetFieldStart();
 					return;
 				}

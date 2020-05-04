@@ -227,7 +227,8 @@ namespace CsvHelper
 			{
 				if (c == '\r' || c == '\n')
 				{
-					<#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					var offset = <#= Await(isAsync) #>ReadLineEnding<#= AsyncPostfix(isAsync) #>()<#= ConfigureAwait(isAsync) #>;
+					fieldReader.SetBufferPosition(offset);
 					fieldReader.SetFieldStart();
 					return;
 				}
