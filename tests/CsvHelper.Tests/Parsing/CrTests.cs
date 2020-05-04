@@ -26,6 +26,19 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[TestMethod]
+		public void SingleFieldAndSingleRowAndRowStartsWithCRTest()
+		{
+			var s = new StringBuilder();
+			s.Append("\r1\r");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
+			{
+				var row = parser.Read();
+				Assert.AreEqual("1", row[0]);
+			}
+		}
+
+		[TestMethod]
 		public void SingleFieldAndSingleRowAndFieldIsQuotedTest()
 		{
 			var s = new StringBuilder();
@@ -168,6 +181,62 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				parser.Configuration.Delimiter = ",";
+				var row = parser.Read();
+				Assert.AreEqual("1", row[0]);
+				Assert.AreEqual("2", row[1]);
+
+				row = parser.Read();
+				Assert.AreEqual("3", row[0]);
+				Assert.AreEqual("4", row[1]);
+			}
+		}
+		
+		[TestMethod]
+		public void MultipleFieldsAndSingleRowAndRowStartsWithCRTest()
+		{
+			var s = new StringBuilder();
+			s.Append("\r1,2\r");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
+			{
+				parser.Configuration.Delimiter = ",";
+
+				var row = parser.Read();
+				Assert.AreEqual("1", row[0]);
+				Assert.AreEqual("2", row[1]);
+			}
+		}
+
+		[TestMethod]
+		public void MultipleBlankLinesWithOnlyCRTest()
+		{
+			var s = new StringBuilder();
+			s.Append("\r\r");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
+			{
+				parser.Configuration.IgnoreBlankLines = false;
+
+				var row = parser.Read();
+				Assert.AreEqual(0, row.Length);
+				row = parser.Read();
+				Assert.AreEqual(0, row.Length);
+				row = parser.Read();
+				Assert.IsNull(row);
+			}
+		}
+
+		[TestMethod]
+		public void MultipleFieldsAndMultipleRowsAndRowStartsWithCRTest()
+		{
+			var s = new StringBuilder();
+			s.Append("1,2\r");
+			s.Append("\r3,4\r");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
+			{
+				parser.Configuration.Delimiter = ",";
+
 				var row = parser.Read();
 				Assert.AreEqual("1", row[0]);
 				Assert.AreEqual("2", row[1]);
