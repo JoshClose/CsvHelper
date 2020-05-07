@@ -6,6 +6,7 @@ using CsvHelper.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -41,7 +42,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				for (var column = 1; column <= columns; column++)
 				{
@@ -71,7 +72,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				var records = new List<Columns50>();
 				for (var i = 0; i < rows; i++)
@@ -147,7 +148,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{
 				string[] row;
 				while ((row = parser.Read()) != null)
@@ -167,7 +168,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				// Read header.
 				csv.Read();
@@ -193,7 +194,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<Columns50>();
 				foreach (var record in records)
@@ -213,7 +214,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				while (await csv.ReadAsync())
 				{

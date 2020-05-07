@@ -7,3 +7,4 @@ artifacts/
 
 *.user
 *.psess
+BenchmarkDotNet.Artifacts/
