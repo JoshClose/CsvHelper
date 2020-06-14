@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace CsvHelper.TypeConversion
 {
@@ -12,7 +12,7 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public class TypeConverterOptionsCache
 	{
-		private Dictionary<Type, TypeConverterOptions> typeConverterOptions = new Dictionary<Type, TypeConverterOptions>();
+		private ConcurrentDictionary<Type, TypeConverterOptions> typeConverterOptions = new ConcurrentDictionary<Type, TypeConverterOptions>();
 
 		/// <summary>
 		/// Adds the <see cref="TypeConverterOptions"/> for the given <see cref="Type"/>.
@@ -50,7 +50,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException(nameof(type));
 			}
 
-			typeConverterOptions.Remove(type);
+			typeConverterOptions.TryRemove(type, out TypeConverterOptions _);
 		}
 
 		/// <summary>
@@ -74,13 +74,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException();
 			}
 
-			if (!typeConverterOptions.TryGetValue(type, out var options))
-			{
-				options = new TypeConverterOptions();
-				typeConverterOptions.Add(type, options);
-			}
-
-			return options;
+			return typeConverterOptions.GetOrAdd(type, _ => new TypeConverterOptions());
 		}
 
 		/// <summary>
