@@ -171,6 +171,10 @@ class Content extends Component {
 	render() {
 		const { className, data } = this.props;
 
+		if (!data) {
+			return <></>;
+		}
+
 		const markdown = marked(data);
 
 		return (

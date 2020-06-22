@@ -4,15 +4,15 @@
 &nbsp; | &nbsp;
 - | -
 [ClassMap](/api/CsvHelper.Configuration/ClassMap) | Maps class members to CSV fields.
-[ClassMap&lt;TClass&gt;](/api/CsvHelper.Configuration/ClassMap&lt;TClass&gt;) | Maps class members to CSV fields.
+[ClassMap&lt;TClass&gt;](/api/CsvHelper.Configuration/ClassMap`1) | Maps class members to CSV fields.
 [ClassMapCollection](/api/CsvHelper.Configuration/ClassMapCollection) | Collection that holds CsvClassMaps for record types.
 [Configuration](/api/CsvHelper.Configuration/Configuration) | Configuration used for reading and writing CSV data.
 [ConfigurationException](/api/CsvHelper.Configuration/ConfigurationException) | Represents configuration errors that occur.
 [ConfigurationFunctions](/api/CsvHelper.Configuration/ConfigurationFunctions) | Holds the default callback methods for delegate members of ``CsvHelper.Configuration.Configuration`` .
-[DefaultClassMap&lt;T&gt;](/api/CsvHelper.Configuration/DefaultClassMap&lt;T&gt;) | A default ``CsvHelper.Configuration.ClassMap<TClass>`` that can be used to create a class map dynamically.
+[DefaultClassMap&lt;T&gt;](/api/CsvHelper.Configuration/DefaultClassMap`1) | A default ``CsvHelper.Configuration.ClassMap<TClass>`` that can be used to create a class map dynamically.
 [MapTypeConverterOption](/api/CsvHelper.Configuration/MapTypeConverterOption) | Sets type converter options on a member map.
 [MemberMap](/api/CsvHelper.Configuration/MemberMap) | Mapping info for a member to a CSV field.
-[MemberMap&lt;TClass, TMember&gt;](/api/CsvHelper.Configuration/MemberMap&lt;TClass, TMember&gt;) | Mapping info for a member to a CSV field.
+[MemberMap&lt;TClass, TMember&gt;](/api/CsvHelper.Configuration/MemberMap`2) | Mapping info for a member to a CSV field.
 [MemberMapCollection](/api/CsvHelper.Configuration/MemberMapCollection) | A collection that holds ``CsvHelper.Configuration.MemberMap`` 's.
 [MemberMapData](/api/CsvHelper.Configuration/MemberMapData) | The configured data for the member map.
 [MemberNameCollection](/api/CsvHelper.Configuration/MemberNameCollection) | A collection that holds member names.

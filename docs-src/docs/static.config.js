@@ -6,10 +6,15 @@ import toc from "./src/data/toc.json";
 function createData(name) {
 	const className = name.substring(name.lastIndexOf("/"));
 	const tocKey = name.substring(0, name.indexOf("/"));
+	const filePath = `./src/content/${name}.md`;
+
+	if (!fs.existsSync(filePath)) {
+		console.error(`Markdown file '${filePath}' doesn't exist.`, name, className, tocKey)
+	}
 
 	return () => ({
-		className: className,
-		data: fs.readFileSync(`./src/content/${name}.md`, "utf-8"),
+		className,
+		data: fs.readFileSync(filePath, "utf-8"),
 		toc: tocKey ? toc[tocKey] : toc[name]
 	});
 }
