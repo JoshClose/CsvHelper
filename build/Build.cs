@@ -4,6 +4,7 @@ using Nuke.Common;
 using Nuke.Common.CI;
 using Nuke.Common.Execution;
 using Nuke.Common.Git;
+using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
@@ -48,6 +49,9 @@ class Build : NukeBuild
     AbsolutePath SourceDirectory => RootDirectory / "src";
     AbsolutePath TestsDirectory => RootDirectory / "tests";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
+	AbsolutePath DocsDirectory => RootDirectory / "docs";
+	AbsolutePath DocsSourceDirectory => RootDirectory / "docs-src" / "docs";
+	AbsolutePath DocsArtifactsDirectory => DocsSourceDirectory / "dist";
 
     Project CsvHelperProject => Solution.GetProject("CsvHelper");
 
@@ -141,4 +145,26 @@ class Build : NukeBuild
 				)
             );
         });
+
+	Target DocsBuild => _ => _
+		.Executes(() =>
+		{
+			NpmInstall(s => s
+				.SetWorkingDirectory(DocsSourceDirectory)
+			);
+
+			NpmRun(s => s
+				.SetWorkingDirectory(DocsSourceDirectory)
+				.SetCommand("build")
+			);
+		});
+
+	Target DocsPublish => _ => _
+		.DependsOn(DocsBuild)
+		.Executes(() =>
+		{
+			EnsureExistingDirectory(DocsDirectory);
+			EnsureCleanDirectory(DocsDirectory);
+			CopyDirectoryRecursively(DocsArtifactsDirectory, DocsDirectory, DirectoryExistsPolicy.Merge);
+		});
 }
