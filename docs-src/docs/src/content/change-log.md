@@ -1,5 +1,45 @@
 # Change Log
 
+### 15.0.5
+
+#### Bug Fixes
+
+- Fixed issue with multiple character delimiter not working when the first char of the delimiter precedes the actual delimiter.
+
+### 15.0.4
+
+#### Bug Fixes
+
+- Fixed issue with `ReflectionHelper` caching not always unique.
+
+### 15.0.3
+
+#### Bug Fixes
+
+- Updated default number styles for `DecimalConverter` and `DoubleConverter` to match MS's recommendations.
+
+### 15.0.2
+
+#### Bug Fixes
+
+- Fixed issue with `DataReader.GetValues` not working when column and rows have different count.
+
+### 15.0.1
+
+### Bug Fixes
+
+- Downgraded `System.Threading.Tasks.Extensions` to 4.5.2 due to loading error of `Microsoft.Bcl.AsyncInterfaces`.
+
+### 15.0.0
+
+#### Features
+
+- Ignore attribute on a reference will ignore all properties on that reference.
+
+#### Breaking Changes
+
+- Added `IMemberReferenceMapper` to `IgnoreAttribute`.
+
 ### 14.0.0
 
 #### Features
