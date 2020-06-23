@@ -479,6 +479,11 @@ namespace CsvHelper
 				var getRecordType = recordType == typeof(object);
 				foreach (var record in records)
 				{
+					if (record == null)
+					{
+						continue;
+					}
+
 					if (getRecordType)
 					{
 						recordType = record.GetType();
