@@ -671,6 +671,10 @@
 					{
 						"title": "Write Anonymous Type Objects",
 						"path": "examples/writing/write-anonymous-type-objects"
+					},
+					{
+						"title": "Appendign to an Existing File",
+						"path": "examples/writing/appending"
 					}
 				]
 			},

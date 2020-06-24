@@ -7,3 +7,4 @@ Here are some prerequisites that are needed for using CsvHelper. These are .NET 
 - | -
 [Using and Dispose](/examples/prerequisites/using-dispose)
 [Reading and Writing Files](/examples/prerequisites/reading-writing-files)
+[Stream](/examples/prerequisites/streams)
