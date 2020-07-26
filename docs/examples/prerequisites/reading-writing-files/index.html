@@ -18,11 +18,11 @@
 
 <span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> writer = <span class="hljs-keyword">new</span> StreamWriter(<span class="hljs-string">&quot;path\\to\\file.csv&quot;</span>))
 {    
-}</code></pre></div></div><div class="columns"><div class="column"><p>CsvHelper doesn&#39;t know anything about your encoding, so if you have a specific encoding, you&#39;ll need to specify that in your stream.</p></div></div><div class="columns"><div class="column" style="overflow-x: auto"><pre><code class="cs"><span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> reader = <span class="hljs-keyword">new</span> StreamReader(<span class="hljs-string">&quot;path\\to\\file.csv&quot;</span>), Encoding.UTF8)
+}</code></pre></div></div><div class="columns"><div class="column"><p>CsvHelper doesn&#39;t know anything about your encoding, so if you have a specific encoding, you&#39;ll need to specify that in your stream.</p></div></div><div class="columns"><div class="column" style="overflow-x: auto"><pre><code class="cs"><span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> reader = <span class="hljs-keyword">new</span> StreamReader(<span class="hljs-string">&quot;path\\to\\file.csv&quot;</span>, Encoding.UTF8)
 {
 }
 
-<span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> writer = <span class="hljs-keyword">new</span> StreamWriter(<span class="hljs-string">&quot;path\\to\\file.csv&quot;</span>), Encoding.UTF8)
+<span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> writer = <span class="hljs-keyword">new</span> StreamWriter(<span class="hljs-string">&quot;path\\to\\file.csv&quot;</span>, false, Encoding.UTF8)
 {    
 }</code></pre></div></div><div class="columns"><div class="column"><p><code>CsvReader</code> and <code>CsvWriter</code> take a <code>TextReader</code> and <code>TextWriter</code> in their constructors. <code>TextReader</code> and <code>TextWriter</code> are <code>abstract</code> classes for reading and writing text. <code>StreamReader</code> inherits <code>TextReader</code> and <code>StreamWriter</code> inherits <code>TextWriter</code>, so we can use those with <code>CsvReader</code> and <code>CsvWriter</code>.</p></div></div><div class="columns"><div class="column" style="overflow-x: auto"><pre><code class="cs"><span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> reader = <span class="hljs-keyword">new</span> StreamReader(<span class="hljs-string">&quot;path\\to\\file.csv&quot;</span>))
 <span class="hljs-keyword">using</span> (<span class="hljs-keyword">var</span> csv = <span class="hljs-keyword">new</span> CsvReader(reader))
