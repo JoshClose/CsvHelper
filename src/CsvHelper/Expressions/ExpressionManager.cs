@@ -296,12 +296,13 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <param name="recordType">The type of the record we're creating.</param>
 		/// <param name="assignments">The member assignments that will be assigned to the created instance.</param>
+		/// <param name="injectedDependencies">InjectedDepenencies - object[]</param>
 		/// <returns>A <see cref="BlockExpression"/> representing the instance creation and assignments.</returns>
-		public virtual BlockExpression CreateInstanceAndAssignMembers(Type recordType, List<MemberAssignment> assignments)
+		public virtual BlockExpression CreateInstanceAndAssignMembers(Type recordType, List<MemberAssignment> assignments, object[] injectedDependencies = null)
 		{
 			var expressions = new List<Expression>();
 			var createInstanceMethod = typeof(ReflectionHelper).GetMethod(nameof(ReflectionHelper.CreateInstance), new Type[] { typeof(Type), typeof(object[]) });
-			var instanceExpression = Expression.Convert(Expression.Call(createInstanceMethod, Expression.Constant(recordType), Expression.Constant(new object[0])), recordType);
+			var instanceExpression = Expression.Convert(Expression.Call(createInstanceMethod, Expression.Constant(recordType), Expression.Constant(injectedDependencies ?? new object[0])), recordType);
 			var variableExpression = Expression.Variable(instanceExpression.Type, "instance");
 			expressions.Add(Expression.Assign(variableExpression, instanceExpression));
 			expressions.AddRange(assignments.Select(b => Expression.Assign(Expression.MakeMemberAccess(variableExpression, b.Member), b.Expression)));

@@ -122,5 +122,10 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
 		IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record);
 #endif // NET47 || NETSTANDARD
+
+		/// <summary>
+		/// Gets Injected Dependencies
+		/// </summary>
+		new object[] InjectedDependencies { get; }
 	}
 }

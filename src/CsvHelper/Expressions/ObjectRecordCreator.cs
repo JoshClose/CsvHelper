@@ -13,11 +13,15 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class ObjectRecordCreator : RecordCreator
 	{
+		private object[] _injectedDependencies;
+
 		/// <summary>
 		/// Initializes a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader"></param>
-		public ObjectRecordCreator(CsvReader reader) : base(reader) { }
+		public ObjectRecordCreator(CsvReader reader) : base(reader) {
+			_injectedDependencies = reader.InjectedDependencies;
+		}
 
 		/// <summary>
 		/// Creates a <see cref="Delegate"/> of type <see cref="Func{T}"/>
@@ -36,26 +40,16 @@ namespace CsvHelper.Expressions
 
 			Expression body;
 
-			if (map.ParameterMaps.Count > 0)
+			var assignments = new List<MemberAssignment>();
+			ExpressionManager.CreateMemberAssignmentsForMapping(map, assignments);
+
+			if (assignments.Count == 0)
 			{
-				// This is a constructor parameter type.
-				var arguments = new List<Expression>();
-				ExpressionManager.CreateConstructorArgumentExpressionsForMapping(map, arguments);
-
-				body = Expression.New(Reader.Configuration.GetConstructor(map.ClassType), arguments);
+				throw new ReaderException(Reader.Context, $"No members are mapped for type '{recordType.FullName}'.");
 			}
-			else
-			{
-				var assignments = new List<MemberAssignment>();
-				ExpressionManager.CreateMemberAssignmentsForMapping(map, assignments);
 
-				if (assignments.Count == 0)
-				{
-					throw new ReaderException(Reader.Context, $"No members are mapped for type '{recordType.FullName}'.");
-				}
-
-				body = ExpressionManager.CreateInstanceAndAssignMembers(recordType, assignments);
-			}
+			body = ExpressionManager.CreateInstanceAndAssignMembers(recordType, assignments, _injectedDependencies);
+			
 
 			var funcType = typeof(Func<>).MakeGenericType(recordType);
 

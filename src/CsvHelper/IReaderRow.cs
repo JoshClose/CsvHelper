@@ -403,5 +403,10 @@ namespace CsvHelper
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <returns>The record.</returns>
 		object GetRecord(Type type);
+
+		/// <summary>
+		/// Gets Injected Dependencies
+		/// </summary>
+		object[] InjectedDependencies { get; }
 	}
 }

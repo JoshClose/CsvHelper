@@ -24,6 +24,7 @@ namespace CsvHelper
 		private ReadingContext context;
 		private bool disposed;
 		private IParser parser;
+		private object[] injectedDependencies;
 
 		/// <summary>
 		/// Gets the reading context.
@@ -41,11 +42,19 @@ namespace CsvHelper
 		public virtual IParser Parser => parser;
 
 		/// <summary>
+		/// Gets Injected Dependencies
+		/// </summary>
+		public virtual object[] InjectedDependencies => injectedDependencies;
+
+		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="culture">The culture.</param>
-		public CsvReader(TextReader reader, CultureInfo culture) : this(new CsvParser(reader, new Configuration.CsvConfiguration(culture), false)) { }
+		/// <param name="injectedDependencies"></param>
+		public CsvReader(TextReader reader, CultureInfo culture, object[] injectedDependencies = null) : this(new CsvParser(reader, new Configuration.CsvConfiguration(culture), false)) {
+			this.injectedDependencies = injectedDependencies ?? new object[0];
+		}
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="TextReader" />.
