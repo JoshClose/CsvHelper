@@ -32,7 +32,7 @@ namespace CsvHelper.TypeConversion
 		/// Adds the <see cref="ITypeConverterFactory"/>. Factories are queried in order of being added and first factory that handles the type is used for creating the <see cref="ITypeConverter"/>.
 		/// </summary>
 		/// <param name="typeConverterFactory">Type converter factory</param>
-		public void AddTypeConverter(ITypeConverterFactory typeConverterFactory)
+		public void AddTypeConverterFactory(ITypeConverterFactory typeConverterFactory)
 		{
 			generalTypeConverters.Add(typeConverterFactory);
 		}
