@@ -80,9 +80,9 @@ namespace CsvHelper.TypeConversion
 				var dict = ignoreCase
 					? enumNamesByAttributeNamesIgnoreCase
 					: enumNamesByAttributeNames;
-				if (dict.ContainsKey(text))
+				if (dict.TryGetValue(text, out var name))
 				{
-					return Enum.Parse(type, dict[text]);
+					return Enum.Parse(type, name);
 				}
 			}
 
@@ -110,9 +110,9 @@ namespace CsvHelper.TypeConversion
 		/// <inheritdoc/>
 		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
-			if (value != null && attributeNamesByEnumValues.ContainsKey(value))
+			if (value != null && attributeNamesByEnumValues.TryGetValue(value, out var name))
 			{
-				return attributeNamesByEnumValues[value];
+				return name;
 			}
 
 			return base.ConvertToString(value, row, memberMapData);

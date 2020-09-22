@@ -35,9 +35,9 @@ namespace CsvHelper.Configuration
 				var currentType = type;
 				while (true)
 				{
-					if (data.ContainsKey(currentType))
+					if (data.TryGetValue(currentType, out var map))
 					{
-						return data[currentType];
+						return map;
 					}
 
 					currentType = currentType.GetTypeInfo().BaseType;
@@ -80,14 +80,7 @@ namespace CsvHelper.Configuration
 
 			var type = GetGenericCsvClassMapType(map.GetType()).GetGenericArguments().First();
 
-			if (data.ContainsKey(type))
-			{
-				data[type] = map;
-			}
-			else
-			{
-				data.Add(type, map);
-			}
+			data[type] = map;
 		}
 
 		/// <summary>
