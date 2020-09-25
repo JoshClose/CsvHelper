@@ -51,10 +51,12 @@ namespace CsvHelper.Tests.Mocks
 		{
 		}
 
+#if NET47 || NETCOREAPP
 		public ValueTask DisposeAsync()
 		{
 			return new ValueTask();
 		}
+#endif
 
 		public Task WriteAsync(string[] record)
 		{
