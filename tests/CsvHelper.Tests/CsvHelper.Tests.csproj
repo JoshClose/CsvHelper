@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net472;net452</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;netcoreapp2.1;net47;net45</TargetFrameworks>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
@@ -11,6 +11,31 @@
 		<PackageReference Include="Moq" Version="4.7.99" />
 		<PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
 		<PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
+	</ItemGroup>
+
+	<!-- .NET 4.5 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
+	</ItemGroup>
+
+	<!-- .NET 4.7 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+	</ItemGroup>
+
+	<!-- .NET Standard 2.0 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+	</ItemGroup>
+
+	<!-- .NET Standard 2.1 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 	</ItemGroup>
 
 	<ItemGroup>
