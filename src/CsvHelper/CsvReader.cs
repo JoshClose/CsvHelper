@@ -1063,8 +1063,9 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}" /> of records.</returns>
 		public virtual IEnumerable<T> GetRecords<T>()
 		{
-			// Don't need to check if it's been read
-			// since we're doing the reading ourselves.
+			if (context.HasBeenRead) throw new ReaderException(context, "Reading has already started (maybe GetRecords enumeration was called twice).");
+
+			// Check
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
@@ -1140,8 +1141,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
 		public virtual IEnumerable<object> GetRecords(Type type)
 		{
-			// Don't need to check if it's been read
-			// since we're doing the reading ourselves.
+			if (context.HasBeenRead) throw new ReaderException(context, "Reading has already started (maybe GetRecords enumeration was called twice).");
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
@@ -1197,8 +1197,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
 		public virtual IEnumerable<T> EnumerateRecords<T>(T record)
 		{
-			// Don't need to check if it's been read
-			// since we're doing the reading ourselves.
+			if (context.HasBeenRead) throw new ReaderException(context, "Reading has already started (maybe GetRecords enumeration was called twice).");
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
@@ -1251,8 +1250,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{T}" /> of records.</returns>
 		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>()
 		{
-			// Don't need to check if it's been read
-			// since we're doing the reading ourselves.
+			if (context.HasBeenRead) throw new ReaderException(context, "Reading has already started (maybe GetRecords enumeration was called twice).");
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
@@ -1328,8 +1326,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
 		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type)
 		{
-			// Don't need to check if it's been read
-			// since we're doing the reading ourselves.
+			if (context.HasBeenRead) throw new ReaderException(context, "Reading has already started (maybe GetRecords enumeration was called twice).");
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{
@@ -1385,8 +1382,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
 		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record)
 		{
-			// Don't need to check if it's been read
-			// since we're doing the reading ourselves.
+			if (context.HasBeenRead) throw new ReaderException(context, "Reading has already started (maybe GetRecords enumeration was called twice).");
 
 			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
 			{

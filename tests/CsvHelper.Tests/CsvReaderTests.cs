@@ -708,7 +708,7 @@ namespace CsvHelper.Tests
 				csvReader.Configuration.RegisterClassMap<TestRecordMap>();
 				var records = csvReader.GetRecords<TestRecord>();
 				Assert.AreEqual(2, records.Count());
-				Assert.AreEqual(0, records.Count());
+				Assert.ThrowsException<ReaderException>(() => records.Count());
 			}
 		}
 

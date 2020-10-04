@@ -2,6 +2,8 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -9,6 +11,22 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.Reading
 {
+	internal static class Enumerable
+	{
+		internal static IEnumerable<T> Generate<T>(Func<T> generator)
+		{
+			while (true)
+				yield return generator();
+		}
+
+		internal static IEnumerable<T> GenerateWhile<T>(Func<bool> checker, Func<T> generator)
+		{
+			while (checker())
+				yield return generator();
+		}
+
+	}
+
 	[TestClass]
 	public class MultipleGetRecordsTests
 	{
@@ -26,14 +44,14 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				var records = csv.GetRecords<Test>().ToList();
+				var records = Enumerable.GenerateWhile(csv.Read, csv.GetRecord<Test>).ToList();
 
 				var position = stream.Position;
 				writer.WriteLine("2,two");
 				writer.Flush();
 				stream.Position = position;
 
-				records = csv.GetRecords<Test>().ToList();
+				records = Enumerable.GenerateWhile(csv.Read, csv.GetRecord<Test>).ToList();
 
 				Assert.AreEqual(1, records.Count);
 				Assert.AreEqual(2, records[0].Id);
