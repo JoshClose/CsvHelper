@@ -24,7 +24,7 @@ namespace CsvHelper.Tests.DataTableTests
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				csv.Configuration.Delimiter = ",";
-                csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 				var dataReader = new CsvDataReader(csv);
 				dataReader.Read();
 
@@ -164,64 +164,78 @@ namespace CsvHelper.Tests.DataTableTests
 
 		[TestMethod]
 		public void ReadWithNoHeaderTest()
-        {
-            var s = new StringBuilder();
-            s.AppendLine("1,one");
-            s.AppendLine("2,two");
-            using (var reader = new StringReader(s.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                csv.Configuration.HasHeaderRecord = false;
-                csv.Configuration.Delimiter = ",";
-                var dataReader = new CsvDataReader(csv);
+		{
+			var s = new StringBuilder();
+			s.AppendLine("1,one");
+			s.AppendLine("2,two");
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.Delimiter = ",";
+				var dataReader = new CsvDataReader(csv);
 
-                dataReader.Read();
-                Assert.AreEqual(1, dataReader.GetInt32(0));
-                Assert.AreEqual("one", dataReader.GetString(1));
+				dataReader.Read();
+				Assert.AreEqual(1, dataReader.GetInt32(0));
+				Assert.AreEqual("one", dataReader.GetString(1));
 
-                dataReader.Read();
-                Assert.AreEqual(2, dataReader.GetInt32(0));
-                Assert.AreEqual("two", dataReader.GetString(1));
-            }
-        }
+				dataReader.Read();
+				Assert.AreEqual(2, dataReader.GetInt32(0));
+				Assert.AreEqual("two", dataReader.GetString(1));
+			}
+		}
 
 		[TestMethod]
 		public void IsNullTest()
-        {
-            var s = new StringBuilder();
-            s.AppendLine(",null");
-            using (var reader = new StringReader(s.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                csv.Configuration.HasHeaderRecord = false;
-                csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+		{
+			var s = new StringBuilder();
+			s.AppendLine(",null");
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 
-                var dataReader = new CsvDataReader(csv);
-                Assert.IsFalse(dataReader.IsDBNull(0));
-                Assert.IsTrue(dataReader.IsDBNull(1));
-            }
-        }
+				var dataReader = new CsvDataReader(csv);
+				Assert.IsFalse(dataReader.IsDBNull(0));
+				Assert.IsTrue(dataReader.IsDBNull(1));
+			}
+		}
 
 		[TestMethod]
 		public void DbNullTest()
-        {
-            var s = new StringBuilder();
-            s.AppendLine(",null");
-            using (var reader = new StringReader(s.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                csv.Configuration.HasHeaderRecord = false;
-                csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+		{
+			var s = new StringBuilder();
+			s.AppendLine(",null");
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 
-                var dataReader = new CsvDataReader(csv);
-                Assert.AreEqual(string.Empty, dataReader.GetValue(0));
-                Assert.AreEqual(DBNull.Value, dataReader.GetValue(1));
+				var dataReader = new CsvDataReader(csv);
+				Assert.AreEqual(string.Empty, dataReader.GetValue(0));
+				Assert.AreEqual(DBNull.Value, dataReader.GetValue(1));
 
-                var values = new object[2];
-                dataReader.GetValues(values);
-                Assert.AreEqual(string.Empty, values[0]);
-                Assert.AreEqual(DBNull.Value, values[1]);
-            }
-        }
-    }
+				var values = new object[2];
+				dataReader.GetValues(values);
+				Assert.AreEqual(string.Empty, values[0]);
+				Assert.AreEqual(DBNull.Value, values[1]);
+			}
+		}
+
+		[TestMethod]
+		public void DataTableLoadEmptyTest()
+		{
+			var s = "";
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				csv.Configuration.HasHeaderRecord = false;
+
+				var dataReader = new CsvDataReader(csv);
+				Assert.AreEqual(0, dataReader.FieldCount);
+			}
+		}
+	}
 }

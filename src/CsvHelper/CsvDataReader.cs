@@ -83,7 +83,7 @@ namespace CsvHelper
 		{
 			get
 			{
-				return csv.Context.Record.Length;
+				return csv.Context.Record?.Length ?? 0;
 			}
 		}
 
