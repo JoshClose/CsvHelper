@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -168,6 +169,39 @@ namespace CsvHelper.Tests.Reading
 				Assert.AreEqual(1, missingFieldExceptionCount);
 				Assert.AreEqual(1, columnCountChangeExceptionCount);
 			}
+		}
+
+		[TestMethod]
+		public void DetectColumnCountChangesUsesHeaderIfPresentTest()
+		{
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				csv.Configuration.Delimiter = ",";
+				csv.Configuration.DetectColumnCountChanges = true;
+				csv.Configuration.HasHeaderRecord = true;
+
+				writer.WriteLine("column1,column2,column3");
+				writer.WriteLine("1,one,1,1");
+				writer.WriteLine("2,two,2");
+				writer.WriteLine("3,three,3");
+				writer.WriteLine("4,four");
+				writer.Flush();
+				stream.Position = 0;
+
+				var erroredRecords = new List<string[]>();
+				csv.Configuration.ReadingExceptionOccurred = (ex) =>
+				{
+					erroredRecords.Add(ex.ReadingContext.Record);
+					return false;
+				};
+
+				var result = csv.GetRecords<dynamic>().ToList();
+
+				Assert.AreEqual(2, erroredRecords.Count);
+			}	
 		}
 
 		private class Test

@@ -195,6 +195,25 @@ namespace CsvHelper
 			}
 		}
 
+		private void HandleDetectColumnCountChanges(ReadingContext readingContext)
+		{			
+			if (readingContext.ReaderConfiguration.DetectColumnCountChanges && readingContext.Record != null)
+			{
+				if (readingContext.ColumnCount > 0 && readingContext.ColumnCount != readingContext.Record.Length)
+				{
+					var csvException = new BadDataException(readingContext, "An inconsistent number of columns has been detected.");
+
+					if (readingContext.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException) ?? true)
+					{
+						throw csvException;
+					}
+				}
+
+				readingContext.ColumnCount = readingContext.HeaderRecord?.Length ?? readingContext.Record.Length; // update ColumnCount if we don't have header, prefer to use header
+			}
+			
+		}
+
 		/// <summary>
 		/// Advances the reader to the next record. This will not read headers.
 		/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/> 
@@ -210,24 +229,10 @@ namespace CsvHelper
 				context.Record = parser.Read();
 			}
 			while (context.Record != null && Configuration.ShouldSkipRecord(context.Record));
-
 			context.CurrentIndex = -1;
 			context.HasBeenRead = true;
 
-			if (context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null)
-			{
-				if (context.ColumnCount > 0 && context.ColumnCount != context.Record.Length)
-				{
-					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
-
-					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException) ?? true)
-					{
-						throw csvException;
-					}
-				}
-
-				context.ColumnCount = context.Record.Length;
-			}
+			HandleDetectColumnCountChanges(context);
 
 			return context.Record != null;
 		}
@@ -249,20 +254,7 @@ namespace CsvHelper
 			context.CurrentIndex = -1;
 			context.HasBeenRead = true;
 
-			if (context.ReaderConfiguration.DetectColumnCountChanges && context.Record != null)
-			{
-				if (context.ColumnCount > 0 && context.ColumnCount != context.Record.Length)
-				{
-					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
-
-					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvException) ?? true)
-					{
-						throw csvException;
-					}
-				}
-
-				context.ColumnCount = context.Record.Length;
-			}
+			HandleDetectColumnCountChanges(context);
 
 			return context.Record != null;
 		}

@@ -17,7 +17,6 @@ namespace CsvHelper.Tests.Serializing
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
-				csv.Configuration.SanitizeForInjection = true;
 				csv.Write( new[] { "=one" } );
 				writer.Flush();
 
@@ -31,7 +30,6 @@ namespace CsvHelper.Tests.Serializing
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
-				csv.Configuration.SanitizeForInjection = true;
 				csv.Write( new[] { "\"=one\"" } );
 				writer.Flush();
 
@@ -45,7 +43,6 @@ namespace CsvHelper.Tests.Serializing
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
-				csv.Configuration.SanitizeForInjection = true;
 				csv.Configuration.InjectionEscapeCharacter = '\'';
 				csv.Write( new[] { "=one" } );
 				writer.Flush();
@@ -60,7 +57,6 @@ namespace CsvHelper.Tests.Serializing
 			using( var writer = new StringWriter() )
 			using( var csv = new CsvSerializer(writer, CultureInfo.InvariantCulture) )
 			{
-				csv.Configuration.SanitizeForInjection = true;
 				csv.Configuration.InjectionEscapeCharacter = '\'';
 				csv.Write( new[] { "\"=one\"" } );
 				writer.Flush();
