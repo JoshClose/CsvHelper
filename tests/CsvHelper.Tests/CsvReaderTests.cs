@@ -863,6 +863,7 @@ namespace CsvHelper.Tests
 			{
 				csv.Configuration.Delimiter = ",";
 				csv.Configuration.IgnoreBlankLines = false;
+				csv.Configuration.MissingFieldFound = null;
 				csv.Configuration.RegisterClassMap<SimpleMap>();
 
 				writer.WriteLine("Id,Name");

@@ -23,6 +23,7 @@ namespace CsvHelper.Tests.Exceptions
 			};
 
 			var reader = new CsvReader( parser );
+			reader.Configuration.IgnoreBlankLines = false;
 			reader.Read();
 			reader.Read();
 			try
