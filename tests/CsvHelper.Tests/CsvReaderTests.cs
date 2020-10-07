@@ -239,10 +239,10 @@ namespace CsvHelper.Tests
 			var data = new Queue<string[]>();
 			data.Enqueue(new[] { "One", "Two" });
 			data.Enqueue(new[] { "1", "2" });
-			data.Enqueue(null);
 			var parserMock = new ParserMock(data);
 
 			var reader = new CsvReader(parserMock);
+			reader.Configuration.IgnoreBlankLines = false;
 			reader.Read();
 
 			try
