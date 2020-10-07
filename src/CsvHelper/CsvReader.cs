@@ -329,11 +329,7 @@ namespace CsvHelper
 
 			if (index >= context.Record.Length || index < 0)
 			{
-				if (context.ReaderConfiguration.IgnoreBlankLines)
-				{
-					context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
-				}
-
+				context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 				return default;
 			}
 
@@ -546,10 +542,7 @@ namespace CsvHelper
 			if (index >= context.Record.Length || index < 0)
 			{
 				context.CurrentIndex = index;
-				if (context.ReaderConfiguration.IgnoreBlankLines)
-				{
-					context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
-				}
+				context.ReaderConfiguration.MissingFieldFound?.Invoke(null, index, context);
 
 				return default;
 			}
