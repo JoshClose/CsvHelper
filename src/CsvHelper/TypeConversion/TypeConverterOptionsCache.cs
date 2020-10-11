@@ -13,6 +13,7 @@ namespace CsvHelper.TypeConversion
 	public class TypeConverterOptionsCache
 	{
 		private Dictionary<Type, TypeConverterOptions> typeConverterOptions = new Dictionary<Type, TypeConverterOptions>();
+		private readonly object dictionaryLock = new object();
 
 		/// <summary>
 		/// Adds the <see cref="TypeConverterOptions"/> for the given <see cref="Type"/>.
@@ -26,7 +27,10 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException(nameof(type));
 			}
 
-			typeConverterOptions[type] = options ?? throw new ArgumentNullException(nameof(options));
+			lock (dictionaryLock)
+			{
+				typeConverterOptions[type] = options ?? throw new ArgumentNullException(nameof(options));
+			}
 		}
 
 		/// <summary>
@@ -50,7 +54,10 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException(nameof(type));
 			}
 
-			typeConverterOptions.Remove(type);
+			lock (dictionaryLock)
+			{
+				typeConverterOptions.Remove(type);
+			}
 		}
 
 		/// <summary>
@@ -74,10 +81,15 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException();
 			}
 
-			if (!typeConverterOptions.TryGetValue(type, out var options))
+			TypeConverterOptions options;
+
+			lock (dictionaryLock)
 			{
-				options = new TypeConverterOptions();
-				typeConverterOptions.Add(type, options);
+				if (!typeConverterOptions.TryGetValue(type, out options))
+				{
+					options = new TypeConverterOptions();
+					typeConverterOptions.Add(type, options);
+				}
 			}
 
 			return options;

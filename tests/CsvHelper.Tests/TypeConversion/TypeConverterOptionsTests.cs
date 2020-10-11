@@ -2,10 +2,13 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.TypeConversion
@@ -78,6 +81,17 @@ namespace CsvHelper.Tests.TypeConversion
 				Assert.IsNull(records[0].Id);
 				Assert.IsNull(records[0].Name);
 			}
+		}
+
+		[TestMethod]
+		public void MultiThreadGetOptionCall()
+		{
+			var optionsCache = new TypeConverterOptionsCache();
+
+			List<TypeConverterOptions> converterOptions = Enumerable.Repeat(typeof(int), 16)
+				.AsParallel()
+				.Select(type => optionsCache.GetOptions(type))
+				.ToList();
 		}
 
 		private class Test
