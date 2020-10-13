@@ -58,7 +58,7 @@ namespace CsvHelper.Expressions
 				{
 					// The user is providing the expression to do the conversion.
 					Expression exp = Expression.Invoke(memberMap.Data.WritingConvertExpression, recordParameterConverted);
-					exp = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteConvertedField), null, exp);
+					exp = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteField), null, exp);
 					delegates.Add(Expression.Lambda<Action<T>>(exp, recordParameter).Compile());
 					continue;
 				}
