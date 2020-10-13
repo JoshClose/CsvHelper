@@ -154,6 +154,34 @@ namespace CsvHelper.Tests
 			Assert.AreEqual("Constant\r\n", result);
 		}
 
+
+		[TestMethod]
+		public void ConvertUsingNullTest()
+		{
+			string result;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				var records = new List<MultipleNamesClass>
+				{
+					new MultipleNamesClass { IntColumn = 1, StringColumn = "test" }
+				};
+
+				csv.Configuration.HasHeaderRecord = false;
+				csv.Configuration.Delimiter = ";";
+				csv.Configuration.RegisterClassMap<ConvertUsingNullMap>();
+				csv.WriteRecords(records);
+				writer.Flush();
+				stream.Position = 0;
+
+				result = reader.ReadToEnd();
+			}
+
+			Assert.AreEqual(";test\r\n", result);
+		}
+
 		private class SameNameMultipleTimesClass
 		{
 			public string Name1 { get; set; }
@@ -220,6 +248,15 @@ namespace CsvHelper.Tests
 			public ConvertUsingConstantMap()
 			{
 				Map(m => m.IntColumn).ConvertUsing(m => "Constant");
+			}
+		}
+
+		private sealed class ConvertUsingNullMap : ClassMap<MultipleNamesClass>
+		{
+			public ConvertUsingNullMap()
+			{
+				Map(m => m.IntColumn).ConvertUsing(m => (string)null);
+				Map(m => m.StringColumn).ConvertUsing(m => m.StringColumn);
 			}
 		}
 	}
