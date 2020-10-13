@@ -95,7 +95,7 @@ namespace CsvHelper.Configuration
 		/// to prevent malicious injection. This covers MS Excel, 
 		/// Google Sheets and Open Office Calc.
 		/// </summary>
-		public virtual bool SanitizeForInjection { get; set; } = true;
+		public virtual bool SanitizeForInjection { get; set; }
 
 		/// <summary>
 		/// Gets or sets the characters that are used for injection attacks.
