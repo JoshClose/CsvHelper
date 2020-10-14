@@ -2,8 +2,11 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -223,5 +226,52 @@ namespace CsvHelper.Tests.DataTableTests
                 Assert.AreEqual(DBNull.Value, values[1]);
             }
         }
-    }
+
+		[TestMethod]
+		public void GetOrdinalCaseInsensitiveTest()
+		{
+			var data = new List<string[]>
+			{
+				new[] { "Id", "Name" },
+				new[] { "1", "one" },
+				null,
+			};
+			var queue = new Queue<string[]>(data);
+			var parser = new ParserMock(queue);
+
+			using (var csv = new CsvReader(parser))
+			{
+				using (var dr = new CsvDataReader(csv))
+				{
+					var ordinal = dr.GetOrdinal("name");
+
+					Assert.AreEqual(1, ordinal);
+				}
+			}
+		}
+
+		[TestMethod]
+		public void GetOrdinalMissingTest()
+		{
+			var data = new List<string[]>
+			{
+				new[] { "Id", "Name" },
+				new[] { "1", "one" },
+				null,
+			};
+			var queue = new Queue<string[]>(data);
+			var parser = new ParserMock(queue);
+
+			using (var csv = new CsvReader(parser))
+			{
+				using (var dr = new CsvDataReader(csv))
+				{
+					Assert.ThrowsException<IndexOutOfRangeException>(() =>
+					{
+						dr.GetOrdinal("Foo");
+					});
+				}
+			}
+		}
+	}
 }
