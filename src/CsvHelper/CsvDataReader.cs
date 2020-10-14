@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace CsvHelper
@@ -355,17 +356,25 @@ namespace CsvHelper
 		/// </returns>
 		public int GetOrdinal(string name)
 		{
-			int index = Array.IndexOf(csv.Context.HeaderRecord, name);
-			if (index != -1)
-				return index;
-
-			for (int i = 0; i < csv.Context.HeaderRecord.Length; i++)
+			var index = csv.GetFieldIndex(name, isTryGet: true);
+			if (index >= 0)
 			{
-				if (string.Equals(csv.Context.HeaderRecord[i], name, StringComparison.InvariantCultureIgnoreCase))
-					return i;
+				return index;
 			}
 
-			return -1;
+			var namePrepared = csv.Configuration.PrepareHeaderForMatch(name, 0);
+
+			var headerRecord = csv.Context.HeaderRecord;
+			for (var i = 0; i < headerRecord.Length; i++)
+			{
+				var headerPrepared = csv.Configuration.PrepareHeaderForMatch(headerRecord[i], i);
+				if (csv.Configuration.CultureInfo.CompareInfo.Compare(namePrepared, headerPrepared, CompareOptions.IgnoreCase) == 0)
+				{
+					return i;
+				}
+			}
+
+			throw new IndexOutOfRangeException($"Field with name '{name}' and prepared name '{namePrepared}' was not found.");
 		}
 
 		/// <summary>
