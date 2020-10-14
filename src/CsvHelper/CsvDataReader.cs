@@ -355,7 +355,17 @@ namespace CsvHelper
 		/// </returns>
 		public int GetOrdinal(string name)
 		{
-			return Array.IndexOf(csv.Context.HeaderRecord, name);
+			int index = Array.IndexOf(csv.Context.HeaderRecord, name);
+			if (index != -1)
+				return index;
+
+			for (int i = 0; i < csv.Context.HeaderRecord.Length; i++)
+			{
+				if (string.Equals(csv.Context.HeaderRecord[i], name, StringComparison.InvariantCultureIgnoreCase))
+					return i;
+			}
+
+			return -1;
 		}
 
 		/// <summary>
