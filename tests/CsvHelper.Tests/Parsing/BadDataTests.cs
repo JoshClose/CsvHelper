@@ -23,6 +23,7 @@ namespace CsvHelper.Tests.Parsing
 				writer.WriteLine(" a\"bc\",d");
 				writer.WriteLine("\"a\"\"b\"c \" ,d");
 				writer.WriteLine("\"a\"\"b\",c");
+				writer.WriteLine("\"ab\"c ,d");
 				writer.Flush();
 				stream.Position = 0;
 
@@ -41,6 +42,11 @@ namespace CsvHelper.Tests.Parsing
 				field = null;
 				parser.Read();
 				Assert.IsNull(field);
+
+				field = null;
+				parser.Read();
+				Assert.IsNotNull(field);
+				Assert.AreEqual("abc ", field);
 			}
 		}
 
