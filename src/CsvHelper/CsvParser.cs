@@ -409,6 +409,10 @@ namespace CsvHelper
 					if (ReadDelimiter())
 					{
 						// Set the end of the field to the char before the delimiter.
+						if(context.IsFieldBad)
+						{
+							context.ParserConfiguration.BadDataFound?.Invoke(context);
+						}
 						context.RecordBuilder.Add(fieldReader.GetField());
 
 						return false;
@@ -695,8 +699,10 @@ namespace CsvHelper
 					}
 					else if (cPrev == context.ParserConfiguration.Quote)
 					{
-						// We're out of quotes. Read the reset of
-						// the field like a normal field.
+						// We're out of quotes. Read the rest of
+						// the field like a normal field and mark as bad data.
+						context.IsFieldBad = true;
+
 						return ReadField();
 					}
 				}
