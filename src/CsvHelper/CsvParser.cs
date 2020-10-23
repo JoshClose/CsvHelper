@@ -671,6 +671,10 @@ namespace CsvHelper
 					{
 						ReadSpaces();
 						fieldReader.SetFieldStart(-1);
+						if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
+						{
+							return ReadField();
+						}
 					}
 
 					if (c == context.ParserConfiguration.Delimiter[0])
