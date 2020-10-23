@@ -96,6 +96,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
+				parser.Configuration.BadDataFound = null;
 				var record = parser.Read();
 
 				Assert.IsNotNull(record);
