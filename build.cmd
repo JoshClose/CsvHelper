@@ -3,4 +3,4 @@
 :; exit $?
 
 @ECHO OFF
-powershell -ExecutionPolicy ByPass -NoProfile %0\..\build.ps1 %*
+powershell -ExecutionPolicy ByPass -NoProfile %~dp0build.ps1 %*
