@@ -291,6 +291,12 @@ namespace CsvHelper.Configuration
 					continue;
 				}
 
+				if (member.GetCustomAttribute<IgnoreAttribute>() != null)
+				{
+					// Ignore this member including its tree if it's a reference.
+					continue;
+				}
+
 				var memberTypeInfo = member.MemberType().GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof(DefaultTypeConverter);
 				if (isDefaultConverter)

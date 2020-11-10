@@ -83,7 +83,6 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public string Name { get; set; }
 
-			[CsvHelper.Configuration.Attributes.Ignore]
 			public GrandChild GrandChild { get; set; }
 		}
 
