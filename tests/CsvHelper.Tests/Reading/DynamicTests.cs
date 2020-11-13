@@ -2,7 +2,9 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -67,6 +69,42 @@ namespace CsvHelper.Tests.Reading
 				Assert.AreEqual("3", record.Id);
 				Assert.AreEqual(null, record.Blank1);
 				Assert.AreEqual(null, record.Blank2);
+			}
+		}
+
+		[TestMethod]
+		public void DuplicateFieldNamesTest()
+		{
+			var queue = new Queue<string[]>();
+			queue.Enqueue(new[] { "Id", "Name", "Name" });
+			queue.Enqueue(new[] { "1", "foo", "bar" });
+			queue.Enqueue(null);
+			using (var parserMock = new ParserMock(queue))
+			using (var csv = new CsvReader(parserMock))
+			{
+				csv.Read();
+				csv.ReadHeader();
+				var headerNameCounts =
+					(from header in csv.Context.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(h, i))
+					 group header by header into g
+					 select new
+					 {
+						 Header = g.Key,
+						 Count = g.Count()
+					 }).ToDictionary(x => x.Header, x => x.Count);
+				csv.Configuration.GetDynamicPropertyName = (context, index) =>
+				{
+					var header = context.HeaderRecord[index];
+					header = context.ReaderConfiguration.PrepareHeaderForMatch(header, index);
+					var name = headerNameCounts[header] > 1 ? $"{header}{index}" : header;
+
+					return name;
+				};
+				var records = csv.GetRecords<dynamic>().ToList();
+				var record = records[0];
+				Assert.AreEqual("1", record.Id);
+				Assert.AreEqual("foo", record.Name1);
+				Assert.AreEqual("bar", record.Name2);
 			}
 		}
 	}

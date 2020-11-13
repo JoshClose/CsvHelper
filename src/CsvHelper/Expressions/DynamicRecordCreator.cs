@@ -38,17 +38,16 @@ namespace CsvHelper.Expressions
 			{
 				for (var i = 0; i < Reader.Context.HeaderRecord.Length; i++)
 				{
-					var header = Reader.Context.HeaderRecord[i];
-					header = Reader.Configuration.PrepareHeaderForMatch(header, i);
+					var propertyName = Reader.Configuration.GetDynamicPropertyName(Reader.Context, i);
 					Reader.TryGetField(i, out string field);
-					dict.Add(header, field);
+					dict.Add(propertyName, field);
 				}
 			}
 			else
 			{
 				for (var i = 0; i < Reader.Context.Record.Length; i++)
 				{
-					var propertyName = "Field" + (i + 1);
+					var propertyName = Reader.Configuration.GetDynamicPropertyName(Reader.Context, i);
 					var field = Reader.GetField(i);
 					dict.Add(propertyName, field);
 				}

@@ -47,7 +47,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the function that is called when a header validation check is ran. The default function
 		/// will throw a <see cref="ValidationException"/> if there is no header for a given member mapping.
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
-		/// Arguments: isValid, headerNames, headerNameIndex, context
+		/// Arguments: (isValid, headerNames, headerNameIndex, context)
 		/// </summary>
 		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ConfigurationFunctions.HeaderValidated;
 
@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the function that is called when a missing field is found. The default function will
 		/// throw a <see cref="MissingFieldException"/>. You can supply your own function to do other things
 		/// like logging the issue instead of throwing an exception.
-		/// Arguments: headerNames, index, context
+		/// Arguments: (headerNames, index, context)
 		/// </summary>
 		public virtual Action<string[], int, ReadingContext> MissingFieldFound { get; set; } = ConfigurationFunctions.MissingFieldFound;
 
@@ -73,13 +73,14 @@ namespace CsvHelper.Configuration
 		/// The default function will re-throw the given exception. If you want to ignore
 		/// reading exceptions, you can supply your own function to do other things like
 		/// logging the issue.
-		/// Arguments: exception
+		/// Arguments: (exception)
 		/// </summary>
 		public virtual Func<CsvHelperException, bool> ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 		/// <summary>
 		/// Gets or sets the callback that will be called to
 		/// determine whether to skip the given record or not.
+		/// Arguments: (record)
 		/// </summary>
 		public virtual Func<string[], bool> ShouldSkipRecord { get; set; } = ConfigurationFunctions.ShouldSkipRecord;
 
@@ -122,17 +123,20 @@ namespace CsvHelper.Configuration
 		/// The header field and the member name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
+		/// Arguments: (header, fieldIndex)
 		/// </summary>
 		public virtual Func<string, int, string> PrepareHeaderForMatch { get; set; } = ConfigurationFunctions.PrepareHeaderForMatch;
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
 		/// the class instead of the default constructor and members.
+		/// Arguments: (parameterType)
 		/// </summary>
 		public virtual Func<Type, bool> ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;
 
 		/// <summary>
 		/// Chooses the constructor to use for constructor mapping.
+		/// Arguments: (classType)
 		/// </summary>
 		public virtual Func<Type, ConstructorInfo> GetConstructor { get; set; } = ConfigurationFunctions.GetConstructor;
 
@@ -143,6 +147,12 @@ namespace CsvHelper.Configuration
 		/// were created with.
 		/// </summary>
 		public virtual IComparer<string> DynamicPropertySort { get; set; }
+
+		/// <summary>
+		/// Gets the name to use for the property of the dynamic object.
+		/// Arguments: (readingContext, fieldIndex)
+		/// </summary>
+		public virtual Func<ReadingContext, int, string> GetDynamicPropertyName { get; set; } = ConfigurationFunctions.GetDynamicPropertyName;
 
 		/// <summary>
 		/// Gets or sets a value indicating whether references
@@ -344,7 +354,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets or sets a callback that will return the prefix for a reference header.
-		/// Arguments: memberType, memberName
+		/// Arguments: (memberType, memberName)
 		/// </summary>
 		public virtual Func<Type, string, string> ReferenceHeaderPrefix { get; set; }
 

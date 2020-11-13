@@ -144,5 +144,24 @@ namespace CsvHelper.Configuration
 		{
 			return type.GetConstructorWithMostParameters();
 		}
+
+		/// <summary>
+		/// Returns the header name ran through <see cref="PrepareHeaderForMatch(string, int)"/>.
+		/// If no header exists, property names will be Field1, Field2, Field3, etc.
+		/// </summary>
+		/// <param name="context">The <see cref="ReadingContext"/>.</param>
+		/// <param name="fieldIndex">The field index of the header to get the name for.</param>
+		public static string GetDynamicPropertyName(ReadingContext context, int fieldIndex)
+		{
+			if (context.HeaderRecord == null)
+			{
+				return $"Field{fieldIndex + 1}";
+			}
+
+			var header = context.HeaderRecord[fieldIndex];
+			header = context.ReaderConfiguration.PrepareHeaderForMatch(header, fieldIndex);
+
+			return header;
+		}
 	}
 }
