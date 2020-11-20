@@ -1,5 +1,45 @@
 # Change Log
 
+### 16.1.0
+
+#### Features
+
+- GetRecords throws `ObjectDisposedException` when `CsvReader` is disposed. A message hint was added to help the user understand what went wrong.
+
+### 16.0.0
+
+#### Features
+
+- Ability to have duplicate header names when using dynamic records.
+
+### 15.0.10
+
+- Fixed `IgnoreAttribute` to ignore the whole property treey if put on a reference property when auto mapped.
+
+### 15.0.9
+
+#### Bug Fixes
+
+- Fixed issue where `CsvDataReader.FieldCount` was throwing an exception if there were no records.
+
+### 15.0.8
+
+#### Bug Fixes
+
+- Fixed `CsvDataReader.GetOrdinal` issue where it wasn't doing a case-insensitive match after a failed case-sensitive match. Run values through `PrepareHeaderForMatch`.
+
+### 15.0.7
+
+#### Bug Fixes
+
+- Fixed issue where writing `null` to `WriteField` didn't output a field.
+
+### 15.0.6
+
+#### Bug Fixes
+
+- Fixed test not building.
+
 ### 15.0.5
 
 #### Bug Fixes
