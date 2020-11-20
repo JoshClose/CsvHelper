@@ -45,7 +45,7 @@ If our class property names match our CSV file header names, we can read the fil
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-{	
+{
 	var records = csv.GetRecords<Foo>();
 }
 ```
@@ -58,7 +58,7 @@ will be read into memory. `CsvReader` is forward only, so if you want to run any
 against your data, you'll have to pull the whole file into memory. Just know that is what you're doing.
 
 Let's say our CSV file names are a little different than our class properties and we don't want to
-make our properties match. 
+make our properties match.
 
 ```
 id,name
@@ -72,7 +72,7 @@ just change how our properties match against the header names.
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-{	
+{
 	csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.ToLower();
 	var records = csv.GetRecords<Foo>();
 }
@@ -96,7 +96,7 @@ First we need to tell the reader that there is no header record, using configura
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-{	
+{
 	csv.Configuration.HasHeaderRecord = false;
 	var records = csv.GetRecords<Foo>();
 }
@@ -157,7 +157,7 @@ To use the mapping, we need to register it in the configuration.
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-{	
+{
 	csv.Configuration.RegisterClassMap<FooMap>();
 	var records = csv.GetRecords<Foo>();
 }
@@ -165,6 +165,29 @@ using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 
 Creating a class map is the recommended way of mapping files in CsvHelper because it's a
 lot more powerful.
+
+You can also read rows by hand.
+
+```cs
+using (var reader = new StreamReader("path\\to\file.csv"))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+{
+	csv.Read();
+	csv.ReadHeader();
+	while (csv.Read())
+	{
+		var record = csv.GetRecord<Foo>();
+		// Do something with the record.
+	}
+}
+```
+
+`Read` will advance row. `ReadHeader` will read the row into CsvHelper as the header values.
+Separating `Read` and `ReadHeader` allows you to do other things with the header row before
+moving onto the next row. `GetRecord` also does not advance the reader to allow you to do
+other things with the row you might need to do. You may need to `GetField` for a single field
+or maybe call `GetRecord` multiple times to fill more than one object.
+
 
 ## Writing a CSV File
 
@@ -195,7 +218,7 @@ We can write the records to a file without any configuration.
 ```cs
 using (var writer = new StreamWriter("path\\to\\file.csv"))
 using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-{	
+{
 	csv.WriteRecords(records);
 }
 ```
@@ -222,5 +245,26 @@ public class FooMap : ClassMap<Foo>
 	}
 }
 ```
+
+You can also write rows by hand.
+
+```cs
+using (var writer = new StreamWriter("path\\to\\file.csv"))
+using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+{
+	csv.WriteHeader<Foo>();
+	csv.NextRecord();
+	foreach (var record in records)
+	{
+		csv.WriteRecord(record);
+		csv.NextRecord();
+	}
+}
+```
+
+`WriteHeader` will not advance you to the next row. Separating `NextRecord` from `WriteHeader`
+allows you to write more things in the header if you need to. `WriteRecord` also will not
+advance you to the next row to give you the ability to write multiple objects or use
+`WriteField` to write individual fields.
 
 <br/>
