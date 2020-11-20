@@ -1063,6 +1063,15 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}" /> of records.</returns>
 		public virtual IEnumerable<T> GetRecords<T>()
 		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(CsvReader),
+					"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
+					"you try and access the values. e.g. .ToList() Did you create CsvReader inside a using block and are now trying to access " +
+					"the records outside of that using block?"
+				);
+			}
+
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
@@ -1140,6 +1149,15 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
 		public virtual IEnumerable<object> GetRecords(Type type)
 		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(CsvReader),
+					"GetRecords<object>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
+					"you try and access the values. e.g. .ToList() Did you create CsvReader inside a using block and are now trying to access " +
+					"the records outside of that using block?"
+				);
+			}
+
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
@@ -1197,6 +1215,15 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
 		public virtual IEnumerable<T> EnumerateRecords<T>(T record)
 		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(CsvReader),
+					"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
+					"you try and access the values. e.g. .ToList() Did you create CsvReader inside a using block and are now trying to access " +
+					"the records outside of that using block?"
+				);
+			}
+
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
@@ -1251,6 +1278,15 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{T}" /> of records.</returns>
 		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>()
 		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(CsvReader),
+					"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
+					"you try and access the values. Did you create CsvReader inside a using block and are now trying to access " +
+					"the records outside of that using block?"
+				);
+			}
+
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
@@ -1328,6 +1364,15 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
 		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type)
 		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(CsvReader),
+					"GetRecords<object>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
+					"you try and access the values. Did you create CsvReader inside a using block and are now trying to access " +
+					"the records outside of that using block?"
+				);
+			}
+
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 
@@ -1385,6 +1430,15 @@ namespace CsvHelper
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
 		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record)
 		{
+			if (disposed)
+			{
+				throw new ObjectDisposedException(nameof(CsvReader),
+					"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
+					"you try and access the values. Did you create CsvReader inside a using block and are now trying to access " +
+					"the records outside of that using block?"
+				);
+			}
+
 			// Don't need to check if it's been read
 			// since we're doing the reading ourselves.
 

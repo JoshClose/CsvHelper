@@ -44,7 +44,7 @@ namespace CsvHelper.Tests.Async
 			}
 		}
 
-#if NETCOREAPP2_1
+#if NETCOREAPP
 		[TestMethod]
 		public async Task GetRecordsTest()
 		{
