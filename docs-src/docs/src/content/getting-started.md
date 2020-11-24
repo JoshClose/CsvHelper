@@ -15,9 +15,24 @@ PM> Install-Package CsvHelper
 > dotnet add package CsvHelper
 ```
 
+## Prerequisites
+
+There is some basic .NET knowledge that is implied when using this documentation. Please look over the prequisites to make sure you have an
+understanding of them. [Prerequisites](/examples/prerequisites)
+
 ## CultureInfo
 
 CsvHelper requires you to specify the `CultureInfo` that you want to use. The culture is used to determine the default delimiter, default line ending, and formatting when type converting. You can change the configuration of any of these too if you like. Choose the appropriate culture for your data. `InvariantCulture` will be the most portable for writing a file and reading it back again, so that will be used in most of the examples.
+
+## Newlines
+
+By default, CsvHelper will follow [RFC 4180](https://tools.ietf.org/html/rfc4180#page-2) and use `\r\n` for writing newlines no matter what operating system
+you are running on. CsvHelper can read `\r\n`, `\r`, or `\n` without any configuration changes. If you want to write in a non-standard format, you can
+change the configuration from `\r\n` to `\r`, `\n`, or `Environment.NewLine`.
+
+```cs
+csv.Configuration.NewLine = NewLine.Environment;
+```
 
 ## Reading a CSV File
 <hr />
