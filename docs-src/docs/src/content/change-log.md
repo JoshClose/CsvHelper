@@ -1,5 +1,12 @@
 # Change Log
 
+### 16.2.0
+
+#### Features
+
+- Added ability to put `[Name]` attribute on enum values.
+- Added ability to register a converter for `Enum` that will be a default for all enum types.
+
 ### 16.1.0
 
 #### Features
