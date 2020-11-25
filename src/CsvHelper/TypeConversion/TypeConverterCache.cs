@@ -104,6 +104,15 @@ namespace CsvHelper.TypeConversion
 
 			if (typeof(Enum).IsAssignableFrom(type))
 			{
+				if (typeConverters.TryGetValue(typeof(Enum), out typeConverter))
+				{
+					// If the user has registered a converter for the generic Enum type,
+					// that converter will be used as a default for all enums. If a
+					// converter was registered for a specific enum type, it would be
+					// returned from above already.
+					return typeConverter;
+				}
+
 				AddConverter(type, new EnumConverter(type));
 				return GetConverter(type);
 			}
