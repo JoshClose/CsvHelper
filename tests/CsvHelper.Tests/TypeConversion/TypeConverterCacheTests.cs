@@ -205,15 +205,6 @@ namespace CsvHelper.Tests.TypeConversion
 		}
 
 		[TestMethod]
-		public void GetConverter_Enum_ReturnsEnumConverter()
-		{
-			var typeConverterFactory = new TypeConverterCache();
-			var converter = typeConverterFactory.GetConverter(typeof(Enum));
-
-			Assert.IsInstanceOfType(converter, typeof(EnumConverter));
-		}
-
-		[TestMethod]
 		public void GetConverter_ConverterRegisteredForEnum_ReturnCustomConverterForAllEnums()
 		{
 			var typeConverterFactory = new TypeConverterCache();

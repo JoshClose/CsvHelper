@@ -8,6 +8,7 @@ using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.TypeConversion;
 using Moq;
+using CsvHelper.Configuration.Attributes;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -19,68 +20,105 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			try
 			{
-				new EnumConverter( typeof( string ) );
+				new EnumConverter(typeof(string));
 				Assert.Fail();
 			}
-			catch( ArgumentException ex )
+			catch (ArgumentException ex)
 			{
-				Assert.AreEqual( "'System.String' is not an Enum.", ex.Message );
+				Assert.AreEqual("'System.String' is not an Enum.", ex.Message);
 			}
 		}
 
 		[TestMethod]
 		public void ConvertToStringTest()
 		{
-			var converter = new EnumConverter( typeof( TestEnum ) );
-			var propertyMapData = new MemberMapData( null )
+			var converter = new EnumConverter(typeof(TestEnum));
+			var propertyMapData = new MemberMapData(null)
 			{
 				TypeConverter = converter,
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			Assert.AreEqual( "None", converter.ConvertToString( (TestEnum)0, null, propertyMapData ) );
-			Assert.AreEqual( "None", converter.ConvertToString( TestEnum.None, null, propertyMapData ) );
-			Assert.AreEqual( "One", converter.ConvertToString( (TestEnum)1, null, propertyMapData ) );
-			Assert.AreEqual( "One", converter.ConvertToString( TestEnum.One, null, propertyMapData ) );
-			Assert.AreEqual( "", converter.ConvertToString( null, null, propertyMapData ) );
+			Assert.AreEqual("None", converter.ConvertToString((TestEnum)0, null, propertyMapData));
+			Assert.AreEqual("None", converter.ConvertToString(TestEnum.None, null, propertyMapData));
+			Assert.AreEqual("One", converter.ConvertToString((TestEnum)1, null, propertyMapData));
+			Assert.AreEqual("One", converter.ConvertToString(TestEnum.One, null, propertyMapData));
+			Assert.AreEqual("", converter.ConvertToString(null, null, propertyMapData));
 		}
 
 		[TestMethod]
 		public void ConvertFromStringTest()
 		{
-			var converter = new EnumConverter( typeof( TestEnum ) );
+			var converter = new EnumConverter(typeof(TestEnum));
 
-			var propertyMapData = new MemberMapData( null );
+			var propertyMapData = new MemberMapData(null);
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
 			var mockRow = new Mock<IReaderRow>();
 
-			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( "One", null, propertyMapData ) );
-			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( "one", null, propertyMapData ) );
-			Assert.AreEqual( TestEnum.One, converter.ConvertFromString( "1", null, propertyMapData ) );
+			Assert.AreEqual(TestEnum.One, converter.ConvertFromString("One", null, propertyMapData));
+			Assert.AreEqual(TestEnum.One, converter.ConvertFromString("one", null, propertyMapData));
+			Assert.AreEqual(TestEnum.One, converter.ConvertFromString("1", null, propertyMapData));
 			try
 			{
-				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( "", mockRow.Object, propertyMapData ) );
+				Assert.AreEqual(TestEnum.One, converter.ConvertFromString("", mockRow.Object, propertyMapData));
 				Assert.Fail();
 			}
-			catch( TypeConverterException )
+			catch (TypeConverterException)
 			{
 			}
 
 			try
 			{
-				Assert.AreEqual( TestEnum.One, converter.ConvertFromString( null, mockRow.Object, propertyMapData ) );
+				Assert.AreEqual(TestEnum.One, converter.ConvertFromString(null, mockRow.Object, propertyMapData));
 				Assert.Fail();
 			}
-			catch( TypeConverterException )
+			catch (TypeConverterException)
 			{
 			}
+		}
+
+		[TestMethod]
+		public void ConvertToString_NameAttribute_ReturnsNameFromNameAttribute()
+		{
+			var converter = new EnumConverter(typeof(NameAttributeEnum));
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
+			};
+
+			var value = converter.ConvertToString(NameAttributeEnum.Foo, null, propertyMapData);
+
+			Assert.AreEqual("Bar", value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_NameAttribute_ReturnsValueFromNameAttribute()
+		{
+			var converter = new EnumConverter(typeof(NameAttributeEnum));
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
+			};
+
+			var value = converter.ConvertFromString("Bar", null, propertyMapData);
+
+			Assert.AreEqual(NameAttributeEnum.Foo, value);
 		}
 
 		private enum TestEnum
 		{
 			None = 0,
 			One = 1,
+		}
+
+		private enum NameAttributeEnum
+		{
+			None = 0,
+			[Name("Bar")]
+			Foo = 1
 		}
 	}
 }

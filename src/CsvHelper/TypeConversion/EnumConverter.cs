@@ -3,8 +3,12 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 
 namespace CsvHelper.TypeConversion
 {
@@ -14,6 +18,8 @@ namespace CsvHelper.TypeConversion
 	public class EnumConverter : DefaultTypeConverter
 	{
 		private readonly Type type;
+		private readonly Dictionary<string, object> nameValues = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<object, string> valueNames = new Dictionary<object, string>();
 
 		/// <summary>
 		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="System.Type"/>.
@@ -21,13 +27,30 @@ namespace CsvHelper.TypeConversion
 		/// <param name="type">The type of the Enum.</param>
 		public EnumConverter(Type type)
 		{
-			var isAssignableFrom = typeof(Enum).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
-			if (!typeof(Enum).IsAssignableFrom(type))
+			if (!typeof(Enum).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
 			{
 				throw new ArgumentException($"'{type.FullName}' is not an Enum.");
 			}
 
 			this.type = type;
+
+			foreach (var value in Enum.GetValues(type))
+			{
+				var name = Enum.GetName(type, value);
+
+				var nameAttribute = type.GetField(name).GetCustomAttribute<NameAttribute>();
+				if (nameAttribute != null && nameAttribute.Names.Length > 0)
+				{
+					foreach (var n in nameAttribute.Names)
+					{
+						nameValues.Add(n, value);
+					}
+				}
+
+				nameValues.Add(name, value);
+				nameValues.Add(((int)value).ToString(), value);
+				valueNames.Add(value, nameValues.First().Key);
+			}
 		}
 
 		/// <summary>
@@ -39,14 +62,29 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			try
+			if (text != null && nameValues.ContainsKey(text))
 			{
-				return Enum.Parse(type, text, true);
+				return nameValues[text];
 			}
-			catch
+
+			return base.ConvertFromString(text, row, memberMapData);
+		}
+
+		/// <summary>
+		/// Converts the object to a string.
+		/// </summary>
+		/// <param name="value">The object to convert to a string.</param>
+		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
+		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
+		/// <returns>The string representation of the object.</returns>
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+		{
+			if (nameValues.ContainsValue(value))
 			{
-				return base.ConvertFromString(text, row, memberMapData);
+				return nameValues.First(pair => Equals(pair.Value, value)).Key;
 			}
+
+			return base.ConvertToString(value, row, memberMapData);
 		}
 	}
 }
