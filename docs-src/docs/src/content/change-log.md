@@ -1,5 +1,11 @@
 # Change Log
 
+### 17.0.0
+
+#### Features
+
+- ValidateHeader will validate all members before calling HeaderValidated.
+
 ### 16.2.0
 
 #### Features
