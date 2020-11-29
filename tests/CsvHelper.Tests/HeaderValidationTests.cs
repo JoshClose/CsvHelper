@@ -15,7 +15,7 @@ namespace CsvHelper.Tests
 	public class HeaderValidationTests
 	{
 		[TestMethod]
-		public void CorrectHeadersTest()
+		public void ValidateHeader_ValidHeaders_NoException()
 		{
 			using (var csv = new CsvReader(new StringReader("Id,Name"), CultureInfo.InvariantCulture))
 			{
@@ -27,78 +27,134 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void PropertiesTest()
+		public void ValidateHeader_PropertiesDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<Test>());
+				try
+				{
+					csv.ValidateHeader<Test>();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void ReferencesTest()
+		public void ValidateHeader_ReferencePropertiesDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<HasReference>());
+				try
+				{
+					csv.ValidateHeader<HasReference>();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void ConstructorParametersTest()
+		public void ValidateHeader_ConstructorParametersDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<HasConstructor>());
+				try
+				{
+					csv.ValidateHeader<HasConstructor>();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void PropertiesGetRecordTest()
+		public void GetRecord_PropertiesDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
-				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecord(typeof(Test)));
+				try
+				{
+					csv.GetRecord(typeof(Test));
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void PropertiesGetRecordGenericTest()
+		public void GetRecordGeneric_PropertiesDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
 				csv.Read();
-				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecord<Test>());
+				try
+				{
+					csv.GetRecord<Test>();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void PropertiesGetRecordsTest()
+		public void GetRecords_PropertiesDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
-				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecords(typeof(Test)).ToList());
+				try
+				{
+					csv.GetRecords(typeof(Test)).ToList();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void PropertiesGetRecordsGenericTest()
+		public void GetRecordsGeneric_PropertiesDontMatch_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("bad data"), CultureInfo.InvariantCulture))
 			{
-				Assert.ThrowsException<HeaderValidationException>(() => csv.GetRecords<Test>().ToList());
+				try
+				{
+					csv.GetRecords<Test>().ToList();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(2, ex.InvalidHeaders.Length);
+				}
 			}
 		}
 
 		[TestMethod]
-		public void PrivateSetterTest()
+		public void GetRecordsGeneric_PrivateSetter_NoException()
 		{
 			var data = new StringBuilder();
 			data.AppendLine("Number");
@@ -113,7 +169,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void IgnorePropertyTest()
+		public void GetRecordsGeneric_IgnoreProperty_NoException()
 		{
 			var data = new StringBuilder();
 			data.AppendLine("Id");
@@ -129,7 +185,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void HasIndexNoNameTest()
+		public void ValidateHeader_NoNamesMapped_NoException()
 		{
 			using (var csv = new CsvReader(new StringReader("Id"), CultureInfo.InvariantCulture))
 			{
@@ -142,7 +198,7 @@ namespace CsvHelper.Tests
 		}
 
 		[TestMethod]
-		public void HasIndexAndNameTest()
+		public void ValidateHeader_HasIndexAndName_ThrowsHeaderValidationException()
 		{
 			using (var csv = new CsvReader(new StringReader("Id"), CultureInfo.InvariantCulture))
 			{
@@ -150,7 +206,16 @@ namespace CsvHelper.Tests
 
 				csv.Read();
 				csv.ReadHeader();
-				Assert.ThrowsException<HeaderValidationException>(() => csv.ValidateHeader<Test>());
+				try
+				{
+					csv.ValidateHeader<Test>();
+					Assert.Fail();
+				}
+				catch (HeaderValidationException ex)
+				{
+					Assert.AreEqual(1, ex.InvalidHeaders.Length);
+					Assert.AreEqual("Name", ex.InvalidHeaders[0].Names[0]);
+				}
 			}
 		}
 

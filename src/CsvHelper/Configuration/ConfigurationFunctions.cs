@@ -3,7 +3,10 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace CsvHelper.Configuration
 {
@@ -13,28 +16,28 @@ namespace CsvHelper.Configuration
 		private static readonly char[] quoteChars = new char[] { '\r', '\n' };
 
 		/// <summary>
-		/// Throws a <see cref="ValidationException"/> if <paramref name="isValid"/> is <c>false</c>.
+		/// Throws a <see cref="ValidationException"/> if <paramref name="invalidHeaders"/> is not empty.
 		/// </summary>
-		public static void HeaderValidated(bool isValid, string[] headerNames, int headerNameIndex, ReadingContext context)
+		public static void HeaderValidated(InvalidHeader[] invalidHeaders, ReadingContext context)
 		{
-			if (isValid)
+			if (invalidHeaders.Count() == 0)
 			{
 				return;
+			}
+
+			var errorMessage = new StringBuilder();
+			foreach (var invalidHeader in invalidHeaders)
+			{
+				errorMessage.AppendLine($"Header with name '{string.Join("' or '", invalidHeader.Names)}'[{invalidHeader.Index}] was not found.");
 			}
 
 			var messagePostfix =
 				$"If you are expecting some headers to be missing and want to ignore this validation, " +
 				$"set the configuration {nameof(HeaderValidated)} to null. You can also change the " +
 				$"functionality to do something else, like logging the issue.";
+			errorMessage.AppendLine(messagePostfix);
 
-			var indexText = headerNameIndex > 0 ? $" at header name index {headerNameIndex}" : string.Empty;
-
-			if (headerNames.Length == 1)
-			{
-				throw new HeaderValidationException(context, headerNames, headerNameIndex, $"Header with name '{headerNames[0]}'{indexText} was not found. {messagePostfix}");
-			}
-
-			throw new HeaderValidationException(context, headerNames, headerNameIndex, $"Header containing names '{string.Join("' or '", headerNames)}'{indexText} was not found. {messagePostfix}");
+			throw new HeaderValidationException(context, invalidHeaders, errorMessage.ToString());
 		}
 
 		/// <summary>

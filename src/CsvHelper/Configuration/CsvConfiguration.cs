@@ -49,7 +49,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: (isValid, headerNames, headerNameIndex, context)
 		/// </summary>
-		public virtual Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; } = ConfigurationFunctions.HeaderValidated;
+		public virtual Action<InvalidHeader[], ReadingContext> HeaderValidated { get; set; } = ConfigurationFunctions.HeaderValidated;
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will

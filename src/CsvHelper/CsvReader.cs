@@ -134,29 +134,36 @@ namespace CsvHelper
 			}
 
 			var map = context.ReaderConfiguration.Maps[type];
-			ValidateHeader(map);
+			var invalidHeaders = new List<InvalidHeader>();
+			ValidateHeader(map, invalidHeaders);
+
+			Configuration.HeaderValidated?.Invoke(invalidHeaders.ToArray(), context);
 		}
 
 		/// <summary>
 		/// Validates the header against the given map.
 		/// </summary>
 		/// <param name="map">The map to validate against.</param>
-		protected virtual void ValidateHeader(ClassMap map)
+		/// <param name="invalidHeaders">List of invalid headers.</param>
+		protected virtual void ValidateHeader(ClassMap map, List<InvalidHeader> invalidHeaders)
 		{
 			foreach (var parameter in map.ParameterMaps)
 			{
 				if (parameter.ConstructorTypeMap != null)
 				{
-					ValidateHeader(parameter.ConstructorTypeMap);
+					ValidateHeader(parameter.ConstructorTypeMap, invalidHeaders);
 				}
 				else if (parameter.ReferenceMap != null)
 				{
-					ValidateHeader(parameter.ReferenceMap.Data.Mapping);
+					ValidateHeader(parameter.ReferenceMap.Data.Mapping, invalidHeaders);
 				}
 				else
 				{
 					var index = GetFieldIndex(parameter.Data.Name, 0, true);
-					Configuration.HeaderValidated?.Invoke(index != -1, new[] { parameter.Data.Name }, 0, context);
+					if (index == -1)
+					{
+						invalidHeaders.Add(new InvalidHeader { Index = 0, Names = new List<string> { parameter.Data.Name } });
+					}
 				}
 			}
 
@@ -181,7 +188,10 @@ namespace CsvHelper
 
 				var index = GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true);
 				var isValid = index != -1 || memberMap.Data.IsOptional;
-				Configuration.HeaderValidated?.Invoke(isValid, memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, context);
+				if (!isValid)
+				{
+					invalidHeaders.Add(new InvalidHeader { Index = memberMap.Data.NameIndex, Names = memberMap.Data.Names.ToList() });
+				}
 			}
 
 			foreach (var referenceMap in map.ReferenceMaps)
@@ -191,7 +201,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				ValidateHeader(referenceMap.Data.Mapping);
+				ValidateHeader(referenceMap.Data.Mapping, invalidHeaders);
 			}
 		}
 

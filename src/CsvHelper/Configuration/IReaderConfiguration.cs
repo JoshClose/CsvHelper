@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using CsvHelper.TypeConversion;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace CsvHelper.Configuration
 {
@@ -27,7 +28,7 @@ namespace CsvHelper.Configuration
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 		/// Arguments: (isValid, headerNames, headerNameIndex, context)
 		/// </summary>
-		Action<bool, string[], int, ReadingContext> HeaderValidated { get; set; }
+		Action<InvalidHeader[], ReadingContext> HeaderValidated { get; set; }
 
 		/// <summary>
 		/// Gets or sets the function that is called when a missing field is found. The default function will
