@@ -6,6 +6,16 @@
 
 - ValidateHeader will validate all members before calling HeaderValidated.
 
+#### Breaking Changes
+
+- `Action<bool, string[], int, ReadingContext> IReaderConfiguration.HeaderValidated` -> `Action<InvalidHeader[], ReadingContext> IReaderConfiguration.HeaderValidated`
+- `Action<bool, string[], int, ReadingContext> CsvConfiguration.HeaderValidated` -> `Action<InvalidHeader[], ReadingContext> CsvConfiguration.HeaderValidated`
+- `ConfigurationFunctions.HeaderValidated` signature changed from `(bool isValid, string[] headerNames, int headerNameIndex, ReadingContext context)` to `(InvalidHeader[] invalidHeaders, ReadingContext context)`
+- `CsvReader.ValidateHeader(ClassMap map)` -> `CsvReader.ValidateHeader(ClassMap map, List<InvalidHeader> invalidHeaders)`
+- Removed `HeaderValidationException.HeaderNames`.
+- Removed `HeaderValidationException.HeaderNameIndex`.
+- Added `InvalidHeader[] HeaderValidationException.InvalidHeaders`.
+
 ### 16.2.0
 
 #### Features
@@ -24,6 +34,11 @@
 #### Features
 
 - Ability to have duplicate header names when using dynamic records.
+
+#### Breaking Changes
+
+- Added `Func<ReadingContext, int, string> IReaderConfiguration.GetDynamicPropertyName`.
+- Added `Func<ReadingContext, int, string> CsvConfiguration.GetDynamicPropertyName`.
 
 ### 15.0.10
 
