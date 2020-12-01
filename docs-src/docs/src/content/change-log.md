@@ -1,5 +1,11 @@
 # Change Log
 
+### 17.0.1
+
+#### Bug Fixes
+
+- Fixed issue where EnumConverter wasn't working if enum value wasn't an Int32.
+
 ### 17.0.0
 
 #### Features
