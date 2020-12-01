@@ -48,7 +48,6 @@ namespace CsvHelper.TypeConversion
 				}
 
 				nameValues.Add(name, value);
-				nameValues.Add(((int)value).ToString(), value);
 				valueNames.Add(value, nameValues.First().Key);
 			}
 		}
@@ -67,7 +66,25 @@ namespace CsvHelper.TypeConversion
 				return nameValues[text];
 			}
 
-			return base.ConvertFromString(text, row, memberMapData);
+#if NET45 || NET47 || NETSTANDARD2_0
+			try
+			{
+				return Enum.Parse(type, text);
+			}
+			catch
+			{
+				return base.ConvertFromString(text, row, memberMapData);
+			}
+#else
+			if (Enum.TryParse(type, text, out var value))
+			{
+				return value;
+			}
+			else
+			{
+				return base.ConvertFromString(text, row, memberMapData);
+			}
+#endif
 		}
 
 		/// <summary>

@@ -108,6 +108,70 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.AreEqual(NameAttributeEnum.Foo, value);
 		}
 
+		[TestMethod]
+		public void ConvertFromString_Int16Enum_ReturnsEnumValue()
+		{
+			var converter = new EnumConverter(typeof(Int16Enum));
+
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
+			};
+
+			var value = converter.ConvertFromString("1", null, propertyMapData);
+
+			Assert.AreEqual(Int16Enum.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertToString_Int16Enum_ReturnsString()
+		{
+			var converter = new EnumConverter(typeof(Int16Enum));
+
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
+			};
+
+			var value = converter.ConvertToString(Int16Enum.One, null, propertyMapData);
+
+			Assert.AreEqual("One", value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_Int16EnumWithNameAttribute_ReturnsEnumValue()
+		{
+			var converter = new EnumConverter(typeof(Int16Enum));
+
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
+			};
+
+			var value = converter.ConvertFromString("Bar", null, propertyMapData);
+
+			Assert.AreEqual(Int16Enum.Foo, value);
+		}
+
+		[TestMethod]
+		public void ConvertToString_Int16EnumWithNameAttribute_ReturnsString()
+		{
+			var converter = new EnumConverter(typeof(Int16Enum));
+
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverter = converter,
+				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
+			};
+
+			var value = converter.ConvertToString(Int16Enum.Foo, null, propertyMapData);
+
+			Assert.AreEqual("Bar", value);
+		}
+
 		private enum TestEnum
 		{
 			None = 0,
@@ -119,6 +183,14 @@ namespace CsvHelper.Tests.TypeConversion
 			None = 0,
 			[Name("Bar")]
 			Foo = 1
+		}
+
+		private enum Int16Enum : short
+		{
+			None = 0,
+			One = 1,
+			[Name("Bar")]
+			Foo = 2
 		}
 	}
 }
