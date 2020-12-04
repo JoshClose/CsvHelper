@@ -1,5 +1,16 @@
 # Change Log
 
+### 18.0.0
+
+#### Features
+
+- Added parameter mapping via class map or attributes.
+
+#### Breaking Changes
+
+- `NameAttribute` added interface `IParameterMapper`.
+- `IndexAttribute` added interface `IParameterMapper`.
+
 ### 17.0.1
 
 #### Bug Fixes
