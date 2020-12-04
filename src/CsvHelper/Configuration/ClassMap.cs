@@ -130,6 +130,57 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Maps a constructor parameter to a CSV field.
+		/// </summary>
+		/// <param name="name">The name of the constructor parameter.</param>
+		public virtual ParameterMap Parameter(string name)
+		{
+			return Parameter(() => ConfigurationFunctions.GetConstructor(ClassType), name);
+		}
+
+		/// <summary>
+		/// Maps a constructor parameter to a CSV field.
+		/// </summary>
+		/// <param name="getConstructor">A function that returns the <see cref="ConstructorInfo"/> for the constructor.</param>
+		/// <param name="name">The name of the constructor parameter.</param>
+		public virtual ParameterMap Parameter(Func<ConstructorInfo> getConstructor, string name)
+		{
+			if (getConstructor == null) throw new ArgumentNullException(nameof(getConstructor));
+			if (name == null) throw new ArgumentNullException(nameof(name));
+
+			var constructor = getConstructor();
+			var parameters = constructor.GetParameters();
+			var parameter = parameters.SingleOrDefault(p => p.Name == name);
+			if (parameter == null)
+			{
+				throw new ConfigurationException($"Constructor {constructor.GetDefinition()} doesn't contain a paramter with name '{name}'.");
+			}
+
+			return Parameter(constructor, parameter);
+		}
+
+		/// <summary>
+		/// Maps a constructor parameter to a CSV field.
+		/// </summary>
+		/// <param name="constructor">The <see cref="ConstructorInfo"/> for the constructor.</param>
+		/// <param name="parameter">The <see cref="ParameterInfo"/> for the constructor parameter.</param>
+		public virtual ParameterMap Parameter(ConstructorInfo constructor, ParameterInfo parameter)
+		{
+			if (constructor == null) throw new ArgumentNullException(nameof(constructor));
+			if (parameter == null) throw new ArgumentNullException(nameof(parameter));
+
+			if (!constructor.GetParameters().Contains(parameter))
+			{
+				throw new ConfigurationException($"Constructor {constructor.GetDefinition()} doesn't contain parameter '{parameter.GetDefinition()}'.");
+			}
+
+			var parameterMap = new ParameterMap(parameter);
+			ParameterMaps.Add(parameterMap);
+
+			return parameterMap;
+		}
+
+		/// <summary>
 		/// Auto maps all members for the given type. If a member
 		/// is mapped again it will override the existing map.
 		/// </summary>
@@ -435,6 +486,8 @@ namespace CsvHelper.Configuration
 				{
 					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions(parameter.ParameterType), parameterMap.Data.TypeConverterOptions);
 					parameterMap.Data.Index = map.GetMaxIndex() + 1;
+
+					ApplyAttributes(parameterMap);
 				}
 
 				map.ParameterMaps.Add(parameterMap);
@@ -481,6 +534,21 @@ namespace CsvHelper.Configuration
 		protected virtual Type GetGenericType()
 		{
 			return GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
+		}
+
+		/// <summary>
+		/// Applies attribute configurations to the map.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		protected virtual void ApplyAttributes(ParameterMap parameterMap)
+		{
+			var parameter = parameterMap.Data.Parameter;
+			var attributes = parameter.GetCustomAttributes().OfType<IParameterMapper>();
+
+			foreach (var attribute in attributes)
+			{
+				attribute.ApplyTo(parameterMap);
+			}
 		}
 
 		/// <summary>

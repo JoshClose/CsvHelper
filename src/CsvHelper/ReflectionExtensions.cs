@@ -121,5 +121,26 @@ namespace CsvHelper
 		{
 			return type.IsValueType && !type.IsPrimitive && !type.IsEnum;
 		}
+
+		/// <summary>
+		/// Gets a string representation of the constructor.
+		/// </summary>
+		/// <param name="constructor">The constructor.</param>
+		public static string GetDefinition(this ConstructorInfo constructor)
+		{
+			var parameters = constructor.GetParameters();
+			var definition = $"{constructor.Name}({string.Join(", ", parameters.Select(p => p.GetDefinition()))})";
+
+			return definition;
+		}
+
+		/// <summary>
+		/// Gets a string representation of the parameter.
+		/// </summary>
+		/// <param name="parameter">The parameter.</param>
+		public static string GetDefinition(this ParameterInfo parameter)
+		{
+			return $"{parameter.ParameterType.Name} {parameter.Name}";
+		}
 	}
 }

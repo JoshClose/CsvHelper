@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration
 	/// This may contain value type data, a constructor type map,
 	/// or a reference map, depending on the type of the parameter.
 	/// </summary>
-	[DebuggerDisplay( "Data = {Data}" )]
+	[DebuggerDisplay("Data = {Data}")]
 	public class ParameterMap
 	{
 		/// <summary>
@@ -35,9 +35,42 @@ namespace CsvHelper.Configuration
 		/// the given information.
 		/// </summary>
 		/// <param name="parameter">The parameter being mapped.</param>
-		public ParameterMap( ParameterInfo parameter )
+		public ParameterMap(ParameterInfo parameter)
 		{
-			Data = new ParameterMapData( parameter );
+			Data = new ParameterMapData(parameter);
+		}
+
+		/// <summary>
+		/// When reading, is used to get the field
+		/// at the index of the name if there was a
+		/// header specified. It will look for the
+		/// first name match in the order listed.
+		/// When writing, sets the name of the 
+		/// field in the header record.
+		/// The first name will be used.
+		/// </summary>
+		/// <param name="name">The name of the CSV field.</param>
+		public virtual ParameterMap Name(string name)
+		{
+			Data.Name = name;
+			Data.IsNameSet = true;
+
+			return this;
+		}
+
+		/// <summary>
+		/// When reading, is used to get the field at
+		/// the given index. When writing, the fields
+		/// will be written in the order of the field
+		/// indexes.
+		/// </summary>
+		/// <param name="index">The index of the CSV field.</param>
+		public virtual ParameterMap Index(int index)
+		{
+			Data.Index = index;
+			Data.IsIndexSet = true;
+
+			return this;
 		}
 
 		internal int GetMaxIndex()

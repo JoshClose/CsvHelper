@@ -7,7 +7,7 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// Defines methods to enables pluggable configuration of member mapping.
+	/// Defines methods to enable pluggable configuration of member mapping.
 	/// </summary>
 	public interface IMemberReferenceMapper
     {

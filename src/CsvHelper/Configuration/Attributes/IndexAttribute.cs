@@ -12,8 +12,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// will be written in the order of the field
 	/// indexes.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class IndexAttribute : Attribute, IMemberMapper
+	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true )]
+	public class IndexAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Gets the index.
@@ -49,5 +49,15 @@ namespace CsvHelper.Configuration.Attributes
             memberMap.Data.IndexEnd = IndexEnd;
             memberMap.Data.IsIndexSet = true;
         }
-    }
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="ParameterMap"/>.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		public void ApplyTo(ParameterMap parameterMap)
+		{
+			parameterMap.Data.Index = Index;
+			parameterMap.Data.IsIndexSet = true;
+		}
+	}
 }

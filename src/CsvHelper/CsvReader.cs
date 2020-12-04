@@ -149,6 +149,12 @@ namespace CsvHelper
 		{
 			foreach (var parameter in map.ParameterMaps)
 			{
+				if (parameter.Data.IsIndexSet && !parameter.Data.IsNameSet)
+				{
+					// If there is only an index set, we don't want to validate the header name.
+					continue;
+				}
+
 				if (parameter.ConstructorTypeMap != null)
 				{
 					ValidateHeader(parameter.ConstructorTypeMap, invalidHeaders);

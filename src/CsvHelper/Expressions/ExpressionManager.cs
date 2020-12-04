@@ -70,9 +70,17 @@ namespace CsvHelper.Expressions
 				{
 					// Value type.
 
-					var index = reader.Configuration.HasHeaderRecord
-						? reader.GetFieldIndex(parameterMap.Data.Name, 0)
-						: parameterMap.Data.Index;
+					int index;
+					if (parameterMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !parameterMap.Data.IsIndexSet)
+					{
+						// Use name.
+						index = reader.GetFieldIndex(parameterMap.Data.Name, 0);
+					}
+					else
+					{
+						// Use index.
+						index = parameterMap.Data.Index;
+					}
 
 					// Get the field using the field index.
 					var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();

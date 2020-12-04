@@ -17,7 +17,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Creates an instance of <see cref="ClassMap{TClass}"/>.
 		/// </summary>
-		public ClassMap() : base( typeof( TClass ) ) { }
+		public ClassMap() : base(typeof(TClass)) { }
 
 		/// <summary>
 		/// Maps a member to a CSV field.
@@ -26,40 +26,40 @@ namespace CsvHelper.Configuration
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same member.</param>
 		/// <returns>The member mapping.</returns>
-		public virtual MemberMap<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true )
+		public virtual MemberMap<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
 		{
-			var stack = ReflectionHelper.GetMembers( expression );
-			if( stack.Count == 0 )
+			var stack = ReflectionHelper.GetMembers(expression);
+			if (stack.Count == 0)
 			{
-				throw new InvalidOperationException( "No members were found in expression '{expression}'." );
+				throw new InvalidOperationException("No members were found in expression '{expression}'.");
 			}
 
 			ClassMap currentClassMap = this;
 			MemberInfo member;
 
-			if( stack.Count > 1 )
+			if (stack.Count > 1)
 			{
 				// We need to add a reference map for every sub member.
-				while( stack.Count > 1 )
+				while (stack.Count > 1)
 				{
 					member = stack.Pop();
 					Type mapType;
 					var property = member as PropertyInfo;
 					var field = member as FieldInfo;
-					if( property != null )
+					if (property != null)
 					{
-						mapType = typeof( DefaultClassMap<> ).MakeGenericType( property.PropertyType );
+						mapType = typeof(DefaultClassMap<>).MakeGenericType(property.PropertyType);
 					}
-					else if( field != null )
+					else if (field != null)
 					{
-						mapType = typeof( DefaultClassMap<> ).MakeGenericType( field.FieldType );
+						mapType = typeof(DefaultClassMap<>).MakeGenericType(field.FieldType);
 					}
 					else
 					{
-						throw new InvalidOperationException( "The given expression was not a property or a field." );
+						throw new InvalidOperationException("The given expression was not a property or a field.");
 					}
 
-					var referenceMap = currentClassMap.References( mapType, member );
+					var referenceMap = currentClassMap.References(mapType, member);
 					currentClassMap = referenceMap.Data.Mapping;
 				}
 			}
@@ -67,7 +67,7 @@ namespace CsvHelper.Configuration
 			// Add the member map to the last reference map.
 			member = stack.Pop();
 
-			return (MemberMap<TClass, TMember>)currentClassMap.Map( typeof( TClass ), member, useExistingMap );
+			return (MemberMap<TClass, TMember>)currentClassMap.Map(typeof(TClass), member, useExistingMap);
 		}
 
 		/// <summary>
@@ -80,10 +80,10 @@ namespace CsvHelper.Configuration
 		/// <param name="expression">The expression.</param>
 		/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 		/// <returns>The reference mapping for the member.</returns>
-		public virtual MemberReferenceMap References<TClassMap>( Expression<Func<TClass, object>> expression, params object[] constructorArgs ) where TClassMap : ClassMap
+		public virtual MemberReferenceMap References<TClassMap>(Expression<Func<TClass, object>> expression, params object[] constructorArgs) where TClassMap : ClassMap
 		{
-			var member = ReflectionHelper.GetMember( expression );
-			return References( typeof( TClassMap ), member, constructorArgs );
+			var member = ReflectionHelper.GetMember(expression);
+			return References(typeof(TClassMap), member, constructorArgs);
 		}
 	}
 }

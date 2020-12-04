@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// The constructor parameter data for the map.
 	/// </summary>
-	[DebuggerDisplay( "Index = {Index}, Name = {Name}, Parameter = {Parameter}" )]
+	[DebuggerDisplay("Index = {Index}, Name = {Name}, Parameter = {Parameter}")]
 	public class ParameterMapData
 	{
 		/// <summary>
@@ -31,20 +31,34 @@ namespace CsvHelper.Configuration
 		public virtual TypeConverterOptions TypeConverterOptions { get; set; } = new TypeConverterOptions();
 
 		/// <summary>
-		/// Gets or sets the column index.
-		/// </summary>
-		public virtual int Index { get; set; } = -1;
-
-		/// <summary>
 		/// Gets or sets the column name.
 		/// </summary>
 		public virtual string Name { get; set; }
 
 		/// <summary>
+		/// Gets or sets a value indicating if the name was
+		/// explicitly set. True if it was explicitly set,
+		/// otherwise false.
+		/// </summary>
+		public virtual bool IsNameSet { get; set; }
+
+		/// <summary>
+		/// Gets or sets the column index.
+		/// </summary>
+		public virtual int Index { get; set; } = -1;
+
+		/// <summary>
+		/// Gets or sets a value indicating if the index was
+		/// explicitly set. True if it was explicitly set,
+		/// otherwise false.
+		/// </summary>
+		public virtual bool IsIndexSet { get; set; }
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="ParameterMapData"/> class.
 		/// </summary>
 		/// <param name="parameter">The constructor parameter.</param>
-		public ParameterMapData( ParameterInfo parameter )
+		public ParameterMapData(ParameterInfo parameter)
 		{
 			Parameter = parameter;
 		}
