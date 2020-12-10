@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions
+    url: https://stackoverflow.com/questions/tagged/csvhelper
+    about: All questions should be directed to StackOverflow. https://stackoverflow.com/questions/tagged/csvhelper
+           Please only submit a question if no one has been able to answer your question on StackOverflow. I have very limited time to work on this project, and would prefer to use that time for bugs and features.
+           Thanks.
+  - name: Unanswered Questions
+    url: https://github.com/JoshClose/CsvHelper/discussions?discussions_q=category%3AQ%26A
+    about: If StackOverflow has failed you, you can ask a question on the disucssions board.
