@@ -9,3 +9,4 @@ contact_links:
   - name: Unanswered Questions
     url: https://github.com/JoshClose/CsvHelper/discussions?discussions_q=category%3AQ%26A
     about: If StackOverflow has failed you, you can ask a question on the disucssions board.
+           Please add a link to your StackOverflow question so we can answer it in both places.
