@@ -83,27 +83,6 @@ namespace CsvHelper.Tests.Writing
 			}
 		}
 
-		[TestMethod]
-		public void EnvironmentTest()
-		{
-			var records = new List<Foo>
-			{
-				new Foo { Id = 1, Name = "one" },
-			};
-
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = false,
-			};
-			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, config))
-			{
-				csv.WriteRecords(records);
-
-				Assert.AreEqual($"1,one{Environment.NewLine}", writer.ToString());
-			}
-		}
-
 		private class Foo
 		{
 			public int Id { get; set; }

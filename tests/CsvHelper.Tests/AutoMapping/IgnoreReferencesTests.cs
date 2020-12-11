@@ -39,7 +39,7 @@ namespace CsvHelper.Tests.AutoMapping
 				csv.WriteRecords(records);
 				writer.Flush();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 

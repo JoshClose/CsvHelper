@@ -606,7 +606,7 @@ namespace CsvHelper.Tests
 				AllowComments = true
 			};
 			using (var stream = new MemoryStream())
-			using (var writer = new StreamWriter(stream))
+			using (var writer = new TestStreamWriter(stream))
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader, config))
 			{
@@ -869,7 +869,7 @@ namespace CsvHelper.Tests
 		public void RowRawTest()
 		{
 			using (var stream = new MemoryStream())
-			using (var writer = new StreamWriter(stream))
+			using (var writer = new TestStreamWriter(stream))
 			using (var reader = new StreamReader(stream))
 			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
 			{

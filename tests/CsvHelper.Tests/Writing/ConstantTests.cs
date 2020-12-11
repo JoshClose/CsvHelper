@@ -33,7 +33,7 @@ namespace CsvHelper.Tests.Writing
 				writer.Flush();
 				stream.Position = 0;
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id,Name");
 				expected.AppendLine("1,constant");
 				expected.AppendLine("2,constant");
