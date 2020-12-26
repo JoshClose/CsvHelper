@@ -16,74 +16,6 @@ namespace CsvHelper
 	/// </summary>
 	internal static class ReflectionHelper
 	{
-		private static readonly Dictionary<int, Dictionary<int, Delegate>> funcArgCache = new Dictionary<int, Dictionary<int, Delegate>>();
-		private static object locker = new object();
-
-		/// <summary>
-		/// Creates an instance of type T using the current <see cref="IObjectResolver"/>.
-		/// </summary>
-		/// <typeparam name="T">The type of instance to create.</typeparam>
-		/// <param name="args">The constructor arguments.</param>
-		/// <returns>A new instance of type T.</returns>
-		public static T CreateInstance<T>(params object[] args)
-		{
-			return (T)CreateInstance(typeof(T), args);
-		}
-
-		/// <summary>
-		/// Creates an instance of the specified type using the current <see cref="IObjectResolver"/>.
-		/// </summary>
-		/// <param name="type">The type of instance to create.</param>
-		/// <param name="args">The constructor arguments.</param>
-		/// <returns>A new instance of the specified type.</returns>
-		public static object CreateInstance(Type type, params object[] args)
-		{
-			return ObjectResolver.Current.Resolve(type, args);
-		}
-
-		/// <summary>
-		/// Creates an instance of the specified type without using the
-		/// current <see cref="IObjectResolver"/>.
-		/// </summary>
-		/// <param name="type">The type of instance to create.</param>
-		/// <param name="args">The constructor arguments.</param>
-		/// <returns>A new instance of the specified type.</returns>
-		public static object CreateInstanceWithoutContractResolver(Type type, params object[] args)
-		{
-			Dictionary<int, Delegate> funcCache;
-			lock (locker)
-			{
-				if (!funcArgCache.TryGetValue(args.Length, out funcCache))
-				{
-					funcArgCache[args.Length] = funcCache = new Dictionary<int, Delegate>();
-				}
-			}
-
-			var typeHashCodes =
-				new List<Type> { type }
-				.Union(args.Select(a => a.GetType()))
-				.Select(t => t.UnderlyingSystemType.GetHashCode());
-			var key = string.Join("|", typeHashCodes).GetHashCode();
-
-			Delegate func;
-			lock (locker)
-			{
-				if (!funcCache.TryGetValue(key, out func))
-				{
-					funcCache[key] = func = CreateInstanceDelegate(type, args);
-				}
-			}
-
-			try
-			{
-				return func.DynamicInvoke(args);
-			}
-			catch (TargetInvocationException ex)
-			{
-				throw ex.InnerException;
-			}
-		}
-
 		/// <summary>
 		/// Gets the <see cref="PropertyInfo"/> from the type where the property was declared.
 		/// </summary>
@@ -197,37 +129,6 @@ namespace CsvHelper
 			}
 
 			return memberExpression;
-		}
-
-		private static T Default<T>()
-		{
-			return default(T);
-		}
-
-		private static Delegate CreateInstanceDelegate(Type type, params object[] args)
-		{
-			Delegate compiled;
-			if (type.GetTypeInfo().IsValueType)
-			{
-				var method = typeof(ReflectionHelper).GetMethod("Default", BindingFlags.Static | BindingFlags.NonPublic);
-				method = method.MakeGenericMethod(type);
-				compiled = Expression.Lambda(Expression.Call(method)).Compile();
-			}
-			else
-			{
-				var argumentTypes = args.Select(a => a.GetType()).ToArray();
-				var argumentExpressions = argumentTypes.Select((t, i) => Expression.Parameter(t, "var" + i)).ToArray();
-				var constructorInfo = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, argumentTypes, null);
-				if (constructorInfo == null)
-				{
-					throw new InvalidOperationException("No public parameterless constructor found.");
-				}
-
-				var constructor = Expression.New(constructorInfo, argumentExpressions);
-				compiled = Expression.Lambda(constructor, argumentExpressions).Compile();
-			}
-
-			return compiled;
 		}
 	}
 }

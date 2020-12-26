@@ -16,19 +16,11 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void NoConstructor()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var csv = new CsvReader(reader, CultureInfo.InvariantCulture) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				try
-				{
-					csv.Configuration.RegisterClassMap<TestMap>();
-					Assert.Fail();
-				}
-				catch( InvalidOperationException ex )
-				{
-					Assert.AreEqual( "No public parameterless constructor found.", ex.Message );
-				}
+				Assert.ThrowsException<MissingMethodException>(() => csv.Configuration.RegisterClassMap<TestMap>());
 			}
 		}
 
@@ -40,10 +32,10 @@ namespace CsvHelper.Tests.Mappings
 
 		private sealed class TestMap : ClassMap<Test>
 		{
-			private TestMap( string test )
+			private TestMap(string test)
 			{
-				Map( m => m.Id );
-				Map( m => m.Name );
+				Map(m => m.Id);
+				Map(m => m.Name);
 			}
 		}
 	}

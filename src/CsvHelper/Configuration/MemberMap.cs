@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		public static MemberMap CreateGeneric(Type classType, MemberInfo member)
 		{
 			var memberMapType = typeof(MemberMap<,>).MakeGenericType(classType, member.MemberType());
-			var memberMap = (MemberMap)ReflectionHelper.CreateInstance(memberMapType, member);
+			var memberMap = (MemberMap)ObjectResolver.Current.Resolve(memberMapType, member);
 
 			return memberMap;
 		}
@@ -190,7 +190,7 @@ namespace CsvHelper.Configuration
 		/// <see cref="TypeConverter"/> to use.</typeparam>
 		public virtual MemberMap TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
-			TypeConverter(ReflectionHelper.CreateInstance<TConverter>());
+			TypeConverter(ObjectResolver.Current.Resolve<TConverter>());
 
 			return this;
 		}

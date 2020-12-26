@@ -25,7 +25,7 @@ namespace CsvHelper.TypeConversion
 		{
 			// Since we're using the MemberType here, this converter can be used for multiple types
 			// as long as they implement IList.
-			var list = (IList)ReflectionHelper.CreateInstance(memberMapData.Member.MemberType());
+			var list = (IList)ObjectResolver.Current.Resolve(memberMapData.Member.MemberType());
 			var type = memberMapData.Member.MemberType().GetGenericArguments()[0];
 
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)

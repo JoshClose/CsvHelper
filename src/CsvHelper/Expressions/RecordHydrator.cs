@@ -21,10 +21,10 @@ namespace CsvHelper.Expressions
 		/// Creates a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public RecordHydrator( CsvReader reader )
+		public RecordHydrator(CsvReader reader)
 		{
 			this.reader = reader;
-			expressionManager = ObjectResolver.Current.Resolve<ExpressionManager>( reader );
+			expressionManager = ObjectResolver.Current.Resolve<ExpressionManager>(reader);
 		}
 
 		/// <summary>
@@ -32,13 +32,13 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		public void Hydrate<T>( T record )
+		public void Hydrate<T>(T record)
 		{
 			try
 			{
-				GetHydrateRecordAction<T>()( record );
+				GetHydrateRecordAction<T>()(record);
 			}
-			catch( TargetInvocationException ex )
+			catch (TargetInvocationException ex)
 			{
 				throw ex.InnerException;
 			}
@@ -50,9 +50,9 @@ namespace CsvHelper.Expressions
 		/// <typeparam name="T">The record type.</typeparam>
 		protected virtual Action<T> GetHydrateRecordAction<T>()
 		{
-			var recordType = typeof( T );
+			var recordType = typeof(T);
 
-			if( !reader.Context.HydrateRecordActions.TryGetValue( recordType, out Delegate action ) )
+			if (!reader.Context.HydrateRecordActions.TryGetValue(recordType, out Delegate action))
 			{
 				reader.Context.HydrateRecordActions[recordType] = action = CreateHydrateRecordAction<T>();
 			}
@@ -66,53 +66,53 @@ namespace CsvHelper.Expressions
 		/// <typeparam name="T">The record type.</typeparam>
 		protected virtual Action<T> CreateHydrateRecordAction<T>()
 		{
-			var recordType = typeof( T );
+			var recordType = typeof(T);
 
-			if( reader.Context.ReaderConfiguration.Maps[recordType] == null )
+			if (reader.Context.ReaderConfiguration.Maps[recordType] == null)
 			{
-				reader.Context.ReaderConfiguration.Maps.Add( reader.Context.ReaderConfiguration.AutoMap( recordType ) );
+				reader.Context.ReaderConfiguration.Maps.Add(reader.Context.ReaderConfiguration.AutoMap(recordType));
 			}
 
 			var mapping = reader.Context.ReaderConfiguration.Maps[recordType];
 
-			var recordTypeParameter = Expression.Parameter( recordType, "record" );
+			var recordTypeParameter = Expression.Parameter(recordType, "record");
 			var memberAssignments = new List<Expression>();
 
-			foreach( var memberMap in mapping.MemberMaps )
+			foreach (var memberMap in mapping.MemberMaps)
 			{
-				var fieldExpression = expressionManager.CreateGetFieldExpression( memberMap );
-				if( fieldExpression == null )
+				var fieldExpression = expressionManager.CreateGetFieldExpression(memberMap);
+				if (fieldExpression == null)
 				{
 					continue;
 				}
 
-				var memberTypeParameter = Expression.Parameter( memberMap.Data.Member.MemberType(), "member" );
-				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, memberMap.Data.Member );
-				var memberAssignment = Expression.Assign( memberAccess, fieldExpression );
-				memberAssignments.Add( memberAssignment );
+				var memberTypeParameter = Expression.Parameter(memberMap.Data.Member.MemberType(), "member");
+				var memberAccess = Expression.MakeMemberAccess(recordTypeParameter, memberMap.Data.Member);
+				var memberAssignment = Expression.Assign(memberAccess, fieldExpression);
+				memberAssignments.Add(memberAssignment);
 			}
 
-			foreach( var referenceMap in mapping.ReferenceMaps )
+			foreach (var referenceMap in mapping.ReferenceMaps)
 			{
-				if( !reader.CanRead( referenceMap ) )
+				if (!reader.CanRead(referenceMap))
 				{
 					continue;
 				}
 
 				var referenceAssignments = new List<MemberAssignment>();
-				expressionManager.CreateMemberAssignmentsForMapping( referenceMap.Data.Mapping, referenceAssignments );
+				expressionManager.CreateMemberAssignmentsForMapping(referenceMap.Data.Mapping, referenceAssignments);
 
-				var referenceBody = expressionManager.CreateInstanceAndAssignMembers( referenceMap.Data.Member.MemberType(), referenceAssignments );
+				var referenceBody = expressionManager.CreateInstanceAndAssignMembers(referenceMap.Data.Member.MemberType(), referenceAssignments);
 
-				var memberTypeParameter = Expression.Parameter( referenceMap.Data.Member.MemberType(), "referenceMember" );
-				var memberAccess = Expression.MakeMemberAccess( recordTypeParameter, referenceMap.Data.Member );
-				var memberAssignment = Expression.Assign( memberAccess, referenceBody );
-				memberAssignments.Add( memberAssignment );
+				var memberTypeParameter = Expression.Parameter(referenceMap.Data.Member.MemberType(), "referenceMember");
+				var memberAccess = Expression.MakeMemberAccess(recordTypeParameter, referenceMap.Data.Member);
+				var memberAssignment = Expression.Assign(memberAccess, referenceBody);
+				memberAssignments.Add(memberAssignment);
 			}
 
-			var body = Expression.Block( memberAssignments );
+			var body = Expression.Block(memberAssignments);
 
-			return Expression.Lambda<Action<T>>( body, recordTypeParameter ).Compile();
+			return Expression.Lambda<Action<T>>(body, recordTypeParameter).Compile();
 		}
 	}
 }

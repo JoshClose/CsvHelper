@@ -12,17 +12,9 @@ namespace CsvHelper.Tests.ObjectResolverTests
 	[TestClass]
 	public class ResolverSingleTypeTests
 	{
-		[TestCleanup]
-		public void Cleanup()
-		{
-			ObjectResolver.Current = new ObjectResolver(type => true, ReflectionHelper.CreateInstanceWithoutContractResolver);
-		}
-
 		[TestMethod]
 		public void Test()
 		{
-			ObjectResolver.Current = new ObjectResolver(CanResolve, Resolve);
-
 			var parser = new ParserMock
 			{
 				{ "Id", "Name" },
@@ -32,6 +24,7 @@ namespace CsvHelper.Tests.ObjectResolverTests
 
 			using (var csv = new CsvReader(parser))
 			{
+				ObjectResolver.Current = new ObjectResolver(CanResolve, Resolve);
 				var records = csv.GetRecords<A>().ToList();
 
 				Assert.AreEqual(1, records.Count);

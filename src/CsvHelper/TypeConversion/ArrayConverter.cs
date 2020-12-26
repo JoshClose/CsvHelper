@@ -42,7 +42,7 @@ namespace CsvHelper.TypeConversion
 					nameIndex++;
 				}
 
-				array = (Array)ReflectionHelper.CreateInstance(memberMapData.Member.MemberType(), list.Count);
+				array = (Array)ObjectResolver.Current.Resolve(memberMapData.Member.MemberType(), list.Count);
 				for (var i = 0; i < list.Count; i++)
 				{
 					array.SetValue(list[i], i);
@@ -56,7 +56,7 @@ namespace CsvHelper.TypeConversion
 					: memberMapData.IndexEnd;
 
 				var arraySize = indexEnd - memberMapData.Index + 1;
-				array = (Array)ReflectionHelper.CreateInstance(memberMapData.Member.MemberType(), arraySize);
+				array = (Array)ObjectResolver.Current.Resolve(memberMapData.Member.MemberType(), arraySize);
 				var arrayIndex = 0;
 				for (var i = memberMapData.Index; i <= indexEnd; i++)
 				{

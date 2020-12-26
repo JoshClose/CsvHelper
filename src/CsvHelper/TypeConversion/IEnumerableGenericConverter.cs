@@ -26,7 +26,7 @@ namespace CsvHelper.TypeConversion
 			var type = memberMapData.Member.MemberType().GetGenericArguments()[0];
 			var listType = typeof(List<>);
 			listType = listType.MakeGenericType(type);
-			var list = (IList)ReflectionHelper.CreateInstance(listType);
+			var list = (IList)ObjectResolver.Current.Resolve(listType);
 
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{

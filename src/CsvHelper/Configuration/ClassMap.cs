@@ -121,7 +121,7 @@ namespace CsvHelper.Configuration
 				return existingMap;
 			}
 
-			var map = (ClassMap)ReflectionHelper.CreateInstance(classMapType, constructorArgs);
+			var map = (ClassMap)ObjectResolver.Current.Resolve(classMapType, constructorArgs);
 			map.ReIndex(GetMaxIndex() + 1);
 			var reference = new MemberReferenceMap(member, map);
 			ReferenceMaps.Add(reference);
@@ -371,7 +371,7 @@ namespace CsvHelper.Configuration
 
 					mapParents.AddLast(type);
 					var refMapType = typeof(DefaultClassMap<>).MakeGenericType(member.MemberType());
-					var refMap = (ClassMap)ReflectionHelper.CreateInstance(refMapType);
+					var refMap = (ClassMap)ObjectResolver.Current.Resolve(refMapType);
 
 					if (memberTypeInfo.HasConstructor() && !memberTypeInfo.HasParameterlessConstructor() && !memberTypeInfo.IsUserDefinedStruct())
 					{
@@ -471,7 +471,7 @@ namespace CsvHelper.Configuration
 
 					mapParents.AddLast(type);
 					var refMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
-					var refMap = (ClassMap)ReflectionHelper.CreateInstance(refMapType);
+					var refMap = (ClassMap)ObjectResolver.Current.Resolve(refMapType);
 					AutoMapMembers(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
 
@@ -489,7 +489,7 @@ namespace CsvHelper.Configuration
 				{
 					mapParents.AddLast(type);
 					var constructorMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
-					var constructorMap = (ClassMap)ReflectionHelper.CreateInstance(constructorMapType);
+					var constructorMap = (ClassMap)ObjectResolver.Current.Resolve(constructorMapType);
 					// Need to use Max here for nested types.
 					AutoMapConstructorParameters(constructorMap, configuration, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));

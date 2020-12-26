@@ -23,9 +23,8 @@ namespace CsvHelper.Expressions
 		public RecordManager(CsvReader reader)
 		{
 			this.reader = reader;
-			var resolver = ObjectResolver.Current;
-			recordCreatorFactory = resolver.Resolve<RecordCreatorFactory>(reader);
-			recordHydrator = resolver.Resolve<RecordHydrator>(reader);
+			recordCreatorFactory = ObjectResolver.Current.Resolve<RecordCreatorFactory>(reader);
+			recordHydrator = ObjectResolver.Current.Resolve<RecordHydrator>(reader);
 		}
 
 		/// <summary>

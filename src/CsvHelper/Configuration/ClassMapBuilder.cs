@@ -22,7 +22,7 @@ namespace CsvHelper.Configuration
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same member.</param>
 		/// <returns>The member mapping.</returns>
-		IHasMapOptions<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true );
+		IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true);
 	}
 
 	/// <summary>
@@ -54,7 +54,7 @@ namespace CsvHelper.Configuration
 		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		IHasTypeConverterOptions<TClass, TMember> TypeConverter( ITypeConverter typeConverter );
+		IHasTypeConverterOptions<TClass, TMember> TypeConverter(ITypeConverter typeConverter);
 
 		/// <summary>
 		/// Specifies the <see cref="TypeConverter"/> to use
@@ -91,7 +91,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
 		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> member.</param>
-		IHasIndexOptions<TClass, TMember> Index( int index, int indexEnd = -1 );
+		IHasIndexOptions<TClass, TMember> Index(int index, int indexEnd = -1);
 	}
 
 	/// <summary>
@@ -150,7 +150,7 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		IHasNameOptions<TClass, TMember> Name( params string[] names );
+		IHasNameOptions<TClass, TMember> Name(params string[] names);
 	}
 
 	/// <summary>
@@ -179,7 +179,7 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		IHasNameIndexOptions<TClass, TMember> NameIndex( int index );
+		IHasNameIndexOptions<TClass, TMember> NameIndex(int index);
 	}
 
 	/// <summary>
@@ -206,14 +206,14 @@ namespace CsvHelper.Configuration
 		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing( Func<IReaderRow, TMember> convertExpression );
+		IHasMap<TClass> ConvertUsing(Func<IReaderRow, TMember> convertExpression);
 
 		/// <summary>
 		/// Specifies an expression to be used to convert the object
 		/// to a field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression );
+		IHasMap<TClass> ConvertUsing(Func<TClass, string> convertExpression);
 	}
 
 	/// <summary>
@@ -228,7 +228,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		IHasDefaultOptions<TClass, TMember> Default( TMember defaultValue );
+		IHasDefaultOptions<TClass, TMember> Default(TMember defaultValue);
 
 		/// <summary>
 		/// The default value that will be used when reading when
@@ -237,7 +237,7 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		IHasDefaultOptions<TClass, TMember> Default( string defaultValue );
+		IHasDefaultOptions<TClass, TMember> Default(string defaultValue);
 	}
 
 	/// <summary>
@@ -263,7 +263,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="value">The constant value.</param>
-		IHasMap<TClass> Constant( TMember value );
+		IHasMap<TClass> Constant(TMember value);
 	}
 
 	/// <summary>
@@ -280,7 +280,7 @@ namespace CsvHelper.Configuration
 		/// will be thrown.
 		/// </summary>
 		/// <param name="validateExpression">The validation expression.</param>
-		IHasMap<TClass> Validate( Func<string, bool> validateExpression );
+		IHasMap<TClass> Validate(Func<string, bool> validateExpression);
 	}
 
 	/// <summary>
@@ -304,9 +304,9 @@ namespace CsvHelper.Configuration
 			map = new BuilderClassMap<TClass>();
 		}
 
-		public IHasMapOptions<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true )
+		public IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
 		{
-			return new MemberMapBuilder<TClass, TMember>( map, map.Map( expression, useExistingMap ) );
+			return new MemberMapBuilder<TClass, TMember>(map, map.Map(expression, useExistingMap));
 		}
 
 		public ClassMap<TClass> Build()
@@ -339,58 +339,58 @@ namespace CsvHelper.Configuration
 		private readonly ClassMap<TClass> classMap;
 		private readonly MemberMap<TClass, TMember> memberMap;
 
-		public MemberMapBuilder( ClassMap<TClass> classMap, MemberMap<TClass, TMember> memberMap )
+		public MemberMapBuilder(ClassMap<TClass> classMap, MemberMap<TClass, TMember> memberMap)
 		{
 			this.classMap = classMap;
 			this.memberMap = memberMap;
 		}
 
 #pragma warning disable CS0693 // Type parameter has the same name as the type parameter from outer type
-		public IHasMapOptions<TClass, TMember> Map<TMember>( Expression<Func<TClass, TMember>> expression, bool useExistingMap = true )
+		public IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
 		{
-			return new MemberMapBuilder<TClass, TMember>( classMap, classMap.Map( expression, useExistingMap ) );
+			return new MemberMapBuilder<TClass, TMember>(classMap, classMap.Map(expression, useExistingMap));
 		}
 #pragma warning restore CS0693 // Type parameter has the same name as the type parameter from outer type
 
-		public IHasMap<TClass> ConvertUsing( Func<IReaderRow, TMember> convertExpression )
+		public IHasMap<TClass> ConvertUsing(Func<IReaderRow, TMember> convertExpression)
 		{
-			memberMap.ConvertUsing( convertExpression );
+			memberMap.ConvertUsing(convertExpression);
 			return this;
 		}
 
-		public IHasMap<TClass> ConvertUsing( Func<TClass, string> convertExpression )
+		public IHasMap<TClass> ConvertUsing(Func<TClass, string> convertExpression)
 		{
-			memberMap.ConvertUsing( convertExpression );
+			memberMap.ConvertUsing(convertExpression);
 			return this;
 		}
 
-		public IHasDefaultOptions<TClass, TMember> Default( TMember defaultValue )
+		public IHasDefaultOptions<TClass, TMember> Default(TMember defaultValue)
 		{
-			memberMap.Default( defaultValue );
+			memberMap.Default(defaultValue);
 			return this;
 		}
 
-		public IHasDefaultOptions<TClass, TMember> Default( string defaultValue )
+		public IHasDefaultOptions<TClass, TMember> Default(string defaultValue)
 		{
-			memberMap.Default( defaultValue );
+			memberMap.Default(defaultValue);
 			return this;
 		}
 
-		public IHasIndexOptions<TClass, TMember> Index( int index, int indexEnd = -1 )
+		public IHasIndexOptions<TClass, TMember> Index(int index, int indexEnd = -1)
 		{
-			memberMap.Index( index, indexEnd );
+			memberMap.Index(index, indexEnd);
 			return this;
 		}
 
-		public IHasNameOptions<TClass, TMember> Name( params string[] names )
+		public IHasNameOptions<TClass, TMember> Name(params string[] names)
 		{
-			memberMap.Name( names );
+			memberMap.Name(names);
 			return this;
 		}
 
-		public IHasNameIndexOptions<TClass, TMember> NameIndex( int index )
+		public IHasNameIndexOptions<TClass, TMember> NameIndex(int index)
 		{
-			memberMap.NameIndex( index );
+			memberMap.NameIndex(index);
 			return this;
 		}
 
@@ -400,9 +400,9 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		public IHasTypeConverterOptions<TClass, TMember> TypeConverter( ITypeConverter typeConverter )
+		public IHasTypeConverterOptions<TClass, TMember> TypeConverter(ITypeConverter typeConverter)
 		{
-			memberMap.TypeConverter( typeConverter );
+			memberMap.TypeConverter(typeConverter);
 			return this;
 		}
 
@@ -412,15 +412,15 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		public IHasMap<TClass> Constant( TMember value )
+		public IHasMap<TClass> Constant(TMember value)
 		{
-			memberMap.Constant( value );
+			memberMap.Constant(value);
 			return this;
 		}
 
-		public IHasMap<TClass> Validate( Func<string, bool> validateExpression )
+		public IHasMap<TClass> Validate(Func<string, bool> validateExpression)
 		{
-			memberMap.Validate( validateExpression );
+			memberMap.Validate(validateExpression);
 			return this;
 		}
 

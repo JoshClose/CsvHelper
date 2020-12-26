@@ -322,20 +322,20 @@ namespace CsvHelper.Tests.Configuration
 				throw new NotImplementedException();
 			}
 		}
-	}
 
-	public class FakeClass
-	{
-		public string A { get; set; }
-		public int B { get; set; }
-		public DateTime C { get; set; }
-		public double D { get; set; }
-		public FakeInnerClass E { get; set; }
-		public string Optional { get; set; }
-	}
+		private class FakeClass
+		{
+			public string A { get; set; }
+			public int B { get; set; }
+			public DateTime C { get; set; }
+			public double D { get; set; }
+			public FakeInnerClass E { get; set; }
+			public string Optional { get; set; }
+		}
 
-	public class FakeInnerClass
-	{
-		public string E { get; set; }
+		private class FakeInnerClass
+		{
+			public string E { get; set; }
+		}
 	}
 }

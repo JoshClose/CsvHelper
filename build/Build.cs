@@ -122,7 +122,7 @@ class Build : NukeBuild
             DotNetPack(s => s
                 .EnableNoRestore()
                 .EnableNoBuild()
-				.SetProject(Solution)
+				.SetProject(CsvHelperProject)
                 .SetConfiguration(Configuration)
                 .SetOutputDirectory(ArtifactsDirectory)
                 .SetVersion(Version ?? GitVersion.NuGetVersionV2)

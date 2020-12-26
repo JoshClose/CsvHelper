@@ -429,7 +429,7 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
 		public virtual TMap RegisterClassMap<TMap>() where TMap : ClassMap
 		{
-			var map = ReflectionHelper.CreateInstance<TMap>();
+			var map = ObjectResolver.Current.Resolve<TMap>();
 			RegisterClassMap(map);
 
 			return map;
@@ -448,7 +448,7 @@ namespace CsvHelper.Configuration
 				throw new ArgumentException("The class map type must inherit from CsvClassMap.");
 			}
 
-			var map = (ClassMap)ReflectionHelper.CreateInstance(classMapType);
+			var map = (ClassMap)ObjectResolver.Current.Resolve(classMapType);
 			RegisterClassMap(map);
 
 			return map;
@@ -502,7 +502,7 @@ namespace CsvHelper.Configuration
 		/// <returns>The generate map.</returns>
 		public virtual ClassMap<T> AutoMap<T>()
 		{
-			var map = ReflectionHelper.CreateInstance<DefaultClassMap<T>>();
+			var map = ObjectResolver.Current.Resolve<DefaultClassMap<T>>();
 			map.AutoMap(this);
 			maps.Add(map);
 
@@ -517,7 +517,7 @@ namespace CsvHelper.Configuration
 		public virtual ClassMap AutoMap(Type type)
 		{
 			var mapType = typeof(DefaultClassMap<>).MakeGenericType(type);
-			var map = (ClassMap)ReflectionHelper.CreateInstance(mapType);
+			var map = (ClassMap)ObjectResolver.Current.Resolve(mapType);
 			map.AutoMap(this);
 			maps.Add(map);
 

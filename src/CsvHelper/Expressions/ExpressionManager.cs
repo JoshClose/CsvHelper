@@ -340,7 +340,7 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Creates an instance of the given type using <see cref="ReflectionHelper.CreateInstance"/> (in turn using the ObjectResolver), then assigns
+		/// Creates an instance of the given type using <see cref="IObjectResolver"/>, then assigns
 		/// the given member assignments to that instance.
 		/// </summary>
 		/// <param name="recordType">The type of the record we're creating.</param>
@@ -349,8 +349,8 @@ namespace CsvHelper.Expressions
 		public virtual BlockExpression CreateInstanceAndAssignMembers(Type recordType, List<MemberAssignment> assignments)
 		{
 			var expressions = new List<Expression>();
-			var createInstanceMethod = typeof(ReflectionHelper).GetMethod(nameof(ReflectionHelper.CreateInstance), new Type[] { typeof(Type), typeof(object[]) });
-			var instanceExpression = Expression.Convert(Expression.Call(createInstanceMethod, Expression.Constant(recordType), Expression.Constant(new object[0])), recordType);
+			var createInstanceMethod = typeof(IObjectResolver).GetMethod(nameof(IObjectResolver.Resolve), new Type[] { typeof(Type), typeof(object[]) });
+			var instanceExpression = Expression.Convert(Expression.Call(Expression.Constant(ObjectResolver.Current), createInstanceMethod, Expression.Constant(recordType), Expression.Constant(new object[0])), recordType);
 			var variableExpression = Expression.Variable(instanceExpression.Type, "instance");
 			expressions.Add(Expression.Assign(variableExpression, instanceExpression));
 			expressions.AddRange(assignments.Select(b => Expression.Assign(Expression.MakeMemberAccess(variableExpression, b.Member), b.Expression)));

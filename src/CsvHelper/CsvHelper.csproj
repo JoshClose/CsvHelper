@@ -45,6 +45,7 @@
 	<!-- .NET 4.7 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
@@ -52,6 +53,7 @@
 	<!-- .NET Standard 2.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>

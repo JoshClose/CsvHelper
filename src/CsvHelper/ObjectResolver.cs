@@ -11,32 +11,27 @@ namespace CsvHelper
 	/// </summary>
 	public class ObjectResolver : IObjectResolver
 	{
-		private static readonly object locker = new object();
-		private static IObjectResolver current = new ObjectResolver();
+		private static IObjectResolver current;
+		private readonly ObjectCreator objectCreator = new ObjectCreator();
 
 		/// <summary>
 		/// Gets or sets the current resolver.
+		/// Use an instance of this instead if at all possible.
 		/// </summary>
 		public static IObjectResolver Current
 		{
 			get
 			{
-				lock (locker)
-				{
-					return current;
-				}
+				return current;
 			}
 			set
 			{
 				if (value == null)
 				{
-					throw new InvalidOperationException("IObjectResolver cannot be null.");
+					throw new InvalidOperationException($"{nameof(IObjectResolver)} cannot be null.");
 				}
 
-				lock (locker)
-				{
-					current = value;
-				}
+				current = value;
 			}
 		}
 
@@ -60,10 +55,28 @@ namespace CsvHelper
 		/// </summary>
 		public Func<Type, object[], object> ResolveFunction { get; private set; }
 
+		static ObjectResolver()
+		{
+			var objectCreator = new ObjectCreator();
+			var locker = new object();
+			current = new ObjectResolver(type => true, (type, args) =>
+			{
+				lock (locker)
+				{
+					return objectCreator.CreateInstance(type, args);
+				}
+			});
+		}
+
 		/// <summary>
 		/// Creates an instance of the object resolver using default values.
 		/// </summary>
-		public ObjectResolver() : this(type => true, ReflectionHelper.CreateInstanceWithoutContractResolver) { }
+		public ObjectResolver()
+		{
+			CanResolve = type => true;
+			ResolveFunction = ResolveWithObjectCreator;
+			UseFallback = true;
+		}
 
 		/// <summary>
 		/// Creates an instance of the object resolver using the given can create function
@@ -102,7 +115,7 @@ namespace CsvHelper
 
 			if (UseFallback)
 			{
-				return ReflectionHelper.CreateInstanceWithoutContractResolver(type, constructorArgs);
+				return objectCreator.CreateInstance(type, constructorArgs);
 			}
 
 			throw new CsvHelperException($"Type '{type.FullName}' can't be resolved and fallback is turned off.");
@@ -120,6 +133,11 @@ namespace CsvHelper
 		public T Resolve<T>(params object[] constructorArgs)
 		{
 			return (T)Resolve(typeof(T), constructorArgs);
+		}
+
+		private object ResolveWithObjectCreator(Type type, params object[] args)
+		{
+			return objectCreator.CreateInstance(type, args);
 		}
 	}
 }

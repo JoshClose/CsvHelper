@@ -199,7 +199,7 @@ namespace CsvHelper.Configuration
 		/// <see cref="TypeConverter"/> to use.</typeparam>
 		public virtual ParameterMap TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
-			TypeConverter(ReflectionHelper.CreateInstance<TConverter>());
+			TypeConverter(ObjectResolver.Current.Resolve<TConverter>());
 
 			return this;
 		}

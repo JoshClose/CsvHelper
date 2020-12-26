@@ -625,7 +625,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = ReflectionHelper.CreateInstance<TConverter>();
+			var converter = ObjectResolver.Current.Resolve<TConverter>();
 			return GetField<T>(index, converter);
 		}
 
@@ -641,7 +641,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = ReflectionHelper.CreateInstance<TConverter>();
+			var converter = ObjectResolver.Current.Resolve<TConverter>();
 			return GetField<T>(name, converter);
 		}
 
@@ -659,7 +659,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = ReflectionHelper.CreateInstance<TConverter>();
+			var converter = ObjectResolver.Current.Resolve<TConverter>();
 			return GetField<T>(name, index, converter);
 		}
 
@@ -734,7 +734,7 @@ namespace CsvHelper
 			}
 			catch
 			{
-				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
+				field = type.GetTypeInfo().IsValueType ? ObjectResolver.Current.Resolve(type) : null;
 				return false;
 			}
 		}
@@ -755,7 +755,7 @@ namespace CsvHelper
 			var index = GetFieldIndex(name, isTryGet: true);
 			if (index == -1)
 			{
-				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
+				field = type.GetTypeInfo().IsValueType ? ObjectResolver.Current.Resolve(type) : null;
 				return false;
 			}
 
@@ -779,7 +779,7 @@ namespace CsvHelper
 			var fieldIndex = GetFieldIndex(name, index, true);
 			if (fieldIndex == -1)
 			{
-				field = type.GetTypeInfo().IsValueType ? ReflectionHelper.CreateInstance(type) : null;
+				field = type.GetTypeInfo().IsValueType ? ObjectResolver.Current.Resolve(type) : null;
 				return false;
 			}
 
@@ -922,7 +922,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = ReflectionHelper.CreateInstance<TConverter>();
+			var converter = ObjectResolver.Current.Resolve<TConverter>();
 			return TryGetField(index, converter, out field);
 		}
 
@@ -939,7 +939,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = ReflectionHelper.CreateInstance<TConverter>();
+			var converter = ObjectResolver.Current.Resolve<TConverter>();
 			return TryGetField(name, converter, out field);
 		}
 
@@ -957,7 +957,7 @@ namespace CsvHelper
 		{
 			CheckHasBeenRead();
 
-			var converter = ReflectionHelper.CreateInstance<TConverter>();
+			var converter = ObjectResolver.Current.Resolve<TConverter>();
 			return TryGetField(name, index, converter, out field);
 		}
 
