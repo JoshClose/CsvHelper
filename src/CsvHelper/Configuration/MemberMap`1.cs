@@ -20,7 +20,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public MemberMap(MemberInfo member)
 		{
-			TypeConverterOption = new MapTypeConverterOption(this);
+			TypeConverterOption = new MemberMapTypeConverterOption(this);
 
 			Data = new MemberMapData(member);
 		}
@@ -128,7 +128,7 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual new MemberMap<TClass, TMember> Default(string defaultValue)
+		public virtual MemberMap<TClass, TMember> Default(string defaultValue)
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;

@@ -25,7 +25,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Type converter options.
 		/// </summary>
-		public virtual MapTypeConverterOption TypeConverterOption { get; protected set; }
+		public virtual MemberMapTypeConverterOption TypeConverterOption { get; protected set; }
 
 		/// <summary>
 		/// Creates an instance of <see cref="MemberMap"/> using the given Type and <see cref="MemberInfo"/>.
@@ -140,21 +140,6 @@ namespace CsvHelper.Configuration
 				throw new ArgumentException($"Default of type '{defaultValue.GetType().FullName}' does not match member of type '{Data.Member.MemberType().FullName}'.");
 			}
 
-			Data.Default = defaultValue;
-			Data.IsDefaultSet = true;
-
-			return this;
-		}
-
-		/// <summary>
-		/// The default value that will be used when reading when
-		/// the CSV field is empty. This value is not type checked
-		/// and will use a <see cref="ITypeConverter"/> to convert
-		/// the field. This could potentially have runtime errors.
-		/// </summary>
-		/// <param name="defaultValue">The default value.</param>
-		public virtual MemberMap Default(string defaultValue)
-		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
 

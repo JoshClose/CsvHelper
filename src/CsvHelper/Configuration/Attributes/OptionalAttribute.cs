@@ -9,8 +9,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// Ignore the member when reading if no matching field name can be found.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-	public class OptionalAttribute : Attribute, IMemberMapper
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	public class OptionalAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Applies configuration to the given <see cref="MemberMap" />.
@@ -19,6 +19,16 @@ namespace CsvHelper.Configuration.Attributes
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.IsOptional = true;
+		}
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="ParameterMap" />.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		/// <exception cref="NotImplementedException"></exception>
+		public void ApplyTo(ParameterMap parameterMap)
+		{
+			parameterMap.Data.IsOptional = true;
 		}
 	}
 }

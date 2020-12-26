@@ -11,8 +11,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// reading and writing. This value will always be used no matter 
 	/// what other mapping configurations are specified.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-	public class ConstantAttribute : Attribute, IMemberMapper
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	public class ConstantAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Gets the constant.
@@ -38,6 +38,16 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			memberMap.Data.Constant = Constant;
 			memberMap.Data.IsConstantSet = true;
+		}
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="ParameterMap"/>.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		public void ApplyTo(ParameterMap parameterMap)
+		{
+			parameterMap.Data.Constant = Constant;
+			parameterMap.Data.IsConstantSet = true;
 		}
 	}
 }

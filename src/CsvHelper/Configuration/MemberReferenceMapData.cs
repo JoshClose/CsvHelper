@@ -22,7 +22,7 @@ namespace CsvHelper.Configuration
 			set
 			{
 				prefix = value;
-				foreach( var memberMap in Mapping.MemberMaps )
+				foreach (var memberMap in Mapping.MemberMaps)
 				{
 					memberMap.Data.Names.Prefix = value;
 				}
@@ -45,7 +45,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="member">The member.</param>
 		/// <param name="mapping">The mapping this is a reference for.</param>
-		public MemberReferenceMapData( MemberInfo member, ClassMap mapping )
+		public MemberReferenceMapData(MemberInfo member, ClassMap mapping)
 		{
 			Member = member;
 			Mapping = mapping;

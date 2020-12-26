@@ -9,8 +9,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// The string values used to represent a boolean false when converting.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-	public class BooleanFalseValuesAttribute : Attribute, IMemberMapper
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	public class BooleanFalseValuesAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Gets the false values.
@@ -43,6 +43,16 @@ namespace CsvHelper.Configuration.Attributes
 		{
 			memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
 			memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(FalseValues);
+		}
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="ParameterMap"/>.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		public void ApplyTo(ParameterMap parameterMap)
+		{
+			parameterMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
+			parameterMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(FalseValues);
 		}
 	}
 }

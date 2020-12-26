@@ -11,8 +11,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// The <see cref="NumberStyles"/> to use when type converting.
 	/// This is used when doing any number conversions.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
-	public class NumberStylesAttribute : Attribute, IMemberMapper
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	public class NumberStylesAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Gets the number styles.
@@ -24,7 +24,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// This is used when doing any number conversions.
 		/// </summary>
 		/// <param name="numberStyles">The number styles.</param>
-		public NumberStylesAttribute( NumberStyles numberStyles )
+		public NumberStylesAttribute(NumberStyles numberStyles)
 		{
 			NumberStyles = numberStyles;
 		}
@@ -34,8 +34,18 @@ namespace CsvHelper.Configuration.Attributes
 		/// </summary>
 		/// <param name="memberMap">The member map.</param>
 		public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.TypeConverterOptions.NumberStyle = NumberStyles;
-        }
-    }
+		{
+			memberMap.Data.TypeConverterOptions.NumberStyles = NumberStyles;
+		}
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="ParameterMap" />.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		/// <exception cref="NotImplementedException"></exception>
+		public void ApplyTo(ParameterMap parameterMap)
+		{
+			parameterMap.Data.TypeConverterOptions.NumberStyles = NumberStyles;
+		}
+	}
 }

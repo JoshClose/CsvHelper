@@ -48,7 +48,7 @@ namespace CsvHelper.Tests.Culture
 				writer.Flush();
 				stream.Position = 0;
 
-				var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+				var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 				csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.Read();
@@ -91,7 +91,7 @@ namespace CsvHelper.Tests.Culture
 				writer.Flush();
 				stream.Position = 0;
 
-				var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+				var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 				csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.GetRecords<Test>().ToList();
@@ -111,7 +111,7 @@ namespace CsvHelper.Tests.Culture
 				writer.Flush();
 				stream.Position = 0;
 
-				var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+				var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 				csvReader.Configuration.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvReader.Configuration.HasHeaderRecord = false;
 				csvReader.Configuration.RegisterClassMap<TestMap>();

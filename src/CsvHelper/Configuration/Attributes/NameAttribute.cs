@@ -75,7 +75,8 @@ namespace CsvHelper.Configuration.Attributes
 		/// <param name="parameterMap">The parameter map.</param>
 		public void ApplyTo(ParameterMap parameterMap)
 		{
-			parameterMap.Data.Name = Names[0];
+			parameterMap.Data.Names.Clear();
+			parameterMap.Data.Names.AddRange(Names);
 			parameterMap.Data.IsNameSet = true;
 		}
 	}

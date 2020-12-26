@@ -21,7 +21,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var numberStyle = memberMapData.TypeConverterOptions.NumberStyle ?? NumberStyles.Number;
+			var numberStyle = memberMapData.TypeConverterOptions.NumberStyles ?? NumberStyles.Number;
 
 			if (decimal.TryParse(text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var d))
 			{

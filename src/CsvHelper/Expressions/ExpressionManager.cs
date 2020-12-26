@@ -47,6 +47,35 @@ namespace CsvHelper.Expressions
 		{
 			foreach (var parameterMap in map.ParameterMaps)
 			{
+				if (parameterMap.Data.IsConstantSet)
+				{
+					var constantExpression = Expression.Convert(Expression.Constant(parameterMap.Data.Constant), parameterMap.Data.Parameter.ParameterType);
+					argumentExpressions.Add(constantExpression);
+
+					continue;
+				}
+
+				if (parameterMap.Data.Ignore)
+				{
+					Expression defaultExpression;
+					if (parameterMap.Data.IsDefaultSet)
+					{
+						defaultExpression = Expression.Convert(Expression.Constant(parameterMap.Data.Default), parameterMap.Data.Parameter.ParameterType);
+					}
+					else if (parameterMap.Data.Parameter.HasDefaultValue)
+					{
+						defaultExpression = Expression.Convert(Expression.Constant(parameterMap.Data.Parameter.DefaultValue), parameterMap.Data.Parameter.ParameterType);
+					}
+					else
+					{
+						defaultExpression = Expression.Default(parameterMap.Data.Parameter.ParameterType);
+					}
+
+					argumentExpressions.Add(defaultExpression);
+
+					continue;
+				}
+
 				if (parameterMap.ConstructorTypeMap != null)
 				{
 					// Constructor parameter type.
@@ -74,7 +103,27 @@ namespace CsvHelper.Expressions
 					if (parameterMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !parameterMap.Data.IsIndexSet)
 					{
 						// Use name.
-						index = reader.GetFieldIndex(parameterMap.Data.Name, 0);
+						index = reader.GetFieldIndex(parameterMap.Data.Names.ToArray(), parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
+						if (index == -1)
+						{
+							if (parameterMap.Data.IsDefaultSet || parameterMap.Data.IsOptional)
+							{
+								var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
+								argumentExpressions.Add(defaultExpression);
+								continue;
+							}
+
+							// Skip if the index was not found.
+							continue;
+						}
+					}
+					else if (!parameterMap.Data.IsIndexSet && parameterMap.Data.IsOptional)
+					{
+						// If there wasn't an index explicitly, use a default value since constructors need all
+						// arguments to be created.
+						var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
+						argumentExpressions.Add(defaultExpression);
+						continue;
 					}
 					else
 					{
@@ -86,22 +135,14 @@ namespace CsvHelper.Expressions
 					var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();
 					Expression fieldExpression = Expression.Call(Expression.Constant(reader), method, Expression.Constant(index, typeof(int)));
 
-					// Convert the field.
-					var typeConverterExpression = Expression.Constant(parameterMap.Data.TypeConverter);
-					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Context.ReaderConfiguration.CultureInfo }, reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(parameterMap.Data.Parameter.ParameterType), parameterMap.Data.TypeConverterOptions);
-
-					// Create type converter expression.
-					var memberMapData = new MemberMapData(null)
+					if (parameterMap.Data.IsDefaultSet)
 					{
-						Index = parameterMap.Data.Index,
-						TypeConverter = parameterMap.Data.TypeConverter,
-						TypeConverterOptions = parameterMap.Data.TypeConverterOptions
-					};
-					memberMapData.Names.Add(parameterMap.Data.Name);
-					Expression typeConverterFieldExpression = Expression.Call(typeConverterExpression, nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMapData));
-					typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, parameterMap.Data.Parameter.ParameterType);
-
-					fieldExpression = typeConverterFieldExpression;
+						fieldExpression = CreateDefaultExpression(parameterMap, fieldExpression);
+					}
+					else
+					{
+						fieldExpression = CreateTypeConverterExpression(parameterMap, fieldExpression);
+					}
 
 					argumentExpressions.Add(fieldExpression);
 				}
@@ -336,7 +377,43 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Creates an default expression if field expression is empty.
+		/// Creates an expression that converts the field expression using a type converter.
+		/// </summary>
+		/// <param name="parameterMap">The mapping for the parameter.</param>
+		/// <param name="fieldExpression">The field expression.</param>
+		public virtual Expression CreateTypeConverterExpression(ParameterMap parameterMap, Expression fieldExpression)
+		{
+			parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge
+			(
+				new TypeConverterOptions { CultureInfo = reader.Context.ReaderConfiguration.CultureInfo },
+				reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(parameterMap.Data.Parameter.ParameterType),
+				parameterMap.Data.TypeConverterOptions
+			);
+
+			var memberMapData = new MemberMapData(null)
+			{
+				Constant = parameterMap.Data.Constant,
+				Default = parameterMap.Data.Default,
+				Ignore = parameterMap.Data.Ignore,
+				Index = parameterMap.Data.Index,
+				IsConstantSet = parameterMap.Data.IsConstantSet,
+				IsDefaultSet = parameterMap.Data.IsDefaultSet,
+				IsIndexSet = parameterMap.Data.IsIndexSet,
+				IsNameSet = parameterMap.Data.IsNameSet,
+				NameIndex = parameterMap.Data.NameIndex,				
+				TypeConverter = parameterMap.Data.TypeConverter,
+				TypeConverterOptions = parameterMap.Data.TypeConverterOptions
+			};
+			memberMapData.Names.AddRange(parameterMap.Data.Names);
+
+			Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(parameterMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMapData));
+			typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, parameterMap.Data.Parameter.ParameterType);
+
+			return typeConverterFieldExpression;
+		}
+
+		/// <summary>
+		/// Creates a default expression if field expression is empty.
 		/// </summary>
 		/// <param name="memberMap">The mapping for the member.</param>
 		/// <param name="fieldExpression">The field expression.</param>
@@ -358,6 +435,41 @@ namespace CsvHelper.Expressions
 			}
 
 			defaultValueExpression = Expression.Convert(defaultValueExpression, memberMap.Data.Member.MemberType());
+
+			// If null, use string.Empty.
+			var coalesceExpression = Expression.Coalesce(fieldExpression, Expression.Constant(string.Empty));
+
+			// Check if the field is an empty string.
+			var checkFieldEmptyExpression = Expression.Equal(Expression.Convert(coalesceExpression, typeof(string)), Expression.Constant(string.Empty, typeof(string)));
+
+			// Use a default value if the field is an empty string.
+			fieldExpression = Expression.Condition(checkFieldEmptyExpression, defaultValueExpression, typeConverterExpression);
+
+			return fieldExpression;
+		}
+
+		/// <summary>
+		/// Creates a default expression if field expression is empty.
+		/// </summary>
+		/// <param name="parameterMap">The mapping for the parameter.</param>
+		/// <param name="fieldExpression">The field expression.</param>
+		public virtual Expression CreateDefaultExpression(ParameterMap parameterMap, Expression fieldExpression)
+		{
+			var typeConverterExpression = CreateTypeConverterExpression(parameterMap, fieldExpression);
+
+			// Create default value expression.
+			Expression defaultValueExpression;
+			if (parameterMap.Data.Parameter.ParameterType != typeof(string) && parameterMap.Data.Default != null && parameterMap.Data.Default.GetType() == typeof(string))
+			{
+				// The default is a string but the member type is not. Use a converter.
+				//defaultValueExpression = Expression.Call(Expression.Constant(parameterMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, Expression.Constant(parameterMap.Data.Default), Expression.Constant(reader), Expression.Constant(memberMap.Data));
+				defaultValueExpression = CreateTypeConverterExpression(parameterMap, Expression.Constant(parameterMap.Data.Default));
+			}
+			else
+			{
+				// The member type and default type match.
+				defaultValueExpression = Expression.Convert(Expression.Constant(parameterMap.Data.Default), parameterMap.Data.Parameter.ParameterType);
+			}
 
 			// If null, use string.Empty.
 			var coalesceExpression = Expression.Coalesce(fieldExpression, Expression.Constant(string.Empty));

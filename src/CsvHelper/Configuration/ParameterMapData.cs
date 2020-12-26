@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.TypeConversion;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -11,7 +12,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// The constructor parameter data for the map.
 	/// </summary>
-	[DebuggerDisplay("Index = {Index}, Name = {Name}, Parameter = {Parameter}")]
+	[DebuggerDisplay("Index = {Index}, Names = {string.Join(\", \", Names)}, Parameter = {Parameter}")]
 	public class ParameterMapData
 	{
 		/// <summary>
@@ -21,19 +22,16 @@ namespace CsvHelper.Configuration
 		public virtual ParameterInfo Parameter { get; private set; }
 
 		/// <summary>
-		/// Gets or sets the type converter.
+		/// Gets the list of column names.
 		/// </summary>
-		public virtual ITypeConverter TypeConverter { get; set; }
+		public virtual MemberNameCollection Names { get; } = new MemberNameCollection();
 
 		/// <summary>
-		/// Gets or sets the type converter options.
+		/// Gets or sets the index of the name.
+		/// This is used if there are multiple
+		/// columns with the same names.
 		/// </summary>
-		public virtual TypeConverterOptions TypeConverterOptions { get; set; } = new TypeConverterOptions();
-
-		/// <summary>
-		/// Gets or sets the column name.
-		/// </summary>
-		public virtual string Name { get; set; }
+		public virtual int NameIndex { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if the name was
@@ -53,6 +51,48 @@ namespace CsvHelper.Configuration
 		/// otherwise false.
 		/// </summary>
 		public virtual bool IsIndexSet { get; set; }
+
+		/// <summary>
+		/// Gets or sets the type converter.
+		/// </summary>
+		public virtual ITypeConverter TypeConverter { get; set; }
+
+		/// <summary>
+		/// Gets or sets the type converter options.
+		/// </summary>
+		public virtual TypeConverterOptions TypeConverterOptions { get; set; } = new TypeConverterOptions();
+
+		/// <summary>
+		/// Gets or sets a value indicating whether the field should be ignored.
+		/// </summary>
+		public virtual bool Ignore { get; set; }
+
+		/// <summary>
+		/// Gets or sets the default value used when a CSV field is empty.
+		/// </summary>
+		public virtual object Default { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether this instance is default value set.
+		/// the default value was explicitly set. True if it was
+		/// explicitly set, otherwise false.
+		/// </summary>
+		public virtual bool IsDefaultSet { get; set; }
+
+		/// <summary>
+		/// Gets or sets the constant value used for every record.
+		/// </summary>
+		public virtual object Constant { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if a constant was explicitly set.
+		/// </summary>
+		public virtual bool IsConstantSet { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating if a field is optional.
+		/// </summary>
+		public virtual bool IsOptional { get; set; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ParameterMapData"/> class.

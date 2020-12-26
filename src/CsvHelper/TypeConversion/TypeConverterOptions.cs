@@ -36,7 +36,7 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Gets or sets the number style.
 		/// </summary>
-		public NumberStyles? NumberStyle { get; set; }
+		public NumberStyles? NumberStyles { get; set; }
 
 		/// <summary>
 		/// Gets or sets the string format.
@@ -104,9 +104,9 @@ namespace CsvHelper.TypeConversion
 					options.TimeSpanStyle = source.TimeSpanStyle;
 				}
 
-				if (source.NumberStyle != null)
+				if (source.NumberStyles != null)
 				{
-					options.NumberStyle = source.NumberStyle;
+					options.NumberStyles = source.NumberStyles;
 				}
 
 				if (source.Formats != null)

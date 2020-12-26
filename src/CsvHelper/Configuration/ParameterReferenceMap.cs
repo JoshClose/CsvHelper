@@ -24,14 +24,14 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="parameter">The parameter.</param>
 		/// <param name="mapping">The <see cref="ClassMap"/> to use for the reference map.</param>
-		public ParameterReferenceMap( ParameterInfo parameter, ClassMap mapping )
+		public ParameterReferenceMap(ParameterInfo parameter, ClassMap mapping)
 		{
-			if( mapping == null )
+			if (mapping == null)
 			{
-				throw new ArgumentNullException( nameof( mapping ) );
+				throw new ArgumentNullException(nameof(mapping));
 			}
 
-			data = new ParameterReferenceMapData( parameter, mapping );
+			data = new ParameterReferenceMapData(parameter, mapping);
 		}
 
 		/// <summary>
@@ -39,9 +39,9 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="prefix">The prefix to be prepended to headers of each reference parameter.</param>
 		/// <returns>The current <see cref="ParameterReferenceMap" /></returns>
-		public ParameterReferenceMap Prefix( string prefix = null )
+		public ParameterReferenceMap Prefix(string prefix = null)
 		{
-			if( string.IsNullOrEmpty( prefix ) )
+			if (string.IsNullOrEmpty(prefix))
 			{
 				prefix = data.Parameter.Name + ".";
 			}

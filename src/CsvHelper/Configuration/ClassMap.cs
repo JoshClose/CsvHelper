@@ -135,6 +135,8 @@ namespace CsvHelper.Configuration
 		/// <param name="name">The name of the constructor parameter.</param>
 		public virtual ParameterMap Parameter(string name)
 		{
+			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+
 			return Parameter(() => ConfigurationFunctions.GetConstructor(ClassType), name);
 		}
 
@@ -146,7 +148,7 @@ namespace CsvHelper.Configuration
 		public virtual ParameterMap Parameter(Func<ConstructorInfo> getConstructor, string name)
 		{
 			if (getConstructor == null) throw new ArgumentNullException(nameof(getConstructor));
-			if (name == null) throw new ArgumentNullException(nameof(name));
+			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
 
 			var constructor = getConstructor();
 			var parameters = constructor.GetParameters();
@@ -175,6 +177,7 @@ namespace CsvHelper.Configuration
 			}
 
 			var parameterMap = new ParameterMap(parameter);
+			parameterMap.Data.Index = GetMaxIndex(isParameter: true) + 1;
 			ParameterMaps.Add(parameterMap);
 
 			return parameterMap;
@@ -224,19 +227,19 @@ namespace CsvHelper.Configuration
 		/// members and references.
 		/// </summary>
 		/// <returns>The max index.</returns>
-		public virtual int GetMaxIndex()
+		public virtual int GetMaxIndex(bool isParameter = false)
 		{
-			if (ParameterMaps.Count == 0 && MemberMaps.Count == 0 && ReferenceMaps.Count == 0)
+			if (isParameter)
+			{
+				return ParameterMaps.Select(parameterMap => parameterMap.GetMaxIndex()).DefaultIfEmpty(-1).Max();
+			}
+
+			if (MemberMaps.Count == 0 && ReferenceMaps.Count == 0)
 			{
 				return -1;
 			}
 
 			var indexes = new List<int>();
-			if (ParameterMaps.Count > 0)
-			{
-				indexes.AddRange(ParameterMaps.Select(parameterMap => parameterMap.GetMaxIndex()));
-			}
-
 			if (MemberMaps.Count > 0)
 			{
 				indexes.Add(MemberMaps.Max(pm => pm.Data.Index));
@@ -334,17 +337,17 @@ namespace CsvHelper.Configuration
 
 			foreach (var member in members)
 			{
+				if (member.GetCustomAttribute<IgnoreAttribute>() != null)
+				{
+					// Ignore this member including its tree if it's a reference.
+					continue;
+				}
+
 				var typeConverterType = configuration.TypeConverterCache.GetConverter(member).GetType();
 
 				if (configuration.HasHeaderRecord && enumerableConverters.Contains(typeConverterType))
 				{
 					// Enumerable converters can't write the header properly, so skip it.
-					continue;
-				}
-
-				if (member.GetCustomAttribute<IgnoreAttribute>() != null)
-				{
-					// Ignore this member including its tree if it's a reference.
 					continue;
 				}
 
@@ -432,10 +435,19 @@ namespace CsvHelper.Configuration
 
 			foreach (var parameter in parameters)
 			{
-				var typeConverterType = configuration.TypeConverterCache.GetConverter(parameter.ParameterType).GetType();
-
 				var parameterMap = new ParameterMap(parameter);
 
+				if (parameter.GetCustomAttributes<IgnoreAttribute>(true).Any() || parameter.GetCustomAttributes<ConstantAttribute>(true).Any())
+				{
+					// If there is an IgnoreAttribute or ConstantAttribute, we still need to add a map because a constructor requires
+					// all parameters to be present. A default value will be used later on.
+
+					ApplyAttributes(parameterMap);
+					map.ParameterMaps.Add(parameterMap);
+					continue;
+				}
+
+				var typeConverterType = configuration.TypeConverterCache.GetConverter(parameter.ParameterType).GetType();
 				var memberTypeInfo = parameter.ParameterType.GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof(DefaultTypeConverter);
 				if (isDefaultConverter && (memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct()))
@@ -460,7 +472,7 @@ namespace CsvHelper.Configuration
 					mapParents.AddLast(type);
 					var refMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
 					var refMap = (ClassMap)ReflectionHelper.CreateInstance(refMapType);
-					AutoMapMembers(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
+					AutoMapMembers(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
 
 					var referenceMap = new ParameterReferenceMap(parameter, refMap);
@@ -468,6 +480,8 @@ namespace CsvHelper.Configuration
 					{
 						referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix(memberTypeInfo.MemberType(), memberTypeInfo.Name);
 					}
+
+					ApplyAttributes(referenceMap);
 
 					parameterMap.ReferenceMap = referenceMap;
 				}
@@ -477,7 +491,7 @@ namespace CsvHelper.Configuration
 					var constructorMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
 					var constructorMap = (ClassMap)ReflectionHelper.CreateInstance(constructorMapType);
 					// Need to use Max here for nested types.
-					AutoMapConstructorParameters(constructorMap, configuration, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
+					AutoMapConstructorParameters(constructorMap, configuration, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
 
 					parameterMap.ConstructorTypeMap = constructorMap;
@@ -485,7 +499,7 @@ namespace CsvHelper.Configuration
 				else
 				{
 					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions(parameter.ParameterType), parameterMap.Data.TypeConverterOptions);
-					parameterMap.Data.Index = map.GetMaxIndex() + 1;
+					parameterMap.Data.Index = map.GetMaxIndex(isParameter: true) + 1;
 
 					ApplyAttributes(parameterMap);
 				}
@@ -554,6 +568,21 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Applies attribute configurations to the map.
 		/// </summary>
+		/// <param name="referenceMap">The parameter reference map.</param>
+		protected virtual void ApplyAttributes(ParameterReferenceMap referenceMap)
+		{
+			var parameter = referenceMap.Data.Parameter;
+			var attributes = parameter.GetCustomAttributes().OfType<IParameterReferenceMapper>();
+
+			foreach (var attribute in attributes)
+			{
+				attribute.ApplyTo(referenceMap);
+			}
+		}
+
+		/// <summary>
+		/// Applies attribute configurations to the map.
+		/// </summary>
 		/// <param name="memberMap">The member map.</param>
 		protected virtual void ApplyAttributes(MemberMap memberMap)
 		{
@@ -569,7 +598,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Applies attribute configurations to the map.
 		/// </summary>
-		/// <param name="referenceMap">The reference map.</param>
+		/// <param name="referenceMap">The member reference map.</param>
 		protected virtual void ApplyAttributes(MemberReferenceMap referenceMap)
 		{
 			var member = referenceMap.Data.Member;

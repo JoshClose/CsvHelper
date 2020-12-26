@@ -33,15 +33,15 @@ namespace CsvHelper.Configuration
 				// We can't use IsAssignableFrom because both a child
 				// and it's parent/grandparent/etc could be mapped.
 				var currentType = type;
-				while( true )
+				while (true)
 				{
-					if( data.ContainsKey( currentType ) )
+					if (data.ContainsKey(currentType))
 					{
 						return data[currentType];
 					}
 
 					currentType = currentType.GetTypeInfo().BaseType;
-					if( currentType == null )
+					if (currentType == null)
 					{
 						return null;
 					}
@@ -53,7 +53,7 @@ namespace CsvHelper.Configuration
 		/// Creates a new instance using the given configuration.
 		/// </summary>
 		/// <param name="configuration">The configuration.</param>
-		public ClassMapCollection( CsvConfiguration configuration )
+		public ClassMapCollection(CsvConfiguration configuration)
 		{
 			this.configuration = configuration;
 		}
@@ -65,7 +65,7 @@ namespace CsvHelper.Configuration
 		/// <returns>The <see cref="ClassMap"/> for the specified record type.</returns>
 		public virtual ClassMap<T> Find<T>()
 		{
-			return (ClassMap<T>)this[typeof( T )];
+			return (ClassMap<T>)this[typeof(T)];
 		}
 
 		/// <summary>
@@ -74,19 +74,19 @@ namespace CsvHelper.Configuration
 		/// map will replace it.
 		/// </summary>
 		/// <param name="map">The map.</param>
-		internal virtual void Add( ClassMap map )
+		internal virtual void Add(ClassMap map)
 		{
-			SetMapDefaults( map );
+			SetMapDefaults(map);
 
-			var type = GetGenericCsvClassMapType( map.GetType() ).GetGenericArguments().First();
+			var type = GetGenericCsvClassMapType(map.GetType()).GetGenericArguments().First();
 
-			if( data.ContainsKey( type ) )
+			if (data.ContainsKey(type))
 			{
 				data[type] = map;
 			}
 			else
 			{
-				data.Add( type, map );
+				data.Add(type, map);
 			}
 		}
 
@@ -94,16 +94,16 @@ namespace CsvHelper.Configuration
 		/// Removes the class map.
 		/// </summary>
 		/// <param name="classMapType">The class map type.</param>
-		internal virtual void Remove( Type classMapType )
+		internal virtual void Remove(Type classMapType)
 		{
-			if( !typeof( ClassMap ).IsAssignableFrom( classMapType ) )
+			if (!typeof(ClassMap).IsAssignableFrom(classMapType))
 			{
-				throw new ArgumentException( "The class map type must inherit from CsvClassMap." );
+				throw new ArgumentException("The class map type must inherit from CsvClassMap.");
 			}
 
-			var type = GetGenericCsvClassMapType( classMapType ).GetGenericArguments().First();
+			var type = GetGenericCsvClassMapType(classMapType).GetGenericArguments().First();
 
-			data.Remove( type );
+			data.Remove(type);
 		}
 
 		/// <summary>
@@ -119,14 +119,14 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="type">The type to traverse.</param>
 		/// <returns>The type that is CsvClassMap{}.</returns>
-		private Type GetGenericCsvClassMapType( Type type )
+		private Type GetGenericCsvClassMapType(Type type)
 		{
-			if( type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof( ClassMap<> ) )
+			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ClassMap<>))
 			{
 				return type;
 			}
 
-			return GetGenericCsvClassMapType( type.GetTypeInfo().BaseType );
+			return GetGenericCsvClassMapType(type.GetTypeInfo().BaseType);
 		}
 
 		/// <summary>
@@ -136,57 +136,57 @@ namespace CsvHelper.Configuration
 		/// TypeConverterFactory.
 		/// </summary>
 		/// <param name="map">The map to set defaults on.</param>
-		private void SetMapDefaults( ClassMap map )
+		private void SetMapDefaults(ClassMap map)
 		{
-			foreach( var memberMap in map.MemberMaps )
+			foreach (var parameterMap in map.ParameterMaps)
 			{
-				if( memberMap.Data.Member == null )
+				if (parameterMap.ConstructorTypeMap != null)
+				{
+					SetMapDefaults(parameterMap.ConstructorTypeMap);
+				}
+				else if (parameterMap.ReferenceMap != null)
+				{
+					SetMapDefaults(parameterMap.ReferenceMap.Data.Mapping);
+				}
+				else
+				{
+					if (parameterMap.Data.TypeConverter == null)
+					{
+						parameterMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter(parameterMap.Data.Parameter.ParameterType);
+					}
+
+					if (parameterMap.Data.Names.Count == 0)
+					{
+						parameterMap.Data.Names.Add(parameterMap.Data.Parameter.Name);
+					}
+				}
+			}
+
+			foreach (var memberMap in map.MemberMaps)
+			{
+				if (memberMap.Data.Member == null)
 				{
 					continue;
 				}
 
-				if( memberMap.Data.TypeConverter == null )
+				if (memberMap.Data.TypeConverter == null)
 				{
-					memberMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter( memberMap.Data.Member.MemberType() );
+					memberMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter(memberMap.Data.Member.MemberType());
 				}
 
-				if( memberMap.Data.Names.Count == 0 )
+				if (memberMap.Data.Names.Count == 0)
 				{
-					memberMap.Data.Names.Add( memberMap.Data.Member.Name );
-				}
-			}
-
-			foreach( var parameterMap in map.ParameterMaps )
-			{
-				if( parameterMap.ConstructorTypeMap != null )
-				{
-					SetMapDefaults( parameterMap.ConstructorTypeMap );
-				}
-				else if( parameterMap.ReferenceMap != null )
-				{
-					SetMapDefaults( parameterMap.ReferenceMap.Data.Mapping );
-				}
-				else
-				{ 
-					if( parameterMap.Data.TypeConverter == null )
-					{
-						parameterMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter( parameterMap.Data.Parameter.ParameterType );
-					}
-
-					if( parameterMap.Data.Name == null )
-					{
-						parameterMap.Data.Name = parameterMap.Data.Parameter.Name;
-					}
+					memberMap.Data.Names.Add(memberMap.Data.Member.Name);
 				}
 			}
 
-			foreach( var referenceMap in map.ReferenceMaps )
+			foreach (var referenceMap in map.ReferenceMaps)
 			{
-				SetMapDefaults( referenceMap.Data.Mapping );
+				SetMapDefaults(referenceMap.Data.Mapping);
 
-				if( configuration.ReferenceHeaderPrefix != null )
+				if (configuration.ReferenceHeaderPrefix != null)
 				{
-					referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix( referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name );
+					referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix(referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name);
 				}
 			}
 		}

@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration
 	/// <summary>
 	/// Mapping info for a reference member mapping to a class.
 	/// </summary>
-	[DebuggerDisplay( "Member = {Data.Member}, Prefix = {Data.Prefix}" )]
+	[DebuggerDisplay("Member = {Data.Member}, Prefix = {Data.Prefix}")]
 	public class MemberReferenceMap
 	{
 		private readonly MemberReferenceMapData data;
@@ -26,14 +26,14 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="member">The member.</param>
 		/// <param name="mapping">The <see cref="ClassMap"/> to use for the reference map.</param>
-		public MemberReferenceMap( MemberInfo member, ClassMap mapping )
+		public MemberReferenceMap(MemberInfo member, ClassMap mapping)
 		{
-			if( mapping == null )
+			if (mapping == null)
 			{
-				throw new ArgumentNullException( nameof( mapping ) );
+				throw new ArgumentNullException(nameof(mapping));
 			}
 
-			data = new MemberReferenceMapData( member, mapping );
+			data = new MemberReferenceMapData(member, mapping);
 		}
 
 		/// <summary>
@@ -41,9 +41,9 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="prefix">The prefix to be prepended to headers of each reference member.</param>
 		/// <returns>The current <see cref="MemberReferenceMap" /></returns>
-		public MemberReferenceMap Prefix( string prefix = null )
+		public MemberReferenceMap Prefix(string prefix = null)
 		{
-			if( string.IsNullOrEmpty( prefix ) )
+			if (string.IsNullOrEmpty(prefix))
 			{
 				prefix = data.Member.Name + ".";
 			}

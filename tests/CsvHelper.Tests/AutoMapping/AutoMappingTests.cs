@@ -310,7 +310,7 @@ namespace CsvHelper.Tests.AutoMapping
 
 			Assert.AreEqual("Id", map.MemberMaps[0].Data.Names[0]);
 			Assert.AreEqual("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Name);
+			Assert.AreEqual("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
 		}
 
 		[TestMethod]
@@ -320,10 +320,10 @@ namespace CsvHelper.Tests.AutoMapping
 			var map = config.AutoMap<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>();
 
 			Assert.AreEqual("Id", map.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("id", map.ParameterMaps[0].Data.Name);
-			Assert.AreEqual("name", map.ParameterMaps[1].ConstructorTypeMap.ParameterMaps[0].Data.Name);
+			Assert.AreEqual("id", map.ParameterMaps[0].Data.Names[0]);
+			Assert.AreEqual("name", map.ParameterMaps[1].ConstructorTypeMap.ParameterMaps[0].Data.Names[0]);
 			Assert.AreEqual("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Name);
+			Assert.AreEqual("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
 		}
 
 		private class Nested

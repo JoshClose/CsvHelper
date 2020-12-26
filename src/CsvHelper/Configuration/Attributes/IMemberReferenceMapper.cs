@@ -7,12 +7,12 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// Defines methods to enable pluggable configuration of member mapping.
+	/// Defines methods to enable pluggable configuration of member reference mapping.
 	/// </summary>
 	public interface IMemberReferenceMapper
     {
 		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
+		/// Applies configuration to the given <see cref="MemberReferenceMap" />.
 		/// </summary>
 		/// <param name="referenceMap">The reference map.</param>
 		void ApplyTo(MemberReferenceMap referenceMap);

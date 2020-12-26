@@ -46,9 +46,9 @@ namespace CsvHelper.Configuration
 		/// Adds the given name to the collection.
 		/// </summary>
 		/// <param name="name">The name to add.</param>
-		public void Add( string name )
+		public void Add(string name)
 		{
-			names.Add( name );
+			names.Add(name);
 		}
 
 		/// <summary>
@@ -63,9 +63,9 @@ namespace CsvHelper.Configuration
 		/// Adds a range of names to the collection.
 		/// </summary>
 		/// <param name="names">The range to add.</param>
-		public void AddRange( IEnumerable<string> names )
+		public void AddRange(IEnumerable<string> names)
 		{
-			this.names.AddRange( names );
+			this.names.AddRange(names);
 		}
 
 		/// <summary>
@@ -77,7 +77,7 @@ namespace CsvHelper.Configuration
 		/// <filterpriority>1</filterpriority>
 		public IEnumerator<string> GetEnumerator()
 		{
-			for( var i = 0; i < names.Count; i++ )
+			for (var i = 0; i < names.Count; i++)
 			{
 				yield return this[i];
 			}

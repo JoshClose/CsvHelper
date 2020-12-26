@@ -21,7 +21,7 @@ namespace CsvHelper.Tests.AttributeMapping
 			{
 				csv.Configuration.Delimiter = ",";
 				var records = csv.GetRecords<NumberStylesTestClass>().ToList();
-				var actual = csv.Configuration.Maps.Find<NumberStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.NumberStyle;
+				var actual = csv.Configuration.Maps.Find<NumberStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.NumberStyles;
 
 				Assert.AreEqual(NumberStyles.AllowCurrencySymbol, actual);
 			}

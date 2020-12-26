@@ -120,7 +120,7 @@ namespace CsvHelper.Configuration
 		/// Initializes a new instance of the <see cref="MemberMapData"/> class.
 		/// </summary>
 		/// <param name="member">The member.</param>
-		public MemberMapData( MemberInfo member )
+		public MemberMapData(MemberInfo member)
 		{
 			Member = member;
 		}

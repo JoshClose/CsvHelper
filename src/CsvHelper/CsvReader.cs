@@ -149,6 +149,11 @@ namespace CsvHelper
 		{
 			foreach (var parameter in map.ParameterMaps)
 			{
+				if (parameter.Data.Ignore)
+				{
+					continue;
+				}
+
 				if (parameter.Data.IsIndexSet && !parameter.Data.IsNameSet)
 				{
 					// If there is only an index set, we don't want to validate the header name.
@@ -165,10 +170,11 @@ namespace CsvHelper
 				}
 				else
 				{
-					var index = GetFieldIndex(parameter.Data.Name, 0, true);
-					if (index == -1)
+					var index = GetFieldIndex(parameter.Data.Names.ToArray(), parameter.Data.NameIndex, true);
+					var isValid = index != -1 || parameter.Data.IsOptional;
+					if (!isValid)
 					{
-						invalidHeaders.Add(new InvalidHeader { Index = 0, Names = new List<string> { parameter.Data.Name } });
+						invalidHeaders.Add(new InvalidHeader { Index = parameter.Data.NameIndex, Names = parameter.Data.Names.ToList() });
 					}
 				}
 			}

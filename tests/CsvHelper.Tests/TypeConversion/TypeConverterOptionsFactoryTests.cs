@@ -39,7 +39,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetFieldTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+			var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetRecordsTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+			var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -83,7 +83,7 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GetRecordsAppliedWhenMappedTest()
 		{
-			var options = new TypeConverterOptions { NumberStyle = NumberStyles.AllowThousands };
+			var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

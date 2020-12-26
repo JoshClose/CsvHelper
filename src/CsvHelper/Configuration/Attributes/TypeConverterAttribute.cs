@@ -11,8 +11,8 @@ namespace CsvHelper.Configuration.Attributes
 	/// Specifies the <see cref="TypeConverter"/> to use
 	/// when converting the member to and from a CSV field.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-	public class TypeConverterAttribute : Attribute, IMemberMapper
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	public class TypeConverterAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Gets the type converter.
@@ -45,6 +45,15 @@ namespace CsvHelper.Configuration.Attributes
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.TypeConverter = TypeConverter;
+		}
+
+		/// <summary>
+		/// Applies configuration to the given <see cref="ParameterMap" />.
+		/// </summary>
+		/// <param name="parameterMap">The parameter map.</param>
+		public void ApplyTo(ParameterMap parameterMap)
+		{
+			parameterMap.Data.TypeConverter = TypeConverter;
 		}
 	}
 }
