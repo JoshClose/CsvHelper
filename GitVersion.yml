@@ -1,6 +1,6 @@
+next-version: 19.0.0
 assembly-versioning-scheme: Major
 assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{env:BUILD_NUMBER ?? 0}'
-mode: ContinuousDelivery
 branches: {}
 ignore:
   sha: []
