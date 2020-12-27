@@ -1,5 +1,21 @@
 # Change Log
 
+### 19.0.0
+
+#### Features
+
+- Added the rest of the mapping and attributes configuration for constructor parameters.
+- Reading speed improvement.
+
+#### Breaking Changes
+
+- Added `IParameterMapper` to `BooleanFalseValuesAttribute`, `BooleanTrueValuesAttribute`, `ConstantAttribute`, `CultureInfoAttribute`, `DateTimeStylesAttribute`, `DefaultAttribute`, `FormatAttribute`, `HeaderPrefixAttribute`, `IgnoreAttribute`, `NameIndexAttribute`, `NullValuesAttribute`, `NumberStylesAttribute`, `OptionalAttribute`, and `TypeConverterAttribute`.
+- Renamed `MapTypeConverterOption` to `MemberMapTypeConverterOptions`.
+- Renamed `TypeConverterOptions.NumberStyle` to `TypeConverterOptions.NumberStyles`.
+- Removed `ReflectionHelper.CreateInstance<T>`.
+- Removed `ReflectionHelper.CreateInstance`.
+- Removed `ReflectionHelper.CreateInstanceWithoutContractResolver`.
+
 ### 18.0.0
 
 #### Features
