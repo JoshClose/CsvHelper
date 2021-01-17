@@ -1,7 +1,8 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -18,18 +19,20 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void PrepareHeaderTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				PrepareHeaderForMatch = (header, index) => header.Replace(" ", string.Empty),
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("O ne,Tw o,Thr ee");
 				writer.WriteLine("1,2,3");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = (header, index) => header.Replace(" ", string.Empty);
 				var records = csv.GetRecords<dynamic>().ToList();
 				Assert.AreEqual("1", records[0].One);
 				Assert.AreEqual("2", records[0].Two);
@@ -40,15 +43,9 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void BlankHeadersTest()
 		{
-			var s = new StringBuilder();
-			s.AppendLine("Id,,");
-			s.AppendLine("1,2");
-			s.AppendLine("3");
-			using (var reader = new StringReader(s.ToString()))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				csv.Configuration.Delimiter = ",";
-				csv.Configuration.PrepareHeaderForMatch = (header, index) =>
+				PrepareHeaderForMatch = (header, index) =>
 				{
 					if (string.IsNullOrWhiteSpace(header))
 					{
@@ -56,8 +53,15 @@ namespace CsvHelper.Tests.Reading
 					}
 
 					return header;
-				};
-
+				},
+			};
+			var s = new StringBuilder();
+			s.AppendLine("Id,,");
+			s.AppendLine("1,2");
+			s.AppendLine("3");
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, config))
+			{
 				var records = csv.GetRecords<dynamic>().ToList();
 
 				var record = records[0];
@@ -75,31 +79,41 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void DuplicateFieldNamesTest()
 		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue(new[] { "Id", "Name", "Name" });
-			queue.Enqueue(new[] { "1", "foo", "bar" });
-			queue.Enqueue(null);
-			using (var parserMock = new ParserMock(queue))
-			using (var csv = new CsvReader(parserMock))
+			var headerNameCounts = new Dictionary<string, int>();
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				GetDynamicPropertyName = (context, index) =>
+				{
+					var header = context.Reader.HeaderRecord[index];
+					header = context.Reader.Configuration.PrepareHeaderForMatch(header, index);
+					var name = headerNameCounts[header] > 1 ? $"{header}{index}" : header;
+
+					return name;
+				},
+			};
+			var parser = new ParserMock(config)
+			{
+				{ "Id", "Name", "Name" },
+				{ "1", "foo", "bar" },
+				null
+			};
+			using (var csv = new CsvReader(parser))
 			{
 				csv.Read();
 				csv.ReadHeader();
-				var headerNameCounts =
-					(from header in csv.Context.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(h, i))
+				var counts =
+					(from header in csv.Context.Reader.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(h, i))
 					 group header by header into g
 					 select new
 					 {
 						 Header = g.Key,
 						 Count = g.Count()
 					 }).ToDictionary(x => x.Header, x => x.Count);
-				csv.Configuration.GetDynamicPropertyName = (context, index) =>
+				foreach (var count in counts)
 				{
-					var header = context.HeaderRecord[index];
-					header = context.ReaderConfiguration.PrepareHeaderForMatch(header, index);
-					var name = headerNameCounts[header] > 1 ? $"{header}{index}" : header;
+					headerNameCounts.Add(count.Key, count.Value);
+				}
 
-					return name;
-				};
 				var records = csv.GetRecords<dynamic>().ToList();
 				var record = records[0];
 				Assert.AreEqual("1", record.Id);

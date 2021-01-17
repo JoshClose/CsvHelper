@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -17,18 +17,20 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GlobalNullValueTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty);
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty);
 				var records = csv.GetRecords<Test>().ToList();
 
 				Assert.IsNull(records[0].Id);
@@ -39,18 +41,20 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void MappingNullValueTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<TestMap>();
+				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
 				Assert.IsNull(records[0].Id);
@@ -61,19 +65,21 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void GlobalAndMappingNullValueTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine(",");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
-				csv.Configuration.RegisterClassMap<TestMap>();
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
 				Assert.IsNull(records[0].Id);

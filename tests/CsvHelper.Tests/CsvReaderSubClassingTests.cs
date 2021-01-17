@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,23 +15,20 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void GetRecordTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Id", "Name" },
-				new[] { "1", "one" },
-				new[] { "2", "two" },
-				null
+				{ "Id", "Name" },
+				{ "1", "one" },
+				{ "2", "two" },
 			};
 
-			var parserMock = new ParserMock( new Queue<string[]>( data ) );
-
-			var csvReader = new MyCsvReader( parserMock );
+			var csvReader = new MyCsvReader(parserMock);
 			csvReader.GetRecords<Test>().ToList();
 		}
 
 		private class MyCsvReader : CsvReader
 		{
-			public MyCsvReader( IParser parser ) : base( parser ){}
+			public MyCsvReader(IParser parser) : base(parser) { }
 		}
 
 		private class Test

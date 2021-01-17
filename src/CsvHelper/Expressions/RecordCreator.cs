@@ -1,8 +1,9 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace CsvHelper.Expressions
@@ -12,6 +13,8 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public abstract class RecordCreator
 	{
+		private readonly Dictionary<Type, Delegate> createRecordFuncs = new Dictionary<Type, Delegate>();
+
 		/// <summary>
 		/// The reader.
 		/// </summary>
@@ -71,9 +74,9 @@ namespace CsvHelper.Expressions
 		/// <param name="recordType">The record type.</param>
 		protected virtual Delegate GetCreateRecordDelegate(Type recordType)
 		{
-			if (!Reader.Context.CreateRecordFuncs.TryGetValue(recordType, out Delegate func))
+			if (!createRecordFuncs.TryGetValue(recordType, out Delegate func))
 			{
-				Reader.Context.CreateRecordFuncs[recordType] = func = CreateCreateRecordDelegate(recordType);
+				createRecordFuncs[recordType] = func = CreateCreateRecordDelegate(recordType);
 			}
 
 			return func;

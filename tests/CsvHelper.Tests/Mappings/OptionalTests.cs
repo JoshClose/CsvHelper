@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -20,19 +20,15 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void OptionalWithExistingColumnTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Id", "Name" },
-				new[] { "1", "one" },
-				new[] { "2", "two" },
-				null
+				{ "Id", "Name" },
+				{ "1", "one" },
+				{ "2", "two" },
 			};
 
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
 			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<FooOptionalIntMap>();
+			csvReader.Context.RegisterClassMap<FooOptionalIntMap>();
 
 			var records = csvReader.GetRecords<Foo>().ToList();
 
@@ -47,19 +43,15 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void OptionalIntTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Name" },
-				new[] { "one" },
-				new[] { "two" },
-				null
+				{ "Name" },
+				{ "one" },
+				{ "two" },
 			};
 
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
 			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<FooOptionalIntMap>();
+			csvReader.Context.RegisterClassMap<FooOptionalIntMap>();
 
 			var records = csvReader.GetRecords<Foo>().ToList();
 
@@ -76,19 +68,15 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void OptionalIntDefaultTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Name" },
-				new[] { "one" },
-				new[] { "two" },
-				null
+				{ "Name" },
+				{ "one" },
+				{ "two" },
 			};
 
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
 			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<FooOptionalIntDefaultMap>();
+			csvReader.Context.RegisterClassMap<FooOptionalIntDefaultMap>();
 
 			var records = csvReader.GetRecords<Foo>().ToList();
 
@@ -105,19 +93,15 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void OptionalStringIntDefaultTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Name" },
-				new[] { "one" },
-				new[] { "two" },
-				null
+				{ "Name" },
+				{ "one" },
+				{ "two" },
 			};
 
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
 			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<FooOptionalStringIntDefaultMap>();
+			csvReader.Context.RegisterClassMap<FooOptionalStringIntDefaultMap>();
 
 			var records = csvReader.GetRecords<Foo>().ToList();
 
@@ -134,19 +118,15 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void OptionalStringTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Id" },
-				new[] { "1" },
-				new[] { "2" },
-				null
+				{ "Id" },
+				{ "1" },
+				{ "2" },
 			};
 
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
 			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<FooOptionalStringMap>();
+			csvReader.Context.RegisterClassMap<FooOptionalStringMap>();
 
 			var records = csvReader.GetRecords<Foo>().ToList();
 
@@ -163,19 +143,15 @@ namespace CsvHelper.Tests.Mappings
 		[TestMethod]
 		public void OptionalStringDefaultTest()
 		{
-			var data = new List<string[]>
+			var parserMock = new ParserMock
 			{
-				new[] { "Id" },
-				new[] { "1" },
-				new[] { "2" },
-				null
+				{ "Id" },
+				{ "1" },
+				{ "2" },
 			};
 
-			var queue = new Queue<string[]>(data);
-			var parserMock = new ParserMock(queue);
-
 			var csvReader = new CsvReader(parserMock);
-			csvReader.Configuration.RegisterClassMap<FooOptionalStringDefaultMap>();
+			csvReader.Context.RegisterClassMap<FooOptionalStringDefaultMap>();
 
 			var records = csvReader.GetRecords<Foo>().ToList();
 

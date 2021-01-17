@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -45,19 +45,20 @@ namespace CsvHelper.Tests
 				new TestRecordWithDecimal
 				{
 					DecimalColumn = 12.0m,
-					DateTimeColumn = new DateTime( 2010, 11, 11 )
+					DateTimeColumn = new DateTime(2010, 11, 11)
 				}
 			};
 
 			var writer = new StringWriter();
-			var csv = new CsvWriter(writer, new CsvHelper.Configuration.CsvConfiguration(new CultureInfo("uk-UA")) { Delimiter = ";" });
+			var culture = new CultureInfo("uk-UA");
+			var csv = new CsvWriter(writer, new CsvHelper.Configuration.CsvConfiguration(culture) { Delimiter = ";" });
 
 			csv.WriteRecords(records);
 
 			var csvFile = writer.ToString();
 
-			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
-									"12,0;11.11.2010 0:00:00\r\n";
+			var expected = "DecimalColumn;DateTimeColumn\r\n" +
+							$"{records[0].DecimalColumn.ToString(culture)};{records[0].DateTimeColumn.ToString(culture)}\r\n";
 
 			Assert.AreEqual(expected, csvFile);
 		}

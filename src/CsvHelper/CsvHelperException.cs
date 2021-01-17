@@ -1,8 +1,9 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Text;
 
 namespace CsvHelper
 {
@@ -13,20 +14,12 @@ namespace CsvHelper
 	public class CsvHelperException : Exception
 	{
 		[NonSerialized]
-		private readonly ReadingContext readingContext;
-
-		[NonSerialized]
-		private readonly WritingContext writingContext;
+		private readonly CsvContext context;
 
 		/// <summary>
-		/// Gets the context used when reading.
+		/// Gets the context.
 		/// </summary>
-		public ReadingContext ReadingContext => readingContext;
-
-		/// <summary>
-		/// Gets the context used when writing.
-		/// </summary>
-		public WritingContext WritingContext => writingContext;
+		public CsvContext Context => context;
 
 		/// <summary>
 		/// Initializes a new instance of the CsvHelperException class.
@@ -49,28 +42,20 @@ namespace CsvHelper
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvHelperException"/> class.
 		/// </summary>
-		public CsvHelperException(ReadingContext context)
+		public CsvHelperException(CsvContext context)
 		{
-			readingContext = context;
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvHelperException"/> class.
-		/// </summary>
-		public CsvHelperException(WritingContext context)
-		{
-			writingContext = context;
+			this.context = context;
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvHelperException"/> class
 		/// with a specified error message.
 		/// </summary>
-		/// <param name="context">The reading context.</param>
+		/// <param name="context">The context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public CsvHelperException(ReadingContext context, string message) : base(message)
+		public CsvHelperException(CsvContext context, string message) : base(AddDetails(message, context))
 		{
-			readingContext = context;
+			this.context = context;
 		}
 
 		/// <summary>
@@ -78,36 +63,92 @@ namespace CsvHelper
 		/// with a specified error message and a reference to the inner exception that 
 		/// is the cause of this exception.
 		/// </summary>
-		/// <param name="context">The reading context.</param>
+		/// <param name="context">The context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public CsvHelperException(ReadingContext context, string message, Exception innerException) : base(message, innerException)
+		public CsvHelperException(CsvContext context, string message, Exception innerException) : base(AddDetails(message, context), innerException)
 		{
-			readingContext = context;
+			this.context = context;
 		}
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvHelperException"/> class
-		/// with a specified error message.
-		/// </summary>
-		/// <param name="context">The writing context.</param>
-		/// <param name="message">The message that describes the error.</param>
-		public CsvHelperException(WritingContext context, string message) : base(message)
+		private static string AddDetails(string message, CsvContext context)
 		{
-			writingContext = context;
-		}
+			var indent = new string(' ', 3);
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvHelperException"/> class
-		/// with a specified error message and a reference to the inner exception that 
-		/// is the cause of this exception.
-		/// </summary>
-		/// <param name="context">The writing context.</param>
-		/// <param name="message">The error message that explains the reason for the exception.</param>
-		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public CsvHelperException(WritingContext context, string message, Exception innerException) : base(message, innerException)
-		{
-			writingContext = context;
+			var details = new StringBuilder();
+
+			if (context.Reader != null)
+			{
+				details.AppendLine($"{nameof(IReader)} state:");
+				details.AppendLine($"{indent}{nameof(IReader.ColumnCount)}: {context.Reader.ColumnCount}");
+				details.AppendLine($"{indent}{nameof(IReader.CurrentIndex)}: {context.Reader.CurrentIndex}");
+				try
+				{
+					var record = new StringBuilder();
+					if (context.Reader.HeaderRecord != null)
+					{
+						record.Append("[\"");
+						string.Join("\",\"", context.Reader.HeaderRecord);
+						record.Append("\"]");
+					}
+
+					details.AppendLine($"{indent}{nameof(IReader.HeaderRecord)}:{Environment.NewLine}{record}");
+				}
+				catch { }
+			}
+
+			if (context.Parser != null)
+			{
+				details.AppendLine($"{nameof(IParser)} state:");
+				details.AppendLine($"{indent}{nameof(IParser.ByteCount)}: {context.Parser.ByteCount}");
+				details.AppendLine($"{indent}{nameof(IParser.CharCount)}: {context.Parser.CharCount}");
+				details.AppendLine($"{indent}{nameof(IParser.Row)}: {context.Parser.Row}");
+				details.AppendLine($"{indent}{nameof(IParser.RawRow)}: {context.Parser.RawRow}");
+				details.AppendLine($"{indent}{nameof(IParser.Count)}: {context.Parser.Count}");
+
+				try
+				{
+					details.AppendLine($"{indent}{nameof(IParser.RawRecord)}:{Environment.NewLine}{context.Parser.RawRecord}");
+				}
+				catch { }
+
+				try
+				{
+					var record = new StringBuilder();
+					if (context.Parser.Count > 0)
+					{
+						record.Append("[\"");
+						string.Join("\",\"", context.Parser.Record);
+						record.Append("\"]");
+					}
+
+					details.AppendLine($"{indent}{nameof(IParser.Record)}:{Environment.NewLine}{record}");
+				}
+				catch { }
+			}
+
+			if (context.Writer != null)
+			{
+				details.AppendLine($"{nameof(IWriter)} state:");
+				details.AppendLine($"{indent}{nameof(IWriter.Row)}: {context.Writer.Row}");
+				details.AppendLine($"{indent}{nameof(IWriter.Index)}: {context.Writer.Index}");
+
+				var record = new StringBuilder();
+				if (context.Writer.HeaderRecord != null)
+				{
+					record.Append("[");
+					if (context.Writer.HeaderRecord.Length > 0)
+					{
+						record.Append("\"");
+						string.Join("\",\"", context.Writer.HeaderRecord);
+						record.Append("\"");
+					}
+					record.Append("]");
+				}
+				details.AppendLine($"{indent}{nameof(IWriter.HeaderRecord)}:{Environment.NewLine}{context.Writer.Row}");
+			}
+
+			return $"{message}{Environment.NewLine}{details}";
 		}
 	}
 }

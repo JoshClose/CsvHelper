@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -21,7 +21,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="context">The reading context.</param>
 		/// <param name="invalidHeaders">The invalid headers.</param>
-		public HeaderValidationException(ReadingContext context, InvalidHeader[] invalidHeaders) : base(context)
+		public HeaderValidationException(CsvContext context, InvalidHeader[] invalidHeaders) : base(context)
 		{
 			InvalidHeaders = invalidHeaders;
 		}
@@ -33,7 +33,7 @@ namespace CsvHelper
 		/// <param name="context">The reading context.</param>
 		/// <param name="invalidHeaders">The invalid headers.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public HeaderValidationException(ReadingContext context, InvalidHeader[] invalidHeaders, string message) : base(context, message)
+		public HeaderValidationException(CsvContext context, InvalidHeader[] invalidHeaders, string message) : base(context, message)
 		{
 			InvalidHeaders = invalidHeaders;
 		}
@@ -47,7 +47,7 @@ namespace CsvHelper
 		/// <param name="invalidHeaders">The invalid headers.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public HeaderValidationException(ReadingContext context, InvalidHeader[] invalidHeaders, string message, Exception innerException) : base(context, message, innerException)
+		public HeaderValidationException(CsvContext context, InvalidHeader[] invalidHeaders, string message, Exception innerException) : base(context, message, innerException)
 		{
 			InvalidHeaders = invalidHeaders;
 		}

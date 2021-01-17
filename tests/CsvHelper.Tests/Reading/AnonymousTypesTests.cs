@@ -1,7 +1,8 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 using System.IO;
@@ -26,7 +27,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -56,7 +56,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -80,17 +79,19 @@ namespace CsvHelper.Tests.Reading
 				Name = string.Empty
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 
@@ -114,7 +115,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -143,7 +143,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -166,17 +165,19 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 
@@ -201,7 +202,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("A,Id,Name,B");
 				writer.WriteLine("-1,1,one,b");
 				writer.Flush();
@@ -234,7 +234,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("A,Id,Name,B");
 				writer.WriteLine("-1,1,one,b");
 				writer.Flush();
@@ -261,17 +260,19 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Test()
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("-1,b,1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 
@@ -300,7 +301,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -333,7 +333,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -360,17 +359,19 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 
@@ -400,7 +401,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -436,7 +436,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -466,17 +465,19 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 
@@ -503,7 +504,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name,A");
 				writer.WriteLine("1,one,2");
 				writer.Flush();
@@ -537,7 +537,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name,A");
 				writer.WriteLine("1,one,2");
 				writer.Flush();
@@ -565,17 +564,19 @@ namespace CsvHelper.Tests.Reading
 				}
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("2,1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 
@@ -599,7 +600,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("ParentId,ChildId,ParentName,ChildName");
 				writer.WriteLine("1,2,one,two");
 				writer.Flush();
@@ -630,7 +630,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("ParentId,ChildId,ParentName,ChildName");
 				writer.WriteLine("1,2,one,two");
 				writer.Flush();
@@ -655,17 +654,19 @@ namespace CsvHelper.Tests.Reading
 				Reference = new Child()
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("1,one,2,two");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
 				var records = csv.GetRecords(definition).ToList();
 				Assert.AreEqual(1, records.Count);
 

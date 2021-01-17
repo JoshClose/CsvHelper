@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -16,12 +16,15 @@ namespace CsvHelper.Tests.Defaults
 		[TestMethod]
 		public void EmptyFieldsOnNullReferencePropertyTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				UseNewObjectForNullReferenceMembers = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var csv = new CsvWriter(writer, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				var records = new List<A>
 				{
 					new A
@@ -38,8 +41,7 @@ namespace CsvHelper.Tests.Defaults
 					},
 				};
 
-				csv.Configuration.UseNewObjectForNullReferenceMembers = false;
-				csv.Configuration.RegisterClassMap<AMap>();
+				csv.Context.RegisterClassMap<AMap>();
 				csv.WriteRecords(records);
 
 				writer.Flush();
@@ -61,7 +63,6 @@ namespace CsvHelper.Tests.Defaults
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var records = new List<A>
 				{
 					new A
@@ -78,7 +79,7 @@ namespace CsvHelper.Tests.Defaults
 					},
 				};
 
-				csv.Configuration.RegisterClassMap<AMap>();
+				csv.Context.RegisterClassMap<AMap>();
 				csv.WriteRecords(records);
 
 				writer.Flush();

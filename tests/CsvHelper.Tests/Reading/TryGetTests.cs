@@ -1,9 +1,11 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,13 +17,12 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetFieldInvalidIndexTest()
 		{
-			var data1 = new[] { "One", "Two" };
-			var data2 = new[] { "one", "two" };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data1);
-			queue.Enqueue(data2);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock
+			{
+				new[] { "One", "Two" },
+				new[] { "one", "two" },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
 			reader.Read();
@@ -34,13 +35,12 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetFieldInvalidNameTest()
 		{
-			var data1 = new[] { "One", "Two" };
-			var data2 = new[] { "one", "two" };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data1);
-			queue.Enqueue(data2);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock
+			{
+				new[] { "One", "Two" },
+				new[] { "one", "two" },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
 			reader.Read();
@@ -54,13 +54,12 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetFieldTest()
 		{
-			var data1 = new[] { "One", "Two" };
-			var data2 = new[] { "1", "2" };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data1);
-			queue.Enqueue(data2);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock
+			{
+				new[] { "One", "Two" },
+				new[] { "1", "2" },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
 			reader.Read();
@@ -75,13 +74,12 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetFieldStrictTest()
 		{
-			var data1 = new[] { "One", "Two" };
-			var data2 = new[] { "1", "2" };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data1);
-			queue.Enqueue(data2);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock
+			{
+				new[] { "One", "Two" },
+				new[] { "1", "2" },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
 			reader.Read();
@@ -96,17 +94,21 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetFieldEmptyDate()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
 			// fails for an empty string for a date.
-			var data = new[] { " " };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock(config)
+			{
+				new[] { " " },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
-			reader.Configuration.HasHeaderRecord = false;
 			reader.Read();
 
 			var got = reader.TryGetField(0, out DateTime field);
@@ -118,17 +120,21 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetNullableFieldEmptyDate()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+
 			// DateTimeConverter.IsValid() doesn't work correctly
 			// so we need to test and make sure that the conversion
 			// fails for an empty string for a date.
-			var data = new[] { " " };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var parserMock = new ParserMock(config)
+			{
+				new[] { " " },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
-			reader.Configuration.HasHeaderRecord = false;
 			reader.Read();
 
 			var got = reader.TryGetField(0, out DateTime? field);
@@ -140,14 +146,18 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TryGetDoesNotThrowWhenWillThrowOnMissingFieldIsEnabled()
 		{
-			var data = new[] { "1" };
-			var queue = new Queue<string[]>();
-			queue.Enqueue(data);
-			queue.Enqueue(null);
-			var parserMock = new ParserMock(queue);
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				MissingFieldFound = null,
+			};
+
+			var parserMock = new ParserMock(config)
+			{
+				new[] { "1" },
+				null
+			};
 
 			var reader = new CsvReader(parserMock);
-			reader.Configuration.MissingFieldFound = null;
 			reader.Read();
 			reader.ReadHeader();
 			Assert.IsFalse(reader.TryGetField("test", out string field));

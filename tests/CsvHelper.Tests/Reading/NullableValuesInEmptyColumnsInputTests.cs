@@ -1,9 +1,11 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
 
 namespace CsvHelper.Tests.Reading
 {
@@ -13,23 +15,25 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void SingleColumnCsvWithHeadersAndSingleNullDataRowTest()
 		{
-			var parser = new ParserMock
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreBlankLines = false,
+			};
+			var parser = new ParserMock(config)
 			{
 				{ "NullableInt32Field" },
 				{ new string[0] },
-				{ null }
 			};
 
 			using (var csv = new CsvReader(parser))
 			{
-				csv.Configuration.IgnoreBlankLines = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<int?>().NullValues.Add(string.Empty);
+				csv.Context.TypeConverterOptionsCache.GetOptions<int?>().NullValues.Add(string.Empty);
 
 				// Read header row, assert header row columns:
 				Assert.IsTrue(csv.Read());
 				Assert.IsTrue(csv.ReadHeader());
-				Assert.AreEqual(1, csv.Context.HeaderRecord.Length);
-				Assert.AreEqual("NullableInt32Field", csv.Context.HeaderRecord[0]);
+				Assert.AreEqual(1, csv.HeaderRecord.Length);
+				Assert.AreEqual("NullableInt32Field", csv.HeaderRecord[0]);
 
 				// Read single data row, assert single null value:
 				Assert.IsTrue(csv.Read());
@@ -48,25 +52,27 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void SingleColumnCsvWithHeadersAndPresentAndNullDataRowTest()
 		{
-			var parser = new ParserMock
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreBlankLines = false,
+			};
+			var parser = new ParserMock(config)
 			{
 				{ "NullableInt32Field" },
 				{ "1" },
 				{ new string[0] },
 				{ "3" },
-				{ null }
 			};
 
 			using (var csv = new CsvReader(parser))
 			{
-				csv.Configuration.IgnoreBlankLines = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<int?>().NullValues.Add(string.Empty);
+				csv.Context.TypeConverterOptionsCache.GetOptions<int?>().NullValues.Add(string.Empty);
 
 				// Read header row, assert header row columns:
 				Assert.IsTrue(csv.Read());
 				Assert.IsTrue(csv.ReadHeader());
-				Assert.AreEqual(1, csv.Context.HeaderRecord.Length);
-				Assert.AreEqual("NullableInt32Field", csv.Context.HeaderRecord[0]);
+				Assert.AreEqual(1, csv.HeaderRecord.Length);
+				Assert.AreEqual("NullableInt32Field", csv.HeaderRecord[0]);
 
 				// Read first data row, assert "1" value:
 				Assert.IsTrue(csv.Read());
@@ -109,27 +115,29 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void TwoColumnCsvWithHeadersAndPresentAndNullDataRowTest()
 		{
-			var parser = new ParserMock
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreBlankLines = false,
+			};
+			var parser = new ParserMock(config)
 			{
 				{ "NullableInt32Field", "NullableStringField" },
 				{ "1" },
 				{ "", "Foo" },
 				{ "", "" },
 				{ "4", "Bar" },
-				{ null }
 			};
 
 			using (var csv = new CsvReader(parser))
 			{
-				csv.Configuration.IgnoreBlankLines = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty); // Read empty fields as nulls instead of `""`.
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty); // Read empty fields as nulls instead of `""`.
 
 				// Read header row, assert header row columns:
 				Assert.IsTrue(csv.Read());
 				Assert.IsTrue(csv.ReadHeader());
-				Assert.AreEqual(2, csv.Context.HeaderRecord.Length);
-				Assert.AreEqual("NullableInt32Field", csv.Context.HeaderRecord[0]);
-				Assert.AreEqual("NullableStringField", csv.Context.HeaderRecord[1]);
+				Assert.AreEqual(2, csv.HeaderRecord.Length);
+				Assert.AreEqual("NullableInt32Field", csv.HeaderRecord[0]);
+				Assert.AreEqual("NullableStringField", csv.HeaderRecord[1]);
 
 				// Read first data row:
 				Assert.IsTrue(csv.Read());

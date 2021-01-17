@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -179,10 +179,18 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to convert data in the
 		/// row to the member.
 		/// </summary>
-		/// <param name="convertExpression">The convert expression.</param>
-		public virtual MemberMap<TClass, TMember> ConvertUsing(Func<IReaderRow, TMember> convertExpression)
+		/// <param name="convertFromStringFunction">The convert expression.</param>
+		public virtual MemberMap<TClass, TMember> Convert(ConvertFromString<TMember> convertFromStringFunction)
 		{
-			Data.ReadingConvertExpression = (Expression<Func<IReaderRow, TMember>>)(x => convertExpression(x));
+			var fieldParameter = Expression.Parameter(typeof(IReaderRow), "row");
+			var methodExpression = Expression.Call(
+				Expression.Constant(convertFromStringFunction.Target),
+				convertFromStringFunction.Method,
+				fieldParameter
+			);
+			var lambdaExpression = Expression.Lambda<ConvertFromString<TMember>>(methodExpression, fieldParameter);
+
+			Data.ReadingConvertExpression = lambdaExpression;
 
 			return this;
 		}
@@ -191,10 +199,18 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to convert the object
 		/// to a field.
 		/// </summary>
-		/// <param name="convertExpression">The convert expression.</param>
-		public virtual MemberMap<TClass, TMember> ConvertUsing(Func<TClass, string> convertExpression)
+		/// <param name="convertToStringFunction">The convert expression.</param>
+		public virtual MemberMap<TClass, TMember> Convert(ConvertToString<TClass> convertToStringFunction)
 		{
-			Data.WritingConvertExpression = (Expression<Func<TClass, string>>)(x => convertExpression(x));
+			var fieldParameter = Expression.Parameter(typeof(TClass), "value");
+			var methodExpression = Expression.Call(
+				Expression.Constant(convertToStringFunction.Target),
+				convertToStringFunction.Method,
+				fieldParameter
+			);
+			var lambdaExpression = Expression.Lambda<ConvertToString<TClass>>(methodExpression, fieldParameter);
+
+			Data.WritingConvertExpression = lambdaExpression;
 
 			return this;
 		}
@@ -202,7 +218,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Ignore the member when reading if no matching field name can be found.
 		/// </summary>
-		public virtual MemberMap<TClass, TMember> Optional()
+		public virtual new MemberMap<TClass, TMember> Optional()
 		{
 			Data.IsOptional = true;
 
@@ -213,9 +229,17 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-		public virtual new MemberMap<TClass, TMember> Validate(Func<string, bool> validateExpression)
+		public virtual new MemberMap<TClass, TMember> Validate(Validate validateExpression)
 		{
-			Data.ValidateExpression = (Expression<Func<string, bool>>)(x => validateExpression(x));
+			var fieldParameter = Expression.Parameter(typeof(string), "field");
+			var methodExpression = Expression.Call(
+				Expression.Constant(validateExpression.Target),
+				validateExpression.Method,
+				fieldParameter
+			);
+			var lambdaExpression = Expression.Lambda<Validate>(methodExpression, fieldParameter);
+
+			Data.ValidateExpression = lambdaExpression;
 
 			return this;
 		}

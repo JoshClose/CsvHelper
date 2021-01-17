@@ -1,12 +1,17 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
 using CsvHelper.Configuration;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CsvHelper.Performance
@@ -15,33 +20,70 @@ namespace CsvHelper.Performance
 	{
 		static void Main(string[] args)
 		{
-			//WriteField(50, 1000000);
-			//WriteRecords(1000000);
+			//BenchmarkRunner.Run<Benchmarks>(); return;
 
-			//Parse();
-			//ReadGetField();
-			ReadGetRecords();
-			//ReadGetRecordsAsync().Wait();
+			Test(); return;
 
-			Console.ReadKey();
+			//WriteField(50, 1_000_000, true); return;
+			//WriteRecords(1_000_000);
+
+			for (var i = 0; i < 10; i++)
+			{
+				//LumenworksParse();
+				//StefanBertelsParse();
+				//StackParse();
+				//StackParse2();
+				//SoftCircuitsParse();
+				//CsvHelperParse();
+
+				//ReadGetField();
+				//ReadGetRecords();
+				//ReadGetRecordsAsync().Wait();
+
+				Console.WriteLine();
+			}
+		}
+
+		static void Test()
+		{
+			var s = new StringBuilder();
+			s.Append("\r");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreBlankLines = false,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				while (parser.Read())
+				{
+					var record = parser.Record;
+				}
+			}
 		}
 
 		static string GetFilePath()
 		{
 			var homePath = Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
 			var filePath = Path.Combine(homePath, "Documents", "performance.csv");
+
 			return filePath;
 		}
 
-		static void WriteField(int columns = 50, int rows = 2000000)
+		static void WriteField(int columns = 50, int rows = 2_000_000, bool quoteAllFields = false)
 		{
 			Console.WriteLine("Writing using WriteField");
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				//Delimiter = ";",
+				ShouldQuote = (field, context) => quoteAllFields,
+			};
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, config))
 			{
 				for (var column = 1; column <= columns; column++)
 				{
@@ -53,7 +95,8 @@ namespace CsvHelper.Performance
 				{
 					for (var column = 1; column <= columns; column++)
 					{
-						csv.WriteField(column);
+						//csv.WriteField($"{row:N0}_{column}");
+						csv.WriteField($"{row}_{column}");
 					}
 					csv.NextRecord();
 				}
@@ -63,7 +106,7 @@ namespace CsvHelper.Performance
 			Console.WriteLine(stopwatch.Elapsed);
 		}
 
-		static void WriteRecords(int rows = 2000000)
+		static void WriteRecords(int rows = 2_000_000)
 		{
 			Console.WriteLine("Writing using WriteRecords");
 			var stopwatch = new Stopwatch();
@@ -71,8 +114,10 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
+				//csv.Configuration.ShouldQuote = (field, context) => true;
+
 				var records = new List<Columns50>();
 				for (var i = 0; i < rows; i++)
 				{
@@ -139,24 +184,31 @@ namespace CsvHelper.Performance
 			Console.WriteLine(stopwatch.Elapsed);
 		}
 
-		static void Parse()
+		static void CsvHelperParse()
 		{
-			Console.WriteLine("Parsing");
-			var stopwatch = new Stopwatch();
-			stopwatch.Start();
+			Console.WriteLine("CsvHelper parsing 2");
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				//BufferSize = 1024 * 4,
+				BufferSize = 16
+			};
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var parser = new CsvParser(reader))
+			using (var parser = new CsvParser(reader, config))
 			{
-				string[] row;
-				while ((row = parser.Read()) != null)
-				{
-				}
-			}
+				var stopwatch = new Stopwatch();
+				stopwatch.Start();
 
-			stopwatch.Stop();
-			Console.WriteLine(stopwatch.Elapsed);
+				//string[] record;
+				while (parser.Read())
+				{
+					//record = parser.Record;
+				}
+
+				stopwatch.Stop();
+				Console.WriteLine(stopwatch.Elapsed);
+			}
 		}
 
 		static void ReadGetField()
@@ -167,7 +219,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				// Read header.
 				csv.Read();
@@ -193,7 +245,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<Columns50>();
 				foreach (var record in records)
@@ -213,7 +265,7 @@ namespace CsvHelper.Performance
 
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				while (await csv.ReadAsync())
 				{
@@ -223,6 +275,52 @@ namespace CsvHelper.Performance
 
 			stopwatch.Stop();
 			Console.WriteLine(stopwatch.Elapsed);
+		}
+
+		static void LumenworksParse()
+		{
+			Console.WriteLine("Lumenworks parsing");
+			var stopwatch = new Stopwatch();
+			stopwatch.Start();
+
+			using (var stream = File.OpenRead(GetFilePath()))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new LumenWorks.Framework.IO.Csv.CsvReader(reader))
+			{
+				var fieldCount = csv.FieldCount;
+				var headers = csv.GetFieldHeaders();
+				while (csv.ReadNextRecord())
+				{
+					var row = new string[fieldCount];
+					for (var i = 0; i < fieldCount; i++)
+					{
+						row[i] = csv[i];
+					}
+				}
+			}
+
+			stopwatch.Stop();
+			Console.WriteLine(stopwatch.Elapsed);
+		}
+
+		static void SoftCircuitsParse()
+		{
+			Console.WriteLine("SoftCircuits parsing");
+
+			using (var stream = File.OpenRead(GetFilePath()))
+			using (var csv = new SoftCircuits.CsvParser.CsvReader(stream))
+			{
+				var stopwatch = new Stopwatch();
+				stopwatch.Start();
+
+				string[] row = null;
+				while (csv.ReadRow(ref row))
+				{
+				}
+
+				stopwatch.Stop();
+				Console.WriteLine(stopwatch.Elapsed);
+			}
 		}
 
 		private class Data
@@ -299,6 +397,114 @@ namespace CsvHelper.Performance
 			public int Column48 { get; set; }
 			public int Column49 { get; set; }
 			public int Column50 { get; set; }
+		}
+	}
+
+	public class Benchmarks
+	{
+		private const int LOOPS = 100_000;
+
+		[Benchmark]
+		public void A()
+		{
+			var isQuoted = false;
+			var config = new Config();
+			for (var i = 0; i < LOOPS; i++)
+			{
+				isQuoted = !isQuoted;
+				var value = new ReadOnlyRefStruct(isQuoted, config);
+				Method(value);
+			}
+		}
+
+		[Benchmark]
+		public void B()
+		{
+			var isQuoted = false;
+			var config = new Config();
+			for (var i = 0; i < LOOPS; i++)
+			{
+				isQuoted = !isQuoted;
+				var value = new Record
+				{
+					IsQuoted = isQuoted,
+					Config = config,
+				};
+				Method(value);
+			}
+		}
+
+		[Benchmark]
+		public void C()
+		{
+			var isQuoted = false;
+			var config = new Config();
+			var value = new Class
+			{
+				Config = config,
+			};
+			for (var i = 0; i < LOOPS; i++)
+			{
+				isQuoted = !isQuoted;
+				value.IsQuoted = isQuoted;
+				Method(value);
+			}
+		}
+
+		private void Method(ReadOnlyRefStruct value)
+		{
+			if (value.Config.Trim)
+			{
+				Console.WriteLine("NOOP");
+			}
+		}
+
+		private void Method(Record value)
+		{
+			if (value.Config.Trim)
+			{
+				Console.WriteLine("NOOP");
+			}
+		}
+
+		private void Method(Class value)
+		{
+			if (value.Config.Trim)
+			{
+				Console.WriteLine("NOOP");
+			}
+		}
+
+		private class Config
+		{
+			public bool Trim { get; set; }
+		}
+
+		private readonly ref struct ReadOnlyRefStruct
+		{
+			public bool IsQuoted { get; }
+
+			public Config Config { get; }
+
+			public ReadOnlyRefStruct(bool isQuoted, Config config)
+			{
+				IsQuoted = isQuoted;
+				Config = config;
+			}
+		}
+
+		private record Record
+		{
+			public bool IsQuoted { get; init; }
+
+			public Config Config { get; init; }
+		}
+
+		private class Class
+		{
+			public bool IsQuoted { get; set; }
+
+			public Config Config { get; set; }
 		}
 	}
 }

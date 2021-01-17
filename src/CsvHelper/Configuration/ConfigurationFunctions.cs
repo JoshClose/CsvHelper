@@ -1,11 +1,13 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CsvHelper.Configuration
@@ -18,7 +20,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Throws a <see cref="ValidationException"/> if <paramref name="invalidHeaders"/> is not empty.
 		/// </summary>
-		public static void HeaderValidated(InvalidHeader[] invalidHeaders, ReadingContext context)
+		public static void HeaderValidated(InvalidHeader[] invalidHeaders, CsvContext context)
 		{
 			if (invalidHeaders.Count() == 0)
 			{
@@ -43,7 +45,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Throws a <c>MissingFieldException</c>.
 		/// </summary>
-		public static void MissingFieldFound(string[] headerNames, int index, ReadingContext context)
+		public static void MissingFieldFound(string[] headerNames, int index, CsvContext context)
 		{
 			var messagePostfix = $"You can ignore missing fields by setting {nameof(MissingFieldFound)} to null.";
 
@@ -69,7 +71,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Throws a <see cref="BadDataException"/>.
 		/// </summary>
-		public static void BadDataFound(ReadingContext context)
+		public static void BadDataFound(CsvContext context)
 		{
 			throw new BadDataException(context, $"You can ignore bad data by setting {nameof(BadDataFound)} to null.");
 		}
@@ -87,18 +89,20 @@ namespace CsvHelper.Configuration
 		/// starts with a space, ends with a space, contains \r or \n, or contains
 		/// the <see cref="ISerializerConfiguration.Delimiter"/>.
 		/// </summary>
-		/// <param name="field">The field.</param>
-		/// <param name="context">The context.</param>
+		/// <param name="field">The current field.</param>
+		/// <param name="row">The current row.</param>
 		/// <returns></returns>
-		public static bool ShouldQuote(string field, WritingContext context)
+		public static bool ShouldQuote(string field, IWriterRow row)
 		{
+			var config = row.Configuration;
+
 			var shouldQuote = !string.IsNullOrEmpty(field) && 
 			(
-				field.Contains(context.WriterConfiguration.QuoteString) // Contains quote
+				field.Contains(config.Quote) // Contains quote
 				|| field[0] == ' ' // Starts with a space
 				|| field[field.Length - 1] == ' ' // Ends with a space
 				|| field.IndexOfAny(quoteChars) > -1 // Contains chars that require quotes
-				|| (context.WriterConfiguration.Delimiter.Length > 0 && field.Contains(context.WriterConfiguration.Delimiter)) // Contains delimiter
+				|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
 			);
 
 			return shouldQuote;
@@ -152,17 +156,17 @@ namespace CsvHelper.Configuration
 		/// Returns the header name ran through <see cref="PrepareHeaderForMatch(string, int)"/>.
 		/// If no header exists, property names will be Field1, Field2, Field3, etc.
 		/// </summary>
-		/// <param name="context">The <see cref="ReadingContext"/>.</param>
+		/// <param name="context">The <see cref="CsvContext"/>.</param>
 		/// <param name="fieldIndex">The field index of the header to get the name for.</param>
-		public static string GetDynamicPropertyName(ReadingContext context, int fieldIndex)
+		public static string GetDynamicPropertyName(CsvContext context, int fieldIndex)
 		{
-			if (context.HeaderRecord == null)
+			if (context.Reader.HeaderRecord == null)
 			{
 				return $"Field{fieldIndex + 1}";
 			}
 
-			var header = context.HeaderRecord[fieldIndex];
-			header = context.ReaderConfiguration.PrepareHeaderForMatch(header, fieldIndex);
+			var header = context.Reader.HeaderRecord[fieldIndex];
+			header = context.Reader.Configuration.PrepareHeaderForMatch(header, fieldIndex);
 
 			return header;
 		}

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -20,19 +20,19 @@ namespace CsvHelper.Tests
 			var map = new TestMappingDefaultClass();
 			//map.CreateMap();
 
-			Assert.AreEqual( 3, map.MemberMaps.Count );
+			Assert.AreEqual(3, map.MemberMaps.Count);
 
-			Assert.AreEqual( 0, map.MemberMaps[0].Data.Names.Count );
-			Assert.AreEqual( 0, map.MemberMaps[0].Data.Index );
-			Assert.IsNull( map.MemberMaps[0].Data.TypeConverter );
+			Assert.AreEqual(0, map.MemberMaps[0].Data.Names.Count);
+			Assert.AreEqual(0, map.MemberMaps[0].Data.Index);
+			Assert.IsNull(map.MemberMaps[0].Data.TypeConverter);
 
-			Assert.AreEqual( 0, map.MemberMaps[1].Data.Names.Count );
-			Assert.AreEqual( 1, map.MemberMaps[1].Data.Index );
-			Assert.IsNull( map.MemberMaps[1].Data.TypeConverter );
+			Assert.AreEqual(0, map.MemberMaps[1].Data.Names.Count);
+			Assert.AreEqual(1, map.MemberMaps[1].Data.Index);
+			Assert.IsNull(map.MemberMaps[1].Data.TypeConverter);
 
-			Assert.AreEqual( 0, map.MemberMaps[2].Data.Names.Count );
-			Assert.AreEqual( 2, map.MemberMaps[2].Data.Index );
-			Assert.IsNull( map.MemberMaps[2].Data.TypeConverter );
+			Assert.AreEqual(0, map.MemberMaps[2].Data.Names.Count);
+			Assert.AreEqual(2, map.MemberMaps[2].Data.Index);
+			Assert.IsNull(map.MemberMaps[2].Data.TypeConverter);
 		}
 
 		[TestMethod]
@@ -41,11 +41,11 @@ namespace CsvHelper.Tests
 			var map = new TestMappingNameClass();
 			//map.CreateMap();
 
-			Assert.AreEqual( 3, map.MemberMaps.Count );
+			Assert.AreEqual(3, map.MemberMaps.Count);
 
-			Assert.AreEqual( "Guid Column", map.MemberMaps[0].Data.Names.FirstOrDefault() );
-			Assert.AreEqual( "Int Column", map.MemberMaps[1].Data.Names.FirstOrDefault() );
-			Assert.AreEqual( "String Column", map.MemberMaps[2].Data.Names.FirstOrDefault() );
+			Assert.AreEqual("Guid Column", map.MemberMaps[0].Data.Names.FirstOrDefault());
+			Assert.AreEqual("Int Column", map.MemberMaps[1].Data.Names.FirstOrDefault());
+			Assert.AreEqual("String Column", map.MemberMaps[2].Data.Names.FirstOrDefault());
 		}
 
 		[TestMethod]
@@ -54,11 +54,11 @@ namespace CsvHelper.Tests
 			var map = new TestMappingIndexClass();
 			//map.CreateMap();
 
-			Assert.AreEqual( 3, map.MemberMaps.Count );
+			Assert.AreEqual(3, map.MemberMaps.Count);
 
-			Assert.AreEqual( 2, map.MemberMaps[0].Data.Index );
-			Assert.AreEqual( 3, map.MemberMaps[1].Data.Index );
-			Assert.AreEqual( 1, map.MemberMaps[2].Data.Index );
+			Assert.AreEqual(2, map.MemberMaps[0].Data.Index);
+			Assert.AreEqual(3, map.MemberMaps[1].Data.Index);
+			Assert.AreEqual(1, map.MemberMaps[2].Data.Index);
 		}
 
 		[TestMethod]
@@ -67,11 +67,11 @@ namespace CsvHelper.Tests
 			var map = new TestMappingIgnoreClass();
 			//map.CreateMap();
 
-			Assert.AreEqual( 3, map.MemberMaps.Count );
+			Assert.AreEqual(3, map.MemberMaps.Count);
 
-			Assert.IsTrue( map.MemberMaps[0].Data.Ignore );
-			Assert.IsFalse( map.MemberMaps[1].Data.Ignore );
-			Assert.IsTrue( map.MemberMaps[2].Data.Ignore );
+			Assert.IsTrue(map.MemberMaps[0].Data.Ignore);
+			Assert.IsFalse(map.MemberMaps[1].Data.Ignore);
+			Assert.IsTrue(map.MemberMaps[2].Data.Ignore);
 		}
 
 		[TestMethod]
@@ -80,11 +80,11 @@ namespace CsvHelper.Tests
 			var map = new TestMappingTypeConverterClass();
 			//map.CreateMap();
 
-			Assert.AreEqual( 3, map.MemberMaps.Count );
+			Assert.AreEqual(3, map.MemberMaps.Count);
 
-			Assert.IsInstanceOfType( map.MemberMaps[0].Data.TypeConverter, typeof( Int16Converter ) );
-			Assert.IsInstanceOfType( map.MemberMaps[1].Data.TypeConverter, typeof( StringConverter ) );
-			Assert.IsInstanceOfType( map.MemberMaps[2].Data.TypeConverter, typeof( Int64Converter ) );
+			Assert.IsInstanceOfType(map.MemberMaps[0].Data.TypeConverter, typeof(Int16Converter));
+			Assert.IsInstanceOfType(map.MemberMaps[1].Data.TypeConverter, typeof(StringConverter));
+			Assert.IsInstanceOfType(map.MemberMaps[2].Data.TypeConverter, typeof(Int64Converter));
 		}
 
 		[TestMethod]
@@ -93,11 +93,11 @@ namespace CsvHelper.Tests
 			var map = new TestMappingMultipleNamesClass();
 			//map.CreateMap();
 
-			Assert.AreEqual( 3, map.MemberMaps.Count );
+			Assert.AreEqual(3, map.MemberMaps.Count);
 
-			Assert.AreEqual( 3, map.MemberMaps[0].Data.Names.Count );
-			Assert.AreEqual( 3, map.MemberMaps[1].Data.Names.Count );
-			Assert.AreEqual( 3, map.MemberMaps[2].Data.Names.Count );
+			Assert.AreEqual(3, map.MemberMaps[0].Data.Names.Count);
+			Assert.AreEqual(3, map.MemberMaps[1].Data.Names.Count);
+			Assert.AreEqual(3, map.MemberMaps[2].Data.Names.Count);
 
 			Assert.AreEqual("guid1", map.MemberMaps[0].Data.Names[0]);
 			Assert.AreEqual("guid2", map.MemberMaps[0].Data.Names[1]);
@@ -116,21 +116,23 @@ namespace CsvHelper.Tests
 		public void MapMultipleTypesTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
-			config.RegisterClassMap<AMap>();
-			config.RegisterClassMap<BMap>();
+			var context = new CsvContext(config);
+			context.RegisterClassMap<AMap>();
+			context.RegisterClassMap<BMap>();
 
-			Assert.IsNotNull( config.Maps[typeof( A )] );
-			Assert.IsNotNull( config.Maps[typeof( B )] );
+			Assert.IsNotNull(context.Maps[typeof(A)]);
+			Assert.IsNotNull(context.Maps[typeof(B)]);
 		}
 
 		[TestMethod]
 		public void PropertyMapAccessTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
-			config.RegisterClassMap<AMap>();
-			config.Maps.Find<A>().Map( m => m.AId ).Ignore();
+			var context = new CsvContext(config);
+			context.RegisterClassMap<AMap>();
+			context.Maps.Find<A>().Map(m => m.AId).Ignore();
 
-			Assert.AreEqual( true, config.Maps[typeof( A )].MemberMaps[0].Data.Ignore );
+			Assert.AreEqual(true, context.Maps[typeof(A)].MemberMaps[0].Data.Ignore);
 		}
 
 		private class A
@@ -142,7 +144,7 @@ namespace CsvHelper.Tests
 		{
 			public AMap()
 			{
-				Map( m => m.AId );
+				Map(m => m.AId);
 			}
 		}
 
@@ -155,7 +157,7 @@ namespace CsvHelper.Tests
 		{
 			public BMap()
 			{
-				Map( m => m.BId );
+				Map(m => m.BId);
 			}
 		}
 
@@ -166,9 +168,9 @@ namespace CsvHelper.Tests
 			public Guid GuidColumn { get; set; }
 			public string NotUsedColumn { get; set; }
 
-			public TestClass(){}
+			public TestClass() { }
 
-			public TestClass( string stringColumn )
+			public TestClass(string stringColumn)
 			{
 				StringColumn = stringColumn;
 			}
@@ -178,9 +180,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMappingDefaultClass()
 			{
-				Map( m => m.GuidColumn );
-				Map( m => m.IntColumn );
-				Map( m => m.StringColumn );
+				Map(m => m.GuidColumn);
+				Map(m => m.IntColumn);
+				Map(m => m.StringColumn);
 			}
 		}
 
@@ -188,9 +190,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMappingNameClass()
 			{
-				Map( m => m.GuidColumn ).Name( "Guid Column" );
-				Map( m => m.IntColumn ).Name( "Int Column" );
-				Map( m => m.StringColumn ).Name( "String Column" );
+				Map(m => m.GuidColumn).Name("Guid Column");
+				Map(m => m.IntColumn).Name("Int Column");
+				Map(m => m.StringColumn).Name("String Column");
 			}
 		}
 
@@ -198,9 +200,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMappingIndexClass()
 			{
-				Map( m => m.GuidColumn ).Index( 3 );
-				Map( m => m.IntColumn ).Index( 2 );
-				Map( m => m.StringColumn ).Index( 1 );
+				Map(m => m.GuidColumn).Index(3);
+				Map(m => m.IntColumn).Index(2);
+				Map(m => m.StringColumn).Index(1);
 			}
 		}
 
@@ -208,9 +210,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMappingIgnoreClass()
 			{
-				Map( m => m.GuidColumn ).Ignore();
-				Map( m => m.IntColumn );
-				Map( m => m.StringColumn ).Ignore();
+				Map(m => m.GuidColumn).Ignore();
+				Map(m => m.IntColumn);
+				Map(m => m.StringColumn).Ignore();
 			}
 		}
 
@@ -218,9 +220,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMappingTypeConverterClass()
 			{
-				Map( m => m.GuidColumn ).TypeConverter<Int16Converter>();
-				Map( m => m.IntColumn ).TypeConverter<StringConverter>();
-				Map( m => m.StringColumn ).TypeConverter( new Int64Converter() );
+				Map(m => m.GuidColumn).TypeConverter<Int16Converter>();
+				Map(m => m.IntColumn).TypeConverter<StringConverter>();
+				Map(m => m.StringColumn).TypeConverter(new Int64Converter());
 			}
 		}
 
@@ -228,9 +230,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMappingMultipleNamesClass()
 			{
-				Map( m => m.GuidColumn ).Name( "guid1", "guid2", "guid3" );
-				Map( m => m.IntColumn ).Name( "int1", "int2", "int3" );
-				Map( m => m.StringColumn ).Name( "string1", "string2", "string3" );
+				Map(m => m.GuidColumn).Name("guid1", "guid2", "guid3");
+				Map(m => m.IntColumn).Name("int1", "int2", "int3");
+				Map(m => m.StringColumn).Name("string1", "string2", "string3");
 			}
 		}
 	}

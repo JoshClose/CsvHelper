@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -9,58 +9,79 @@ using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Linq;
 
 namespace CsvHelper.Tests.Mocks
 {
 	public class ParserMock : IParser, IEnumerable<string[]>
 	{
-		private readonly Queue<string[]> rows;
-		private ReadingContext context;
+		private readonly Queue<string[]> records = new Queue<string[]>();
+		private string[] record;
+		private int row;
 
-		public ReadingContext Context => context;
+		public CsvContext Context { get; private set; }
 
-		public IParserConfiguration Configuration { get; }
+		public IParserConfiguration Configuration { get; private set; }
 
-		public IFieldReader FieldReader
+		public int Count => record?.Length ?? 0;
+
+		public string[] Record => record;
+
+		public string RawRecord => throw new NotImplementedException();
+
+		public int Row => row;
+
+		public int RawRow => row;
+
+		public long ByteCount => 0;
+
+		public long CharCount => 0;
+
+		public string this[int index] => record[index];
+
+		public ParserMock() : this(new CsvConfiguration(CultureInfo.InvariantCulture)) { }
+
+		public ParserMock(CsvConfiguration configuration)
 		{
-			get
+			Configuration = configuration;
+			Context = new CsvContext(this);
+		}
+
+		public bool Read()
+		{
+			if (records.Count == 0)
 			{
-				throw new NotImplementedException();
+				return false;
 			}
+
+			row++;
+			record = records.Dequeue();
+
+			return true;
 		}
 
-		public ParserMock()
+		public Task<bool> ReadAsync()
 		{
-			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture), false);
-			rows = new Queue<string[]>();
+			row++;
+			record = records.Dequeue();
+
+			return Task.FromResult(records.Count > 0);
 		}
 
-		public ParserMock(Queue<string[]> rows)
+		public void Dispose()
 		{
-			context = new ReadingContext(new StringReader(string.Empty), new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture), false);
-			this.rows = rows;
 		}
 
-		public string[] Read()
-		{
-			context.Row++;
-			return rows.Dequeue();
-		}
+		#region Mock Methods
 
-		public Task<string[]> ReadAsync()
+		public void Add(params string[] record)
 		{
-			context.Row++;
-			return Task.FromResult(rows.Dequeue());
-		}
-
-		public void Add(params string[] row)
-		{
-			rows.Enqueue(row);
+			records.Enqueue(record);
 		}
 
 		public IEnumerator<string[]> GetEnumerator()
 		{
-			return rows.GetEnumerator();
+			return records.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -68,8 +89,6 @@ namespace CsvHelper.Tests.Mocks
 			return GetEnumerator();
 		}
 
-		public void Dispose()
-		{
-		}
+		#endregion Mock Methods
 	}
 }

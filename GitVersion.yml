@@ -1,7 +1,11 @@
-next-version: 19.0.0
+next-version: 20.0.0
 assembly-versioning-scheme: Major
 assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{env:BUILD_NUMBER ?? 0}'
-branches: {}
+branches:
+  span-parser:
+    regex: fast-parser
+    source-branches: [ 'span-parser' ]
+    tag: beta
 ignore:
   sha: []
 merge-message-formats: {}

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -19,7 +19,6 @@ namespace CsvHelper.Tests
 		{
 			using (var csv = new CsvReader(new StringReader("Id,Name"), CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				csv.Read();
 				csv.ReadHeader();
 				csv.ValidateHeader<Test>();
@@ -176,7 +175,7 @@ namespace CsvHelper.Tests
 			data.AppendLine("1");
 			using (var csv = new CsvReader(new StringReader(data.ToString()), CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.RegisterClassMap<HasIgnoredPropertyMap>();
+				csv.Context.RegisterClassMap<HasIgnoredPropertyMap>();
 				var records = csv.GetRecords<Test>().ToList();
 				var record = records[0];
 				Assert.AreEqual(1, record.Id);
@@ -189,7 +188,7 @@ namespace CsvHelper.Tests
 		{
 			using (var csv = new CsvReader(new StringReader("Id"), CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.RegisterClassMap<HasIndexNoNameMap>();
+				csv.Context.RegisterClassMap<HasIndexNoNameMap>();
 
 				csv.Read();
 				csv.ReadHeader();
@@ -202,7 +201,7 @@ namespace CsvHelper.Tests
 		{
 			using (var csv = new CsvReader(new StringReader("Id"), CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.RegisterClassMap<HasIndexAndNameMap>();
+				csv.Context.RegisterClassMap<HasIndexAndNameMap>();
 
 				csv.Read();
 				csv.ReadHeader();

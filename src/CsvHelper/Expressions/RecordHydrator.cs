@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -16,6 +16,7 @@ namespace CsvHelper.Expressions
 	{
 		private readonly CsvReader reader;
 		private readonly ExpressionManager expressionManager;
+		private readonly Dictionary<Type, Delegate> hydrateRecordActions = new Dictionary<Type, Delegate>();
 
 		/// <summary>
 		/// Creates a new instance using the given reader.
@@ -52,9 +53,9 @@ namespace CsvHelper.Expressions
 		{
 			var recordType = typeof(T);
 
-			if (!reader.Context.HydrateRecordActions.TryGetValue(recordType, out Delegate action))
+			if (!hydrateRecordActions.TryGetValue(recordType, out Delegate action))
 			{
-				reader.Context.HydrateRecordActions[recordType] = action = CreateHydrateRecordAction<T>();
+				hydrateRecordActions[recordType] = action = CreateHydrateRecordAction<T>();
 			}
 
 			return (Action<T>)action;
@@ -68,12 +69,12 @@ namespace CsvHelper.Expressions
 		{
 			var recordType = typeof(T);
 
-			if (reader.Context.ReaderConfiguration.Maps[recordType] == null)
+			if (reader.Context.Maps[recordType] == null)
 			{
-				reader.Context.ReaderConfiguration.Maps.Add(reader.Context.ReaderConfiguration.AutoMap(recordType));
+				reader.Context.Maps.Add(reader.Context.AutoMap(recordType));
 			}
 
-			var mapping = reader.Context.ReaderConfiguration.Maps[recordType];
+			var mapping = reader.Context.Maps[recordType];
 
 			var recordTypeParameter = Expression.Parameter(recordType, "record");
 			var memberAssignments = new List<Expression>();

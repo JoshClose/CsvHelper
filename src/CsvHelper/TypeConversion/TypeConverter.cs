@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -31,7 +31,7 @@ namespace CsvHelper.TypeConversion
 			var message = "Converting System.Type is not supported. " +
 						  "If you want to do this, create your own ITypeConverter and register " +
 						  "it in the TypeConverterFactory by calling AddConverter.";
-			throw new TypeConverterException(this, memberMapData, text, (ReadingContext)row.Context, message);
+			throw new TypeConverterException(this, memberMapData, text, row.Context, message);
 		}
 
 		/// <summary>
@@ -46,7 +46,7 @@ namespace CsvHelper.TypeConversion
 			var message = "Converting System.Type is not supported. " +
 						  "If you want to do this, create your own ITypeConverter and register " +
 						  "it in the TypeConverterFactory by calling AddConverter.";
-			throw new TypeConverterException(this, memberMapData, value, (WritingContext)row.Context, message);
+			throw new TypeConverterException(this, memberMapData, value, row.Context, message);
 		}
 	}
 }

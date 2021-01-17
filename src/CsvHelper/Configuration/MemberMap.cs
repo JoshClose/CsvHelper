@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -196,12 +196,30 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Ignore the member when reading if no matching field name can be found.
+		/// </summary>
+		public virtual MemberMap Optional()
+		{
+			Data.IsOptional = true;
+
+			return this;
+		}
+
+		/// <summary>
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-		public virtual MemberMap Validate(Func<string, bool> validateExpression)
+		public virtual MemberMap Validate(Validate validateExpression)
 		{
-			Data.ValidateExpression = (Expression<Func<string, bool>>)(x => validateExpression(x));
+			var fieldParameter = Expression.Parameter(typeof(string), "field");
+			var methodExpression = Expression.Call(
+				Expression.Constant(validateExpression.Target),
+				validateExpression.Method,
+				fieldParameter
+			);
+			var lambdaExpression = Expression.Lambda<Validate>(methodExpression, fieldParameter);
+
+			Data.ValidateExpression = lambdaExpression;
 
 			return this;
 		}

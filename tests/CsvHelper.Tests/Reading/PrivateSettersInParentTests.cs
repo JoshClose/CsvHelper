@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -16,18 +16,19 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void AutoMappingTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IncludePrivateMembers = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
-
-				csv.Configuration.IncludePrivateMembers = true;
 
 				var records = csv.GetRecords<Child>().ToList();
 				Assert.AreEqual(1, records[0].Id);
@@ -38,19 +39,21 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void ClassMappingTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IncludePrivateMembers = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.IncludePrivateMembers = true;
-				csv.Configuration.RegisterClassMap<ChildMap>();
+				csv.Context.RegisterClassMap<ChildMap>();
 
 				var records = csv.GetRecords<Child>().ToList();
 				Assert.AreEqual(1, records[0].Id);

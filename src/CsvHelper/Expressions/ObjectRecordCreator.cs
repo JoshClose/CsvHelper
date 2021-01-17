@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -27,12 +27,12 @@ namespace CsvHelper.Expressions
 		/// <param name="recordType">The record type.</param>
 		protected override Delegate CreateCreateRecordDelegate(Type recordType)
 		{
-			if (Reader.Context.ReaderConfiguration.Maps[recordType] == null)
+			if (Reader.Context.Maps[recordType] == null)
 			{
-				Reader.Context.ReaderConfiguration.Maps.Add(Reader.Context.ReaderConfiguration.AutoMap(recordType));
+				Reader.Context.Maps.Add(Reader.Context.AutoMap(recordType));
 			}
 
-			var map = Reader.Context.ReaderConfiguration.Maps[recordType];
+			var map = Reader.Context.Maps[recordType];
 
 			Expression body;
 

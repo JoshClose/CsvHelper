@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -28,8 +28,7 @@ namespace CsvHelper.Tests
 			using (var writer = new StreamWriter(stream))
 			using (var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csvWriter.Configuration.Delimiter = ",";
-				csvWriter.Configuration.RegisterClassMap<MultipleNamesClassMap>();
+				csvWriter.Context.RegisterClassMap<MultipleNamesClassMap>();
 				csvWriter.WriteRecords(records);
 
 				writer.Flush();
@@ -55,7 +54,6 @@ namespace CsvHelper.Tests
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var records = new List<SameNameMultipleTimesClass>
 				{
 					new SameNameMultipleTimesClass
@@ -65,7 +63,7 @@ namespace CsvHelper.Tests
 						Name3 = "3"
 					}
 				};
-				csv.Configuration.RegisterClassMap<SameNameMultipleTimesClassMap>();
+				csv.Context.RegisterClassMap<SameNameMultipleTimesClassMap>();
 				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
@@ -79,19 +77,22 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ConvertUsingTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			string result;
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var csv = new CsvWriter(writer, config))
 			{
 				var records = new List<TestClass>
 				{
 					new TestClass { IntColumn = 1 }
 				};
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<ConvertUsingMap>();
+				csv.Context.RegisterClassMap<ConvertUsingMap>();
 				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
@@ -105,19 +106,22 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ConvertUsingBlockTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			string result;
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var csv = new CsvWriter(writer, config))
 			{
 				var records = new List<TestClass>
 				{
 					new TestClass { IntColumn = 1 }
 				};
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<ConvertUsingBlockMap>();
+				csv.Context.RegisterClassMap<ConvertUsingBlockMap>();
 				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
@@ -131,19 +135,22 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ConvertUsingConstantTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			string result;
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var csv = new CsvWriter(writer, config))
 			{
 				var records = new List<TestClass>
 				{
 					new TestClass { IntColumn = 1 }
 				};
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<ConvertUsingConstantMap>();
+				csv.Context.RegisterClassMap<ConvertUsingConstantMap>();
 				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
@@ -158,28 +165,24 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ConvertUsingNullTest()
 		{
-			string result;
-			using (var stream = new MemoryStream())
-			using (var reader = new StreamReader(stream))
-			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = ";",
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
 			{
 				var records = new List<MultipleNamesClass>
 				{
 					new MultipleNamesClass { IntColumn = 1, StringColumn = "test" }
 				};
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.Delimiter = ";";
-				csv.Configuration.RegisterClassMap<ConvertUsingNullMap>();
+				csv.Context.RegisterClassMap<ConvertUsingNullMap>();
 				csv.WriteRecords(records);
-				writer.Flush();
-				stream.Position = 0;
 
-				result = reader.ReadToEnd();
+				Assert.AreEqual(";test\r\n", writer.ToString());
 			}
-
-			Assert.AreEqual(";test\r\n", result);
 		}
 
 		private class SameNameMultipleTimesClass
@@ -226,7 +229,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map(m => m.IntColumn).ConvertUsing(m => $"Converted{m.IntColumn}");
+				Map(m => m.IntColumn).Convert(m => $"Converted{m.IntColumn}");
 			}
 		}
 
@@ -234,7 +237,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map(m => m.IntColumn).ConvertUsing(m =>
+				Map(m => m.IntColumn).Convert(m =>
 			 {
 				 var x = "Converted";
 				 x += m.IntColumn;
@@ -247,7 +250,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingConstantMap()
 			{
-				Map(m => m.IntColumn).ConvertUsing(m => "Constant");
+				Map(m => m.IntColumn).Convert(m => "Constant");
 			}
 		}
 
@@ -255,8 +258,8 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingNullMap()
 			{
-				Map(m => m.IntColumn).ConvertUsing(m => (string)null);
-				Map(m => m.StringColumn).ConvertUsing(m => m.StringColumn);
+				Map(m => m.IntColumn).Convert(m => (string)null);
+				Map(m => m.StringColumn).Convert(m => m.StringColumn);
 			}
 		}
 	}

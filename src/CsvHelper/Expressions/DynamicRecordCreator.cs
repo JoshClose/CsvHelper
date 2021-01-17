@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -34,9 +34,9 @@ namespace CsvHelper.Expressions
 		{
 			var obj = new ExpandoObject();
 			var dict = obj as IDictionary<string, object>;
-			if (Reader.Context.HeaderRecord != null)
+			if (Reader.HeaderRecord != null)
 			{
-				for (var i = 0; i < Reader.Context.HeaderRecord.Length; i++)
+				for (var i = 0; i < Reader.HeaderRecord.Length; i++)
 				{
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(Reader.Context, i);
 					Reader.TryGetField(i, out string field);
@@ -45,7 +45,7 @@ namespace CsvHelper.Expressions
 			}
 			else
 			{
-				for (var i = 0; i < Reader.Context.Record.Length; i++)
+				for (var i = 0; i < Reader.Parser.Count; i++)
 				{
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(Reader.Context, i);
 					var field = Reader.GetField(i);

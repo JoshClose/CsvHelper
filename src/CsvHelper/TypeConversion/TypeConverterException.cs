@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -40,7 +40,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="memberMapData">The member map data.</param>
 		/// <param name="text">The text.</param>
 		/// <param name="context">The reading context.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, ReadingContext context) : base(context)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, CsvContext context) : base(context)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="memberMapData">The member map data.</param>
 		/// <param name="value">The value.</param>
 		/// <param name="context">The writing context.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, WritingContext context) : base(context)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, CsvContext context) : base(context)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -70,7 +70,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="text">The text.</param>
 		/// <param name="context">The reading context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, ReadingContext context, string message) : base(context, message)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, CsvContext context, string message) : base(context, message)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -86,7 +86,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="value">The value.</param>
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, WritingContext context, string message) : base(context, message)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, CsvContext context, string message) : base(context, message)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -104,7 +104,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="context">The reading context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, ReadingContext context, string message, Exception innerException) : base(context, message, innerException)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, CsvContext context, string message, Exception innerException) : base(context, message, innerException)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -122,7 +122,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, WritingContext context, string message, Exception innerException) : base(context, message, innerException)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, CsvContext context, string message, Exception innerException) : base(context, message, innerException)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;

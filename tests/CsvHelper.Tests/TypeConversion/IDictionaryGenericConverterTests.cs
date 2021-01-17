@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -11,8 +11,8 @@ using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using System.Reflection;
+using CsvHelper.Tests.Mocks;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -20,79 +20,22 @@ namespace CsvHelper.Tests.TypeConversion
 	public class IDictionaryGenericConverterTests
 	{
 		[TestMethod]
-		public void ConvertNoIndexEndTest()
-		{
-			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
-			var rowMock = new Mock<IReader>();
-			var headers = new[] { "Id", "Name", "Prop1", "Prop2", "Prop3" };
-			var currentRecord = new[] { "1", "One", "1", "2", "3" };
-			var context = new ReadingContext(new StringReader(string.Empty), config, false)
-			{
-				HeaderRecord = headers,
-				Record = currentRecord
-			};
-			rowMock.Setup(m => m.Configuration).Returns(config);
-			rowMock.Setup(m => m.Context).Returns(context);
-			rowMock.Setup(m => m.GetField(It.IsAny<Type>(), It.IsAny<int>())).Returns<Type, int>((type, index) => Convert.ToInt32(currentRecord[index]));
-			var data = new MemberMapData(typeof(Test).GetTypeInfo().GetProperty("Dictionary"))
-			{
-				Index = 2
-			};
-			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
-
-			var converter = new IDictionaryGenericConverter();
-			var dictionary = (IDictionary<string, int?>)converter.ConvertFromString("1", rowMock.Object, data);
-
-			Assert.AreEqual(3, dictionary.Count);
-			Assert.AreEqual(1, dictionary["Prop1"]);
-			Assert.AreEqual(2, dictionary["Prop2"]);
-			Assert.AreEqual(3, dictionary["Prop3"]);
-		}
-
-		[TestMethod]
-		public void ConvertWithIndexEndTest()
-		{
-			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) { HasHeaderRecord = false };
-			var rowMock = new Mock<IReaderRow>();
-			var headers = new[] { "Id", "Name", "Prop1", "Prop2", "Prop3" };
-			var currentRecord = new[] { "1", "One", "1", "2", "3" };
-			var context = new ReadingContext(new StringReader(string.Empty), config, false)
-			{
-				HeaderRecord = headers,
-				Record = currentRecord
-			};
-			rowMock.Setup(m => m.Configuration).Returns(config);
-			rowMock.Setup(m => m.Context).Returns(context);
-			rowMock.Setup(m => m.GetField(It.IsAny<Type>(), It.IsAny<int>())).Returns<Type, int>((type, index) => Convert.ToInt32(currentRecord[index]));
-			var data = new MemberMapData(typeof(Test).GetProperty("Dictionary"))
-			{
-				Index = 2,
-				IndexEnd = 3
-			};
-			data.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
-
-			var converter = new IDictionaryGenericConverter();
-			var dictionary = (IDictionary)converter.ConvertFromString("1", rowMock.Object, data);
-
-			Assert.AreEqual(2, dictionary.Count);
-			Assert.AreEqual(1, dictionary["Prop1"]);
-			Assert.AreEqual(2, dictionary["Prop2"]);
-		}
-
-		[TestMethod]
 		public void FullReadNoHeaderTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
 				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<TestIndexMap>();
+				csv.Context.RegisterClassMap<TestIndexMap>();
 
 				try
 				{
@@ -110,20 +53,21 @@ namespace CsvHelper.Tests.TypeConversion
 		[TestMethod]
 		public void FullReadWithHeaderTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HeaderValidated = null,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary1,Dictionary2,Dictionary3,After");
 				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HeaderValidated = null;
-				csv.Configuration.HasHeaderRecord = true;
-				csv.Configuration.RegisterClassMap<TestIndexMap>();
+				csv.Context.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
 				var list = records[0].Dictionary;
@@ -143,14 +87,12 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
 				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = true;
-				csv.Configuration.RegisterClassMap<TestDefaultMap>();
+				csv.Context.RegisterClassMap<TestDefaultMap>();
 
 				try
 				{
@@ -172,14 +114,12 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary,Dictionary,Dictionary,After");
 				writer.WriteLine("1,2,3,4,5");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = true;
-				csv.Configuration.RegisterClassMap<TestNamedMap>();
+				csv.Context.RegisterClassMap<TestNamedMap>();
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
@@ -200,14 +140,12 @@ namespace CsvHelper.Tests.TypeConversion
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Before,Dictionary,A,Dictionary,B,Dictionary,After");
 				writer.WriteLine("1,2,3,4,5,6,7");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.HasHeaderRecord = true;
-				csv.Configuration.RegisterClassMap<TestNamedMap>();
+				csv.Context.RegisterClassMap<TestNamedMap>();
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();

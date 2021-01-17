@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -17,10 +17,13 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void TypeMixedWithBoxedTypeTest()
 		{
-			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				csv.Configuration.Delimiter = ",";
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				var recordsTyped = new List<A>
 				{
 					new A { Id = 1, Name = "one" },
@@ -30,8 +33,7 @@ namespace CsvHelper.Tests
 					new A { Id = 2, Name = "two" },
 				};
 
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<AMap>();
+				csv.Context.RegisterClassMap<AMap>();
 				csv.WriteRecords(recordsTyped);
 				csv.WriteRecords(recordsBoxed);
 				writer.Flush();

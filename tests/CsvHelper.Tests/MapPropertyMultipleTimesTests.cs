@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -23,13 +23,12 @@ namespace CsvHelper.Tests
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var list = new List<Test>
 				{
 					new Test { Id = 1, Name = "one" }
 				};
 
-				csv.Configuration.RegisterClassMap<TestMap>();
+				csv.Context.RegisterClassMap<TestMap>();
 				csv.WriteRecords(list);
 				writer.Flush();
 				stream.Position = 0;
@@ -55,13 +54,12 @@ namespace CsvHelper.Tests
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id1,Name1,Id2,Name2");
 				writer.WriteLine("1,one,2,two");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.RegisterClassMap<TestMap>();
+				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
 				Assert.AreEqual(2, records[0].Id);

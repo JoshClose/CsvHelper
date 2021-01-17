@@ -1,9 +1,14 @@
-﻿using CsvHelper.Configuration;
+﻿// Copyright 2009-2021 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,16 +62,14 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[TestMethod]
 		public void GetRecords_WithParameterMap_HasHeader_CreatesRecords()
 		{
-			var rows = new Queue<string[]>(new List<string[]>
+			var parser = new ParserMock
 			{
-				new [] { "id", "amount" },
-				new [] { "1", $"({amount})" },
-				null
-			});
-			using (var parser = new ParserMock(rows))
+				{ "id", "amount" },
+				{ "1", $"({amount})" },
+			};
 			using (var csv = new CsvReader(parser))
 			{
-				var map = csv.Configuration.RegisterClassMap<FooMap>();
+				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -78,16 +81,17 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[TestMethod]
 		public void GetRecords_WithParameterMap_NoHeader_CreatesRecords()
 		{
-			var rows = new Queue<string[]>(new List<string[]>
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				new [] { "1", $"({amount})" },
-				null
-			});
-			using (var parser = new ParserMock(rows))
+				HasHeaderRecord = false,
+			};
+			var parser = new ParserMock(config)
+			{
+				{ "1", $"({amount})" },
+			};
 			using (var csv = new CsvReader(parser))
 			{
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.RegisterClassMap<FooMap>();
+				csv.Context.RegisterClassMap<FooMap>();
 
 				var records = csv.GetRecords<Foo>().ToList();
 
@@ -105,20 +109,18 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				new Foo(1, amount),
 			};
 
-			using (var serializer = new SerializerMock())
-			using (var csv = new CsvWriter(serializer))
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.RegisterClassMap<FooMap>();
+				csv.Context.RegisterClassMap<FooMap>();
 
 				csv.WriteRecords(records);
 
-				Assert.AreEqual(2, serializer.Records.Count);
+				var expected = new StringBuilder();
+				expected.Append("Id,Amount\r\n");
+				expected.Append($"1,{amount}\r\n");
 
-				Assert.AreEqual("Id", serializer.Records[0][0]);
-				Assert.AreEqual("Amount", serializer.Records[0][1]);
-
-				Assert.AreEqual("1", serializer.Records[1][0]);
-				Assert.AreEqual(amount.ToString(), serializer.Records[1][1]);
+				Assert.AreEqual(expected.ToString(), writer.ToString());
 			}
 		}
 

@@ -2,11 +2,17 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>net50</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CsvHelper\CsvHelper.csproj" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="LumenWorksCsvReader" Version="4.0.0" />
+    <PackageReference Include="SoftCircuits.CsvParser" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
   </ItemGroup>
 
 </Project>

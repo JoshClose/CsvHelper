@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -206,14 +206,14 @@ namespace CsvHelper.Configuration
 		/// row to the member.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing(Func<IReaderRow, TMember> convertExpression);
+		IHasMap<TClass> ConvertUsing(ConvertFromString<TMember> convertExpression);
 
 		/// <summary>
 		/// Specifies an expression to be used to convert the object
 		/// to a field.
 		/// </summary>
 		/// <param name="convertExpression">The convert expression.</param>
-		IHasMap<TClass> ConvertUsing(Func<TClass, string> convertExpression);
+		IHasMap<TClass> ConvertUsing(ConvertToString<TClass> convertExpression);
 	}
 
 	/// <summary>
@@ -280,7 +280,7 @@ namespace CsvHelper.Configuration
 		/// will be thrown.
 		/// </summary>
 		/// <param name="validateExpression">The validation expression.</param>
-		IHasMap<TClass> Validate(Func<string, bool> validateExpression);
+		IHasMap<TClass> Validate(Validate validateExpression);
 	}
 
 	/// <summary>
@@ -352,15 +352,15 @@ namespace CsvHelper.Configuration
 		}
 #pragma warning restore CS0693 // Type parameter has the same name as the type parameter from outer type
 
-		public IHasMap<TClass> ConvertUsing(Func<IReaderRow, TMember> convertExpression)
+		public IHasMap<TClass> ConvertUsing(ConvertFromString<TMember> convertExpression)
 		{
-			memberMap.ConvertUsing(convertExpression);
+			memberMap.Convert(convertExpression);
 			return this;
 		}
 
-		public IHasMap<TClass> ConvertUsing(Func<TClass, string> convertExpression)
+		public IHasMap<TClass> ConvertUsing(ConvertToString<TClass> convertExpression)
 		{
-			memberMap.ConvertUsing(convertExpression);
+			memberMap.Convert(convertExpression);
 			return this;
 		}
 
@@ -418,7 +418,7 @@ namespace CsvHelper.Configuration
 			return this;
 		}
 
-		public IHasMap<TClass> Validate(Func<string, bool> validateExpression)
+		public IHasMap<TClass> Validate(Validate validateExpression)
 		{
 			memberMap.Validate(validateExpression);
 			return this;

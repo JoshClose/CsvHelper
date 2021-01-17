@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -22,7 +22,6 @@ namespace CsvHelper.Tests.Mappings
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("AId,BId,CId");
 				writer.WriteLine("1,2,3");
 				writer.Flush();
@@ -33,7 +32,7 @@ namespace CsvHelper.Tests.Mappings
 				var member = type.GetProperty("AId");
 				map.Map(type, member).Constant(4);
 
-				csv.Configuration.RegisterClassMap(map);
+				csv.Context.RegisterClassMap(map);
 				var records = csv.GetRecords<A>().ToList();
 
 				Assert.AreEqual(4, records[0].AId);
@@ -48,7 +47,6 @@ namespace CsvHelper.Tests.Mappings
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("AId,BId,CId");
 				writer.WriteLine(",2,3");
 				writer.Flush();
@@ -59,7 +57,7 @@ namespace CsvHelper.Tests.Mappings
 				var member = type.GetProperty("AId");
 				map.Map(type, member).Default(4);
 
-				csv.Configuration.RegisterClassMap(map);
+				csv.Context.RegisterClassMap(map);
 				var records = csv.GetRecords<A>().ToList();
 
 				Assert.AreEqual(4, records[0].AId);

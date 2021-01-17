@@ -1,10 +1,11 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -21,7 +22,6 @@ namespace CsvHelper.Tests
 			using (var reader = new StreamReader(stream))
 			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name,Order");
 				writer.WriteLine(",,");
 				writer.WriteLine("2,two,2");
@@ -29,7 +29,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csvReader.Configuration.RegisterClassMap<TestMap>();
+				csvReader.Context.RegisterClassMap<TestMap>();
 
 				var records = csvReader.GetRecords<Test>().ToList();
 
@@ -52,7 +52,6 @@ namespace CsvHelper.Tests
 			using (var reader = new StreamReader(stream))
 			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name,Order");
 				writer.WriteLine(",,");
 				writer.WriteLine("2,two,2");
@@ -60,7 +59,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				csvReader.Configuration.RegisterClassMap<TestStringMap>();
+				csvReader.Context.RegisterClassMap<TestStringMap>();
 
 				var records = csvReader.GetRecords<Test>().ToList();
 

@@ -1,137 +1,807 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.IO;
 using CsvHelper.Configuration;
-using System.Threading.Tasks;
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
-
-// This file is generated from a T4 template.
-// Modifying it directly won't do you any good.
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
 	/// <summary>
 	/// Parses a CSV file.
 	/// </summary>
-	public partial class CsvParser : IParser
+	public class CsvParser : IParser, IDisposable
 	{
-		private ReadingContext context;
-		private IFieldReader fieldReader;
+		private readonly FieldCache fieldCache = new FieldCache();
+		private readonly TextReader reader;
+		private readonly string delimiter;
+		private readonly char delimiterFirstChar;
+		private readonly char quote;
+		private readonly char escape;
+		private readonly bool countBytes;
+		private readonly Encoding encoding;
+		private readonly bool ignoreBlankLines;
+		private readonly char comment;
+		private readonly bool allowComments;
+		private readonly BadDataFound badDataFound;
+		private readonly bool lineBreakInQuotedFieldIsBadData;
+		private readonly TrimOptions trimOptions;
+		private readonly char[] whiteSpaceChars;
+		private readonly bool leaveOpen;
+		private readonly ParserMode mode;
+		private readonly char newLine;
+		private readonly bool cacheFields;
+
+		private char[] buffer;
+		private int bufferSize;
+		private int charsRead;
+		private int bufferPosition;
+		private int rowStartPosition;
+		private int fieldStartPosition;
+		private int row;
+		private int rawRow;
+		private long charCount;
+		private long byteCount;
+		private bool inQuotes;
+		private bool inEscape;
+		private Field[] fields;
+		private int fieldsPosition;
 		private bool disposed;
-		private int c = -1;
+		private int quoteCount;
+		private char[] processFieldBuffer;
+		private int processFieldBufferSize;
+		private ParserState state;
+		private int delimiterPosition = 1;
+
+		/// <inheritdoc/>
+		public long CharCount => charCount;
+
+		/// <inheritdoc/>
+		public long ByteCount => byteCount;
+
+		/// <inheritdoc/>
+		public int Row => row;
+
+		/// <inheritdoc/>
+		public string[] Record
+		{
+			get
+			{
+				if (fieldsPosition == 0)
+				{
+					return null;
+				}
+
+				var record = new string[fieldsPosition];
+
+				for (var i = 0; i < record.Length; i++)
+				{
+					record[i] = this[i];
+				}
+
+				return record;
+			}
+		}
+
+		/// <inheritdoc/>
+		public string RawRecord => new string(buffer, rowStartPosition, bufferPosition - rowStartPosition);
+
+		/// <inheritdoc/>
+		public int Count => fieldsPosition;
+
+		/// <inheritdoc/>
+		public int RawRow => rawRow;
+
+		/// <inheritdoc/>
+		public CsvContext Context { get; private set; }
+
+		/// <inheritdoc/>
+		public IParserConfiguration Configuration { get; private set; }
+
+		/// <inheritdoc/>
+		public string this[int index] => GetField(index);
 
 		/// <summary>
-		/// Gets the reading context.
+		/// Initializes a new instance of the <see cref="CsvParser"/> class.
 		/// </summary>
-		public virtual ReadingContext Context => context;
-
-		/// <summary>
-		/// Gets the configuration.
-		/// </summary>
-		public virtual IParserConfiguration Configuration => context.ParserConfiguration;
-
-		/// <summary>
-		/// Gets the <see cref="FieldReader"/>.
-		/// </summary>
-		public virtual IFieldReader FieldReader => fieldReader;
-
-		/// <summary>
-		/// Creates a new parser using the given <see cref="TextReader" />.
-		/// </summary>
-		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
+		/// <param name="reader">The reader.</param>
 		/// <param name="culture">The culture.</param>
-		public CsvParser(TextReader reader, CultureInfo culture) : this(new CsvFieldReader(reader, new Configuration.CsvConfiguration(culture), false)) { }
+		/// <param name="leaveOpen">if set to <c>true</c> [leave open].</param>
+		public CsvParser(TextReader reader, CultureInfo culture, bool leaveOpen = false) : this(reader, new CsvConfiguration(culture) { LeaveOpen = leaveOpen }) { }
 
 		/// <summary>
-		/// Creates a new parser using the given <see cref="TextReader" />.
+		/// Initializes a new instance of the <see cref="CsvParser"/> class.
 		/// </summary>
-		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
-		/// <param name="culture">The culture.</param>
-		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser(TextReader reader, CultureInfo culture, bool leaveOpen) : this(new CsvFieldReader(reader, new Configuration.CsvConfiguration(culture), leaveOpen)) { }
-
-		/// <summary>
-		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
-		/// </summary>
-		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
+		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser(TextReader reader, Configuration.CsvConfiguration configuration) : this(new CsvFieldReader(reader, configuration, false)) { }
-
-		/// <summary>
-		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
-		/// </summary>
-		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
-		/// <param name="configuration">The configuration.</param>
-		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser(TextReader reader, Configuration.CsvConfiguration configuration, bool leaveOpen) : this(new CsvFieldReader(reader, configuration, leaveOpen)) { }
-
-		/// <summary>
-		/// Creates a new parser using the given <see cref="FieldReader"/>.
-		/// </summary>
-		/// <param name="fieldReader">The field reader.</param>
-		public CsvParser(IFieldReader fieldReader)
+		public CsvParser(TextReader reader, CsvConfiguration configuration)
 		{
-			this.fieldReader = fieldReader ?? throw new ArgumentNullException(nameof(fieldReader));
-			context = fieldReader.Context as ReadingContext ?? throw new InvalidOperationException($"For {nameof(FieldReader)} to be used in {nameof(CsvParser)}, {nameof(FieldReader.Context)} must also implement {nameof(ReadingContext)}.");
+			this.reader = reader;
+			Configuration = configuration;
+			Context = new CsvContext(this);
+
+			allowComments = configuration.AllowComments;
+			badDataFound = configuration.BadDataFound;
+			bufferSize = configuration.BufferSize;
+			cacheFields = configuration.CacheFields;
+			comment = configuration.Comment;
+			countBytes = configuration.CountBytes;
+			delimiter = configuration.Delimiter;
+			delimiterFirstChar = configuration.Delimiter[0];
+			encoding = configuration.Encoding;
+			escape = configuration.Escape;
+			ignoreBlankLines = configuration.IgnoreBlankLines;
+			leaveOpen = configuration.LeaveOpen;
+			lineBreakInQuotedFieldIsBadData = configuration.LineBreakInQuotedFieldIsBadData;
+			newLine = configuration.NewLine ?? '\n';
+			mode = configuration.Mode;
+			processFieldBufferSize = 1024;
+			quote = configuration.Quote;
+			whiteSpaceChars = configuration.WhiteSpaceChars;
+			trimOptions = configuration.TrimOptions;
+
+			buffer = ArrayPool<char>.Shared.Rent(bufferSize);
+			processFieldBuffer = ArrayPool<char>.Shared.Rent(processFieldBufferSize);
+			fields = new Field[128];
 		}
-			
-		/// <summary>
-		/// Reads a record from the CSV file.
-		/// </summary>
-		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
-		public virtual string[] Read()
+
+		/// <inheritdoc/>
+		public bool Read()
 		{
-			try
-			{
-				context.ClearCache(Caches.RawRecord);
+			rowStartPosition = bufferPosition;
+			fieldStartPosition = rowStartPosition;
+			fieldsPosition = 0;
+			quoteCount = 0;
+			row++;
+			rawRow++;
 
-				var row = ReadLine();
+			var result = ReadLineResult.None;
 
-				return row;
-			}
-			catch (Exception ex)
+			while (true)
 			{
-				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
+				if (bufferPosition >= charsRead)
+				{
+					if (!FillBuffer())
+					{
+						return ReadEndOfFile(result);
+					}
+				}
+
+				result = ReadLine();
+
+				if (result == ReadLineResult.Complete)
+				{
+					return true;
+				}
 			}
 		}
-			
-		/// <summary>
-		/// Reads a record from the CSV file asynchronously.
-		/// </summary>
-		/// <returns>A <see cref="T:String[]" /> of fields for the record read.</returns>
-		public virtual async Task<string[]> ReadAsync()
+
+		/// <inheritdoc/>
+		public async Task<bool> ReadAsync()
 		{
-			try
-			{
-				context.ClearCache(Caches.RawRecord);
+			rowStartPosition = bufferPosition;
+			fieldStartPosition = rowStartPosition;
+			fieldsPosition = 0;
+			quoteCount = 0;
+			row++;
+			rawRow++;
 
-				var row = await ReadLineAsync().ConfigureAwait(false);
+			var result = ReadLineResult.None;
 
-				return row;
-			}
-			catch (Exception ex)
+			while (true)
 			{
-				throw ex as CsvHelperException ?? new ParserException(context, "An unexpected error occurred.", ex);
+				if (bufferPosition >= charsRead)
+				{
+					if (!await FillBufferAsync())
+					{
+						return ReadEndOfFile(result);
+					}
+				}
+
+				result = ReadLine();
+
+				if (result == ReadLineResult.Complete)
+				{
+					return true;
+				}
 			}
 		}
-			
-		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		/// <filterpriority>2</filterpriority>
-		public virtual void Dispose()
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private ReadLineResult ReadLine()
 		{
-			Dispose(!context?.LeaveOpen ?? true);
+			char c = '\0';
+			char cPrev;
+			while (bufferPosition < charsRead)
+			{
+				if (state != ParserState.None)
+				{
+					// Continue the state before doing anything else.
+					ReadLineResult result;
+					switch (state)
+					{
+						case ParserState.BlankLine:
+							result = ReadBlankLine(ref c);
+							break;
+						case ParserState.Delimiter:
+							result = ReadDelimiter(ref c);
+							break;
+						case ParserState.LineEnding:
+							result = ReadLineEnding(ref c);
+							break;
+						default:
+							result = ReadLineResult.None;
+							break;
+					}
+
+					if (result == ReadLineResult.Incomplete)
+					{
+						return result;
+					}
+				}
+
+				cPrev = c;
+				c = buffer[bufferPosition];
+				bufferPosition++;
+				charCount++;
+				if (countBytes)
+				{
+					byteCount += encoding.GetByteCount(new char[] { c });
+				}
+
+				if (mode == ParserMode.RFC4180)
+				{
+					if (allowComments && c == comment || ignoreBlankLines && rowStartPosition == bufferPosition - 1 && (c == '\r' || c == '\n'))
+					{
+						state = ParserState.BlankLine;
+						var result = ReadBlankLine(ref c);
+						if (result == ReadLineResult.Complete)
+						{
+							state = ParserState.None;
+
+							continue;
+						}
+						else
+						{
+							return ReadLineResult.Incomplete;
+						}
+					}
+
+					if (c == quote || c == escape)
+					{
+						quoteCount++;
+						inQuotes = !inQuotes;
+					}
+
+					if (inQuotes)
+					{
+						if (c == '\r' || c == '\n' && cPrev != '\r')
+						{
+							rawRow++;
+						}
+
+						// We don't care about anything else if we're in quotes.
+						continue;
+					}
+
+					if (c == delimiterFirstChar)
+					{
+						state = ParserState.Delimiter;
+						var result = ReadDelimiter(ref c);
+						if (result == ReadLineResult.Incomplete)
+						{
+							return result;
+						}
+
+						state = ParserState.None;
+
+						continue;
+					}
+
+					if (c == '\r' || c == '\n')
+					{
+						state = ParserState.LineEnding;
+						var result = ReadLineEnding(ref c);
+						if (result == ReadLineResult.Complete)
+						{
+							state = ParserState.None;
+						}
+
+						return result;
+					}
+				}
+				else if (mode == ParserMode.Escape)
+				{
+					if (allowComments && c == comment || ignoreBlankLines && rowStartPosition == bufferPosition - 1 && c == newLine)
+					{
+						state = ParserState.BlankLine;
+						var result = ReadBlankLine(ref c);
+						if (result == ReadLineResult.Complete)
+						{
+							state = ParserState.None;
+
+							continue;
+						}
+						else
+						{
+							return ReadLineResult.Incomplete;
+						}
+					}
+
+					if (inEscape)
+					{
+						inEscape = false;
+
+						continue;
+					}
+
+					if (c == escape)
+					{
+						inEscape = true;
+
+						continue;
+					}
+
+					if (c == delimiterFirstChar)
+					{
+						state = ParserState.Delimiter;
+						var result = ReadDelimiter(ref c);
+						if (result == ReadLineResult.Incomplete)
+						{
+							return result;
+						}
+
+						state = ParserState.None;
+
+						continue;
+					}
+
+					if (c == newLine)
+					{
+						state = ParserState.LineEnding;
+						var result = ReadLineEnding(ref c);
+						if (result == ReadLineResult.Complete)
+						{
+							state = ParserState.None;
+						}
+
+						return result;
+					}
+				}
+			}
+
+			return ReadLineResult.Incomplete;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private ReadLineResult ReadBlankLine(ref char c)
+		{
+			while (bufferPosition < charsRead)
+			{
+				if (c == '\r' || c == '\n')
+				{
+					var result = ReadLineEnding(ref c);
+					if (result == ReadLineResult.Complete)
+					{
+						rowStartPosition = bufferPosition;
+						fieldStartPosition = rowStartPosition;
+						row++;
+						rawRow++;
+					}
+
+					return result;
+				}
+
+				c = buffer[bufferPosition];
+				bufferPosition++;
+				charCount++;
+				if (countBytes)
+				{
+					byteCount += encoding.GetByteCount(new char[] { c });
+				}
+			}
+
+			return ReadLineResult.Incomplete;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private ReadLineResult ReadDelimiter(ref char c)
+		{
+			for (var i = delimiterPosition; i < delimiter.Length; i++)
+			{
+				if (bufferPosition >= charsRead)
+				{
+					return ReadLineResult.Incomplete;
+				}
+
+				delimiterPosition++;
+
+				c = buffer[bufferPosition];
+				if (c != delimiter[i])
+				{
+					c = buffer[bufferPosition - 1];
+					delimiterPosition = 1;
+
+					return ReadLineResult.Complete;
+				}
+
+				bufferPosition++;
+				charCount++;
+				if (countBytes)
+				{
+					byteCount += encoding.GetByteCount(new[] { c });
+				}
+
+				if (bufferPosition >= charsRead)
+				{
+					return ReadLineResult.Incomplete;
+				}
+			}
+
+			AddField(fieldStartPosition, bufferPosition - fieldStartPosition - delimiter.Length);
+
+			fieldStartPosition = bufferPosition;
+			delimiterPosition = 1;
+
+			return ReadLineResult.Complete;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private ReadLineResult ReadLineEnding(ref char c)
+		{
+			var lessChars = 1;
+
+			if (c == '\r' && mode == ParserMode.RFC4180)
+			{
+				if (bufferPosition >= charsRead)
+				{
+					return ReadLineResult.Incomplete;
+				}
+
+				c = buffer[bufferPosition];
+
+				if (c == '\n')
+				{
+					lessChars++;
+					bufferPosition++;
+					charCount++;
+					if (countBytes)
+					{
+						byteCount += encoding.GetByteCount(new char[] { c });
+					}
+				}
+			}
+
+			if (state == ParserState.LineEnding)
+			{
+				AddField(fieldStartPosition, bufferPosition - fieldStartPosition - lessChars);
+			}
+
+			return ReadLineResult.Complete;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool ReadEndOfFile(in ReadLineResult result)
+		{
+			var state = this.state;
+			this.state = ParserState.None;
+
+			if (state == ParserState.BlankLine)
+			{
+				return false;
+			}
+
+			if (state == ParserState.Delimiter)
+			{
+				AddField(fieldStartPosition, bufferPosition - fieldStartPosition - delimiter.Length);
+
+				fieldStartPosition = bufferPosition;
+
+				AddField(fieldStartPosition, bufferPosition - fieldStartPosition);
+
+				return true;
+			}
+
+			if (state == ParserState.LineEnding)
+			{
+				AddField(fieldStartPosition, bufferPosition - fieldStartPosition - 1);
+
+				return true;
+			}
+
+			if (rowStartPosition < bufferPosition)
+			{
+				AddField(fieldStartPosition, bufferPosition - fieldStartPosition);
+			}
+
+			return fieldsPosition > 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void AddField(in int start, in int length)
+		{
+			if (fieldsPosition >= fields.Length)
+			{
+				Array.Resize(ref fields, fields.Length * 2);
+			}
+
+			ref var field = ref fields[fieldsPosition];
+			field.Start = start - rowStartPosition;
+			field.Length = length;
+			field.QuoteCount = quoteCount;
+
+			fieldsPosition++;
+			quoteCount = 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool FillBuffer()
+		{
+			if (rowStartPosition == 0 && charCount > 0 && charsRead == bufferSize)
+			{
+				// The record is longer than the memory buffer. Increase the buffer.
+				bufferSize *= 2;
+				var tempBuffer = ArrayPool<char>.Shared.Rent(bufferSize);
+				buffer.CopyTo(tempBuffer, 0);
+				ArrayPool<char>.Shared.Return(buffer);
+				buffer = tempBuffer;
+			}
+
+			var charsLeft = Math.Max(charsRead - rowStartPosition, 0);
+
+			Array.Copy(buffer, rowStartPosition, buffer, 0, charsLeft);
+
+			fieldStartPosition -= rowStartPosition;
+			rowStartPosition = 0;
+			bufferPosition = charsLeft;
+
+			charsRead = reader.Read(buffer, charsLeft, buffer.Length - charsLeft);
+			if (charsRead == 0)
+			{
+				return false;
+			}
+
+			charsRead += charsLeft;
+
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private async Task<bool> FillBufferAsync()
+		{
+			if (rowStartPosition == 0 && charCount > 0 && charsRead == bufferSize)
+			{
+				// The record is longer than the memory buffer. Increase the buffer.
+				bufferSize *= 2;
+				var tempBuffer = ArrayPool<char>.Shared.Rent(bufferSize);
+				buffer.CopyTo(tempBuffer, 0);
+				ArrayPool<char>.Shared.Return(buffer);
+				buffer = tempBuffer;
+			}
+
+			var charsLeft = Math.Max(charsRead - rowStartPosition, 0);
+
+			Array.Copy(buffer, rowStartPosition, buffer, 0, charsLeft);
+
+			fieldStartPosition -= rowStartPosition;
+			rowStartPosition = 0;
+			bufferPosition = charsLeft;
+
+			charsRead = await reader.ReadAsync(buffer, charsLeft, buffer.Length - charsLeft);
+			if (charsRead == 0)
+			{
+				return false;
+			}
+
+			charsRead += charsLeft;
+
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private string GetField(in int index)
+		{
+			ref var field = ref fields[index];
+
+			if (field.Length == 0)
+			{
+				return string.Empty;
+			}
+
+			var start = field.Start + rowStartPosition;
+			var length = field.Length;
+			var quoteCount = field.QuoteCount;
+
+			var processedField = mode == ParserMode.RFC4180
+				? ProcessRFC4180Field(start, length, quoteCount)
+				: ProcessEscapeField(start, length);
+
+			if (!cacheFields)
+			{
+				return new string(processedField.Buffer, processedField.Start, processedField.Length);
+			}
+
+			var value = fieldCache.GetField(processedField.Buffer, processedField.Start, processedField.Length);
+
+			return value;
+		}
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected ProcessedField ProcessRFC4180Field(in int start, in int length, in int quoteCount)
+		{
+			var newStart = start;
+			var newLength = length;
+
+			if ((trimOptions & TrimOptions.Trim) == TrimOptions.Trim)
+			{
+				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+			}
+
+			if (quoteCount == 0)
+			{
+				// Not quoted.
+				// No processing needed.
+
+				return new ProcessedField
+				{
+					Buffer = buffer,
+					Start = newStart,
+					Length = newLength,
+				};
+			}
+
+			// Remove the quotes from the ends.
+			if (buffer[newStart] == quote && buffer[newStart + newLength - 1] == quote && newLength > 1)
+			{
+				newStart += 1;
+				newLength -= 2;
+			}
+			else
+			{
+				badDataFound?.Invoke(Context);
+
+				// If BadDataFound doesn't throw, we don't want to remove the esacpe characters.
+				// Field isn't quoted properly, so leave it as is.
+				// No more processing needed.
+
+				return new ProcessedField
+				{
+					Buffer = buffer,
+					Start = newStart,
+					Length = newLength,
+				};
+			}
+
+			if ((trimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
+			{
+				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+			}
+
+			if (lineBreakInQuotedFieldIsBadData)
+			{
+				for (var i = newStart; i < newStart + newLength; i++)
+				{
+					if (buffer[i] == '\r' || buffer[i] == '\n')
+					{
+						badDataFound?.Invoke(Context);
+					}
+				}
+			}
+
+			if (quoteCount == 2)
+			{
+				// The only quotes are the ends of the field.
+				// No more processing is needed.
+				return new ProcessedField
+				{
+					Buffer = buffer,
+					Start = newStart,
+					Length = newLength,
+				};
+			}
+
+			if (newLength > processFieldBuffer.Length)
+			{
+				processFieldBufferSize *= 2;
+				ArrayPool<char>.Shared.Return(processFieldBuffer);
+				processFieldBuffer = ArrayPool<char>.Shared.Rent(processFieldBufferSize);
+			}
+
+			// Remove escapes.
+			var inEscape = false;
+			var position = 0;
+			for (var i = newStart; i < newStart + newLength; i++)
+			{
+				var c = buffer[i];
+
+				if (inEscape)
+				{
+					if (c != quote)
+					{
+						// Can only escape "s in RFC4180 mode.
+						badDataFound?.Invoke(Context);
+					}
+
+					inEscape = false;
+				}
+				else if (c == escape)
+				{
+					inEscape = true;
+					continue;
+				}
+
+				processFieldBuffer[position] = c;
+				position++;
+			}
+
+			return new ProcessedField
+			{
+				Buffer = processFieldBuffer,
+				Start = 0,
+				Length = position,
+			};
+		}
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected ProcessedField ProcessEscapeField(in int start, in int length)
+		{
+			var newStart = start;
+			var newLength = length;
+
+			if ((trimOptions & TrimOptions.Trim) == TrimOptions.Trim)
+			{
+				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+			}
+
+			// Remove escapes.
+			var inEscape = false;
+			var position = 0;
+			for (var i = newStart; i < newStart + newLength; i++)
+			{
+				var c = buffer[i];
+
+				if (inEscape)
+				{
+					inEscape = false;
+				}
+				else if (c == escape)
+				{
+					inEscape = true;
+					continue;
+				}
+
+				processFieldBuffer[position] = c;
+				position++;
+			}
+
+			return new ProcessedField
+			{
+				Buffer = processFieldBuffer,
+				Start = 0,
+				Length = position,
+			};
+		}
+
+		/// <inheritdoc/>
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
 			GC.SuppressFinalize(this);
 		}
 
-		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		/// <param name="disposing">True if the instance needs to be disposed of.</param>
+		/// <inheritdoc/>
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposed)
@@ -141,920 +811,72 @@ namespace CsvHelper
 
 			if (disposing)
 			{
-				fieldReader?.Dispose();
+				// Dispose managed state (managed objects)
+				ArrayPool<char>.Shared.Return(buffer);
+				ArrayPool<char>.Shared.Return(processFieldBuffer);
+
+				if (!leaveOpen)
+				{
+					reader?.Dispose();
+				}
 			}
 
-			fieldReader = null;
-			context = null;
+			// Free unmanaged resources (unmanaged objects) and override finalizer
+			// Set large fields to null
+
 			disposed = true;
 		}
-			
+
 		/// <summary>
-		/// Reads a line of the CSV file.
+		/// Processes a raw field based on configuration.
+		/// This will remove quotes, remove escapes, and trim if configured to.
 		/// </summary>
-		/// <returns>The CSV line.</returns>
-		protected virtual string[] ReadLine()
+		[DebuggerDisplay("Start = {Start}, Length = {Length}, Buffer.Length = {Buffer.Length}")]
+		protected readonly ref struct ProcessedField
 		{
-			context.RecordBuilder.Clear();
-			context.Row++;
-			context.RawRow++;
+			/// <summary>
+			/// The start of the field in the buffer.
+			/// </summary>
+			public int Start { get; init; }
 
-			while (true)
-			{
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					if (context.RecordBuilder.Length > 0)
-					{
-						// There was no line break at the end of the file.
-						// We need to return the last record first.
-						context.RecordBuilder.Add(fieldReader.GetField());
-						return context.RecordBuilder.ToArray();
-					}
+			/// <summary>
+			/// The length of the field in the buffer.
+			/// </summary>
+			public int Length { get; init; }
 
-					return null;
-				}
-
-				c = fieldReader.GetChar();
-
-				if (context.RecordBuilder.Length == 0 && ((c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments) || c == '\r' || c == '\n'))
-				{
-					ReadBlankLine();
-					if (!context.ParserConfiguration.IgnoreBlankLines)
-					{
-						break;
-					}
-
-					continue;
-				}
-
-				// Trim start outside of quotes.
-				if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-				{
-					ReadSpaces();
-					fieldReader.SetFieldStart(-1);
-				}
-
-				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
-				{
-					if (ReadQuotedField())
-					{
-						break;
-					}
-				}
-				else
-				{
-					if (ReadField())
-					{
-						break;
-					}
-				}
-			}
-
-			return context.RecordBuilder.ToArray();
+			/// <summary>
+			/// The buffer that contains the field.
+			/// </summary>
+			public char[] Buffer { get; init; }
 		}
-			
-		/// <summary>
-		/// Reads a line of the CSV file.
-		/// </summary>
-		/// <returns>The CSV line.</returns>
-		protected virtual async Task<string[]> ReadLineAsync()
+
+		private enum ReadLineResult
 		{
-			context.RecordBuilder.Clear();
-			context.Row++;
-			context.RawRow++;
-
-			while (true)
-			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					if (context.RecordBuilder.Length > 0)
-					{
-						// There was no line break at the end of the file.
-						// We need to return the last record first.
-						context.RecordBuilder.Add(fieldReader.GetField());
-						return context.RecordBuilder.ToArray();
-					}
-
-					return null;
-				}
-
-				c = fieldReader.GetChar();
-
-				if (context.RecordBuilder.Length == 0 && ((c == context.ParserConfiguration.Comment && context.ParserConfiguration.AllowComments) || c == '\r' || c == '\n'))
-				{
-					await ReadBlankLineAsync().ConfigureAwait(false);
-					if (!context.ParserConfiguration.IgnoreBlankLines)
-					{
-						break;
-					}
-
-					continue;
-				}
-
-				// Trim start outside of quotes.
-				if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-				{
-					await ReadSpacesAsync().ConfigureAwait(false);
-					fieldReader.SetFieldStart(-1);
-				}
-
-				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
-				{
-					if (await ReadQuotedFieldAsync().ConfigureAwait(false))
-					{
-						break;
-					}
-				}
-				else
-				{
-					if (await ReadFieldAsync().ConfigureAwait(false))
-					{
-						break;
-					}
-				}
-			}
-
-			return context.RecordBuilder.ToArray();
+			None = 0,
+			Complete = 1,
+			Incomplete = 2
 		}
-			
-		/// <summary>
-		/// Reads a blank line. This accounts for empty lines
-		/// and commented out lines.
-		/// </summary>
-		protected virtual void ReadBlankLine()
+
+		private enum ParserState
 		{
-			if (context.ParserConfiguration.IgnoreBlankLines)
-			{
-				context.Row++;
-			}
-
-			while (true)
-			{
-				if (c == '\r' || c == '\n')
-				{
-					ReadLineEnding();
-					fieldReader.SetFieldStart();
-					return;
-				}
-
-				// If the buffer runs, it appends the current data to the field.
-				// We don't want to capture any data on a blank line, so we
-				// need to set the field start every char.
-				fieldReader.SetFieldStart();
-
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					return;
-				}
-
-				c = fieldReader.GetChar();
-			}
+			None = 0,
+			BlankLine = 1,
+			Delimiter = 2,
+			LineEnding = 3
 		}
-			
-		/// <summary>
-		/// Reads a blank line. This accounts for empty lines
-		/// and commented out lines.
-		/// </summary>
-		protected virtual async Task ReadBlankLineAsync()
+
+		[DebuggerDisplay("Start = {Start}, Length = {Length}, QuoteCount = {QuoteCount}")]
+		private struct Field
 		{
-			if (context.ParserConfiguration.IgnoreBlankLines)
-			{
-				context.Row++;
-			}
-
-			while (true)
-			{
-				if (c == '\r' || c == '\n')
-				{
-					await ReadLineEndingAsync().ConfigureAwait(false);
-					fieldReader.SetFieldStart();
-					return;
-				}
-
-				// If the buffer runs, it appends the current data to the field.
-				// We don't want to capture any data on a blank line, so we
-				// need to set the field start every char.
-				fieldReader.SetFieldStart();
-
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					return;
-				}
-
-				c = fieldReader.GetChar();
-			}
-		}
-			
-		/// <summary>
-		/// Reads until a delimiter or line ending is found.
-		/// </summary>
-		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual bool ReadField()
-		{
-			if (c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n')
-			{
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					fieldReader.SetFieldEnd();
-
-					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-					{
-						fieldReader.SetFieldStart();
-					}
-
-					context.RecordBuilder.Add(fieldReader.GetField());
-					return true;
-				}
-
-				c = fieldReader.GetChar();
-			}
-
-			var inSpaces = false;
-			while (true)
-			{
-				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
-				{
-					context.IsFieldBad = true;
-				}
-
-				// Trim end outside of quotes.
-				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-				{
-					inSpaces = true;
-					fieldReader.SetFieldEnd(-1);
-					fieldReader.AppendField();
-					fieldReader.SetFieldStart(-1);
-				}
-				else if (inSpaces && c != ' ')
-				{
-					// Hit a non-space char.
-					// Need to determine if it's the end of the field or another char.
-					inSpaces = false;
-					if (c == context.ParserConfiguration.Delimiter[0] || c == '\r' || c == '\n')
-					{
-						fieldReader.SetFieldStart(-1);
-					}
-				}
-
-				if (c == context.ParserConfiguration.Delimiter[0])
-				{
-					fieldReader.SetFieldEnd(-1);
-
-					// End of field.
-					if (ReadDelimiter())
-					{
-						// Set the end of the field to the char before the delimiter.
-						context.RecordBuilder.Add(fieldReader.GetField());
-
-						return false;
-					}
-				}
-				else if (c == '\r' || c == '\n')
-				{
-					// End of line.
-					fieldReader.SetFieldEnd(-1);
-					var offset = ReadLineEnding();
-					fieldReader.SetRawRecordEnd(offset);
-					context.RecordBuilder.Add(fieldReader.GetField());
-
-					fieldReader.SetFieldStart(offset);
-					fieldReader.SetBufferPosition(offset);
-
-					return true;
-				}
-
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					fieldReader.SetFieldEnd();
-
-					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-					{
-						fieldReader.SetFieldStart();
-					}
-
-					context.RecordBuilder.Add(fieldReader.GetField());
-
-					return true;
-				}
-
-				c = fieldReader.GetChar();
-			}
-		}
-			
-		/// <summary>
-		/// Reads until a delimiter or line ending is found.
-		/// </summary>
-		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual async Task<bool> ReadFieldAsync()
-		{
-			if (c != context.ParserConfiguration.Delimiter[0] && c != '\r' && c != '\n')
-			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					fieldReader.SetFieldEnd();
-
-					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-					{
-						fieldReader.SetFieldStart();
-					}
-
-					context.RecordBuilder.Add(fieldReader.GetField());
-					return true;
-				}
-
-				c = fieldReader.GetChar();
-			}
-
-			var inSpaces = false;
-			while (true)
-			{
-				if (c == context.ParserConfiguration.Quote && !context.ParserConfiguration.IgnoreQuotes)
-				{
-					context.IsFieldBad = true;
-				}
-
-				// Trim end outside of quotes.
-				if (!inSpaces && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-				{
-					inSpaces = true;
-					fieldReader.SetFieldEnd(-1);
-					fieldReader.AppendField();
-					fieldReader.SetFieldStart(-1);
-				}
-				else if (inSpaces && c != ' ')
-				{
-					// Hit a non-space char.
-					// Need to determine if it's the end of the field or another char.
-					inSpaces = false;
-					if (c == context.ParserConfiguration.Delimiter[0] || c == '\r' || c == '\n')
-					{
-						fieldReader.SetFieldStart(-1);
-					}
-				}
-
-				if (c == context.ParserConfiguration.Delimiter[0])
-				{
-					fieldReader.SetFieldEnd(-1);
-
-					// End of field.
-					if (await ReadDelimiterAsync().ConfigureAwait(false))
-					{
-						// Set the end of the field to the char before the delimiter.
-						context.RecordBuilder.Add(fieldReader.GetField());
-
-						return false;
-					}
-				}
-				else if (c == '\r' || c == '\n')
-				{
-					// End of line.
-					fieldReader.SetFieldEnd(-1);
-					var offset = await ReadLineEndingAsync().ConfigureAwait(false);
-					fieldReader.SetRawRecordEnd(offset);
-					context.RecordBuilder.Add(fieldReader.GetField());
-
-					fieldReader.SetFieldStart(offset);
-					fieldReader.SetBufferPosition(offset);
-
-					return true;
-				}
-
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					fieldReader.SetFieldEnd();
-
-					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-					{
-						fieldReader.SetFieldStart();
-					}
-
-					context.RecordBuilder.Add(fieldReader.GetField());
-
-					return true;
-				}
-
-				c = fieldReader.GetChar();
-			}
-		}
-			
-		/// <summary>
-		/// Reads until the field is not quoted and a delimiter is found.
-		/// </summary>
-		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual bool ReadQuotedField()
-		{
-			var inQuotes = true;
-			var quoteCount = 1;
-			// Set the start of the field to after the quote.
-			fieldReader.SetFieldStart();
-
-			while (true)
-			{
-				var cPrev = c;
-
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					fieldReader.SetFieldEnd();
-					context.RecordBuilder.Add(fieldReader.GetField());
-
-					return true;
-				}
-
-				c = fieldReader.GetChar();
-
-				// Trim start inside quotes.
-				if (quoteCount == 1 && c == ' ' && cPrev == context.ParserConfiguration.Quote && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
-				{
-					ReadSpaces();
-					cPrev = ' ';
-					fieldReader.SetFieldStart(-1);
-				}
-
-				// Trim end inside quotes.
-				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
-				{
-					fieldReader.SetFieldEnd(-1);
-					fieldReader.AppendField();
-					fieldReader.SetFieldStart(-1);
-					ReadSpaces();
-					cPrev = ' ';
-
-					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
-					{
-						inQuotes = !inQuotes;
-						quoteCount++;
-
-						cPrev = c;
-
-						if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-						{
-							// End of file.
-							fieldReader.SetFieldStart();
-							fieldReader.SetFieldEnd();
-							context.RecordBuilder.Add(fieldReader.GetField());
-
-							return true;
-						}
-
-						c = fieldReader.GetChar();
-
-						if (c == context.ParserConfiguration.Quote)
-						{
-							// If we find a second quote, this isn't the end of the field.
-							// We need to keep the spaces in this case.
-
-							inQuotes = !inQuotes;
-							quoteCount++;
-
-							fieldReader.SetFieldEnd(-1);
-							fieldReader.AppendField();
-							fieldReader.SetFieldStart();
-
-							continue;
-						}
-						else
-						{
-							// If there isn't a second quote, this is the end of the field.
-							// We need to ignore the spaces.
-							fieldReader.SetFieldStart(-1);
-						}
-					}
-				}
-
-				if (inQuotes && c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
-				{
-					inQuotes = !inQuotes;
-					quoteCount++;
-
-					if (!inQuotes)
-					{
-						// Add an offset for the quote.
-						fieldReader.SetFieldEnd(-1);
-						fieldReader.AppendField();
-						fieldReader.SetFieldStart();
-					}
-
-					continue;
-				}
-
-				if (inQuotes)
-				{
-					if (c == '\r' || (c == '\n' && cPrev != '\r'))
-					{
-						if (context.ParserConfiguration.LineBreakInQuotedFieldIsBadData)
-						{
-							context.ParserConfiguration.BadDataFound?.Invoke(context);
-						}
-
-						// Inside a quote \r\n is just another character to absorb.
-						context.RawRow++;
-					}
-				}
-
-				if (!inQuotes)
-				{
-					// Trim end outside of quotes.
-					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-					{
-						ReadSpaces();
-						fieldReader.SetFieldStart(-1);
-					}
-
-					if (c == context.ParserConfiguration.Delimiter[0])
-					{
-						fieldReader.SetFieldEnd(-1);
-
-						if (ReadDelimiter())
-						{
-							// Add an extra offset because of the end quote.
-							context.RecordBuilder.Add(fieldReader.GetField());
-
-							return false;
-						}
-					}
-					else if (c == '\r' || c == '\n')
-					{
-						fieldReader.SetFieldEnd(-1);
-						var offset = ReadLineEnding();
-						fieldReader.SetRawRecordEnd(offset);
-						context.RecordBuilder.Add(fieldReader.GetField());
-
-						fieldReader.SetFieldStart(offset);
-						fieldReader.SetBufferPosition(offset);
-
-						return true;
-					}
-					else if (cPrev == context.ParserConfiguration.Quote)
-					{
-						// We're out of quotes. Read the reset of
-						// the field like a normal field.
-						return ReadField();
-					}
-				}
-			}
-		}
-			
-		/// <summary>
-		/// Reads until the field is not quoted and a delimiter is found.
-		/// </summary>
-		/// <returns>True if the end of the line was found, otherwise false.</returns>
-		protected virtual async Task<bool> ReadQuotedFieldAsync()
-		{
-			var inQuotes = true;
-			var quoteCount = 1;
-			// Set the start of the field to after the quote.
-			fieldReader.SetFieldStart();
-
-			while (true)
-			{
-				var cPrev = c;
-
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					fieldReader.SetFieldEnd();
-					context.RecordBuilder.Add(fieldReader.GetField());
-
-					return true;
-				}
-
-				c = fieldReader.GetChar();
-
-				// Trim start inside quotes.
-				if (quoteCount == 1 && c == ' ' && cPrev == context.ParserConfiguration.Quote && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
-				{
-					await ReadSpacesAsync().ConfigureAwait(false);
-					cPrev = ' ';
-					fieldReader.SetFieldStart(-1);
-				}
-
-				// Trim end inside quotes.
-				if (inQuotes && c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
-				{
-					fieldReader.SetFieldEnd(-1);
-					fieldReader.AppendField();
-					fieldReader.SetFieldStart(-1);
-					ReadSpaces();
-					cPrev = ' ';
-
-					if (c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
-					{
-						inQuotes = !inQuotes;
-						quoteCount++;
-
-						cPrev = c;
-
-						if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-						{
-							// End of file.
-							fieldReader.SetFieldStart();
-							fieldReader.SetFieldEnd();
-							context.RecordBuilder.Add(fieldReader.GetField());
-
-							return true;
-						}
-
-						c = fieldReader.GetChar();
-
-						if (c == context.ParserConfiguration.Quote)
-						{
-							// If we find a second quote, this isn't the end of the field.
-							// We need to keep the spaces in this case.
-
-							inQuotes = !inQuotes;
-							quoteCount++;
-
-							fieldReader.SetFieldEnd(-1);
-							fieldReader.AppendField();
-							fieldReader.SetFieldStart();
-
-							continue;
-						}
-						else
-						{
-							// If there isn't a second quote, this is the end of the field.
-							// We need to ignore the spaces.
-							fieldReader.SetFieldStart(-1);
-						}
-					}
-				}
-
-				if (inQuotes && c == context.ParserConfiguration.Escape || c == context.ParserConfiguration.Quote)
-				{
-					inQuotes = !inQuotes;
-					quoteCount++;
-
-					if (!inQuotes)
-					{
-						// Add an offset for the quote.
-						fieldReader.SetFieldEnd(-1);
-						fieldReader.AppendField();
-						fieldReader.SetFieldStart();
-					}
-
-					continue;
-				}
-
-				if (inQuotes)
-				{
-					if (c == '\r' || (c == '\n' && cPrev != '\r'))
-					{
-						if (context.ParserConfiguration.LineBreakInQuotedFieldIsBadData)
-						{
-							context.ParserConfiguration.BadDataFound?.Invoke(context);
-						}
-
-						// Inside a quote \r\n is just another character to absorb.
-						context.RawRow++;
-					}
-				}
-
-				if (!inQuotes)
-				{
-					// Trim end outside of quotes.
-					if (c == ' ' && (context.ParserConfiguration.TrimOptions & TrimOptions.Trim) == TrimOptions.Trim)
-					{
-						await ReadSpacesAsync().ConfigureAwait(false);
-						fieldReader.SetFieldStart(-1);
-					}
-
-					if (c == context.ParserConfiguration.Delimiter[0])
-					{
-						fieldReader.SetFieldEnd(-1);
-
-						if (await ReadDelimiterAsync().ConfigureAwait(false))
-						{
-							// Add an extra offset because of the end quote.
-							context.RecordBuilder.Add(fieldReader.GetField());
-
-							return false;
-						}
-					}
-					else if (c == '\r' || c == '\n')
-					{
-						fieldReader.SetFieldEnd(-1);
-						var offset = await ReadLineEndingAsync().ConfigureAwait(false);
-						fieldReader.SetRawRecordEnd(offset);
-						context.RecordBuilder.Add(fieldReader.GetField());
-
-						fieldReader.SetFieldStart(offset);
-						fieldReader.SetBufferPosition(offset);
-
-						return true;
-					}
-					else if (cPrev == context.ParserConfiguration.Quote)
-					{
-						// We're out of quotes. Read the reset of
-						// the field like a normal field.
-						return await ReadFieldAsync().ConfigureAwait(false);
-					}
-				}
-			}
-		}
-			
-		/// <summary>
-		/// Reads until the delimiter is done.
-		/// </summary>
-		/// <returns>True if a delimiter was read. False if the sequence of
-		/// chars ended up not being the delimiter.</returns>
-		protected virtual bool ReadDelimiter()
-		{
-			if (c != context.ParserConfiguration.Delimiter[0])
-			{
-				throw new InvalidOperationException("Tried reading a delimiter when the first delimiter char didn't match the current char.");
-			}
-
-			if (context.ParserConfiguration.Delimiter.Length == 1)
-			{
-				return true;
-			}
-
-			var originalC = c;
-			var charsRead = 0;
-			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
-			{
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					return false;
-				}
-
-				c = fieldReader.GetChar();
-				charsRead++;
-				if (c != context.ParserConfiguration.Delimiter[i])
-				{
-					c = originalC;
-					fieldReader.SetBufferPosition(-charsRead);
-
-					return false;
-				}
-			}
-
-			return true;
-		}
-			
-		/// <summary>
-		/// Reads until the delimiter is done.
-		/// </summary>
-		/// <returns>True if a delimiter was read. False if the sequence of
-		/// chars ended up not being the delimiter.</returns>
-		protected virtual async Task<bool> ReadDelimiterAsync()
-		{
-			if (c != context.ParserConfiguration.Delimiter[0])
-			{
-				throw new InvalidOperationException("Tried reading a delimiter when the first delimiter char didn't match the current char.");
-			}
-
-			if (context.ParserConfiguration.Delimiter.Length == 1)
-			{
-				return true;
-			}
-
-			var originalC = c;
-			var charsRead = 0;
-			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
-			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					return false;
-				}
-
-				c = fieldReader.GetChar();
-				charsRead++;
-				if (c != context.ParserConfiguration.Delimiter[i])
-				{
-					c = originalC;
-					fieldReader.SetBufferPosition(-charsRead);
-
-					return false;
-				}
-			}
-
-			return true;
-		}
-			
-		/// <summary>
-		/// Reads until the line ending is done.
-		/// </summary>
-		/// <returns>The field start offset.</returns>
-		protected virtual int ReadLineEnding()
-		{
-			if (c != '\r' && c != '\n')
-			{
-				throw new InvalidOperationException("Tried reading a line ending when the current char is not a \\r or \\n.");
-			}
-
-			var fieldStartOffset = 0;
-			if (c == '\r')
-			{
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					return fieldStartOffset;
-				}
-
-				c = fieldReader.GetChar();
-				if (c != '\n' && c != -1)
-				{
-					// The start needs to be moved back.
-					fieldStartOffset--;
-				}
-			}
-
-			return fieldStartOffset;
-		}
-			
-		/// <summary>
-		/// Reads until the line ending is done.
-		/// </summary>
-		/// <returns>The field start offset.</returns>
-		protected virtual async Task<int> ReadLineEndingAsync()
-		{
-			if (c != '\r' && c != '\n')
-			{
-				throw new InvalidOperationException("Tried reading a line ending when the current char is not a \\r or \\n.");
-			}
-
-			var fieldStartOffset = 0;
-			if (c == '\r')
-			{
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					return fieldStartOffset;
-				}
-
-				c = fieldReader.GetChar();
-				if (c != '\n' && c != -1)
-				{
-					// The start needs to be moved back.
-					fieldStartOffset--;
-				}
-			}
-
-			return fieldStartOffset;
-		}
-			
-		/// <summary>
-		/// Reads until a non-space character is found.
-		/// </summary>
-		/// <returns>True if there is more data to read.
-		/// False if the end of the file has been reached.</returns>
-		protected virtual bool ReadSpaces()
-		{
-			while (true)
-			{
-				if (c != ' ')
-				{
-					break;
-				}
-
-				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
-				{
-					// End of file.
-					return false;
-				}
-
-				c = fieldReader.GetChar();
-			}
-
-			return true;
-		}
-		
-		/// <summary>
-		/// Reads until a non-space character is found.
-		/// </summary>
-		/// <returns>True if there is more data to read.
-		/// False if the end of the file has been reached.</returns>
-		protected virtual async Task<bool> ReadSpacesAsync()
-		{
-			while (true)
-			{
-				if (c != ' ')
-				{
-					break;
-				}
-
-				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
-				{
-					// End of file.
-					return false;
-				}
-
-				c = fieldReader.GetChar();
-			}
-
-			return true;
+			/// <summary>
+			/// Starting position of the field.
+			/// This is an offset from <see cref="rowStartPosition"/>.
+			/// </summary>
+			public int Start;
+
+			public int Length;
+
+			public int QuoteCount;
 		}
 	}
 }

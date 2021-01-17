@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -25,14 +25,17 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void FirstColumnEmptyFirstRowErrorWithNoHeaderTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+				AllowComments = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csvReader = new CsvReader(reader, config))
 			{
-				csvReader.Configuration.HasHeaderRecord = false;
-				csvReader.Configuration.AllowComments = true;
-				csvReader.Configuration.RegisterClassMap<Test1Map>();
+				csvReader.Context.RegisterClassMap<Test1Map>();
 				writer.WriteLine(",one");
 				writer.WriteLine("2,two");
 				writer.Flush();
@@ -45,8 +48,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(1, ex.ReadingContext.Row);
-					Assert.AreEqual(0, ex.ReadingContext.CurrentIndex);
+					Assert.AreEqual(1, ex.Context.Parser.Row);
+					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
@@ -54,14 +57,16 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void FirstColumnEmptySecondRowErrorWithHeader()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				AllowComments = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csvReader = new CsvReader(reader, config))
 			{
-				csvReader.Configuration.Delimiter = ",";
-				csvReader.Configuration.AllowComments = true;
-				csvReader.Configuration.RegisterClassMap<Test1Map>();
+				csvReader.Context.RegisterClassMap<Test1Map>();
 				writer.WriteLine("IntColumn,StringColumn");
 				writer.WriteLine("1,one");
 				writer.WriteLine(",two");
@@ -75,8 +80,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(3, ex.ReadingContext.Row);
-					Assert.AreEqual(0, ex.ReadingContext.CurrentIndex);
+					Assert.AreEqual(3, ex.Context.Parser.Row);
+					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
@@ -84,13 +89,16 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void FirstColumnEmptyErrorWithHeaderAndCommentRowTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				AllowComments = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csvReader = new CsvReader(reader, config))
 			{
-				csvReader.Configuration.AllowComments = true;
-				csvReader.Configuration.RegisterClassMap<Test1Map>();
+				csvReader.Context.RegisterClassMap<Test1Map>();
 				writer.WriteLine("IntColumn,StringColumn");
 				writer.WriteLine("# comment");
 				writer.WriteLine();
@@ -106,8 +114,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(4, ex.ReadingContext.Row);
-					Assert.AreEqual(0, ex.ReadingContext.CurrentIndex);
+					Assert.AreEqual(4, ex.Context.Parser.Row);
+					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
@@ -120,7 +128,7 @@ namespace CsvHelper.Tests
 			using (var reader = new StreamReader(stream))
 			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csvReader.Configuration.RegisterClassMap<Test1Map>();
+				csvReader.Context.RegisterClassMap<Test1Map>();
 				writer.WriteLine("IntColumn,StringColumn");
 				writer.WriteLine();
 				writer.WriteLine("one,one");
@@ -135,8 +143,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(3, ex.ReadingContext.Row);
-					Assert.AreEqual(0, ex.ReadingContext.CurrentIndex);
+					Assert.AreEqual(3, ex.Context.Parser.Row);
+					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
@@ -149,8 +157,7 @@ namespace CsvHelper.Tests
 			using (var reader = new StreamReader(stream))
 			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csvReader.Configuration.Delimiter = ",";
-				csvReader.Configuration.RegisterClassMap<Test2Map>();
+				csvReader.Context.RegisterClassMap<Test2Map>();
 				writer.WriteLine("StringColumn,IntColumn");
 				writer.WriteLine("one,");
 				writer.WriteLine("two,2");
@@ -164,8 +171,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(2, ex.ReadingContext.Row);
-					Assert.AreEqual(1, ex.ReadingContext.CurrentIndex);
+					Assert.AreEqual(2, ex.Context.Parser.Row);
+					Assert.AreEqual(1, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
@@ -173,20 +180,22 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void Test()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csvReader = new CsvReader(reader, config))
 			{
-				csvReader.Configuration.Delimiter = ",";
 				writer.WriteLine("1,9/24/2012");
 				writer.Flush();
 				stream.Position = 0;
 
 				try
 				{
-					csvReader.Configuration.HasHeaderRecord = false;
-					csvReader.Configuration.RegisterClassMap<Test3Map>();
+					csvReader.Context.RegisterClassMap<Test3Map>();
 					var records = csvReader.GetRecords<Test3>().ToList();
 				}
 				catch (ReaderException)

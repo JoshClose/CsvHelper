@@ -1,3 +1,7 @@
+// Copyright 2009-2021 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
 using System;
 using System.Linq;
 using Nuke.Common;
@@ -38,6 +42,8 @@ class Build : NukeBuild
 	readonly string NugetApiKey;
 	[Parameter("Version to use for package.")]
 	readonly string Version;
+	[Parameter("NuGet package version.")]
+	readonly string PackageVersion;
 
     [Solution]
 	readonly Solution Solution;
@@ -81,8 +87,8 @@ class Build : NukeBuild
                 .SetProjectFile(Solution)
                 .SetConfiguration(Configuration)
                 .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                .SetFileVersion(Version ?? GitVersion.AssemblySemFileVer)
-                .SetInformationalVersion(Version ?? GitVersion.InformationalVersion)
+                .SetFileVersion(GitVersion.AssemblySemFileVer)
+                .SetInformationalVersion(GitVersion.InformationalVersion)
 			);
 
             DotNetPublish(s => s
@@ -90,8 +96,8 @@ class Build : NukeBuild
 				.EnableNoBuild()
 				.SetConfiguration(Configuration)
 				.SetAssemblyVersion(GitVersion.AssemblySemVer)
-				.SetFileVersion(Version ?? GitVersion.AssemblySemFileVer)
-				.SetInformationalVersion(Version ?? GitVersion.InformationalVersion)
+				.SetFileVersion(GitVersion.AssemblySemFileVer)
+				.SetInformationalVersion(GitVersion.InformationalVersion)
 				.CombineWith(
 					from project in new[] { CsvHelperProject }
 					from framework in project.GetTargetFrameworks()
@@ -125,7 +131,7 @@ class Build : NukeBuild
 				.SetProject(CsvHelperProject)
                 .SetConfiguration(Configuration)
                 .SetOutputDirectory(ArtifactsDirectory)
-                .SetVersion(Version ?? GitVersion.NuGetVersionV2)
+				.SetProperty("PackageVersion", PackageVersion ?? GitVersion.NuGetVersionV2)
 				.SetIncludeSymbols(true)
 				.SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
             );

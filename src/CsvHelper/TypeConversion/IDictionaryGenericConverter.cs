@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -29,14 +29,14 @@ namespace CsvHelper.TypeConversion
 			var dictionary = (IDictionary)ObjectResolver.Current.Resolve(dictionaryType);
 
 			var indexEnd = memberMapData.IndexEnd < memberMapData.Index
-				? row.Context.Record.Length - 1
+				? row.Parser.Count - 1
 				: memberMapData.IndexEnd;
 
 			for (var i = memberMapData.Index; i <= indexEnd; i++)
 			{
 				var field = row.GetField(valueType, i);
 
-				dictionary.Add(row.Context.HeaderRecord[i], field);
+				dictionary.Add(row.HeaderRecord[i], field);
 			}
 
 			return dictionary;

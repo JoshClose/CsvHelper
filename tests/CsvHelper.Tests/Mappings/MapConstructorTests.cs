@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Mappings
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				Assert.ThrowsException<MissingMethodException>(() => csv.Configuration.RegisterClassMap<TestMap>());
+				Assert.ThrowsException<MissingMethodException>(() => csv.Context.RegisterClassMap<TestMap>());
 			}
 		}
 

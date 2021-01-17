@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -13,14 +13,13 @@ namespace CsvHelper.Tests.Reading
 	public class MultipleGetRecordsTests
 	{
 		[TestMethod]
-		public void Blah()
+		public void GetRecordsAfterRefillingReaderTest()
 		{
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -35,13 +34,20 @@ namespace CsvHelper.Tests.Reading
 
 				records = csv.GetRecords<Test>().ToList();
 
-				writer.WriteLine("2,two");
-				writer.Flush();
-				stream.Position = position;
-
 				Assert.AreEqual(1, records.Count);
 				Assert.AreEqual(2, records[0].Id);
 				Assert.AreEqual("two", records[0].Name);
+
+				position = stream.Position;
+				writer.WriteLine("3,three");
+				writer.Flush();
+				stream.Position = position;
+
+				records = csv.GetRecords<Test>().ToList();
+
+				Assert.AreEqual(1, records.Count);
+				Assert.AreEqual(3, records[0].Id);
+				Assert.AreEqual("three", records[0].Name);
 			}
 		}
 

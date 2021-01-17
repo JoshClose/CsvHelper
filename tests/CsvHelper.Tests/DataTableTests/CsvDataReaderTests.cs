@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -8,6 +8,7 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -25,8 +26,7 @@ namespace CsvHelper.Tests.DataTableTests
 			using (var reader = new StringReader(s.ToString()))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 				var dataReader = new CsvDataReader(csv);
 				dataReader.Read();
 
@@ -80,7 +80,6 @@ namespace CsvHelper.Tests.DataTableTests
 			using (var reader = new StringReader(s.ToString()))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var dataReader = new CsvDataReader(csv);
 
 				var schemaTable = dataReader.GetSchemaTable();
@@ -99,7 +98,6 @@ namespace CsvHelper.Tests.DataTableTests
 			using (var reader = new StringReader(s.ToString()))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var dataReader = new CsvDataReader(csv);
 
 				var dataTable = new DataTable();
@@ -126,7 +124,6 @@ namespace CsvHelper.Tests.DataTableTests
 			using (var reader = new StringReader(s.ToString()))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var dataReader = new CsvDataReader(csv);
 
 				var dataTable = new DataTable();
@@ -146,14 +143,16 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void DataTableLoadNoHeaderTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			var s = new StringBuilder();
 			s.AppendLine("1,one");
 			s.AppendLine("2,two");
 			using (var reader = new StringReader(s.ToString()))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.Delimiter = ",";
 				var dataReader = new CsvDataReader(csv);
 
 				var dataTable = new DataTable();
@@ -167,14 +166,16 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void ReadWithNoHeaderTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			var s = new StringBuilder();
 			s.AppendLine("1,one");
 			s.AppendLine("2,two");
 			using (var reader = new StringReader(s.ToString()))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.Delimiter = ",";
 				var dataReader = new CsvDataReader(csv);
 
 				dataReader.Read();
@@ -190,13 +191,16 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void IsNullTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			var s = new StringBuilder();
 			s.AppendLine(",null");
 			using (var reader = new StringReader(s.ToString()))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 
 				var dataReader = new CsvDataReader(csv);
 				Assert.IsFalse(dataReader.IsDBNull(0));
@@ -207,13 +211,16 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void DbNullTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
 			var s = new StringBuilder();
 			s.AppendLine(",null");
 			using (var reader = new StringReader(s.ToString()))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 
 				var dataReader = new CsvDataReader(csv);
 				Assert.AreEqual(string.Empty, dataReader.GetValue(0));
@@ -229,14 +236,12 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void GetOrdinalCaseInsensitiveTest()
 		{
-			var data = new List<string[]>
+			var parser = new ParserMock
 			{
-				new[] { "Id", "Name" },
-				new[] { "1", "one" },
+				{ "Id", "Name" },
+				{ "1", "one" },
 				null,
 			};
-			var queue = new Queue<string[]>(data);
-			var parser = new ParserMock(queue);
 
 			using (var csv = new CsvReader(parser))
 			{
@@ -252,14 +257,12 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void GetOrdinalMissingTest()
 		{
-			var data = new List<string[]>
+			var parser = new ParserMock
 			{
-				new[] { "Id", "Name" },
-				new[] { "1", "one" },
+				{ "Id", "Name" },
+				{ "1", "one" },
 				null,
 			};
-			var queue = new Queue<string[]>(data);
-			var parser = new ParserMock(queue);
 
 			using (var csv = new CsvReader(parser))
 			{
@@ -276,11 +279,13 @@ namespace CsvHelper.Tests.DataTableTests
 		[TestMethod]
 		public void DataTableLoadEmptyTest()
 		{
-			using (var reader = new StringReader(string.Empty))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				csv.Configuration.HasHeaderRecord = false;
-
+				HasHeaderRecord = false,
+			};
+			using (var reader = new StringReader(string.Empty))
+			using (var csv = new CsvReader(reader, config))
+			{
 				var dataReader = new CsvDataReader(csv);
 				Assert.AreEqual(0, dataReader.FieldCount);
 			}

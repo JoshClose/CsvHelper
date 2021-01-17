@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,20 +15,21 @@ namespace CsvHelper.Tests
 		[TestMethod]
 		public void ReferenceMappingTest()
 		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue( new[]
+			var parserMock = new ParserMock
 			{
-				"FirstName",
-				"LastName",
-				"HomeStreet",
-				"HomeCity",
-				"HomeState",
-				"HomeZip",
-				"WorkStreet",
-				"WorkCity",
-				"WorkState",
-				"WorkZip"
-			} );
+				{
+					"FirstName",
+					"LastName",
+					"HomeStreet",
+					"HomeCity",
+					"HomeState",
+					"HomeZip",
+					"WorkStreet",
+					"WorkCity",
+					"WorkState",
+					"WorkZip"
+				},
+			};
 			var row = new[]
 			{
 				"John",
@@ -42,63 +43,61 @@ namespace CsvHelper.Tests
 				"Work State",
 				"67890"
 			};
-			queue.Enqueue( row );
+			parserMock.Add(row);
 
-			var parserMock = new ParserMock( queue );
-
-			var reader = new CsvReader( parserMock );
-			reader.Configuration.RegisterClassMap<PersonMap>();
+			var reader = new CsvReader(parserMock);
+			reader.Context.RegisterClassMap<PersonMap>();
 			reader.Read();
 			var person = reader.GetRecord<Person>();
 
-			Assert.AreEqual( row[0], person.FirstName );
-			Assert.AreEqual( row[1], person.LastName );
-			Assert.AreEqual( row[2], person.HomeAddress.Street );
-			Assert.AreEqual( row[3], person.HomeAddress.City );
-			Assert.AreEqual( row[4], person.HomeAddress.State );
-			Assert.AreEqual( row[5], person.HomeAddress.Zip );
-			Assert.AreEqual( row[6], person.WorkAddress.Street );
-			Assert.AreEqual( row[7], person.WorkAddress.City );
-			Assert.AreEqual( row[8], person.WorkAddress.State );
-			Assert.AreEqual( row[9], person.WorkAddress.Zip );
+			Assert.AreEqual(row[0], person.FirstName);
+			Assert.AreEqual(row[1], person.LastName);
+			Assert.AreEqual(row[2], person.HomeAddress.Street);
+			Assert.AreEqual(row[3], person.HomeAddress.City);
+			Assert.AreEqual(row[4], person.HomeAddress.State);
+			Assert.AreEqual(row[5], person.HomeAddress.Zip);
+			Assert.AreEqual(row[6], person.WorkAddress.Street);
+			Assert.AreEqual(row[7], person.WorkAddress.City);
+			Assert.AreEqual(row[8], person.WorkAddress.State);
+			Assert.AreEqual(row[9], person.WorkAddress.Zip);
 		}
 
 		[TestMethod]
 		public void OnlyReferencesTest()
 		{
-			var queue = new Queue<string[]>();
-			queue.Enqueue( new[]
+			var parserMock = new ParserMock()
 			{
-				"FirstName",
-				"LastName",
-				"HomeStreet",
-				"HomeCity",
-				"HomeState",
-				"HomeZip",
-				"WorkStreet",
-				"WorkCity",
-				"WorkState",
-				"WorkZip"
-			} );
-			queue.Enqueue( new[]
-			{
-				"John",
-				"Doe",
-				"1234 Home St",
-				"Home Town",
-				"Home State",
-				"12345",
-				"5678 Work Rd",
-				"Work City",
-				"Work State",
-				"67890"
-			} );
-			queue.Enqueue( null );
+				new[]
+				{
+					"FirstName",
+					"LastName",
+					"HomeStreet",
+					"HomeCity",
+					"HomeState",
+					"HomeZip",
+					"WorkStreet",
+					"WorkCity",
+					"WorkState",
+					"WorkZip"
+				},
+				new[]
+				{
+					"John",
+					"Doe",
+					"1234 Home St",
+					"Home Town",
+					"Home State",
+					"12345",
+					"5678 Work Rd",
+					"Work City",
+					"Work State",
+					"67890"
+				},
+				null
+			};
 
-			var parserMock = new ParserMock( queue );
-
-			var reader = new CsvReader( parserMock );
-			reader.Configuration.RegisterClassMap<OnlyReferencesMap>();
+			var reader = new CsvReader(parserMock);
+			reader.Context.RegisterClassMap<OnlyReferencesMap>();
 			reader.Read();
 			var person = reader.GetRecord<Person>();
 		}
@@ -129,10 +128,10 @@ namespace CsvHelper.Tests
 		{
 			public PersonMap()
 			{
-				Map( m => m.FirstName );
-				Map( m => m.LastName );
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
+				Map(m => m.FirstName);
+				Map(m => m.LastName);
+				References<HomeAddressMap>(m => m.HomeAddress);
+				References<WorkAddressMap>(m => m.WorkAddress);
 			}
 		}
 
@@ -140,10 +139,10 @@ namespace CsvHelper.Tests
 		{
 			public HomeAddressMap()
 			{
-				Map( m => m.Street ).Name( "HomeStreet" );
-				Map( m => m.City ).Name( "HomeCity" );
-				Map( m => m.State ).Name( "HomeState" );
-				Map( m => m.Zip ).Name( "HomeZip" );
+				Map(m => m.Street).Name("HomeStreet");
+				Map(m => m.City).Name("HomeCity");
+				Map(m => m.State).Name("HomeState");
+				Map(m => m.Zip).Name("HomeZip");
 			}
 		}
 
@@ -151,10 +150,10 @@ namespace CsvHelper.Tests
 		{
 			public WorkAddressMap()
 			{
-				Map(m => m.Street).Name( "WorkStreet" );
-				Map(m => m.City).Name( "WorkCity" );
-				Map(m => m.State).Name( "WorkState" );
-				Map(m => m.Zip).Name( "WorkZip" );
+				Map(m => m.Street).Name("WorkStreet");
+				Map(m => m.City).Name("WorkCity");
+				Map(m => m.State).Name("WorkState");
+				Map(m => m.Zip).Name("WorkZip");
 			}
 		}
 
@@ -162,8 +161,8 @@ namespace CsvHelper.Tests
 		{
 			public OnlyReferencesMap()
 			{
-				References<HomeAddressMap>( m => m.HomeAddress );
-				References<WorkAddressMap>( m => m.WorkAddress );
+				References<HomeAddressMap>(m => m.HomeAddress);
+				References<WorkAddressMap>(m => m.WorkAddress);
 			}
 		}
 	}

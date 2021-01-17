@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,7 +15,7 @@ namespace CsvHelper.Tests.Configuration
 	public class ClassMapBuilderTests
 	{
 		private static readonly Factory csvFactory = new Factory();
-		private static Func<IReaderRow, FakeInnerClass> ConvertExpression => r => new FakeInnerClass { E = r.GetField(4) };
+		private static ConvertFromString<FakeInnerClass> ConvertExpression => r => new FakeInnerClass { E = r.GetField(4) };
 		private static readonly ClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
 			/*
 			.Map( m => m.A ).Constant( "a" )
@@ -97,7 +97,7 @@ namespace CsvHelper.Tests.Configuration
 		public void ClassMapBuilderAddsConvertUsingFunctionCorrectly()
 		{
 			var fakeRow = new BuilderRowFake();
-			Assert.AreEqual(ConvertExpression(fakeRow).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<Func<IReaderRow, FakeInnerClass>>).Compile()(fakeRow).E); //6
+			Assert.AreEqual(ConvertExpression(fakeRow).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(fakeRow).E); //6
 		}
 
 		[TestMethod]
@@ -114,28 +114,21 @@ namespace CsvHelper.Tests.Configuration
 			public string[] CurrentRecord { get; }
 			public int Row { get; }
 
-			public ReadingContext Context
-			{
-				get
-				{
-					throw new NotImplementedException();
-				}
-			}
+			public CsvContext Context => throw new NotImplementedException();
 
-			string IReaderRow.this[int index]
-			{
-				get { throw new NotImplementedException(); }
-			}
+			public int CurrentIndex => throw new NotImplementedException();
 
-			string IReaderRow.this[string name]
-			{
-				get { throw new NotImplementedException(); }
-			}
+			public string[] HeaderRecord => throw new NotImplementedException();
 
-			string IReaderRow.this[string name, int index]
-			{
-				get { throw new NotImplementedException(); }
-			}
+			public IParser Parser => throw new NotImplementedException();
+
+			public int ColumnCount => throw new NotImplementedException();
+
+			string IReaderRow.this[int index] => throw new NotImplementedException();
+
+			string IReaderRow.this[string name] => throw new NotImplementedException();
+
+			string IReaderRow.this[string name, int index] => throw new NotImplementedException();
 
 			public string GetField(int index)
 			{

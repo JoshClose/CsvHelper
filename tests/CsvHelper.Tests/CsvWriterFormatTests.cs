@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -26,10 +26,8 @@ namespace CsvHelper.Tests
 
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
-			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-			csv.Configuration.Delimiter = ",";
-			csv.Configuration.CultureInfo = new CultureInfo("en-US");
-			csv.Configuration.RegisterClassMap<TestRecordMap>();
+			var csv = new CsvWriter(writer, new CultureInfo("en-US"));
+			csv.Context.RegisterClassMap<TestRecordMap>();
 
 			csv.WriteRecord(record);
 			csv.NextRecord();
@@ -105,8 +103,7 @@ namespace CsvHelper.Tests
 			var stream = new MemoryStream();
 			var writer = new StreamWriter(stream) { AutoFlush = true };
 			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-			csv.Configuration.Delimiter = ",";
-			csv.Configuration.RegisterClassMap<PersonMap>();
+			csv.Context.RegisterClassMap<PersonMap>();
 
 			csv.WriteRecord(record);
 			csv.NextRecord();

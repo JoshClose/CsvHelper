@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	public class ClassMapCollection
 	{
 		private readonly Dictionary<Type, ClassMap> data = new Dictionary<Type, ClassMap>();
-		private readonly CsvConfiguration configuration;
+		private readonly CsvContext context;
 
 		/// <summary>
 		/// Gets the <see cref="ClassMap"/> for the specified record type.
@@ -52,10 +52,10 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Creates a new instance using the given configuration.
 		/// </summary>
-		/// <param name="configuration">The configuration.</param>
-		public ClassMapCollection(CsvConfiguration configuration)
+		/// <param name="context">The context.</param>
+		public ClassMapCollection(CsvContext context)
 		{
-			this.configuration = configuration;
+			this.context = context;
 		}
 
 		/// <summary>
@@ -152,7 +152,7 @@ namespace CsvHelper.Configuration
 				{
 					if (parameterMap.Data.TypeConverter == null)
 					{
-						parameterMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter(parameterMap.Data.Parameter.ParameterType);
+						parameterMap.Data.TypeConverter = context.TypeConverterCache.GetConverter(parameterMap.Data.Parameter.ParameterType);
 					}
 
 					if (parameterMap.Data.Names.Count == 0)
@@ -171,7 +171,7 @@ namespace CsvHelper.Configuration
 
 				if (memberMap.Data.TypeConverter == null)
 				{
-					memberMap.Data.TypeConverter = configuration.TypeConverterCache.GetConverter(memberMap.Data.Member.MemberType());
+					memberMap.Data.TypeConverter = context.TypeConverterCache.GetConverter(memberMap.Data.Member.MemberType());
 				}
 
 				if (memberMap.Data.Names.Count == 0)
@@ -184,9 +184,9 @@ namespace CsvHelper.Configuration
 			{
 				SetMapDefaults(referenceMap.Data.Mapping);
 
-				if (configuration.ReferenceHeaderPrefix != null)
+				if (context.Configuration.ReferenceHeaderPrefix != null)
 				{
-					referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix(referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name);
+					referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name);
 				}
 			}
 		}

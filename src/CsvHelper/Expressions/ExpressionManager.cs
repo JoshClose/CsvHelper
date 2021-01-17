@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -218,7 +218,7 @@ namespace CsvHelper.Expressions
 			}
 
 			int index;
-			if (memberMap.Data.IsNameSet || reader.Context.ReaderConfiguration.HasHeaderRecord && !memberMap.Data.IsIndexSet)
+			if (memberMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !memberMap.Data.IsIndexSet)
 			{
 				// Use the name.
 				index = reader.GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional);
@@ -319,7 +319,7 @@ namespace CsvHelper.Expressions
 				var isValueType = memberMap.Data.Member.MemberType().GetTypeInfo().IsValueType;
 				var isGenericType = isValueType && memberMap.Data.Member.MemberType().GetTypeInfo().IsGenericType;
 				Type memberType;
-				if (isValueType && !isGenericType && !writer.Context.WriterConfiguration.UseNewObjectForNullReferenceMembers)
+				if (isValueType && !isGenericType && !writer.Configuration.UseNewObjectForNullReferenceMembers)
 				{
 					memberType = typeof(Nullable<>).MakeGenericType(memberMap.Data.Member.MemberType());
 					memberExpression = Expression.Convert(memberExpression, memberType);
@@ -368,7 +368,7 @@ namespace CsvHelper.Expressions
 		/// <param name="fieldExpression">The field expression.</param>
 		public virtual Expression CreateTypeConverterExpression(MemberMap memberMap, Expression fieldExpression)
 		{
-			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Context.ReaderConfiguration.CultureInfo }, reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
+			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Configuration.CultureInfo }, reader.Context.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
 
 			Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
 			typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
@@ -385,8 +385,8 @@ namespace CsvHelper.Expressions
 		{
 			parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge
 			(
-				new TypeConverterOptions { CultureInfo = reader.Context.ReaderConfiguration.CultureInfo },
-				reader.Context.ReaderConfiguration.TypeConverterOptionsCache.GetOptions(parameterMap.Data.Parameter.ParameterType),
+				new TypeConverterOptions { CultureInfo = reader.Configuration.CultureInfo },
+				reader.Context.TypeConverterOptionsCache.GetOptions(parameterMap.Data.Parameter.ParameterType),
 				parameterMap.Data.TypeConverterOptions
 			);
 

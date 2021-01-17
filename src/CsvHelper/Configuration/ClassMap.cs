@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -200,26 +200,36 @@ namespace CsvHelper.Configuration
 		/// <param name="configuration">The configuration.</param>
 		public virtual void AutoMap(CsvConfiguration configuration)
 		{
+			AutoMap(new CsvContext(configuration));
+		}
+
+		/// <summary>
+		/// Auto maps all members for the given type. If a member 
+		/// is mapped again it will override the existing map.
+		/// </summary>
+		/// <param name="context">The context.</param>
+		public virtual void AutoMap(CsvContext context)
+		{
 			var type = GetGenericType();
 			if (typeof(IEnumerable).IsAssignableFrom(type))
 			{
 				throw new ConfigurationException("Types that inherit IEnumerable cannot be auto mapped. " +
-													 "Did you accidentally call GetRecord or WriteRecord which " +
-													 "acts on a single record instead of calling GetRecords or " +
-													 "WriteRecords which acts on a list of records?");
+												 "Did you accidentally call GetRecord or WriteRecord which " +
+												 "acts on a single record instead of calling GetRecords or " +
+												 "WriteRecords which acts on a list of records?");
 			}
 
 			var mapParents = new LinkedList<Type>();
-			if (configuration.ShouldUseConstructorParameters(type))
+			if (context.Configuration.ShouldUseConstructorParameters(type))
 			{
 				// This type doesn't have a parameterless constructor so we can't create an
 				// instance and set it's member. Constructor parameters need to be created
 				// instead. Writing only uses getters, so members will also be mapped
 				// for writing purposes.
-				AutoMapConstructorParameters(this, configuration, mapParents);
+				AutoMapConstructorParameters(this, context, mapParents);
 			}
 
-			AutoMapMembers(this, configuration, mapParents);
+			AutoMapMembers(this, context, mapParents);
 		}
 
 		/// <summary>
@@ -285,21 +295,21 @@ namespace CsvHelper.Configuration
 		/// Auto maps the given map and checks for circular references as it goes.
 		/// </summary>
 		/// <param name="map">The map to auto map.</param>
-		/// <param name="configuration">The configuration.</param>
+		/// <param name="context">The context.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapMembers(ClassMap map, CsvConfiguration configuration, LinkedList<Type> mapParents, int indexStart = 0)
+		protected virtual void AutoMapMembers(ClassMap map, CsvContext context, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
 
 			var flags = BindingFlags.Instance | BindingFlags.Public;
-			if (configuration.IncludePrivateMembers)
+			if (context.Configuration.IncludePrivateMembers)
 			{
 				flags = flags | BindingFlags.NonPublic;
 			}
 
 			var members = new List<MemberInfo>();
-			if ((configuration.MemberTypes & MemberTypes.Properties) == MemberTypes.Properties)
+			if ((context.Configuration.MemberTypes & MemberTypes.Properties) == MemberTypes.Properties)
 			{
 				// We need to go up the declaration tree and find the actual type the property
 				// exists on and use that PropertyInfo instead. This is so we can get the private
@@ -321,7 +331,7 @@ namespace CsvHelper.Configuration
 				members.AddRange(properties);
 			}
 
-			if ((configuration.MemberTypes & MemberTypes.Fields) == MemberTypes.Fields)
+			if ((context.Configuration.MemberTypes & MemberTypes.Fields) == MemberTypes.Fields)
 			{
 				var fields = new List<MemberInfo>();
 				foreach (var field in type.GetFields(flags))
@@ -343,9 +353,9 @@ namespace CsvHelper.Configuration
 					continue;
 				}
 
-				var typeConverterType = configuration.TypeConverterCache.GetConverter(member).GetType();
+				var typeConverterType = context.TypeConverterCache.GetConverter(member).GetType();
 
-				if (configuration.HasHeaderRecord && enumerableConverters.Contains(typeConverterType))
+				if (context.Configuration.HasHeaderRecord && enumerableConverters.Contains(typeConverterType))
 				{
 					// Enumerable converters can't write the header properly, so skip it.
 					continue;
@@ -359,7 +369,7 @@ namespace CsvHelper.Configuration
 					// and it has a parameterless constructor, create a
 					// reference map for it.
 
-					if (configuration.IgnoreReferences)
+					if (context.Configuration.IgnoreReferences)
 					{
 						continue;
 					}
@@ -375,19 +385,19 @@ namespace CsvHelper.Configuration
 
 					if (memberTypeInfo.HasConstructor() && !memberTypeInfo.HasParameterlessConstructor() && !memberTypeInfo.IsUserDefinedStruct())
 					{
-						AutoMapConstructorParameters(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
+						AutoMapConstructorParameters(refMap, context, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
 					}
 
 					// Need to use Max here for nested types.
-					AutoMapMembers(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
+					AutoMapMembers(refMap, context, mapParents, Math.Max(map.GetMaxIndex() + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
 
 					if (refMap.MemberMaps.Count > 0 || refMap.ReferenceMaps.Count > 0)
 					{
 						var referenceMap = new MemberReferenceMap(member, refMap);
-						if (configuration.ReferenceHeaderPrefix != null)
+						if (context.Configuration.ReferenceHeaderPrefix != null)
 						{
-							referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix(member.MemberType(), member.Name);
+							referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(member.MemberType(), member.Name);
 						}
 
 						ApplyAttributes(referenceMap);
@@ -408,7 +418,7 @@ namespace CsvHelper.Configuration
 					var memberMap = MemberMap.CreateGeneric(classType, member);
 
 					// Use global values as the starting point.
-					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions(member.MemberType()), memberMap.Data.TypeConverterOptions);
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), context.TypeConverterOptionsCache.GetOptions(member.MemberType()), memberMap.Data.TypeConverterOptions);
 					memberMap.Data.Index = map.GetMaxIndex() + 1;
 
 					ApplyAttributes(memberMap);
@@ -424,13 +434,13 @@ namespace CsvHelper.Configuration
 		/// Auto maps the given map using constructor parameters.
 		/// </summary>
 		/// <param name="map">The map.</param>
-		/// <param name="configuration">The configuration.</param>
+		/// <param name="context">The context.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapConstructorParameters(ClassMap map, CsvConfiguration configuration, LinkedList<Type> mapParents, int indexStart = 0)
+		protected virtual void AutoMapConstructorParameters(ClassMap map, CsvContext context, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
-			var constructor = configuration.GetConstructor(map.ClassType);
+			var constructor = context.Configuration.GetConstructor(map.ClassType);
 			var parameters = constructor.GetParameters();
 
 			foreach (var parameter in parameters)
@@ -447,7 +457,7 @@ namespace CsvHelper.Configuration
 					continue;
 				}
 
-				var typeConverterType = configuration.TypeConverterCache.GetConverter(parameter.ParameterType).GetType();
+				var typeConverterType = context.TypeConverterCache.GetConverter(parameter.ParameterType).GetType();
 				var memberTypeInfo = parameter.ParameterType.GetTypeInfo();
 				var isDefaultConverter = typeConverterType == typeof(DefaultTypeConverter);
 				if (isDefaultConverter && (memberTypeInfo.HasParameterlessConstructor() || memberTypeInfo.IsUserDefinedStruct()))
@@ -456,9 +466,9 @@ namespace CsvHelper.Configuration
 					// and it has a parameterless constructor, create a
 					// reference map for it.
 
-					if (configuration.IgnoreReferences)
+					if (context.Configuration.IgnoreReferences)
 					{
-						throw new InvalidOperationException($"Configuration '{nameof(configuration.IgnoreReferences)}' can't be true " +
+						throw new InvalidOperationException($"Configuration '{nameof(CsvConfiguration.IgnoreReferences)}' can't be true " +
 															  "when using types without a default constructor. Constructor parameters " +
 															  "are used and all members including references must be used.");
 					}
@@ -472,33 +482,33 @@ namespace CsvHelper.Configuration
 					mapParents.AddLast(type);
 					var refMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
 					var refMap = (ClassMap)ObjectResolver.Current.Resolve(refMapType);
-					AutoMapMembers(refMap, configuration, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
+					AutoMapMembers(refMap, context, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
 
 					var referenceMap = new ParameterReferenceMap(parameter, refMap);
-					if (configuration.ReferenceHeaderPrefix != null)
+					if (context.Configuration.ReferenceHeaderPrefix != null)
 					{
-						referenceMap.Data.Prefix = configuration.ReferenceHeaderPrefix(memberTypeInfo.MemberType(), memberTypeInfo.Name);
+						referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(memberTypeInfo.MemberType(), memberTypeInfo.Name);
 					}
 
 					ApplyAttributes(referenceMap);
 
 					parameterMap.ReferenceMap = referenceMap;
 				}
-				else if (configuration.ShouldUseConstructorParameters(parameter.ParameterType))
+				else if (context.Configuration.ShouldUseConstructorParameters(parameter.ParameterType))
 				{
 					mapParents.AddLast(type);
 					var constructorMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
 					var constructorMap = (ClassMap)ObjectResolver.Current.Resolve(constructorMapType);
 					// Need to use Max here for nested types.
-					AutoMapConstructorParameters(constructorMap, configuration, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
+					AutoMapConstructorParameters(constructorMap, context, mapParents, Math.Max(map.GetMaxIndex(isParameter: true) + 1, indexStart));
 					mapParents.Drop(mapParents.Find(type));
 
 					parameterMap.ConstructorTypeMap = constructorMap;
 				}
 				else
 				{
-					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), configuration.TypeConverterOptionsCache.GetOptions(parameter.ParameterType), parameterMap.Data.TypeConverterOptions);
+					parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), context.TypeConverterOptionsCache.GetOptions(parameter.ParameterType), parameterMap.Data.TypeConverterOptions);
 					parameterMap.Data.Index = map.GetMaxIndex(isParameter: true) + 1;
 
 					ApplyAttributes(parameterMap);

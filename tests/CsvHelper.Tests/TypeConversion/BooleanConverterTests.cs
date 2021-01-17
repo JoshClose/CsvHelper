@@ -1,12 +1,12 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
 using CsvHelper.Configuration;
+using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -40,7 +40,7 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new MemberMapData(null);
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var mockRow = new Mock<IReaderRow>();
+			var row = new CsvReader(new ParserMock());
 
 			Assert.IsTrue((bool)converter.ConvertFromString("true", null, propertyMapData));
 			Assert.IsTrue((bool)converter.ConvertFromString("True", null, propertyMapData));
@@ -55,14 +55,7 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.IsFalse((bool)converter.ConvertFromString(" false ", null, propertyMapData));
 			Assert.IsFalse((bool)converter.ConvertFromString(" 0 ", null, propertyMapData));
 
-			try
-			{
-				converter.ConvertFromString(null, mockRow.Object, propertyMapData);
-				Assert.Fail();
-			}
-			catch (TypeConverterException)
-			{
-			}
+			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 		}
 	}
 }

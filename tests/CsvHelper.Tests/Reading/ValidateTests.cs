@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -17,19 +17,21 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void ValidateTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				MissingFieldFound = null,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine(",one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.MissingFieldFound = null;
-				csv.Configuration.RegisterClassMap<ValidateMap>();
+				csv.Context.RegisterClassMap<ValidateMap>();
 				Assert.ThrowsException<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}
@@ -37,20 +39,22 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void LogInsteadTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				MissingFieldFound = null,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,");
 				writer.Flush();
 				stream.Position = 0;
 
 				var logger = new StringBuilder();
-				csv.Configuration.MissingFieldFound = null;
-				csv.Configuration.RegisterClassMap(new LogInsteadMap(logger));
+				csv.Context.RegisterClassMap(new LogInsteadMap(logger));
 				csv.GetRecords<Test>().ToList();
 
 				var expected = new StringBuilder();
@@ -63,19 +67,21 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void CustomExceptionTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				MissingFieldFound = null,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine(",one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.MissingFieldFound = null;
-				csv.Configuration.RegisterClassMap<CustomExceptionMap>();
+				csv.Context.RegisterClassMap<CustomExceptionMap>();
 				Assert.ThrowsException<CustomException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}

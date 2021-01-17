@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -26,12 +26,13 @@ namespace CsvHelper.Tests.Writing
 				new Foo { Id = 1, Name = "one" },
 			};
 
-			using (var writer = new StringWriter())
-			using (var serializer = new CsvSerializer(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				var csv = new CsvWriter(serializer);
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.NewLine = NewLine.CRLF;
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				csv.WriteRecords(records);
 
 				Assert.AreEqual("1,one\r\n", writer.ToString());
@@ -46,12 +47,14 @@ namespace CsvHelper.Tests.Writing
 				new Foo { Id = 1, Name = "one" },
 			};
 
-			using (var writer = new StringWriter())
-			using (var serializer = new CsvSerializer(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				var csv = new CsvWriter(serializer);
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.NewLine = NewLine.CR;
+				HasHeaderRecord = false,
+				NewLine = '\r',
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				csv.WriteRecords(records);
 
 				Assert.AreEqual("1,one\r", writer.ToString());
@@ -66,12 +69,14 @@ namespace CsvHelper.Tests.Writing
 				new Foo { Id = 1, Name = "one" },
 			};
 
-			using (var writer = new StringWriter())
-			using (var serializer = new CsvSerializer(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				var csv = new CsvWriter(serializer);
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.NewLine = NewLine.LF;
+				HasHeaderRecord = false,
+				NewLine = '\n',
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				csv.WriteRecords(records);
 
 				Assert.AreEqual("1,one\n", writer.ToString());
@@ -86,12 +91,13 @@ namespace CsvHelper.Tests.Writing
 				new Foo { Id = 1, Name = "one" },
 			};
 
-			using (var writer = new StringWriter())
-			using (var serializer = new CsvSerializer(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				var csv = new CsvWriter(serializer);
-				csv.Configuration.HasHeaderRecord = false;
-				csv.Configuration.NewLine = NewLine.Environment;
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				csv.WriteRecords(records);
 
 				Assert.AreEqual($"1,one{Environment.NewLine}", writer.ToString());

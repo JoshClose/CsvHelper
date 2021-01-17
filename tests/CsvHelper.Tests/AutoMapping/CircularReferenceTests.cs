@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -14,14 +14,16 @@ namespace CsvHelper.Tests.AutoMapping
 		public void SelfCircularDependencyTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
-			var map = config.AutoMap<SelfCircularA>();
+			var context = new CsvContext(config);
+			var map = context.AutoMap<SelfCircularA>();
 		}
 
 		[TestMethod]
 		public void CircularDependencyTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
-			var map = config.AutoMap<ACircular>();
+			var context = new CsvContext(config);
+			var map = context.AutoMap<ACircular>();
 			Assert.IsNotNull( map );
 			Assert.AreEqual( 1, map.MemberMaps.Count );
 			Assert.AreEqual( 1, map.ReferenceMaps.Count );
@@ -33,7 +35,8 @@ namespace CsvHelper.Tests.AutoMapping
 		public void CircularDependencyWithMultiplePropertiesTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
-			var map = config.AutoMap<A>();
+			var context = new CsvContext(config);
+			var map = context.AutoMap<A>();
 			Assert.AreEqual( 1, map.MemberMaps.Count );
 			Assert.AreEqual( 3, map.ReferenceMaps.Count );
 		}

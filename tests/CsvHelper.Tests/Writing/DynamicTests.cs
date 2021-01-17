@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -22,7 +23,6 @@ namespace CsvHelper.Tests.Writing
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				var list = new List<dynamic>();
 				dynamic obj = new ExpandoObject();
 				obj.Id = 1;
@@ -54,7 +54,6 @@ namespace CsvHelper.Tests.Writing
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				dynamic obj = new ExpandoObject();
 				obj.Id = 1;
 				obj.Name = "one";
@@ -86,8 +85,6 @@ namespace CsvHelper.Tests.Writing
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
-
 				dynamic obj = new ExpandoObject();
 				obj.Name = "one";
 				obj.Id = 1;
@@ -116,8 +113,6 @@ namespace CsvHelper.Tests.Writing
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
-
 				dynamic obj = new DynamicObjectMock();
 				obj.Name = "one";
 				obj.Id = 1;
@@ -143,12 +138,13 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingWithDynamicSortTest()
 		{
-			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				csv.Configuration.Delimiter = ",";
-				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
-
+				DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y)),
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				dynamic obj = new ExpandoObject();
 				obj.Name = "one";
 				obj.Id = 1;
@@ -174,12 +170,13 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingWithDynamicSortTest()
 		{
-			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				csv.Configuration.Delimiter = ",";
-				csv.Configuration.DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y));
-
+				DynamicPropertySort = Comparer<string>.Create((x, y) => x.CompareTo(y)),
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
 				dynamic obj = new DynamicObjectMock();
 				obj.Name = "one";
 				obj.Id = 1;

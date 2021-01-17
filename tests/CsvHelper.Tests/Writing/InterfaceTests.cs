@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -16,53 +16,53 @@ namespace CsvHelper.Tests.Writing
 		[TestMethod]
 		public void WriteRecordsGenericTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				var records = new List<IRecord>();
 				IRecord record = new Record { A = 1, B = 2 };
-				records.Add( record );
+				records.Add(record);
 				record = new Record { A = 3, B = 4 };
-				records.Add( record );
+				records.Add(record);
 
-				csv.Configuration.RegisterClassMap<RecordMap>();
-				csv.WriteRecords( records );
+				csv.Context.RegisterClassMap<RecordMap>();
+				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
 				var expected = "RenameA\r\n1\r\n3\r\n";
-				Assert.AreEqual( expected, reader.ReadToEnd() );
+				Assert.AreEqual(expected, reader.ReadToEnd());
 			}
 		}
 
 		[TestMethod]
 		public void WriteRecordTest()
 		{
-			using( var stream = new MemoryStream() )
-			using( var reader = new StreamReader( stream ) )
-			using( var writer = new StreamWriter( stream ) )
-			using( var csv = new CsvWriter(writer, CultureInfo.InvariantCulture) )
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.RegisterClassMap<RecordMap>();
+				csv.Context.RegisterClassMap<RecordMap>();
 
 				csv.WriteHeader<IRecord>();
 				csv.NextRecord();
 
 				IRecord record = new Record { A = 1, B = 2 };
-				csv.WriteRecord( record );
+				csv.WriteRecord(record);
 				csv.NextRecord();
 
 				record = new Record { A = 3, B = 4 };
-				csv.WriteRecord( record );
+				csv.WriteRecord(record);
 				csv.NextRecord();
 
 				writer.Flush();
 				stream.Position = 0;
 
 				var expected = "RenameA\r\n1\r\n3\r\n";
-				Assert.AreEqual( expected, reader.ReadToEnd() );
+				Assert.AreEqual(expected, reader.ReadToEnd());
 			}
 		}
 
@@ -82,7 +82,7 @@ namespace CsvHelper.Tests.Writing
 		{
 			public RecordMap()
 			{
-				Map( m => m.A ).Name( "RenameA" );
+				Map(m => m.A).Name("RenameA");
 			}
 		}
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -16,12 +16,13 @@ namespace CsvHelper.Tests.Configuration
 		{
 			var parentMap = new ParentMap();
 			var childMap = new ChildMap();
-			var c = new ClassMapCollection( new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture) );
-			c.Add( parentMap );
-			c.Add( childMap );
+			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
+			var c = new ClassMapCollection(context);
+			c.Add(parentMap);
+			c.Add(childMap);
 
-			var map = c[typeof( Child )];
-			Assert.AreEqual( childMap, map );
+			var map = c[typeof(Child)];
+			Assert.AreEqual(childMap, map);
 		}
 
 		private class Parent { }

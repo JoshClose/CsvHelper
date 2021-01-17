@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -14,11 +14,6 @@ namespace CsvHelper
 	/// </summary>
 	public interface IReader : IReaderRow, IDisposable
 	{
-		/// <summary>
-		/// Gets the parser.
-		/// </summary>
-		IParser Parser { get; }
-
 		/// <summary>
 		/// Reads the header record without reading the first row.
 		/// </summary>
@@ -81,7 +76,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
 		IEnumerable<T> EnumerateRecords<T>(T record);
 
-#if NET47 || NETSTANDARD
+#if !NET45
 		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
@@ -121,6 +116,6 @@ namespace CsvHelper
 		/// <param name="record">The record to fill each enumeration.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
 		IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record);
-#endif // NET47 || NETSTANDARD
+#endif
 	}
 }

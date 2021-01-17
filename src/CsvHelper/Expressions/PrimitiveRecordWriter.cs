@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -34,7 +34,7 @@ namespace CsvHelper.Expressions
 
 			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
 
-			var typeConverter = Writer.Configuration.TypeConverterCache.GetConverter( type );
+			var typeConverter = Writer.Context.TypeConverterCache.GetConverter( type );
 			var typeConverterExpression = Expression.Constant( typeConverter );
 			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
 
@@ -42,9 +42,9 @@ namespace CsvHelper.Expressions
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
-				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.WriterConfiguration.TypeConverterOptionsCache.GetOptions( type ) )
+				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.TypeConverterOptionsCache.GetOptions( type ) )
 			};
-			memberMapData.TypeConverterOptions.CultureInfo = Writer.Context.WriterConfiguration.CultureInfo;
+			memberMapData.TypeConverterOptions.CultureInfo = Writer.Configuration.CultureInfo;
 
 			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( Writer ), Expression.Constant( memberMapData ) );
 			fieldExpression = Expression.Call( Expression.Constant( Writer ), nameof( Writer.WriteConvertedField ), null, fieldExpression );

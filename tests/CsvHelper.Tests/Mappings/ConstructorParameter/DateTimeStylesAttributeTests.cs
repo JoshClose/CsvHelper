@@ -1,10 +1,15 @@
-﻿using CsvHelper.Configuration;
+﻿// Copyright 2009-2021 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,8 +25,8 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[TestMethod]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresParameterMaps()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
-			var map = config.AutoMap<Foo>();
+			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
+			var map = context.AutoMap<Foo>();
 
 			Assert.AreEqual(2, map.ParameterMaps.Count);
 			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.DateTimeStyle);
@@ -31,13 +36,11 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[TestMethod]
 		public void GetRecords_WithCultureInfoAttributes_HasHeader_CreatesRecords()
 		{
-			var rows = new Queue<string[]>(new List<string[]>
+			var parser = new ParserMock
 			{
-				new [] { "id", "date" },
-				new [] { "1", $" {DATE}" },
-				null
-			});
-			using (var parser = new ParserMock(rows))
+				{ "id", "date" },
+				{ "1", $" {DATE}" },
+			};
 			using (var csv = new CsvReader(parser))
 			{
 				var records = csv.GetRecords<Foo>().ToList();
@@ -51,16 +54,16 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[TestMethod]
 		public void GetRecords_WithCultureInfoAttributes_NoHeader_CreatesRecords()
 		{
-			var rows = new Queue<string[]>(new List<string[]>
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				new [] { "1", $" {DATE}" },
-				null
-			});
-			using (var parser = new ParserMock(rows))
+				HasHeaderRecord = false,
+			};
+			var parser = new ParserMock(config)
+			{
+				{ "1", $" {DATE}" },
+			};
 			using (var csv = new CsvReader(parser))
 			{
-				csv.Configuration.HasHeaderRecord = false;
-
 				var records = csv.GetRecords<Foo>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -77,18 +80,16 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				new Foo(1, date),
 			};
 
-			using (var serializer = new SerializerMock())
-			using (var csv = new CsvWriter(serializer))
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
 				csv.WriteRecords(records);
 
-				Assert.AreEqual(2, serializer.Records.Count);
+				var expected = new StringBuilder();
+				expected.Append("Id,Date\r\n");
+				expected.Append($"1,{date.ToString(null, CultureInfo.InvariantCulture)}\r\n");
 
-				Assert.AreEqual("Id", serializer.Records[0][0]);
-				Assert.AreEqual("Date", serializer.Records[0][1]);
-
-				Assert.AreEqual("1", serializer.Records[1][0]);
-				Assert.AreEqual(date.ToString(null, CultureInfo.InvariantCulture), serializer.Records[1][1]);
+				Assert.AreEqual(expected.ToString(), writer.ToString());
 			}
 		}
 

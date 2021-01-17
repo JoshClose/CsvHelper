@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,9 +15,30 @@ namespace CsvHelper
 	public interface IReaderRow
 	{
 		/// <summary>
+		/// Gets the column count of the current row.
+		/// This should match <see cref="IParser.Count"/>.
+		/// </summary>
+		int ColumnCount { get; }
+
+		/// <summary>
+		/// Gets the field index the reader is currently on.
+		/// </summary>
+		int CurrentIndex { get; }
+
+		/// <summary>
+		/// Gets the header record.
+		/// </summary>
+		string[] HeaderRecord { get; }
+
+		/// <summary>
+		/// Gets the parser.
+		/// </summary>
+		IParser Parser { get; }
+
+		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
-		ReadingContext Context { get; }
+		CsvContext Context { get; }
 
 		/// <summary>
 		/// Gets or sets the configuration.

@@ -1,7 +1,8 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
@@ -21,7 +22,6 @@ namespace CsvHelper.Tests.Reading
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
@@ -41,18 +41,20 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void ValueTypesParamsDontMatchPropsTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header)
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
 				var records = csv.GetRecords<ValueTypesParamsDontMatchProps>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -67,18 +69,20 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void MultipleConstructorsTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header)
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
 				var records = csv.GetRecords<MultipleConstructors>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -93,19 +97,21 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void UseDifferentConstructorTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header),
+				GetConstructor = type => type.GetConstructors().First(),
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
-				csv.Configuration.GetConstructor = type => type.GetConstructors().First();
 				var records = csv.GetRecords<MultipleConstructors>().ToList();
 
 				Assert.AreEqual(1, records.Count);
@@ -119,22 +125,24 @@ namespace CsvHelper.Tests.Reading
 		[TestMethod]
 		public void UseDifferentConstructorWhenDefaultIsAvailableTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header),
+				ShouldUseConstructorParameters = type =>
+					!type.IsUserDefinedStruct()
+					&& !type.IsInterface
+					&& Type.GetTypeCode(type) == TypeCode.Object,
+			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
 			using (var reader = new StreamReader(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
 				writer.WriteLine("Id,Name");
 				writer.WriteLine("1,one");
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Configuration.PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header);
-				csv.Configuration.ShouldUseConstructorParameters = type =>
-					!type.IsUserDefinedStruct()
-					&& !type.IsInterface
-					&& Type.GetTypeCode(type) == TypeCode.Object;
 				var records = csv.GetRecords<MultipleConstructorsWithDefault>().ToList();
 
 				Assert.AreEqual(1, records.Count);

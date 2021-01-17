@@ -1,9 +1,10 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
 using System.IO;
+using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.Parsing
@@ -14,27 +15,26 @@ namespace CsvHelper.Tests.Parsing
 		[TestMethod]
 		public void CommentThatCrossesBuffersShouldNotAddToFieldTest()
 		{
-			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				AllowComments = true,
-				BufferSize = 10
+				BufferSize = 16
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
 			using (var parser = new CsvParser(reader, config))
 			{
-				parser.Configuration.Delimiter = ",";
 				writer.Write("1,2\r\n");
-				writer.Write("#commented line\r\n");
+				writer.Write("#abcdefghijklmnop\r\n");
 				writer.Write("3,4");
 				writer.Flush();
 				stream.Position = 0;
 
 				parser.Read();
-				var line = parser.Read();
-				Assert.AreEqual("3", line[0]);
-				Assert.AreEqual("4", line[1]);
+				parser.Read();
+				Assert.AreEqual("3", parser[0]);
+				Assert.AreEqual("4", parser[1]);
 			}
 		}
 
@@ -46,7 +46,6 @@ namespace CsvHelper.Tests.Parsing
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.AllowComments = false;
 				csv.WriteField("#no comment");
 				csv.NextRecord();
 				writer.Flush();
@@ -61,12 +60,15 @@ namespace CsvHelper.Tests.Parsing
 		[TestMethod]
 		public void WriteCommentCharInFieldWithCommentsOnTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				AllowComments = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var csv = new CsvWriter(writer, config))
 			{
-				csv.Configuration.AllowComments = true;
 				csv.WriteField("#no comment");
 				csv.NextRecord();
 				writer.Flush();
@@ -86,7 +88,6 @@ namespace CsvHelper.Tests.Parsing
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				csv.Configuration.AllowComments = false;
 				csv.WriteComment("comment\"has\" quote");
 				csv.NextRecord();
 				writer.Flush();
@@ -101,12 +102,15 @@ namespace CsvHelper.Tests.Parsing
 		[TestMethod]
 		public void WriteCommentWithCommentsOnTest()
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				AllowComments = true,
+			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var csv = new CsvWriter(writer, config))
 			{
-				csv.Configuration.AllowComments = true;
 				csv.WriteComment("comment\"has\" quote");
 				csv.NextRecord();
 				writer.Flush();

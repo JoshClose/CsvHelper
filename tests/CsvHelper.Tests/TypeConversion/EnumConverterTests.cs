@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2020 Josh Close and Contributors
+﻿// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -7,8 +7,8 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.TypeConversion;
-using Moq;
 using CsvHelper.Configuration.Attributes;
+using CsvHelper.Tests.Mocks;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -54,28 +54,13 @@ namespace CsvHelper.Tests.TypeConversion
 			var propertyMapData = new MemberMapData(null);
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 
-			var mockRow = new Mock<IReaderRow>();
+			var row = new CsvReader(new ParserMock());
 
 			Assert.AreEqual(TestEnum.One, converter.ConvertFromString("One", null, propertyMapData));
 			Assert.AreEqual(TestEnum.One, converter.ConvertFromString("one", null, propertyMapData));
 			Assert.AreEqual(TestEnum.One, converter.ConvertFromString("1", null, propertyMapData));
-			try
-			{
-				Assert.AreEqual(TestEnum.One, converter.ConvertFromString("", mockRow.Object, propertyMapData));
-				Assert.Fail();
-			}
-			catch (TypeConverterException)
-			{
-			}
-
-			try
-			{
-				Assert.AreEqual(TestEnum.One, converter.ConvertFromString(null, mockRow.Object, propertyMapData));
-				Assert.Fail();
-			}
-			catch (TypeConverterException)
-			{
-			}
+			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString("", row, propertyMapData));
+			Assert.ThrowsException<TypeConverterException>(() => Assert.AreEqual(TestEnum.One, converter.ConvertFromString(null, row, propertyMapData)));
 		}
 
 		[TestMethod]
