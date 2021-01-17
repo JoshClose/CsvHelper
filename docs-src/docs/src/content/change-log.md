@@ -1,5 +1,81 @@
 # Change Log
 
+### 20.0.0
+
+#### Features
+
+- Parser performance.
+- Writer performance.
+- Changed CsvConfiguration to a read only `record` to eliminate threading issues.
+- Unix parsing mode. Uses escape character instead of field quoting. Configurable `NewLine`.
+- Field caching. Disabled by default. When enabled, this will cache all fields created so duplicate fields won't need to create a new string from a character array.
+
+#### Breaking Changes
+
+- Removed `Caches` enum.
+- `ReadingContext` and `WritingContext` were merged into a single `CsvContext`. Anywhere that used either was changed to `CsvContext`.
+- All `Func`s and `Action`s now have their own `delegate`.
+- `ConvertUsing` renamed to `Convert`.
+- `ShouldQuote` now takes in `IWriterRow` instead of `CsvContext`.
+- `CsvConfiguration` changed from a `class` to a `record`.
+- All `CsvConfiguration` properties changed to read only `get; init;`.
+- `CsvConfiguration.NewLine` changed to `char?`.
+- `CsvConfiguration.NewLineString` removed.
+- `CsvConfiguration.RegisterClassMap` moved to `CsvContext`.
+- `CsvConfiguration.UnregisterClassMap` moved to `CsvContext`.
+- `CsvConfiguration.AutoMap` moved to `CsvContext`.
+- All `IParserConfiguration` setters removed.
+- `bool IParserConfiguration.CacheFields` added.
+- `bool IParserConfiguration.LeaveOpen` added.
+- `char? IParserConfiguration.NewLine` added.
+- `ParserMode IParserConfiguration.Mode` added.
+- `IParserConfiguration.IgnoreQuotes` removed.
+- `char[] IParserConfiguration.WhiteSpaceChars` added.
+- All `IReaderConfiguration` setters removed.
+- `IReaderConfiguration.TypeConverterOptionsCache` removed.
+- `IReaderConfiguration.TypeConverterCache` removed.
+- `IReaderConfiguration.Maps` removed.
+- `IReaderConfiguration.RegisterClassMap` removed.
+- `IReaderConfiguration.UnregisterClassMap` removed.
+- `IReaderConfiguration.AutoMap` removed.
+- `ISerializerConfiguration` removed and properties added to `IWriterConfiguration`.
+- All `IWriterConfiguration` setters removed.
+- `WriterConfiguration.QuoteString` removed.
+- `WriterConfiguration.TypeConverterCache` removed.
+- `WriterConfiguration.MemberTypes` removed.
+- `WriterConfiguration.Maps` removed.
+- `WriterConfiguration.RegisterClassMap` removed.
+- `WriterConfiguration.UnregisterClassMap` removed.
+- `WriterConfiguration.AutoMap` removed.
+- `MemberMap.Optional` added.
+- `MemberMap<TClass, TMember>.ConvertUsing` renamed to `Convert`.
+- `CsvFieldReader` removed.
+- `CsvParser.Read` returns `boolean` instead of `string[]`.
+- `CsvParser` constructors that take in a `FieldReader` removed.
+- `CsvParser[int index]` added to retrieve fields after a `Read`.
+- `CsvSerializer` removed.
+- `IFieldReader` removed.
+- `IParser.ByteCount` added.
+- `IParser.CharCount` added.
+- `IParser.Count` added.
+- `IParser[int index]` added.
+- `IParser.Record` added.
+- `IParser.RawRecord` added.
+- `IParser.Row` added.
+- `IParser.RawRow` added.
+- `IParser.Read` returns `bool` instead of `string[]`.
+- `IParser.ReadAsync` returns `bool` instead of `string[]`.
+- `IReader.Parser` removed.
+- `int IReaderRow.ColumnCount` added.
+- `int IReaderRow.CurrentIndex` added.
+- `string[] IReaderRow.HeaderRecord` added.
+- `IParser IReaderRow.Parser` added.
+- `ISerializer` removed.
+- `string[] IWriterRow.HeaderRecord` added.
+- `int IWriterRow.Row` added.
+- `int IWriterRow.Index` added.
+- `RecordBuilder` removed.
+
 ### 19.0.0
 
 #### Features
