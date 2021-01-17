@@ -31,7 +31,7 @@ namespace CsvHelper
 		/// If a field contains a delimiter, line ending, or escape, it is preceeded by \.
 		/// A line is terminated by \n.
 		/// <see cref="IParserConfiguration.Quote"/>, <see cref="IParserConfiguration.Delimiter"/>,
-		/// <see cref="IParserConfiguration.Escape"/>, and <see cref="IParserConfiguration.LineEnding"/>
+		/// <see cref="IParserConfiguration.Escape"/>, and <see cref="IParserConfiguration.NewLine"/>
 		/// are configurable in this mode.
 		/// </summary>
 		Escape = 1

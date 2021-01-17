@@ -111,20 +111,6 @@ namespace CsvHelper
 					details.AppendLine($"{indent}{nameof(IParser.RawRecord)}:{Environment.NewLine}{context.Parser.RawRecord}");
 				}
 				catch { }
-
-				try
-				{
-					var record = new StringBuilder();
-					if (context.Parser.Count > 0)
-					{
-						record.Append("[\"");
-						string.Join("\",\"", context.Parser.Record);
-						record.Append("\"]");
-					}
-
-					details.AppendLine($"{indent}{nameof(IParser.Record)}:{Environment.NewLine}{record}");
-				}
-				catch { }
 			}
 
 			if (context.Writer != null)

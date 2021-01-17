@@ -85,9 +85,9 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns true if the field contains a <see cref="IWriterConfiguration.QuoteString"/>,
+		/// Returns true if the field contains a <see cref="IWriterConfiguration.Quote"/>,
 		/// starts with a space, ends with a space, contains \r or \n, or contains
-		/// the <see cref="ISerializerConfiguration.Delimiter"/>.
+		/// the <see cref="IWriterConfiguration.Delimiter"/>.
 		/// </summary>
 		/// <param name="field">The current field.</param>
 		/// <param name="row">The current row.</param>
@@ -103,6 +103,7 @@ namespace CsvHelper.Configuration
 				|| field[field.Length - 1] == ' ' // Ends with a space
 				|| field.IndexOfAny(quoteChars) > -1 // Contains chars that require quotes
 				|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
+				|| config.NewLine.HasValue && field.Contains(config.NewLine.Value)
 			);
 
 			return shouldQuote;

@@ -22,7 +22,7 @@ namespace CsvHelper.Performance
 		{
 			//BenchmarkRunner.Run<Benchmarks>(); return;
 
-			Test(); return;
+			//Test(); return;
 
 			//WriteField(50, 1_000_000, true); return;
 			//WriteRecords(1_000_000);

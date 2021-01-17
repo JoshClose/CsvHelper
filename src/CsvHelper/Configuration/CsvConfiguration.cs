@@ -23,7 +23,6 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private string quoteString = "\"";
 		private string doubleQuoteString = "\"\"";
-		private NewLine newLine;
 
 		/// <inheritdoc/>
 		public virtual bool CacheFields { get; init; }
