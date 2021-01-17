@@ -3,9 +3,9 @@
 		<!-- Assembly -->
 		<AssemblyTitle>CsvHelper</AssemblyTitle>
 		<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-		<Copyright>Copyright © 2009-2020 Josh Close and Contributors</Copyright>
+		<Copyright>Copyright © 2009-2021 Josh Close</Copyright>
 		<Authors>Josh Close</Authors>
-		
+
 		<!-- Build -->
 		<AssemblyName>CsvHelper</AssemblyName>
 		<TargetFrameworks>net50;netstandard2.1;netstandard2.0;net45;net47</TargetFrameworks>
@@ -13,12 +13,13 @@
 		<DefaultLanguage>en-US</DefaultLanguage>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
-		
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+
 		<!-- Sign -->
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
 		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-		
+
 		<!-- NuGet -->
 		<PackageId>CsvHelper</PackageId>
 		<PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
@@ -28,8 +29,12 @@
 		<PackageReleaseNotes>https://joshclose.github.io/CsvHelper/change-log</PackageReleaseNotes>
 		<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -69,14 +74,18 @@
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="IsExternalInit" Version="1.0.0">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
+		<PackageReference Include="IsExternalInit" Version="1.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
 
 </Project>

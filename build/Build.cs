@@ -132,8 +132,6 @@ class Build : NukeBuild
                 .SetConfiguration(Configuration)
                 .SetOutputDirectory(ArtifactsDirectory)
 				.SetProperty("PackageVersion", PackageVersion ?? GitVersion.NuGetVersionV2)
-				.SetIncludeSymbols(true)
-				.SetSymbolPackageFormat(DotNetSymbolPackageFormat.snupkg)
             );
         });
 
