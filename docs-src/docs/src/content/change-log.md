@@ -1,5 +1,19 @@
 # Change Log
 
+### 21.0.0
+
+#### Features
+
+- `CsvConfiguration.NewLine` changed to a `string`. You can now read and write any string you like for a line ending. This defaults to `Environment.NewLine`. When reading, if the value is not explicitly set `\r\n`, `\r`, or `\n` will still be used.
+
+#### Bug Fixes
+
+- Fixed issue with being unable to write \r\n in an environment that does use that for `Environment.NewLine`.
+
+#### Breaking Changes
+
+- `char? CsvConfiguration.NewLine` changed to `string CsvConfiguration.NewLine`.
+
 ### 20.0.0
 
 #### Features
