@@ -14,12 +14,15 @@ B,07a0fca2-1b1c-4e44-b1be-c2b05da5afc7,bar
 ```cs
 void Main()
 {
+	var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+	{
+		HasHeaderRecord = false,
+	};
     using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+    using (var csv = new CsvReader(reader, config))
     {
-		csv.Configuration.HasHeaderRecord = false;
-		csv.Configuration.RegisterClassMap<FooMap>();
-		csv.Configuration.RegisterClassMap<BarMap>();
+		csv.Context.RegisterClassMap<FooMap>();
+		csv.Context.RegisterClassMap<BarMap>();
 		var fooRecords = new List<Foo>();
 		var barRecords = new List<Bar>();
 		while (csv.Read())

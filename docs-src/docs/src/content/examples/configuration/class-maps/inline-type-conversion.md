@@ -19,7 +19,7 @@ void Main()
     using (var reader = new StreamReader("path\\to\\file.csv"))
     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
-        csv.Configuration.RegisterClassMap<FooMap>();
+        csv.Context.RegisterClassMap<FooMap>();
         csv.GetRecords<Foo>().ToList().Dump();
     }
 }
@@ -42,7 +42,7 @@ public class FooMap : ClassMap<Foo>
     {
         Map(m => m.Id);
         Map(m => m.Name);
-        Map(m => m.Json).ConvertUsing(row => JsonConvert.DeserializeObject<Json>(row.GetField("Json")));
+        Map(m => m.Json).Convert(row => JsonConvert.DeserializeObject<Json>(row.GetField("Json")));
     }
 }
 ```
@@ -62,7 +62,7 @@ void Main()
 	using (var writer = new StreamWriter("path\\to\\file.csv"))
 	using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 	{
-		csv.Configuration.RegisterClassMap<FooMap>();
+		csv.Context.RegisterClassMap<FooMap>();
 		csv.WriteRecords(records);
 		
 		writer.ToString().Dump();
@@ -87,7 +87,7 @@ public class FooMap : ClassMap<Foo>
 	{
 		Map(m => m.Id);
 		Map(m => m.Name);
-		Map(m => m.Json).ConvertUsing(o => JsonConvert.SerializeObject(o));
+		Map(m => m.Json).Convert(o => JsonConvert.SerializeObject(o));
 	}
 }
 ```

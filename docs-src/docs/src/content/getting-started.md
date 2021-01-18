@@ -27,11 +27,14 @@ CsvHelper requires you to specify the `CultureInfo` that you want to use. The cu
 ## Newlines
 
 By default, CsvHelper will follow [RFC 4180](https://tools.ietf.org/html/rfc4180#page-2) and use `\r\n` for writing newlines no matter what operating system
-you are running on. CsvHelper can read `\r\n`, `\r`, or `\n` without any configuration changes. If you want to write in a non-standard format, you can
-change the configuration from `\r\n` to `\r`, `\n`, or `Environment.NewLine`.
+you are running on. CsvHelper can read `\r\n`, `\r`, or `\n` without any configuration changes. If you want to reaad or write in a non-standard format, you can
+change the configuration for `NewLine`.
 
 ```cs
-csv.Configuration.NewLine = NewLine.Environment;
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+{
+	NewLine = NewLine.Environment,
+}
 ```
 
 ## Reading a CSV File
@@ -85,10 +88,13 @@ In this case, the names are lower case. We want our property names to be Pascal 
 just change how our properties match against the header names.
 
 ```cs
-using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	csv.Configuration.PrepareHeaderForMatch = (string header, int index) => header.ToLower();
+	PrepareHeaderForMatch = (string header, int index) => header.ToLower(),
+};
+using (var reader = new StreamReader("path\\to\\file.csv"))
+using (var csv = new CsvReader(reader, config))
+{
 	var records = csv.GetRecords<Foo>();
 }
 ```
@@ -109,10 +115,13 @@ Let's say out CSV file doesn't have a header at all.
 First we need to tell the reader that there is no header record, using configuration.
 
 ```cs
-using (var reader = new StreamReader("path\\to\\file.csv"))
-using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	csv.Configuration.HasHeaderRecord = false;
+	HasHeaderRecord = false,
+};
+using (var reader = new StreamReader("path\\to\\file.csv"))
+using (var csv = new CsvReader(reader, config))
+{
 	var records = csv.GetRecords<Foo>();
 }
 ```
@@ -167,13 +176,13 @@ public class FooMap : ClassMap<Foo>
 }
 ```
 
-To use the mapping, we need to register it in the configuration.
+To use the mapping, we need to register it in the context.
 
 ```cs
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 {
-	csv.Configuration.RegisterClassMap<FooMap>();
+	csv.Context.RegisterClassMap<FooMap>();
 	var records = csv.GetRecords<Foo>();
 }
 ```

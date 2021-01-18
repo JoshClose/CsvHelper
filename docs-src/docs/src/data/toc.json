@@ -765,6 +765,10 @@
 				"path": "getting-started#cultureinfo"
 			},
 			{
+				"title": "Newlines",
+				"path": "getting-started#newlines"
+			},
+			{
 				"title": "Reading a CSV File",
 				"path": "getting-started#reading-a-csv-file"
 			},

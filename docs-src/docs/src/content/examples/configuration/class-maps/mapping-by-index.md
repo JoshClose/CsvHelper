@@ -12,11 +12,14 @@ If your data doesn't have a header you can map by index instead of name. You can
 ```cs
 void Main()
 {
-    using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
     {
-		csv.Configuration.HasHeaderRecord = false;
-        csv.Configuration.RegisterClassMap<FooMap>();
+        HasHeaderRecord = false,
+    };
+    using (var reader = new StreamReader("path\\to\\file.csv"))
+    using (var csv = new CsvReader(reader, ))
+    {
+        csv.Context.RegisterClassMap<FooMap>();
         var records = csv.GetRecords<Foo>();
     }
 }

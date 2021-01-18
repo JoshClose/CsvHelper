@@ -17,7 +17,7 @@ void Main()
 	using (var reader = new StreamReader("path\\to\\file.csv"))
 	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 	{
-		csv.Configuration.RegisterClassMap<FooMap>();
+		csv.Context.RegisterClassMap<FooMap>();
 		csv.GetRecords<Foo>().ToList().Dump();
 	}
 }

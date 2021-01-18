@@ -16,12 +16,15 @@ BarId,Name
 ```cs
 void Main()
 {
+    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+	{
+		IgnoreBlankLines = false,		
+	};
     using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+    using (var csv = new CsvReader(reader, config))
     {
-		csv.Configuration.IgnoreBlankLines = false;
-		csv.Configuration.RegisterClassMap<FooMap>();
-		csv.Configuration.RegisterClassMap<BarMap>();
+		csv.Context.RegisterClassMap<FooMap>();
+		csv.Context.RegisterClassMap<BarMap>();
 		var fooRecords = new List<Foo>();
 		var barRecords = new List<Bar>();
 		var isHeader = true;
@@ -40,7 +43,7 @@ void Main()
 				continue;
 			}
 
-			switch (csv.Context.HeaderRecord[0])
+			switch (csv.HeaderRecord[0])
 			{
 				case "FooId":
 					fooRecords.Add(csv.GetRecord<Foo>());

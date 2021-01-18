@@ -1,6 +1,6 @@
 # Mapping Properties
 
-This will map the properties of a class to the header names of the CSV data. The mapping needs to be registered in the configuration. This example is identical to not using a class mapping at all. The headers match the property names.
+This will map the properties of a class to the header names of the CSV data. The mapping needs to be registered in the context. This example is identical to not using a class mapping at all. The headers match the property names.
 
 ###### Data
 
@@ -17,7 +17,7 @@ void Main()
 	using (var reader = new StreamReader("path\\to\\file.csv"))
 	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 	{		
-		csv.Configuration.RegisterClassMap<FooMap>();
+		csv.Context.RegisterClassMap<FooMap>();
 		var records = csv.GetRecords<Foo>();
 	}
 }

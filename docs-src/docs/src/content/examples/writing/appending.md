@@ -23,12 +23,15 @@ void Main()
 	};
 
 	// Append to the file.
-	using (var stream = File.Open("path\\to\\file.csv", FileMode.Append))
-	using (var writer = new StreamWriter(stream))
-	using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+	var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 	{
 		// Don't write the header again.
-		csv.Configuration.HasHeaderRecord = false;
+		HasHeaderRecord = false,
+	};
+	using (var stream = File.Open("path\\to\\file.csv", FileMode.Append))
+	using (var writer = new StreamWriter(stream))
+	using (var csv = new CsvWriter(writer, config))
+	{
 		csv.WriteRecords(records);
 	}
 }
