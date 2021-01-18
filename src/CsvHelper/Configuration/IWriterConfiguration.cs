@@ -36,7 +36,7 @@ namespace CsvHelper.Configuration
 		char Quote { get; }
 
 		/// <summary>
-		/// Gets the escape character used to escape a quote inside a field.
+		/// The character used to escape characters.
 		/// Default is '"'.
 		/// </summary>
 		char Escape { get; }
@@ -64,10 +64,10 @@ namespace CsvHelper.Configuration
 		char InjectionEscapeCharacter { get; }
 
 		/// <summary>
-		/// Gets the newline to use when writing.
-		/// If not set, \r\n will be used.
-		/// Keep in mind, when reading <see cref="ParserMode.RFC4180"/> will not use this value.
-		/// Only <see cref="ParserMode.Escape"/> will.
+		/// The newline string to use. Default is <see cref="Environment.NewLine"/>.
+		/// When writing, this value is always used.
+		/// When reading, this value is only used if explicitly set. If not set,
+		/// the parser uses one of \r\n, \r, or \n.
 		/// </summary>
 		string NewLine { get; }
 

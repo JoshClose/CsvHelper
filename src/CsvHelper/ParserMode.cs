@@ -18,21 +18,18 @@ namespace CsvHelper
     {
 		/// <summary>
 		/// Parses using RFC 4180 format (default).
-		/// If a field contains a delimiter or line ending, it is wrapped in "s.
-		/// If quoted field contains a ", it is preceeded by ".
-		/// A line is terminated by \r\n, \r, or \n.
-		/// <see cref="IParserConfiguration.Quote"/>, <see cref="IParserConfiguration.Delimiter"/>,
-		/// and <see cref="IParserConfiguration.Escape"/> are configurable in this mode.
+		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
+		/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.
+		/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceeded by <see cref="CsvConfiguration.Escape"/>.
+		/// A line is terminated by \r\n, \r, \n, or <see cref="CsvConfiguration.NewLine"/>.
 		/// </summary>
 		RFC4180 = 0,
 
 		/// <summary>
 		/// Parses using escapes.
-		/// If a field contains a delimiter, line ending, or escape, it is preceeded by \.
-		/// A line is terminated by \n.
-		/// <see cref="IParserConfiguration.Quote"/>, <see cref="IParserConfiguration.Delimiter"/>,
-		/// <see cref="IParserConfiguration.Escape"/>, and <see cref="IParserConfiguration.NewLine"/>
-		/// are configurable in this mode.
+		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.NewLine"/>,
+		/// or <see cref="CsvConfiguration.Escape"/>, it is preceeded by <see cref="CsvConfiguration.Escape"/>.
+		/// A line is terminated by \r\n, \r, \n, or <see cref="CsvConfiguration.NewLine"/>.
 		/// </summary>
 		Escape = 1
 	}

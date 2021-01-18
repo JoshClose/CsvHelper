@@ -28,9 +28,10 @@ namespace CsvHelper.Configuration
 		bool LeaveOpen { get; }
 
 		/// <summary>
-		/// The line ending.
-		/// This is only used when using <see cref="ParserMode.Escape"/>.
-		/// Default is \n.
+		/// The newline string to use. Default is <see cref="Environment.NewLine"/>.
+		/// When writing, this value is always used.
+		/// When reading, this value is only used if explicitly set.
+		/// If not set, the parser uses one of \r\n, \r, or \n.
 		/// </summary>
 		string NewLine { get; }
 
@@ -115,7 +116,7 @@ namespace CsvHelper.Configuration
 		string Delimiter { get; }
 
 		/// <summary>
-		/// Gets the escape character used to escape a quote inside a field.
+		/// The character used to escape characters.
 		/// Default is '"'.
 		/// </summary>
 		char Escape { get; }
