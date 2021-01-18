@@ -8,6 +8,7 @@
 
 #### Bug Fixes
 
+- Fixed issue with other platforms than net50 using `init`.
 - Fixed issue with being unable to write \r\n in an environment that does use that for `Environment.NewLine`.
 
 #### Breaking Changes
