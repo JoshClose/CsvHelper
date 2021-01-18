@@ -243,7 +243,7 @@ namespace CsvHelper.Configuration
 		{
 			CultureInfo = cultureInfo;
 			delimiter = cultureInfo.TextInfo.ListSeparator;
-			newLine = Environment.NewLine;
+			newLine = "\r\n";
 		}
 	}
 }
