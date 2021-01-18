@@ -56,11 +56,10 @@ namespace CsvHelper
 		private bool hasHeaderBeenWritten;
 		private bool hasRecordBeenWritten;
 		private int row = 1;
-		private int index = 1;
+		private int index;
 		private char[] buffer;
 		private int bufferSize;
 		private int bufferPosition;
-		private int fieldCount;
 
 		/// <inheritdoc/>
 		public virtual string[] HeaderRecord { get; private set; }
@@ -162,13 +161,13 @@ namespace CsvHelper
 				field = SanitizeForInjection(field);
 			}
 
-			if (fieldCount > 0)
+			if (index > 0)
 			{
 				CopyToBuffer(delimiter);
 			}
 
 			CopyToBuffer(field);
-			fieldCount++;
+			index++;
 		}
 
 		/// <inheritdoc/>
@@ -550,18 +549,20 @@ namespace CsvHelper
 		public virtual void NextRecord()
 		{
 			CopyToBuffer(newLine);
-			fieldCount = 0;
-
 			Flush();
+
+			index = 0;
+			row++;
 		}
 
 		/// <inheritdoc/>
-		public virtual Task NextRecordAsync()
+		public virtual async Task NextRecordAsync()
 		{
 			CopyToBuffer(newLine);
-			fieldCount = 0;
+			await FlushAsync();
 
-			return FlushAsync();
+			index = 0;
+			row++;
 		}
 
 		/// <inheritdoc/>

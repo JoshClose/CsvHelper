@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
@@ -135,6 +136,52 @@ namespace CsvHelper.Tests.Writing
 
 				Assert.AreEqual($"\"o{csv.Configuration.Delimiter}e\"", writer.ToString());
 			}
+		}
+
+		[TestMethod]
+		public void Test1()
+		{
+			var data = new List<(int row, int column, string field)>();
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				ShouldQuote = (field, row) =>
+				{
+					data.Add((row.Row, row.Index, field));
+
+					return ConfigurationFunctions.ShouldQuote(field, row);
+				},
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				csv.WriteField("Id");
+				csv.WriteField("Name");
+				csv.NextRecord();
+
+				csv.WriteField("1");
+				csv.WriteField("one");
+				csv.NextRecord();
+
+				csv.Flush();
+			}
+
+			Assert.AreEqual(4, data.Count);
+
+			Assert.AreEqual(1, data[0].row);
+			Assert.AreEqual(0, data[0].column);
+			Assert.AreEqual("Id", data[0].field);
+
+			Assert.AreEqual(1, data[1].row);
+			Assert.AreEqual(1, data[1].column);
+			Assert.AreEqual("Name", data[1].field);
+
+			Assert.AreEqual(2, data[2].row);
+			Assert.AreEqual(0, data[2].column);
+			Assert.AreEqual("1", data[2].field);
+
+			Assert.AreEqual(2, data[3].row);
+			Assert.AreEqual(1, data[3].column);
+			Assert.AreEqual("one", data[3].field);
 		}
 	}
 }
