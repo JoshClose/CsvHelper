@@ -65,7 +65,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets the newline to use when writing.
-		/// If not set, \r\n will be used.
+		/// If not set, the value of Environment.NewLine will be used.
+		/// There is no way to force the use of \r\n explicitly, only single-character line endings.
 		/// Keep in mind, when reading <see cref="ParserMode.RFC4180"/> will not use this value.
 		/// Only <see cref="ParserMode.Escape"/> will.
 		/// </summary>
