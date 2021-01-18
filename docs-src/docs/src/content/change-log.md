@@ -1,5 +1,9 @@
 # Change Log
 
+### 21.0.2
+
+- Fixed issue with `CsvConfiguration.NewLine` not defaulting to '\r\n'.
+
 ### 21.0.1
 
 #### Big Fixes
