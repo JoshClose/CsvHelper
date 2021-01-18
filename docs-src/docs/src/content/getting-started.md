@@ -33,8 +33,8 @@ change the configuration for `NewLine`.
 ```cs
 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	NewLine = NewLine.Environment,
-}
+	NewLine = Environment.NewLine,
+};
 ```
 
 ## Reading a CSV File
