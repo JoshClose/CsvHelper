@@ -69,7 +69,15 @@ namespace CsvHelper.Configuration
 		/// Keep in mind, when reading <see cref="ParserMode.RFC4180"/> will not use this value.
 		/// Only <see cref="ParserMode.Escape"/> will.
 		/// </summary>
-		char? NewLine { get; }
+		string NewLine { get; }
+
+		/// <summary>
+		/// A value indicating if <see cref="NewLine"/> was set.
+		/// </summary>
+		/// <value>
+		///   <c>true</c> if <see cref="NewLine"/> was set. <c>false</c> if <see cref="NewLine"/> is the default.
+		/// </value>
+		bool IsNewLineSet { get; }
 
 		/// <summary>
 		/// Gets a function that is used to determine if a field should get quoted 

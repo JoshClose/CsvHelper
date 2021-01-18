@@ -38,7 +38,9 @@ namespace CsvHelper
 		private readonly char[] whiteSpaceChars;
 		private readonly bool leaveOpen;
 		private readonly ParserMode mode;
-		private readonly char newLine;
+		private readonly string newLine;
+		private readonly char newLineFirstChar;
+		private readonly bool isNewLineSet;
 		private readonly bool cacheFields;
 
 		private char[] buffer;
@@ -61,6 +63,7 @@ namespace CsvHelper
 		private int processFieldBufferSize;
 		private ParserState state;
 		private int delimiterPosition = 1;
+		private int newLinePosition = 1;
 
 		/// <inheritdoc/>
 		public long CharCount => charCount;
@@ -140,9 +143,11 @@ namespace CsvHelper
 			encoding = configuration.Encoding;
 			escape = configuration.Escape;
 			ignoreBlankLines = configuration.IgnoreBlankLines;
+			isNewLineSet = configuration.IsNewLineSet;
 			leaveOpen = configuration.LeaveOpen;
 			lineBreakInQuotedFieldIsBadData = configuration.LineBreakInQuotedFieldIsBadData;
-			newLine = configuration.NewLine ?? '\n';
+			newLine = configuration.NewLine;
+			newLineFirstChar = configuration.NewLine[0];
 			mode = configuration.Mode;
 			processFieldBufferSize = 1024;
 			quote = configuration.Quote;
@@ -172,7 +177,7 @@ namespace CsvHelper
 				{
 					if (!FillBuffer())
 					{
-						return ReadEndOfFile(result);
+						return ReadEndOfFile();
 					}
 				}
 
@@ -203,7 +208,7 @@ namespace CsvHelper
 				{
 					if (!await FillBufferAsync())
 					{
-						return ReadEndOfFile(result);
+						return ReadEndOfFile();
 					}
 				}
 
@@ -238,6 +243,9 @@ namespace CsvHelper
 						case ParserState.LineEnding:
 							result = ReadLineEnding(ref c);
 							break;
+						case ParserState.NewLine:
+							result = ReadNewLine(ref c);
+							break;
 						default:
 							result = ReadLineResult.None;
 							break;
@@ -258,24 +266,24 @@ namespace CsvHelper
 					byteCount += encoding.GetByteCount(new char[] { c });
 				}
 
+				if (allowComments && c == comment || ignoreBlankLines && rowStartPosition == bufferPosition - 1 && ((c == '\r' || c == '\n') && !isNewLineSet || c == newLineFirstChar && isNewLineSet))
+				{
+					state = ParserState.BlankLine;
+					var result = ReadBlankLine(ref c);
+					if (result == ReadLineResult.Complete)
+					{
+						state = ParserState.None;
+
+						continue;
+					}
+					else
+					{
+						return ReadLineResult.Incomplete;
+					}
+				}
+
 				if (mode == ParserMode.RFC4180)
 				{
-					if (allowComments && c == comment || ignoreBlankLines && rowStartPosition == bufferPosition - 1 && (c == '\r' || c == '\n'))
-					{
-						state = ParserState.BlankLine;
-						var result = ReadBlankLine(ref c);
-						if (result == ReadLineResult.Complete)
-						{
-							state = ParserState.None;
-
-							continue;
-						}
-						else
-						{
-							return ReadLineResult.Incomplete;
-						}
-					}
-
 					if (c == quote || c == escape)
 					{
 						quoteCount++;
@@ -292,51 +300,9 @@ namespace CsvHelper
 						// We don't care about anything else if we're in quotes.
 						continue;
 					}
-
-					if (c == delimiterFirstChar)
-					{
-						state = ParserState.Delimiter;
-						var result = ReadDelimiter(ref c);
-						if (result == ReadLineResult.Incomplete)
-						{
-							return result;
-						}
-
-						state = ParserState.None;
-
-						continue;
-					}
-
-					if (c == '\r' || c == '\n')
-					{
-						state = ParserState.LineEnding;
-						var result = ReadLineEnding(ref c);
-						if (result == ReadLineResult.Complete)
-						{
-							state = ParserState.None;
-						}
-
-						return result;
-					}
 				}
 				else if (mode == ParserMode.Escape)
 				{
-					if (allowComments && c == comment || ignoreBlankLines && rowStartPosition == bufferPosition - 1 && c == newLine)
-					{
-						state = ParserState.BlankLine;
-						var result = ReadBlankLine(ref c);
-						if (result == ReadLineResult.Complete)
-						{
-							state = ParserState.None;
-
-							continue;
-						}
-						else
-						{
-							return ReadLineResult.Incomplete;
-						}
-					}
-
 					if (inEscape)
 					{
 						inEscape = false;
@@ -350,32 +316,44 @@ namespace CsvHelper
 
 						continue;
 					}
+				}
 
-					if (c == delimiterFirstChar)
+				if (c == delimiterFirstChar)
+				{
+					state = ParserState.Delimiter;
+					var result = ReadDelimiter(ref c);
+					if (result == ReadLineResult.Incomplete)
 					{
-						state = ParserState.Delimiter;
-						var result = ReadDelimiter(ref c);
-						if (result == ReadLineResult.Incomplete)
-						{
-							return result;
-						}
-
-						state = ParserState.None;
-
-						continue;
-					}
-
-					if (c == newLine)
-					{
-						state = ParserState.LineEnding;
-						var result = ReadLineEnding(ref c);
-						if (result == ReadLineResult.Complete)
-						{
-							state = ParserState.None;
-						}
-
 						return result;
 					}
+
+					state = ParserState.None;
+
+					continue;
+				}
+
+				if (!isNewLineSet && (c == '\r' || c == '\n'))
+				{
+					state = ParserState.LineEnding;
+					var result = ReadLineEnding(ref c);
+					if (result == ReadLineResult.Complete)
+					{
+						state = ParserState.None;
+					}
+
+					return result;
+				}
+
+				if (isNewLineSet && c == newLineFirstChar)
+				{
+					state = ParserState.NewLine;
+					var result = ReadNewLine(ref c);
+					if (result == ReadLineResult.Complete)
+					{
+						state = ParserState.None;
+					}
+
+					return result;
 				}
 			}
 
@@ -490,7 +468,49 @@ namespace CsvHelper
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool ReadEndOfFile(in ReadLineResult result)
+		private ReadLineResult ReadNewLine(ref char c)
+		{
+			for (var i = newLinePosition; i < newLine.Length; i++)
+			{
+				if (bufferPosition >= charsRead)
+				{
+					return ReadLineResult.Incomplete;
+				}
+
+				newLinePosition++;
+
+				c = buffer[bufferPosition];
+				if (c != newLine[i])
+				{
+					c = buffer[bufferPosition - 1];
+					newLinePosition = 1;
+
+					return ReadLineResult.Complete;
+				}
+
+				bufferPosition++;
+				charCount++;
+				if (countBytes)
+				{
+					byteCount += encoding.GetByteCount(new[] { c });
+				}
+
+				if (bufferPosition >= charsRead)
+				{
+					return ReadLineResult.Incomplete;
+				}
+			}
+
+			AddField(fieldStartPosition, bufferPosition - fieldStartPosition - newLine.Length);
+
+			fieldStartPosition = bufferPosition;
+			newLinePosition = 1;
+
+			return ReadLineResult.Complete;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private bool ReadEndOfFile()
 		{
 			var state = this.state;
 			this.state = ParserState.None;
@@ -514,6 +534,13 @@ namespace CsvHelper
 			if (state == ParserState.LineEnding)
 			{
 				AddField(fieldStartPosition, bufferPosition - fieldStartPosition - 1);
+
+				return true;
+			}
+
+			if (state == ParserState.NewLine)
+			{
+				AddField(fieldStartPosition, bufferPosition - fieldStartPosition - newLine.Length);
 
 				return true;
 			}
@@ -854,7 +881,7 @@ namespace CsvHelper
 		{
 			None = 0,
 			Complete = 1,
-			Incomplete = 2
+			Incomplete = 2,
 		}
 
 		private enum ParserState
@@ -862,7 +889,8 @@ namespace CsvHelper
 			None = 0,
 			BlankLine = 1,
 			Delimiter = 2,
-			LineEnding = 3
+			LineEnding = 3,
+			NewLine = 4,
 		}
 
 		[DebuggerDisplay("Start = {Start}, Length = {Length}, QuoteCount = {QuoteCount}")]

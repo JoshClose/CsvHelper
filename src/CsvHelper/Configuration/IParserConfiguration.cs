@@ -32,7 +32,15 @@ namespace CsvHelper.Configuration
 		/// This is only used when using <see cref="ParserMode.Escape"/>.
 		/// Default is \n.
 		/// </summary>
-		char? NewLine { get; }
+		string NewLine { get; }
+
+		/// <summary>
+		/// A value indicating if <see cref="NewLine"/> was set.
+		/// </summary>
+		/// <value>
+		///   <c>true</c> if <see cref="NewLine"/> was set. <c>false</c> if <see cref="NewLine"/> is the default.
+		/// </value>
+		bool IsNewLineSet { get; }
 
 		/// <summary>
 		/// The parsing mode.

@@ -47,7 +47,7 @@ namespace CsvHelper
 		private readonly IComparer<string> dynamicPropertySort;
 		private readonly string delimiter;
 		private readonly bool leaveOpen;
-		private readonly string newLineString;
+		private readonly string newLine;
 		private readonly char[] injectionCharacters;
 		private readonly char injectionEscapeCharacter;
 		private readonly bool sanitizeForInjection;
@@ -109,7 +109,7 @@ namespace CsvHelper
 			injectionCharacters = configuration.InjectionCharacters;
 			injectionEscapeCharacter = configuration.InjectionEscapeCharacter;
 			leaveOpen = configuration.LeaveOpen;
-			newLineString = configuration.NewLine?.ToString() ?? Environment.NewLine;
+			newLine = configuration.NewLine;
 			quote = configuration.Quote;
 			quoteString = configuration.QuoteString;
 			sanitizeForInjection = configuration.SanitizeForInjection;
@@ -549,7 +549,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual void NextRecord()
 		{
-			CopyToBuffer(newLineString);
+			CopyToBuffer(newLine);
 			fieldCount = 0;
 
 			Flush();
@@ -558,7 +558,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual Task NextRecordAsync()
 		{
-			CopyToBuffer(newLineString);
+			CopyToBuffer(newLine);
 			fieldCount = 0;
 
 			return FlushAsync();

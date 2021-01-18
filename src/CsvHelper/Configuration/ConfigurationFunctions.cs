@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	/// <summary>Holds the default callback methods for delegate members of <c>CsvHelper.Configuration.Configuration</c>.</summary>
 	public static class ConfigurationFunctions
 	{
-		private static readonly char[] quoteChars = new char[] { '\r', '\n' };
+		private static readonly char[] lineEndingChars = new char[] { '\r', '\n' };
 
 		/// <summary>
 		/// Throws a <see cref="ValidationException"/> if <paramref name="invalidHeaders"/> is not empty.
@@ -101,9 +101,9 @@ namespace CsvHelper.Configuration
 				field.Contains(config.Quote) // Contains quote
 				|| field[0] == ' ' // Starts with a space
 				|| field[field.Length - 1] == ' ' // Ends with a space
-				|| field.IndexOfAny(quoteChars) > -1 // Contains chars that require quotes
 				|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
-				|| config.NewLine.HasValue && field.Contains(config.NewLine.Value)
+				|| !config.IsNewLineSet && field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
+				|| config.IsNewLineSet && field.Contains(config.NewLine) // Contains newline
 			);
 
 			return shouldQuote;

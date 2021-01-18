@@ -23,6 +23,7 @@ namespace CsvHelper.Configuration
 		private char quote = '"';
 		private string quoteString = "\"";
 		private string doubleQuoteString = "\"\"";
+		private string newLine;
 
 		/// <inheritdoc/>
 		public virtual bool CacheFields { get; init; }
@@ -215,7 +216,18 @@ namespace CsvHelper.Configuration
 		public virtual ReferenceHeaderPrefix ReferenceHeaderPrefix { get; init; }
 
 		/// <inheritdoc/>
-		public virtual char? NewLine { get; init; }
+		public virtual string NewLine
+		{
+			get => newLine;
+			init
+			{
+				IsNewLineSet = true;
+				newLine = value;
+			}
+		}
+
+		/// <inheritdoc/>
+		public bool IsNewLineSet { get; private set; }
 
 		/// <inheritdoc/>
 		public virtual bool UseNewObjectForNullReferenceMembers { get; init; } = true;
@@ -231,6 +243,7 @@ namespace CsvHelper.Configuration
 		{
 			CultureInfo = cultureInfo;
 			delimiter = cultureInfo.TextInfo.ListSeparator;
+			newLine = Environment.NewLine;
 		}
 	}
 }

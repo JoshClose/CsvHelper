@@ -50,7 +50,7 @@ namespace CsvHelper.Tests.Writing
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				NewLine = '\r',
+				NewLine = "\r",
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.Writing
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				NewLine = '\n',
+				NewLine = "\n",
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
