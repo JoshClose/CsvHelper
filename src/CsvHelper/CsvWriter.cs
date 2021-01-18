@@ -109,7 +109,7 @@ namespace CsvHelper
 			injectionCharacters = configuration.InjectionCharacters;
 			injectionEscapeCharacter = configuration.InjectionEscapeCharacter;
 			leaveOpen = configuration.LeaveOpen;
-			newLineString = configuration.NewLine?.ToString() ?? Environment.NewLine;
+			newLineString = configuration.NewLine?.ToString() ?? "\r\n";
 			quote = configuration.Quote;
 			quoteString = configuration.QuoteString;
 			sanitizeForInjection = configuration.SanitizeForInjection;
