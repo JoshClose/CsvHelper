@@ -1,5 +1,11 @@
 # Change Log
 
+### 21.0.1
+
+#### Big Fixes
+
+- Fixed issue with `CsvWriter` not keeping track of `Row` and `Index`.
+
 ### 21.0.0
 
 #### Features
