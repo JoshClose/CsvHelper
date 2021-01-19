@@ -13,33 +13,39 @@ namespace CsvHelper.Expressions
 	public class RecordCreatorFactory
 	{
 		private readonly CsvReader reader;
+		private readonly DynamicRecordCreator dynamicRecordCreator;
+		private readonly PrimitiveRecordCreator primitiveRecordCreator;
+		private readonly ObjectRecordCreator objectRecordCreator;
 
 		/// <summary>
 		/// Initializes a new instance using the given reader.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public RecordCreatorFactory( CsvReader reader )
+		public RecordCreatorFactory(CsvReader reader)
 		{
 			this.reader = reader;
+			dynamicRecordCreator = new DynamicRecordCreator(reader);
+			primitiveRecordCreator = new PrimitiveRecordCreator(reader);
+			objectRecordCreator = new ObjectRecordCreator(reader);
 		}
 
 		/// <summary>
 		/// Creates a record creator for the given record type.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		public virtual RecordCreator MakeRecordCreator( Type recordType )
+		public virtual RecordCreator MakeRecordCreator(Type recordType)
 		{
-			if( recordType == typeof( object ) )
+			if (recordType == typeof(object))
 			{
-				return new DynamicRecordCreator( reader );
+				return dynamicRecordCreator;
 			}
 
-			if( recordType.GetTypeInfo().IsPrimitive )
+			if (recordType.GetTypeInfo().IsPrimitive)
 			{
-				return new PrimitiveRecordCreator( reader );
+				return primitiveRecordCreator;
 			}
 
-			return new ObjectRecordCreator( reader );
+			return objectRecordCreator;
 		}
 	}
 }

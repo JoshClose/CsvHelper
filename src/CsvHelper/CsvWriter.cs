@@ -633,6 +633,7 @@ namespace CsvHelper
 			return field;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void CopyToBuffer(string value)
 		{
 			var length = value?.Length ?? 0;

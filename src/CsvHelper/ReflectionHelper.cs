@@ -23,6 +23,7 @@ namespace CsvHelper
 		/// <param name="type">The type the property belongs to.</param>
 		/// <param name="property">The property to search.</param>
 		/// <param name="flags">Flags for how the property is retrieved.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PropertyInfo GetDeclaringProperty(Type type, PropertyInfo property, BindingFlags flags)
 		{
 			if (property.DeclaringType != type)
@@ -41,6 +42,7 @@ namespace CsvHelper
 		/// <param name="type">The <see cref="Type"/> to get properties for.</param>
 		/// <param name="flags">The flags for getting the properties.</param>
 		/// <param name="overwrite">If true, parent class properties that are hidden by `new` child properties will be overwritten.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static List<PropertyInfo> GetUniqueProperties(Type type, BindingFlags flags, bool overwrite = false)
 		{
 			var properties = new Dictionary<string, PropertyInfo>();
@@ -71,6 +73,7 @@ namespace CsvHelper
 		/// <typeparam name="TProperty">The type of the property.</typeparam>
 		/// <param name="expression">The expression.</param>
 		/// <returns>The <see cref="PropertyInfo"/> for the expression.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MemberInfo GetMember<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression)
 		{
 			var member = GetMemberExpression(expression.Body).Member;
@@ -96,6 +99,7 @@ namespace CsvHelper
 		/// <typeparam name="TProperty">The type of the property.</typeparam>
 		/// <param name="expression">The member expression.</param>
 		/// <returns>The inheritance chain for the given member expression as a stack.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Stack<MemberInfo> GetMembers<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression)
 		{
 			var stack = new Stack<MemberInfo>();

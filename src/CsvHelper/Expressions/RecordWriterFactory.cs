@@ -13,6 +13,10 @@ namespace CsvHelper.Expressions
 	public class RecordWriterFactory
 	{
 		private readonly CsvWriter writer;
+		private readonly ExpandoObjectRecordWriter expandoObjectRecordWriter;
+		private readonly DynamicRecordWriter dynamicRecordWriter;
+		private readonly PrimitiveRecordWriter primitiveRecordWriter;
+		private readonly ObjectRecordWriter objectRecordWriter;
 
 		/// <summary>
 		/// Initializes a new instance using the given writer.
@@ -21,6 +25,10 @@ namespace CsvHelper.Expressions
 		public RecordWriterFactory(CsvWriter writer)
 		{
 			this.writer = writer;
+			expandoObjectRecordWriter = new ExpandoObjectRecordWriter(writer);
+			dynamicRecordWriter = new DynamicRecordWriter(writer);
+			primitiveRecordWriter = new PrimitiveRecordWriter(writer);
+			objectRecordWriter = new ObjectRecordWriter(writer);
 		}
 
 		/// <summary>
@@ -34,20 +42,20 @@ namespace CsvHelper.Expressions
 
 			if (record is ExpandoObject expandoObject)
 			{
-				return new ExpandoObjectRecordWriter(writer);
+				return expandoObjectRecordWriter;
 			}
 
 			if (record is IDynamicMetaObjectProvider dynamicObject)
 			{
-				return new DynamicRecordWriter(writer);
+				return dynamicRecordWriter;
 			}
 
 			if (type.GetTypeInfo().IsPrimitive)
 			{
-				return new PrimitiveRecordWriter(writer);
+				return primitiveRecordWriter;
 			}
 
-			return new ObjectRecordWriter(writer);
+			return objectRecordWriter;
 		}
 	}
 }

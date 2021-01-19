@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace CsvHelper
 {
@@ -1304,6 +1305,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void CheckHasBeenRead()
 		{
 			if (!hasBeenRead)
@@ -1313,6 +1315,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void ParseNamedIndexes()
 		{
 			if (headerRecord == null)

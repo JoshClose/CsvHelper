@@ -20,6 +20,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="member">The member to get the type from.</param>
 		/// <returns>The type.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type MemberType(this MemberInfo member)
 		{
 			var property = member as PropertyInfo;
@@ -43,6 +44,7 @@ namespace CsvHelper
 		/// <param name="member">The member to get the expression for.</param>
 		/// <param name="expression">The member expression.</param>
 		/// <returns>The member expression.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MemberExpression GetMemberExpression(this MemberInfo member, Expression expression)
 		{
 			var property = member as PropertyInfo;
@@ -65,6 +67,7 @@ namespace CsvHelper
 		/// True for anonymous, otherwise false.
 		/// </summary>
 		/// <param name="type">The type.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAnonymous(this Type type)
 		{
 			if (type == null)
@@ -87,6 +90,7 @@ namespace CsvHelper
 		/// True if it has a parameterless constructor, otherwise false.
 		/// </summary>
 		/// <param name="type">The type.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasParameterlessConstructor(this Type type)
 		{
 			return type.GetConstructor(new Type[0]) != null;
@@ -96,6 +100,7 @@ namespace CsvHelper
 		/// Gets a value indicating if the given type has any constructors.
 		/// </summary>
 		/// <param name="type">The type.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasConstructor(this Type type)
 		{
 			return type.GetConstructors().Length > 0;
@@ -105,6 +110,7 @@ namespace CsvHelper
 		/// Gets the constructor that contains the most parameters.
 		/// </summary>
 		/// <param name="type">The type.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ConstructorInfo GetConstructorWithMostParameters(this Type type)
 		{
 			return type.GetConstructors()
@@ -117,6 +123,7 @@ namespace CsvHelper
 		/// True if it is a user defined struct, otherwise false.
 		/// </summary>
 		/// <param name="type">The type.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsUserDefinedStruct(this Type type)
 		{
 			return type.IsValueType && !type.IsPrimitive && !type.IsEnum;
@@ -126,6 +133,7 @@ namespace CsvHelper
 		/// Gets a string representation of the constructor.
 		/// </summary>
 		/// <param name="constructor">The constructor.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetDefinition(this ConstructorInfo constructor)
 		{
 			var parameters = constructor.GetParameters();
@@ -138,6 +146,7 @@ namespace CsvHelper
 		/// Gets a string representation of the parameter.
 		/// </summary>
 		/// <param name="parameter">The parameter.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetDefinition(this ParameterInfo parameter)
 		{
 			return $"{parameter.ParameterType.Name} {parameter.Name}";
