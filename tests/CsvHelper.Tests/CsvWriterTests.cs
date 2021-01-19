@@ -13,6 +13,7 @@ using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 using System.Dynamic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
+using System.Linq;
 
 namespace CsvHelper.Tests
 {
@@ -53,6 +54,26 @@ namespace CsvHelper.Tests
 			var data = reader.ReadToEnd();
 
 			Assert.AreEqual("one,\"one, two\",\"one \"\"two\"\" three\",\" one \"," + date + ",1,2,3,4,5," + guid + "\r\n", data);
+		}
+
+		[TestMethod]
+		public void WriteLargeFieldTest()
+		{
+			var stream = new MemoryStream();
+			var writer = new StreamWriter(stream) { AutoFlush = true };
+
+			var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+
+			var longString = string.Join("", Enumerable.Range(0, 20000).Select(i => "a"));
+
+			csv.WriteField(longString);
+			csv.NextRecord();
+
+			var reader = new StreamReader(stream);
+			stream.Position = 0;
+			var data = reader.ReadToEnd();
+
+			Assert.AreEqual(longString + "\r\n", data);
 		}
 
 		[TestMethod]

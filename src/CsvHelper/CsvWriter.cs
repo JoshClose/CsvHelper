@@ -644,7 +644,7 @@ namespace CsvHelper
 
 			if (bufferPosition + length >= buffer.Length)
 			{
-				bufferSize *= 2;
+				bufferSize *= (int)Math.Ceiling(bufferPosition + length / (decimal)bufferSize);
 				Array.Resize(ref buffer, bufferSize);
 			}
 
