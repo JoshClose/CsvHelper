@@ -1,6 +1,30 @@
 # Change Log
 
+### 21.0.6
+
+#### Bug Fixes
+
+- Fixed issue with writing a field that is larger then 2x the buffer size.
+
+### 21.0.5
+
+#### Bug Fixes
+
+- Fixed issue with VB not being able to set `init` properties on CsvConfiguration by adding a constructor that takes in all properties as optional named arguments.
+
+### 21.0.4
+
+#### Bug Fixes
+
+- Fixed issue with cache miss in on both the reader and writer.
+
+### 21.0.3
+
+No changes.
+
 ### 21.0.2
+
+#### Bug Fixes
 
 - Fixed issue with `CsvConfiguration.NewLine` not defaulting to '\r\n'.
 
