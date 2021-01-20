@@ -83,8 +83,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets a value indicating whether references
-		/// should be ignored when auto mapping. True to ignore
-		/// references, otherwise false. Default is false.
+		/// should be ignored when auto mapping. <c>true</c> to ignore
+		/// references, otherwise <c>false</c>. Default is false.
 		/// </summary>
 		bool IgnoreReferences { get; }
 
@@ -98,7 +98,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets a value indicating if private
 		/// member should be read from and written to.
-		/// True to include private member, otherwise false. Default is false.
+		/// <c>true</c> to include private member, otherwise <c>false</c>. Default is false.
 		/// </summary>
 		bool IncludePrivateMembers { get; }
 
@@ -113,9 +113,6 @@ namespace CsvHelper.Configuration
 		/// count should be detected. If true, a <see cref="BadDataException"/>
 		/// will be thrown if a different column count is detected.
 		/// </summary>
-		/// <value>
-		/// <c>true</c> if [detect column count changes]; otherwise, <c>false</c>.
-		/// </value>
 		bool DetectColumnCountChanges { get; }
 
 		/// <summary>

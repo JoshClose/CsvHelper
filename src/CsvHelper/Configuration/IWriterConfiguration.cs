@@ -87,7 +87,7 @@ namespace CsvHelper.Configuration
 		ShouldQuote ShouldQuote { get; }
 
 		/// <summary>
-		/// Gets the culture info used to read an write CSV files.
+		/// Gets the culture info used to read and write CSV files.
 		/// </summary>
 		CultureInfo CultureInfo { get; }
 

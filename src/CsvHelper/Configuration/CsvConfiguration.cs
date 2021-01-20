@@ -246,6 +246,47 @@ namespace CsvHelper.Configuration
 			newLine = "\r\n";
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvConfiguration"/> class.
+		/// </summary>
+		/// <param name="cultureInfo">The the culture info used to read and write CSV files.</param>
+		/// <param name="allowComments">A value indicating if comments are allowed. <c>true</c> to allow commented out lines, otherwise <c>false</c>.</param>
+		/// <param name="badDataFound">The function that is called when bad field data is found. A field has bad data if it contains a quote and the field is not quoted (escaped). You can supply your own function to do other things like logging the issue instead of throwing an exception. Arguments: context</param>
+		/// <param name="bufferSize">Size of the buffer used for parsing and writing CSV files. Default is 0x1000.</param>
+		/// <param name="cacheFields">Cache fields that are created when parsing. Default is false.</param>
+		/// <param name="comment">The character used to denote a line that is commented out. Default is '#'.</param>
+		/// <param name="countBytes">A value indicating whether the number of bytes should be counted while parsing. Default is false. This will slow down parsing because it needs to get the byte count of every char for the given encoding. The <see cref="Encoding"/> needs to be set correctly for this to be accurate.</param>
+		/// <param name="delimiter">The delimiter used to separate fields. Default is <see cref="TextInfo.ListSeparator"/>.</param>
+		/// <param name="detectColumnCountChanges">A value indicating whether changes in the column count should be detected. If true, a <see cref="BadDataException"/> will be thrown if a different column count is detected.</param>
+		/// <param name="dynamicPropertySort">The comparer used to order the properties of dynamic objects when writing. The default is null, which will preserve the order the object properties were created with.</param>
+		/// <param name="encoding">The encoding used when counting bytes.</param>
+		/// <param name="escape">The character used to escape characters. Default is '"'.</param>
+		/// <param name="getConstructor">Chooses the constructor to use for constructor mapping. Arguments: (classType)</param>
+		/// <param name="getDynamicPropertyName">The name to use for the property of the dynamic object. Arguments: (readingContext, fieldIndex)</param>
+		/// <param name="hasHeaderRecord">A value indicating if the CSV file has a header record. Default is true.</param>
+		/// <param name="headerValidated">The function that is called when a header validation check is ran. The default function will throw a <see cref="ValidationException"/> if there is no header for a given member mapping. You can supply your own function to do other things like logging the issue instead of throwing an exception. Arguments: (isValid, headerNames, headerNameIndex, context)</param>
+		/// <param name="ignoreBlankLines">A value indicating if blank lines should be ignored when reading. <c>true</c> to ignore, otherwise <c>false</c>. Default is true.</param>
+		/// <param name="ignoreReferences">A value indicating whether references should be ignored when auto mapping. <c>true</c> to ignore references, otherwise <c>false</c>. Default is false.</param>
+		/// <param name="includePrivateMembers">A value indicating if private member should be read from and written to. <c>true</c> to include private member, otherwise <c>false</c>. Default is false.</param>
+		/// <param name="injectionCharacters">The characters that are used for injection attacks.</param>
+		/// <param name="injectionEscapeCharacter">The character used to escape a detected injection.</param>
+		/// <param name="leaveOpen">A value indicating whether to leave the <see cref="TextReader"/> or <see cref="TextWriter"/> open after this object is disposed.</param>
+		/// <param name="lineBreakInQuotedFieldIsBadData">A value indicating if a line break found in a quote field should be considered bad data. <c>true</c> to consider a line break bad data, otherwise <c>false</c>. Defaults to false.</param>
+		/// <param name="memberTypes">The member types that are used when auto mapping. MemberTypes are flags, so you can choose more than one. Default is Properties.</param>
+		/// <param name="missingFieldFound">The function that is called when a missing field is found. The default function will throw a <see cref="MissingFieldException"/>. You can supply your own function to do other things like logging the issue instead of throwing an exception. Arguments: (headerNames, index, context)</param>
+		/// <param name="mode">The parsing mode.</param>
+		/// <param name="newLine">The newline string to use. Default is <see cref="Environment.NewLine"/>. When writing, this value is always used. When reading, this value is only used if explicitly set. If not set, the parser uses one of \r\n, \r, or \n.</param>
+		/// <param name="prepareHeaderForMatch">Prepares the header field for matching against a member name. The header field and the member name are both ran through this function. You should do things like trimming, removing whitespace, removing underscores, and making casing changes to ignore case. Arguments: (header, fieldIndex)</param>
+		/// <param name="quote">The character used to quote fields. Default is '"'.</param>
+		/// <param name="readingExceptionOccurred">The function that is called when a reading exception occurs. The default function will re-throw the given exception. If you want to ignore reading exceptions, you can supply your own function to do other things like logging the issue. Arguments: (exception)</param>
+		/// <param name="referenceHeaderPrefix">A callback that will return the prefix for a reference header. Arguments: (memberType, memberName)</param>
+		/// <param name="sanitizeForInjection">A value indicating if fields should be sanitized to prevent malicious injection. This covers MS Excel,  Google Sheets and Open Office Calc.</param>
+		/// <param name="shouldQuote">A function that is used to determine if a field should get quoted  when writing. Arguments: field, context</param>
+		/// <param name="shouldSkipRecord">The callback that will be called to determine whether to skip the given record or not. Arguments: (record)</param>
+		/// <param name="shouldUseConstructorParameters">Determines if constructor parameters should be used to create the class instead of the default constructor and members. Arguments: (parameterType)</param>
+		/// <param name="trimOptions">The field trimming options.</param>
+		/// <param name="useNewObjectForNullReferenceMembers">A value indicating that during writing if a new  object should be created when a reference member is null. True to create a new object and use it's defaults for the fields, or false to leave the fields empty for all the reference member's member.</param>
+		/// <param name="whiteSpaceChars">Characters considered whitespace. Used when trimming fields.</param>
 		public CsvConfiguration(
 			CultureInfo cultureInfo,
 			bool allowComments = false,

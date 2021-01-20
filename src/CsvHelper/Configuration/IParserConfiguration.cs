@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -50,8 +51,8 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets the size of the buffer
-		/// used for reading CSV files.
-		/// Default is 2048.
+		/// used for parsing and writing CSV files.
+		/// Default is 0x1000.
 		/// </summary>
 		int BufferSize { get; }
 
@@ -79,7 +80,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets a value indicating if a line break found in a quote field should
-		/// be considered bad data. True to consider a line break bad data, otherwise false.
+		/// be considered bad data. <c>true</c> to consider a line break bad data, otherwise <c>false</c>.
 		/// Defaults to false.
 		/// </summary>
 		bool LineBreakInQuotedFieldIsBadData { get; }
@@ -92,14 +93,14 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets a value indicating if comments are allowed.
-		/// True to allow commented out lines, otherwise false.
+		/// <c>true</c> to allow commented out lines, otherwise <c>false</c>.
 		/// </summary>
 		bool AllowComments { get; }
 
 		/// <summary>
 		/// Gets a value indicating if blank lines
 		/// should be ignored when reading.
-		/// True to ignore, otherwise false. Default is true.
+		/// <c>true</c> to ignore, otherwise <c>false</c>. Default is true.
 		/// </summary>
 		bool IgnoreBlankLines { get; }
 
@@ -111,7 +112,7 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets the delimiter used to separate fields.
-		/// Default is CultureInfo.CurrentCulture.TextInfo.ListSeparator.
+		/// Default is <see cref="TextInfo.ListSeparator"/>.
 		/// </summary>
 		string Delimiter { get; }
 
