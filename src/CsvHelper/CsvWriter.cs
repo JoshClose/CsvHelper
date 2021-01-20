@@ -643,9 +643,14 @@ namespace CsvHelper
 				return;
 			}
 
-			if (bufferPosition + length >= buffer.Length)
+			var lengthNeeded = bufferPosition + length;
+			if (lengthNeeded >= bufferSize)
 			{
-				bufferSize *= 2;
+				while (lengthNeeded >= bufferSize)
+				{
+					bufferSize *= 2;
+				}
+
 				Array.Resize(ref buffer, bufferSize);
 			}
 
