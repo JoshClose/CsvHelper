@@ -648,9 +648,21 @@ namespace CsvHelper
 			var length = field.Length;
 			var quoteCount = field.QuoteCount;
 
-			var processedField = mode == ParserMode.RFC4180
-				? ProcessRFC4180Field(start, length, quoteCount)
-				: ProcessEscapeField(start, length);
+			ProcessedField processedField;
+			switch (mode)
+			{
+				case ParserMode.RFC4180:
+					processedField = ProcessRFC4180Field(start, length, quoteCount);
+					break;
+				case ParserMode.Escape:
+					processedField = ProcessEscapeField(start, length);
+					break;
+				case ParserMode.NoEscape:
+					processedField = ProcessNoEscapeField(start, length);
+					break;
+				default:
+					throw new InvalidOperationException($"ParseMode '{mode}' is not handled.");
+			}
 
 			if (!cacheFields)
 			{
@@ -817,6 +829,26 @@ namespace CsvHelper
 				Buffer = processFieldBuffer,
 				Start = 0,
 				Length = position,
+			};
+		}
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected ProcessedField ProcessNoEscapeField(in int start, in int length)
+		{
+			var newStart = start;
+			var newLength = length;
+
+			if ((trimOptions & TrimOptions.Trim) == TrimOptions.Trim)
+			{
+				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+			}
+
+			return new ProcessedField
+			{
+				Buffer = buffer,
+				Start = newStart,
+				Length = newLength,
 			};
 		}
 

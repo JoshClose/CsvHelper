@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.Parsing
 {
 	[TestClass]
-    public class UnixTests
+    public class ParserModeTests
     {
 		[TestMethod]
 		public void Read_HasEscapedDelimiter_Parses()
@@ -55,6 +55,54 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual("a\nb", parser[0]);
 				Assert.AreEqual("c", parser[1]);
 				Assert.IsFalse(parser.Read());
+			}
+		}
+
+		[TestMethod]
+		public void Read_NoEscapeMode_HasRFC4180Format_Parses()
+		{
+			var s = new StringBuilder();
+			s.Append("a,\"b,\"\"c\r\nd\",e");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Mode = ParserMode.NoEscape,
+				Escape = '"',
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				Assert.IsTrue(parser.Read());
+				Assert.AreEqual("a", parser[0]);
+				Assert.AreEqual("\"b", parser[1]);
+				Assert.AreEqual("\"\"c", parser[2]);
+
+				Assert.IsTrue(parser.Read());
+				Assert.AreEqual("d\"", parser[0]);
+				Assert.AreEqual("e", parser[1]);
+			}
+		}
+
+		[TestMethod]
+		public void Read_NoEscapeMode_HasEscapeFormat_Parses()
+		{
+			var s = new StringBuilder();
+			s.Append("a,\\b\\,c\\\nd,e");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Mode = ParserMode.NoEscape,
+				Escape = '\\',
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				Assert.IsTrue(parser.Read());
+				Assert.AreEqual("a", parser[0]);
+				Assert.AreEqual("\\b\\", parser[1]);
+				Assert.AreEqual("c\\", parser[2]);
+
+				Assert.IsTrue(parser.Read());
+				Assert.AreEqual("d", parser[0]);
+				Assert.AreEqual("e", parser[1]);
 			}
 		}
 	}

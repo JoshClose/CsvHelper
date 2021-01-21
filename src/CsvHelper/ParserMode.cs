@@ -21,7 +21,6 @@ namespace CsvHelper
 		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
 		/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.
 		/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceeded by <see cref="CsvConfiguration.Escape"/>.
-		/// A line is terminated by \r\n, \r, \n, or <see cref="CsvConfiguration.NewLine"/>.
 		/// </summary>
 		RFC4180 = 0,
 
@@ -29,8 +28,15 @@ namespace CsvHelper
 		/// Parses using escapes.
 		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.NewLine"/>,
 		/// or <see cref="CsvConfiguration.Escape"/>, it is preceeded by <see cref="CsvConfiguration.Escape"/>.
-		/// A line is terminated by \r\n, \r, \n, or <see cref="CsvConfiguration.NewLine"/>.
 		/// </summary>
-		Escape = 1
+		Escape = 1,
+
+		/// <summary>
+		/// Doesn't parse quotes or escapes.
+		/// This will ignore quoting and escape characters. This means a field cannot contain a
+		/// <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.Quote"/>, or
+		/// <see cref="CsvConfiguration.NewLine"/>, as they cannot be escaped.
+		/// </summary>
+		NoEscape = 2
 	}
 }
