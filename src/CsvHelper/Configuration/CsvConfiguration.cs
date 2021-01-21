@@ -18,12 +18,12 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	{
-		private string delimiter = CultureInfo.CurrentCulture.TextInfo.ListSeparator;
+		private string delimiter;
 		private char escape = '"';
 		private char quote = '"';
 		private string quoteString = "\"";
 		private string doubleQuoteString = "\"\"";
-		private string newLine;
+		private string newLine = "\r\n";
 
 		/// <inheritdoc/>
 		public virtual bool AllowComments { get; init; }
@@ -243,7 +243,6 @@ namespace CsvHelper.Configuration
 		{
 			CultureInfo = cultureInfo;
 			delimiter = cultureInfo.TextInfo.ListSeparator;
-			newLine = "\r\n";
 		}
 
 		/// <summary>
@@ -289,83 +288,83 @@ namespace CsvHelper.Configuration
 		/// <param name="whiteSpaceChars">Characters considered whitespace. Used when trimming fields.</param>
 		public CsvConfiguration(
 			CultureInfo cultureInfo,
-			bool allowComments = false,
+			bool? allowComments = null,
 			BadDataFound badDataFound = null,
-			int bufferSize = 0x1000,
-			bool cacheFields = false,
-			char comment = '#',
-			bool countBytes = false,
+			int? bufferSize = null,
+			bool? cacheFields = null,
+			char? comment = null,
+			bool? countBytes = null,
 			string delimiter = null,
-			bool detectColumnCountChanges = false,
+			bool? detectColumnCountChanges = null,
 			IComparer<string> dynamicPropertySort = null,
 			Encoding encoding = null,
-			char escape = '"',
+			char? escape = null,
 			GetConstructor getConstructor = null,
 			GetDynamicPropertyName getDynamicPropertyName = null,
-			bool hasHeaderRecord = true,
+			bool? hasHeaderRecord = null,
 			HeaderValidated headerValidated = null,
-			bool ignoreBlankLines = true,
-			bool ignoreReferences = false,
-			bool includePrivateMembers = false,
+			bool? ignoreBlankLines = null,
+			bool? ignoreReferences = null,
+			bool? includePrivateMembers = null,
 			char[] injectionCharacters = null,
-			char injectionEscapeCharacter = '\t',
-			bool leaveOpen = false,
-			bool lineBreakInQuotedFieldIsBadData = false,
-			MemberTypes memberTypes = MemberTypes.Properties,
+			char? injectionEscapeCharacter = null,
+			bool? leaveOpen = null,
+			bool? lineBreakInQuotedFieldIsBadData = null,
+			MemberTypes? memberTypes = null,
 			MissingFieldFound missingFieldFound = null,
-			ParserMode mode = ParserMode.RFC4180,
-			string newLine = "\r\n",
+			ParserMode? mode = null,
+			string newLine = null,
 			PrepareHeaderForMatch prepareHeaderForMatch = null,
-			char quote = '"',
+			char? quote = null,
 			ReadingExceptionOccurred readingExceptionOccurred = null,
 			ReferenceHeaderPrefix referenceHeaderPrefix = null,
-			bool sanitizeForInjection = false,
+			bool? sanitizeForInjection = null,
 			ShouldQuote shouldQuote = null,
 			ShouldSkipRecord shouldSkipRecord = null,
 			ShouldUseConstructorParameters shouldUseConstructorParameters = null,
-			TrimOptions trimOptions = TrimOptions.None,
-			bool useNewObjectForNullReferenceMembers = true,
+			TrimOptions? trimOptions = null,
+			bool? useNewObjectForNullReferenceMembers = null,
 			char[] whiteSpaceChars = null
 		)
 		{
 			CultureInfo = cultureInfo;
-			AllowComments = allowComments;
-			BadDataFound = badDataFound ?? ConfigurationFunctions.BadDataFound;
-			BufferSize = bufferSize;
-			CacheFields = cacheFields;
-			Comment = comment;
-			CountBytes = countBytes;
-			Delimiter = delimiter;
-			DetectColumnCountChanges = detectColumnCountChanges;
-			DynamicPropertySort = dynamicPropertySort;
-			Encoding = encoding ?? Encoding.UTF8;
-			Escape = escape;
-			GetConstructor = getConstructor ?? ConfigurationFunctions.GetConstructor;
-			GetDynamicPropertyName = getDynamicPropertyName ?? ConfigurationFunctions.GetDynamicPropertyName;
-			HasHeaderRecord = hasHeaderRecord;
-			HeaderValidated = headerValidated ?? ConfigurationFunctions.HeaderValidated;
-			IgnoreBlankLines = ignoreBlankLines;
-			IgnoreReferences = ignoreReferences;
-			IncludePrivateMembers = includePrivateMembers;
-			InjectionCharacters = injectionCharacters ?? new[] { '=', '@', '+', '-' };
-			InjectionEscapeCharacter = injectionEscapeCharacter;
-			LeaveOpen = leaveOpen;
-			LineBreakInQuotedFieldIsBadData = lineBreakInQuotedFieldIsBadData;
-			MemberTypes = memberTypes;
-			MissingFieldFound = missingFieldFound ?? ConfigurationFunctions.MissingFieldFound;
-			Mode = mode;
-			NewLine = newLine;
-			PrepareHeaderForMatch = prepareHeaderForMatch ?? ConfigurationFunctions.PrepareHeaderForMatch;
-			Quote = quote;
-			ReadingExceptionOccurred = readingExceptionOccurred ?? ConfigurationFunctions.ReadingExceptionOccurred;
-			ReferenceHeaderPrefix = referenceHeaderPrefix;
-			SanitizeForInjection = sanitizeForInjection;
-			ShouldQuote = shouldQuote ?? ConfigurationFunctions.ShouldQuote;
-			ShouldSkipRecord = shouldSkipRecord ?? ConfigurationFunctions.ShouldSkipRecord;
-			ShouldUseConstructorParameters = shouldUseConstructorParameters ?? ConfigurationFunctions.ShouldUseConstructorParameters;
-			TrimOptions = trimOptions;
-			UseNewObjectForNullReferenceMembers = useNewObjectForNullReferenceMembers;
-			WhiteSpaceChars = whiteSpaceChars ?? new char[] { ' ', '\t' };
+			AllowComments = allowComments ?? AllowComments;
+			BadDataFound = badDataFound ?? BadDataFound;
+			BufferSize = bufferSize ?? BufferSize;
+			CacheFields = cacheFields ?? CacheFields;
+			Comment = comment ?? Comment;
+			CountBytes = countBytes ?? CountBytes;
+			Delimiter = delimiter ?? cultureInfo.TextInfo.ListSeparator;
+			DetectColumnCountChanges = detectColumnCountChanges ?? DetectColumnCountChanges;
+			DynamicPropertySort = dynamicPropertySort ?? DynamicPropertySort;
+			Encoding = encoding ?? Encoding;
+			Escape = escape ?? Escape;
+			GetConstructor = getConstructor ?? GetConstructor;
+			GetDynamicPropertyName = getDynamicPropertyName ?? GetDynamicPropertyName;
+			HasHeaderRecord = hasHeaderRecord ?? HasHeaderRecord;
+			HeaderValidated = headerValidated ?? HeaderValidated;
+			IgnoreBlankLines = ignoreBlankLines ?? IgnoreBlankLines;
+			IgnoreReferences = ignoreReferences ?? IgnoreReferences;
+			IncludePrivateMembers = includePrivateMembers ?? IncludePrivateMembers;
+			InjectionCharacters = injectionCharacters ?? InjectionCharacters;
+			InjectionEscapeCharacter = injectionEscapeCharacter ?? InjectionEscapeCharacter;
+			LeaveOpen = leaveOpen ?? LeaveOpen;
+			LineBreakInQuotedFieldIsBadData = lineBreakInQuotedFieldIsBadData ?? LineBreakInQuotedFieldIsBadData;
+			MemberTypes = memberTypes ?? MemberTypes;
+			MissingFieldFound = missingFieldFound ?? MissingFieldFound;
+			Mode = mode ?? Mode;
+			NewLine = newLine ?? NewLine;
+			PrepareHeaderForMatch = prepareHeaderForMatch ?? PrepareHeaderForMatch;
+			Quote = quote ?? Quote;
+			ReadingExceptionOccurred = readingExceptionOccurred ?? ReadingExceptionOccurred;
+			ReferenceHeaderPrefix = referenceHeaderPrefix ?? ReferenceHeaderPrefix;
+			SanitizeForInjection = sanitizeForInjection ?? SanitizeForInjection;
+			ShouldQuote = shouldQuote ?? ShouldQuote;
+			ShouldSkipRecord = shouldSkipRecord ?? ShouldSkipRecord;
+			ShouldUseConstructorParameters = shouldUseConstructorParameters ?? ShouldUseConstructorParameters;
+			TrimOptions = trimOptions ?? TrimOptions;
+			UseNewObjectForNullReferenceMembers = useNewObjectForNullReferenceMembers ?? UseNewObjectForNullReferenceMembers;
+			WhiteSpaceChars = whiteSpaceChars ?? WhiteSpaceChars;
 		}
 	}
 }
