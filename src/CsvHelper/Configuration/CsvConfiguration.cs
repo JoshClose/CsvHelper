@@ -335,7 +335,7 @@ namespace CsvHelper.Configuration
 			CacheFields = cacheFields;
 			Comment = comment;
 			CountBytes = countBytes;
-			Delimiter = delimiter;
+			Delimiter = delimiter ?? cultureInfo.TextInfo.ListSeparator;
 			DetectColumnCountChanges = detectColumnCountChanges;
 			DynamicPropertySort = dynamicPropertySort;
 			Encoding = encoding ?? Encoding.UTF8;
