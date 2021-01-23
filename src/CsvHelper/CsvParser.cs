@@ -169,8 +169,6 @@ namespace CsvHelper
 			row++;
 			rawRow++;
 
-			var result = ReadLineResult.None;
-
 			while (true)
 			{
 				if (bufferPosition >= charsRead)
@@ -181,9 +179,7 @@ namespace CsvHelper
 					}
 				}
 
-				result = ReadLine();
-
-				if (result == ReadLineResult.Complete)
+				if (ReadLine() == ReadLineResult.Complete)
 				{
 					return true;
 				}
@@ -200,8 +196,6 @@ namespace CsvHelper
 			row++;
 			rawRow++;
 
-			var result = ReadLineResult.None;
-
 			while (true)
 			{
 				if (bufferPosition >= charsRead)
@@ -212,9 +206,7 @@ namespace CsvHelper
 					}
 				}
 
-				result = ReadLine();
-
-				if (result == ReadLineResult.Complete)
+				if (ReadLine() == ReadLineResult.Complete)
 				{
 					return true;
 				}
@@ -231,6 +223,7 @@ namespace CsvHelper
 				if (state != ParserState.None)
 				{
 					// Continue the state before doing anything else.
+					c = buffer[bufferPosition - 1];
 					ReadLineResult result;
 					switch (state)
 					{
@@ -241,11 +234,9 @@ namespace CsvHelper
 							result = ReadDelimiter(ref c);
 							break;
 						case ParserState.LineEnding:
-							result = ReadLineEnding(ref c);
-							break;
+							return ReadLineEnding(ref c);
 						case ParserState.NewLine:
-							result = ReadNewLine(ref c);
-							break;
+							return ReadNewLine(ref c);
 						default:
 							result = ReadLineResult.None;
 							break;
@@ -438,7 +429,7 @@ namespace CsvHelper
 		{
 			var lessChars = 1;
 
-			if (c == '\r' && mode == ParserMode.RFC4180)
+			if (c == '\r')
 			{
 				if (bufferPosition >= charsRead)
 				{
@@ -573,6 +564,8 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool FillBuffer()
 		{
+			// Don't forget the async method below.
+
 			if (rowStartPosition == 0 && charCount > 0 && charsRead == bufferSize)
 			{
 				// The record is longer than the memory buffer. Increase the buffer.
