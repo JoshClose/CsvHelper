@@ -1,5 +1,29 @@
 # Change Log
 
+### 21.2.0
+
+#### Features
+
+- Process boolean and null type converter options when writing.
+
+### 21.1.2
+
+#### Bug Fixes
+
+- Fixed parsing issue with state not being reset when buffer is filled in the middle of a state.
+
+### 21.1.1
+
+#### Bug Fixes
+
+- Fixed parsing issue with buffer ending in the middle of a line ending.
+
+### 21.1.0
+
+#### Features
+
+- Added ParserMode.NoEscape. This will ignore quotes and escape characters.
+
 ### 21.0.6
 
 #### Bug Fixes
