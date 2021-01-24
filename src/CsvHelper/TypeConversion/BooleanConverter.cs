@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
+using System.Linq;
 using CsvHelper.Configuration;
 
 namespace CsvHelper.TypeConversion
@@ -12,13 +13,7 @@ namespace CsvHelper.TypeConversion
 	/// </summary>
 	public class BooleanConverter : DefaultTypeConverter
 	{
-		/// <summary>
-		/// Converts the string to an object.
-		/// </summary>
-		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
-		/// <returns>The object created from the string.</returns>
+		/// <inheritdoc/>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			if (bool.TryParse(text, out var b))
@@ -56,6 +51,22 @@ namespace CsvHelper.TypeConversion
 			}
 
 			return base.ConvertFromString(text, row, memberMapData);
+		}
+
+		/// <inheritdoc/>
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+		{
+			var b = value as bool?;
+			if (b == true && memberMapData.TypeConverterOptions.BooleanTrueValues.Count > 0)
+			{
+				return memberMapData.TypeConverterOptions.BooleanTrueValues.First();
+			}
+			else if (b == false && memberMapData.TypeConverterOptions.BooleanFalseValues.Count > 0)
+			{
+				return memberMapData.TypeConverterOptions.BooleanFalseValues.First();
+			}
+
+			return base.ConvertToString(value, row, memberMapData);
 		}
 	}
 }
