@@ -234,15 +234,28 @@ namespace CsvHelper
 							result = ReadDelimiter(ref c);
 							break;
 						case ParserState.LineEnding:
-							return ReadLineEnding(ref c);
-						case ParserState.NewLine:
-							return ReadNewLine(ref c);
-						default:
-							result = ReadLineResult.None;
+							result = ReadLineEnding(ref c);
 							break;
+						case ParserState.NewLine:
+							result = ReadNewLine(ref c);
+							break;
+						default:
+							throw new InvalidOperationException($"Parser state '{state}' is not valid.");
 					}
 
-					if (result == ReadLineResult.Incomplete)
+					var shouldReturn =
+						// Buffer needs to be filled.
+						result == ReadLineResult.Incomplete ||
+						// Done reading row.
+						result == ReadLineResult.Complete && (state == ParserState.LineEnding || state == ParserState.NewLine)
+					;
+
+					if (result == ReadLineResult.Complete)
+					{
+						state = ParserState.None;
+					}
+
+					if (shouldReturn)
 					{
 						return result;
 					}
