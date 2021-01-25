@@ -149,13 +149,13 @@ namespace CsvHelper
 			newLine = configuration.NewLine;
 			newLineFirstChar = configuration.NewLine[0];
 			mode = configuration.Mode;
-			processFieldBufferSize = 1024;
+			processFieldBufferSize = configuration.ProcessFieldBufferSize;
 			quote = configuration.Quote;
 			whiteSpaceChars = configuration.WhiteSpaceChars;
 			trimOptions = configuration.TrimOptions;
 
-			buffer = ArrayPool<char>.Shared.Rent(bufferSize);
-			processFieldBuffer = ArrayPool<char>.Shared.Rent(processFieldBufferSize);
+			buffer = new char[bufferSize];
+			processFieldBuffer = new char[processFieldBufferSize];
 			fields = new Field[128];
 		}
 
@@ -583,9 +583,8 @@ namespace CsvHelper
 			{
 				// The record is longer than the memory buffer. Increase the buffer.
 				bufferSize *= 2;
-				var tempBuffer = ArrayPool<char>.Shared.Rent(bufferSize);
+				var tempBuffer = new char[bufferSize];
 				buffer.CopyTo(tempBuffer, 0);
-				ArrayPool<char>.Shared.Return(buffer);
 				buffer = tempBuffer;
 			}
 
@@ -615,9 +614,8 @@ namespace CsvHelper
 			{
 				// The record is longer than the memory buffer. Increase the buffer.
 				bufferSize *= 2;
-				var tempBuffer = ArrayPool<char>.Shared.Rent(bufferSize);
+				var tempBuffer = new char[bufferSize];
 				buffer.CopyTo(tempBuffer, 0);
-				ArrayPool<char>.Shared.Return(buffer);
 				buffer = tempBuffer;
 			}
 
@@ -757,9 +755,12 @@ namespace CsvHelper
 
 			if (newLength > processFieldBuffer.Length)
 			{
-				processFieldBufferSize *= 2;
-				ArrayPool<char>.Shared.Return(processFieldBuffer);
-				processFieldBuffer = ArrayPool<char>.Shared.Rent(processFieldBufferSize);
+				while (newLength > processFieldBufferSize)
+				{
+					processFieldBufferSize *= 2;
+				}
+
+				processFieldBuffer = new char[processFieldBufferSize];
 			}
 
 			// Remove escapes.
@@ -877,8 +878,6 @@ namespace CsvHelper
 			if (disposing)
 			{
 				// Dispose managed state (managed objects)
-				ArrayPool<char>.Shared.Return(buffer);
-				ArrayPool<char>.Shared.Return(processFieldBuffer);
 
 				if (!leaveOpen)
 				{

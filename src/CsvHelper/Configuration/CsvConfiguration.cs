@@ -170,6 +170,9 @@ namespace CsvHelper.Configuration
 		public virtual PrepareHeaderForMatch PrepareHeaderForMatch { get; init; } = ConfigurationFunctions.PrepareHeaderForMatch;
 
 		/// <inheritdoc/>
+		public virtual int ProcessFieldBufferSize { get; init; } = 1024;
+
+		/// <inheritdoc/>
 		public virtual char Quote
 		{
 			get { return quote; }
@@ -276,6 +279,7 @@ namespace CsvHelper.Configuration
 		/// <param name="mode">The parsing mode.</param>
 		/// <param name="newLine">The newline string to use. Default is <see cref="Environment.NewLine"/>. When writing, this value is always used. When reading, this value is only used if explicitly set. If not set, the parser uses one of \r\n, \r, or \n.</param>
 		/// <param name="prepareHeaderForMatch">Prepares the header field for matching against a member name. The header field and the member name are both ran through this function. You should do things like trimming, removing whitespace, removing underscores, and making casing changes to ignore case. Arguments: (header, fieldIndex)</param>
+		/// <param name="processFieldBufferSize">Size of the buffer to process a field. Should be larger than the largest field.</param>
 		/// <param name="quote">The character used to quote fields. Default is '"'.</param>
 		/// <param name="readingExceptionOccurred">The function that is called when a reading exception occurs. The default function will re-throw the given exception. If you want to ignore reading exceptions, you can supply your own function to do other things like logging the issue. Arguments: (exception)</param>
 		/// <param name="referenceHeaderPrefix">A callback that will return the prefix for a reference header. Arguments: (memberType, memberName)</param>
@@ -315,6 +319,7 @@ namespace CsvHelper.Configuration
 			ParserMode? mode = null,
 			string newLine = null,
 			PrepareHeaderForMatch prepareHeaderForMatch = null,
+			int? processFieldBufferSize = null,
 			char? quote = null,
 			ReadingExceptionOccurred readingExceptionOccurred = null,
 			ReferenceHeaderPrefix referenceHeaderPrefix = null,
@@ -355,6 +360,7 @@ namespace CsvHelper.Configuration
 			Mode = mode ?? Mode;
 			NewLine = newLine ?? NewLine;
 			PrepareHeaderForMatch = prepareHeaderForMatch ?? PrepareHeaderForMatch;
+			ProcessFieldBufferSize = processFieldBufferSize ?? ProcessFieldBufferSize;
 			Quote = quote ?? Quote;
 			ReadingExceptionOccurred = readingExceptionOccurred ?? ReadingExceptionOccurred;
 			ReferenceHeaderPrefix = referenceHeaderPrefix ?? ReferenceHeaderPrefix;
