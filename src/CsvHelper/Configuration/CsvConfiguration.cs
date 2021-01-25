@@ -249,7 +249,14 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
+		/// Use property initializers instead of this constructor if your environment allows it.
 		/// Initializes a new instance of the <see cref="CsvConfiguration"/> class.
+		/// Any arguments passed in as null will use their default value instead.
+		/// If you need to set a callback like <see cref="MissingFieldFound"/> to null, set it to an empty
+		/// function instead.
+		/// <code>
+		///		missingFieldFound: () => { }
+		/// </code>
 		/// </summary>
 		/// <param name="cultureInfo">The the culture info used to read and write CSV files.</param>
 		/// <param name="allowComments">A value indicating if comments are allowed. <c>true</c> to allow commented out lines, otherwise <c>false</c>.</param>
