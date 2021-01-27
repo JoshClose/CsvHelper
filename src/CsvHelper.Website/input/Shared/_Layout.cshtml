@@ -20,25 +20,42 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>CsvHelper</title>
+	<title>@Metadata.Get("title") | CsvHelper</title>
+
 	<environment include="Development">
 		<link rel="stylesheet" href="~/input/lib/bulma/bulma.css" />
 	</environment>
 	<environment exclude="Development">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.1/css/bulma.min.css" />
 	</environment>
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/default.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/vs.min.css" />
 	<link rel="stylesheet" href="~/styles/index.css" />
+
 	<script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
 </head>
 <body>
 	<partial name="_Header" />
 	<div class="body">
-		@RenderBody()
+		<div class="container is-fluid">
+			<div class="columns">
+				<div class="column container-right">
+					<partial name="_SideBar" />
+				</div>
+				<div class="column container-content content">
+					@RenderBody()
+				</div>
+			</div>
+		</div>
 	</div>
 	<footer class="footer">
 		<div class="has-text-centered">&copy; 2009-2021 Josh Close</div>
 	</footer>
 
+	<script>
+		hljs.initHighlightingOnLoad();
+	</script>
 	@RenderSection("Scripts", required: false)
 </body>
 </html>

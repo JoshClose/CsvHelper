@@ -1,0 +1,8 @@
+﻿@inherits StatiqRazorPage<TocItem>
+<li>
+	<a href="@Model.Link">@Model.Title</a>
+	@if (Model.Children.Any())
+	{
+		<partial name="_TocItems" for="@Model.Children" />
+	}
+</li>

@@ -1,0 +1,7 @@
+﻿@inherits StatiqRazorPage<TocItem[]>
+<ul>
+	@foreach (var item in Model)
+	{
+		<partial name="_TocItem" for="@item" />
+	}
+</ul>
