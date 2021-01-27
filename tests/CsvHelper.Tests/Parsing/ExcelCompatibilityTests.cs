@@ -119,12 +119,5 @@ namespace CsvHelper.Tests
 				Assert.AreEqual("5", parser[2]);
 			}
 		}
-
-		private class Simple
-		{
-			public int Id { get; set; }
-
-			public string Name { get; set; }
-		}
 	}
 }
