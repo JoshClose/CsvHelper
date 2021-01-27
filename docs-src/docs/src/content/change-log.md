@@ -1,5 +1,20 @@
 # Change Log
 
+### 21.3.0
+
+#### Features
+
+- Added back Excel compatibility for bad data fallback.
+  1. If a field doesn't start with a `Quote`, read until a `Delimiter` or `NewLine` is found.
+  1. If in quoted field and a `Quote` is found that isn't preceded by an `Escape`, read until a `Delimiter or `NewLine` is found.
+  1. `TrimOptions.Trim` will be applied before these rules.
+
+### 21.2.1
+
+#### Bug Fixes
+
+- Fixed issue with processed field buffer not being large enough on resize.
+
 ### 21.2.0
 
 #### Features
