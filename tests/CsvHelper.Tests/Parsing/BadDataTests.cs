@@ -26,22 +26,12 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				writer.Write(" a\"bc\",d\r\n");        //   a"bc",d\r\n
-				writer.Write("\"e\"\"f\"g \" ,h\r\n"); // "e""f"g " ,h\r\n
-				writer.Write("\"i\"\"j\",k\r\n");      // "i""j",k\r\n
 				writer.Flush();
 				stream.Position = 0;
 
 				parser.Read();
 				var record = parser.Record;
-
-				Assert.IsNotNull(rawRecord);
 				Assert.AreEqual(" a\"bc\",d\r\n", rawRecord);
-
-				rawRecord = null;
-				parser.Read();
-				record = parser.Record;
-				Assert.IsNotNull(rawRecord);
-				Assert.AreEqual("\"e\"\"f\"g \" ,h\r\n\"i\"\"j\",k\r\n", rawRecord);
 
 				rawRecord = null;
 				parser.Read();

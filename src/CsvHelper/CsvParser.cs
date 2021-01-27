@@ -64,6 +64,8 @@ namespace CsvHelper
 		private ParserState state;
 		private int delimiterPosition = 1;
 		private int newLinePosition = 1;
+		private bool fieldIsBadData;
+		private bool fieldIsQuoted;
 
 		/// <inheritdoc/>
 		public long CharCount => charCount;
@@ -227,6 +229,9 @@ namespace CsvHelper
 					ReadLineResult result;
 					switch (state)
 					{
+						case ParserState.Spaces:
+							result = ReadSpaces(ref c);
+							break;
 						case ParserState.BlankLine:
 							result = ReadBlankLine(ref c);
 							break;
@@ -270,7 +275,8 @@ namespace CsvHelper
 					byteCount += encoding.GetByteCount(new char[] { c });
 				}
 
-				if (allowComments && c == comment || ignoreBlankLines && rowStartPosition == bufferPosition - 1 && ((c == '\r' || c == '\n') && !isNewLineSet || c == newLineFirstChar && isNewLineSet))
+				var isFirstCharOfRow = rowStartPosition == bufferPosition - 1;
+				if (isFirstCharOfRow && (allowComments && c == comment || ignoreBlankLines && ((c == '\r' || c == '\n') && !isNewLineSet || c == newLineFirstChar && isNewLineSet)))
 				{
 					state = ParserState.BlankLine;
 					var result = ReadBlankLine(ref c);
@@ -288,21 +294,60 @@ namespace CsvHelper
 
 				if (mode == ParserMode.RFC4180)
 				{
-					if (c == quote || c == escape)
+					var isFirstCharOfField = fieldStartPosition == bufferPosition - 1;
+					if (isFirstCharOfField)
 					{
-						quoteCount++;
-						inQuotes = !inQuotes;
-					}
-
-					if (inQuotes)
-					{
-						if (c == '\r' || c == '\n' && cPrev != '\r')
+						if ((trimOptions & TrimOptions.Trim) == TrimOptions.Trim && ArrayHelper.Contains(whiteSpaceChars, c))
 						{
-							rawRow++;
+							// Skip through whitespace. This is so we can process the field later.
+							var result = ReadSpaces(ref c);
+							if (result == ReadLineResult.Incomplete)
+							{
+								return result;
+							}
 						}
 
-						// We don't care about anything else if we're in quotes.
-						continue;
+						// Fields are only quoted if the first character is a quote.
+						// If not, read until a delimiter or newline is found.
+						fieldIsQuoted = c == quote;
+					}
+
+					if (fieldIsQuoted)
+					{
+						if (c == quote || c == escape)
+						{
+							quoteCount++;
+
+							if (!inQuotes && !isFirstCharOfField && cPrev != escape)
+							{
+								fieldIsBadData = true;
+							}
+							else if (!fieldIsBadData)
+							{
+								// Don't process field quotes after bad data has been detected.
+								inQuotes = !inQuotes;
+							}
+						}
+
+						if (inQuotes)
+						{
+							if (c == '\r' || c == '\n' && cPrev != '\r')
+							{
+								rawRow++;
+							}
+
+							// We don't care about anything else if we're in quotes.
+							continue;
+						}
+					}
+					else
+					{
+						if (c == quote || c == escape)
+						{
+							// If the field isn't quoted but contains a
+							// quote or escape, it's has bad data.
+							fieldIsBadData = true;
+						}
 					}
 				}
 				else if (mode == ParserMode.Escape)
@@ -362,6 +407,23 @@ namespace CsvHelper
 			}
 
 			return ReadLineResult.Incomplete;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private ReadLineResult ReadSpaces(ref char c)
+		{
+			while (ArrayHelper.Contains(whiteSpaceChars, c))
+			{
+				if (bufferPosition >= charsRead)
+				{
+					return ReadLineResult.Incomplete;
+				}
+
+				c = buffer[bufferPosition];
+				bufferPosition++;
+			}
+
+			return ReadLineResult.Complete;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -433,6 +495,7 @@ namespace CsvHelper
 
 			fieldStartPosition = bufferPosition;
 			delimiterPosition = 1;
+			fieldIsBadData = false;
 
 			return ReadLineResult.Complete;
 		}
@@ -467,6 +530,8 @@ namespace CsvHelper
 			{
 				AddField(fieldStartPosition, bufferPosition - fieldStartPosition - lessChars);
 			}
+
+			fieldIsBadData = false;
 
 			return ReadLineResult.Complete;
 		}
@@ -509,6 +574,7 @@ namespace CsvHelper
 
 			fieldStartPosition = bufferPosition;
 			newLinePosition = 1;
+			fieldIsBadData = false;
 
 			return ReadLineResult.Complete;
 		}
@@ -569,6 +635,7 @@ namespace CsvHelper
 			field.Start = start - rowStartPosition;
 			field.Length = length;
 			field.QuoteCount = quoteCount;
+			field.IsBad = fieldIsBadData;
 
 			fieldsPosition++;
 			quoteCount = 0;
@@ -656,7 +723,9 @@ namespace CsvHelper
 			switch (mode)
 			{
 				case ParserMode.RFC4180:
-					processedField = ProcessRFC4180Field(start, length, quoteCount);
+					processedField = field.IsBad
+						? ProcessRFC4180BadField(start, length)
+						: ProcessRFC4180Field(start, length, quoteCount);
 					break;
 				case ParserMode.Escape:
 					processedField = ProcessEscapeField(start, length);
@@ -680,7 +749,7 @@ namespace CsvHelper
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected ProcessedField ProcessRFC4180Field(in int start, in int length, in int quoteCount)
+		protected ProcessedField ProcessRFC4180Field(int start, int length, int quoteCount)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -703,31 +772,10 @@ namespace CsvHelper
 				};
 			}
 
-			// Remove the quotes from the ends.
-			if (buffer[newStart] == quote && buffer[newStart + newLength - 1] == quote && newLength > 1)
+			if (buffer[newStart] != quote || buffer[newStart + newLength - 1] != quote || newLength == 1 && buffer[newStart] == quote)
 			{
-				newStart += 1;
-				newLength -= 2;
-			}
-			else
-			{
-				badDataFound?.Invoke(Context);
-
-				// If BadDataFound doesn't throw, we don't want to remove the esacpe characters.
-				// Field isn't quoted properly, so leave it as is.
-				// No more processing needed.
-
-				return new ProcessedField
-				{
-					Buffer = buffer,
-					Start = newStart,
-					Length = newLength,
-				};
-			}
-
-			if ((trimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
-			{
-				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+				// If the field doesn't have quotes on the ends, or the field is a single quote char, it's bad data.
+				return ProcessRFC4180BadField(start, length);
 			}
 
 			if (lineBreakInQuotedFieldIsBadData)
@@ -736,9 +784,18 @@ namespace CsvHelper
 				{
 					if (buffer[i] == '\r' || buffer[i] == '\n')
 					{
-						badDataFound?.Invoke(Context);
+						return ProcessRFC4180BadField(start, length);
 					}
 				}
+			}
+
+			// Remove the quotes from the ends.
+			newStart += 1;
+			newLength -= 2;
+
+			if ((trimOptions & TrimOptions.InsideQuotes) == TrimOptions.InsideQuotes)
+			{
+				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
 			}
 
 			if (quoteCount == 2)
@@ -755,6 +812,7 @@ namespace CsvHelper
 
 			if (newLength > processFieldBuffer.Length)
 			{
+				// Make sure the field processing buffer is large engough.
 				while (newLength > processFieldBufferSize)
 				{
 					processFieldBufferSize *= 2;
@@ -772,17 +830,12 @@ namespace CsvHelper
 
 				if (inEscape)
 				{
-					if (c != quote)
-					{
-						// Can only escape "s in RFC4180 mode.
-						badDataFound?.Invoke(Context);
-					}
-
 					inEscape = false;
 				}
 				else if (c == escape)
 				{
 					inEscape = true;
+
 					continue;
 				}
 
@@ -800,7 +853,96 @@ namespace CsvHelper
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected ProcessedField ProcessEscapeField(in int start, in int length)
+		protected ProcessedField ProcessRFC4180BadField(int start, int length)
+		{
+			// If field is already known to be bad, different rules can be applied.
+
+			badDataFound?.Invoke(Context);
+
+			var newStart = start;
+			var newLength = length;
+
+			if ((trimOptions & TrimOptions.Trim) == TrimOptions.Trim)
+			{
+				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+			}
+
+			if (buffer[newStart] != quote)
+			{
+				// If the field doesn't start with a quote, don't process it.
+				return new ProcessedField
+				{
+					Buffer = buffer,
+					Start = newStart,
+					Length = newLength,
+				};
+			}
+
+			if (newLength > processFieldBuffer.Length)
+			{
+				// Make sure the field processing buffer is large engough.
+				while (newLength > processFieldBufferSize)
+				{
+					processFieldBufferSize *= 2;
+				}
+
+				processFieldBuffer = new char[processFieldBufferSize];
+			}
+
+			// Remove escapes until the last quote is found.
+			var inEscape = false;
+			var position = 0;
+			var c = '\0';
+			var doneProcessing = false;
+			for (var i = newStart + 1; i < newStart + newLength; i++)
+			{
+				var cPrev = c;
+				c = buffer[i];
+
+				// a,"b",c
+				// a,"b "" c",d
+				// a,"b "c d",e
+
+				if (inEscape)
+				{
+					inEscape = false;
+
+					if (c == quote)
+					{
+						// Ignore the quote after an escape.
+						continue;
+					}
+					else if (cPrev == quote)
+					{
+						// The escape and quote are the same character.
+						// This is the end of the field.
+						// Don't process escapes for the rest of the field.
+						doneProcessing = true;
+					}
+				}
+
+				if (c == escape && !doneProcessing)
+				{
+					inEscape = true;
+
+					continue;
+				}
+
+				processFieldBuffer[position] = c;
+				position++;
+			}
+
+			return new ProcessedField
+			{
+				Buffer = processFieldBuffer,
+				Start = 0,
+				Length = position,
+			};
+		}
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected ProcessedField ProcessEscapeField(int start, int length)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -808,6 +950,17 @@ namespace CsvHelper
 			if ((trimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 			{
 				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
+			}
+
+			if (newLength > processFieldBuffer.Length)
+			{
+				// Make sure the field processing buffer is large engough.
+				while (newLength > processFieldBufferSize)
+				{
+					processFieldBufferSize *= 2;
+				}
+
+				processFieldBuffer = new char[processFieldBufferSize];
 			}
 
 			// Remove escapes.
@@ -841,7 +994,7 @@ namespace CsvHelper
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected ProcessedField ProcessNoEscapeField(in int start, in int length)
+		protected ProcessedField ProcessNoEscapeField(int start, int length)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -917,20 +1070,21 @@ namespace CsvHelper
 		private enum ReadLineResult
 		{
 			None = 0,
-			Complete = 1,
-			Incomplete = 2,
+			Complete,
+			Incomplete,
 		}
 
 		private enum ParserState
 		{
 			None = 0,
-			BlankLine = 1,
-			Delimiter = 2,
-			LineEnding = 3,
-			NewLine = 4,
+			Spaces,
+			BlankLine,
+			Delimiter,
+			LineEnding,
+			NewLine,
 		}
 
-		[DebuggerDisplay("Start = {Start}, Length = {Length}, QuoteCount = {QuoteCount}")]
+		[DebuggerDisplay("Start = {Start}, Length = {Length}, QuoteCount = {QuoteCount}, IsBad = {IsBad}")]
 		private struct Field
 		{
 			/// <summary>
@@ -942,6 +1096,8 @@ namespace CsvHelper
 			public int Length;
 
 			public int QuoteCount;
+
+			public bool IsBad;
 		}
 	}
 }

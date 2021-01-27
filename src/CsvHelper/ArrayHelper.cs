@@ -17,7 +17,8 @@ namespace CsvHelper
 	public static class ArrayHelper
     {
 		/// <summary>
-		/// Trims the characters off the start and end of the buffer.
+		/// Trims the characters off the start and end of the buffer
+		/// by updating the start and length arguments.
 		/// </summary>
 		/// <param name="buffer">The buffer.</param>
 		/// <param name="start">The start.</param>

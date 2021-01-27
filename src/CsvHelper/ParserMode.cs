@@ -20,14 +20,14 @@ namespace CsvHelper
 		/// Parses using RFC 4180 format (default).
 		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
 		/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.
-		/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceeded by <see cref="CsvConfiguration.Escape"/>.
+		/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
 		/// </summary>
 		RFC4180 = 0,
 
 		/// <summary>
 		/// Parses using escapes.
 		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.NewLine"/>,
-		/// or <see cref="CsvConfiguration.Escape"/>, it is preceeded by <see cref="CsvConfiguration.Escape"/>.
+		/// or <see cref="CsvConfiguration.Escape"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
 		/// </summary>
 		Escape = 1,
 

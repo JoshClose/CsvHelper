@@ -50,7 +50,7 @@ namespace CsvHelper.Tests.Parsing
 				Escape = '|',
 				TrimOptions = TrimOptions.Trim,
 			};
-			using (var reader = new StringReader(" \"|\"a|\"\" \r\n"))
+			using (var reader = new StringReader(" \"|\"a|\"\" \r\n")) // ` "|"a|"" \r\n`
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
