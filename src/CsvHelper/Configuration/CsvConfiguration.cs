@@ -255,7 +255,7 @@ namespace CsvHelper.Configuration
 		/// If you need to set a callback like <see cref="MissingFieldFound"/> to null, set it to an empty
 		/// function instead.
 		/// <code>
-		///		missingFieldFound: () => { }
+		///		missingFieldFound: (_, _, _) => { }
 		/// </code>
 		/// </summary>
 		/// <param name="cultureInfo">The the culture info used to read and write CSV files.</param>
