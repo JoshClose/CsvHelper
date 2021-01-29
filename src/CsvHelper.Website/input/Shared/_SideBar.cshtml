@@ -1,9 +1,7 @@
 ﻿@{ 
-	DocumentList<IDocument> raw = null;
-	var items = new List<TocItem>();
-	if (Metadata.ContainsKey("toc"))
-	{
-		raw = Metadata.GetDocumentList("toc");
-	}
+	var items = TocItem.Create(Metadata.GetList<IMetadataDictionary>("toc"));
 }
-@*<partial name="_TocItems" for="@items" />*@
+
+<br /><br />
+
+<partial name="_TocItems" for="@items" />
