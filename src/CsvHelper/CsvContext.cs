@@ -178,7 +178,7 @@ namespace CsvHelper
 		public virtual ClassMap<T> AutoMap<T>()
 		{
 			var map = ObjectResolver.Current.Resolve<DefaultClassMap<T>>();
-			map.AutoMap(Configuration);
+			map.AutoMap(this);
 			Maps.Add(map);
 
 			return map;
@@ -193,7 +193,7 @@ namespace CsvHelper
 		{
 			var mapType = typeof(DefaultClassMap<>).MakeGenericType(type);
 			var map = (ClassMap)ObjectResolver.Current.Resolve(mapType);
-			map.AutoMap(Configuration);
+			map.AutoMap(this);
 			Maps.Add(map);
 
 			return map;

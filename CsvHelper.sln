@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		CsvHelper.sln.licenseheader = CsvHelper.sln.licenseheader
 		GitVersion.yml = GitVersion.yml
 		global.json = global.json
 		README.markdown = README.markdown

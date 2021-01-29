@@ -7,30 +7,30 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CsvHelper.Tests.Writing
+namespace CsvHelper.Tests.AutoMapping
 {
 	[TestClass]
-    public class WriteBufferTests
+    public class ContextTests
     {
 		[TestMethod]
-        public void Write_FieldThatIsLargerThenTwiceTheBuffer_Writes()
+        public void AutoMap_UsesContext()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				BufferSize = 16
-			};
-			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, config))
-			{
-				var random = new Random();
-				csv.WriteField("one");
-				csv.WriteField(new string(Enumerable.Range(0, 1000).Select(i => (char)random.Next((int)'a', (int)'z' + 1)).ToArray()));
-			}
+			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
+			context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("Bar");
+
+			var map = context.AutoMap<Foo>();
+
+			Assert.IsTrue(map.MemberMaps.Find<Foo>(x => x.Name).Data.TypeConverterOptions.NullValues.Contains("Bar"));
+		}
+
+		private class Foo
+		{
+			public int Id { get; set; }
+			public string Name { get; set; }
 		}
     }
 }
