@@ -25,7 +25,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,one\a\b");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.RFC4180,
+				Mode = CsvMode.RFC4180,
 				NewLine = "\a\b",
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -51,7 +51,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,one\a");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.RFC4180,
+				Mode = CsvMode.RFC4180,
 				NewLine = "\a",
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -77,7 +77,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,one");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.RFC4180,
+				Mode = CsvMode.RFC4180,
 				NewLine = "\a\b",
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,one\a\b");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.Escape,
+				Mode = CsvMode.Escape,
 				NewLine = "\a\b",
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -129,7 +129,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,one\a");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.Escape,
+				Mode = CsvMode.Escape,
 				NewLine = "\a",
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -155,7 +155,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("1,one");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.Escape,
+				Mode = CsvMode.Escape,
 				NewLine = "\a\b",
 			};
 			using (var reader = new StringReader(s.ToString()))

@@ -45,9 +45,10 @@ namespace CsvHelper.Configuration
 		bool IsNewLineSet { get; }
 
 		/// <summary>
-		/// The parsing mode.
+		/// The mode.
+		/// See <see cref="CsvMode"/> for more details.
 		/// </summary>
-		ParserMode Mode { get; }
+		CsvMode Mode { get; }
 
 		/// <summary>
 		/// Gets the size of the buffer
@@ -55,6 +56,12 @@ namespace CsvHelper.Configuration
 		/// Default is 0x1000.
 		/// </summary>
 		int BufferSize { get; }
+
+		/// <summary>
+		/// The size of the buffer used when processing fields.
+		/// Default is 1024.
+		/// </summary>
+		int ProcessFieldBufferSize { get; }
 
 		/// <summary>
 		/// Gets a value indicating whether the number of bytes should

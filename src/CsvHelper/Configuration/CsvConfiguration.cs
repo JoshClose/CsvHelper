@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -18,11 +19,6 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	{
-		private string delimiter;
-		private char escape = '"';
-		private char quote = '"';
-		private string quoteString = "\"";
-		private string doubleQuoteString = "\"\"";
 		private string newLine = "\r\n";
 
 		/// <inheritdoc/>
@@ -47,35 +43,10 @@ namespace CsvHelper.Configuration
 		public virtual CultureInfo CultureInfo { get; protected set; }
 
 		/// <inheritdoc/>
-		public virtual string Delimiter
-		{
-			get { return delimiter; }
-			init
-			{
-				if (value == "\n")
-				{
-					throw new ConfigurationException("Newline is not a valid delimiter.");
-				}
-
-				if (value == "\r")
-				{
-					throw new ConfigurationException("Carriage return is not a valid delimiter.");
-				}
-
-				if (value == Convert.ToString(quote))
-				{
-					throw new ConfigurationException("You can not use the quote as a delimiter.");
-				}
-
-				delimiter = value;
-			}
-		}
+		public virtual string Delimiter { get; init; }
 
 		/// <inheritdoc/>
 		public virtual bool DetectColumnCountChanges { get; init; }
-
-		/// <inheritdoc/>
-		public virtual string DoubleQuoteString => doubleQuoteString;
 
 		/// <inheritdoc/>
 		public virtual IComparer<string> DynamicPropertySort { get; init; }
@@ -84,31 +55,7 @@ namespace CsvHelper.Configuration
 		public virtual Encoding Encoding { get; init; } = Encoding.UTF8;
 
 		/// <inheritdoc/>
-		public virtual char Escape
-		{
-			get { return escape; }
-			init
-			{
-				if (value == '\n')
-				{
-					throw new ConfigurationException("Newline is not a valid escape.");
-				}
-
-				if (value == '\r')
-				{
-					throw new ConfigurationException("Carriage return is not a valid escape.");
-				}
-
-				if (value.ToString() == delimiter)
-				{
-					throw new ConfigurationException("You can not use the delimiter as an escape.");
-				}
-
-				escape = value;
-
-				doubleQuoteString = escape + quoteString;
-			}
-		}
+		public virtual char Escape { get; init; } = '"';
 
 		/// <inheritdoc/>
 		public virtual GetConstructor GetConstructor { get; init; } = ConfigurationFunctions.GetConstructor;
@@ -153,13 +100,13 @@ namespace CsvHelper.Configuration
 		public virtual MissingFieldFound MissingFieldFound { get; init; } = ConfigurationFunctions.MissingFieldFound;
 
 		/// <inheritdoc/>
-		public virtual ParserMode Mode { get; init; }
+		public virtual CsvMode Mode { get; init; }
 
 		/// <inheritdoc/>
 		public virtual string NewLine
 		{
 			get => newLine;
-			init
+			set
 			{
 				IsNewLineSet = true;
 				newLine = value;
@@ -173,40 +120,7 @@ namespace CsvHelper.Configuration
 		public virtual int ProcessFieldBufferSize { get; init; } = 1024;
 
 		/// <inheritdoc/>
-		public virtual char Quote
-		{
-			get { return quote; }
-			init
-			{
-				if (value == '\n')
-				{
-					throw new ConfigurationException("Newline is not a valid quote.");
-				}
-
-				if (value == '\r')
-				{
-					throw new ConfigurationException("Carriage return is not a valid quote.");
-				}
-
-				if (value == '\0')
-				{
-					throw new ConfigurationException("Null is not a valid quote.");
-				}
-
-				if (Convert.ToString(value) == delimiter)
-				{
-					throw new ConfigurationException("You can not use the delimiter as a quote.");
-				}
-
-				quote = value;
-
-				quoteString = Convert.ToString(value, CultureInfo);
-				doubleQuoteString = escape + quoteString;
-			}
-		}
-
-		/// <inheritdoc/>
-		public virtual string QuoteString => quoteString;
+		public virtual char Quote { get; init; } = '"';
 
 		/// <inheritdoc/>
 		public virtual ReadingExceptionOccurred ReadingExceptionOccurred { get; init; } = ConfigurationFunctions.ReadingExceptionOccurred;
@@ -245,7 +159,7 @@ namespace CsvHelper.Configuration
 		public CsvConfiguration(CultureInfo cultureInfo)
 		{
 			CultureInfo = cultureInfo;
-			delimiter = cultureInfo.TextInfo.ListSeparator;
+			Delimiter = cultureInfo.TextInfo.ListSeparator;
 		}
 
 		/// <summary>
@@ -323,7 +237,7 @@ namespace CsvHelper.Configuration
 			bool? lineBreakInQuotedFieldIsBadData = null,
 			MemberTypes? memberTypes = null,
 			MissingFieldFound missingFieldFound = null,
-			ParserMode? mode = null,
+			CsvMode? mode = null,
 			string newLine = null,
 			PrepareHeaderForMatch prepareHeaderForMatch = null,
 			int? processFieldBufferSize = null,
@@ -378,6 +292,30 @@ namespace CsvHelper.Configuration
 			TrimOptions = trimOptions ?? TrimOptions;
 			UseNewObjectForNullReferenceMembers = useNewObjectForNullReferenceMembers ?? UseNewObjectForNullReferenceMembers;
 			WhiteSpaceChars = whiteSpaceChars ?? WhiteSpaceChars;
+		}
+
+		/// <summary>
+		/// Validates the configuration.
+		/// </summary>
+		public void Validate()
+		{
+			var escape = Escape.ToString();
+			var quote = Quote.ToString();
+			var lineEndings = new[] { "\r", "\n", "\r\n" };
+
+			// Escape
+			if (escape == Delimiter) throw new ConfigurationException($"");
+			if (escape == NewLine && IsNewLineSet) throw new ConfigurationException($"");
+			if (lineEndings.Contains(Escape.ToString()) && !IsNewLineSet) throw new ConfigurationException($"");
+
+			// Quote
+			if (quote == Delimiter) throw new ConfigurationException($"");
+			if (quote == NewLine && IsNewLineSet) throw new ConfigurationException($"");
+			if (lineEndings.Contains(quote)) throw new ConfigurationException($"");
+
+			// Delimiter
+			if (Delimiter == NewLine && IsNewLineSet) throw new ConfigurationException($"");
+			if (lineEndings.Contains(Delimiter)) throw new ConfigurationException($"");
 		}
 	}
 }

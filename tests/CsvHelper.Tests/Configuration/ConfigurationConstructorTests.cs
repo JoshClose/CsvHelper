@@ -30,7 +30,6 @@ namespace CsvHelper.Tests.Configuration
 			Assert.AreEqual(CultureInfo.InvariantCulture, config.CultureInfo);
 			Assert.AreEqual(",", config.Delimiter);
 			Assert.IsFalse(config.DetectColumnCountChanges);
-			Assert.AreEqual("\"\"", config.DoubleQuoteString);
 			Assert.IsNull(config.DynamicPropertySort);
 			Assert.AreEqual(Encoding.UTF8, config.Encoding);
 			Assert.AreEqual('\"', config.Escape);
@@ -51,11 +50,10 @@ namespace CsvHelper.Tests.Configuration
 			Assert.IsFalse(config.LineBreakInQuotedFieldIsBadData);
 			Assert.AreEqual(MemberTypes.Properties, config.MemberTypes);
 			Assert.AreEqual(ConfigurationFunctions.MissingFieldFound, config.MissingFieldFound);
-			Assert.AreEqual(ParserMode.RFC4180, config.Mode);
+			Assert.AreEqual(CsvMode.RFC4180, config.Mode);
 			Assert.AreEqual("\r\n", config.NewLine);
 			Assert.AreEqual(ConfigurationFunctions.PrepareHeaderForMatch, config.PrepareHeaderForMatch);
 			Assert.AreEqual('"', config.Quote);
-			Assert.AreEqual("\"", config.QuoteString);
 			Assert.AreEqual(ConfigurationFunctions.ReadingExceptionOccurred, config.ReadingExceptionOccurred);
 			Assert.IsNull(config.ReferenceHeaderPrefix);
 			Assert.IsFalse(config.SanitizeForInjection);
@@ -109,7 +107,7 @@ namespace CsvHelper.Tests.Configuration
 				lineBreakInQuotedFieldIsBadData: true,
 				memberTypes: MemberTypes.Fields,
 				missingFieldFound: missingFieldFound,
-				mode: ParserMode.Escape,
+				mode: CsvMode.Escape,
 				newLine: "\n",
 				prepareHeaderForMatch: prepareHeaderForMatch,
 				quote: '\'',
@@ -133,7 +131,6 @@ namespace CsvHelper.Tests.Configuration
 			Assert.AreEqual(CultureInfo.CurrentCulture, config.CultureInfo);
 			Assert.AreEqual(":", config.Delimiter);
 			Assert.IsTrue(config.DetectColumnCountChanges);
-			Assert.AreEqual("\\'", config.DoubleQuoteString);
 			Assert.AreEqual(dynamicPropertySort, config.DynamicPropertySort);
 			Assert.AreEqual(Encoding.ASCII, config.Encoding);
 			Assert.AreEqual('\\', config.Escape);
@@ -151,11 +148,10 @@ namespace CsvHelper.Tests.Configuration
 			Assert.IsTrue(config.LineBreakInQuotedFieldIsBadData);
 			Assert.AreEqual(MemberTypes.Fields, config.MemberTypes);
 			Assert.AreEqual(missingFieldFound, config.MissingFieldFound);
-			Assert.AreEqual(ParserMode.Escape, config.Mode);
+			Assert.AreEqual(CsvMode.Escape, config.Mode);
 			Assert.AreEqual("\n", config.NewLine);
 			Assert.AreEqual(prepareHeaderForMatch, config.PrepareHeaderForMatch);
 			Assert.AreEqual('\'', config.Quote);
-			Assert.AreEqual("'", config.QuoteString);
 			Assert.AreEqual(readingExceptionOccurred, config.ReadingExceptionOccurred);
 			Assert.AreEqual(referenceHeaderPrefix, config.ReferenceHeaderPrefix);
 			Assert.IsTrue(config.SanitizeForInjection);

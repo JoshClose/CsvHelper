@@ -1221,7 +1221,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.Escape,
+				Mode = CsvMode.Escape,
 				Escape = '\\',
 			};
 			using (var stream = new MemoryStream())

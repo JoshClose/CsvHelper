@@ -38,7 +38,6 @@ namespace CsvHelper
 		private readonly MemberMapData reusableMemberMapData = new MemberMapData(null);
 		private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
 		private readonly string quoteString;
-		private readonly string doubleQuoteString;
 		private readonly char quote;
 		private readonly CultureInfo cultureInfo;
 		private readonly char comment;
@@ -51,6 +50,10 @@ namespace CsvHelper
 		private readonly char[] injectionCharacters;
 		private readonly char injectionEscapeCharacter;
 		private readonly bool sanitizeForInjection;
+		private readonly CsvMode mode;
+		private readonly string escapeQuoteString;
+		private readonly string escapeDelimiterString;
+		private readonly string escapeNewlineString;
 
 		private bool disposed;
 		private bool hasHeaderBeenWritten;
@@ -91,6 +94,8 @@ namespace CsvHelper
 		/// <param name="configuration">The configuration.</param>
 		public CsvWriter(TextWriter writer, CsvConfiguration configuration)
 		{
+			configuration.Validate();
+
 			this.writer = writer;
 			Configuration = configuration;
 			context = new CsvContext(this);
@@ -101,16 +106,19 @@ namespace CsvHelper
 			bufferSize = configuration.BufferSize;
 			delimiter = configuration.Delimiter;
 			cultureInfo = configuration.CultureInfo;
-			doubleQuoteString = configuration.DoubleQuoteString;
 			dynamicPropertySort = configuration.DynamicPropertySort;
+			escapeDelimiterString = new string(configuration.Delimiter.SelectMany(c => new[] { configuration.Escape, c }).ToArray());
+			escapeNewlineString = new string(configuration.NewLine.SelectMany(c => new[] { configuration.Escape, c }).ToArray());
+			escapeQuoteString = new string(new[] { configuration.Escape, configuration.Quote });
 			hasHeaderRecord = configuration.HasHeaderRecord;
 			includePrivateMembers = configuration.IncludePrivateMembers;
 			injectionCharacters = configuration.InjectionCharacters;
 			injectionEscapeCharacter = configuration.InjectionEscapeCharacter;
 			leaveOpen = configuration.LeaveOpen;
+			mode = configuration.Mode;
 			newLine = configuration.NewLine;
 			quote = configuration.Quote;
-			quoteString = configuration.QuoteString;
+			quoteString = configuration.Quote.ToString();
 			sanitizeForInjection = configuration.SanitizeForInjection;
 			shouldQuote = configuration.ShouldQuote;
 			trimOptions = configuration.TrimOptions;
@@ -145,15 +153,21 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual void WriteField(string field, bool shouldQuote)
 		{
-			// All quotes must be doubled.
-			if (shouldQuote && !string.IsNullOrEmpty(field))
+			if (mode == CsvMode.RFC4180)
 			{
-				field = field.Replace(quoteString, doubleQuoteString);
+				// All quotes must be escaped.
+				if (shouldQuote)
+				{
+					field = field?.Replace(quoteString, escapeQuoteString);
+					field = quote + field + quote;
+				}
 			}
-
-			if (shouldQuote)
+			else if (mode == CsvMode.Escape)
 			{
-				field = quote + field + quote;
+				field = field?
+					.Replace(quoteString, escapeQuoteString)
+					.Replace(delimiter, escapeDelimiterString)
+					.Replace(newLine, escapeNewlineString);
 			}
 
 			if (sanitizeForInjection)

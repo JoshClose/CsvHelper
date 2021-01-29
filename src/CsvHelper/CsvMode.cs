@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 namespace CsvHelper
 {
 	/// <summary>
-	/// Mode to use when parsing.
+	/// Mode to use when parsing and writing.
 	/// </summary>
-	public enum ParserMode
+	public enum CsvMode
     {
 		/// <summary>
-		/// Parses using RFC 4180 format (default).
+		/// Uses RFC 4180 format (default).
 		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
 		/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.
 		/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
@@ -25,18 +25,19 @@ namespace CsvHelper
 		RFC4180 = 0,
 
 		/// <summary>
-		/// Parses using escapes.
+		/// Uses escapes.
 		/// If a field contains a <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.NewLine"/>,
 		/// or <see cref="CsvConfiguration.Escape"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
+		/// Newline defaults to \n.
 		/// </summary>
-		Escape = 1,
+		Escape,
 
 		/// <summary>
-		/// Doesn't parse quotes or escapes.
+		/// Doesn't use quotes or escapes.
 		/// This will ignore quoting and escape characters. This means a field cannot contain a
 		/// <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.Quote"/>, or
 		/// <see cref="CsvConfiguration.NewLine"/>, as they cannot be escaped.
 		/// </summary>
-		NoEscape = 2
+		NoEscape
 	}
 }

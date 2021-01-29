@@ -37,7 +37,7 @@ namespace CsvHelper
 		private readonly TrimOptions trimOptions;
 		private readonly char[] whiteSpaceChars;
 		private readonly bool leaveOpen;
-		private readonly ParserMode mode;
+		private readonly CsvMode mode;
 		private readonly string newLine;
 		private readonly char newLineFirstChar;
 		private readonly bool isNewLineSet;
@@ -130,6 +130,8 @@ namespace CsvHelper
 		/// <param name="configuration">The configuration.</param>
 		public CsvParser(TextReader reader, CsvConfiguration configuration)
 		{
+			configuration.Validate();
+
 			this.reader = reader;
 			Configuration = configuration;
 			Context = new CsvContext(this);
@@ -292,7 +294,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (mode == ParserMode.RFC4180)
+				if (mode == CsvMode.RFC4180)
 				{
 					var isFirstCharOfField = fieldStartPosition == bufferPosition - 1;
 					if (isFirstCharOfField)
@@ -350,7 +352,7 @@ namespace CsvHelper
 						}
 					}
 				}
-				else if (mode == ParserMode.Escape)
+				else if (mode == CsvMode.Escape)
 				{
 					if (inEscape)
 					{
@@ -722,15 +724,15 @@ namespace CsvHelper
 			ProcessedField processedField;
 			switch (mode)
 			{
-				case ParserMode.RFC4180:
+				case CsvMode.RFC4180:
 					processedField = field.IsBad
 						? ProcessRFC4180BadField(start, length)
 						: ProcessRFC4180Field(start, length, quoteCount);
 					break;
-				case ParserMode.Escape:
+				case CsvMode.Escape:
 					processedField = ProcessEscapeField(start, length);
 					break;
-				case ParserMode.NoEscape:
+				case CsvMode.NoEscape:
 					processedField = ProcessNoEscapeField(start, length);
 					break;
 				default:

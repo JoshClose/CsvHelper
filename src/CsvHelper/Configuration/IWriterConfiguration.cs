@@ -16,6 +16,12 @@ namespace CsvHelper.Configuration
 	public interface IWriterConfiguration
 	{
 		/// <summary>
+		/// The mode.
+		/// See <see cref="CsvMode"/> for more details.
+		/// </summary>
+		CsvMode Mode { get; }
+
+		/// <summary>
 		/// A value indicating whether to leave the <see cref="TextReader"/> or <see cref="TextWriter"/> open after this object is disposed.
 		/// </summary>
 		/// <value>

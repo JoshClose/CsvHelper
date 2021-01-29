@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace CsvHelper.Tests.Parsing
 {
 	[TestClass]
-    public class ParserModeTests
+    public class CsvModeTests
     {
 		[TestMethod]
 		public void Read_HasEscapedDelimiter_Parses()
@@ -24,7 +24,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("a\\,b,c\n");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.Escape,
+				Mode = CsvMode.Escape,
 				Escape = '\\',
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -45,7 +45,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("a\\\nb,c\n");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.Escape,
+				Mode = CsvMode.Escape,
 				Escape = '\\',
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -65,7 +65,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("a,\"b,\"\"c\r\nd\",e");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.NoEscape,
+				Mode = CsvMode.NoEscape,
 				Escape = '"',
 			};
 			using (var reader = new StringReader(s.ToString()))
@@ -89,7 +89,7 @@ namespace CsvHelper.Tests.Parsing
 			s.Append("a,\\b\\,c\\\nd,e");
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				Mode = ParserMode.NoEscape,
+				Mode = CsvMode.NoEscape,
 				Escape = '\\',
 			};
 			using (var reader = new StringReader(s.ToString()))
