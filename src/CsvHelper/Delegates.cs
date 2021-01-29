@@ -81,7 +81,7 @@ namespace CsvHelper
 	/// <summary>
 	/// Function that is used to determine if a field should get quoted when writing.
 	/// </summary>
-	public delegate bool ShouldQuote(string field, IWriterRow row);
+	public delegate bool ShouldQuote(string field, Type fieldType, IWriterRow row);
 
 	/// <summary>
 	/// Function that determines whether to skip the given record or not.

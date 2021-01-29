@@ -57,12 +57,12 @@ namespace CsvHelper
 
 		private bool disposed;
 		private bool hasHeaderBeenWritten;
-		private bool hasRecordBeenWritten;
 		private int row = 1;
 		private int index;
 		private char[] buffer;
 		private int bufferSize;
 		private int bufferPosition;
+		private Type fieldType;
 
 		/// <inheritdoc/>
 		public virtual string[] HeaderRecord { get; private set; }
@@ -145,7 +145,9 @@ namespace CsvHelper
 				field = field.Trim();
 			}
 
-			var shouldQuoteResult = shouldQuote(field, this);
+			fieldType ??= typeof(string);
+
+			var shouldQuoteResult = shouldQuote(field, fieldType, this);
 
 			WriteField(field, shouldQuoteResult);
 		}
@@ -182,6 +184,7 @@ namespace CsvHelper
 
 			CopyToBuffer(field);
 			index++;
+			fieldType = null;
 		}
 
 		/// <inheritdoc/>
@@ -195,7 +198,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual void WriteField<T>(T field, ITypeConverter converter)
 		{
-			var type = field == null ? typeof(string) : field.GetType();
+			var type = fieldType = field == null ? typeof(string) : field.GetType();
 			reusableMemberMapData.TypeConverter = converter;
 			if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
 			{

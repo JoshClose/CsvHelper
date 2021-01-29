@@ -36,7 +36,7 @@ namespace CsvHelper.Tests.Serializing
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				SanitizeForInjection = true,
-				ShouldQuote = (field, context) => false,
+				ShouldQuote = (_, _, _) => false,
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
@@ -73,7 +73,7 @@ namespace CsvHelper.Tests.Serializing
 			{
 				SanitizeForInjection = true,
 				InjectionEscapeCharacter = '\'',
-				ShouldQuote = (field, context) => false,
+				ShouldQuote = (_, _, _) => false,
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))

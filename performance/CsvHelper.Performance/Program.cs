@@ -79,7 +79,7 @@ namespace CsvHelper.Performance
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				//Delimiter = ";",
-				ShouldQuote = (field, context) => quoteAllFields,
+				ShouldQuote = (_, _, _) => quoteAllFields,
 			};
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))

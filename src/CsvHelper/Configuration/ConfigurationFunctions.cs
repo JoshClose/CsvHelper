@@ -92,7 +92,7 @@ namespace CsvHelper.Configuration
 		/// <param name="field">The current field.</param>
 		/// <param name="row">The current row.</param>
 		/// <returns></returns>
-		public static bool ShouldQuote(string field, IWriterRow row)
+		public static bool ShouldQuote(string field, Type fieldType, IWriterRow row)
 		{
 			var config = row.Configuration;
 

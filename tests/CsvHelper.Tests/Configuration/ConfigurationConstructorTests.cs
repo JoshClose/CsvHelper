@@ -78,7 +78,7 @@ namespace CsvHelper.Tests.Configuration
 			PrepareHeaderForMatch prepareHeaderForMatch = (header, fieldIndex) => header;
 			ReadingExceptionOccurred readingExceptionOccurred = (ex) => true;
 			ReferenceHeaderPrefix referenceHeaderPrefix = (type, memberName) => string.Empty;
-			ShouldQuote shouldQuote = (field, row) => true;
+			ShouldQuote shouldQuote = (_, _, _) => true;
 			ShouldSkipRecord shouldSkipRecord = (record) => true;
 			ShouldUseConstructorParameters shouldUseConstructorParameters = (parameterType) => true;
 
