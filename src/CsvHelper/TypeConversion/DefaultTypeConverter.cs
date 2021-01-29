@@ -21,7 +21,7 @@ namespace CsvHelper.TypeConversion
 				$"    Text: '{text}'\r\n" +
 				$"    MemberType: {memberMapData.Member?.MemberType().FullName}\r\n" +
 				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
-			throw new TypeConverterException(this, memberMapData, text, (CsvContext)row.Context, message);
+			throw new TypeConverterException(this, memberMapData, text, row.Context, message);
 		}
 
 		/// <inheritdoc/>

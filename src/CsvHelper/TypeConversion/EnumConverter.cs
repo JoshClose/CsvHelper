@@ -18,8 +18,16 @@ namespace CsvHelper.TypeConversion
 	public class EnumConverter : DefaultTypeConverter
 	{
 		private readonly Type type;
-		private readonly Dictionary<string, object> nameValues = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-		private readonly Dictionary<object, string> valueNames = new Dictionary<object, string>();
+		private readonly Dictionary<string, string> enumNamesByAttributeNames = new Dictionary<string, string>();
+		private readonly Dictionary<string, string> enumNamesByAttributeNamesIgnoreCase = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		private readonly Dictionary<object, string> attributeNamesByEnumValues = new Dictionary<object, string>();
+
+		// enumNamesByAttributeNames
+		// enumNamesByAttributeNamesIgnoreCase
+		// [Name("Foo")]:One
+
+		// attributeNamesByEnumValues
+		// 1:[Name("Foo")]
 
 		/// <summary>
 		/// Creates a new <see cref="EnumConverter"/> for the given <see cref="Enum"/> <see cref="System.Type"/>.
@@ -36,47 +44,59 @@ namespace CsvHelper.TypeConversion
 
 			foreach (var value in Enum.GetValues(type))
 			{
-				var name = Enum.GetName(type, value);
+				var enumName = Enum.GetName(type, value);
 
-				var nameAttribute = type.GetField(name).GetCustomAttribute<NameAttribute>();
+				var nameAttribute = type.GetField(enumName).GetCustomAttribute<NameAttribute>();
 				if (nameAttribute != null && nameAttribute.Names.Length > 0)
 				{
-					foreach (var n in nameAttribute.Names)
+					foreach (var attributeName in nameAttribute.Names)
 					{
-						nameValues.Add(n, value);
+						if (!enumNamesByAttributeNames.ContainsKey(attributeName))
+						{
+							enumNamesByAttributeNames.Add(attributeName, enumName);
+						}
+
+						if (!enumNamesByAttributeNamesIgnoreCase.ContainsKey(attributeName))
+						{
+							enumNamesByAttributeNamesIgnoreCase.Add(attributeName, enumName);
+						}
+
+						if (!attributeNamesByEnumValues.ContainsKey(value))
+						{
+							attributeNamesByEnumValues.Add(value, attributeName);
+						}
 					}
 				}
-
-				nameValues.Add(name, value);
-				valueNames.Add(value, nameValues.First().Key);
 			}
 		}
 
-		/// <summary>
-		/// Converts the string to an object.
-		/// </summary>
-		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
-		/// <returns>The object created from the string.</returns>
+		/// <inheritdoc/>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			if (text != null && nameValues.ContainsKey(text))
+			var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase;
+
+			if (text != null)
 			{
-				return nameValues[text];
+				var dict = ignoreCase
+					? enumNamesByAttributeNamesIgnoreCase
+					: enumNamesByAttributeNames;
+				if (dict.ContainsKey(text))
+				{
+					return Enum.Parse(type, dict[text]);
+				}
 			}
 
 #if NET45 || NET47 || NETSTANDARD2_0
 			try
 			{
-				return Enum.Parse(type, text);
+				return Enum.Parse(type, text, ignoreCase);
 			}
 			catch
 			{
 				return base.ConvertFromString(text, row, memberMapData);
 			}
 #else
-			if (Enum.TryParse(type, text, out var value))
+			if (Enum.TryParse(type, text, ignoreCase, out var value))
 			{
 				return value;
 			}
@@ -87,18 +107,12 @@ namespace CsvHelper.TypeConversion
 #endif
 		}
 
-		/// <summary>
-		/// Converts the object to a string.
-		/// </summary>
-		/// <param name="value">The object to convert to a string.</param>
-		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
-		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
-		/// <returns>The string representation of the object.</returns>
+		/// <inheritdoc/>
 		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
-			if (nameValues.ContainsValue(value))
+			if (value != null && attributeNamesByEnumValues.ContainsKey(value))
 			{
-				return nameValues.First(pair => Equals(pair.Value, value)).Key;
+				return attributeNamesByEnumValues[value];
 			}
 
 			return base.ConvertToString(value, row, memberMapData);

@@ -152,5 +152,16 @@ namespace CsvHelper.Configuration
 
 			return memberMap;
 		}
+
+		/// <summary>
+		/// Ignore case when parsing enums.
+		/// </summary>
+		/// <param name="ignoreCase"><c>true</c> to ignore case, otherwise <c>false</c>.</param>
+		public virtual MemberMap EnumIgnoreCase(bool ignoreCase = true)
+		{
+			memberMap.Data.TypeConverterOptions.EnumIgnoreCase = ignoreCase;
+
+			return memberMap;
+		}
 	}
 }

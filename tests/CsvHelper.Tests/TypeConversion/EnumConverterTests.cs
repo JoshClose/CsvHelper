@@ -33,11 +33,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToStringTest()
 		{
 			var converter = new EnumConverter(typeof(TestEnum));
-			var propertyMapData = new MemberMapData(null)
-			{
-				TypeConverter = converter,
-				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
-			};
+			var propertyMapData = new MemberMapData(null);
 
 			Assert.AreEqual("None", converter.ConvertToString((TestEnum)0, null, propertyMapData));
 			Assert.AreEqual("None", converter.ConvertToString(TestEnum.None, null, propertyMapData));
@@ -51,8 +47,10 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			var converter = new EnumConverter(typeof(TestEnum));
 
-			var propertyMapData = new MemberMapData(null);
-			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
+			var propertyMapData = new MemberMapData(null)
+			{
+				TypeConverterOptions = { EnumIgnoreCase = true },
+			};
 
 			var row = new CsvReader(new ParserMock());
 
@@ -84,8 +82,6 @@ namespace CsvHelper.Tests.TypeConversion
 			var converter = new EnumConverter(typeof(NameAttributeEnum));
 			var propertyMapData = new MemberMapData(null)
 			{
-				TypeConverter = converter,
-				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
 			var value = converter.ConvertFromString("Bar", null, propertyMapData);
@@ -157,6 +153,122 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.AreEqual("Bar", value);
 		}
 
+		[TestMethod]
+		public void ConvertFromString_DuplicateNames_IgnoreCase_ReturnsNameWithLowestValue()
+		{
+			var converter = new EnumConverter(typeof(DuplicateNames));
+
+			var memberMapData = new MemberMapData(null)
+			{
+				TypeConverterOptions = { EnumIgnoreCase = true },
+			};
+
+			var value = converter.ConvertFromString("oNe", null, memberMapData);
+
+			Assert.AreEqual(DuplicateNames.one, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_DuplicateValues_ReturnsNameThatAppearsFirst()
+		{
+			var converter = new EnumConverter(typeof(DuplicateValues));
+
+			var memberMapData = new MemberMapData(null)
+			{
+			};
+
+			var value = converter.ConvertFromString("1", null, memberMapData);
+
+			Assert.AreEqual(DuplicateValues.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_UsingValue_DuplicateNamesAndValues_ReturnsNameThatAppearsFirst()
+		{
+			var converter = new EnumConverter(typeof(DuplicateNamesAndValues));
+
+			var memberMapData = new MemberMapData(null)
+			{
+			};
+
+			var value = converter.ConvertFromString("1", null, memberMapData);
+
+			Assert.AreEqual(DuplicateNamesAndValues.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_UsingName_DuplicateNamesAndValues_ReturnsNameThatAppearsFirst()
+		{
+			var converter = new EnumConverter(typeof(DuplicateNamesAndValues));
+
+			var memberMapData = new MemberMapData(null)
+			{
+				TypeConverterOptions = { EnumIgnoreCase = true },
+			};
+
+			var value = converter.ConvertFromString("oNe", null, memberMapData);
+
+			Assert.AreEqual(DuplicateNamesAndValues.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_DuplicateAttributeNames_IgnoreCase_ReturnsNameWithLowestValue()
+		{
+			var converter = new EnumConverter(typeof(DuplicateNamesAttributeEnum));
+
+			var memberMapData = new MemberMapData(null)
+			{
+				TypeConverterOptions = { EnumIgnoreCase = true },
+			};
+
+			var value = converter.ConvertFromString("oNe", null, memberMapData);
+
+			Assert.AreEqual(DuplicateNamesAttributeEnum.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_DuplicateAttributeValues_ReturnsNameThatAppearsFirst()
+		{
+			var converter = new EnumConverter(typeof(DuplicateValuesAttributeEnum));
+
+			var memberMapData = new MemberMapData(null)
+			{
+			};
+
+			var value = converter.ConvertFromString("1", null, memberMapData);
+
+			Assert.AreEqual(DuplicateValuesAttributeEnum.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_UsingValue_DuplicateAttributeNamesAndValues_ReturnsNameThatAppearsFirst()
+		{
+			var converter = new EnumConverter(typeof(DuplicateNamesAndValuesAttributeEnum));
+
+			var memberMapData = new MemberMapData(null)
+			{
+			};
+
+			var value = converter.ConvertFromString("1", null, memberMapData);
+
+			Assert.AreEqual(DuplicateNamesAndValuesAttributeEnum.One, value);
+		}
+
+		[TestMethod]
+		public void ConvertFromString_UsingName_DuplicateAttributeNamesAndValues_ReturnsNameThatAppearsFirst()
+		{
+			var converter = new EnumConverter(typeof(DuplicateNamesAndValuesAttributeEnum));
+
+			var memberMapData = new MemberMapData(null)
+			{
+				TypeConverterOptions = { EnumIgnoreCase = true },
+			};
+
+			var value = converter.ConvertFromString("oNe", null, memberMapData);
+
+			Assert.AreEqual(DuplicateNamesAndValuesAttributeEnum.One, value);
+		}
+
 		private enum TestEnum
 		{
 			None = 0,
@@ -176,6 +288,60 @@ namespace CsvHelper.Tests.TypeConversion
 			One = 1,
 			[Name("Bar")]
 			Foo = 2
+		}
+
+		private enum DuplicateNames
+		{
+			None = 0,
+			One = 2,
+			one = 1,
+			Three = 3
+		}
+
+		private enum DuplicateValues
+		{
+			None = 0,
+			One = 1,
+			Two = 1,
+			Three = 3
+		}
+
+		private enum DuplicateNamesAndValues
+		{
+			None = 0,
+			One = 1,
+			one = 1,
+			Two = 2
+		}
+
+		private enum DuplicateNamesAttributeEnum
+		{
+			None = 0,
+			[Name("Foo")]
+			One = 2,
+			[Name("foo")]
+			Two = 1,
+			Three = 3
+		}
+
+		private enum DuplicateValuesAttributeEnum
+		{
+			None = 0,
+			[Name("Foo")]
+			One = 1,
+			[Name("Bar")]
+			Two = 1,
+			Three = 3
+		}
+
+		private enum DuplicateNamesAndValuesAttributeEnum
+		{
+			None = 0,
+			[Name("Foo")]
+			One = 1,
+			[Name("foo")]
+			Two = 1,
+			Three = 3
 		}
 	}
 }

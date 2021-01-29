@@ -29,6 +29,11 @@ namespace CsvHelper.TypeConversion
 		public DateTimeStyles? DateTimeStyle { get; set; }
 
 		/// <summary>
+		/// Ingore case when parsing enums. Default is false.
+		/// </summary>
+		public bool EnumIgnoreCase { get; set; }
+
+		/// <summary>
 		/// Gets or sets the time span style.
 		/// </summary>
 		public TimeSpanStyles? TimeSpanStyle { get; set; }
