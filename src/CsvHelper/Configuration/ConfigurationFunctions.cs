@@ -90,8 +90,9 @@ namespace CsvHelper.Configuration
 		/// the <see cref="IWriterConfiguration.Delimiter"/>.
 		/// </summary>
 		/// <param name="field">The current field.</param>
+		/// <param name="fieldType">The type of the field.</param>
 		/// <param name="row">The current row.</param>
-		/// <returns></returns>
+		/// <returns><c>true</c> if the field should be quoted, otherwise <c>false</c>.</returns>
 		public static bool ShouldQuote(string field, Type fieldType, IWriterRow row)
 		{
 			var config = row.Configuration;
