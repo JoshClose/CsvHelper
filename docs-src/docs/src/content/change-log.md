@@ -1,5 +1,15 @@
 # Change Log
 
+### 22.1.0
+
+#### Features
+
+- Added `[EnumIgnoreAttribute]`.
+
+### Bug Fixes
+
+- Fixed issue with `EnumIgnoreCase` value not making it to the converter when reading.
+
 ### 22.0.0
 
 #### Features
