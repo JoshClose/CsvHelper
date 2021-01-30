@@ -1,5 +1,31 @@
 # Change Log
 
+### 22.0.0
+
+#### Features
+
+- Changed `ParserMode` to `CsvMode` and added the modes to `CsvWriter`.
+- Added `Type fieldType` parameter to `ShouldQuote` delegate.
+- Added `TypeConverterOptions.EnumIgnoreCase` (default is false). Allows `EnumConverter` to ignore case when matching enum names, values, or `NameAttribute`.
+
+#### Bug Fixes
+
+- Fixed issue with `EnumConverter` when duplicate names or values appeared in an Enum.
+
+#### Breaking Changes
+
+- `ParserMode` -> `CsvMode`
+- Added `IParserConfiguration.ProcessFieldBufferSize`.
+- Added `IWriterConfiguration.Mode`.
+- `ShouldQuote(string, IWriterRow)` -> `ShouldQuote(string, Type, IWriterRow)`.
+- `EnumConverter` was changed to case sensitive by default.
+
+### 21.3.1
+
+#### Bug Fixes
+
+- Fixed issue with CsvContext not being passed into AutoMap.
+
 ### 21.3.0
 
 #### Features
