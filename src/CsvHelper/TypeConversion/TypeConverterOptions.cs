@@ -29,11 +29,6 @@ namespace CsvHelper.TypeConversion
 		public DateTimeStyles? DateTimeStyle { get; set; }
 
 		/// <summary>
-		/// Ingore case when parsing enums. Default is false.
-		/// </summary>
-		public bool EnumIgnoreCase { get; set; }
-
-		/// <summary>
 		/// Gets or sets the time span style.
 		/// </summary>
 		public TimeSpanStyles? TimeSpanStyle { get; set; }
@@ -52,6 +47,11 @@ namespace CsvHelper.TypeConversion
 		/// Gets or sets the <see cref="UriKind"/>.
 		/// </summary>
 		public UriKind? UriKind { get; set; }
+
+		/// <summary>
+		/// Ingore case when parsing enums. Default is false.
+		/// </summary>
+		public bool? EnumIgnoreCase { get; set; }
 
 		/// <summary>
 		/// Gets the list of values that can be
@@ -122,6 +122,11 @@ namespace CsvHelper.TypeConversion
 				if (source.UriKind != null)
 				{
 					options.UriKind = source.UriKind;
+				}
+
+				if (source.EnumIgnoreCase != null)
+				{
+					options.EnumIgnoreCase = source.EnumIgnoreCase;
 				}
 
 				// Only change the values if they are different than the defaults.

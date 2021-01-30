@@ -9,6 +9,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CsvHelper.TypeConversion;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
+using System.Text;
+using System.IO;
+using System.Linq;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -267,6 +270,23 @@ namespace CsvHelper.Tests.TypeConversion
 			var value = converter.ConvertFromString("oNe", null, memberMapData);
 
 			Assert.AreEqual(DuplicateNamesAndValuesAttributeEnum.One, value);
+		}
+
+		private class TestClass
+		{
+			public int Id { get; set; }
+			public string Name { get; set; }
+			public TestEnum TestEnum { get; set; }
+		}
+
+		private class TestClassMap : ClassMap<TestClass>
+		{
+			public TestClassMap()
+			{
+				Map(m => m.Id);
+				Map(m => m.Name);
+				Map(m => m.TestEnum).TypeConverterOption.EnumIgnoreCase();
+			}
 		}
 
 		private enum TestEnum

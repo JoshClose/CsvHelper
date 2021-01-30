@@ -73,7 +73,7 @@ namespace CsvHelper.TypeConversion
 		/// <inheritdoc/>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase;
+			var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase ?? false;
 
 			if (text != null)
 			{
