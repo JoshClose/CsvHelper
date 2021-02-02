@@ -735,7 +735,10 @@ namespace CsvHelper
 			{
 				// Dispose managed state (managed objects)
 
-				await writer.DisposeAsync().ConfigureAwait(false);
+				if (!leaveOpen)
+				{
+					await writer.DisposeAsync().ConfigureAwait(false);
+				}
 			}
 
 			// Free unmanaged resources (unmanaged objects) and override finalizer
