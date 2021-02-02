@@ -279,7 +279,7 @@ namespace CsvHelper.Configuration
 			MemberTypes = memberTypes ?? MemberTypes;
 			MissingFieldFound = missingFieldFound ?? MissingFieldFound;
 			Mode = mode ?? Mode;
-			NewLine = newLine ?? NewLine;
+			if (newLine != null) NewLine = newLine;
 			PrepareHeaderForMatch = prepareHeaderForMatch ?? PrepareHeaderForMatch;
 			ProcessFieldBufferSize = processFieldBufferSize ?? ProcessFieldBufferSize;
 			Quote = quote ?? Quote;
