@@ -5,7 +5,7 @@ If your property names don't match your class names, you can map the property to
 ###### Data
 
 ```
-Column1,Column2
+ColumnA,ColumnB
 1,one
 ```
 
