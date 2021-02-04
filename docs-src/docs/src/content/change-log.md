@@ -1,5 +1,17 @@
 # Change Log
 
+### 22.1.2
+
+#### Bug Fixes
+
+- Fixed issue with data corruption when parser buffer ran out in middle of escape and quote.
+
+### 22.1.1
+
+#### Bug Fixes
+
+- Fixed issue where CsvConfiguration.NewLine was being set when value is null in constructor causing IsNewLine to be true.
+
 ### 22.1.0
 
 #### Features
