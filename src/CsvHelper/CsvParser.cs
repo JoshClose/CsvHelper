@@ -172,6 +172,8 @@ namespace CsvHelper
 			quoteCount = 0;
 			row++;
 			rawRow++;
+			var c = '\0';
+			var cPrev = c;
 
 			while (true)
 			{
@@ -183,7 +185,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (ReadLine() == ReadLineResult.Complete)
+				if (ReadLine(ref c, ref cPrev) == ReadLineResult.Complete)
 				{
 					return true;
 				}
@@ -199,6 +201,8 @@ namespace CsvHelper
 			quoteCount = 0;
 			row++;
 			rawRow++;
+			var c = '\0';
+			var cPrev = c;
 
 			while (true)
 			{
@@ -210,7 +214,7 @@ namespace CsvHelper
 					}
 				}
 
-				if (ReadLine() == ReadLineResult.Complete)
+				if (ReadLine(ref c, ref cPrev) == ReadLineResult.Complete)
 				{
 					return true;
 				}
@@ -218,16 +222,13 @@ namespace CsvHelper
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ReadLineResult ReadLine()
+		private ReadLineResult ReadLine(ref char c, ref char cPrev)
 		{
-			char c = '\0';
-			char cPrev;
 			while (bufferPosition < charsRead)
 			{
 				if (state != ParserState.None)
 				{
 					// Continue the state before doing anything else.
-					c = buffer[bufferPosition - 1];
 					ReadLineResult result;
 					switch (state)
 					{
