@@ -10,6 +10,7 @@ using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
+using CsvHelper.TypeConversion;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CsvHelper.Tests.DataTableTests
@@ -288,6 +289,32 @@ namespace CsvHelper.Tests.DataTableTests
 			{
 				var dataReader = new CsvDataReader(csv);
 				Assert.AreEqual(0, dataReader.FieldCount);
+			}
+		}
+
+		[TestMethod]
+		public void DataTableNullableValueTypeTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+			};
+			var parser = new ParserMock(config)
+			{
+				{ "Id", "Name", "DateTime" },
+				{ "1", "one", DateTime.Now.ToString() },
+			};
+			using (var csv = new CsvReader(parser))
+			using (var dr = new CsvDataReader(csv))
+			{
+				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("");
+
+				var table = new DataTable();
+				table.Columns.Add("Id", typeof(int));
+				table.Columns.Add("Name", typeof(string));
+				var column = table.Columns.Add("DateTime", typeof(DateTime));
+				column.AllowDBNull = true;
+
+				table.Load(dr);
 			}
 		}
 	}
