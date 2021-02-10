@@ -8,6 +8,7 @@
 		const sidebar = document.getElementById("sidebar");
 		if (sidebar) {
 			const parent = sidebar.parentElement;
+			const footer = document.getElementById("footer");
 
 			const resizeSidebarWidth = () => {
 				const rect = parent.getBoundingClientRect();
@@ -16,17 +17,24 @@
 				sidebar.style.width = `${width}px`;
 			};
 
-			const resiseSidebarHeight = () => {
-				const rect = parent.getBoundingClientRect();
-				const style = getComputedStyle(parent);
-				const top = Math.max(rect.top + parseFloat(style.paddingTop), 0);
+			const resizeSidebarHeight = () => {
+				const parentRect = parent.getBoundingClientRect();
+				const parentStyle = getComputedStyle(parent);
+				const footerRect = footer.getBoundingClientRect();
+				const bodyRect = document.body.getBoundingClientRect();
+
+				const top = Math.max(parentRect.top + parseFloat(parentStyle.paddingTop), 0);
+				const bottom = Math.max(bodyRect.height - footerRect.top, 0);
+
 				sidebar.style.top = `${top}px`;
+				sidebar.style.bottom = `${bottom}px`;
 			}
 
 			const sidebarResizeObserver = new ResizeObserver(resizeSidebarWidth);
 			sidebarResizeObserver.observe(parent);
 
-			document.addEventListener("scroll", resiseSidebarHeight);
+			window.addEventListener("load", resizeSidebarHeight);
+			document.addEventListener("scroll", resizeSidebarHeight);
 		}
 	})();
 </script>

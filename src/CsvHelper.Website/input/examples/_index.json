@@ -1,0 +1,116 @@
+{
+	"toc": [
+		{
+			"title": "Prerequisites",
+			"children": [
+				{
+					"title": "Using and Dispose"
+				},
+				{
+					"title": "Reading and Writing Files"
+				},
+				{
+					"title": "Streams"
+				}
+			]
+		},
+		{
+			"title": "Reading",
+			"children": [
+				{
+					"title": "Get Class Records"
+				},
+				{
+					"title": "Get Dynamic Records"
+				},
+				{
+					"title": "Get Anonymous Type Records"
+				},
+				{
+					"title": "Enumerate Class Records"
+				},
+				{
+					"title": "Reading by Hand"
+				},
+				{
+					"title": "Reading Multiple Data Sets"
+				},
+				{
+					"title": "Reading Multiple Record Types"
+				}
+			]
+		},
+		{
+			"title": "Writing",
+			"children": [
+				{
+					"title": "Write Class Objects"
+				},
+				{
+					"title": "Write Dynamic Objects"
+				},
+				{
+					"title": "Write Anonymous Type Objects"
+				},
+				{
+					"title": "Appending to an Existing File"
+				}
+			]
+		},
+		{
+			"title": "Configuration",
+			"children": [
+				{
+					"title": "Class Maps",
+					"children": [
+						{
+							"title": "Mapping Properties"
+						},
+						{
+							"title": "Mapping by Name"
+						},
+						{
+							"title": "Mapping by Alternate Names"
+						},
+						{
+							"title": "Mapping Duplicate Names"
+						},
+						{
+							"title": "Mapping by Index"
+						},
+						{
+							"title": "Auto Mapping"
+						},
+						{
+							"title": "Ignoring Properties"
+						},
+						{
+							"title": "Constant Value"
+						},
+						{
+							"title": "Type Conversion"
+						},
+						{
+							"title": "Inline Type Conversion"
+						},
+						{
+							"title": "Optional Maps"
+						},
+						{
+							"title": "Validation"
+						}
+					]
+				},
+				{
+					"title": "Attributes"
+				}
+			]
+		},
+		{
+			"title": "Type Conversion"
+		},
+		{
+			"title": "DataReader"
+		}
+	]
+}
