@@ -1,5 +1,9 @@
 ﻿@inherits StatiqRazorPage<IEnumerable<TocItem>>
-<ul>
+@{ 
+	var c = ViewBag.ShowChildren ? string.Empty : "is-hidden";
+	ViewBag.showChildren = false;
+}
+<ul class="@c">
 	@foreach (var item in Model)
 	{
 		<partial name="_TocItem" for="@item" />

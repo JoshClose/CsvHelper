@@ -42,7 +42,7 @@
 	<partial name="_Header" />
 
 	<main id="main" class="container is-fluid">
-		<div class="columns">
+		<div class="columns is-variable is-1">
 			@if (isMarkdown)
 			{
 				<div class="column is-2">
@@ -71,7 +71,8 @@
 	<script>
 		hljs.initHighlightingOnLoad();
 	</script>
-	<partial name="_LayoutScripts" />
+	<script src="~/scripts/header.js"></script>
+	<script src="~/scripts/sidebar.js"></script>
 	@RenderSection("Scripts", required: false)
 </body>
 </html>
