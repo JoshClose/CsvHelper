@@ -4,18 +4,26 @@
 {
 	display: flex;
 	position: fixed;
+	overflow: auto;
 
 	ul
 	{
 		width: 100%;
 
+		ul
+		{
+			margin-left: 1rem;
+		}
+
 		li
 		{
 			line-height: 2rem;
+			white-space: nowrap;
 
 			a
 			{
 				color: $text;
+				display: inline-flex;
 
 				&:not(:first-child)
 				{
