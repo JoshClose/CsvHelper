@@ -1,10 +1,4 @@
 ﻿@inherits StatiqRazorPage<TocItem>
-@{
-	foreach (var child in Model.Children)
-	{
-		child.Level = Model.Level + 1;
-	}
-}
 <li>
 	@if (Model.Children.Count > 0)
 	{
