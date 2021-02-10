@@ -1,7 +1,8 @@
-﻿@{ 
+﻿@{
 	var items = TocItem.Create(Metadata.GetList<IMetadataDictionary>("toc"));
+	items.Add(new TocItem { Title = "Back to top", Link = "#" });
 }
 
-<br /><br />
-
-<partial name="_TocItems" for="@items" />
+<div id="sidebar" class="sidebar">
+	<partial name="_TocItems" for="@items" />
+</div>

@@ -1,0 +1,31 @@
+﻿@import "bulma";
+
+.sidebar
+{
+	display: flex;
+	position: fixed;
+
+	ul
+	{
+		width: 100%;
+
+		li
+		{
+			height: 2rem;
+			line-height: 2rem;
+
+			a
+			{
+				color: $text;
+
+				&:not(:first-child)
+				{
+					&:hover
+					{
+						text-decoration: underline;
+					}
+				}
+			}
+		}
+	}
+}

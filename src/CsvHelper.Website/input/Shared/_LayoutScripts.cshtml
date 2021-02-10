@@ -1,0 +1,32 @@
+﻿<script>
+	(() => {
+		document.getElementById("navbar-burger").addEventListener("click", () => {
+			document.getElementById("navbar-burger").classList.toggle("is-active");
+			document.getElementById("navbar-menu").classList.toggle("is-active");
+		});
+
+		const sidebar = document.getElementById("sidebar");
+		if (sidebar) {
+			const parent = sidebar.parentElement;
+
+			const resizeSidebarWidth = () => {
+				const rect = parent.getBoundingClientRect();
+				const style = getComputedStyle(parent);
+				const width = rect.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+				sidebar.style.width = `${width}px`;
+			};
+
+			const resiseSidebarHeight = () => {
+				const rect = parent.getBoundingClientRect();
+				const style = getComputedStyle(parent);
+				const top = Math.max(rect.top + parseFloat(style.paddingTop), 0);
+				sidebar.style.top = `${top}px`;
+			}
+
+			const sidebarResizeObserver = new ResizeObserver(resizeSidebarWidth);
+			sidebarResizeObserver.observe(parent);
+
+			document.addEventListener("scroll", resiseSidebarHeight);
+		}
+	})();
+</script>

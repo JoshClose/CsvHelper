@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@{
+	var isMarkdown = Metadata.Get<string>("Source").EndsWith(".md");
+}
+<!DOCTYPE html>
 <html lang="en-us">
 <head>
 	<meta charSet="UTF-8" />
@@ -23,7 +26,7 @@
 	<title>@Metadata.Get("title") | CsvHelper</title>
 
 	<environment include="Development">
-		<link rel="stylesheet" href="~/input/lib/bulma/bulma.css" />
+		<link rel="stylesheet" href="../../lib/bulma/bulma.css" />
 	</environment>
 	<environment exclude="Development">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.1/css/bulma.min.css" />
@@ -37,28 +40,38 @@
 </head>
 <body>
 	<partial name="_Header" />
-	<div class="body">
-		<div class="container is-fluid">
-			<div class="columns">
-				<div class="column container-right">
+
+	<main id="main" class="container is-fluid">
+		<div class="columns">
+			@if (isMarkdown)
+			{
+				<div class="column is-2">
 					<partial name="_SideBar" />
 				</div>
-				<div class="column container-content">
+
+				<div class="column">
 					<div class="content">
-						<span></span>
 						@RenderBody()
 					</div>
 				</div>
-			</div>
+			}
+			else
+			{
+				<div class="column">
+					@RenderBody()
+				</div>
+			}
 		</div>
-	</div>
-	<footer class="footer">
-		<div class="has-text-centered">&copy; 2009-2021 Josh Close</div>
-	</footer>
+	</main>
+
+	<partial name="_Footer" />
+
+	@*<partial name="_Metadata" />*@
 
 	<script>
 		hljs.initHighlightingOnLoad();
 	</script>
+	<partial name="_LayoutScripts" />
 	@RenderSection("Scripts", required: false)
 </body>
 </html>
