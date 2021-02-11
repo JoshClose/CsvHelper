@@ -1,19 +1,14 @@
 ﻿@inherits StatiqRazorPage<TocItem>
 <li>
+	<span>
 	@if (Model.Children.Count > 0)
 	{
-		<a class="expander">
-			<span class="icon is-small">
-				<i class="fas fa-angle-right fa-xs"></i>
-			</span>
-		</a>
-	}
-	else
-	{
-		<span class="icon is-small"></span>
+		<a class="expander"></a>
 	}
 
-	<a href="@Model.Link">@Model.Title</a>
+	<a href="@Url.Content(Model.Link)">@Model.Title</a>
+	</span>
+
 	@if (Model.Children.Any())
 	{
 		<partial name="_TocItems" for="@Model.Children" />

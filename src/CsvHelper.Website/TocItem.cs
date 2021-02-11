@@ -31,6 +31,6 @@ namespace CsvHelper.Website
 			return tocItem;
 		}
 
-		public static List<TocItem> Create(IEnumerable<IMetadataDictionary> objects) => objects?.Select(Create).ToList() ?? new List<TocItem>();
+		public static List<TocItem> Create(IEnumerable<IMetadataDictionary> objects, TocItem parent = null) => objects?.Select(Create).ToList() ?? new List<TocItem>();
     }
 }

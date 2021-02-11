@@ -1,15 +1,35 @@
 ﻿@import "bulma";
 
+.expander
+{
+	position: absolute;
+	font-size: 1.5rem;
+	transform: rotate(0deg);
+	top: -3px;
+	left: 0;
+
+	&::before
+	{
+		content: "\203A";
+	}
+
+	&.expanded
+	{
+		left: 4px;
+		top: 2px;
+		transform: rotate(90deg);
+	}
+}
+
 .sidebar
 {
 	display: flex;
 	position: fixed;
-	overflow: auto;
+	overflow-x: hidden;
+	overflow-y: auto;
 
 	ul
 	{
-		width: 100%;
-
 		ul
 		{
 			margin-left: 1rem;
@@ -18,14 +38,14 @@
 		li
 		{
 			line-height: 2rem;
-			white-space: nowrap;
+			padding-left: 1em;
+			position: relative;
 
 			a
 			{
 				color: $text;
-				display: inline-flex;
 
-				&:not(:first-child)
+				&:not(.expander)
 				{
 					&:hover
 					{

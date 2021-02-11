@@ -28,7 +28,8 @@
 	}
 
 	const handleExpanderClick = (e) => {
-		e.currentTarget.parentElement.querySelector("ul").classList.toggle("is-hidden");
+		e.currentTarget.classList.toggle("expanded");
+		e.currentTarget.closest("li").querySelector("ul").classList.toggle("is-hidden");
 	}
 
 	const sidebarResizeObserver = new ResizeObserver(resizeSidebarWidth);
