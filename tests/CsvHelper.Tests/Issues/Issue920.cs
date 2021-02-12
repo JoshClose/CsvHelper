@@ -19,8 +19,8 @@ namespace CsvHelper.Tests.Issues
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				GetConstructor = type =>
-					type.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
+				GetConstructor = args =>
+					args.ClassType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)
 					.OrderBy(c => c.GetParameters().Length)
 					.First(),
 				IncludePrivateMembers = true,

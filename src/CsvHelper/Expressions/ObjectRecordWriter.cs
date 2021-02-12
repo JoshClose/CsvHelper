@@ -57,7 +57,9 @@ namespace CsvHelper.Expressions
 				if (memberMap.Data.WritingConvertExpression != null)
 				{
 					// The user is providing the expression to do the conversion.
-					Expression exp = Expression.Invoke(memberMap.Data.WritingConvertExpression, recordParameterConverted);
+					var constructor = typeof(ConvertToStringArgs<T>).GetConstructor(new Type[] { typeof(T) });
+					var args = Expression.New(constructor, recordParameterConverted);
+					Expression exp = Expression.Invoke(memberMap.Data.WritingConvertExpression, args);
 					exp = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteField), null, exp);
 					delegates.Add(Expression.Lambda<Action<T>>(exp, recordParameter).Compile());
 					continue;

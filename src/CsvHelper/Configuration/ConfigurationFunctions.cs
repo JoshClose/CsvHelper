@@ -18,17 +18,17 @@ namespace CsvHelper.Configuration
 		private static readonly char[] lineEndingChars = new char[] { '\r', '\n' };
 
 		/// <summary>
-		/// Throws a <see cref="ValidationException"/> if <paramref name="invalidHeaders"/> is not empty.
+		/// Throws a <see cref="ValidationException"/> if <see name="HeaderValidatedArgs.InvalidHeaders"/> is not empty.
 		/// </summary>
-		public static void HeaderValidated(InvalidHeader[] invalidHeaders, CsvContext context)
+		public static void HeaderValidated(HeaderValidatedArgs args)
 		{
-			if (invalidHeaders.Count() == 0)
+			if (args.InvalidHeaders.Count() == 0)
 			{
 				return;
 			}
 
 			var errorMessage = new StringBuilder();
-			foreach (var invalidHeader in invalidHeaders)
+			foreach (var invalidHeader in args.InvalidHeaders)
 			{
 				errorMessage.AppendLine($"Header with name '{string.Join("' or '", invalidHeader.Names)}'[{invalidHeader.Index}] was not found.");
 			}
@@ -39,47 +39,47 @@ namespace CsvHelper.Configuration
 				$"functionality to do something else, like logging the issue.";
 			errorMessage.AppendLine(messagePostfix);
 
-			throw new HeaderValidationException(context, invalidHeaders, errorMessage.ToString());
+			throw new HeaderValidationException(args.Context, args.InvalidHeaders, errorMessage.ToString());
 		}
 
 		/// <summary>
 		/// Throws a <c>MissingFieldException</c>.
 		/// </summary>
-		public static void MissingFieldFound(string[] headerNames, int index, CsvContext context)
+		public static void MissingFieldFound(MissingFieldFoundArgs args)
 		{
 			var messagePostfix = $"You can ignore missing fields by setting {nameof(MissingFieldFound)} to null.";
 
 			// Get by index.
 
-			if (headerNames == null || headerNames.Length == 0)
+			if (args.HeaderNames == null || args.HeaderNames.Length == 0)
 			{
-				throw new MissingFieldException(context, $"Field at index '{index}' does not exist. {messagePostfix}");
+				throw new MissingFieldException(args.Context, $"Field at index '{args.Index}' does not exist. {messagePostfix}");
 			}
 
 			// Get by name.
 
-			var indexText = index > 0 ? $" at field index '{index}'" : string.Empty;
+			var indexText = args.Index > 0 ? $" at field index '{args.Index}'" : string.Empty;
 
-			if (headerNames.Length == 1)
+			if (args.HeaderNames.Length == 1)
 			{
-				throw new MissingFieldException(context, $"Field with name '{headerNames[0]}'{indexText} does not exist. {messagePostfix}");
+				throw new MissingFieldException(args.Context, $"Field with name '{args.HeaderNames[0]}'{indexText} does not exist. {messagePostfix}");
 			}
 
-			throw new MissingFieldException(context, $"Field containing names '{string.Join("' or '", headerNames)}'{indexText} does not exist. {messagePostfix}");
+			throw new MissingFieldException(args.Context, $"Field containing names '{string.Join("' or '", args.HeaderNames)}'{indexText} does not exist. {messagePostfix}");
 		}
 
 		/// <summary>
 		/// Throws a <see cref="BadDataException"/>.
 		/// </summary>
-		public static void BadDataFound(CsvContext context)
+		public static void BadDataFound(BadDataFoundArgs args)
 		{
-			throw new BadDataException(context, $"You can ignore bad data by setting {nameof(BadDataFound)} to null.");
+			throw new BadDataException(args.Context, $"You can ignore bad data by setting {nameof(BadDataFound)} to null.");
 		}
 
 		/// <summary>
-		/// Throws the given <paramref name="exception"/>.
+		/// Throws the given <see name="ReadingExceptionOccurredArgs.Exception"/>.
 		/// </summary>
-		public static bool ReadingExceptionOccurred(CsvHelperException exception)
+		public static bool ReadingExceptionOccurred(ReadingExceptionOccurredArgs args)
 		{
 			return true;
 		}
@@ -89,22 +89,20 @@ namespace CsvHelper.Configuration
 		/// starts with a space, ends with a space, contains \r or \n, or contains
 		/// the <see cref="IWriterConfiguration.Delimiter"/>.
 		/// </summary>
-		/// <param name="field">The current field.</param>
-		/// <param name="fieldType">The type of the field.</param>
-		/// <param name="row">The current row.</param>
+		/// <param name="args">The args.</param>
 		/// <returns><c>true</c> if the field should be quoted, otherwise <c>false</c>.</returns>
-		public static bool ShouldQuote(string field, Type fieldType, IWriterRow row)
+		public static bool ShouldQuote(ShouldQuoteArgs args)
 		{
-			var config = row.Configuration;
+			var config = args.Row.Configuration;
 
-			var shouldQuote = !string.IsNullOrEmpty(field) && 
+			var shouldQuote = !string.IsNullOrEmpty(args.Field) && 
 			(
-				field.Contains(config.Quote) // Contains quote
-				|| field[0] == ' ' // Starts with a space
-				|| field[field.Length - 1] == ' ' // Ends with a space
-				|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
-				|| !config.IsNewLineSet && field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
-				|| config.IsNewLineSet && field.Contains(config.NewLine) // Contains newline
+				args.Field.Contains(config.Quote) // Contains quote
+				|| args.Field[0] == ' ' // Starts with a space
+				|| args.Field[args.Field.Length - 1] == ' ' // Ends with a space
+				|| (config.Delimiter.Length > 0 && args.Field.Contains(config.Delimiter)) // Contains delimiter
+				|| !config.IsNewLineSet && args.Field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
+				|| config.IsNewLineSet && args.Field.Contains(config.NewLine) // Contains newline
 			);
 
 			return shouldQuote;
@@ -113,17 +111,17 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Returns <c>false</c>.
 		/// </summary>
-		public static bool ShouldSkipRecord(string[] record)
+		public static bool ShouldSkipRecord(ShouldSkipRecordArgs args)
 		{
 			return false;
 		}
 
 		/// <summary>
-		/// Returns the <paramref name="header"/> as given.
+		/// Returns the <see name="PrepareHeaderForMatchArgs.Header"/> as given.
 		/// </summary>
-		public static string PrepareHeaderForMatch(string header, int index)
+		public static string PrepareHeaderForMatch(PrepareHeaderForMatchArgs args)
 		{
-			return header;
+			return args.Header;
 		}
 
 		/// <summary>
@@ -134,13 +132,13 @@ namespace CsvHelper.Configuration
 		/// 4. is not an interface
 		/// 5. TypeCode is not an Object.
 		/// </summary>
-		public static bool ShouldUseConstructorParameters(Type type)
+		public static bool ShouldUseConstructorParameters(ShouldUseConstructorParametersArgs args)
 		{
-			return !type.HasParameterlessConstructor()
-				&& type.HasConstructor()
-				&& !type.IsUserDefinedStruct()
-				&& !type.IsInterface
-				&& Type.GetTypeCode(type) == TypeCode.Object;
+			return !args.ParameterType.HasParameterlessConstructor()
+				&& args.ParameterType.HasConstructor()
+				&& !args.ParameterType.IsUserDefinedStruct()
+				&& !args.ParameterType.IsInterface
+				&& Type.GetTypeCode(args.ParameterType) == TypeCode.Object;
 		}
 
 		/// <summary>
@@ -149,26 +147,25 @@ namespace CsvHelper.Configuration
 		/// there is no guarantee which one will be returned. If you have
 		/// that situation, you should probably implement this function yourself.
 		/// </summary>
-		public static ConstructorInfo GetConstructor(Type type)
+		public static ConstructorInfo GetConstructor(GetConstructorArgs args)
 		{
-			return type.GetConstructorWithMostParameters();
+			return args.ClassType.GetConstructorWithMostParameters();
 		}
 
 		/// <summary>
-		/// Returns the header name ran through <see cref="PrepareHeaderForMatch(string, int)"/>.
+		/// Returns the header name ran through <see cref="PrepareHeaderForMatch(PrepareHeaderForMatchArgs)"/>.
 		/// If no header exists, property names will be Field1, Field2, Field3, etc.
 		/// </summary>
-		/// <param name="context">The <see cref="CsvContext"/>.</param>
-		/// <param name="fieldIndex">The field index of the header to get the name for.</param>
-		public static string GetDynamicPropertyName(CsvContext context, int fieldIndex)
+		/// <param name="args">The args.</param>
+		public static string GetDynamicPropertyName(GetDynamicPropertyNameArgs args)
 		{
-			if (context.Reader.HeaderRecord == null)
+			if (args.Context.Reader.HeaderRecord == null)
 			{
-				return $"Field{fieldIndex + 1}";
+				return $"Field{args.FieldIndex + 1}";
 			}
 
-			var header = context.Reader.HeaderRecord[fieldIndex];
-			header = context.Reader.Configuration.PrepareHeaderForMatch(header, fieldIndex);
+			var header = args.Context.Reader.HeaderRecord[args.FieldIndex];
+			header = args.Context.Reader.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(header, args.FieldIndex));
 
 			return header;
 		}

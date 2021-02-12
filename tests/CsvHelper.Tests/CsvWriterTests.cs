@@ -315,7 +315,7 @@ namespace CsvHelper.Tests
 
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (_, _, _) => true,
+				ShouldQuote = _ => true,
 			};
 
 			string csv;
@@ -352,7 +352,7 @@ namespace CsvHelper.Tests
 
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (_, _, _) => false,
+				ShouldQuote = _ => false,
 			};
 			string csv;
 			using (var stream = new MemoryStream())
@@ -449,7 +449,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (_, _, _) => true,
+				ShouldQuote = _ => true,
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -476,7 +476,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (_, _, _) => true,
+				ShouldQuote = _ => true,
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -694,7 +694,7 @@ namespace CsvHelper.Tests
 
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ReferenceHeaderPrefix = (type, name) => $"{name}."
+				ReferenceHeaderPrefix = args => $"{args.MemberName}."
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

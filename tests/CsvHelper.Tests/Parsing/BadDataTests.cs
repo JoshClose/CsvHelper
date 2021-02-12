@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.Parsing
 			string rawRecord = null;
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				BadDataFound = context => rawRecord = context.Parser.RawRecord.ToString(),
+				BadDataFound = args => rawRecord = args.Context.Parser.RawRecord.ToString(),
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

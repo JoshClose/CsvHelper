@@ -557,7 +557,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => header.ToLower(),
+				PrepareHeaderForMatch = args => args.Header.ToLower(),
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
@@ -584,7 +584,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => Regex.Replace(header, @"\s", string.Empty),
+				PrepareHeaderForMatch = args => Regex.Replace(args.Header, @"\s", string.Empty),
 			};
 			var parserMock = new ParserMock(config)
 			{
@@ -641,7 +641,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				ShouldSkipRecord = record => record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Record.All(string.IsNullOrWhiteSpace),
 			};
 
 			var parserMock = new ParserMock(config)
@@ -672,7 +672,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				ShouldSkipRecord = row => row[1] == "2",
+				ShouldSkipRecord = args => args.Record[1] == "2",
 			};
 
 			var parserMock = new ParserMock(config)
@@ -838,7 +838,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				MissingFieldFound = null,
-				PrepareHeaderForMatch = (header, index) => header.Trim(),
+				PrepareHeaderForMatch = args => args.Header.Trim(),
 			};
 			var parserMock = new ParserMock(config)
 			{
@@ -915,7 +915,7 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ReferenceHeaderPrefix = (type, name) => $"{name}.",
+				ReferenceHeaderPrefix = args => $"{args.MemberName}.",
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

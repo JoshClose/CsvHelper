@@ -860,7 +860,7 @@ namespace CsvHelper
 		{
 			// If field is already known to be bad, different rules can be applied.
 
-			badDataFound?.Invoke(Context);
+			badDataFound?.Invoke(new BadDataFoundArgs(new string(buffer, start, length), Context));
 
 			var newStart = start;
 			var newLength = length;

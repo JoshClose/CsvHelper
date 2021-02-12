@@ -43,7 +43,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header)
+				PrepareHeaderForMatch = args => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(args.Header)
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header)
+				PrepareHeaderForMatch = args => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(args.Header)
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
@@ -99,8 +99,8 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header),
-				GetConstructor = type => type.GetConstructors().First(),
+				PrepareHeaderForMatch = args => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(args.Header),
+				GetConstructor = args => args.ClassType.GetConstructors().First(),
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
@@ -127,11 +127,11 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(header),
-				ShouldUseConstructorParameters = type =>
-					!type.IsUserDefinedStruct()
-					&& !type.IsInterface
-					&& Type.GetTypeCode(type) == TypeCode.Object,
+				PrepareHeaderForMatch = args => CultureInfo.CurrentCulture.TextInfo.ToTitleCase(args.Header),
+				ShouldUseConstructorParameters = args =>
+					!args.ParameterType.IsUserDefinedStruct()
+					&& !args.ParameterType.IsInterface
+					&& Type.GetTypeCode(args.ParameterType) == TypeCode.Object,
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))

@@ -229,7 +229,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map(m => m.IntColumn).Convert(m => $"Converted{m.IntColumn}");
+				Map(m => m.IntColumn).Convert(args => $"Converted{args.Value.IntColumn}");
 			}
 		}
 
@@ -237,12 +237,12 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map(m => m.IntColumn).Convert(m =>
-			 {
-				 var x = "Converted";
-				 x += m.IntColumn;
-				 return x;
-			 });
+				Map(m => m.IntColumn).Convert(args =>
+				{
+					var x = "Converted";
+					x += args.Value.IntColumn;
+					return x;
+				});
 			}
 		}
 
@@ -259,7 +259,7 @@ namespace CsvHelper.Tests
 			public ConvertUsingNullMap()
 			{
 				Map(m => m.IntColumn).Convert(m => (string)null);
-				Map(m => m.StringColumn).Convert(m => m.StringColumn);
+				Map(m => m.StringColumn).Convert(args => args.Value.StringColumn);
 			}
 		}
 	}

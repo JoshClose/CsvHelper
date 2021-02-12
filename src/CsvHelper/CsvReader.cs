@@ -148,7 +148,7 @@ namespace CsvHelper
 			var invalidHeaders = new List<InvalidHeader>();
 			ValidateHeader(map, invalidHeaders);
 
-			headerValidated?.Invoke(invalidHeaders.ToArray(), context);
+			headerValidated?.Invoke(new HeaderValidatedArgs(invalidHeaders.ToArray(), context));
 		}
 
 		/// <inheritdoc/>
@@ -234,7 +234,7 @@ namespace CsvHelper
 			{
 				hasMoreRecords = parser.Read();
 			}
-			while (hasMoreRecords && shouldSkipRecord(parser.Record));
+			while (hasMoreRecords && shouldSkipRecord(new ShouldSkipRecordArgs(parser.Record)));
 
 			currentIndex = -1;
 			hasBeenRead = true;
@@ -245,7 +245,7 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
 
-					if (readingExceptionOccurred?.Invoke(csvException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvException)) ?? true)
 					{
 						throw csvException;
 					}
@@ -265,7 +265,7 @@ namespace CsvHelper
 			{
 				hasMoreRecords = await parser.ReadAsync();
 			}
-			while (hasMoreRecords && shouldSkipRecord(parser.Record));
+			while (hasMoreRecords && shouldSkipRecord(new ShouldSkipRecordArgs(parser.Record)));
 
 			currentIndex = -1;
 			hasBeenRead = true;
@@ -276,7 +276,7 @@ namespace CsvHelper
 				{
 					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
 
-					if (readingExceptionOccurred?.Invoke(csvException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvException)) ?? true)
 					{
 						throw csvException;
 					}
@@ -335,7 +335,7 @@ namespace CsvHelper
 			{
 				if (ignoreBlankLines)
 				{
-					missingFieldFound?.Invoke(null, index, context);
+					missingFieldFound?.Invoke(new MissingFieldFoundArgs(null, index, context));
 				}
 
 				return default;
@@ -475,7 +475,7 @@ namespace CsvHelper
 				currentIndex = index;
 				if (ignoreBlankLines)
 				{
-					missingFieldFound?.Invoke(null, index, context);
+					missingFieldFound?.Invoke(new MissingFieldFoundArgs(null, index, context));
 				}
 
 				return default;
@@ -735,7 +735,7 @@ namespace CsvHelper
 			{
 				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-				if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+				if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 				{
 					if (ex is CsvHelperException)
 					{
@@ -794,7 +794,7 @@ namespace CsvHelper
 			{
 				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-				if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+				if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 				{
 					if (ex is CsvHelperException)
 					{
@@ -849,7 +849,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 					{
 						if (ex is CsvHelperException)
 						{
@@ -922,7 +922,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 					{
 						if (ex is CsvHelperException)
 						{
@@ -978,7 +978,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 					{
 						if (ex is CsvHelperException)
 						{
@@ -1036,7 +1036,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 					{
 						if (ex is CsvHelperException)
 						{
@@ -1109,7 +1109,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 					{
 						if (ex is CsvHelperException)
 						{
@@ -1165,7 +1165,7 @@ namespace CsvHelper
 				{
 					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
 
-					if (readingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					if (readingExceptionOccurred?.Invoke(new ReadingExceptionOccurredArgs(csvHelperException)) ?? true)
 					{
 						if (ex is CsvHelperException)
 						{
@@ -1224,7 +1224,7 @@ namespace CsvHelper
 			{
 				var n = names[i];
 				// Get the list of indexes for this name.
-				var fieldName = prepareHeaderForMatch(n, i);
+				var fieldName = prepareHeaderForMatch(new PrepareHeaderForMatchArgs(n, i));
 				if (namedIndexes.ContainsKey(fieldName))
 				{
 					name = fieldName;
@@ -1238,7 +1238,7 @@ namespace CsvHelper
 				// It doesn't exist. The field is missing.
 				if (!isTryGet && !isOptional)
 				{
-					missingFieldFound?.Invoke(names, index, context);
+					missingFieldFound?.Invoke(new MissingFieldFoundArgs(names, index, context));
 				}
 
 				return -1;
@@ -1340,7 +1340,7 @@ namespace CsvHelper
 
 			for (var i = 0; i < headerRecord.Length; i++)
 			{
-				var name = prepareHeaderForMatch(headerRecord[i], i);
+				var name = prepareHeaderForMatch(new PrepareHeaderForMatchArgs(headerRecord[i], i));
 				if (namedIndexes.ContainsKey(name))
 				{
 					namedIndexes[name].Add(i);

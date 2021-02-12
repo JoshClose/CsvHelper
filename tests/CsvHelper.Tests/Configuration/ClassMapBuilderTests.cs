@@ -15,7 +15,7 @@ namespace CsvHelper.Tests.Configuration
 	public class ClassMapBuilderTests
 	{
 		private static readonly Factory csvFactory = new Factory();
-		private static ConvertFromString<FakeInnerClass> ConvertExpression => r => new FakeInnerClass { E = r.GetField(4) };
+		private static ConvertFromString<FakeInnerClass> ConvertExpression => args => new FakeInnerClass { E = args.Row.GetField(4) };
 		private static readonly ClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
 			/*
 			.Map( m => m.A ).Constant( "a" )
@@ -97,7 +97,11 @@ namespace CsvHelper.Tests.Configuration
 		public void ClassMapBuilderAddsConvertUsingFunctionCorrectly()
 		{
 			var fakeRow = new BuilderRowFake();
-			Assert.AreEqual(ConvertExpression(fakeRow).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(fakeRow).E); //6
+			var args = new ConvertFromStringArgs
+			{
+				Row = fakeRow,
+			};
+			Assert.AreEqual(ConvertExpression(args).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(args).E); //6
 		}
 
 		[TestMethod]

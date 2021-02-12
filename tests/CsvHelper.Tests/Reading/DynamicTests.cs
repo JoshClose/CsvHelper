@@ -21,7 +21,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => header.Replace(" ", string.Empty),
+				PrepareHeaderForMatch = args => args.Header.Replace(" ", string.Empty),
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))
@@ -45,14 +45,14 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) =>
+				PrepareHeaderForMatch = args =>
 				{
-					if (string.IsNullOrWhiteSpace(header))
+					if (string.IsNullOrWhiteSpace(args.Header))
 					{
-						return $"Blank{index}";
+						return $"Blank{args.FieldIndex}";
 					}
 
-					return header;
+					return args.Header;
 				},
 			};
 			var s = new StringBuilder();
@@ -82,11 +82,11 @@ namespace CsvHelper.Tests.Reading
 			var headerNameCounts = new Dictionary<string, int>();
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				GetDynamicPropertyName = (context, index) =>
+				GetDynamicPropertyName = args =>
 				{
-					var header = context.Reader.HeaderRecord[index];
-					header = context.Reader.Configuration.PrepareHeaderForMatch(header, index);
-					var name = headerNameCounts[header] > 1 ? $"{header}{index}" : header;
+					var header = args.Context.Reader.HeaderRecord[args.FieldIndex];
+					header = args.Context.Reader.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(header, args.FieldIndex));
+					var name = headerNameCounts[header] > 1 ? $"{header}{args.FieldIndex}" : header;
 
 					return name;
 				},
@@ -102,7 +102,7 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				csv.ReadHeader();
 				var counts =
-					(from header in csv.Context.Reader.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(h, i))
+					(from header in csv.Context.Reader.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(h, i)))
 					 group header by header into g
 					 select new
 					 {

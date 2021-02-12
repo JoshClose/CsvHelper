@@ -186,7 +186,7 @@ namespace CsvHelper.Configuration
 
 				if (context.Configuration.ReferenceHeaderPrefix != null)
 				{
-					referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name);
+					referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(new ReferenceHeaderPrefixArgs(referenceMap.Data.Member.MemberType(), referenceMap.Data.Member.Name));
 				}
 			}
 		}

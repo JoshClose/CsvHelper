@@ -147,7 +147,7 @@ namespace CsvHelper
 
 			fieldType ??= typeof(string);
 
-			var shouldQuoteResult = shouldQuote(field, fieldType, this);
+			var shouldQuoteResult = shouldQuote(new ShouldQuoteArgs(field, fieldType, this));
 
 			WriteField(field, shouldQuoteResult);
 		}

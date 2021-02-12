@@ -97,7 +97,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			public ValidateMap()
 			{
-				Map(m => m.Id).Validate(field => !string.IsNullOrEmpty(field));
+				Map(m => m.Id).Validate(args => !string.IsNullOrEmpty(args.Field));
 				Map(m => m.Name);
 			}
 		}
@@ -107,12 +107,12 @@ namespace CsvHelper.Tests.Reading
 			public LogInsteadMap(StringBuilder logger)
 			{
 				Map(m => m.Id);
-				Map(m => m.Name).Validate(field =>
+				Map(m => m.Name).Validate(args =>
 			 {
-				 var isValid = !string.IsNullOrEmpty(field);
+				 var isValid = !string.IsNullOrEmpty(args.Field);
 				 if (!isValid)
 				 {
-					 logger.AppendLine($"Field '{field}' is not valid!");
+					 logger.AppendLine($"Field '{args.Field}' is not valid!");
 				 }
 
 				 return true;

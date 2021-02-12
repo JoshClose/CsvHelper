@@ -19,10 +19,10 @@ namespace CsvHelper.Tests.Writing
 			Type type = null;
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (field, fieldType, row) =>
+				ShouldQuote = args =>
 				{
-					type = fieldType;
-					return ConfigurationFunctions.ShouldQuote(field, fieldType, row);
+					type = args.FieldType;
+					return ConfigurationFunctions.ShouldQuote(args);
 				},
 			};
 			using (var writer = new StringWriter())

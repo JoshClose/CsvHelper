@@ -178,7 +178,7 @@ namespace CsvHelper.Tests
 		{
 			public CovarianceClassMap()
 			{
-				Map(m => m.Id).Convert(row => row.GetField<int>(0));
+				Map(m => m.Id).Convert(args => args.Row.GetField<int>(0));
 			}
 		}
 
@@ -244,7 +244,7 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingMap()
 			{
-				Map(m => m.IntColumn).Convert(row => row.GetField<int>(0) + row.GetField<int>(1));
+				Map(m => m.IntColumn).Convert(args => args.Row.GetField<int>(0) + args.Row.GetField<int>(1));
 			}
 		}
 
@@ -252,10 +252,10 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingBlockMap()
 			{
-				Map(m => m.IntColumn).Convert(row =>
+				Map(m => m.IntColumn).Convert(args =>
 			 {
-				 var x = row.GetField<int>(0);
-				 var y = row.GetField<int>(1);
+				 var x = args.Row.GetField<int>(0);
+				 var y = args.Row.GetField<int>(1);
 				 return x + y;
 			 });
 			}
@@ -274,7 +274,7 @@ namespace CsvHelper.Tests
 			public ConvertUsingClassMap()
 			{
 				Map(m => m.IntColumn).Name("int2");
-				Map(m => m.StringColumn).Convert(row => row.GetField("string.3"));
+				Map(m => m.StringColumn).Convert(args => args.Row.GetField("string.3"));
 			}
 		}
 	}

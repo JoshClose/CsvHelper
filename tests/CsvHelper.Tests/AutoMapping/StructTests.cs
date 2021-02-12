@@ -38,7 +38,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ReferenceHeaderPrefix = (type, name) => $"{name}.",
+				ReferenceHeaderPrefix = args => $"{args.MemberName}.",
 			};
 			using (var stream = new MemoryStream())
 			using (var writer = new StreamWriter(stream))

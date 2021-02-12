@@ -137,7 +137,7 @@ namespace CsvHelper.Configuration
 		{
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
 
-			return Parameter(() => ConfigurationFunctions.GetConstructor(ClassType), name);
+			return Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(ClassType)), name);
 		}
 
 		/// <summary>
@@ -220,7 +220,7 @@ namespace CsvHelper.Configuration
 			}
 
 			var mapParents = new LinkedList<Type>();
-			if (context.Configuration.ShouldUseConstructorParameters(type))
+			if (context.Configuration.ShouldUseConstructorParameters(new ShouldUseConstructorParametersArgs(type)))
 			{
 				// This type doesn't have a parameterless constructor so we can't create an
 				// instance and set it's member. Constructor parameters need to be created
@@ -397,7 +397,7 @@ namespace CsvHelper.Configuration
 						var referenceMap = new MemberReferenceMap(member, refMap);
 						if (context.Configuration.ReferenceHeaderPrefix != null)
 						{
-							referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(member.MemberType(), member.Name);
+							referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(new ReferenceHeaderPrefixArgs(member.MemberType(), member.Name));
 						}
 
 						ApplyAttributes(referenceMap);
@@ -440,7 +440,7 @@ namespace CsvHelper.Configuration
 		protected virtual void AutoMapConstructorParameters(ClassMap map, CsvContext context, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
-			var constructor = context.Configuration.GetConstructor(map.ClassType);
+			var constructor = context.Configuration.GetConstructor(new GetConstructorArgs(map.ClassType));
 			var parameters = constructor.GetParameters();
 
 			foreach (var parameter in parameters)
@@ -488,14 +488,14 @@ namespace CsvHelper.Configuration
 					var referenceMap = new ParameterReferenceMap(parameter, refMap);
 					if (context.Configuration.ReferenceHeaderPrefix != null)
 					{
-						referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(memberTypeInfo.MemberType(), memberTypeInfo.Name);
+						referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(new ReferenceHeaderPrefixArgs(memberTypeInfo.MemberType(), memberTypeInfo.Name));
 					}
 
 					ApplyAttributes(referenceMap);
 
 					parameterMap.ReferenceMap = referenceMap;
 				}
-				else if (context.Configuration.ShouldUseConstructorParameters(parameter.ParameterType))
+				else if (context.Configuration.ShouldUseConstructorParameters(new ShouldUseConstructorParametersArgs(parameter.ParameterType)))
 				{
 					mapParents.AddLast(type);
 					var constructorMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);

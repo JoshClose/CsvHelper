@@ -182,7 +182,7 @@ namespace CsvHelper.Configuration
 		/// <param name="convertFromStringFunction">The convert expression.</param>
 		public virtual MemberMap<TClass, TMember> Convert(ConvertFromString<TMember> convertFromStringFunction)
 		{
-			var fieldParameter = Expression.Parameter(typeof(IReaderRow), "row");
+			var fieldParameter = Expression.Parameter(typeof(ConvertFromStringArgs), "args");
 			var methodExpression = Expression.Call(
 				Expression.Constant(convertFromStringFunction.Target),
 				convertFromStringFunction.Method,
@@ -202,7 +202,7 @@ namespace CsvHelper.Configuration
 		/// <param name="convertToStringFunction">The convert expression.</param>
 		public virtual MemberMap<TClass, TMember> Convert(ConvertToString<TClass> convertToStringFunction)
 		{
-			var fieldParameter = Expression.Parameter(typeof(TClass), "value");
+			var fieldParameter = Expression.Parameter(typeof(ConvertToStringArgs<TClass>), "args");
 			var methodExpression = Expression.Call(
 				Expression.Constant(convertToStringFunction.Target),
 				convertToStringFunction.Method,
@@ -231,7 +231,7 @@ namespace CsvHelper.Configuration
 		/// <param name="validateExpression"></param>
 		public virtual new MemberMap<TClass, TMember> Validate(Validate validateExpression)
 		{
-			var fieldParameter = Expression.Parameter(typeof(string), "field");
+			var fieldParameter = Expression.Parameter(typeof(ValidateArgs), "args");
 			var methodExpression = Expression.Call(
 				Expression.Constant(validateExpression.Target),
 				validateExpression.Method,

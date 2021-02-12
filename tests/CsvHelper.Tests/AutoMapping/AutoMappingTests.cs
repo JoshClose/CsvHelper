@@ -108,7 +108,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => header.ToLower(),
+				PrepareHeaderForMatch = args => args.Header.ToLower(),
 			};
 			var s = new StringBuilder();
 			s.AppendLine("Id,Name");
@@ -127,7 +127,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				PrepareHeaderForMatch = (header, index) => header.ToLower(),
+				PrepareHeaderForMatch = args => args.Header.ToLower(),
 			};
 			var s = new StringBuilder();
 			s.AppendLine("Id,Name");
@@ -289,7 +289,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ReferenceHeaderPrefix = (type, name) => $"{name}."
+				ReferenceHeaderPrefix = args => $"{args.MemberName}."
 			};
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Nested>();

@@ -150,13 +150,13 @@ namespace CsvHelper.Tests.Reading
 			{
 				DetectColumnCountChanges = true,
 				HeaderValidated = null,
-				ReadingExceptionOccurred = (ex) =>
+				ReadingExceptionOccurred = (args) =>
 				{
-					if (ex is MissingFieldException)
+					if (args.Exception is MissingFieldException)
 					{
 						missingFieldExceptionCount++;
 					}
-					else if (ex is BadDataException)
+					else if (args.Exception is BadDataException)
 					{
 						columnCountChangeExceptionCount++;
 					}

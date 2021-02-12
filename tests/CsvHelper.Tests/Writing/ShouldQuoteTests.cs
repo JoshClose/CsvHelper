@@ -18,7 +18,7 @@ namespace CsvHelper.Tests.Writing
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (_, _, _) => true,
+				ShouldQuote = _ => true,
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.Writing
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (_, _, _) => false,
+				ShouldQuote = _ => false,
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
@@ -144,11 +144,11 @@ namespace CsvHelper.Tests.Writing
 			var data = new List<(int row, int column, string field)>();
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldQuote = (field, fieldType, row) =>
+				ShouldQuote = args =>
 				{
-					data.Add((row.Row, row.Index, field));
+					data.Add((args.Row.Row, args.Row.Index, args.Field));
 
-					return ConfigurationFunctions.ShouldQuote(field, fieldType, row);
+					return ConfigurationFunctions.ShouldQuote(args);
 				},
 			};
 			using (var writer = new StringWriter())
