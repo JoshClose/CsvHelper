@@ -566,7 +566,7 @@ namespace CsvHelper
 		public virtual void NextRecord()
 		{
 			WriteToBuffer(newLine);
-			Flush();
+			FlushBuffer();
 
 			index = 0;
 			row++;
@@ -576,7 +576,7 @@ namespace CsvHelper
 		public virtual async Task NextRecordAsync()
 		{
 			WriteToBuffer(newLine);
-			await FlushAsync();
+			await FlushBufferAsync();
 
 			index = 0;
 			row++;
@@ -585,12 +585,28 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual void Flush()
 		{
+			FlushBuffer();
+			writer.Flush();
+		}
+
+		/// <inheritdoc/>
+		public virtual async Task FlushAsync()
+		{
+			await FlushBufferAsync().ConfigureAwait(false);
+			await writer.FlushAsync().ConfigureAwait(false);
+		}
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected virtual void FlushBuffer()
+		{
 			writer.Write(buffer, 0, bufferPosition);
 			bufferPosition = 0;
 		}
 
 		/// <inheritdoc/>
-		public virtual async Task FlushAsync()
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public virtual async Task FlushBufferAsync()
 		{
 			await writer.WriteAsync(buffer, 0, bufferPosition);
 			bufferPosition = 0;
@@ -693,7 +709,6 @@ namespace CsvHelper
 			}
 
 			Flush();
-			writer.Flush();
 
 			if (disposing)
 			{
@@ -730,7 +745,6 @@ namespace CsvHelper
 			}
 
 			await FlushAsync().ConfigureAwait(false);
-			await writer.FlushAsync().ConfigureAwait(false);
 
 			if (disposing)
 			{

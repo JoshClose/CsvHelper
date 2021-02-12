@@ -19,24 +19,28 @@ namespace CsvHelper
 #endif
 	{
 		/// <summary>
-		/// Serializes the row to the <see cref="TextWriter"/>.
+		/// Flushes the internal buffer to the <see cref="TextWriter"/> then
+		/// flushes the <see cref="TextWriter"/>.
 		/// </summary>
 		void Flush();
 
 		/// <summary>
-		/// Serializes the row to the <see cref="TextWriter"/>.
+		/// Flushes the internal buffer to the <see cref="TextWriter"/> then
+		/// flushes the <see cref="TextWriter"/>.
 		/// </summary>
 		Task FlushAsync();
 
 		/// <summary>
 		/// Ends writing of the current record and starts a new record.
-		/// This automatically flushes the writer.
+		/// This flushes the buffer to the <see cref="TextWriter"/> but
+		/// does not flush the <see cref="TextWriter"/>.
 		/// </summary>
 		void NextRecord();
 
 		/// <summary>
 		/// Ends writing of the current record and starts a new record.
-		/// This automatically flushes the writer.
+		/// This flushes the buffer to the <see cref="TextWriter"/> but
+		/// does not flush the <see cref="TextWriter"/>.
 		/// </summary>
 		Task NextRecordAsync();
 
