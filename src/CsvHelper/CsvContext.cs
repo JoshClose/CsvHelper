@@ -20,12 +20,12 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets or sets the <see cref="TypeConverterOptionsCache"/>.
 		/// </summary>
-		public virtual TypeConverterOptionsCache TypeConverterOptionsCache { get; init; } = new TypeConverterOptionsCache();
+		public virtual TypeConverterOptionsCache TypeConverterOptionsCache { get; set; } = new TypeConverterOptionsCache();
 
 		/// <summary>
 		/// Gets or sets the <see cref="TypeConverterOptionsCache"/>.
 		/// </summary>
-		public virtual TypeConverterCache TypeConverterCache { get; init; } = new TypeConverterCache();
+		public virtual TypeConverterCache TypeConverterCache { get; set; } = new TypeConverterCache();
 
 		/// <summary>
 		/// The configured <see cref="ClassMap"/>s.
