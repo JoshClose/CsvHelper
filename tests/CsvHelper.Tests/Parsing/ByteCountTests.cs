@@ -113,5 +113,25 @@ namespace CsvHelper.Tests.Parsing
 			}
 		}
 
+		[TestMethod]
+		public void Read_Trimmed_WhiteSpaceCorrect()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Encoding = Encoding.Unicode,
+				CountBytes = true,
+				TrimOptions = TrimOptions.Trim
+			};
+			var s = new StringBuilder();
+			s.Append("1, 2\r\n");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.AreEqual(config.Encoding.GetByteCount(s.ToString()), parser.ByteCount);
+			}
+		}
+
 	}
 }

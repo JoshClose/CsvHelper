@@ -424,6 +424,11 @@ namespace CsvHelper
 
 				c = buffer[bufferPosition];
 				bufferPosition++;
+				charCount++;
+				if (countBytes)
+				{
+					byteCount += encoding.GetByteCount(new char[] { c });
+				}
 			}
 
 			return ReadLineResult.Complete;
