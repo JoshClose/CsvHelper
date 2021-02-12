@@ -1,5 +1,32 @@
 # Change Log
 
+### 23.0.0
+
+#### Features
+
+- Changed public `init` properties to `set`. Once VB.NET implements `init`, it can change back.
+- Made method `CsvWriter.WriteBuffer` protected so sub classes can write fields.
+- `CsvWriter.Flush` and `CsvWriter.FlushAsync` will now flush the underlying `TextWriter`.
+- Changed all `delegate` methods to accept an args `struct` instead of parameters. This makes it easier to understand what parameters are passed in, and allows for additional parameters to be added later without a breaking change.
+
+#### Breaking Changes
+
+- Removed the large `CsvConfiguration` constructor. The properties are now settable, so this isn't needed for VB.NET.
+- All delegates now take in a single struct argument.
+  - BadDataFound
+  - ConvertFromString
+  - GetConstructor
+  - GetDynamicPropertyName
+  - HeaderValidated
+  - MissingFieldFound
+  - PrepareHeaderForMatch
+  - ReadingExceptionOccurred
+  - ReferenceHeaderPrefix
+  - ShouldQuote
+  - ShouldSkipRecord
+  - ShouldUseConstructorParameter
+  - Validate
+
 ### 22.1.2
 
 #### Bug Fixes
