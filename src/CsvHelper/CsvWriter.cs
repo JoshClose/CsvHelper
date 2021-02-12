@@ -179,10 +179,10 @@ namespace CsvHelper
 
 			if (index > 0)
 			{
-				CopyToBuffer(delimiter);
+				WriteToBuffer(delimiter);
 			}
 
-			CopyToBuffer(field);
+			WriteToBuffer(field);
 			index++;
 			fieldType = null;
 		}
@@ -565,7 +565,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual void NextRecord()
 		{
-			CopyToBuffer(newLine);
+			WriteToBuffer(newLine);
 			Flush();
 
 			index = 0;
@@ -575,7 +575,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual async Task NextRecordAsync()
 		{
-			CopyToBuffer(newLine);
+			WriteToBuffer(newLine);
 			await FlushAsync();
 
 			index = 0;
@@ -650,8 +650,9 @@ namespace CsvHelper
 			return field;
 		}
 
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void CopyToBuffer(string value)
+		protected void WriteToBuffer(string value)
 		{
 			var length = value?.Length ?? 0;
 
