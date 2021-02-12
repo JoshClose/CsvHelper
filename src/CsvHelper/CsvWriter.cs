@@ -606,7 +606,7 @@ namespace CsvHelper
 
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public virtual async Task FlushBufferAsync()
+		protected virtual async Task FlushBufferAsync()
 		{
 			await writer.WriteAsync(buffer, 0, bufferPosition);
 			bufferPosition = 0;
