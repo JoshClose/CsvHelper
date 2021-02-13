@@ -73,7 +73,6 @@ namespace CsvHelper.Tests.Async
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(OperationCanceledException))]
 		public async Task GetRecordsTestCanceled()
 		{
 			var parser = new ParserMock
@@ -88,7 +87,7 @@ namespace CsvHelper.Tests.Async
 			{
 				source.Cancel();
 				var records = csv.GetRecordsAsync<Simple>(source.Token).GetAsyncEnumerator();
-				await records.MoveNextAsync();
+				await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await records.MoveNextAsync());
 			}
 		}
 #endif

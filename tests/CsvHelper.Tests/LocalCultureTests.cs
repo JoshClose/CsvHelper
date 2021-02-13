@@ -45,7 +45,7 @@ namespace CsvHelper.Tests
 				new TestRecordWithDecimal
 				{
 					DecimalColumn = 12.0m,
-					DateTimeColumn = new DateTime(2010, 11, 11)
+					DateTimeColumn = new DateTime( 2003, 1, 4, 15, 9, 26 )
 				}
 			};
 
@@ -57,8 +57,8 @@ namespace CsvHelper.Tests
 
 			var csvFile = writer.ToString();
 
-			var expected = "DecimalColumn;DateTimeColumn\r\n" +
-							$"{records[0].DecimalColumn.ToString(culture)};{records[0].DateTimeColumn.ToString(culture)}\r\n";
+			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
+									"12,0;04.01.2003 15:09:26\r\n";
 
 			Assert.AreEqual(expected, csvFile);
 		}

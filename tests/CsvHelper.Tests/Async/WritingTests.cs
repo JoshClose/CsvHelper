@@ -96,10 +96,12 @@ namespace CsvHelper.Tests.Async
 				{
 					await csv.WriteRecordsAsync(records, source.Token);
 				}
-				catch (WriterException ex)//i know [ExpectedException] but exceptions are nested.
+				catch (WriterException ex)
 				{
 					if (ex.InnerException is OperationCanceledException || ex.InnerException is TaskCanceledException)
+					{
 						return;
+					}
 				}
 
 				Assert.Fail("Did not throw exception");
