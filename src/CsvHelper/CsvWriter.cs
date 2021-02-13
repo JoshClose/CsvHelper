@@ -18,6 +18,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Buffers;
+using System.Threading;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -448,7 +449,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual async Task WriteRecordsAsync(IEnumerable records)
+		public virtual async Task WriteRecordsAsync(IEnumerable records, CancellationToken cancellationToken = default)
 		{
 			// Changes in this method require changes in method WriteRecords<T>(IEnumerable<T> records) also.
 
@@ -456,6 +457,8 @@ namespace CsvHelper
 			{
 				foreach (var record in records)
 				{
+					cancellationToken.ThrowIfCancellationRequested();
+
 					var recordType = record.GetType();
 
 					if (record is IDynamicMetaObjectProvider dynamicObject)
@@ -497,7 +500,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual async Task WriteRecordsAsync<T>(IEnumerable<T> records)
+		public virtual async Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default)
 		{
 			// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
 
@@ -519,6 +522,8 @@ namespace CsvHelper
 				var getRecordType = recordType == typeof(object);
 				foreach (var record in records)
 				{
+					cancellationToken.ThrowIfCancellationRequested();
+
 					if (getRecordType)
 					{
 						recordType = record.GetType();
