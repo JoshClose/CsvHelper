@@ -102,5 +102,23 @@ namespace CsvHelper.Tests.Parsing
 				Assert.AreEqual(7, parser.CharCount);
 			}
 		}
+
+		[TestMethod]
+		public void Read_Trimmed_WhiteSpaceCorrect()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				TrimOptions = TrimOptions.Trim
+			};
+			var s = new StringBuilder();
+			s.Append("1, 2");
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.AreEqual(4, parser.CharCount);
+			}
+		}
 	}
 }
