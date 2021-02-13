@@ -7,6 +7,7 @@ using System.Collections;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CsvHelper
 {
@@ -61,13 +62,15 @@ namespace CsvHelper
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <param name="records">The records to write.</param>
-		Task WriteRecordsAsync(IEnumerable records);
+		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
+		Task WriteRecordsAsync(IEnumerable records, CancellationToken cancellationToken = default);
 
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
 		/// <typeparam name="T">Record type.</typeparam>
 		/// <param name="records">The records to write.</param>
-		Task WriteRecordsAsync<T>(IEnumerable<T> records);
+		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
+		Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default);
 	}
 }

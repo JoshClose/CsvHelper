@@ -3,10 +3,12 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Async
@@ -71,6 +73,36 @@ namespace CsvHelper.Tests.Async
 				expected.AppendLine("2,two");
 
 				Assert.AreEqual(expected.ToString(), reader.ReadToEnd());
+			}
+		}
+
+		[TestMethod]
+		public async Task WriteRecordsTestCanceled()
+		{
+			using (var source = new CancellationTokenSource())
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				var records = new List<Simple>
+				{
+					new Simple { Id = 1, Name = "one" },
+					new Simple { Id = 2, Name = "two" },
+					new Simple { Id = 3, Name = "three" },
+				};
+				source.Cancel();
+				try
+				{
+					await csv.WriteRecordsAsync(records, source.Token);
+				}
+				catch (WriterException ex)//i know [ExpectedException] but exceptions are nested.
+				{
+					if (ex.InnerException is OperationCanceledException || ex.InnerException is TaskCanceledException)
+						return;
+				}
+
+				Assert.Fail("Did not throw exception");
 			}
 		}
 

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using CsvHelper.Expressions;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace CsvHelper
 {
@@ -1000,7 +1001,7 @@ namespace CsvHelper
 
 #if !NET45
 		/// <inheritdoc/>
-		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>()
+		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation]CancellationToken cancellationToken = default(CancellationToken))
 		{
 			if (disposed)
 			{
@@ -1027,6 +1028,7 @@ namespace CsvHelper
 
 			while (await ReadAsync().ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
 				T record;
 				try
 				{
@@ -1057,7 +1059,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition)
+		public virtual IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition, CancellationToken cancellationToken = default)
 		{
 			if (anonymousTypeDefinition == null)
 			{
@@ -1069,11 +1071,11 @@ namespace CsvHelper
 				throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
 			}
 
-			return GetRecordsAsync<T>();
+			return GetRecordsAsync<T>(cancellationToken);
 		}
 
 		/// <inheritdoc/>
-		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type)
+		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			if (disposed)
 			{
@@ -1100,6 +1102,7 @@ namespace CsvHelper
 
 			while (await ReadAsync().ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
 				object record;
 				try
 				{
@@ -1130,7 +1133,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record)
+		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			if (disposed)
 			{
@@ -1157,6 +1160,7 @@ namespace CsvHelper
 
 			while (await ReadAsync().ConfigureAwait(false))
 			{
+				cancellationToken.ThrowIfCancellationRequested();
 				try
 				{
 					recordManager.Value.Hydrate(record);

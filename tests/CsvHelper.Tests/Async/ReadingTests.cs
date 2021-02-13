@@ -6,6 +6,8 @@ using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
+using System;
 
 namespace CsvHelper.Tests.Async
 {
@@ -67,6 +69,26 @@ namespace CsvHelper.Tests.Async
 
 				Assert.AreEqual(2, records.Current.Id);
 				Assert.AreEqual("two", records.Current.Name);
+			}
+		}
+
+		[TestMethod]
+		[ExpectedException(typeof(OperationCanceledException))]
+		public async Task GetRecordsTestCanceled()
+		{
+			var parser = new ParserMock
+			{
+				new [] { "Id", "Name" },
+				new [] { "1", "one" },
+				new [] { "2", "two" },
+				null
+			};
+			using (var source = new CancellationTokenSource())
+			using (var csv = new CsvReader(parser))
+			{
+				source.Cancel();
+				var records = csv.GetRecordsAsync<Simple>(source.Token).GetAsyncEnumerator();
+				await records.MoveNextAsync();
 			}
 		}
 #endif

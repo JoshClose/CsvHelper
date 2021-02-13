@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace CsvHelper
 {
@@ -83,8 +84,9 @@ namespace CsvHelper
 		/// should not be used when using this.
 		/// </summary>
 		/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
+		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}" /> of records.</returns>
-		IAsyncEnumerable<T> GetRecordsAsync<T>();
+		IAsyncEnumerable<T> GetRecordsAsync<T>(CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Gets all the records in the CSV file and converts
@@ -93,8 +95,9 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
+		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
-		IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition);
+		IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Gets all the records in the CSV file and
@@ -102,8 +105,9 @@ namespace CsvHelper
 		/// should not be used when using this.
 		/// </summary>
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
+		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
-		IAsyncEnumerable<object> GetRecordsAsync(Type type);
+		IAsyncEnumerable<object> GetRecordsAsync(Type type, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Enumerates the records hydrating the given record instance with row data.
@@ -114,8 +118,9 @@ namespace CsvHelper
 		/// </summary>
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to fill each enumeration.</param>
+		/// /// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
-		IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record);
+		IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, CancellationToken cancellationToken = default(CancellationToken));
 #endif
 	}
 }
