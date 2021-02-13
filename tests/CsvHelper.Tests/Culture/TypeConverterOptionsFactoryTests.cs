@@ -222,7 +222,7 @@ namespace CsvHelper.Tests.Culture
 				Map(m => m.Number);
 				Map(m => m.NumberOverridenInMap)
 					.TypeConverterOption.NumberStyles(NumberStyles.AllowThousands | NumberStyles.AllowCurrencySymbol)
-					.TypeConverterOption.Format("N");
+					.TypeConverterOption.Format("N2");
 			}
 		}
 	}
