@@ -143,8 +143,8 @@
 			"link": "~/examples/type-conversion"
 		},
 		{
-			"title": "DataReader",
-			"link": "~/examples/datareader"
+			"title": "CsvDataReader",
+			"link": "~/examples/csvdatareader"
 		}
 	]
 }

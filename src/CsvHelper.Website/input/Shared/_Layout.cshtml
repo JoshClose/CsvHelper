@@ -1,5 +1,6 @@
 ﻿@{
 	var isMarkdown = Metadata.Get<string>("Source").EndsWith(".md");
+	var hasTock = Metadata.ContainsKey("toc");
 }
 <!DOCTYPE html>
 <html lang="en-us">
@@ -45,9 +46,12 @@
 		<div class="columns is-variable is-1">
 			@if (isMarkdown)
 			{
-				<div class="column is-2">
-					<partial name="_SideBar" />
-				</div>
+				@if (hasTock)
+				{
+					<div class="column is-2">
+						<partial name="_SideBar" />
+					</div>
+				}
 
 				<div class="column">
 					<div class="content">

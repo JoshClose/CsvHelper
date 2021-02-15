@@ -1,6 +1,4 @@
-﻿title: Getting Started
----
-# Getting Started
+﻿# Getting Started
 
 ## Installation
 <hr />
@@ -92,7 +90,7 @@ just change how our properties match against the header names.
 ```cs
 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	PrepareHeaderForMatch = (string header, int index) => header.ToLower(),
+	PrepareHeaderForMatch = args => args.Header.ToLower(),
 };
 using (var reader = new StreamReader("path\\to\\file.csv"))
 using (var csv = new CsvReader(reader, config))
