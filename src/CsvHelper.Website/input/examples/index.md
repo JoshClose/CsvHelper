@@ -7,4 +7,4 @@ Sections | &nbsp;
 [Writing](/examples/writing) | Writing CSV data.
 [Configuration](/examples/configuration) | Configuring the behavior of CsvHelper to work with your CSV data or custom class structures.
 [Type Conversion](/examples/type-conversion) | Using type conversion to convert CSV fields to and from .NET types.
-[DataReader](/examples/datareader) | Using a DataTable to read CSV data.
+[DataReader](/examples/csvdatareader) | Using a DataTable to read CSV data.

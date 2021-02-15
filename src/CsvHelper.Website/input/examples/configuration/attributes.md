@@ -2,8 +2,6 @@
 
 Most of the configuration done via class maps can also be done using attributes.
 
-[You can view the full list of available attributes here.](/api/CsvHelper.Configuration.Attributes)
-
 ###### Data
 
 ```
