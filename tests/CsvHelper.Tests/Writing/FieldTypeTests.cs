@@ -14,7 +14,7 @@ namespace CsvHelper.Tests.Writing
     public class FieldTypeTests
     {
 		[TestMethod]
-        public void Test1()
+        public void WriteField_ShouldQuote_HasCorrectFieldType()
 		{
 			Type type = null;
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -38,5 +38,46 @@ namespace CsvHelper.Tests.Writing
 				Assert.AreEqual(typeof(string), type);
 			}
 		}
-    }
+
+		[TestMethod]
+		public void WriteRecords_ShouldQuote_HasCorrectFieldType()
+		{
+			var records = new List<Foo>
+			{
+				new Foo { Id = 1, Name = "one" },
+			};
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				ShouldQuote = args =>
+				{
+					if (args.Row.Row > 1)
+					{
+						switch (args.Row.Index)
+						{
+							case 0:
+								Assert.AreEqual(typeof(int), args.FieldType);
+								break;
+							case 1:
+								Assert.AreEqual(typeof(string), args.FieldType);
+								break;
+						}
+					}
+
+					return ConfigurationFunctions.ShouldQuote(args);
+				},
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				csv.WriteRecords(records);
+			}
+		}
+
+		private class Foo
+		{
+			public int Id { get; set; }
+
+			public string Name { get; set; }
+		}
+	}
 }

@@ -18,7 +18,7 @@ namespace CsvHelper.Expressions
 		/// Initializes a new instance using the given writer.
 		/// </summary>
 		/// <param name="writer">The writer.</param>
-		public PrimitiveRecordWriter( CsvWriter writer ) : base( writer ) { }
+		public PrimitiveRecordWriter(CsvWriter writer) : base(writer) { }
 
 		/// <summary>
 		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
@@ -26,30 +26,30 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected override Action<T> CreateWriteDelegate<T>( T record )
+		protected override Action<T> CreateWriteDelegate<T>(T record)
 		{
-			var type = Writer.GetTypeForRecord( record );
+			var type = Writer.GetTypeForRecord(record);
 
-			var recordParameter = Expression.Parameter( typeof( T ), "record" );
+			var recordParameter = Expression.Parameter(typeof(T), "record");
 
-			Expression fieldExpression = Expression.Convert( recordParameter, typeof( object ) );
+			Expression fieldExpression = Expression.Convert(recordParameter, typeof(object));
 
-			var typeConverter = Writer.Context.TypeConverterCache.GetConverter( type );
-			var typeConverterExpression = Expression.Constant( typeConverter );
-			var method = typeof( ITypeConverter ).GetMethod( nameof( ITypeConverter.ConvertToString ) );
+			var typeConverter = Writer.Context.TypeConverterCache.GetConverter(type);
+			var typeConverterExpression = Expression.Constant(typeConverter);
+			var method = typeof(ITypeConverter).GetMethod(nameof(ITypeConverter.ConvertToString));
 
-			var memberMapData = new MemberMapData( null )
+			var memberMapData = new MemberMapData(null)
 			{
 				Index = 0,
 				TypeConverter = typeConverter,
-				TypeConverterOptions = TypeConverterOptions.Merge( new TypeConverterOptions(), Writer.Context.TypeConverterOptionsCache.GetOptions( type ) )
+				TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), Writer.Context.TypeConverterOptionsCache.GetOptions(type))
 			};
 			memberMapData.TypeConverterOptions.CultureInfo = Writer.Configuration.CultureInfo;
 
-			fieldExpression = Expression.Call( typeConverterExpression, method, fieldExpression, Expression.Constant( Writer ), Expression.Constant( memberMapData ) );
-			fieldExpression = Expression.Call( Expression.Constant( Writer ), nameof( Writer.WriteConvertedField ), null, fieldExpression );
+			fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression, Expression.Constant(Writer), Expression.Constant(memberMapData));
+			fieldExpression = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteConvertedField), null, fieldExpression, Expression.Constant(type));
 
-			var action = Expression.Lambda<Action<T>>( fieldExpression, recordParameter ).Compile();
+			var action = Expression.Lambda<Action<T>>(fieldExpression, recordParameter).Compile();
 
 			return action;
 		}

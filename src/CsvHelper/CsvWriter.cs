@@ -128,8 +128,10 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual void WriteConvertedField(string field)
+		public virtual void WriteConvertedField(string field, Type fieldType)
 		{
+			this.fieldType = fieldType;
+
 			if (field == null)
 			{
 				return;
@@ -199,7 +201,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public virtual void WriteField<T>(T field, ITypeConverter converter)
 		{
-			var type = fieldType = field == null ? typeof(string) : field.GetType();
+			var type = field == null ? typeof(string) : field.GetType();
 			reusableMemberMapData.TypeConverter = converter;
 			if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
 			{
@@ -211,7 +213,7 @@ namespace CsvHelper
 
 			var fieldString = converter.ConvertToString(field, this, reusableMemberMapData);
 
-			WriteConvertedField(fieldString);
+			WriteConvertedField(fieldString, type);
 		}
 
 		/// <inheritdoc/>

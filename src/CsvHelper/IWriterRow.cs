@@ -47,7 +47,8 @@ namespace CsvHelper
 		/// written data, and the returned value should not be written.
 		/// </summary>
 		/// <param name="field">The converted field to write.</param>
-		void WriteConvertedField(string field);
+		/// <param name="fieldType">The type of the field before it was converted into a string.</param>
+		void WriteConvertedField(string field, Type fieldType);
 
 		/// <summary>
 		/// Writes the field to the CSV file. The field
