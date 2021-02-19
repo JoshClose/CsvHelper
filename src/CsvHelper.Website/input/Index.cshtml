@@ -16,7 +16,7 @@
 					</a>
 				</div>
 				<div class="column is-narrow">
-					<a class="button is-large is-link" href="~/getting-started">
+					<a class="button is-large is-link" href="@Context.GetLink("/getting-started")">
 						<span class="icon">
 							<i class="fas fa-play-circle"></i>
 						</span>
@@ -27,7 +27,7 @@
 
 		</div>
 		<div class="column">
-			<img src="~/images/logo.svg" />
+			<img src="@Context.GetLink("/images/logo.svg")" />
 		</div>
 	</div>
 
@@ -194,8 +194,8 @@
 				<span>Documentation</span>
 			</h4>
 			<p class="subtitle is-6">
-				Learn how to use CsvHelper using the <a href="~/api">API reference</a>
-				or check out some <a href="~/examples">examples</a>.
+				Learn how to use CsvHelper using the <a href="@Context.GetLink("/api")">API reference</a>
+				or check out some <a href="@Context.GetLink("/examples")">examples</a>.
 			</p>
 		</div>
 

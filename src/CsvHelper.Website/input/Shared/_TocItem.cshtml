@@ -1,12 +1,12 @@
 ﻿@inherits StatiqRazorPage<TocItem>
 <li>
 	<span>
-	@if (Model.Children.Count > 0)
-	{
-		<a class="expander"></a>
-	}
+		@if (Model.Children.Count > 0)
+		{
+			<a class="expander"></a>
+		}
 
-	<a href="@Url.Content(Model.Link)">@Model.Title</a>
+		<a href="@Context.GetLink(Model.Link)">@Model.Title</a>
 	</span>
 
 	@if (Model.Children.Any())
