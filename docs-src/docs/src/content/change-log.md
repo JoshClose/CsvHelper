@@ -1,5 +1,21 @@
 # Change Log
 
+### 24.0.0
+
+#### Features
+
+- Added `CancellationToken` to reading and writing async methods.
+
+#### Bug Fixes
+
+- Fixed issue with `ShouldQuote` not having the correct field type when writing records instead of fields.
+- Fixed issue with `CharCount` and `ByteCount` when trimming.
+
+#### Breaking Changes
+
+- `void IWriterRow.WriteConvertedField(string field)` -> `void IWriterRow.WriteConvertedField(string field, Type fieldType)`
+- `void CsvWriter.WriteConvertedField(string field)` -> `void CsvWriter.WriteConvertedField(string field, Type fieldType)`
+
 ### 23.0.0
 
 #### Features

@@ -125,7 +125,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if <paramref name="type"/>:
+		/// Returns <c>true</c> if <paramref name="args.ParameterType"/>:
 		/// 1. does not have a parameterless constructor
 		/// 2. has a constructor
 		/// 3. is not a user defined struct
