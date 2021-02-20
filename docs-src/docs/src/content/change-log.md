@@ -1,5 +1,11 @@
 # Change Log
 
+### 24.0.1
+
+#### Bug Fixes
+
+- Fixed issue with Trimming all white space.
+
 ### 24.0.0
 
 #### Features
