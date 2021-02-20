@@ -62,5 +62,18 @@ namespace CsvHelper.Tests
 			Assert.AreEqual(1, length);
 		}
 
+		[TestMethod]
+		public void Trim_AllWhitespace_EmptyString()
+		{
+			var buffer = new string(' ', 100).ToCharArray();
+			var trimChars = new char[] { ' ' };
+			var start = 0;
+			var length = buffer.Length;
+
+			ArrayHelper.Trim(buffer, ref start, ref length, trimChars);
+
+			Assert.AreEqual(100, start);
+			Assert.AreEqual(0, length);
+		}
 	}
 }

@@ -28,7 +28,7 @@ namespace CsvHelper
 		public static void Trim(char[] buffer, ref int start, ref int length, char[] trimChars)
 		{
 			// Trim start.
-			for (var i = start; i < start + length + 1; i++)
+			for (var i = start; i < start + length; i++)
 			{
 				var c = buffer[i];
 				if (!Contains(trimChars, c))
