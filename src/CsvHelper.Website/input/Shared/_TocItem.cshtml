@@ -6,7 +6,7 @@
 			<a class="expander"></a>
 		}
 
-		<a href="@Context.GetLink(Model.Link)">@Model.Title</a>
+		<a href="@(new RelativeUrl(Model.Link, Document.GetString(Keys.LinkRoot)).ToString())">@Model.Title</a>
 	</span>
 
 	@if (Model.Children.Any())

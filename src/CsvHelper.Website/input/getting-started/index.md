@@ -18,7 +18,7 @@ PM> Install-Package CsvHelper
 ## Prerequisites
 
 There is some basic .NET knowledge that is implied when using this documentation. Please look over the prequisites to make sure you have an
-understanding of them. [Prerequisites](/examples/prerequisites)
+understanding of them. [Prerequisites](~/examples/prerequisites)
 
 ## CultureInfo
 

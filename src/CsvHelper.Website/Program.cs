@@ -12,7 +12,6 @@ namespace CsvHelper.Docs
 		static async Task<int> Main(string[] args) => await Bootstrapper
 			.Factory
 			.CreateWeb(args)
-			.ModifyTemplate(MediaTypes.Markdown, module => ((RenderMarkdown)module).PrependLinkRoot(true))
 			.RunAsync();
 	}
 }

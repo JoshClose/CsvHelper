@@ -18,7 +18,7 @@ When writing, you can throw an enumerable of class objects, dynamic objects, ano
 
 Topics | &nbsp;
 - | -
-[Write Class Objects](/examples/writing/write-class-objects) |
-[Write Dynamic Objects](/examples/writing/write-dynamic-objects) |
-[Write Anonymous Type Objects](/examples/writing/write-anonymous-type-objects) |
-[Appending to an Existing File](/examples/writing/appending-to-an-existing-file) |
+[Write Class Objects](~/examples/writing/write-class-objects) |
+[Write Dynamic Objects](~/examples/writing/write-dynamic-objects) |
+[Write Anonymous Type Objects](~/examples/writing/write-anonymous-type-objects) |
+[Appending to an Existing File](~/examples/writing/appending-to-an-existing-file) |
