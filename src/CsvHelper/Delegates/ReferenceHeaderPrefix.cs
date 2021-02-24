@@ -25,16 +25,5 @@ namespace CsvHelper
 		/// The member name.
 		/// </summary>
 		public string MemberName { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of ReferenceHeaderPrefixArgs.
-		/// </summary>
-		/// <param name="memberType">The member type.</param>
-		/// <param name="memberName">The member name.</param>
-		public ReferenceHeaderPrefixArgs(Type memberType, string memberName)
-		{
-			MemberType = memberType;
-			MemberName = memberName;
-		}
 	}
 }

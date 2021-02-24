@@ -27,16 +27,5 @@ namespace CsvHelper
 		/// The context.
 		/// </summary>
 		public CsvContext Context { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of HeaderValidatedArgs.
-		/// </summary>
-		/// <param name="invalidHeaders">The invalid headers.</param>
-		/// <param name="context">The context.</param>
-		public HeaderValidatedArgs(InvalidHeader[] invalidHeaders, CsvContext context)
-		{
-			InvalidHeaders = invalidHeaders;
-			Context = context;
-		}
 	}
 }

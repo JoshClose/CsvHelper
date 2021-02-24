@@ -13,29 +13,23 @@ namespace CsvHelper
 	public delegate void BadDataFound(BadDataFoundArgs args);
 
 	/// <summary>
-	/// <see cref="BadDataFound"/> args.
+	/// Information about the field that caused <see cref="BadDataFound"/> to be called.
 	/// </summary>
 	public readonly struct BadDataFoundArgs
 	{
 		/// <summary>
-		/// The field.
+		/// The full field unedited.
 		/// </summary>
 		public readonly string Field { get; init; }
+
+		/// <summary>
+		/// The full row unedited.
+		/// </summary>
+		public readonly string RawRecord { get; init; }
 
 		/// <summary>
 		/// The context.
 		/// </summary>
 		public readonly CsvContext Context { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of BadDataFoundArgs.
-		/// </summary>
-		/// <param name="field">The field.</param>
-		/// <param name="context">The context</param>
-		public BadDataFoundArgs(string field, CsvContext context)
-		{
-			Field = field;
-			Context = context;
-		}
 	}
 }

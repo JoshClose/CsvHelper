@@ -22,14 +22,5 @@ namespace CsvHelper
 		/// The field.
 		/// </summary>
 		public string Field { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of ValidateArgs.
-		/// </summary>
-		/// <param name="field">The field.</param>
-		public ValidateArgs(string field)
-		{
-			Field = field;
-		}
 	}
 }

@@ -20,49 +20,26 @@ namespace CsvHelper.Performance
 	{
 		static void Main(string[] args)
 		{
-			//BenchmarkRunner.Run<Benchmarks>(); return;
+			BenchmarkRunner.Run<Benchmarks>(); return;
 
 			//Test(); return;
 
-			//WriteField(50, 1_000_000, true); return;
+			//WriteField(50, 1_000_000, new CsvConfiguration(CultureInfo.InvariantCulture) { ShouldQuote = args => true }); return;
 			//WriteRecords(1_000_000);
 
 			for (var i = 0; i < 10; i++)
 			{
-				//LumenworksParse();
-				//StefanBertelsParse();
-				//StackParse();
-				//StackParse2();
-				//SoftCircuitsParse();
-				//CsvHelperParse();
+				//Parse();
 
 				//ReadGetField();
 				//ReadGetRecords();
 				//ReadGetRecordsAsync().Wait();
 
-				Console.WriteLine();
+				//Console.WriteLine();
 			}
 		}
 
-		static void Test()
-		{
-			var s = new StringBuilder();
-			s.Append("\r");
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				IgnoreBlankLines = false,
-			};
-			using (var reader = new StringReader(s.ToString()))
-			using (var parser = new CsvParser(reader, config))
-			{
-				while (parser.Read())
-				{
-					var record = parser.Record;
-				}
-			}
-		}
-
-		static string GetFilePath()
+		public static string GetFilePath()
 		{
 			var homePath = Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%");
 			var filePath = Path.Combine(homePath, "Documents", "performance.csv");
@@ -70,17 +47,14 @@ namespace CsvHelper.Performance
 			return filePath;
 		}
 
-		static void WriteField(int columns = 50, int rows = 2_000_000, bool quoteAllFields = false)
+		static void WriteField(int columns = 50, int rows = 1_000_000, CsvConfiguration config = null)
 		{
 			Console.WriteLine("Writing using WriteField");
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
 
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				//Delimiter = ";",
-				ShouldQuote = _ => quoteAllFields,
-			};
+			config ??= new CsvConfiguration(CultureInfo.InvariantCulture);
+
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, config))
@@ -184,14 +158,12 @@ namespace CsvHelper.Performance
 			Console.WriteLine(stopwatch.Elapsed);
 		}
 
-		static void CsvHelperParse()
+		static void Parse()
 		{
-			Console.WriteLine("CsvHelper parsing 2");
+			Console.WriteLine("CsvHelper parsing");
 
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				//BufferSize = 1024 * 4,
-				BufferSize = 16
 			};
 			using (var stream = File.OpenRead(GetFilePath()))
 			using (var reader = new StreamReader(stream))
@@ -200,10 +172,10 @@ namespace CsvHelper.Performance
 				var stopwatch = new Stopwatch();
 				stopwatch.Start();
 
-				//string[] record;
+				string[] record;
 				while (parser.Read())
 				{
-					//record = parser.Record;
+					record = parser.Record;
 				}
 
 				stopwatch.Stop();
@@ -275,52 +247,6 @@ namespace CsvHelper.Performance
 
 			stopwatch.Stop();
 			Console.WriteLine(stopwatch.Elapsed);
-		}
-
-		static void LumenworksParse()
-		{
-			Console.WriteLine("Lumenworks parsing");
-			var stopwatch = new Stopwatch();
-			stopwatch.Start();
-
-			using (var stream = File.OpenRead(GetFilePath()))
-			using (var reader = new StreamReader(stream))
-			using (var csv = new LumenWorks.Framework.IO.Csv.CsvReader(reader))
-			{
-				var fieldCount = csv.FieldCount;
-				var headers = csv.GetFieldHeaders();
-				while (csv.ReadNextRecord())
-				{
-					var row = new string[fieldCount];
-					for (var i = 0; i < fieldCount; i++)
-					{
-						row[i] = csv[i];
-					}
-				}
-			}
-
-			stopwatch.Stop();
-			Console.WriteLine(stopwatch.Elapsed);
-		}
-
-		static void SoftCircuitsParse()
-		{
-			Console.WriteLine("SoftCircuits parsing");
-
-			using (var stream = File.OpenRead(GetFilePath()))
-			using (var csv = new SoftCircuits.CsvParser.CsvReader(stream))
-			{
-				var stopwatch = new Stopwatch();
-				stopwatch.Start();
-
-				string[] row = null;
-				while (csv.ReadRow(ref row))
-				{
-				}
-
-				stopwatch.Stop();
-				Console.WriteLine(stopwatch.Elapsed);
-			}
 		}
 
 		private class Data
@@ -402,109 +328,42 @@ namespace CsvHelper.Performance
 
 	public class Benchmarks
 	{
-		private const int LOOPS = 100_000;
-
-		[Benchmark]
-		public void A()
+		[GlobalSetup]
+		public void GlobalSetup()
 		{
-			var isQuoted = false;
-			var config = new Config();
-			for (var i = 0; i < LOOPS; i++)
-			{
-				isQuoted = !isQuoted;
-				var value = new ReadOnlyRefStruct(isQuoted, config);
-				Method(value);
-			}
+		}
+
+		[GlobalCleanup]
+		public void GlobalCleanup()
+		{
+		}
+
+		[IterationSetup]
+		public void IterationSetup()
+		{
+		}
+
+		[IterationCleanup]
+		public void IterationCleanup()
+		{
 		}
 
 		[Benchmark]
-		public void B()
+		public void Parse()
 		{
-			var isQuoted = false;
-			var config = new Config();
-			for (var i = 0; i < LOOPS; i++)
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				isQuoted = !isQuoted;
-				var value = new Record
-				{
-					IsQuoted = isQuoted,
-					Config = config,
-				};
-				Method(value);
-			}
-		}
-
-		[Benchmark]
-		public void C()
-		{
-			var isQuoted = false;
-			var config = new Config();
-			var value = new Class
-			{
-				Config = config,
 			};
-			for (var i = 0; i < LOOPS; i++)
+			using (var stream = File.OpenRead(Program.GetFilePath()))
+			using (var reader = new StreamReader(stream))
+			using (var parser = new CsvParser(reader, config))
 			{
-				isQuoted = !isQuoted;
-				value.IsQuoted = isQuoted;
-				Method(value);
+				string[] record;
+				while (parser.Read())
+				{
+					record = parser.Record;
+				}
 			}
-		}
-
-		private void Method(ReadOnlyRefStruct value)
-		{
-			if (value.Config.Trim)
-			{
-				Console.WriteLine("NOOP");
-			}
-		}
-
-		private void Method(Record value)
-		{
-			if (value.Config.Trim)
-			{
-				Console.WriteLine("NOOP");
-			}
-		}
-
-		private void Method(Class value)
-		{
-			if (value.Config.Trim)
-			{
-				Console.WriteLine("NOOP");
-			}
-		}
-
-		private class Config
-		{
-			public bool Trim { get; set; }
-		}
-
-		private readonly ref struct ReadOnlyRefStruct
-		{
-			public bool IsQuoted { get; }
-
-			public Config Config { get; }
-
-			public ReadOnlyRefStruct(bool isQuoted, Config config)
-			{
-				IsQuoted = isQuoted;
-				Config = config;
-			}
-		}
-
-		private record Record
-		{
-			public bool IsQuoted { get; init; }
-
-			public Config Config { get; init; }
-		}
-
-		private class Class
-		{
-			public bool IsQuoted { get; set; }
-
-			public Config Config { get; set; }
 		}
 	}
 }

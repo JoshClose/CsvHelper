@@ -165,7 +165,12 @@ namespace CsvHelper.Configuration
 			}
 
 			var header = args.Context.Reader.HeaderRecord[args.FieldIndex];
-			header = args.Context.Reader.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(header, args.FieldIndex));
+			var prepareHeaderForMatchArgs = new PrepareHeaderForMatchArgs
+			{
+				FieldIndex = args.FieldIndex,
+				Header = header,
+			};
+			header = args.Context.Reader.Configuration.PrepareHeaderForMatch(prepareHeaderForMatchArgs);
 
 			return header;
 		}

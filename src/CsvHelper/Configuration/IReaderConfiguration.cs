@@ -27,7 +27,6 @@ namespace CsvHelper.Configuration
 		/// Gets the function that is called when a header validation check is ran. The default function
 		/// will throw a <see cref="ValidationException"/> if there is no header for a given member mapping.
 		/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
-		/// Arguments: (isValid, headerNames, headerNameIndex, context)
 		/// </summary>
 		HeaderValidated HeaderValidated { get; }
 
@@ -35,7 +34,6 @@ namespace CsvHelper.Configuration
 		/// Gets the function that is called when a missing field is found. The default function will
 		/// throw a <see cref="MissingFieldException"/>. You can supply your own function to do other things
 		/// like logging the issue instead of throwing an exception.
-		/// Arguments: (headerNames, index, context)
 		/// </summary>
 		MissingFieldFound MissingFieldFound { get; }
 
@@ -44,7 +42,6 @@ namespace CsvHelper.Configuration
 		/// The default function will re-throw the given exception. If you want to ignore
 		/// reading exceptions, you can supply your own function to do other things like
 		/// logging the issue.
-		/// Arguments: (exception)
 		/// </summary>
 		ReadingExceptionOccurred ReadingExceptionOccurred { get; }
 
@@ -58,26 +55,22 @@ namespace CsvHelper.Configuration
 		/// The header field and the member name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,
 		/// and making casing changes to ignore case.
-		/// Arguments: (header, fieldIndex)
 		/// </summary>
 		PrepareHeaderForMatch PrepareHeaderForMatch { get; }
 
 		/// <summary>
 		/// Determines if constructor parameters should be used to create
 		/// the class instead of the default constructor and members.
-		/// Arguments: (parameterType)
 		/// </summary>
 		ShouldUseConstructorParameters ShouldUseConstructorParameters { get; }
 
 		/// <summary>
 		/// Chooses the constructor to use for constructor mapping.
-		/// Arguments: (classType)
 		/// </summary>
 		GetConstructor GetConstructor { get; }
 
 		/// <summary>
 		/// Gets the name to use for the property of the dynamic object.
-		/// Arguments: (readingContext, fieldIndex)
 		/// </summary>
 		GetDynamicPropertyName GetDynamicPropertyName { get; }
 
@@ -91,7 +84,6 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the callback that will be called to
 		/// determine whether to skip the given record or not.
-		/// Arguments: (record)
 		/// </summary>
 		ShouldSkipRecord ShouldSkipRecord { get; }
 
@@ -104,7 +96,6 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets a callback that will return the prefix for a reference header.
-		/// Arguments: (memberType, memberName)
 		/// </summary>
 		ReferenceHeaderPrefix ReferenceHeaderPrefix { get; }
 

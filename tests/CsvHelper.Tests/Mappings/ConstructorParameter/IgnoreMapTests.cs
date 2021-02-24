@@ -35,8 +35,8 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		public void Parameter_WithConstructorFunctionAndName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
-			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "id");
-			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "name").Ignore();
+			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs { ClassType = typeof(Foo) }), "id");
+			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs { ClassType = typeof(Foo) }), "name").Ignore();
 
 			Assert.AreEqual(2, map.ParameterMaps.Count);
 			Assert.IsFalse(map.ParameterMaps[0].Data.Ignore);
@@ -46,7 +46,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[TestMethod]
 		public void Parameter_WithConstructorAndProperty_CreatesParameterMaps()
 		{
-			var constructor = ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo)));
+			var constructor = ConfigurationFunctions.GetConstructor(new GetConstructorArgs { ClassType = typeof(Foo) });
 			var parameters = constructor.GetParameters();
 
 			var map = new DefaultClassMap<Foo>();

@@ -7,8 +7,6 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
-    <PackageReference Include="LumenWorksCsvReader" Version="4.0.0" />
-    <PackageReference Include="SoftCircuits.CsvParser" Version="2.4.2" />
   </ItemGroup>
 
   <ItemGroup>

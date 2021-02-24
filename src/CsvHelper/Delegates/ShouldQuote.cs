@@ -30,18 +30,5 @@ namespace CsvHelper
 		/// The row.
 		/// </summary>
 		public IWriterRow Row { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of ShouldQuoteArgs.
-		/// </summary>
-		/// <param name="field">The field.</param>
-		/// <param name="fieldType">The field type.</param>
-		/// <param name="row">The row.</param>
-		public ShouldQuoteArgs(string field, Type fieldType, IWriterRow row)
-		{
-			Field = field;
-			FieldType = fieldType;
-			Row = row;
-		}
 	}
 }

@@ -28,16 +28,5 @@ namespace CsvHelper
 		/// The field index.
 		/// </summary>
 		public int FieldIndex { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of PrepareHeaderForMatchArgs.
-		/// </summary>
-		/// <param name="header">The header.</param>
-		/// <param name="fieldIndex">The field index.</param>
-		public PrepareHeaderForMatchArgs(string header, int fieldIndex)
-		{
-			Header = header;
-			FieldIndex = fieldIndex;
-		}
 	}
 }

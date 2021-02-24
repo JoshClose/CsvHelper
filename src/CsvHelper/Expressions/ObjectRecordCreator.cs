@@ -42,7 +42,12 @@ namespace CsvHelper.Expressions
 				var arguments = new List<Expression>();
 				ExpressionManager.CreateConstructorArgumentExpressionsForMapping(map, arguments);
 
-				body = Expression.New(Reader.Configuration.GetConstructor(new GetConstructorArgs(map.ClassType)), arguments);
+				var args = new GetConstructorArgs
+				{
+					ClassType = map.ClassType
+				};
+
+				body = Expression.New(Reader.Configuration.GetConstructor(args), arguments);
 			}
 			else
 			{

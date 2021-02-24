@@ -32,18 +32,5 @@ namespace CsvHelper
 		/// The context.
 		/// </summary>
 		public CsvContext Context { get; init; }
-
-		/// <summary>
-		/// Creates a new instance of MissingFieldFoundArgs.
-		/// </summary>
-		/// <param name="headerNames">The header names.</param>
-		/// <param name="index">The index.</param>
-		/// <param name="context">The context.</param>
-		public MissingFieldFoundArgs(string[] headerNames, int index, CsvContext context)
-		{
-			HeaderNames = headerNames;
-			Index = index;
-			Context = context;
-		}
 	}
 }

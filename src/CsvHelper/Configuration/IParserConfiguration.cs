@@ -81,7 +81,6 @@ namespace CsvHelper.Configuration
 		/// has bad data if it contains a quote and the field is not quoted (escaped).
 		/// You can supply your own function to do other things like logging the issue
 		/// instead of throwing an exception.
-		/// Arguments: context
 		/// </summary>
 		BadDataFound BadDataFound { get; }
 

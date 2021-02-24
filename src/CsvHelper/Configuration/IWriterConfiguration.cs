@@ -88,7 +88,6 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets a function that is used to determine if a field should get quoted 
 		/// when writing.
-		/// Arguments: field, context
 		/// </summary>
 		ShouldQuote ShouldQuote { get; }
 
@@ -132,7 +131,6 @@ namespace CsvHelper.Configuration
 
 		/// <summary>
 		/// Gets a callback that will return the prefix for a reference header.
-		/// Arguments: memberType, memberName
 		/// </summary>
 		ReferenceHeaderPrefix ReferenceHeaderPrefix { get; }
 
