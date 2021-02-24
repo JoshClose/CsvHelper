@@ -1,5 +1,15 @@
 # Change Log
 
+### 25.0.0
+
+#### Bug Fixes
+
+- Fixed stack overflow issue with accessing Parser[int] or Parser.Record in BaddataFound callback. Throws an exception explaining issue now.
+
+#### Breaking Changes
+
+- All delegate args had their non-parameterless constructor removed in favor of using `init`.
+
 ### 24.0.1
 
 #### Bug Fixes
