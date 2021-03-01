@@ -73,6 +73,9 @@
 	@*<partial name="_Metadata" />*@
 
 	<script>
+		hljs.configure({
+			tabReplace: "    "
+		});
 		hljs.initHighlightingOnLoad();
 	</script>
 	<script src="@Context.GetLink("/scripts/header.js")"></script>
