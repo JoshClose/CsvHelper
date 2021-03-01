@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Csvdatareader | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,36 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="csvdatareader">CsvDataReader</h1>
+<p>The question on how to load a data table using CsvHelper came up so often that I just built the functionality in.</p>
+<p><code>CsvDataReader</code> implements <code>IDataReader</code>. This means it has all the capabilities of a forward only data reader. There is really no reason to use this class directly over using <code>CsvReader</code>. <code>CsvDataReader</code> requires an instance of <code>CsvReader</code> and uses it internally to do it's work.</p>
+<p>Loading a <code>DataTable</code> in CsvHelper is simple. By default, a table will be loaded with all columns populated as strings. For the reader to be ready after instantiation, the first row needs to be read immediately, so you need to make any configuration changes before creating an instance of CsvDataReader.</p>
+<pre><code class="language-cs">using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+{
+	// Do any configuration to `CsvReader` before creating CsvDataReader.
+	using (var dr = new CsvDataReader(csv))
+	{		
+		var dt = new DataTable();
+		dt.Load(dr);
+	}
+}
+</code></pre>
+<p>If you want to specify columns and column types, the data table will be loaded with the types automatically converted.</p>
+<pre><code class="language-cs">using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+{
+	// Do any configuration to `CsvReader` before creating CsvDataReader.
+	using (var dr = new CsvDataReader(csv))
+	{		
+		var dt = new DataTable();
+		dt.Columns.Add(&quot;Id&quot;, typeof(int));
+		dt.Columns.Add(&quot;Name&quot;, typeof(string));
+
+		dt.Load(dr);
+	}
+}
+</code></pre>
 
 					</div>
 				</div>

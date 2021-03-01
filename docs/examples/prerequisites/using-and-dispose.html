@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Using And Dispose | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,20 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="using-and-dispose">Using and Dispose</h1>
+<p>Whenever you have an object the implements <code>IDisposable</code>, you need to dispose of the resource when you're done with it. Most classes that use unmanaged resources will implement <code>IDisposable</code>. This means a lot of classes in the <code>System.IO</code> namespace will need to be disposed of.</p>
+<p>The best practice to dispose of an object when you're done with it is to wrap the code in a <code>using</code> block. When the <code>using</code> block exits, the resource will automatically be disposed of as soon as possible.</p>
+<pre><code class="language-cs">using (var stream = new MemoryStream())
+{
+	// Use the stream.
+}
+// The stream will be disposed of as soon as possible.
+</code></pre>
+<p>If you need to keep keep it around for a while and dispose of it later, <code>using</code> does some error handling for you, so it's still a good idea to use it instead of calling <code>Dispose</code> directly. There is some debate on whether this is a good idea because it doesn't show intent.</p>
+<pre><code class="language-cs">var stream = new MemoryStream();
+// Later in a different part of your code.
+using (stream) { }
+</code></pre>
 
 					</div>
 				</div>

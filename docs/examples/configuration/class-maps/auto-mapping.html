@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Auto Mapping | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,38 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="auto-mapping">Auto Mapping</h1>
+<p>If you don't supply a map to the configuration, one is automatically created for you on the fly. You can call auto mapping directly in your class map also. You may want to do this if you have a large number of properties that will be set up correctly by default, and only need to make a couple changes.</p>
+<h6 id="data">Data</h6>
+<pre><code>Id,The Name
+1,one
+</code></pre>
+<h6 id="example">Example</h6>
+<pre><code class="language-cs">void Main()
+{	   
+	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+    {
+        csv.Context.RegisterClassMap&lt;FooMap&gt;();
+        var records = csv.GetRecords&lt;Foo&gt;();
+    }
+}
+
+public class Foo
+{
+	public int Id { get; set; }
+	public string Name { get; set; }
+}
+
+public sealed class FooMap : ClassMap&lt;Foo&gt;
+{
+	public FooMap()
+	{
+		AutoMap(CultureInfo.InvariantCulture);
+		Map(m =&gt; m.Name).Name(&quot;The Name&quot;);
+	}
+}
+</code></pre>
 
 					</div>
 				</div>

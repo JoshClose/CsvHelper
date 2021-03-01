@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Reading And Writing Files | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,56 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="reading-and-writing-files">Reading and Writing Files</h1>
+<p>To open a file for reading or writing, we can use <code>System.IO.File</code>.</p>
+<pre><code class="language-cs">using (var stream = File.OpenRead(&quot;path\\to\\file.csv&quot;))
+{
+}
+
+using (var stream = File.OpenWrite(&quot;path\\to\\file.csv&quot;))
+{	
+}
+</code></pre>
+<p>These both return a <code>FileStream</code> for working with our file. Since our data is text, we will need to use a <code>StreamReader</code> and <code>StreamWriter</code> to read and write the text.</p>
+<pre><code class="language-cs">using (var stream = File.OpenRead(&quot;path\\to\\file.csv&quot;))
+using (var reader = new StreamReader(stream))
+{
+}
+
+using (var stream = File.OpenWrite(&quot;path\\to\\file.csv&quot;))
+using (var writer = new StreamWriter(stream))
+{	
+}
+</code></pre>
+<p><code>StreamReader</code> and <code>StreamWriter</code> have shortcuts for doing this.</p>
+<pre><code class="language-cs">using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+{
+}
+
+using (var writer = new StreamWriter(&quot;path\\to\\file.csv&quot;))
+{	
+}
+</code></pre>
+<p>CsvHelper doesn't know anything about your encoding, so if you have a specific encoding, you'll need to specify that in your stream.</p>
+<pre><code class="language-cs">using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;, Encoding.UTF8))
+{
+}
+
+using (var writer = new StreamWriter(&quot;path\\to\\file.csv&quot;, Encoding.UTF8))
+{	
+}
+</code></pre>
+<p><code>CsvReader</code> and <code>CsvWriter</code> take a <code>TextReader</code> and <code>TextWriter</code> in their constructors. <code>TextReader</code> and <code>TextWriter</code> are <code>abstract</code> classes for reading and writing text. <code>StreamReader</code> inherits <code>TextReader</code> and <code>StreamWriter</code> inherits <code>TextWriter</code>, so we can use those with <code>CsvReader</code> and <code>CsvWriter</code>.</p>
+<pre><code class="language-cs">using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+using (var csv = new CsvReader(reader))
+{
+}
+
+using (var writer = new StreamWriter(&quot;path\\to\\file.csv&quot;))
+using (var csv = new CsvWriter(writer))
+{	
+}
+</code></pre>
 
 					</div>
 				</div>

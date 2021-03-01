@@ -1,0 +1,3 @@
+html, body { height: 100vh; }
+
+body { display: flex; flex-direction: column; }

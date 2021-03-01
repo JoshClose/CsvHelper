@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Reading By Hand | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,39 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="reading-by-hand">Reading by Hand</h1>
+<p>Sometimes it's easier to not try and configure a mapping to match your class definition for various reasons. It's usually only a few more lines of code to just read the rows by hand instead.</p>
+<h6 id="data">Data</h6>
+<pre><code>Id,Name
+1,one
+</code></pre>
+<h6 id="example">Example</h6>
+<pre><code class="language-cs">void Main()
+{
+    using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+    {
+        var records = new List&lt;Foo&gt;();
+		csv.Read();
+		csv.ReadHeader();
+		while (csv.Read())
+		{
+			var record = new Foo
+			{
+				Id = csv.GetField&lt;int&gt;(&quot;Id&quot;),
+				Name = csv.GetField(&quot;Name&quot;)
+			};
+			records.Add(record);
+		}
+    }
+}
+
+public class Foo
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
+</code></pre>
 
 					</div>
 				</div>

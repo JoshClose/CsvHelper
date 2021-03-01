@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Streams | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,29 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="streams">Streams</h1>
+<p>When reading from a stream, if you need to go back to the beginning of the stream, you can use the <code>Stream.Position</code> property.</p>
+<pre><code class="language-cs">using (var stream = new File.OpenRead(&quot;path\\to\\file&quot;))
+using (var reader = new StreamReader(stream))
+{	
+	// Read file content.
+	var content = reader.ReadToEnd();
+
+	// Go back to beginning of the stream.
+	stream.Position = 0;
+
+	// Read file content again.
+	content = reader.ReadToEnd();
+}
+</code></pre>
+<p>When writing to a file, you need to flush the writer for the data to be written to the stream. <code>StreamWriter</code> contains an internal buffer and the data is only written to the stream when the buffer is full, or <code>Flush</code> is called. <code>Flush</code> is automatically called when a <code>using</code> block exits.</p>
+<pre><code class="language-cs">using (var stream = new File.OpenWrite(&quot;path\\to\\file&quot;))
+using (var writer = new StreamWriter(stream))
+{	
+	writer.WriteLine(&quot;Foo&quot;);
+	writer.Flush(); // Data is written from the writer buffer to the stream.
+} // Flush is also called here.
+</code></pre>
 
 					</div>
 				</div>

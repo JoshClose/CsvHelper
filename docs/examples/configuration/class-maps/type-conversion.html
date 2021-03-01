@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Prerequisites | CsvHelper</title>
+	<title>Type Conversion | CsvHelper</title>
 
 	
 	
@@ -382,30 +382,58 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<p>s# Prerequisites</p>
-<p>Here are some prerequisites that are needed for using CsvHelper. These are .NET basics that are implied knowledge when using CsvHelper. <a href="https://docs.microsoft.com/dotnet/" target="_blank">Microsoft has excellent documentation</a> that can you can use to learn more.</p>
-<table>
-<thead>
-<tr>
-<th>Topics</th>
-<th> </th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/using-and-dispose">Using and Dispose</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/reading-and-writing-files">Reading and Writing Files</a></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="/CsvHelper/examples/prerequisites/streams">Streams</a></td>
-<td></td>
-</tr>
-</tbody>
-</table>
+						<h1 id="type-conversion">Type Conversion</h1>
+<p>If you need to convert to or from a non-standard .NET type, you can supply a type converter to use for a property.</p>
+<h6 id="data">Data</h6>
+<pre><code>Id,Name,Json
+1,one,&quot;{ &quot;&quot;Foo&quot;&quot;: &quot;&quot;Bar&quot;&quot; }&quot;
+</code></pre>
+<h6 id="example">Example</h6>
+<pre><code class="language-cs">void Main()
+{
+	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
+	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+	{
+		csv.Context.RegisterClassMap&lt;FooMap&gt;();
+		csv.GetRecords&lt;Foo&gt;().ToList().Dump();
+	}
+}
+
+public class Foo
+{
+	public int Id { get; set; }
+	public string Name { get; set; }
+	public Json Json { get; set; }
+}
+
+public class Json
+{
+	public string Foo { get; set; }
+}
+
+public class JsonConverter&lt;T&gt; : DefaultTypeConverter
+{
+	public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+	{
+		return JsonConvert.DeserializeObject&lt;T&gt;(text);
+	}
+
+	public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+	{
+		return JsonConvert.SerializeObject(value);
+	}
+}
+
+public class FooMap : ClassMap&lt;Foo&gt;
+{
+	public FooMap()
+	{
+		Map(m =&gt; m.Id);
+		Map(m =&gt; m.Name);
+		Map(m =&gt; m.Json).TypeConverter&lt;JsonConverter&lt;Json&gt;&gt;();
+	}
+}
+</code></pre>
 
 					</div>
 				</div>
