@@ -56,10 +56,9 @@ class Build : NukeBuild
     AbsolutePath TestsDirectory => RootDirectory / "tests";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
 	AbsolutePath DocsDirectory => RootDirectory / "docs";
-	AbsolutePath DocsSourceDirectory => RootDirectory / "docs-src" / "docs";
-	AbsolutePath DocsArtifactsDirectory => DocsSourceDirectory / "dist";
 
     Project CsvHelperProject => Solution.GetProject("CsvHelper");
+	Project DocsProject => Solution.GetProject("CsvHelper.Website");
 
     Target Clean => _ => _
         .Before(Restore)
@@ -147,25 +146,15 @@ class Build : NukeBuild
             );
         });
 
-	Target DocsBuild => _ => _
+	Target Docs => _ => _
 		.Executes(() =>
 		{
-			NpmInstall(s => s
-				.SetWorkingDirectory(DocsSourceDirectory)
-			);
-
-			NpmRun(s => s
-				.SetWorkingDirectory(DocsSourceDirectory)
-				.SetCommand("build")
-			);
-		});
-
-	Target DocsPublish => _ => _
-		.DependsOn(DocsBuild)
-		.Executes(() =>
-		{
-			EnsureExistingDirectory(DocsDirectory);
 			EnsureCleanDirectory(DocsDirectory);
-			CopyDirectoryRecursively(DocsArtifactsDirectory, DocsDirectory, DirectoryExistsPolicy.Merge);
+
+			DotNetRun(s => s
+				.SetProjectFile(DocsProject)
+				.SetConfiguration(Configuration.Release)
+				.SetApplicationArguments($"-o \"{DocsDirectory}\"")
+			);
 		});
 }
