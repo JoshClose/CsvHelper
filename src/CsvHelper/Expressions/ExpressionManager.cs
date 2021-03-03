@@ -81,10 +81,7 @@ namespace CsvHelper.Expressions
 					// Constructor parameter type.
 					var arguments = new List<Expression>();
 					CreateConstructorArgumentExpressionsForMapping(parameterMap.ConstructorTypeMap, arguments);
-					var args = new GetConstructorArgs
-					{
-						ClassType = parameterMap.ConstructorTypeMap.ClassType,
-					};
+					var args = new GetConstructorArgs(parameterMap.ConstructorTypeMap.ClassType);
 					var constructorExpression = Expression.New(reader.Configuration.GetConstructor(args), arguments);
 
 					argumentExpressions.Add(constructorExpression);
@@ -183,10 +180,7 @@ namespace CsvHelper.Expressions
 				{
 					var arguments = new List<Expression>();
 					CreateConstructorArgumentExpressionsForMapping(referenceMap.Data.Mapping, arguments);
-					var args = new GetConstructorArgs
-					{
-						ClassType = referenceMap.Data.Mapping.ClassType,
-					};
+					var args = new GetConstructorArgs(referenceMap.Data.Mapping.ClassType);
 					referenceBody = Expression.New(reader.Configuration.GetConstructor(args), arguments);
 				}
 				else
@@ -210,7 +204,7 @@ namespace CsvHelper.Expressions
 			if (memberMap.Data.ReadingConvertExpression != null)
 			{
 				// The user is providing the expression to do the conversion.
-				Expression exp = Expression.Invoke(memberMap.Data.ReadingConvertExpression, Expression.Constant(new ConvertFromStringArgs { Row = reader }));
+				Expression exp = Expression.Invoke(memberMap.Data.ReadingConvertExpression, Expression.Constant(new ConvertFromStringArgs(reader)));
 				return Expression.Convert(exp, memberMap.Data.Member.MemberType());
 			}
 
@@ -254,11 +248,8 @@ namespace CsvHelper.Expressions
 			// Validate the field.
 			if (memberMap.Data.ValidateExpression != null)
 			{
-				var argsType = typeof(ValidateArgs);
-				var newArgsExpression = Expression.New(argsType);
-				var fieldBinding = Expression.Bind(argsType.GetProperty(nameof(ValidateArgs.Field)), fieldExpression);
-				var args = Expression.MemberInit(newArgsExpression, fieldBinding);
-
+				var constructor = typeof(ValidateArgs).GetConstructor(new Type[] { typeof(string) });
+				var args = Expression.New(constructor, fieldExpression);
 				var validateExpression = Expression.IsFalse(Expression.Invoke(memberMap.Data.ValidateExpression, args));
 				var validationExceptionConstructor = typeof(FieldValidationException).GetConstructors().OrderBy(c => c.GetParameters().Length).First();
 				var newValidationExceptionExpression = Expression.New(validationExceptionConstructor, Expression.Constant(reader.Context), fieldExpression);

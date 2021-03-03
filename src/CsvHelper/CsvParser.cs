@@ -797,12 +797,7 @@ namespace CsvHelper
 				// Not quoted.
 				// No processing needed.
 
-				return new ProcessedField
-				{
-					Buffer = buffer,
-					Start = newStart,
-					Length = newLength,
-				};
+				return new ProcessedField(newStart, newLength, buffer);
 			}
 
 			if (buffer[newStart] != quote || buffer[newStart + newLength - 1] != quote || newLength == 1 && buffer[newStart] == quote)
@@ -835,12 +830,7 @@ namespace CsvHelper
 			{
 				// The only quotes are the ends of the field.
 				// No more processing is needed.
-				return new ProcessedField
-				{
-					Buffer = buffer,
-					Start = newStart,
-					Length = newLength,
-				};
+				return new ProcessedField(newStart, newLength, buffer);
 			}
 
 			if (newLength > processFieldBuffer.Length)
@@ -876,12 +866,7 @@ namespace CsvHelper
 				position++;
 			}
 
-			return new ProcessedField
-			{
-				Buffer = processFieldBuffer,
-				Start = 0,
-				Length = position,
-			};
+			return new ProcessedField(0, position, processFieldBuffer);
 		}
 
 		/// <inheritdoc/>
@@ -890,12 +875,7 @@ namespace CsvHelper
 		{
 			// If field is already known to be bad, different rules can be applied.
 
-			var args = new BadDataFoundArgs
-			{
-				Field = new string(buffer, start, length),
-				RawRecord = RawRecord,
-				Context = Context,
-			};
+			var args = new BadDataFoundArgs(new string(buffer, start, length), RawRecord, Context);
 			badDataFound?.Invoke(args);
 
 			var newStart = start;
@@ -909,12 +889,7 @@ namespace CsvHelper
 			if (buffer[newStart] != quote)
 			{
 				// If the field doesn't start with a quote, don't process it.
-				return new ProcessedField
-				{
-					Buffer = buffer,
-					Start = newStart,
-					Length = newLength,
-				};
+				return new ProcessedField(newStart, newLength, buffer);
 			}
 
 			if (newLength > processFieldBuffer.Length)
@@ -971,12 +946,7 @@ namespace CsvHelper
 				position++;
 			}
 
-			return new ProcessedField
-			{
-				Buffer = processFieldBuffer,
-				Start = 0,
-				Length = position,
-			};
+			return new ProcessedField(0, position, processFieldBuffer);
 		}
 
 		/// <inheritdoc/>
@@ -1023,12 +993,7 @@ namespace CsvHelper
 				position++;
 			}
 
-			return new ProcessedField
-			{
-				Buffer = processFieldBuffer,
-				Start = 0,
-				Length = position,
-			};
+			return new ProcessedField(0, position, processFieldBuffer);
 		}
 
 		/// <inheritdoc/>
@@ -1043,12 +1008,7 @@ namespace CsvHelper
 				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
 			}
 
-			return new ProcessedField
-			{
-				Buffer = buffer,
-				Start = newStart,
-				Length = newLength,
-			};
+			return new ProcessedField(newStart, newLength, buffer);
 		}
 
 		/// <inheritdoc/>
@@ -1093,17 +1053,30 @@ namespace CsvHelper
 			/// <summary>
 			/// The start of the field in the buffer.
 			/// </summary>
-			public int Start { get; init; }
+			public readonly int Start;
 
 			/// <summary>
 			/// The length of the field in the buffer.
 			/// </summary>
-			public int Length { get; init; }
+			public readonly int Length;
 
 			/// <summary>
 			/// The buffer that contains the field.
 			/// </summary>
-			public char[] Buffer { get; init; }
+			public readonly char[] Buffer;
+
+			/// <summary>
+			/// Creates a new instance of ProcessedField.
+			/// </summary>
+			/// <param name="start">The start of the field in the buffer.</param>
+			/// <param name="length">The length of the field in the buffer.</param>
+			/// <param name="buffer">The buffer that contains the field.</param>
+			public ProcessedField(int start, int length, char[] buffer)
+			{
+				Start = start;
+				Length = length;
+				Buffer = buffer;
+			}
 		}
 
 		private enum ReadLineResult

@@ -137,10 +137,7 @@ namespace CsvHelper.Configuration
 		{
 			if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
 
-			var args = new GetConstructorArgs
-			{
-				ClassType = ClassType,
-			};
+			var args = new GetConstructorArgs(ClassType);
 
 			return Parameter(() => ConfigurationFunctions.GetConstructor(args), name);
 		}
@@ -225,10 +222,7 @@ namespace CsvHelper.Configuration
 			}
 
 			var mapParents = new LinkedList<Type>();
-			var args = new ShouldUseConstructorParametersArgs
-			{
-				ParameterType = type,
-			};
+			var args = new ShouldUseConstructorParametersArgs(type);
 			if (context.Configuration.ShouldUseConstructorParameters(args))
 			{
 				// This type doesn't have a parameterless constructor so we can't create an
@@ -406,11 +400,7 @@ namespace CsvHelper.Configuration
 						var referenceMap = new MemberReferenceMap(member, refMap);
 						if (context.Configuration.ReferenceHeaderPrefix != null)
 						{
-							var args = new ReferenceHeaderPrefixArgs
-							{
-								MemberName = member.Name,
-								MemberType = member.MemberType(),
-							};
+							var args = new ReferenceHeaderPrefixArgs(member.MemberType(), member.Name);
 							referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(args);
 						}
 
@@ -454,10 +444,7 @@ namespace CsvHelper.Configuration
 		protected virtual void AutoMapConstructorParameters(ClassMap map, CsvContext context, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
-			var args = new GetConstructorArgs
-			{
-				ClassType = map.ClassType,
-			};
+			var args = new GetConstructorArgs(map.ClassType);
 			var constructor = context.Configuration.GetConstructor(args);
 			var parameters = constructor.GetParameters();
 
@@ -506,11 +493,7 @@ namespace CsvHelper.Configuration
 					var referenceMap = new ParameterReferenceMap(parameter, refMap);
 					if (context.Configuration.ReferenceHeaderPrefix != null)
 					{
-						var referenceHeaderPrefix = new ReferenceHeaderPrefixArgs
-						{
-							MemberName = memberTypeInfo.Name,
-							MemberType = memberTypeInfo.MemberType(),
-						};
+						var referenceHeaderPrefix = new ReferenceHeaderPrefixArgs(memberTypeInfo.MemberType(), memberTypeInfo.Name);
 						referenceMap.Data.Prefix = context.Configuration.ReferenceHeaderPrefix(referenceHeaderPrefix);
 					}
 
@@ -518,7 +501,7 @@ namespace CsvHelper.Configuration
 
 					parameterMap.ReferenceMap = referenceMap;
 				}
-				else if (context.Configuration.ShouldUseConstructorParameters(new ShouldUseConstructorParametersArgs { ParameterType = parameter.ParameterType }))
+				else if (context.Configuration.ShouldUseConstructorParameters(new ShouldUseConstructorParametersArgs(parameter.ParameterType)))
 				{
 					mapParents.AddLast(type);
 					var constructorMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);

@@ -20,6 +20,15 @@ namespace CsvHelper
 		/// <summary>
 		/// The class type.
 		/// </summary>
-		public Type ClassType { get; init; }
+		public readonly Type ClassType;
+
+		/// <summary>
+		/// Creates a new instance of GetConstructorArgs.
+		/// </summary>
+		/// <param name="classType">The class type.</param>
+		public GetConstructorArgs(Type classType)
+		{
+			ClassType = classType;
+		}
 	}
 }

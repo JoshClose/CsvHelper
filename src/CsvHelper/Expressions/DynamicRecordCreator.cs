@@ -38,11 +38,7 @@ namespace CsvHelper.Expressions
 			{
 				for (var i = 0; i < Reader.HeaderRecord.Length; i++)
 				{
-					var args = new GetDynamicPropertyNameArgs
-					{
-						FieldIndex = i,
-						Context = Reader.Context,
-					};
+					var args = new GetDynamicPropertyNameArgs(i, Reader.Context);
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(args);
 					Reader.TryGetField(i, out string field);
 					dict.Add(propertyName, field);
@@ -52,11 +48,7 @@ namespace CsvHelper.Expressions
 			{
 				for (var i = 0; i < Reader.Parser.Count; i++)
 				{
-					var args = new GetDynamicPropertyNameArgs
-					{
-						FieldIndex = i,
-						Context = Reader.Context,
-					};
+					var args = new GetDynamicPropertyNameArgs(i, Reader.Context);
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(args);
 					var field = Reader.GetField(i);
 					dict.Add(propertyName, field);

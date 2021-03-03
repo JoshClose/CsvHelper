@@ -22,6 +22,15 @@ namespace CsvHelper
 		/// <summary>
 		/// The row.
 		/// </summary>
-		public readonly IReaderRow Row { get; init; }
+		public readonly IReaderRow Row;
+
+		/// <summary>
+		/// Creates a new instance of ConvertFromStringArgs.
+		/// </summary>
+		/// <param name="row">The row.</param>
+		public ConvertFromStringArgs(IReaderRow row)
+		{
+			Row = row;
+		}
 	}
 }

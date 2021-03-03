@@ -19,16 +19,29 @@ namespace CsvHelper
 		/// <summary>
 		/// The field.
 		/// </summary>
-		public string Field { get; init; }
+		public readonly string Field;
 
 		/// <summary>
 		/// The field type.
 		/// </summary>
-		public Type FieldType { get; init; }
+		public readonly Type FieldType;
 
 		/// <summary>
 		/// The row.
 		/// </summary>
-		public IWriterRow Row { get; init; }
+		public readonly IWriterRow Row;
+
+		/// <summary>
+		/// Creates a new instance of ShouldQuoteArgs.
+		/// </summary>
+		/// <param name="field">The field.</param>
+		/// <param name="fieldType">The field type.</param>
+		/// <param name="row">The row.</param>
+		public ShouldQuoteArgs(string field, Type fieldType, IWriterRow row)
+		{
+			Field = field;
+			FieldType = fieldType;
+			Row = row;
+		}
 	}
 }

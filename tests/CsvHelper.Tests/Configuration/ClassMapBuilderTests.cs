@@ -97,10 +97,7 @@ namespace CsvHelper.Tests.Configuration
 		public void ClassMapBuilderAddsConvertUsingFunctionCorrectly()
 		{
 			var fakeRow = new BuilderRowFake();
-			var args = new ConvertFromStringArgs
-			{
-				Row = fakeRow,
-			};
+			var args = new ConvertFromStringArgs(fakeRow);
 			Assert.AreEqual(ConvertExpression(args).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(args).E); //6
 		}
 

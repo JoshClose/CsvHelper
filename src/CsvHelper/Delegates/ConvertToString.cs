@@ -23,6 +23,15 @@ namespace CsvHelper
 		/// <summary>
 		/// The value to convert.
 		/// </summary>
-		public TClass Value { get; init; }
+		public readonly TClass Value;
+
+		/// <summary>
+		/// Creates a new instance of ConvertToStringArgs{TClass}.
+		/// </summary>
+		/// <param name="value">The value to convert.</param>
+		public ConvertToStringArgs(TClass value)
+		{
+			Value = value;
+		}
 	}
 }

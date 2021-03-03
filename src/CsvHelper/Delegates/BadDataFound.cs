@@ -20,16 +20,29 @@ namespace CsvHelper
 		/// <summary>
 		/// The full field unedited.
 		/// </summary>
-		public readonly string Field { get; init; }
+		public readonly string Field;
 
 		/// <summary>
 		/// The full row unedited.
 		/// </summary>
-		public readonly string RawRecord { get; init; }
+		public readonly string RawRecord;
 
 		/// <summary>
 		/// The context.
 		/// </summary>
-		public readonly CsvContext Context { get; init; }
+		public readonly CsvContext Context;
+
+		/// <summary>
+		/// Creates a new instance of BadDataFoundArgs.
+		/// </summary>
+		/// <param name="field">The full field unedited.</param>
+		/// <param name="rawRecord">The full row unedited.</param>
+		/// <param name="context">The context.</param>
+		public BadDataFoundArgs(string field, string rawRecord, CsvContext context)
+		{
+			Field = field;
+			RawRecord = rawRecord;
+			Context = context;
+		}
 	}
 }

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace CsvHelper
 {
 	/// <summary>
-	/// 
+	/// Methods to help with arrays.
 	/// </summary>
 	public static class ArrayHelper
     {

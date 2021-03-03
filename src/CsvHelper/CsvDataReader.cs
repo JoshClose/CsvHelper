@@ -362,21 +362,13 @@ namespace CsvHelper
 				return index;
 			}
 
-			var args = new PrepareHeaderForMatchArgs
-			{
-				FieldIndex = 0,
-				Header = name,
-			};
+			var args = new PrepareHeaderForMatchArgs(name, 0);
 			var namePrepared = csv.Configuration.PrepareHeaderForMatch(args);
 
 			var headerRecord = csv.HeaderRecord;
 			for (var i = 0; i < headerRecord.Length; i++)
 			{
-				args = new PrepareHeaderForMatchArgs
-				{
-					FieldIndex = i,
-					Header = headerRecord[i],
-				};
+				args = new PrepareHeaderForMatchArgs(headerRecord[i], i);
 				var headerPrepared = csv.Configuration.PrepareHeaderForMatch(args);
 				if (csv.Configuration.CultureInfo.CompareInfo.Compare(namePrepared, headerPrepared, CompareOptions.IgnoreCase) == 0)
 				{

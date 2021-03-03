@@ -21,16 +21,29 @@ namespace CsvHelper
 		/// <summary>
 		/// The header names.
 		/// </summary>
-		public string[] HeaderNames { get; init; }
+		public readonly string[] HeaderNames;
 
 		/// <summary>
 		/// The index.
 		/// </summary>
-		public int Index { get; init; }
+		public readonly int Index;
 
 		/// <summary>
 		/// The context.
 		/// </summary>
-		public CsvContext Context { get; init; }
+		public readonly CsvContext Context;
+
+		/// <summary>
+		/// Creates a new instance of MissingFieldFoundArgs.
+		/// </summary>
+		/// <param name="headerNames">The header names.</param>
+		/// <param name="index">The index.</param>
+		/// <param name="context">The context.</param>
+		public MissingFieldFoundArgs(string[] headerNames, int index, CsvContext context)
+		{
+			HeaderNames = headerNames;
+			Index = index;
+			Context = context;
+		}
 	}
 }

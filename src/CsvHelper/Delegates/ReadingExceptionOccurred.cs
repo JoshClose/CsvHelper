@@ -22,6 +22,15 @@ namespace CsvHelper
 		/// <summary>
 		/// The exception.
 		/// </summary>
-		public CsvHelperException Exception { get; init; }
+		public readonly CsvHelperException Exception;
+
+		/// <summary>
+		/// Creates a new instance of ReadingExceptionOccurredArgs.
+		/// </summary>
+		/// <param name="exception">The exception.</param>
+		public ReadingExceptionOccurredArgs(CsvHelperException exception)
+		{
+			Exception = exception;
+		}
 	}
 }

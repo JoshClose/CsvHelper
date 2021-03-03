@@ -85,11 +85,7 @@ namespace CsvHelper.Tests.Reading
 				GetDynamicPropertyName = args =>
 				{
 					var header = args.Context.Reader.HeaderRecord[args.FieldIndex];
-					var prepareHeaderForMatchArgs = new PrepareHeaderForMatchArgs
-					{
-						FieldIndex = args.FieldIndex,
-						Header = header,
-					};
+					var prepareHeaderForMatchArgs = new PrepareHeaderForMatchArgs(header, args.FieldIndex);
 					header = args.Context.Reader.Configuration.PrepareHeaderForMatch(prepareHeaderForMatchArgs);
 					var name = headerNameCounts[header] > 1 ? $"{header}{args.FieldIndex}" : header;
 
@@ -107,7 +103,7 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				csv.ReadHeader();
 				var counts =
-					(from header in csv.Context.Reader.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs { FieldIndex = i, Header = h }))
+					(from header in csv.Context.Reader.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(h, i)))
 					 group header by header into g
 					 select new
 					 {

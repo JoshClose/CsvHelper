@@ -21,6 +21,15 @@ namespace CsvHelper
 		/// <summary>
 		/// The field.
 		/// </summary>
-		public string Field { get; init; }
+		public readonly string Field;
+
+		/// <summary>
+		/// Creates a new instance of ValidateArgs.
+		/// </summary>
+		/// <param name="field">The field.</param>
+		public ValidateArgs(string field)
+		{
+			Field = field;
+		}
 	}
 }
