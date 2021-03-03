@@ -1,5 +1,35 @@
 ﻿# Change Log
 
+### 26.0.0
+
+#### Features
+
+- Added configuration for `ExceptionMessagesContainRawData` that defaults to true.
+
+#### Bug Fixes
+
+- Removed all `init` properties. These were causing people too many problems.
+- Fixed issue with exception message not containing the header record.
+
+#### Breaking Changes
+
+- Added `bool IParserConfiguration.ExceptionMessagesContainRawData { get; }`.
+- Added `bool IWriterConfiguration.ExceptionMessagesContainRawData { get; }`.
+- All delegate args objects have `init` removed and now have constructors with parameters.
+  - BadDataFound
+  - ConvertFromString
+  - GetConstructor
+  - GetDynamicPropertyName
+  - HeaderValidated
+  - MissingFieldFound
+  - PrepareHeaderForMatch
+  - ReadingExceptionOccurred
+  - ReferenceHeaderPrefix
+  - ShouldQuote
+  - ShouldSkipRecord
+  - ShouldUseConstructorParameter
+  - Validate
+
 ### 25.0.0
 
 #### Bug Fixes
