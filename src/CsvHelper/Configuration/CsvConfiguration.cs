@@ -58,6 +58,9 @@ namespace CsvHelper.Configuration
 		public virtual char Escape { get; set; } = '"';
 
 		/// <inheritdoc/>
+		public virtual bool ExceptionMessagesContainRawData { get; set; } = true;
+
+		/// <inheritdoc/>
 		public virtual GetConstructor GetConstructor { get; set; } = ConfigurationFunctions.GetConstructor;
 
 		/// <inheritdoc/>

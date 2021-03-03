@@ -16,10 +16,15 @@ namespace CsvHelper.TypeConversion
 		/// <inheritdoc/>
 		public virtual object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
+			if (!row.Configuration.ExceptionMessagesContainRawData)
+			{
+				text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
+			}
+
 			var message =
-				$"The conversion cannot be performed.\r\n" +
-				$"    Text: '{text}'\r\n" +
-				$"    MemberType: {memberMapData.Member?.MemberType().FullName}\r\n" +
+				$"The conversion cannot be performed.{Environment.NewLine}" +
+				$"    Text: '{text}'{Environment.NewLine}" +
+				$"    MemberType: {memberMapData.Member?.MemberType().FullName}{Environment.NewLine}" +
 				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
 			throw new TypeConverterException(this, memberMapData, text, row.Context, message);
 		}

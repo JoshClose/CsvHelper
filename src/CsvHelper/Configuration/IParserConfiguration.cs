@@ -138,5 +138,12 @@ namespace CsvHelper.Configuration
 		/// Used when trimming fields.
 		/// </summary>
 		char[] WhiteSpaceChars { get; }
+
+		/// <summary>
+		/// A value indicating if exception messages contain raw CSV data.
+		/// <c>true</c> if exception contain raw CSV data, otherwise <c>false</c>.
+		/// Default is <c>true</c>.
+		/// </summary>
+		bool ExceptionMessagesContainRawData { get; }
 	}
 }

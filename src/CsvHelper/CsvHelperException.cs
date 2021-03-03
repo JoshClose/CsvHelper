@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using System;
 using System.Text;
 
@@ -88,7 +89,7 @@ namespace CsvHelper
 					if (context.Reader.HeaderRecord != null)
 					{
 						record.Append("[\"");
-						string.Join("\",\"", context.Reader.HeaderRecord);
+						record.Append(string.Join("\",\"", context.Reader.HeaderRecord));
 						record.Append("\"]");
 					}
 
@@ -108,7 +109,10 @@ namespace CsvHelper
 
 				try
 				{
-					details.AppendLine($"{indent}{nameof(IParser.RawRecord)}:{Environment.NewLine}{context.Parser.RawRecord}");
+					var rawRecord = context.Configuration.ExceptionMessagesContainRawData
+						? context.Parser.RawRecord
+						: $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
+					details.AppendLine($"{indent}{nameof(IParser.RawRecord)}:{Environment.NewLine}{rawRecord}");
 				}
 				catch { }
 			}
@@ -126,7 +130,7 @@ namespace CsvHelper
 					if (context.Writer.HeaderRecord.Length > 0)
 					{
 						record.Append("\"");
-						string.Join("\",\"", context.Writer.HeaderRecord);
+						record.Append(string.Join("\",\"", context.Writer.HeaderRecord));
 						record.Append("\"");
 					}
 					record.Append("]");
