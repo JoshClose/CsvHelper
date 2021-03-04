@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.AutoMapping
 				writer.Flush();
 				stream.Position = 0;
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine( "ParentProp" );
 				expected.AppendLine( "parent" );
 
