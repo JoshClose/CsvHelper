@@ -11,7 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
 	public class TypeConverterTests

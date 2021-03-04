@@ -8,29 +8,42 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
-	public class DateTimeStylesTests
+	public class ConstantTests
 	{
 		[TestMethod]
-		public void DateTimeStylesTest()
+		public void ConstantTest()
 		{
 			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				var records = csv.GetRecords<DateTimeStylesTestClass>().ToList();
-				var actual = csv.Context.Maps.Find<DateTimeStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.DateTimeStyle;
+				var records = csv.GetRecords<ConstantTestClass>().ToList();
 
-				Assert.AreEqual(DateTimeStyles.AdjustToUniversal, actual);
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("two", records[0].Name);
 			}
 		}
 
-		private class DateTimeStylesTestClass
+		[TestMethod]
+		public void ConstantOnMissingFieldTest()
+		{
+			using (var reader = new StringReader("Id\r\n1\r\n"))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				var records = csv.GetRecords<ConstantTestClass>().ToList();
+
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("two", records[0].Name);
+			}
+		}
+
+		private class ConstantTestClass
 		{
 			public int Id { get; set; }
 
-			[DateTimeStyles(DateTimeStyles.AdjustToUniversal)]
+			[Constant("two")]
 			public string Name { get; set; }
 		}
 	}

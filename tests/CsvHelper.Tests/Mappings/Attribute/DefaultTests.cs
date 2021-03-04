@@ -8,29 +8,29 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
-	public class FormatTests
+	public class DefaultTests
 	{
 		[TestMethod]
-		public void FormatTest()
+		public void DefaultTest()
 		{
-			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
+			using (var reader = new StringReader("Id,Name\r\n1,\r\n"))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				var records = csv.GetRecords<FormatTestClass>().ToList();
-				var actual = csv.Context.Maps.Find<FormatTestClass>().MemberMaps[1].Data.TypeConverterOptions.Formats[0];
+				var records = csv.GetRecords<DefaultTestClass>().ToList();
 
-				Assert.AreEqual("abc", actual);
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("one", records[0].Name);
 			}
 		}
 
-		private class FormatTestClass
+		private class DefaultTestClass
 		{
 			public int Id { get; set; }
 
-			[Format("abc")]
+			[Default("one")]
 			public string Name { get; set; }
 		}
 	}

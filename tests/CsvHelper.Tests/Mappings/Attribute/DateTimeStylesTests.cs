@@ -8,30 +8,29 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
-	public class NameTests
+	public class DateTimeStylesTests
 	{
 		[TestMethod]
-		public void NameTest()
+		public void DateTimeStylesTest()
 		{
-			using (var reader = new StringReader("id,name\r\n1,one\r\n"))
+			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				var records = csv.GetRecords<NameTestClass>().ToList();
+				var records = csv.GetRecords<DateTimeStylesTestClass>().ToList();
+				var actual = csv.Context.Maps.Find<DateTimeStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.DateTimeStyle;
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.AreEqual(DateTimeStyles.AdjustToUniversal, actual);
 			}
 		}
 
-		private class NameTestClass
+		private class DateTimeStylesTestClass
 		{
-			[Name("id")]
 			public int Id { get; set; }
 
-			[Name("name")]
+			[DateTimeStyles(DateTimeStyles.AdjustToUniversal)]
 			public string Name { get; set; }
 		}
 	}

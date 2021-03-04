@@ -8,29 +8,30 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
-	public class DefaultTests
+	public class NameTests
 	{
 		[TestMethod]
-		public void DefaultTest()
+		public void NameTest()
 		{
-			using (var reader = new StringReader("Id,Name\r\n1,\r\n"))
+			using (var reader = new StringReader("id,name\r\n1,one\r\n"))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				var records = csv.GetRecords<DefaultTestClass>().ToList();
+				var records = csv.GetRecords<NameTestClass>().ToList();
 
 				Assert.AreEqual(1, records[0].Id);
 				Assert.AreEqual("one", records[0].Name);
 			}
 		}
 
-		private class DefaultTestClass
+		private class NameTestClass
 		{
+			[Name("id")]
 			public int Id { get; set; }
 
-			[Default("one")]
+			[Name("name")]
 			public string Name { get; set; }
 		}
 	}

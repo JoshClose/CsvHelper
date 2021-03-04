@@ -3,38 +3,34 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
-using CsvHelper.Tests.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
-	public class OptionalTests
+	public class FormatTests
 	{
 		[TestMethod]
-		public void OptionalTest()
+		public void FormatTest()
 		{
-			var parser = new ParserMock
+			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				{ "Id" },
-				{ "1" },
-			};
+				var records = csv.GetRecords<FormatTestClass>().ToList();
+				var actual = csv.Context.Maps.Find<FormatTestClass>().MemberMaps[1].Data.TypeConverterOptions.Formats[0];
 
-			using (var csv = new CsvReader(parser))
-			{
-				var records = csv.GetRecords<OptionalTestClass>().ToList();
-
-				Assert.AreEqual(1, records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.AreEqual("abc", actual);
 			}
 		}
 
-		private class OptionalTestClass
+		private class FormatTestClass
 		{
 			public int Id { get; set; }
 
-			[Optional]
+			[Format("abc")]
 			public string Name { get; set; }
 		}
 	}

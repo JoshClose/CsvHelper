@@ -27,7 +27,7 @@ namespace CsvHelper.Tests.Mocks
 
 		public string[] Record => record;
 
-		public string RawRecord => throw new NotImplementedException();
+		public string RawRecord => string.Empty;
 
 		public int Row => row;
 

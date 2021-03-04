@@ -163,6 +163,12 @@ namespace CsvHelper
 					continue;
 				}
 
+				if (parameter.Data.IsConstantSet)
+				{
+					// If ConvertUsing and Constant don't require a header.
+					continue;
+				}
+
 				if (parameter.Data.IsIndexSet && !parameter.Data.IsNameSet)
 				{
 					// If there is only an index set, we don't want to validate the header name.

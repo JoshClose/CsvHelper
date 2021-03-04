@@ -2,40 +2,41 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
-	public class IndexTests
+	[TestClass]
+	public class ReferenceTests
 	{
 		[TestMethod]
-		public void IndexTest()
+		public void ReferenceTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			using (var reader = new StringReader("id,name\r\n1,one\r\n"))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				HasHeaderRecord = false,
-			};
-			using (var reader = new StringReader("a,1,b,one,c\r\n"))
-			using (var csv = new CsvReader(reader, config))
-			{
-				var records = csv.GetRecords<IndexTestClass>().ToList();
+				var records = csv.GetRecords<ReferenceTestClassA>().ToList();
 
 				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.AreEqual("one", records[0].B.Name);
 			}
 		}
 
-		private class IndexTestClass
+		private class ReferenceTestClassA
 		{
-			[Index(1)]
+			[Name("id")]
 			public int Id { get; set; }
 
-			[Index(3)]
+			public ReferenceTestClassB B { get; set; }
+		}
+
+		private class ReferenceTestClassB
+		{
+			[Name("name")]
 			public string Name { get; set; }
 		}
 	}

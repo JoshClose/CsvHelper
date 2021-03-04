@@ -8,30 +8,30 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
-namespace CsvHelper.Tests.AttributeMapping
+namespace CsvHelper.Tests.Mappings.Attribute
 {
 	[TestClass]
-	public class BooleanValuesTests
+	public class NullValuesTests
 	{
 		[TestMethod]
-		public void BooleanValuesTest()
+		public void NullValuesTest()
 		{
-			using (var reader = new StringReader("IsTrue,IsFalse\r\ntrue,false\r\n"))
+			using (var reader = new StringReader("Id,Name\r\nNULL,null\r\n"))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				var records = csv.GetRecords<BooleanValuesTestClass>().ToList();
-				Assert.AreEqual(true, records[0].IsTrue);
-				Assert.AreEqual(false, records[0].IsFalse);
+				var records = csv.GetRecords<NullValuesTestClass>().ToList();
+				Assert.IsNull(records[0].Id);
+				Assert.IsNull(records[0].Name);
 			}
 		}
 
-		private class BooleanValuesTestClass
+		private class NullValuesTestClass
 		{
-			[BooleanTrueValues("true")]
-			public bool? IsTrue { get; set; }
+			[NullValues("NULL")]
+			public int? Id { get; set; }
 
-			[BooleanFalseValues("false")]
-			public bool? IsFalse { get; set; }
+			[NullValues("null")]
+			public string Name { get; set; }
 		}
 	}
 }

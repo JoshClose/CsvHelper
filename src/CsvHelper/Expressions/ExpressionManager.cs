@@ -213,6 +213,11 @@ namespace CsvHelper.Expressions
 				return null;
 			}
 
+			if (memberMap.Data.IsConstantSet)
+			{
+				return Expression.Convert(Expression.Constant(memberMap.Data.Constant), memberMap.Data.Member.MemberType());
+			}
+
 			if (memberMap.Data.TypeConverter == null)
 			{
 				// Skip if the type isn't convertible.
@@ -261,18 +266,12 @@ namespace CsvHelper.Expressions
 				);
 			}
 
-			if (memberMap.Data.IsConstantSet)
-			{
-				fieldExpression = Expression.Convert(Expression.Constant(memberMap.Data.Constant), memberMap.Data.Member.MemberType());
-			}
-			else if (memberMap.Data.IsDefaultSet)
+			if (memberMap.Data.IsDefaultSet)
 			{
 				return CreateDefaultExpression(memberMap, fieldExpression);
 			}
-			else
-			{
-				fieldExpression = CreateTypeConverterExpression(memberMap, fieldExpression);
-			}
+
+			fieldExpression = CreateTypeConverterExpression(memberMap, fieldExpression);
 
 			return fieldExpression;
 		}

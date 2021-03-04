@@ -103,6 +103,47 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		}
 
 		[TestMethod]
+		public void GetRecords_WithParameterMap_HasHeader_FieldMissing_CreatesRecords()
+		{
+			var parser = new ParserMock
+			{
+				{ "id" },
+				{ "1" },
+			};
+			using (var csv = new CsvReader(parser))
+			{
+				var map = csv.Context.RegisterClassMap<FooMap>();
+				var records = csv.GetRecords<Foo>().ToList();
+
+				Assert.AreEqual(1, records.Count);
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("Bar", records[0].Name);
+			}
+		}
+
+		[TestMethod]
+		public void GetRecords_WithParameterMap_NoHeader_FieldMissing_CreatesRecords()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			var parser = new ParserMock(config)
+			{
+				{ "1" },
+			};
+			using (var csv = new CsvReader(parser))
+			{
+				var map = csv.Context.RegisterClassMap<FooMap>();
+				var records = csv.GetRecords<Foo>().ToList();
+
+				Assert.AreEqual(1, records.Count);
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual("Bar", records[0].Name);
+			}
+		}
+
+		[TestMethod]
 		public void WriteRecords_WithParameterMap_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
