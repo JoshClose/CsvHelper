@@ -8,21 +8,21 @@ namespace CsvHelper.Tests
 	/// </summary>
 	public class TestStringBuilder
 	{
-		private readonly string _newLine;
-		private readonly StringBuilder _builder;
+		private readonly string newLine;
+		private readonly StringBuilder builder;
 
 		public TestStringBuilder(string newLine)
 		{
-			_newLine = newLine ?? throw new ArgumentNullException(nameof(newLine));
-			_builder = new StringBuilder();
+			this.newLine = newLine ?? throw new ArgumentNullException(nameof(newLine));
+			builder = new StringBuilder();
 		}
 
 		public TestStringBuilder AppendLine(string value)
 		{
-			_builder.Append(value).Append(_newLine);
+			builder.Append(value).Append(newLine);
 			return this;
 		}
 
-		public override string ToString() => _builder.ToString();
+		public override string ToString() => builder.ToString();
 	}
 }
