@@ -66,7 +66,7 @@ namespace CsvHelper.Tests.Mappings
 			{
 				csv.WriteRecords(records);
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 
@@ -88,7 +88,7 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap<BarMap>();
 				csv.WriteRecords(records);
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 

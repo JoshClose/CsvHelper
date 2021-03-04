@@ -175,18 +175,18 @@ namespace CsvHelper.Configuration
 			var lineEndings = new[] { "\r", "\n", "\r\n" };
 
 			// Escape
-			if (escape == Delimiter) throw new ConfigurationException($"");
-			if (escape == NewLine && IsNewLineSet) throw new ConfigurationException($"");
-			if (lineEndings.Contains(Escape.ToString()) && !IsNewLineSet) throw new ConfigurationException($"");
+			if (escape == Delimiter) throw new ConfigurationException($"{Escape} and {Delimiter} cannot be the same.");
+			if (escape == NewLine && IsNewLineSet) throw new ConfigurationException($"{Escape} and {NewLine} cannot be the same.");
+			if (lineEndings.Contains(Escape.ToString()) && !IsNewLineSet) throw new ConfigurationException($"{Escape} cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
 
 			// Quote
-			if (quote == Delimiter) throw new ConfigurationException($"");
-			if (quote == NewLine && IsNewLineSet) throw new ConfigurationException($"");
-			if (lineEndings.Contains(quote)) throw new ConfigurationException($"");
+			if (quote == Delimiter) throw new ConfigurationException($"{Quote} and {Delimiter} cannot be the same.");
+			if (quote == NewLine && IsNewLineSet) throw new ConfigurationException($"{Quote} and {NewLine} cannot be the same.");
+			if (lineEndings.Contains(quote)) throw new ConfigurationException($"{Quote} cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
 
 			// Delimiter
-			if (Delimiter == NewLine && IsNewLineSet) throw new ConfigurationException($"");
-			if (lineEndings.Contains(Delimiter)) throw new ConfigurationException($"");
+			if (Delimiter == NewLine && IsNewLineSet) throw new ConfigurationException($"{Delimiter} and {NewLine} cannot be the same.");
+			if (lineEndings.Contains(Delimiter)) throw new ConfigurationException($"{Delimiter} cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
 		}
 	}
 }

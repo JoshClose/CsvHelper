@@ -192,7 +192,7 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 
 				var result = reader.ReadToEnd();
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Before,List1,List2,List3,After");
 				expected.AppendLine(",1,2,3,");
 

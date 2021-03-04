@@ -36,7 +36,7 @@ namespace CsvHelper.Tests.Writing
 
 				var result = reader.ReadToEnd();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id,Constant,Name");
 				expected.AppendLine("1,const,");
 				expected.AppendLine("2,const,");
@@ -67,7 +67,7 @@ namespace CsvHelper.Tests.Writing
 
 				var result = reader.ReadToEnd();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id,");
 				expected.AppendLine("1,const");
 				expected.AppendLine("2,const");
@@ -102,7 +102,7 @@ namespace CsvHelper.Tests.Writing
 
 				var result = reader.ReadToEnd();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("1,const,");
 				expected.AppendLine("2,const,");
 
@@ -136,7 +136,7 @@ namespace CsvHelper.Tests.Writing
 
 				var result = reader.ReadToEnd();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("1,const");
 				expected.AppendLine("2,const");
 
@@ -170,7 +170,7 @@ namespace CsvHelper.Tests.Writing
 
 				var result = reader.ReadToEnd();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("one,,,1");
 				expected.AppendLine("two,,,2");
 

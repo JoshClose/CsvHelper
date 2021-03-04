@@ -30,7 +30,7 @@ namespace CsvHelper.Tests.Writing
 				csv.NextRecord();
 				writer.Flush();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 				expected.AppendLine("Name");
@@ -61,7 +61,7 @@ namespace CsvHelper.Tests.Writing
 				csv.NextRecord();
 				writer.Flush();
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 				expected.AppendLine("Name");

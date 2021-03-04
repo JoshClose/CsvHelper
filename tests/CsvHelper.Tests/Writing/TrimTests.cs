@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.Writing
 				writer.Flush();
 				stream.Position = 0;
 
-				var expected = new StringBuilder();
+				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("a b c,d e f");
 
 				Assert.AreEqual(expected.ToString(), reader.ReadToEnd());
