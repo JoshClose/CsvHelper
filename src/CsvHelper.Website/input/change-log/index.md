@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 26.0.1
+
+#### Bug Fixes
+
+- Fixed issue with constant not working when the field is missing.
+
 ### 26.0.0
 
 #### Features
