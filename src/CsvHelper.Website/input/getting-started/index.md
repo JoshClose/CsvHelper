@@ -27,7 +27,7 @@ CsvHelper requires you to specify the `CultureInfo` that you want to use. The cu
 ## Newlines
 
 By default, CsvHelper will follow [RFC 4180](https://tools.ietf.org/html/rfc4180#page-2) and use `\r\n` for writing newlines no matter what operating system
-you are running on. CsvHelper can read `\r\n`, `\r`, or `\n` without any configuration changes. If you want to reaad or write in a non-standard format, you can
+you are running on. CsvHelper can read `\r\n`, `\r`, or `\n` without any configuration changes. If you want to read or write in a non-standard format, you can
 change the configuration for `NewLine`.
 
 ```cs
