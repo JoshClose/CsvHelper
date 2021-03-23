@@ -20,50 +20,6 @@ namespace CsvHelper
 		private bool skipNextRead;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-		/// </summary>
-		/// <param name="csv">The CSV.</param>
-		public CsvDataReader(CsvReader csv)
-		{
-			this.csv = csv;
-
-			csv.Read();
-
-			if (csv.Configuration.HasHeaderRecord)
-			{
-				csv.ReadHeader();
-			}
-			else
-			{
-				skipNextRead = true;
-			}
-
-			schemaTable = GetSchemaTable();
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-		/// </summary>
-		/// <param name="csv">The CSV.</param>
-		/// <param name="schemaTable">The DataTable representing the file schema.</param>
-		public CsvDataReader(CsvReader csv, DataTable schemaTable)
-		{
-			this.csv = csv;
-			this.schemaTable = schemaTable;
-
-			csv.Read();
-
-			if (csv.Configuration.HasHeaderRecord)
-			{
-				csv.ReadHeader();
-			}
-			else
-			{
-				skipNextRead = true;
-			}
-		}
-
-		/// <summary>
 		/// Gets the column with the specified index.
 		/// </summary>
 		/// <value>
@@ -131,6 +87,29 @@ namespace CsvHelper
 			{
 				return csv?.Parser.Count ?? 0;
 			}
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+		/// </summary>
+		/// <param name="csv">The CSV.</param>
+		/// <param name="schemaTable">The DataTable representing the file schema.</param>
+		public CsvDataReader(CsvReader csv, DataTable schemaTable = null)
+		{
+			this.csv = csv;
+
+			csv.Read();
+
+			if (csv.Configuration.HasHeaderRecord)
+			{
+				csv.ReadHeader();
+			}
+			else
+			{
+				skipNextRead = true;
+			}
+
+			this.schemaTable = schemaTable ?? GetSchemaTable();
 		}
 
 		/// <summary>
@@ -412,14 +391,13 @@ namespace CsvHelper
 		/// </returns>
 		public DataTable GetSchemaTable()
 		{
-			if (this.schemaTable != null)
+			if (schemaTable != null)
 			{
-				return this.schemaTable;
+				return schemaTable;
 			}
-			else
-			{
+
 			// https://docs.microsoft.com/en-us/dotnet/api/system.data.datatablereader.getschematable?view=netframework-4.7.2
-				DataTable dt = new DataTable("SchemaTable");
+			var dt = new DataTable("SchemaTable");
 			dt.Columns.Add("AllowDBNull", typeof(bool));
 			dt.Columns.Add("AutoIncrementSeed", typeof(long));
 			dt.Columns.Add("AutoIncrementStep", typeof(long));
@@ -448,20 +426,21 @@ namespace CsvHelper
 
 			if (csv.Configuration.HasHeaderRecord)
 			{
-				for (var i = 0; i < csv.HeaderRecord.Length; i++)
+				var header = csv.HeaderRecord;
+
+				for (var i = 0; i < header.Length; i++)
 				{
-					var header = csv.HeaderRecord[i];
 					var row = dt.NewRow();
 					row["AllowDBNull"] = true;
 					row["AutoIncrementSeed"] = DBNull.Value;
 					row["AutoIncrementStep"] = DBNull.Value;
 					row["BaseCatalogName"] = null;
-					row["BaseColumnName"] = csv.HeaderRecord[i];
+					row["BaseColumnName"] = header[i];
 					row["BaseColumnNamespace"] = null;
 					row["BaseSchemaName"] = null;
 					row["BaseTableName"] = null;
 					row["BaseTableNamespace"] = null;
-					row["ColumnName"] = csv.HeaderRecord[i];
+					row["ColumnName"] = header[i];
 					row["ColumnMapping"] = MappingType.Element;
 					row["ColumnOrdinal"] = i;
 					row["ColumnSize"] = int.MaxValue;
@@ -483,7 +462,6 @@ namespace CsvHelper
 			}
 
 			return dt;
-		}
 		}
 
 		/// <summary>
