@@ -16,7 +16,52 @@ namespace CsvHelper
 	public class CsvDataReader : IDataReader
 	{
 		private readonly CsvReader csv;
+		private readonly DataTable schemaTable;
 		private bool skipNextRead;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+		/// </summary>
+		/// <param name="csv">The CSV.</param>
+		public CsvDataReader(CsvReader csv)
+		{
+			this.csv = csv;
+
+			csv.Read();
+
+			if (csv.Configuration.HasHeaderRecord)
+			{
+				csv.ReadHeader();
+			}
+			else
+			{
+				skipNextRead = true;
+			}
+
+			schemaTable = GetSchemaTable();
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+		/// </summary>
+		/// <param name="csv">The CSV.</param>
+		/// <param name="schemaTable">The DataTable representing the file schema.</param>
+		public CsvDataReader(CsvReader csv, DataTable schemaTable)
+		{
+			this.csv = csv;
+			this.schemaTable = schemaTable;
+
+			csv.Read();
+
+			if (csv.Configuration.HasHeaderRecord)
+			{
+				csv.ReadHeader();
+			}
+			else
+			{
+				skipNextRead = true;
+			}
+		}
 
 		/// <summary>
 		/// Gets the column with the specified index.
@@ -85,26 +130,6 @@ namespace CsvHelper
 			get
 			{
 				return csv?.Parser.Count ?? 0;
-			}
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-		/// </summary>
-		/// <param name="csv">The CSV.</param>
-		public CsvDataReader(CsvReader csv)
-		{
-			this.csv = csv;
-
-			csv.Read();
-
-			if (csv.Configuration.HasHeaderRecord)
-			{
-				csv.ReadHeader();
-			}
-			else
-			{
-				skipNextRead = true;
 			}
 		}
 
@@ -387,9 +412,14 @@ namespace CsvHelper
 		/// </returns>
 		public DataTable GetSchemaTable()
 		{
+			if (this.schemaTable != null)
+			{
+				return this.schemaTable;
+			}
+			else
+			{
 			// https://docs.microsoft.com/en-us/dotnet/api/system.data.datatablereader.getschematable?view=netframework-4.7.2
-
-			var dt = new DataTable("SchemaTable");
+				DataTable dt = new DataTable("SchemaTable");
 			dt.Columns.Add("AllowDBNull", typeof(bool));
 			dt.Columns.Add("AutoIncrementSeed", typeof(long));
 			dt.Columns.Add("AutoIncrementStep", typeof(long));
@@ -453,6 +483,7 @@ namespace CsvHelper
 			}
 
 			return dt;
+		}
 		}
 
 		/// <summary>
