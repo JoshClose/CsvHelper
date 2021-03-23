@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 26.1.0
+
+#### Features
+
+- Allow schema of destination table to be specified in CsvDataReader.
+
 ### 26.0.1
 
 #### Bug Fixes
