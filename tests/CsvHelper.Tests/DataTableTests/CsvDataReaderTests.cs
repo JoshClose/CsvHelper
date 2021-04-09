@@ -11,14 +11,14 @@ using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.DataTableTests
 {
-	[TestClass]
+	
 	public class CsvDataReaderTests
 	{
-		[TestMethod]
+		[Fact]
 		public void GetValuesTest()
 		{
 			var s = new StringBuilder();
@@ -31,47 +31,47 @@ namespace CsvHelper.Tests.DataTableTests
 				var dataReader = new CsvDataReader(csv);
 				dataReader.Read();
 
-				Assert.AreEqual(true, dataReader.GetBoolean(0));
-				Assert.AreEqual(1, dataReader.GetByte(1));
+				Assert.True(dataReader.GetBoolean(0));
+				Assert.Equal(1, dataReader.GetByte(1));
 
 				byte[] byteBuffer = new byte[2];
 				dataReader.GetBytes(2, 0, byteBuffer, 0, byteBuffer.Length);
-				Assert.AreEqual(0x1, byteBuffer[0]);
-				Assert.AreEqual(0x2, byteBuffer[1]);
+				Assert.Equal(0x1, byteBuffer[0]);
+				Assert.Equal(0x2, byteBuffer[1]);
 
-				Assert.AreEqual('a', dataReader.GetChar(3));
+				Assert.Equal('a', dataReader.GetChar(3));
 
 				char[] charBuffer = new char[2];
 				dataReader.GetChars(4, 0, charBuffer, 0, charBuffer.Length);
-				Assert.AreEqual('a', charBuffer[0]);
-				Assert.AreEqual('b', charBuffer[1]);
+				Assert.Equal('a', charBuffer[0]);
+				Assert.Equal('b', charBuffer[1]);
 
-				Assert.IsNull(dataReader.GetData(0));
-				Assert.AreEqual(DateTime.Parse("1/1/2019"), dataReader.GetDateTime(5));
-				Assert.AreEqual(typeof(string).Name, dataReader.GetDataTypeName(0));
-				Assert.AreEqual(1.23m, dataReader.GetDecimal(6));
-				Assert.AreEqual(4.56d, dataReader.GetDouble(7));
-				Assert.AreEqual(typeof(string), dataReader.GetFieldType(0));
-				Assert.AreEqual(7.89f, dataReader.GetFloat(8));
-				Assert.AreEqual(Guid.Parse("eca0c8c6-9a2a-4e6c-8599-3561abda13f1"), dataReader.GetGuid(9));
-				Assert.AreEqual(1, dataReader.GetInt16(10));
-				Assert.AreEqual(2, dataReader.GetInt32(11));
-				Assert.AreEqual(3, dataReader.GetInt64(12));
-				Assert.AreEqual("Boolean", dataReader.GetName(0));
-				Assert.AreEqual(0, dataReader.GetOrdinal("Boolean"));
+				Assert.Null(dataReader.GetData(0));
+				Assert.Equal(DateTime.Parse("1/1/2019"), dataReader.GetDateTime(5));
+				Assert.Equal(typeof(string).Name, dataReader.GetDataTypeName(0));
+				Assert.Equal(1.23m, dataReader.GetDecimal(6));
+				Assert.Equal(4.56d, dataReader.GetDouble(7));
+				Assert.Equal(typeof(string), dataReader.GetFieldType(0));
+				Assert.Equal(7.89f, dataReader.GetFloat(8));
+				Assert.Equal(Guid.Parse("eca0c8c6-9a2a-4e6c-8599-3561abda13f1"), dataReader.GetGuid(9));
+				Assert.Equal(1, dataReader.GetInt16(10));
+				Assert.Equal(2, dataReader.GetInt32(11));
+				Assert.Equal(3, dataReader.GetInt64(12));
+				Assert.Equal("Boolean", dataReader.GetName(0));
+				Assert.Equal(0, dataReader.GetOrdinal("Boolean"));
 
-				Assert.AreEqual("true", dataReader.GetString(0));
-				Assert.AreEqual("true", dataReader.GetValue(0));
+				Assert.Equal("true", dataReader.GetString(0));
+				Assert.Equal("true", dataReader.GetValue(0));
 
 				var objectBuffer = new object[14];
 				dataReader.GetValues(objectBuffer);
-				Assert.AreEqual("true", objectBuffer[0]);
-				Assert.AreEqual(DBNull.Value, objectBuffer[13]);
-				Assert.IsTrue(dataReader.IsDBNull(13));
+				Assert.Equal("true", objectBuffer[0]);
+				Assert.Equal(DBNull.Value, objectBuffer[13]);
+				Assert.True(dataReader.IsDBNull(13));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetSchemaTableTest()
 		{
 			var s = new StringBuilder();
@@ -84,12 +84,12 @@ namespace CsvHelper.Tests.DataTableTests
 				var dataReader = new CsvDataReader(csv);
 
 				var schemaTable = dataReader.GetSchemaTable();
-				Assert.AreEqual(25, schemaTable.Columns.Count);
-				Assert.AreEqual(2, schemaTable.Rows.Count);
+				Assert.Equal(25, schemaTable.Columns.Count);
+				Assert.Equal(2, schemaTable.Rows.Count);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DataTableLoadTest()
 		{
 			var s = new StringBuilder();
@@ -107,15 +107,15 @@ namespace CsvHelper.Tests.DataTableTests
 
 				dataTable.Load(dataReader);
 
-				Assert.AreEqual(2, dataTable.Rows.Count);
-				Assert.AreEqual(1, dataTable.Rows[0]["Id"]);
-				Assert.AreEqual("one", dataTable.Rows[0]["Name"]);
-				Assert.AreEqual(2, dataTable.Rows[1]["Id"]);
-				Assert.AreEqual("two", dataTable.Rows[1]["Name"]);
+				Assert.Equal(2, dataTable.Rows.Count);
+				Assert.Equal(1, dataTable.Rows[0]["Id"]);
+				Assert.Equal("one", dataTable.Rows[0]["Name"]);
+				Assert.Equal(2, dataTable.Rows[1]["Id"]);
+				Assert.Equal("two", dataTable.Rows[1]["Name"]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DataTableLoadHeaderAndRowsHaveDifferentLengthTest()
 		{
 			var s = new StringBuilder();
@@ -133,15 +133,15 @@ namespace CsvHelper.Tests.DataTableTests
 
 				dataTable.Load(dataReader);
 
-				Assert.AreEqual(2, dataTable.Rows.Count);
-				Assert.AreEqual(1, dataTable.Rows[0]["Id"]);
-				Assert.AreEqual("one", dataTable.Rows[0]["Name"]);
-				Assert.AreEqual(2, dataTable.Rows[1]["Id"]);
-				Assert.AreEqual("two", dataTable.Rows[1]["Name"]);
+				Assert.Equal(2, dataTable.Rows.Count);
+				Assert.Equal(1, dataTable.Rows[0]["Id"]);
+				Assert.Equal("one", dataTable.Rows[0]["Name"]);
+				Assert.Equal(2, dataTable.Rows[1]["Id"]);
+				Assert.Equal("two", dataTable.Rows[1]["Name"]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DataTableLoadNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -160,11 +160,11 @@ namespace CsvHelper.Tests.DataTableTests
 
 				dataTable.Load(dataReader);
 
-				Assert.AreEqual(0, dataTable.Rows.Count);
+				Assert.Equal(0, dataTable.Rows.Count);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadWithNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -180,16 +180,16 @@ namespace CsvHelper.Tests.DataTableTests
 				var dataReader = new CsvDataReader(csv);
 
 				dataReader.Read();
-				Assert.AreEqual(1, dataReader.GetInt32(0));
-				Assert.AreEqual("one", dataReader.GetString(1));
+				Assert.Equal(1, dataReader.GetInt32(0));
+				Assert.Equal("one", dataReader.GetString(1));
 
 				dataReader.Read();
-				Assert.AreEqual(2, dataReader.GetInt32(0));
-				Assert.AreEqual("two", dataReader.GetString(1));
+				Assert.Equal(2, dataReader.GetInt32(0));
+				Assert.Equal("two", dataReader.GetString(1));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void IsNullTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -204,12 +204,12 @@ namespace CsvHelper.Tests.DataTableTests
 				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 
 				var dataReader = new CsvDataReader(csv);
-				Assert.IsFalse(dataReader.IsDBNull(0));
-				Assert.IsTrue(dataReader.IsDBNull(1));
+				Assert.False(dataReader.IsDBNull(0));
+				Assert.True(dataReader.IsDBNull(1));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DbNullTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -224,17 +224,17 @@ namespace CsvHelper.Tests.DataTableTests
 				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add("null");
 
 				var dataReader = new CsvDataReader(csv);
-				Assert.AreEqual(string.Empty, dataReader.GetValue(0));
-				Assert.AreEqual(DBNull.Value, dataReader.GetValue(1));
+				Assert.Equal(string.Empty, dataReader.GetValue(0));
+				Assert.Equal(DBNull.Value, dataReader.GetValue(1));
 
 				var values = new object[2];
 				dataReader.GetValues(values);
-				Assert.AreEqual(string.Empty, values[0]);
-				Assert.AreEqual(DBNull.Value, values[1]);
+				Assert.Equal(string.Empty, values[0]);
+				Assert.Equal(DBNull.Value, values[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetOrdinalCaseInsensitiveTest()
 		{
 			var parser = new ParserMock
@@ -250,12 +250,12 @@ namespace CsvHelper.Tests.DataTableTests
 				{
 					var ordinal = dr.GetOrdinal("name");
 
-					Assert.AreEqual(1, ordinal);
+					Assert.Equal(1, ordinal);
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetOrdinalMissingTest()
 		{
 			var parser = new ParserMock
@@ -269,7 +269,7 @@ namespace CsvHelper.Tests.DataTableTests
 			{
 				using (var dr = new CsvDataReader(csv))
 				{
-					Assert.ThrowsException<IndexOutOfRangeException>(() =>
+					Assert.Throws<IndexOutOfRangeException>(() =>
 					{
 						dr.GetOrdinal("Foo");
 					});
@@ -277,7 +277,7 @@ namespace CsvHelper.Tests.DataTableTests
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DataTableLoadEmptyTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -288,11 +288,11 @@ namespace CsvHelper.Tests.DataTableTests
 			using (var csv = new CsvReader(reader, config))
 			{
 				var dataReader = new CsvDataReader(csv);
-				Assert.AreEqual(0, dataReader.FieldCount);
+				Assert.Equal(0, dataReader.FieldCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DataTableNullableValueTypeTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)

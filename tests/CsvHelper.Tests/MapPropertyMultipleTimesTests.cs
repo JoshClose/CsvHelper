@@ -8,14 +8,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class MapPropertyMultipleTimesTests
 	{
-		[TestMethod]
+		[Fact]
 		public void MapPropertiesToMultipleFieldsWhenWritingTest()
 		{
 			using (var stream = new MemoryStream())
@@ -39,11 +39,11 @@ namespace CsvHelper.Tests
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void MapPropertiesToMultipleFieldsWhenReadingTest()
 		{
 			// This is not something that anyone should do, but this
@@ -62,8 +62,8 @@ namespace CsvHelper.Tests
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual(2, records[0].Id);
-				Assert.AreEqual("two", records[0].Name);
+				Assert.Equal(2, records[0].Id);
+				Assert.Equal("two", records[0].Name);
 			}
 		}
 

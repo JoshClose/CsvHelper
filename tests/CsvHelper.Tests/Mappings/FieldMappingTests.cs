@@ -8,15 +8,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 #pragma warning disable 649
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
 	public class FieldMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReadPublicFieldsWithAutoMapTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -35,13 +35,13 @@ namespace CsvHelper.Tests.Mappings
 
 				var records = csv.GetRecords<APublic>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].IdField);
-				Assert.AreEqual("one", records[0].BField.NameField);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].IdField);
+				Assert.Equal("one", records[0].BField.NameField);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WritePublicFieldsWithAutoMapTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -74,11 +74,11 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("IdField,NameField");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadPublicFieldsWithMappingTest()
 		{
 			using (var stream = new MemoryStream())
@@ -94,13 +94,13 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap<APublicMap>();
 				var records = csv.GetRecords<APublic>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].IdField);
-				Assert.AreEqual("one", records[0].BField.NameField);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].IdField);
+				Assert.Equal("one", records[0].BField.NameField);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WritePublicFieldsWithMappingTest()
 		{
 			using (var stream = new MemoryStream())
@@ -130,11 +130,11 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("IdField,NameField");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadPrivateFieldsWithAutoMapTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -154,13 +154,13 @@ namespace CsvHelper.Tests.Mappings
 
 				var records = csv.GetRecords<APrivate>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].GetId());
-				Assert.AreEqual("one", records[0].GetB().GetName());
+				Assert.Single(records);
+				Assert.Equal(1, records[0].GetId());
+				Assert.Equal("one", records[0].GetB().GetName());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WritePrivateFieldsWithAutoMapTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -188,11 +188,11 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("idField,nameField");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadPrivateFieldsWithMappingTest()
 		{
 			using (var stream = new MemoryStream())
@@ -208,13 +208,13 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap<APrivateMap>();
 				var records = csv.GetRecords<APrivate>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].GetId());
-				Assert.AreEqual("one", records[0].GetB().GetName());
+				Assert.Single(records);
+				Assert.Equal(1, records[0].GetId());
+				Assert.Equal("one", records[0].GetB().GetName());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WritePrivateFieldsWithMappingTest()
 		{
 			using (var stream = new MemoryStream())
@@ -237,11 +237,11 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("idField,nameField");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadPublicFieldsAndPropertiesWithAutoMapTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -260,13 +260,13 @@ namespace CsvHelper.Tests.Mappings
 
 				var records = csv.GetRecords<APublic>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].IdField);
-				Assert.AreEqual("one", records[0].BField.NameField);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].IdField);
+				Assert.Equal("one", records[0].BField.NameField);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WritePublicFieldsAndPropertiesWithAutoMapTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -301,7 +301,7 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("IdProp,IdField,NameProp,NameField");
 				expected.AppendLine("2,1,two,one");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 

@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
     public class FieldCacheTests
     {
-		[TestMethod]
+		[Fact]
 		public void Read_WithFieldCacheEnabled_ReturnsSameFieldInstance()
 		{
 			var s = new StringBuilder();
@@ -35,11 +35,11 @@ namespace CsvHelper.Tests.Parsing
 				parser.Read();
 				var b = parser[1];
 
-				Assert.AreSame(a, b);
+				Assert.Same(a, b);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_WithFieldCacheDisabled_ReturnsDifferentFieldInstance()
 		{
 			var s = new StringBuilder();
@@ -57,11 +57,11 @@ namespace CsvHelper.Tests.Parsing
 				parser.Read();
 				var b = parser[1];
 
-				Assert.AreNotSame(a, b);
+				Assert.NotSame(a, b);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Test1()
 		{
 			// "542008", "27721116", "98000820" have hash code 3769566006
@@ -78,17 +78,17 @@ namespace CsvHelper.Tests.Parsing
 			var field3 = cache.GetField(value3.ToCharArray(), 0, value3.Length);
 			var field4 = cache.GetField(value4.ToCharArray(), 0, value4.Length);
 
-			Assert.AreEqual(value1, field1);
-			Assert.AreEqual(value2, field2);
-			Assert.AreEqual(value3, field3);
-			Assert.AreEqual(value4, field4);
+			Assert.Equal(value1, field1);
+			Assert.Equal(value2, field2);
+			Assert.Equal(value3, field3);
+			Assert.Equal(value4, field4);
 
-			Assert.AreNotSame(value1, field1);
-			Assert.AreNotSame(value2, field2);
-			Assert.AreNotSame(value3, field3);
-			Assert.AreNotSame(value4, field4);
+			Assert.NotSame(value1, field1);
+			Assert.NotSame(value2, field2);
+			Assert.NotSame(value3, field3);
+			Assert.NotSame(value4, field4);
 
-			Assert.AreSame(field1, field4);
+			Assert.Same(field1, field4);
 		}
 	}
 }

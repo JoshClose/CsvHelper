@@ -2,7 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,10 +13,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Async
 {
-	[TestClass]
+	
 	public class WritingTests
 	{
-		[TestMethod]
+		[Fact]
 		public async Task WritingTest()
 		{
 			using (var stream = new MemoryStream())
@@ -45,11 +45,11 @@ namespace CsvHelper.Tests.Async
 				expected.AppendLine("1,one");
 				expected.AppendLine("2,two");
 
-				Assert.AreEqual(expected.ToString(), reader.ReadToEnd());
+				Assert.Equal(expected.ToString(), reader.ReadToEnd());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task WriteRecordsTest()
 		{
 			using (var stream = new MemoryStream())
@@ -72,11 +72,11 @@ namespace CsvHelper.Tests.Async
 				expected.AppendLine("1,one");
 				expected.AppendLine("2,two");
 
-				Assert.AreEqual(expected.ToString(), reader.ReadToEnd());
+				Assert.Equal(expected.ToString(), reader.ReadToEnd());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task WriteRecordsTestCanceled()
 		{
 			using (var source = new CancellationTokenSource())
@@ -92,6 +92,7 @@ namespace CsvHelper.Tests.Async
 					new Simple { Id = 3, Name = "three" },
 				};
 				source.Cancel();
+
 				try
 				{
 					await csv.WriteRecordsAsync(records, source.Token);
@@ -104,7 +105,7 @@ namespace CsvHelper.Tests.Async
 					}
 				}
 
-				Assert.Fail("Did not throw exception");
+				throw new XunitException("Did not throw exception");
 			}
 		}
 

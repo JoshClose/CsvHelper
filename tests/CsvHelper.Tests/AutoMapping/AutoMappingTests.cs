@@ -9,20 +9,18 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.AutoMapping
-{
-	[TestClass]
+{	
 	public class AutoMappingTests
 	{
-		[TestInitialize]
-		public void TestInitialize()
+		public AutoMappingTests()
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReaderSimpleTest()
 		{
 			using (var stream = new MemoryStream())
@@ -38,18 +36,18 @@ namespace CsvHelper.Tests.AutoMapping
 
 				var list = csv.GetRecords<Simple>().ToList();
 
-				Assert.IsNotNull(list);
-				Assert.AreEqual(2, list.Count);
+				Assert.NotNull(list);
+				Assert.Equal(2, list.Count);
 				var row = list[0];
-				Assert.AreEqual(1, row.Id);
-				Assert.AreEqual("one", row.Name);
+				Assert.Equal(1, row.Id);
+				Assert.Equal("one", row.Name);
 				row = list[1];
-				Assert.AreEqual(2, row.Id);
-				Assert.AreEqual("two", row.Name);
+				Assert.Equal(2, row.Id);
+				Assert.Equal("two", row.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReaderFloatingCultureDeTest()
 		{
 			using (var stream = new MemoryStream())
@@ -65,21 +63,21 @@ namespace CsvHelper.Tests.AutoMapping
 
 				var list = csv.GetRecords<Numbers>().ToList();
 
-				Assert.IsNotNull(list);
-				Assert.AreEqual(2, list.Count);
+				Assert.NotNull(list);
+				Assert.Equal(2, list.Count);
 				var row = list[0];
-				Assert.AreEqual(1.1f, row.Single, 0.0001);
-				Assert.AreEqual(2.2d, row.Double, 0.0001);
-				Assert.AreEqual(3.3m, row.Decimal);
+				Assert.Equal(1.1f, row.Single, 4);
+				Assert.Equal(2.2d, row.Double, 4);
+				Assert.Equal(3.3m, row.Decimal);
 
 				row = list[1];
-				Assert.AreEqual(-0.1f, row.Single, 0.0001);
-				Assert.AreEqual(-0.2d, row.Double, 0.0001);
-				Assert.AreEqual(-0.3m, row.Decimal);
+				Assert.Equal(-0.1f, row.Single, 4);
+				Assert.Equal(-0.2d, row.Double, 4);
+				Assert.Equal(-0.3m, row.Decimal);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReaderReferenceTest()
 		{
 			using (var stream = new MemoryStream())
@@ -94,16 +92,16 @@ namespace CsvHelper.Tests.AutoMapping
 
 				var list = csv.GetRecords<A>().ToList();
 
-				Assert.IsNotNull(list);
-				Assert.AreEqual(1, list.Count);
+				Assert.NotNull(list);
+				Assert.Single(list);
 				var row = list[0];
-				Assert.AreEqual(1, row.AId);
-				Assert.IsNotNull(row.B);
-				Assert.AreEqual(2, row.B.BId);
+				Assert.Equal(1, row.AId);
+				Assert.NotNull(row.B);
+				Assert.Equal(2, row.B.BId);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReaderReferenceHasNoDefaultConstructorTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -117,12 +115,12 @@ namespace CsvHelper.Tests.AutoMapping
 			{
 				var records = csv.GetRecords<SimpleReferenceHasNoDefaultConstructor>().ToList();
 				var row = records[0];
-				Assert.AreEqual(1, row.Id);
-				Assert.AreEqual("one", row.Ref.Name);
+				Assert.Equal(1, row.Id);
+				Assert.Equal("one", row.Ref.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReaderHasNoDefaultConstructorReferenceHasNoDefaultConstructorTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -136,12 +134,12 @@ namespace CsvHelper.Tests.AutoMapping
 			{
 				var records = csv.GetRecords<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>().ToList();
 				var row = records[0];
-				Assert.AreEqual(1, row.Id);
-				Assert.AreEqual("one", row.Ref.Name);
+				Assert.Equal(1, row.Id);
+				Assert.Equal("one", row.Ref.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriterSimpleTest()
 		{
 			using (var stream = new MemoryStream())
@@ -163,11 +161,11 @@ namespace CsvHelper.Tests.AutoMapping
 				expected.AppendLine("Id,Name");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), data);
+				Assert.Equal(expected.ToString(), data);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriterReferenceTest()
 		{
 			using (var stream = new MemoryStream())
@@ -196,11 +194,11 @@ namespace CsvHelper.Tests.AutoMapping
 				expected.AppendLine("AId,BId");
 				expected.AppendLine("1,2");
 
-				Assert.AreEqual(expected.ToString(), data);
+				Assert.Equal(expected.ToString(), data);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriterReferenceHasNoDefaultConstructorTest()
 		{
 			using (var writer = new StringWriter())
@@ -221,11 +219,11 @@ namespace CsvHelper.Tests.AutoMapping
 				expected.AppendLine("Id,Name");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriterHasNoDefaultConstructorReferenceHasNoDefaultConstructorTest()
 		{
 			using (var writer = new StringWriter())
@@ -242,23 +240,19 @@ namespace CsvHelper.Tests.AutoMapping
 				expected.AppendLine("Id,Name");
 				expected.AppendLine("1,one");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AutoMapEnumerableTest()
 		{
 			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
-			try
-			{
-				context.AutoMap(typeof(List<string>));
-				Assert.Fail();
-			}
-			catch (ConfigurationException) { }
+
+			Assert.Throws<ConfigurationException>(() => context.AutoMap(typeof(List<string>)));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AutoMapWithExistingMapTest()
 		{
 			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
@@ -274,17 +268,17 @@ namespace CsvHelper.Tests.AutoMapping
 			};
 			var map = context.AutoMap(data.GetType());
 
-			Assert.IsNotNull(map);
-			Assert.AreEqual(0, map.MemberMaps.Count);
-			Assert.AreEqual(1, map.ReferenceMaps.Count);
+			Assert.NotNull(map);
+			Assert.Empty(map.MemberMaps);
+			Assert.Single(map.ReferenceMaps);
 
 			// Since Simple is a reference on the anonymous object, the type won't
 			// be re-used. Types which are created from automapping aren't added
 			// to the list of registered maps either.
-			Assert.IsNotInstanceOfType(map.ReferenceMaps[0].Data.Mapping, typeof(SimpleMap));
+			Assert.IsNotType<SimpleMap>(map.ReferenceMaps[0].Data.Mapping);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AutoMapWithNestedHeaders()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
@@ -293,36 +287,36 @@ namespace CsvHelper.Tests.AutoMapping
 			};
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Nested>();
-			Assert.AreEqual("Simple1.Id", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("Simple1.Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[1].Data.Names[0]);
-			Assert.AreEqual("Simple2.Id", map.ReferenceMaps[1].Data.Mapping.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("Simple2.Name", map.ReferenceMaps[1].Data.Mapping.MemberMaps[1].Data.Names[0]);
+			Assert.Equal("Simple1.Id", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
+			Assert.Equal("Simple1.Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[1].Data.Names[0]);
+			Assert.Equal("Simple2.Id", map.ReferenceMaps[1].Data.Mapping.MemberMaps[0].Data.Names[0]);
+			Assert.Equal("Simple2.Name", map.ReferenceMaps[1].Data.Mapping.MemberMaps[1].Data.Names[0]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AutoMapWithDefaultConstructor()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			ClassMap map = context.AutoMap<SimpleReferenceHasNoDefaultConstructor>();
 
-			Assert.AreEqual("Id", map.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
+			Assert.Equal("Id", map.MemberMaps[0].Data.Names[0]);
+			Assert.Equal("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
+			Assert.Equal("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AutoMapWithNoDefaultConstructor()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			var map = context.AutoMap<SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor>();
 
-			Assert.AreEqual("Id", map.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("id", map.ParameterMaps[0].Data.Names[0]);
-			Assert.AreEqual("name", map.ParameterMaps[1].ConstructorTypeMap.ParameterMaps[0].Data.Names[0]);
-			Assert.AreEqual("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
-			Assert.AreEqual("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
+			Assert.Equal("Id", map.MemberMaps[0].Data.Names[0]);
+			Assert.Equal("id", map.ParameterMaps[0].Data.Names[0]);
+			Assert.Equal("name", map.ParameterMaps[1].ConstructorTypeMap.ParameterMaps[0].Data.Names[0]);
+			Assert.Equal("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
+			Assert.Equal("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
 		}
 
 		private class Nested

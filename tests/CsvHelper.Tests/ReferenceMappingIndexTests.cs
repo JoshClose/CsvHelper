@@ -7,14 +7,14 @@ using System.Globalization;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class ReferenceMappingIndexTests
 	{
-		[TestMethod]
+		[Fact]
 		public void MapByIndexTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -31,10 +31,10 @@ namespace CsvHelper.Tests
 			csv.Context.RegisterClassMap<AMap>();
 
 			var records = csv.GetRecords<A>().ToList();
-			Assert.AreEqual(1, records[0].Id);
-			Assert.AreEqual(0, records[0].B.Id);
-			Assert.AreEqual(3, records[1].Id);
-			Assert.AreEqual(2, records[1].B.Id);
+			Assert.Equal(1, records[0].Id);
+			Assert.Equal(0, records[0].B.Id);
+			Assert.Equal(3, records[1].Id);
+			Assert.Equal(2, records[1].B.Id);
 		}
 
 		private class A

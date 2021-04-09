@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
 	public class ShouldQuoteTests
 	{    
-		[TestMethod]
+		[Fact]
 		public void QuoteAllFieldsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -26,11 +26,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("one");
 				csv.Flush();
 
-				Assert.AreEqual("\"one\"", writer.ToString());
+				Assert.Equal("\"one\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void QuoteNoFieldsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -43,11 +43,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("o\"e");
 				csv.Flush();
 
-				Assert.AreEqual("o\"e", writer.ToString());
+				Assert.Equal("o\"e", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContainsQuoteTest()
 		{
 			using (var writer = new StringWriter())
@@ -56,11 +56,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField($"o{csv.Configuration.Quote}e");
 				csv.Flush();
 
-				Assert.AreEqual($"\"o{csv.Configuration.Quote}{csv.Configuration.Quote}e\"", writer.ToString());
+				Assert.Equal($"\"o{csv.Configuration.Quote}{csv.Configuration.Quote}e\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void StartsWithSpaceTest()
 		{
 			using (var writer = new StringWriter())
@@ -69,11 +69,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField(" one");
 				csv.Flush();
 
-				Assert.AreEqual("\" one\"", writer.ToString());
+				Assert.Equal("\" one\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EndsWithSpaceTest()
 		{
 			using (var writer = new StringWriter())
@@ -82,11 +82,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("one ");
 				csv.Flush();
 
-				Assert.AreEqual("\"one \"", writer.ToString());
+				Assert.Equal("\"one \"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContainsCrTest()
 		{
 			using (var writer = new StringWriter())
@@ -95,11 +95,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("o\re");
 				csv.Flush();
 
-				Assert.AreEqual("\"o\re\"", writer.ToString());
+				Assert.Equal("\"o\re\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContainsLfTest()
 		{
 			using (var writer = new StringWriter())
@@ -108,11 +108,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("o\ne");
 				csv.Flush();
 
-				Assert.AreEqual("\"o\ne\"", writer.ToString());
+				Assert.Equal("\"o\ne\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContainsCrLfTest()
 		{
 			using (var writer = new StringWriter())
@@ -121,11 +121,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("o\r\ne");
 				csv.Flush();
 
-				Assert.AreEqual("\"o\r\ne\"", writer.ToString());
+				Assert.Equal("\"o\r\ne\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ContainsDelimiterTest()
 		{
 			using (var writer = new StringWriter())
@@ -134,11 +134,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField($"o{csv.Configuration.Delimiter}e");
 				csv.Flush();
 
-				Assert.AreEqual($"\"o{csv.Configuration.Delimiter}e\"", writer.ToString());
+				Assert.Equal($"\"o{csv.Configuration.Delimiter}e\"", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Test1()
 		{
 			var data = new List<(int row, int column, string field)>();
@@ -165,23 +165,23 @@ namespace CsvHelper.Tests.Writing
 				csv.Flush();
 			}
 
-			Assert.AreEqual(4, data.Count);
+			Assert.Equal(4, data.Count);
 
-			Assert.AreEqual(1, data[0].row);
-			Assert.AreEqual(0, data[0].column);
-			Assert.AreEqual("Id", data[0].field);
+			Assert.Equal(1, data[0].row);
+			Assert.Equal(0, data[0].column);
+			Assert.Equal("Id", data[0].field);
 
-			Assert.AreEqual(1, data[1].row);
-			Assert.AreEqual(1, data[1].column);
-			Assert.AreEqual("Name", data[1].field);
+			Assert.Equal(1, data[1].row);
+			Assert.Equal(1, data[1].column);
+			Assert.Equal("Name", data[1].field);
 
-			Assert.AreEqual(2, data[2].row);
-			Assert.AreEqual(0, data[2].column);
-			Assert.AreEqual("1", data[2].field);
+			Assert.Equal(2, data[2].row);
+			Assert.Equal(0, data[2].column);
+			Assert.Equal("1", data[2].field);
 
-			Assert.AreEqual(2, data[3].row);
-			Assert.AreEqual(1, data[3].column);
-			Assert.AreEqual("one", data[3].field);
+			Assert.Equal(2, data[3].row);
+			Assert.Equal(1, data[3].column);
+			Assert.Equal("one", data[3].field);
 		}
 	}
 }

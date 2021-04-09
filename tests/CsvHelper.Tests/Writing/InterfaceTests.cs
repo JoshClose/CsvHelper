@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
 	public class InterfaceTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsGenericTest()
 		{
 			using (var stream = new MemoryStream())
@@ -33,11 +33,11 @@ namespace CsvHelper.Tests.Writing
 				stream.Position = 0;
 
 				var expected = "RenameA\r\n1\r\n3\r\n";
-				Assert.AreEqual(expected, reader.ReadToEnd());
+				Assert.Equal(expected, reader.ReadToEnd());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordTest()
 		{
 			using (var stream = new MemoryStream())
@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.Writing
 				stream.Position = 0;
 
 				var expected = "RenameA\r\n1\r\n3\r\n";
-				Assert.AreEqual(expected, reader.ReadToEnd());
+				Assert.Equal(expected, reader.ReadToEnd());
 			}
 		}
 

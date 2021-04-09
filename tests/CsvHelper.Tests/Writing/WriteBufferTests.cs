@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
     public class WriteBufferTests
     {
-		[TestMethod]
+		[Fact]
         public void Write_FieldThatIsLargerThenTwiceTheBuffer_Writes()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)

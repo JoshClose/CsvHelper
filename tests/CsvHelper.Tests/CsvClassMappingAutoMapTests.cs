@@ -2,27 +2,27 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using CsvHelper.Configuration;
 using System.Globalization;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+
 	public class CsvClassMappingAutoMapTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Test()
 		{
 			var aMap = new AMap();
 
-			Assert.AreEqual( 3, aMap.MemberMaps.Count );
-			Assert.AreEqual( 0, aMap.MemberMaps[0].Data.Index );
-			Assert.AreEqual( 1, aMap.MemberMaps[1].Data.Index );
-			Assert.AreEqual( 2, aMap.MemberMaps[2].Data.Index );
-			Assert.AreEqual( true, aMap.MemberMaps[2].Data.Ignore );
+			Assert.Equal(3, aMap.MemberMaps.Count);
+			Assert.Equal(0, aMap.MemberMaps[0].Data.Index);
+			Assert.Equal(1, aMap.MemberMaps[1].Data.Index);
+			Assert.Equal(2, aMap.MemberMaps[2].Data.Index);
+			Assert.True(aMap.MemberMaps[2].Data.Ignore);
 
-			Assert.AreEqual( 1, aMap.ReferenceMaps.Count );
+			Assert.Single(aMap.ReferenceMaps);
 		}
 
 		private class A
@@ -50,7 +50,7 @@ namespace CsvHelper.Tests
 			public AMap()
 			{
 				AutoMap(CultureInfo.InvariantCulture);
-				Map( m => m.Three ).Ignore();
+				Map(m => m.Three).Ignore();
 			}
 		}
 

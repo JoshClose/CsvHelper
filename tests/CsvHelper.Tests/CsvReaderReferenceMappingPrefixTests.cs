@@ -4,16 +4,16 @@
 // https://github.com/JoshClose/CsvHelper
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using CsvHelper.Configuration;
 using System.Globalization;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvReaderReferenceMappingPrefixTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReferencesWithPrefixTest()
 		{
 			using (var stream = new MemoryStream())
@@ -33,16 +33,16 @@ namespace CsvHelper.Tests
 
 				var list = csv.GetRecords<A>().ToList();
 
-				Assert.IsNotNull(list);
-				Assert.AreEqual(4, list.Count);
+				Assert.NotNull(list);
+				Assert.Equal(4, list.Count);
 
 				for (var i = 0; i < 4; i++)
 				{
 					var rowId = i + 1;
 					var row = list[i];
-					Assert.AreEqual("a" + rowId, row.Id);
-					Assert.AreEqual("b" + rowId, row.B.Id);
-					Assert.AreEqual("c" + rowId, row.B.C.Id);
+					Assert.Equal("a" + rowId, row.Id);
+					Assert.Equal("b" + rowId, row.B.Id);
+					Assert.Equal("c" + rowId, row.B.C.Id);
 				}
 			}
 		}

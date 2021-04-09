@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 {
 	public class IndexTests
 	{
-		[TestMethod]
+		[Fact]
 		public void IndexTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -25,8 +25,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			{
 				var records = csv.GetRecords<IndexTestClass>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 

@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -13,10 +13,10 @@ using System.Text;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class DynamicTests
 	{
-		[TestMethod]
+		[Fact]
 		public void PrepareHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -34,13 +34,13 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords<dynamic>().ToList();
-				Assert.AreEqual("1", records[0].One);
-				Assert.AreEqual("2", records[0].Two);
-				Assert.AreEqual("3", records[0].Three);
+				Assert.Equal("1", records[0].One);
+				Assert.Equal("2", records[0].Two);
+				Assert.Equal("3", records[0].Three);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void BlankHeadersTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -65,18 +65,18 @@ namespace CsvHelper.Tests.Reading
 				var records = csv.GetRecords<dynamic>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual("1", record.Id);
-				Assert.AreEqual("2", record.Blank1);
-				Assert.AreEqual(null, record.Blank2);
+				Assert.Equal("1", record.Id);
+				Assert.Equal("2", record.Blank1);
+				Assert.Equal(null, record.Blank2);
 
 				record = records[1];
-				Assert.AreEqual("3", record.Id);
-				Assert.AreEqual(null, record.Blank1);
-				Assert.AreEqual(null, record.Blank2);
+				Assert.Equal("3", record.Id);
+				Assert.Equal(null, record.Blank1);
+				Assert.Equal(null, record.Blank2);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DuplicateFieldNamesTest()
 		{
 			var headerNameCounts = new Dictionary<string, int>();
@@ -117,9 +117,9 @@ namespace CsvHelper.Tests.Reading
 
 				var records = csv.GetRecords<dynamic>().ToList();
 				var record = records[0];
-				Assert.AreEqual("1", record.Id);
-				Assert.AreEqual("foo", record.Name1);
-				Assert.AreEqual("bar", record.Name2);
+				Assert.Equal("1", record.Id);
+				Assert.Equal("foo", record.Name1);
+				Assert.Equal("bar", record.Name2);
 			}
 		}
 	}

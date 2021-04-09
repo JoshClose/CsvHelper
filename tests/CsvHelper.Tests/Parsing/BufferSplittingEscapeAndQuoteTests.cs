@@ -1,5 +1,5 @@
 ﻿using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
     public class BufferSplittingEscapeAndQuoteTests
     {
-		[TestMethod]
+		[Fact]
 		public void Read_BufferEndsAtEscape_FieldIsNotBadData()
 		{
 			var s = new StringBuilder();
@@ -26,8 +26,8 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual("bcdefghijklm\"nopqrstuvwxyz", parser[1]);
+				Assert.Equal("a", parser[0]);
+				Assert.Equal("bcdefghijklm\"nopqrstuvwxyz", parser[1]);
 			}
 		}
     }

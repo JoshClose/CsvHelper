@@ -5,7 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,22 +16,22 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
     public class EnumIgnoreCaseTests
     {
-		[TestMethod]
+		[Fact]
 		public void AutoMap_WithEnumIgnoreCaseAttributes_ConfiguresParameterMaps()
 		{
 			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
 			var map = context.AutoMap<Foo>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.AreEqual("id", map.ParameterMaps[0].Data.Names.First());
-			Assert.AreEqual("bar", map.ParameterMaps[1].Data.Names.First());
-			Assert.IsTrue(map.ParameterMaps[1].Data.TypeConverterOptions.EnumIgnoreCase.GetValueOrDefault());
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Equal("id", map.ParameterMaps[0].Data.Names.First());
+			Assert.Equal("bar", map.ParameterMaps[1].Data.Names.First());
+			Assert.True(map.ParameterMaps[1].Data.TypeConverterOptions.EnumIgnoreCase.GetValueOrDefault());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithEnumIgnoreCaseAttributes_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -43,13 +43,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(Bar.One, records[0].Bar);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(Bar.One, records[0].Bar);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithEnumIgnoreCaseAttributes_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -64,13 +64,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(Bar.One, records[0].Bar);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(Bar.One, records[0].Bar);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithIgnoreAttributes_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Bar\r\n");
 				expected.Append("1,None\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

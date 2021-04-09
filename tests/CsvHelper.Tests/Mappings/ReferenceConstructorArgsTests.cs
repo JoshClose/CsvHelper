@@ -3,19 +3,19 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
 	public class ReferenceConstructorArgsTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Test()
 		{
 			var map = new AMap( "A Field" );
 			var name = map.ReferenceMaps[0].Data.Mapping.MemberMaps.Find<B>( m => m.Name ).Data.Names[0];
-			Assert.AreEqual( "B Field", name );
+			Assert.Equal( "B Field", name );
 		}
 
 		private class A

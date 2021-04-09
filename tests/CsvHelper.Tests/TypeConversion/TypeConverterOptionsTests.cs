@@ -7,14 +7,14 @@ using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class TypeConverterOptionsTests
 	{
-		[TestMethod]
+		[Fact]
 		public void GlobalNullValueTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -33,12 +33,12 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues.Add(string.Empty);
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.IsNull(records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Null(records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void MappingNullValueTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -57,12 +57,12 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.IsNull(records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Null(records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GlobalAndMappingNullValueTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -82,8 +82,8 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.IsNull(records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Null(records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 

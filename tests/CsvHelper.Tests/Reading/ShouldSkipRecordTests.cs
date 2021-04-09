@@ -7,14 +7,14 @@ using System.Globalization;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class ShouldSkipRecordTests
 	{
-		[TestMethod]
+		[Fact]
 		public void SkipEmptyHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -33,11 +33,11 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 			csv.Read();
-			Assert.AreEqual("1", csv.GetField(0));
-			Assert.AreEqual("2", csv.GetField(1));
+			Assert.Equal("1", csv.GetField(0));
+			Assert.Equal("2", csv.GetField(1));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SkipEmptyRowTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -56,11 +56,11 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 			csv.Read();
-			Assert.AreEqual("1", csv.GetField(0));
-			Assert.AreEqual("2", csv.GetField(1));
+			Assert.Equal("1", csv.GetField(0));
+			Assert.Equal("2", csv.GetField(1));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ShouldSkipWithEmptyRows()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -80,8 +80,8 @@ namespace CsvHelper.Tests.Reading
 
 			csv.Read();
 			csv.Read();
-			Assert.AreEqual("1", csv.GetField(0));
-			Assert.AreEqual("2", csv.GetField(1));
+			Assert.Equal("1", csv.GetField(0));
+			Assert.Equal("2", csv.GetField(1));
 		}
 	}
 }

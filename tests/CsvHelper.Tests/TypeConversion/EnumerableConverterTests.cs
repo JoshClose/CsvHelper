@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using CsvHelper.Tests.Mocks;
@@ -11,10 +11,10 @@ using System.IO;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class EnumerableConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConvertTest()
 		{
 			var converter = new EnumerableConverter();
@@ -25,8 +25,8 @@ namespace CsvHelper.Tests.TypeConversion
 			var readerRow = new CsvReader(new ParserMock());
 			var writerRow = new CsvWriter(new StringWriter(), CultureInfo.InvariantCulture);
 
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString("", readerRow, propertyMapData));
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertToString(5, writerRow, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("", readerRow, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertToString(5, writerRow, propertyMapData));
 		}
 	}
 }

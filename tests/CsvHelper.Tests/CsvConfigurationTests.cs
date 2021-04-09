@@ -6,14 +6,14 @@ using System;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvConfigurationTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EnsureReaderAndParserConfigIsAreSameTest()
 		{
 			using (var stream = new MemoryStream())
@@ -21,128 +21,123 @@ namespace CsvHelper.Tests
 			{
 				var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-				Assert.AreSame(csvReader.Configuration, csvReader.Parser.Configuration);
+				Assert.Same(csvReader.Configuration, csvReader.Parser.Configuration);
 
 				var config = new CsvConfiguration(CultureInfo.InvariantCulture);
 				var parser = new CsvParser(reader, config);
 				csvReader = new CsvReader(parser);
 
-				Assert.AreSame(csvReader.Configuration, csvReader.Parser.Configuration);
+				Assert.Same(csvReader.Configuration, csvReader.Parser.Configuration);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithGenericMethod1Test()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			context.RegisterClassMap<TestClassMappings>();
 
-			Assert.AreEqual(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithGenericMethod2Test()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			context.RegisterClassMap<TestClassMappings>();
 
-			Assert.AreEqual(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithNonGenericMethodTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			context.RegisterClassMap(typeof(TestClassMappings));
 
-			Assert.AreEqual(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithInstanceMethodTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			context.RegisterClassMap(new TestClassMappings());
 
-			Assert.AreEqual(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void RegisterClassMapGenericTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 			context.RegisterClassMap<TestClassMappings>();
-			Assert.IsNotNull(context.Maps[typeof(TestClass)]);
+			Assert.NotNull(context.Maps[typeof(TestClass)]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void RegisterClassMapNonGenericTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 			context.RegisterClassMap(typeof(TestClassMappings));
-			Assert.IsNotNull(context.Maps[typeof(TestClass)]);
+			Assert.NotNull(context.Maps[typeof(TestClass)]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void RegisterClassInstanceTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 			context.RegisterClassMap(new TestClassMappings());
-			Assert.IsNotNull(context.Maps[typeof(TestClass)]);
+			Assert.NotNull(context.Maps[typeof(TestClass)]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void UnregisterClassMapGenericTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 			context.RegisterClassMap<TestClassMappings>();
-			Assert.IsNotNull(context.Maps[typeof(TestClass)]);
+			Assert.NotNull(context.Maps[typeof(TestClass)]);
 
 			context.UnregisterClassMap<TestClassMappings>();
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void UnregisterClassNonMapGenericTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 			context.RegisterClassMap(typeof(TestClassMappings));
-			Assert.IsNotNull(context.Maps[typeof(TestClass)]);
+			Assert.NotNull(context.Maps[typeof(TestClass)]);
 
 			context.UnregisterClassMap(typeof(TestClassMappings));
-			Assert.IsNull(context.Maps[typeof(TestClass)]);
+			Assert.Null(context.Maps[typeof(TestClass)]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AddingMappingsWithNonGenericMethodThrowsWhenNotACsvClassMap()
 		{
 			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
 
-			try
-			{
-				context.RegisterClassMap(typeof(TestClass));
-				Assert.Fail();
-			}
-			catch (ArgumentException) { }
+			Assert.Throws<ArgumentException>(() => context.RegisterClassMap(typeof(TestClass)));
 		}
 
 		private class TestClass

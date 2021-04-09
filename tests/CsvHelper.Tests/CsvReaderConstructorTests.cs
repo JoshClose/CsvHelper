@@ -4,36 +4,36 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvReaderConstructorTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EnsureInternalsAreSetupCorrectlyWhenPassingTextReaderTest()
 		{
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				Assert.AreSame(csv.Configuration, csv.Parser.Configuration);
+				Assert.Same(csv.Configuration, csv.Parser.Configuration);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EnsureInternalsAreSetupCorrectlyWhenPassingTextReaderAndConfigurationTest()
 		{
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)))
 			{
-				Assert.AreSame(csv.Configuration, csv.Parser.Configuration);
+				Assert.Same(csv.Configuration, csv.Parser.Configuration);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EnsureInternalsAreSetupCorrectlyWhenPassingParserTest()
 		{
 			using (var stream = new MemoryStream())
@@ -43,8 +43,8 @@ namespace CsvHelper.Tests
 
 				using (var csv = new CsvReader(parser))
 				{
-					Assert.AreSame(csv.Configuration, csv.Parser.Configuration);
-					Assert.AreSame(parser, csv.Parser);
+					Assert.Same(csv.Configuration, csv.Parser.Configuration);
+					Assert.Same(parser, csv.Parser);
 				}
 			}
 		}

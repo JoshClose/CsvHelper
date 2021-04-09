@@ -5,14 +5,14 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvWriterSubClassingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteRecordTest()
 		{
 			var data = new List<Test>

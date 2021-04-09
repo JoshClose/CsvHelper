@@ -5,7 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -13,10 +13,10 @@ using System.Linq;
 
 namespace CsvHelper.Tests.Mappings.Attribute
 {
-	[TestClass]
+	
 	public class TypeConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void TypeConverterTest()
 		{
 			using (var reader = new StringReader("Id,Name\r\n1,one\r\n"))
@@ -24,12 +24,12 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			{
 				var records = csv.GetRecords<TypeConverterClass>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("two", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("two", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TypeConverterOnClassReferenceTest()
 		{
 			var records = new List<AClass>
@@ -43,11 +43,11 @@ namespace CsvHelper.Tests.Mappings.Attribute
 
 				var expected = "Id,Name\r\n1,two\r\n";
 
-				Assert.AreEqual(expected, writer.ToString());
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TypeConverterOnStructReferenceTest()
 		{
 			var records = new List<AStruct>
@@ -61,7 +61,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 
 				var expected = "Id,Name\r\n1,two\r\n";
 
-				Assert.AreEqual(expected, writer.ToString());
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 

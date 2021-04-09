@@ -7,14 +7,14 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvWriterReferenceMappingPrefixTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReferencesWithPrefixTest()
 		{
 			using (var stream = new MemoryStream())
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests
 				expected.AppendLine("a2,b2,c2");
 				expected.AppendLine("a3,b3,c3");
 				expected.AppendLine("a4,b4,c4");
-				Assert.AreEqual(expected.ToString(), data);
+				Assert.Equal(expected.ToString(), data);
 			}
 		}
 

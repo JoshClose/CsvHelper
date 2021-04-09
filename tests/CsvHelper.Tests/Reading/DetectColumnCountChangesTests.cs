@@ -6,14 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class DetectColumnCountChangesTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConsistentColumnsWithDetectColumnChangesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -36,7 +36,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InconsistentColumnsMultipleRowsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -77,11 +77,11 @@ namespace CsvHelper.Tests.Reading
 				}
 
 				// Expect only 3 errors
-				Assert.AreEqual<int>(3, failCount);
+				Assert.Equal<int>(3, failCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InconsistentColumnsSmallerTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Reading
 				try
 				{
 					csv.Read();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (BadDataException)
 				{
@@ -111,7 +111,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InconsistentColumnsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -133,7 +133,7 @@ namespace CsvHelper.Tests.Reading
 				try
 				{
 					csv.Read();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (BadDataException)
 				{
@@ -141,7 +141,7 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WillThrowOnMissingFieldStillWorksTest()
 		{
 			var missingFieldExceptionCount = 0;
@@ -176,8 +176,8 @@ namespace CsvHelper.Tests.Reading
 
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
-				Assert.AreEqual(1, missingFieldExceptionCount);
-				Assert.AreEqual(1, columnCountChangeExceptionCount);
+				Assert.Equal(1, missingFieldExceptionCount);
+				Assert.Equal(1, columnCountChangeExceptionCount);
 			}
 		}
 

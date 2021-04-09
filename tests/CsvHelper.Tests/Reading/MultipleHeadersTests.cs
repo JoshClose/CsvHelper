@@ -5,14 +5,14 @@
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class MultipleHeadersTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReadWithoutMapTest()
 		{
 			using (var stream = new MemoryStream())
@@ -31,19 +31,19 @@ namespace CsvHelper.Tests.Reading
 				csv.ReadHeader();
 				csv.Read();
 
-				Assert.AreEqual(1, csv.GetField<int>("A"));
-				Assert.AreEqual("one", csv.GetField("B"));
+				Assert.Equal(1, csv.GetField<int>("A"));
+				Assert.Equal("one", csv.GetField("B"));
 
 				csv.Read();
 				csv.ReadHeader();
 				csv.Read();
 
-				Assert.AreEqual("two", csv.GetField("Y"));
-				Assert.AreEqual(2, csv.GetField<int>("Z"));
+				Assert.Equal("two", csv.GetField("Y"));
+				Assert.Equal(2, csv.GetField<int>("Z"));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadWithMapTest()
 		{
 			using (var stream = new MemoryStream())
@@ -67,8 +67,8 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var alphaRecord = csv.GetRecord<Alpha>();
 
-				Assert.AreEqual(1, alphaRecord.A);
-				Assert.AreEqual("one", alphaRecord.B);
+				Assert.Equal(1, alphaRecord.A);
+				Assert.Equal("one", alphaRecord.B);
 
 				csv.Read();
 				csv.ReadHeader();
@@ -76,8 +76,8 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var omegaRecord = csv.GetRecord<Omega>();
 
-				Assert.AreEqual("two", omegaRecord.Y);
-				Assert.AreEqual(2, omegaRecord.Z);
+				Assert.Equal("two", omegaRecord.Y);
+				Assert.Equal(2, omegaRecord.Z);
 			}
 		}
 

@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,40 +15,40 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
     public class FormatMapTests
     {
 		private const string FORMAT = "MM|dd|yyyy";
 		private const string DATE = "12|25|2020";
 		private readonly DateTimeOffset date = DateTimeOffset.ParseExact(DATE, FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.None);
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter("id");
 			map.Parameter("date").TypeConverterOption.Format(FORMAT);
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
-			Assert.AreEqual(1, map.ParameterMaps[1].Data.TypeConverterOptions.Formats.Count());
-			Assert.AreEqual(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
+			Assert.Single(map.ParameterMaps[1].Data.TypeConverterOptions.Formats);
+			Assert.Equal(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorFunctionAndName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "id");
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "date").TypeConverterOption.Format(FORMAT);
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
-			Assert.AreEqual(1, map.ParameterMaps[1].Data.TypeConverterOptions.Formats.Count());
-			Assert.AreEqual(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
+			Assert.Single(map.ParameterMaps[1].Data.TypeConverterOptions.Formats);
+			Assert.Equal(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorAndProperty_CreatesParameterMaps()
 		{
 			var constructor = ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo)));
@@ -58,13 +58,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			map.Parameter(constructor, parameters[0]);
 			map.Parameter(constructor, parameters[1]).TypeConverterOption.Format(FORMAT);
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
-			Assert.AreEqual(1, map.ParameterMaps[1].Data.TypeConverterOptions.Formats.Count());
-			Assert.AreEqual(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
+			Assert.Single(map.ParameterMaps[1].Data.TypeConverterOptions.Formats);
+			Assert.Equal(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -77,13 +77,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(date, records[0].Date);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(date, records[0].Date);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -100,13 +100,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(date, records[0].Date);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(date, records[0].Date);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithParameterMap_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -125,7 +125,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Date\r\n");
 				expected.Append($"1,{date.ToString(null, CultureInfo.InvariantCulture)}\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

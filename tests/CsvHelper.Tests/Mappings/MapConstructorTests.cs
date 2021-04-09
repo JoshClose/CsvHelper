@@ -6,21 +6,21 @@ using System;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
 	public class MapConstructorTests
 	{
-		[TestMethod]
+		[Fact]
 		public void NoConstructor()
 		{
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
-				Assert.ThrowsException<MissingMethodException>(() => csv.Context.RegisterClassMap<TestMap>());
+				Assert.Throws<MissingMethodException>(() => csv.Context.RegisterClassMap<TestMap>());
 			}
 		}
 

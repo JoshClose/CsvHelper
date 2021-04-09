@@ -8,14 +8,14 @@ using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Culture
 {
-	[TestClass]
+	
 	public class TypeConverterOptionsFactoryTests
 	{
-		[TestMethod]
+		[Fact]
 		public void AddGetRemoveTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
@@ -27,16 +27,16 @@ namespace CsvHelper.Tests.Culture
 			context.TypeConverterOptionsCache.AddOptions<string>(customOptions);
 			var options = context.TypeConverterOptionsCache.GetOptions<string>();
 
-			Assert.AreEqual(customOptions.Formats, options.Formats);
+			Assert.Equal(customOptions.Formats, options.Formats);
 
 			context.TypeConverterOptionsCache.RemoveOptions<string>();
 
 			options = context.TypeConverterOptionsCache.GetOptions<string>();
 
-			Assert.AreNotEqual(customOptions.Formats, options.Formats);
+			Assert.NotEqual(customOptions.Formats, options.Formats);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -55,12 +55,12 @@ namespace CsvHelper.Tests.Culture
 				var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
 				csvReader.Context.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvReader.Read();
-				Assert.AreEqual(1234, csvReader.GetField<int>(0));
-				Assert.AreEqual(5678, csvReader.GetField(typeof(int), 1));
+				Assert.Equal(1234, csvReader.GetField<int>(0));
+				Assert.Equal(5678, csvReader.GetField(typeof(int), 1));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetFieldSwitchCulturesTest()
 		{
 			GetFieldForCultureTest("\"1234,32\",\"5678,44\"", "fr-FR", 1234.32M, 5678.44M);
@@ -79,12 +79,12 @@ namespace CsvHelper.Tests.Culture
 			using (var csvReader = new CsvReader(reader, config))
 			{
 				csvReader.Read();
-				Assert.AreEqual(expected1, csvReader.GetField<decimal>(0));
-				Assert.AreEqual(expected2, csvReader.GetField(typeof(decimal), 1));
+				Assert.Equal(expected1, csvReader.GetField<decimal>(0));
+				Assert.Equal(expected2, csvReader.GetField(typeof(decimal), 1));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -106,7 +106,7 @@ namespace CsvHelper.Tests.Culture
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordsAppliedWhenMappedTest()
 		{
 			var config = new CsvConfiguration(new CultureInfo("en-US"))
@@ -129,7 +129,7 @@ namespace CsvHelper.Tests.Culture
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteFieldTest()
 		{
 			var config = new CsvConfiguration(new CultureInfo("en-US"))
@@ -149,11 +149,11 @@ namespace CsvHelper.Tests.Culture
 				stream.Position = 0;
 				var record = reader.ReadToEnd();
 
-				Assert.AreEqual("\"$1,234.00\"\r\n", record);
+				Assert.Equal("\"$1,234.00\"\r\n", record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsTest()
 		{
 			var config = new CsvConfiguration(new CultureInfo("en-US"))
@@ -176,11 +176,11 @@ namespace CsvHelper.Tests.Culture
 				stream.Position = 0;
 				var record = reader.ReadToEnd();
 
-				Assert.AreEqual("\"$1,234.00\",\"$5,678.00\"\r\n", record);
+				Assert.Equal("\"$1,234.00\",\"$5,678.00\"\r\n", record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsAppliedWhenMappedTest()
 		{
 			var config = new CsvConfiguration(new CultureInfo("en-US"))
@@ -204,7 +204,7 @@ namespace CsvHelper.Tests.Culture
 				stream.Position = 0;
 				var record = reader.ReadToEnd();
 
-				Assert.AreEqual("\"$1,234.00\",\"5,678.00\"\r\n", record);
+				Assert.Equal("\"$1,234.00\",\"5,678.00\"\r\n", record);
 			}
 		}
 

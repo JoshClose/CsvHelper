@@ -7,11 +7,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Configuration
 {
-	[TestClass]
+	
 	public class ClassMapBuilderTests
 	{
 		private static readonly Factory csvFactory = new Factory();
@@ -55,57 +55,57 @@ namespace CsvHelper.Tests.Configuration
 			.Map(m => m.Optional).Optional()
 			.Build();
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsPropertyMapsCorrectly()
 		{
-			Assert.AreEqual(6, map.MemberMaps.Count);//IMappable
+			Assert.Equal(6, map.MemberMaps.Count);//IMappable
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsOptionalCorrectly()
 		{
-			Assert.IsTrue(map.MemberMaps[5].Data.IsOptional);
+			Assert.True(map.MemberMaps[5].Data.IsOptional);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsTypeConvertersCorrectly()
 		{
-			Assert.AreEqual(typeof(DateTimeConverter), map.MemberMaps[2].Data.TypeConverter.GetType());//2
-			Assert.AreEqual(typeof(DoubleConverter), map.MemberMaps[3].Data.TypeConverter.GetType());//2
+			Assert.Equal(typeof(DateTimeConverter), map.MemberMaps[2].Data.TypeConverter.GetType());//2
+			Assert.Equal(typeof(DoubleConverter), map.MemberMaps[3].Data.TypeConverter.GetType());//2
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsIndexesCorrectly()
 		{
-			Assert.AreEqual(2, map.MemberMaps[2].Data.Index); //3
+			Assert.Equal(2, map.MemberMaps[2].Data.Index); //3
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsNamesCorrectly()
 		{
-			Assert.AreEqual("D4", map.MemberMaps[3].Data.Names.Single()); //4
+			Assert.Equal("D4", map.MemberMaps[3].Data.Names.Single()); //4
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsNameIndexesCorrectly()
 		{
-			Assert.AreEqual(2, map.MemberMaps[0].Data.NameIndex); //5
+			Assert.Equal(2, map.MemberMaps[0].Data.NameIndex); //5
 		}
 
 		//this one is kind of hacky, but i'm not sure how else to test it more robustly since the function gets converted to an expression inside the CsvClassMap
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsConvertUsingFunctionCorrectly()
 		{
 			var fakeRow = new BuilderRowFake();
 			var args = new ConvertFromStringArgs(fakeRow);
-			Assert.AreEqual(ConvertExpression(args).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(args).E); //6
+			Assert.Equal(ConvertExpression(args).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(args).E); //6
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMapBuilderAddsDefaultsCorrectly()
 		{
-			Assert.AreEqual("WEW", map.MemberMaps[0].Data.Default);//7
-			Assert.AreEqual(4d, map.MemberMaps[3].Data.Default);//7
+			Assert.Equal("WEW", map.MemberMaps[0].Data.Default);//7
+			Assert.Equal(4d, map.MemberMaps[3].Data.Default);//7
 		}
 
 		private class BuilderRowFake : IReaderRow

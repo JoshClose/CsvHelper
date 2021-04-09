@@ -7,14 +7,14 @@ using System.Globalization;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvReaderMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReadWithConvertUsingTest()
 		{
 			var parserMock = new ParserMock
@@ -30,15 +30,15 @@ namespace CsvHelper.Tests
 
 			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
 
-			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(1, records[0].IntColumn);
-			Assert.AreEqual("one", records[0].StringColumn);
-			Assert.AreEqual(2, records[1].IntColumn);
-			Assert.AreEqual("two", records[1].StringColumn);
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(1, records[0].IntColumn);
+			Assert.Equal("one", records[0].StringColumn);
+			Assert.Equal(2, records[1].IntColumn);
+			Assert.Equal("two", records[1].StringColumn);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadMultipleNamesTest()
 		{
 			var parserMock = new ParserMock
@@ -53,15 +53,15 @@ namespace CsvHelper.Tests
 
 			var records = csvReader.GetRecords<MultipleNamesClass>().ToList();
 
-			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(1, records[0].IntColumn);
-			Assert.AreEqual("one", records[0].StringColumn);
-			Assert.AreEqual(2, records[1].IntColumn);
-			Assert.AreEqual("two", records[1].StringColumn);
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(1, records[0].IntColumn);
+			Assert.Equal("one", records[0].StringColumn);
+			Assert.Equal(2, records[1].IntColumn);
+			Assert.Equal("two", records[1].StringColumn);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -79,13 +79,13 @@ namespace CsvHelper.Tests
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(3, records[0].IntColumn);
-			Assert.AreEqual(7, records[1].IntColumn);
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(3, records[0].IntColumn);
+			Assert.Equal(7, records[1].IntColumn);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingCovarianceTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests
 			var records = csvReader.GetRecords<CovarianceClass>().ToList();
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingBlockTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -121,13 +121,13 @@ namespace CsvHelper.Tests
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(3, records[0].IntColumn);
-			Assert.AreEqual(7, records[1].IntColumn);
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(3, records[0].IntColumn);
+			Assert.Equal(7, records[1].IntColumn);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingConstantTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -145,13 +145,13 @@ namespace CsvHelper.Tests
 
 			var records = csvReader.GetRecords<TestClass>().ToList();
 
-			Assert.IsNotNull(records);
-			Assert.AreEqual(2, records.Count);
-			Assert.AreEqual(1, records[0].IntColumn);
-			Assert.AreEqual(1, records[1].IntColumn);
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(1, records[0].IntColumn);
+			Assert.Equal(1, records[1].IntColumn);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadSameNameMultipleTimesTest()
 		{
 			var parserMock = new ParserMock
@@ -165,8 +165,8 @@ namespace CsvHelper.Tests
 
 			var records = csv.GetRecords<SameNameMultipleTimesClass>().ToList();
 
-			Assert.IsNotNull(records);
-			Assert.AreEqual(1, records.Count);
+			Assert.NotNull(records);
+			Assert.Single(records);
 		}
 
 		private class CovarianceClass

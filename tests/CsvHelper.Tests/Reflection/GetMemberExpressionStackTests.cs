@@ -2,36 +2,32 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reflection
 {
-	[TestClass]
+
 	public class GetPropertiesTests
 	{
-		[TestMethod]
+		[Fact]
 		public void FirstLevelTest()
 		{
-			var stack = ReflectionHelper.GetMembers<A, string>( a => a.P1 );
+			var stack = ReflectionHelper.GetMembers<A, string>(a => a.P1);
 
-			Assert.AreEqual( 1, stack.Count );
-			Assert.AreEqual( "P1", stack.Pop().Name );
+			Assert.Single(stack);
+			Assert.Equal("P1", stack.Pop().Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void LastLevelTest()
 		{
-			var stack = ReflectionHelper.GetMembers<A, string>( a => a.B.C.D.P4 );
+			var stack = ReflectionHelper.GetMembers<A, string>(a => a.B.C.D.P4);
 
-			Assert.AreEqual( 4, stack.Count );
-			Assert.AreEqual( "B", stack.Pop().Name );
-			Assert.AreEqual( "C", stack.Pop().Name );
-			Assert.AreEqual( "D", stack.Pop().Name );
-			Assert.AreEqual( "P4", stack.Pop().Name );
-		}
-
-		public void ThirdLevelTest()
-		{
+			Assert.Equal(4, stack.Count);
+			Assert.Equal("B", stack.Pop().Name);
+			Assert.Equal("C", stack.Pop().Name);
+			Assert.Equal("D", stack.Pop().Name);
+			Assert.Equal("P4", stack.Pop().Name);
 		}
 
 		private class A

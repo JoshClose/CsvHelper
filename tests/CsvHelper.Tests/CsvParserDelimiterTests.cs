@@ -5,14 +5,14 @@
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvParserDelimiterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void DifferentDelimiterTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -29,23 +29,23 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2", parser[1]);
-				Assert.AreEqual("3", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2", parser[1]);
+				Assert.Equal("3", parser[2]);
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("4", parser[0]);
-				Assert.AreEqual("5", parser[1]);
-				Assert.AreEqual("6", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("4", parser[0]);
+				Assert.Equal("5", parser[1]);
+				Assert.Equal("6", parser[2]);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void MultipleCharDelimiter2Test()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -63,25 +63,25 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2", parser[1]);
-				Assert.AreEqual("3", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2", parser[1]);
+				Assert.Equal("3", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("4", parser[0]);
-				Assert.AreEqual("5", parser[1]);
-				Assert.AreEqual("6", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("4", parser[0]);
+				Assert.Equal("5", parser[1]);
+				Assert.Equal("6", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsFalse(hasRecords);
+				Assert.False(hasRecords);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void MultipleCharDelimiter3Test()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -99,25 +99,25 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2", parser[1]);
-				Assert.AreEqual("3", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2", parser[1]);
+				Assert.Equal("3", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("4", parser[0]);
-				Assert.AreEqual("5", parser[1]);
-				Assert.AreEqual("6", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("4", parser[0]);
+				Assert.Equal("5", parser[1]);
+				Assert.Equal("6", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsFalse(hasRecords);
+				Assert.False(hasRecords);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AllFieldsEmptyTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -135,25 +135,25 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("", parser[0]);
-				Assert.AreEqual("", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("", parser[0]);
+				Assert.Equal("", parser[1]);
+				Assert.Equal("", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("", parser[0]);
-				Assert.AreEqual("", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("", parser[0]);
+				Assert.Equal("", parser[1]);
+				Assert.Equal("", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsFalse(hasRecords);
+				Assert.False(hasRecords);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AllFieldsEmptyNoEolOnLastLineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -170,23 +170,23 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("", parser[0]);
-				Assert.AreEqual("", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("", parser[0]);
+				Assert.Equal("", parser[1]);
+				Assert.Equal("", parser[2]);
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("", parser[0]);
-				Assert.AreEqual("", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("", parser[0]);
+				Assert.Equal("", parser[1]);
+				Assert.Equal("", parser[2]);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EmptyLastFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -204,25 +204,25 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2", parser[1]);
+				Assert.Equal("", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("4", parser[0]);
-				Assert.AreEqual("5", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("4", parser[0]);
+				Assert.Equal("5", parser[1]);
+				Assert.Equal("", parser[2]);
 
 				hasRecords = parser.Read();
-				Assert.IsFalse(hasRecords);
+				Assert.False(hasRecords);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EmptyLastFieldNoEolOnLastLineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -239,23 +239,23 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2", parser[1]);
+				Assert.Equal("", parser[2]);
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("4", parser[0]);
-				Assert.AreEqual("5", parser[1]);
-				Assert.AreEqual("", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("4", parser[0]);
+				Assert.Equal("5", parser[1]);
+				Assert.Equal("", parser[2]);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DifferentDelimiter2ByteCountTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -274,16 +274,16 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual(6, parser.ByteCount);
+				Assert.Equal(6, parser.ByteCount);
 
 				parser.Read();
-				Assert.AreEqual(12, parser.ByteCount);
+				Assert.Equal(12, parser.ByteCount);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DifferentDelimiter3ByteCountTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -302,16 +302,16 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual(7, parser.ByteCount);
+				Assert.Equal(7, parser.ByteCount);
 
 				parser.Read();
-				Assert.AreEqual(14, parser.ByteCount);
+				Assert.Equal(14, parser.ByteCount);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void MultipleCharDelimiterWithBufferEndingInMiddleOfDelimiterTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
@@ -330,13 +330,13 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				var hasRecords = parser.Read();
-				Assert.IsTrue(hasRecords);
-				Assert.AreEqual(2, parser.Count);
-				Assert.AreEqual("12340000004321", parser[0]);
-				Assert.AreEqual("2", parser[1]);
+				Assert.True(hasRecords);
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("12340000004321", parser[0]);
+				Assert.Equal("2", parser[1]);
 
 				hasRecords = parser.Read();
-				Assert.IsFalse(hasRecords);
+				Assert.False(hasRecords);
 			}
 		}
 	}

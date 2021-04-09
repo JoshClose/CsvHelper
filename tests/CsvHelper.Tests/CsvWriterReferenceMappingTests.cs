@@ -7,14 +7,14 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvWriterReferenceMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void NestedReferencesTest()
 		{
 			using (var stream = new MemoryStream())
@@ -59,11 +59,11 @@ namespace CsvHelper.Tests
 				expected.AppendLine("a2,b2,c2,d2");
 				expected.AppendLine("a3,b3,c3,d3");
 				expected.AppendLine("a4,b4,c4,d4");
-				Assert.AreEqual(expected.ToString(), data);
+				Assert.Equal(expected.ToString(), data);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void NullReferenceTest()
 		{
 			using (var stream = new MemoryStream())
@@ -88,7 +88,7 @@ namespace CsvHelper.Tests
 				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("AId,BId,CId,DId");
 				expected.AppendLine("1,,,");
-				Assert.AreEqual(expected.ToString(), data);
+				Assert.Equal(expected.ToString(), data);
 			}
 		}
 

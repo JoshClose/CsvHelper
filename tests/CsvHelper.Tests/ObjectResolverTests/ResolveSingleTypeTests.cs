@@ -3,16 +3,16 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Linq;
 
 namespace CsvHelper.Tests.ObjectResolverTests
 {
-	[TestClass]
+	
 	public class ResolverSingleTypeTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Test()
 		{
 			var parser = new ParserMock
@@ -26,7 +26,7 @@ namespace CsvHelper.Tests.ObjectResolverTests
 				ObjectResolver.Current = new ObjectResolver(CanResolve, Resolve);
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 			}
 		}
 

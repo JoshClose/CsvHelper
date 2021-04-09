@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,10 +15,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
     public class HiddenBaseMembersTests
     {
-		[TestMethod]
+		[Fact]
 		public void ReadWithAutoMapTest()
 		{
 			var parserMock = new ParserMock
@@ -30,12 +30,12 @@ namespace CsvHelper.Tests.Mappings
 			{
 				var records = csv.GetRecords<Bar>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
         public void ReadWithClassMapTest()
 		{
 			var parserMock = new ParserMock
@@ -48,12 +48,12 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap<BarMap>();
 				var records = csv.GetRecords<Bar>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteWithAutoMapTest()
 		{
 			var records = new List<Bar>
@@ -70,11 +70,11 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteWithClassMapTest()
 		{
 			var records = new List<Bar>
@@ -92,7 +92,7 @@ namespace CsvHelper.Tests.Mappings
 				expected.AppendLine("Id");
 				expected.AppendLine("1");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

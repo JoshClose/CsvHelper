@@ -3,19 +3,19 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class MappingInheritedClassTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Test()
 		{
 			var map = new AMap<A>();
-			Assert.AreEqual( 2, map.MemberMaps.Count );
+			Assert.Equal( 2, map.MemberMaps.Count );
 		}
 
 		private interface IA

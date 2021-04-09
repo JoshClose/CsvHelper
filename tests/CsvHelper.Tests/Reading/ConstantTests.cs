@@ -6,16 +6,16 @@ using System.Collections.Generic;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.IO;
 using System.Globalization;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class ConstantTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConstantAlwaysReturnsSameValueTest()
 		{
 			var parser = new ParserMock
@@ -29,13 +29,13 @@ namespace CsvHelper.Tests.Reading
 			csv.Context.RegisterClassMap<TestStringMap>();
 			var records = csv.GetRecords<Test>().ToList();
 
-			Assert.AreEqual(1, records[0].Id);
-			Assert.AreEqual("constant", records[0].Name);
-			Assert.AreEqual(2, records[1].Id);
-			Assert.AreEqual("constant", records[1].Name);
+			Assert.Equal(1, records[0].Id);
+			Assert.Equal("constant", records[0].Name);
+			Assert.Equal(2, records[1].Id);
+			Assert.Equal("constant", records[1].Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConstantIsNullTest()
 		{
 			var rows = new Queue<string[]>();
@@ -54,13 +54,13 @@ namespace CsvHelper.Tests.Reading
 			csv.Context.RegisterClassMap<TestNullMap>();
 			var records = csv.GetRecords<Test>().ToList();
 
-			Assert.AreEqual(1, records[0].Id);
-			Assert.IsNull(records[0].Name);
-			Assert.AreEqual(2, records[1].Id);
-			Assert.IsNull(records[1].Name);
+			Assert.Equal(1, records[0].Id);
+			Assert.Null(records[0].Name);
+			Assert.Equal(2, records[1].Id);
+			Assert.Null(records[1].Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void IntConstantTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -73,8 +73,8 @@ namespace CsvHelper.Tests.Reading
 				csv.Context.RegisterClassMap<TestIntMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual(-1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Equal(-1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 

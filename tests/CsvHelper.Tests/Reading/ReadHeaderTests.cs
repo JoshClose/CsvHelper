@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class ReadHeaderTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReadHeaderReadsHeaderTest()
 		{
 			var parser = new ParserMock
@@ -28,12 +28,12 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.IsNotNull(csv.HeaderRecord);
-			Assert.AreEqual("Id", csv.HeaderRecord[0]);
-			Assert.AreEqual("Name", csv.HeaderRecord[1]);
+			Assert.NotNull(csv.HeaderRecord);
+			Assert.Equal("Id", csv.HeaderRecord[0]);
+			Assert.Equal("Name", csv.HeaderRecord[1]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadHeaderDoesNotAffectCurrentRecordTest()
 		{
 			var parser = new ParserMock
@@ -48,11 +48,11 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.AreEqual("Id", csv.Parser[0]);
-			Assert.AreEqual("Name", csv.Parser[1]);
+			Assert.Equal("Id", csv.Parser[0]);
+			Assert.Equal("Name", csv.Parser[1]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadingHeaderFailsWhenReaderIsDoneTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -70,10 +70,10 @@ namespace CsvHelper.Tests.Reading
 			var csv = new CsvReader(parser);
 			while (csv.Read()) { }
 
-			Assert.ThrowsException<ReaderException>(() => csv.ReadHeader());
+			Assert.Throws<ReaderException>(() => csv.ReadHeader());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadingHeaderFailsWhenNoHeaderRecordTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -90,10 +90,10 @@ namespace CsvHelper.Tests.Reading
 
 			var csv = new CsvReader(parser);
 
-			Assert.ThrowsException<ReaderException>(() => csv.ReadHeader());
+			Assert.Throws<ReaderException>(() => csv.ReadHeader());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadingHeaderDoesNotFailWhenHeaderAlreadyReadTest()
 		{
 			var parser = new ParserMock
@@ -110,7 +110,7 @@ namespace CsvHelper.Tests.Reading
 			csv.ReadHeader();
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadHeaderResetsNamedIndexesTest()
 		{
 			var parser = new ParserMock
@@ -122,17 +122,17 @@ namespace CsvHelper.Tests.Reading
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.AreEqual(0, csv.GetFieldIndex("Id"));
-			Assert.AreEqual(1, csv.GetFieldIndex("Name"));
+			Assert.Equal(0, csv.GetFieldIndex("Id"));
+			Assert.Equal(1, csv.GetFieldIndex("Name"));
 
 			csv.Read();
 			csv.ReadHeader();
 
-			Assert.AreEqual(1, csv.GetFieldIndex("Id"));
-			Assert.AreEqual(0, csv.GetFieldIndex("Name"));
+			Assert.Equal(1, csv.GetFieldIndex("Id"));
+			Assert.Equal(0, csv.GetFieldIndex("Name"));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void MultipleReadHeaderCallsWorksWithNamedIndexCacheTest()
 		{
 			var parser = new ParserMock
@@ -148,19 +148,19 @@ namespace CsvHelper.Tests.Reading
 			csv.ReadHeader();
 			csv.Read();
 
-			Assert.AreEqual(1, csv.GetField<int>("Id"));
-			Assert.AreEqual("one", csv.GetField("Name"));
-			Assert.AreEqual(2, csv.GetField<int>("Id", 1));
-			Assert.AreEqual("two", csv.GetField("Name", 1));
+			Assert.Equal(1, csv.GetField<int>("Id"));
+			Assert.Equal("one", csv.GetField("Name"));
+			Assert.Equal(2, csv.GetField<int>("Id", 1));
+			Assert.Equal("two", csv.GetField("Name", 1));
 
 			csv.Read();
 			csv.ReadHeader();
 			csv.Read();
 
-			Assert.AreEqual(3, csv.GetField<int>("Id"));
-			Assert.AreEqual("three", csv.GetField("Name"));
-			Assert.AreEqual(4, csv.GetField<int>("Id", 1));
-			Assert.AreEqual("four", csv.GetField("Name", 1));
+			Assert.Equal(3, csv.GetField<int>("Id"));
+			Assert.Equal("three", csv.GetField("Name"));
+			Assert.Equal(4, csv.GetField<int>("Id", 1));
+			Assert.Equal("four", csv.GetField("Name", 1));
 		}
 	}
 }

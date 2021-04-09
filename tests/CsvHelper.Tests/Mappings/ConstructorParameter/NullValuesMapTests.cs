@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,23 +15,23 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
 	public class NullValuesMapTests
     {
-		[TestMethod]
+		[Fact]
 		public void AutoMap_WithBooleanFalseValuesAttribute_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter("id");
 			map.Parameter("name").TypeConverterOption.NullValues("NULL");
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.AreEqual(0, map.ParameterMaps[0].Data.TypeConverterOptions.NullValues.Count);
-			Assert.AreEqual(1, map.ParameterMaps[1].Data.TypeConverterOptions.NullValues.Count);
-			Assert.AreEqual("NULL", map.ParameterMaps[1].Data.TypeConverterOptions.NullValues[0]);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Empty(map.ParameterMaps[0].Data.TypeConverterOptions.NullValues);
+			Assert.Single(map.ParameterMaps[1].Data.TypeConverterOptions.NullValues);
+			Assert.Equal("NULL", map.ParameterMaps[1].Data.TypeConverterOptions.NullValues[0]);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithBooleanFalseValuesAttribute_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -44,13 +44,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithBooleanFalseValuesAttribute_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -67,13 +67,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithBooleanFalseValuesAttribute_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -91,7 +91,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Name\r\n");
 				expected.Append("1,\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

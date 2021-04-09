@@ -7,14 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvReaderDefaultValueTests
 	{
-		[TestMethod]
+		[Fact]
 		public void DefaultValueTest()
 		{
 			using (var stream = new MemoryStream())
@@ -34,17 +34,17 @@ namespace CsvHelper.Tests
 				var records = csvReader.GetRecords<Test>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual(-1, record.Id);
-				Assert.AreEqual(null, record.Name);
-				Assert.AreEqual(-2, record.Order);
+				Assert.Equal(-1, record.Id);
+				Assert.Null(record.Name);
+				Assert.Equal(-2, record.Order);
 
 				record = records[1];
-				Assert.AreEqual(2, record.Id);
-				Assert.AreEqual("two", record.Name);
+				Assert.Equal(2, record.Id);
+				Assert.Equal("two", record.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DefaultStringValueTest()
 		{
 			using (var stream = new MemoryStream())
@@ -64,13 +64,13 @@ namespace CsvHelper.Tests
 				var records = csvReader.GetRecords<Test>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual(-1, record.Id);
-				Assert.AreEqual(null, record.Name);
-				Assert.AreEqual(-2, record.Order);
+				Assert.Equal(-1, record.Id);
+				Assert.Null(record.Name);
+				Assert.Equal(-2, record.Order);
 
 				record = records[1];
-				Assert.AreEqual(2, record.Id);
-				Assert.AreEqual("two", record.Name);
+				Assert.Equal(2, record.Id);
+				Assert.Equal("two", record.Name);
 			}
 		}
 

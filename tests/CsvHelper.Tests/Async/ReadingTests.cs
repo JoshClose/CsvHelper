@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
@@ -11,10 +11,10 @@ using System;
 
 namespace CsvHelper.Tests.Async
 {
-	[TestClass]
+	
 	public class ReadingTests
 	{
-		[TestMethod]
+		[Fact]
 		public async Task ReadingTest()
 		{
 			var parser = new ParserMock
@@ -34,20 +34,20 @@ namespace CsvHelper.Tests.Async
 					records.Add(csv.GetRecord<Simple>());
 				}
 
-				Assert.AreEqual(2, records.Count);
+				Assert.Equal(2, records.Count);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.Name);
 
 				record = records[1];
-				Assert.AreEqual(2, record.Id);
-				Assert.AreEqual("two", record.Name);
+				Assert.Equal(2, record.Id);
+				Assert.Equal("two", record.Name);
 			}
 		}
 
 #if NETCOREAPP
-		[TestMethod]
+		[Fact]
 		public async Task GetRecordsTest()
 		{
 			var parser = new ParserMock
@@ -62,17 +62,17 @@ namespace CsvHelper.Tests.Async
 				var records = csv.GetRecordsAsync<Simple>().GetAsyncEnumerator();
 				await records.MoveNextAsync();
 
-				Assert.AreEqual(1, records.Current.Id);
-				Assert.AreEqual("one", records.Current.Name);
+				Assert.Equal(1, records.Current.Id);
+				Assert.Equal("one", records.Current.Name);
 
 				await records.MoveNextAsync();
 
-				Assert.AreEqual(2, records.Current.Id);
-				Assert.AreEqual("two", records.Current.Name);
+				Assert.Equal(2, records.Current.Id);
+				Assert.Equal("two", records.Current.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task GetRecordsTestCanceled()
 		{
 			var parser = new ParserMock
@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.Async
 			{
 				source.Cancel();
 				var records = csv.GetRecordsAsync<Simple>(source.Token).GetAsyncEnumerator();
-				await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await records.MoveNextAsync());
+				await Assert.ThrowsAsync<OperationCanceledException>(async () => await records.MoveNextAsync());
 			}
 		}
 #endif

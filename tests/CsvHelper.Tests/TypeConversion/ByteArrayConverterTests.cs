@@ -5,14 +5,14 @@
 using System;
 using System.Linq;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class ByteArrayConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WhenConverting_FromStringToByteArray_ReturnsCorrectValues()
 		{
 			var testCases = new[]
@@ -69,13 +69,13 @@ namespace CsvHelper.Tests.TypeConversion
 					var actual = (byte[])converter.ConvertFromString( f.test, null, null );
 					foreach( var b in actual.Zip( f.expected, ( a, e ) => new { a, e } ) )
 					{
-						Assert.AreEqual( b.e, b.a );
+						Assert.Equal( b.e, b.a );
 					}
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WhenConverting_FromByteArrayToString_ReturnsCorrectValues()
 		{
 			var testCases = new[]
@@ -131,7 +131,7 @@ namespace CsvHelper.Tests.TypeConversion
 				{
 					var actual = converter.ConvertToString( f.test, null, null );
 
-					Assert.AreEqual( actual, f.expected );
+					Assert.Equal( actual, f.expected );
 				}
 			}
 		}

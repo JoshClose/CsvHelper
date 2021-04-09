@@ -1,5 +1,5 @@
 ﻿using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.Property
 {
-	[TestClass]
+	
     public class ConstantTests
     {
-		[TestMethod]
+		[Fact]
 		public void GetRecords_ConstantSet_FieldExists_ReturnsRecordsWithConstant()
 		{
 			var s = new StringBuilder();
@@ -28,11 +28,11 @@ namespace CsvHelper.Tests.Mappings.Property
 				csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_ConstantSet_FieldMissing_ReturnsRecordsWithConstant()
 		{
 			var s = new StringBuilder();
@@ -47,7 +47,7 @@ namespace CsvHelper.Tests.Mappings.Property
 				csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 

@@ -6,14 +6,14 @@ using System;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvWriterFormatTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteFieldTest()
 		{
 			var record = new TestRecord
@@ -37,10 +37,10 @@ namespace CsvHelper.Tests
 			var csvFile = reader.ReadToEnd();
 			var expected = "first column,0001,10/1/2012,$150.99\r\n";
 
-			Assert.AreEqual(expected, csvFile);
+			Assert.Equal(expected, csvFile);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteFieldShouldQuoteNoTest()
 		{
 			var stream = new MemoryStream();
@@ -55,10 +55,10 @@ namespace CsvHelper.Tests
 			var csvFile = reader.ReadToEnd();
 			var expected = "a \"b\" c\r\n";
 
-			Assert.AreEqual(expected, csvFile);
+			Assert.Equal(expected, csvFile);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteFieldShouldQuoteYesTest()
 		{
 			var stream = new MemoryStream();
@@ -73,10 +73,10 @@ namespace CsvHelper.Tests
 			var csvFile = reader.ReadToEnd();
 			var expected = "\"a \"\"b\"\" c\"\r\n";
 
-			Assert.AreEqual(expected, csvFile);
+			Assert.Equal(expected, csvFile);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordWithReferencesTest()
 		{
 			var record = new Person
@@ -114,7 +114,7 @@ namespace CsvHelper.Tests
 
 			var expected = "First Name,Last Name,2012-10-01 12:12:12.123,Home Street,Home City,Home State,02201,Work Street,Work City,Work State,04100\r\n";
 
-			Assert.AreEqual(expected, csvFile);
+			Assert.Equal(expected, csvFile);
 		}
 
 		private class TestRecord

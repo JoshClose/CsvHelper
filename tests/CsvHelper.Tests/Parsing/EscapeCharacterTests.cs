@@ -3,16 +3,16 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
 	public class EscapeCharacterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EscapeTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -23,11 +23,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("\"a\"", parser[0]);
+				Assert.Equal("\"a\"", parser[0]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EscapeNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -38,11 +38,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("\"a\"", parser[0]);
+				Assert.Equal("\"a\"", parser[0]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EscapeTrimOutsideTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -54,11 +54,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("\"a\"", parser[0]);
+				Assert.Equal("\"a\"", parser[0]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EscapeTrimInsideTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -70,11 +70,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("\"a\"", parser[0]);
+				Assert.Equal("\"a\"", parser[0]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EscapeTrimBothTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -86,11 +86,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("\"a\"", parser[0]);
+				Assert.Equal("\"a\"", parser[0]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EscapeWriteTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Parsing
 				csv.WriteField("\"a\"");
 				csv.Flush();
 
-				Assert.AreEqual("\"|\"a|\"\"", writer.ToString());
+				Assert.Equal("\"|\"a|\"\"", writer.ToString());
 			}
 		}
 	}

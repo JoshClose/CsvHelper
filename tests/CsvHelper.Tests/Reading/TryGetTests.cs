@@ -7,14 +7,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class TryGetTests
 	{
-		[TestMethod]
+		[Fact]
 		public void TryGetFieldInvalidIndexTest()
 		{
 			var parserMock = new ParserMock
@@ -28,11 +28,11 @@ namespace CsvHelper.Tests.Reading
 			reader.Read();
 
 			var got = reader.TryGetField(0, out int field);
-			Assert.IsFalse(got);
-			Assert.AreEqual(default(int), field);
+			Assert.False(got);
+			Assert.Equal(default(int), field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetFieldInvalidNameTest()
 		{
 			var parserMock = new ParserMock
@@ -47,11 +47,11 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 
 			var got = reader.TryGetField("One", out int field);
-			Assert.IsFalse(got);
-			Assert.AreEqual(default(int), field);
+			Assert.False(got);
+			Assert.Equal(default(int), field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetFieldTest()
 		{
 			var parserMock = new ParserMock
@@ -67,11 +67,11 @@ namespace CsvHelper.Tests.Reading
 			reader.Read();
 
 			var got = reader.TryGetField(0, out int field);
-			Assert.IsTrue(got);
-			Assert.AreEqual(1, field);
+			Assert.True(got);
+			Assert.Equal(1, field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetFieldStrictTest()
 		{
 			var parserMock = new ParserMock
@@ -87,11 +87,11 @@ namespace CsvHelper.Tests.Reading
 			reader.Read();
 
 			var got = reader.TryGetField("One", out int field);
-			Assert.IsTrue(got);
-			Assert.AreEqual(1, field);
+			Assert.True(got);
+			Assert.Equal(1, field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetFieldEmptyDate()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -113,11 +113,11 @@ namespace CsvHelper.Tests.Reading
 
 			var got = reader.TryGetField(0, out DateTime field);
 
-			Assert.IsFalse(got);
-			Assert.AreEqual(DateTime.MinValue, field);
+			Assert.False(got);
+			Assert.Equal(DateTime.MinValue, field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetNullableFieldEmptyDate()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -139,11 +139,11 @@ namespace CsvHelper.Tests.Reading
 
 			var got = reader.TryGetField(0, out DateTime? field);
 
-			Assert.IsFalse(got);
-			Assert.IsNull(field);
+			Assert.False(got);
+			Assert.Null(field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetDoesNotThrowWhenWillThrowOnMissingFieldIsEnabled()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -160,10 +160,10 @@ namespace CsvHelper.Tests.Reading
 			var reader = new CsvReader(parserMock);
 			reader.Read();
 			reader.ReadHeader();
-			Assert.IsFalse(reader.TryGetField("test", out string field));
+			Assert.False(reader.TryGetField("test", out string field));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetFieldIndexTest()
 		{
 			var parserMock = new ParserMock
@@ -177,15 +177,15 @@ namespace CsvHelper.Tests.Reading
 			reader.Read();
 
 			var got = reader.TryGetField("Two", 0, out int field);
-			Assert.IsTrue(got);
-			Assert.AreEqual(2, field);
+			Assert.True(got);
+			Assert.Equal(2, field);
 
 			got = reader.TryGetField("Two", 1, out field);
-			Assert.IsTrue(got);
-			Assert.AreEqual(3, field);
+			Assert.True(got);
+			Assert.Equal(3, field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetMissingDateTimeFieldTest()
 		{
 			var parserMock = new ParserMock
@@ -201,11 +201,11 @@ namespace CsvHelper.Tests.Reading
 
 			var got = reader.TryGetField(typeof(DateTime), "Name", out object field);
 
-			Assert.IsFalse(got);
-			Assert.AreEqual(DateTime.MinValue, field);
+			Assert.False(got);
+			Assert.Equal(DateTime.MinValue, field);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TryGetMissingDateTimeOffsetFieldTest()
 		{
 			var parserMock = new ParserMock
@@ -221,8 +221,8 @@ namespace CsvHelper.Tests.Reading
 
 			var got = reader.TryGetField(typeof(DateTimeOffset), "DateTime", out object field);
 
-			Assert.IsFalse(got);
-			Assert.AreEqual(DateTimeOffset.MinValue, field);
+			Assert.False(got);
+			Assert.Equal(DateTimeOffset.MinValue, field);
 		}
 	}
 }

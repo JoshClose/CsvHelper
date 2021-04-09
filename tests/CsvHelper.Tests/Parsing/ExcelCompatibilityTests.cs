@@ -6,14 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class ExcelCompatibilityTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Parse_EscapedFieldHasSpaceAfterLastQuote_FieldProcessedLeavingSpaceAtEnd()
 		{
 			var s = new StringBuilder();
@@ -27,14 +27,14 @@ namespace CsvHelper.Tests
 			{
 				parser.Read();
 
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("one", parser[0]);
-				Assert.AreEqual("two ", parser[1]);
-				Assert.AreEqual("three", parser[2]);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("one", parser[0]);
+				Assert.Equal("two ", parser[1]);
+				Assert.Equal("three", parser[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parse_EscapedFieldHasSpaceBeforeFirstQuote_FieldIsNotProcessed()
 		{
 			var s = new StringBuilder();
@@ -48,14 +48,14 @@ namespace CsvHelper.Tests
 			{
 				parser.Read();
 
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("one", parser[0]);
-				Assert.AreEqual(" \"two\"", parser[1]);
-				Assert.AreEqual("three", parser[2]);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("one", parser[0]);
+				Assert.Equal(" \"two\"", parser[1]);
+				Assert.Equal("three", parser[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parse_EscapedFieldHasExtraQuoteAfterLastQuote_CharsAfterLastQuoteAreNotProcessed()
 		{
 			var s = new StringBuilder();
@@ -69,16 +69,16 @@ namespace CsvHelper.Tests
 			{
 				parser.Read();
 
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("two \"2", parser[1]);
-				Assert.AreEqual("3", parser[2]);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("two \"2", parser[1]);
+				Assert.Equal("3", parser[2]);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parse_EscapedFieldHasNoEndingQuote_GoesToEndOfFile()
 		{
 			var s = new StringBuilder();
@@ -93,13 +93,13 @@ namespace CsvHelper.Tests
 			{
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual("b", parser[1]);
-				Assert.AreEqual("c\r\nd,e,f\r\n", parser[2]);
+				Assert.Equal("a", parser[0]);
+				Assert.Equal("b", parser[1]);
+				Assert.Equal("c\r\nd,e,f\r\n", parser[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parse_NonEscapedFieldHasQuotesInIt_IgnoresQuotes()
 		{
 			var s = new StringBuilder();
@@ -113,10 +113,10 @@ namespace CsvHelper.Tests
 			{
 				parser.Read();
 
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2\"3\"4", parser[1]);
-				Assert.AreEqual("5", parser[2]);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2\"3\"4", parser[1]);
+				Assert.Equal("5", parser[2]);
 			}
 		}
 	}

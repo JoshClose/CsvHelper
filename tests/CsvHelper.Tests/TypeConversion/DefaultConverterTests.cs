@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,10 +15,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
     public class DefaultConverterTests
     {
-		[TestMethod]
+		[Fact]
 		public void ConvertToString_ValueIsNull_ReturnsEmptyString()
 		{
 			var converter = new DefaultTypeConverter();
@@ -29,10 +29,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(null, null, memberMapData);
 
-			Assert.AreEqual(string.Empty, value);
+			Assert.Equal(string.Empty, value);
 		}
 
-		[TestMethod]
+		[Fact]
         public void ConvertToString_SingleNullValue_UsesValue()
 		{
 			var converter = new DefaultTypeConverter();
@@ -44,10 +44,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(null, null, memberMapData);
 
-			Assert.AreEqual("Foo", value);
+			Assert.Equal("Foo", value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertToString_MultipleNullValues_UsesFirstValue()
 		{
 			var converter = new DefaultTypeConverter();
@@ -59,10 +59,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(null, null, memberMapData);
 
-			Assert.AreEqual("Foo", value);
+			Assert.Equal("Foo", value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_NullValue_UsesValue()
 		{
 			using (var writer = new StringWriter())
@@ -74,7 +74,7 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Flush();
 				writer.Flush();
 
-				Assert.AreEqual("Foo", writer.ToString());
+				Assert.Equal("Foo", writer.ToString());
 			}
 		}
 	}

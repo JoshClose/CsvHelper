@@ -6,14 +6,14 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class CharConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConvertToStringTest()
 		{
 			var converter = new CharConverter();
@@ -23,14 +23,14 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			Assert.AreEqual("a", converter.ConvertToString('a', null, propertyMapData));
+			Assert.Equal("a", converter.ConvertToString('a', null, propertyMapData));
 
-			Assert.AreEqual("True", converter.ConvertToString(true, null, propertyMapData));
+			Assert.Equal("True", converter.ConvertToString(true, null, propertyMapData));
 
-			Assert.AreEqual("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertFromStringTest()
 		{
 			var converter = new CharConverter();
@@ -40,11 +40,11 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.AreEqual('a', converter.ConvertFromString("a", null, propertyMapData));
-			Assert.AreEqual('a', converter.ConvertFromString(" a ", null, propertyMapData));
-			Assert.AreEqual(' ', converter.ConvertFromString(" ", null, propertyMapData));
+			Assert.Equal('a', converter.ConvertFromString("a", null, propertyMapData));
+			Assert.Equal('a', converter.ConvertFromString(" a ", null, propertyMapData));
+			Assert.Equal(' ', converter.ConvertFromString(" ", null, propertyMapData));
 
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 		}
 	}
 }

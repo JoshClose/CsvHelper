@@ -5,14 +5,14 @@
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvParserRawRecordTests
 	{
-		[TestMethod]
+		[Fact]
 		public void RawRecordCrLfTest()
 		{
 			using (var stream = new MemoryStream())
@@ -26,17 +26,17 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual("1,2\r\n", parser.RawRecord.ToString());
+				Assert.Equal("1,2\r\n", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual("3,4\r\n", parser.RawRecord.ToString());
+				Assert.Equal("3,4\r\n", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual(string.Empty, parser.RawRecord.ToString());
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void RawRecordCrTest()
 		{
 			using (var stream = new MemoryStream())
@@ -50,17 +50,17 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual("1,2\r", parser.RawRecord.ToString());
+				Assert.Equal("1,2\r", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual("3,4\r", parser.RawRecord.ToString());
+				Assert.Equal("3,4\r", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual(string.Empty, parser.RawRecord.ToString());
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void RawRecordLfTest()
 		{
 			using (var stream = new MemoryStream())
@@ -74,17 +74,17 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual("1,2\n", parser.RawRecord.ToString());
+				Assert.Equal("1,2\n", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual("3,4\n", parser.RawRecord.ToString());
+				Assert.Equal("3,4\n", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual(string.Empty, parser.RawRecord.ToString());
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void RawRecordCr2DelimiterTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -102,17 +102,17 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual("1;;2\r", parser.RawRecord.ToString());
+				Assert.Equal("1;;2\r", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual("3;;4\r", parser.RawRecord.ToString());
+				Assert.Equal("3;;4\r", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual(string.Empty, parser.RawRecord.ToString());
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void TinyBufferTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -130,13 +130,13 @@ namespace CsvHelper.Tests
 				stream.Position = 0;
 
 				parser.Read();
-				Assert.AreEqual("1,2\r\n", parser.RawRecord.ToString());
+				Assert.Equal("1,2\r\n", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual("3,4\r\n", parser.RawRecord.ToString());
+				Assert.Equal("3,4\r\n", parser.RawRecord.ToString());
 
 				parser.Read();
-				Assert.AreEqual(string.Empty, parser.RawRecord.ToString());
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
 			}
 		}
 	}

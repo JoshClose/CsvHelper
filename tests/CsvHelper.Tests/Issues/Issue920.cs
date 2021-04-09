@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,10 +11,10 @@ using System.Reflection;
 
 namespace CsvHelper.Tests.Issues
 {
-	[TestClass]
+	
 	public class Issue920
 	{
-		[TestMethod]
+		[Fact]
 		public void Test1()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -38,7 +38,7 @@ namespace CsvHelper.Tests.Issues
 
 				var records = csv.GetRecords<Sample>().ToList();
 
-				Assert.AreEqual(2, records.Count);
+				Assert.Equal(2, records.Count);
 			}
 		}
 

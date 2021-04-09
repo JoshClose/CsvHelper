@@ -6,14 +6,14 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class ByteConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConvertToStringTest()
 		{
 			var converter = new ByteConverter();
@@ -23,12 +23,12 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			Assert.AreEqual( "123", converter.ConvertToString( (byte)123, null, propertyMapData ) );
+			Assert.Equal( "123", converter.ConvertToString( (byte)123, null, propertyMapData ) );
 
-			Assert.AreEqual( "", converter.ConvertToString( null, null, propertyMapData ) );
+			Assert.Equal( "", converter.ConvertToString( null, null, propertyMapData ) );
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertFromStringTest()
 		{
 			var converter = new ByteConverter();
@@ -38,10 +38,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.AreEqual( (byte)123, converter.ConvertFromString( "123", null, propertyMapData ) );
-			Assert.AreEqual( (byte)123, converter.ConvertFromString( " 123 ", null, propertyMapData ) );
+			Assert.Equal( (byte)123, converter.ConvertFromString( "123", null, propertyMapData ) );
+			Assert.Equal( (byte)123, converter.ConvertFromString( " 123 ", null, propertyMapData ) );
 
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 		}
 	}
 }

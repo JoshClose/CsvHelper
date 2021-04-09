@@ -6,14 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
 	public class IgnoreHeaderWhiteSpaceTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Blah()
 		{
 			using (var stream = new MemoryStream())
@@ -29,8 +29,8 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 

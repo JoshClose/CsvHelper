@@ -3,16 +3,16 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class EnumerateRecordsTests
 	{
-		[TestMethod]
+		[Fact]
 		public void BasicTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -42,13 +42,13 @@ namespace CsvHelper.Tests
 				{
 					if (count == 1)
 					{
-						Assert.AreEqual(1, r.Id);
-						Assert.AreEqual("one", r.Name);
+						Assert.Equal(1, r.Id);
+						Assert.Equal("one", r.Name);
 					}
 					else if (count == 2)
 					{
-						Assert.AreEqual(2, r.Id);
-						Assert.AreEqual("two", r.Name);
+						Assert.Equal(2, r.Id);
+						Assert.Equal("two", r.Name);
 					}
 
 					count++;
@@ -56,7 +56,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void UnUsedPropertyTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -87,15 +87,15 @@ namespace CsvHelper.Tests
 				{
 					if (count == 1)
 					{
-						Assert.AreEqual(1, r.Id);
-						Assert.AreEqual("one", r.Name);
-						Assert.AreEqual("nothing", r.UnUsed);
+						Assert.Equal(1, r.Id);
+						Assert.Equal("one", r.Name);
+						Assert.Equal("nothing", r.UnUsed);
 					}
 					else if (count == 2)
 					{
-						Assert.AreEqual(2, r.Id);
-						Assert.AreEqual("two", r.Name);
-						Assert.AreEqual("nothing", r.UnUsed);
+						Assert.Equal(2, r.Id);
+						Assert.Equal("two", r.Name);
+						Assert.Equal("nothing", r.UnUsed);
 					}
 
 					count++;
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReferenceTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -136,13 +136,13 @@ namespace CsvHelper.Tests
 				{
 					if (count == 1)
 					{
-						Assert.AreEqual(1, r.Id);
-						Assert.AreEqual("one", r.Reference.Name);
+						Assert.Equal(1, r.Id);
+						Assert.Equal("one", r.Reference.Name);
 					}
 					else if (count == 2)
 					{
-						Assert.AreEqual(2, r.Id);
-						Assert.AreEqual("two", r.Reference.Name);
+						Assert.Equal(2, r.Id);
+						Assert.Equal("two", r.Reference.Name);
 					}
 
 					count++;

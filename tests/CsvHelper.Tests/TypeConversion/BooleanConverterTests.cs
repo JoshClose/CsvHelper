@@ -7,14 +7,14 @@ using System.IO;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class BooleanConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConvertToStringTest()
 		{
 			var converter = new BooleanConverter();
@@ -25,15 +25,15 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			Assert.AreEqual("True", converter.ConvertToString(true, null, memberMapData));
+			Assert.Equal("True", converter.ConvertToString(true, null, memberMapData));
 
-			Assert.AreEqual("False", converter.ConvertToString(false, null, memberMapData));
+			Assert.Equal("False", converter.ConvertToString(false, null, memberMapData));
 
-			Assert.AreEqual("", converter.ConvertToString(null, null, memberMapData));
-			Assert.AreEqual("1", converter.ConvertToString(1, null, memberMapData));
+			Assert.Equal("", converter.ConvertToString(null, null, memberMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null, memberMapData));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertFromStringTest()
 		{
 			var converter = new BooleanConverter();
@@ -43,23 +43,23 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.IsTrue((bool)converter.ConvertFromString("true", null, memberMapData));
-			Assert.IsTrue((bool)converter.ConvertFromString("True", null, memberMapData));
-			Assert.IsTrue((bool)converter.ConvertFromString("TRUE", null, memberMapData));
-			Assert.IsTrue((bool)converter.ConvertFromString("1", null, memberMapData));
-			Assert.IsTrue((bool)converter.ConvertFromString(" true ", null, memberMapData));
+			Assert.True((bool)converter.ConvertFromString("true", null, memberMapData));
+			Assert.True((bool)converter.ConvertFromString("True", null, memberMapData));
+			Assert.True((bool)converter.ConvertFromString("TRUE", null, memberMapData));
+			Assert.True((bool)converter.ConvertFromString("1", null, memberMapData));
+			Assert.True((bool)converter.ConvertFromString(" true ", null, memberMapData));
 
-			Assert.IsFalse((bool)converter.ConvertFromString("false", null, memberMapData));
-			Assert.IsFalse((bool)converter.ConvertFromString("False", null, memberMapData));
-			Assert.IsFalse((bool)converter.ConvertFromString("FALSE", null, memberMapData));
-			Assert.IsFalse((bool)converter.ConvertFromString("0", null, memberMapData));
-			Assert.IsFalse((bool)converter.ConvertFromString(" false ", null, memberMapData));
-			Assert.IsFalse((bool)converter.ConvertFromString(" 0 ", null, memberMapData));
+			Assert.False((bool)converter.ConvertFromString("false", null, memberMapData));
+			Assert.False((bool)converter.ConvertFromString("False", null, memberMapData));
+			Assert.False((bool)converter.ConvertFromString("FALSE", null, memberMapData));
+			Assert.False((bool)converter.ConvertFromString("0", null, memberMapData));
+			Assert.False((bool)converter.ConvertFromString(" false ", null, memberMapData));
+			Assert.False((bool)converter.ConvertFromString(" 0 ", null, memberMapData));
 
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, memberMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, memberMapData));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertToString_SingleBooleanTrueValue_UsesValue()
 		{
 			var converter = new BooleanConverter();
@@ -74,10 +74,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(true, null, memberMapData);
 
-			Assert.AreEqual("Foo", value);
+			Assert.Equal("Foo", value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertToString_MultipleBooleanTrueValues_UsesFirstValue()
 		{
 			var converter = new BooleanConverter();
@@ -92,10 +92,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(true, null, memberMapData);
 
-			Assert.AreEqual("Foo", value);
+			Assert.Equal("Foo", value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertToString_SingleBooleanFalseValue_UsesValue()
 		{
 			var converter = new BooleanConverter();
@@ -110,10 +110,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(false, null, memberMapData);
 
-			Assert.AreEqual("Foo", value);
+			Assert.Equal("Foo", value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertToString_MultipleBooleanFalseValues_UsesFirstValue()
 		{
 			var converter = new BooleanConverter();
@@ -128,10 +128,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var value = converter.ConvertToString(false, null, memberMapData);
 
-			Assert.AreEqual("Foo", value);
+			Assert.Equal("Foo", value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_TrueValue_UsesValue()
 		{
 			using (var writer = new StringWriter())
@@ -143,11 +143,11 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Flush();
 				writer.Flush();
 
-				Assert.AreEqual("Foo", writer.ToString());
+				Assert.Equal("Foo", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_FalseValue_UsesValue()
 		{
 			using (var writer = new StringWriter())
@@ -159,7 +159,7 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Flush();
 				writer.Flush();
 
-				Assert.AreEqual("Foo", writer.ToString());
+				Assert.Equal("Foo", writer.ToString());
 			}
 		}
 	}

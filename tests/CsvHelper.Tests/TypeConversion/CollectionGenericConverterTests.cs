@@ -8,16 +8,16 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Reflection;
 using CsvHelper.Tests.Mocks;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class CollectionGenericConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void FullWriteTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -39,7 +39,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual("1,2,3\r\n", result);
+				Assert.Equal("1,2,3\r\n", result);
 			}
 		}
 

@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,36 +15,36 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
     public class ConstantMapTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter("id");
 			map.Parameter("name").Constant("Bar");
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsFalse(map.ParameterMaps[0].Data.IsConstantSet);
-			Assert.IsTrue(map.ParameterMaps[1].Data.IsConstantSet);
-			Assert.AreEqual("Bar", map.ParameterMaps[1].Data.Constant);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.False(map.ParameterMaps[0].Data.IsConstantSet);
+			Assert.True(map.ParameterMaps[1].Data.IsConstantSet);
+			Assert.Equal("Bar", map.ParameterMaps[1].Data.Constant);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorFunctionAndName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "id");
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "name").Constant("Bar");
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsFalse(map.ParameterMaps[0].Data.IsConstantSet);
-			Assert.IsTrue(map.ParameterMaps[1].Data.IsConstantSet);
-			Assert.AreEqual("Bar", map.ParameterMaps[1].Data.Constant);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.False(map.ParameterMaps[0].Data.IsConstantSet);
+			Assert.True(map.ParameterMaps[1].Data.IsConstantSet);
+			Assert.Equal("Bar", map.ParameterMaps[1].Data.Constant);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorAndProperty_CreatesParameterMaps()
 		{
 			var constructor = ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo)));
@@ -54,13 +54,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			map.Parameter(constructor, parameters[0]);
 			map.Parameter(constructor, parameters[1]).Constant("Bar");
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsFalse(map.ParameterMaps[0].Data.IsConstantSet);
-			Assert.IsTrue(map.ParameterMaps[1].Data.IsConstantSet);
-			Assert.AreEqual("Bar", map.ParameterMaps[1].Data.Constant);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.False(map.ParameterMaps[0].Data.IsConstantSet);
+			Assert.True(map.ParameterMaps[1].Data.IsConstantSet);
+			Assert.Equal("Bar", map.ParameterMaps[1].Data.Constant);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -73,13 +73,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -96,13 +96,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_HasHeader_FieldMissing_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -115,13 +115,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_NoHeader_FieldMissing_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -137,13 +137,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithParameterMap_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -162,7 +162,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Name\r\n");
 				expected.Append("1,one\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

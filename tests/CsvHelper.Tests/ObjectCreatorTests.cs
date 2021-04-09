@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,47 +17,47 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.ObjectCreatorTests
 {
-	[TestClass]
+	
 	public class CreateInstance_ValueType
 	{
-		[TestMethod]
+		[Fact]
 		public void CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var value = creator.CreateInstance<int>();
 
-			Assert.AreEqual(default(int), value);
+			Assert.Equal(default(int), value);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ParameterSupplied_ThrowsMissingMethodExcepetion()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<MissingMethodException>(() => creator.CreateInstance<int>(1));
+			Assert.Throws<MissingMethodException>(() => creator.CreateInstance<int>(1));
 		}
 	}
 
-	[TestClass]
+	
 	public class CreateInstance_DefaultConstructor
 	{
-		[TestMethod]
+		[Fact]
 		public void CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>();
 			creator.CreateInstance<Foo>();
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(default(int), foo.Id);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(default(int), foo.Id);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ParameterSupplied_ThrowsMissingMethodExcepetion()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<MissingMethodException>(() => creator.CreateInstance<Foo>(1));
+			Assert.Throws<MissingMethodException>(() => creator.CreateInstance<Foo>(1));
 		}
 
 		private class Foo
@@ -68,25 +68,25 @@ namespace CsvHelper.Tests.ObjectCreatorTests
 		}
 	}
 
-	[TestClass]
+	
 	public class CreateInstance_OneParameterConstructor
 	{
-		[TestMethod]
+		[Fact]
 		public void OneParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>(1);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(1, foo.Id);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(1, foo.Id);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void NoParameter_ThrowsMissingMethodException()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<MissingMethodException>(() => creator.CreateInstance<Foo>());
+			Assert.Throws<MissingMethodException>(() => creator.CreateInstance<Foo>());
 		}
 
 		private class Foo
@@ -100,35 +100,35 @@ namespace CsvHelper.Tests.ObjectCreatorTests
 		}
 	}
 
-	[TestClass]
+	
 	public class CreateInstance_DefaultConstructorAndOneParameterConstructor
 	{
-		[TestMethod]
+		[Fact]
 		public void NoParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>();
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(default(int), foo.Id);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(default(int), foo.Id);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OneParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>(1);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(1, foo.Id);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(1, foo.Id);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OneParameterWrongType_ThrowsMissingMethodException()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<MissingMethodException>(() => creator.CreateInstance<Foo>(string.Empty));
+			Assert.Throws<MissingMethodException>(() => creator.CreateInstance<Foo>(string.Empty));
 		}
 
 		private class Foo
@@ -144,67 +144,67 @@ namespace CsvHelper.Tests.ObjectCreatorTests
 		}
 	}
 
-	[TestClass]
+	
 	public class CreateInstance_ValueTypeAndReferenceTypeParameters
 	{
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>(1, "one");
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(1, foo.Id);
-			Assert.AreEqual("one", foo.Name);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(1, foo.Id);
+			Assert.Equal("one", foo.Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondSignature_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>("one", 1);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(1, foo.Id);
-			Assert.AreEqual("one", foo.Name);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(1, foo.Id);
+			Assert.Equal("one", foo.Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_NullReferenceType_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>(1, null);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(1, foo.Id);
-			Assert.IsNull(foo.Name);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(1, foo.Id);
+			Assert.Null(foo.Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondSignature_NullReferenceType_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>(null, 1);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(1, foo.Id);
-			Assert.IsNull(foo.Name);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(1, foo.Id);
+			Assert.Null(foo.Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_NullValueType_ThrowsMissingMethodException()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<MissingMethodException>(() => creator.CreateInstance<Foo>(null, "one"));
+			Assert.Throws<MissingMethodException>(() => creator.CreateInstance<Foo>(null, "one"));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondSignature_NullValueType_ThrowsMissingMethodException()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<MissingMethodException>(() => creator.CreateInstance<Foo>("one", null));
+			Assert.Throws<MissingMethodException>(() => creator.CreateInstance<Foo>("one", null));
 		}
 
 		private class Foo
@@ -227,85 +227,85 @@ namespace CsvHelper.Tests.ObjectCreatorTests
 		}
 	}
 
-	[TestClass]
+	
 	public class CreateInstance_TwoReferenceTypeParameters
 	{
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var bar = new Bar();
 			var foo = creator.CreateInstance<Foo>("one", bar);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual("one", foo.Name);
-			Assert.AreEqual(bar, foo.Bar);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal("one", foo.Name);
+			Assert.Equal(bar, foo.Bar);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondSignature_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var bar = new Bar();
 			var foo = creator.CreateInstance<Foo>(bar, "one");
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual("one", foo.Name);
-			Assert.AreEqual(bar, foo.Bar);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal("one", foo.Name);
+			Assert.Equal(bar, foo.Bar);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_NullFirstParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var bar = new Bar();
 			var foo = creator.CreateInstance<Foo>(null, bar);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.IsNull(foo.Name);
-			Assert.AreEqual(bar, foo.Bar);
+			Assert.IsType<Foo>(foo);
+			Assert.Null(foo.Name);
+			Assert.Equal(bar, foo.Bar);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_NullSecondParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>("one", null);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual("one", foo.Name);
-			Assert.IsNull(foo.Bar);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal("one", foo.Name);
+			Assert.Null(foo.Bar);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondSignature_NullFirstParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var foo = creator.CreateInstance<Foo>(null, "one");
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.IsNull(foo.Bar);
-			Assert.AreEqual("one", foo.Name);
+			Assert.IsType<Foo>(foo);
+			Assert.Null(foo.Bar);
+			Assert.Equal("one", foo.Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondSignature_NullSecondParameter_CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 			var bar = new Bar();
 			var foo = creator.CreateInstance<Foo>(bar, null);
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
-			Assert.AreEqual(bar, foo.Bar);
-			Assert.IsNull(foo.Name);
+			Assert.IsType<Foo>(foo);
+			Assert.Equal(bar, foo.Bar);
+			Assert.Null(foo.Name);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstSignature_BothNullParameters_ThrowsAmbiguousMatchException()
 		{
 			var creator = new ObjectCreator();
 
-			Assert.ThrowsException<AmbiguousMatchException>(() => creator.CreateInstance<Foo>(null, null));
+			Assert.Throws<AmbiguousMatchException>(() => creator.CreateInstance<Foo>(null, null));
 		}
 
 		private class Foo
@@ -330,17 +330,17 @@ namespace CsvHelper.Tests.ObjectCreatorTests
 		private class Bar { }
 	}
 
-	[TestClass]
+	
 	public class CreateInstance_PrivateConstructor
 	{
-		[TestMethod]
+		[Fact]
 		public void CreatesInstance()
 		{
 			var creator = new ObjectCreator();
 
 			var foo = creator.CreateInstance<Foo>();
 
-			Assert.IsInstanceOfType(foo, typeof(Foo));
+			Assert.IsType<Foo>(foo);
 		}
 
 		private class Foo

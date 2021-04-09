@@ -5,7 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,34 +16,34 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
     public class TypeConverterMapTests
     {
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter("id");
 			map.Parameter("name").TypeConverter<CustomConverter>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverter);
-			Assert.IsInstanceOfType(map.ParameterMaps[1].Data.TypeConverter, typeof(CustomConverter));
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverter);
+			Assert.IsType<CustomConverter>(map.ParameterMaps[1].Data.TypeConverter);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorFunctionAndName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "id");
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "name").TypeConverter<CustomConverter>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverter);
-			Assert.IsInstanceOfType(map.ParameterMaps[1].Data.TypeConverter, typeof(CustomConverter));
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverter);
+			Assert.IsType<CustomConverter>(map.ParameterMaps[1].Data.TypeConverter);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorAndProperty_CreatesParameterMaps()
 		{
 			var constructor = ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo)));
@@ -53,12 +53,12 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			map.Parameter(constructor, parameters[0]);
 			map.Parameter(constructor, parameters[1]).TypeConverter<CustomConverter>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverter);
-			Assert.IsInstanceOfType(map.ParameterMaps[1].Data.TypeConverter, typeof(CustomConverter));
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverter);
+			Assert.IsType<CustomConverter>(map.ParameterMaps[1].Data.TypeConverter);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -71,13 +71,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -94,13 +94,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithParameterMap_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -119,7 +119,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Name\r\n");
 				expected.Append("1,one\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

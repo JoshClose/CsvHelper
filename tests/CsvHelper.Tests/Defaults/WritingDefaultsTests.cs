@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Defaults
 {
-	[TestClass]
+	
 	public class WritingDefaultsTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EmptyFieldsOnNullReferencePropertyTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -51,11 +51,11 @@ namespace CsvHelper.Tests.Defaults
 				var expected = "AId,BId,CId\r\n" +
 							   "1,,\r\n" +
 							   "2,3,0\r\n";
-				Assert.AreEqual(expected, data);
+				Assert.Equal(expected, data);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DefaultFieldsOnNullReferencePropertyTest()
 		{
 			using (var stream = new MemoryStream())
@@ -89,7 +89,7 @@ namespace CsvHelper.Tests.Defaults
 				var expected = "AId,BId,CId\r\n" +
 							   "1,0,0\r\n" +
 							   "2,3,0\r\n";
-				Assert.AreEqual(expected, data);
+				Assert.Equal(expected, data);
 			}
 		}
 

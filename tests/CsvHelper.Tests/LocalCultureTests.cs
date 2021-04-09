@@ -7,17 +7,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class LocalCultureTests
 	{
 		// In 'uk-UA' decimal separator is the ','
 		// For 'Invariant' and many other cultures decimal separator is '.'
 
-		[TestMethod]
+		[Fact]
 		public void ReadRecordsTest()
 		{
 			const string source = "DateTimeColumn;DecimalColumn\r\n" +
@@ -31,13 +31,13 @@ namespace CsvHelper.Tests
 
 			var records = reader.GetRecords<TestRecordWithDecimal>().ToList();
 
-			Assert.AreEqual(1, records.Count());
+			Assert.Single(records);
 			var record = records.First();
-			Assert.AreEqual(12.0m, record.DecimalColumn);
-			Assert.AreEqual(new DateTime(2010, 11, 11), record.DateTimeColumn);
+			Assert.Equal(12.0m, record.DecimalColumn);
+			Assert.Equal(new DateTime(2010, 11, 11), record.DateTimeColumn);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsTest()
 		{
 			var records = new List<TestRecordWithDecimal>
@@ -60,7 +60,7 @@ namespace CsvHelper.Tests
 			const string expected = "DecimalColumn;DateTimeColumn\r\n" +
 									"12,0;04.01.2003 15:09:26\r\n";
 
-			Assert.AreEqual(expected, csvFile);
+			Assert.Equal(expected, csvFile);
 		}
 
 		private class TestRecordWithDecimal

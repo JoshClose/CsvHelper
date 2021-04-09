@@ -9,16 +9,16 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Reflection;
 using CsvHelper.Tests.Mocks;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class ArrayConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void FullReadNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -39,14 +39,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual(2, list[0]);
-				Assert.AreEqual(3, list[1]);
-				Assert.AreEqual(4, list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal(2, list[0]);
+				Assert.Equal(3, list[1]);
+				Assert.Equal(4, list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -64,14 +64,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual(2, list[0]);
-				Assert.AreEqual(3, list[1]);
-				Assert.AreEqual(4, list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal(2, list[0]);
+				Assert.Equal(3, list[1]);
+				Assert.Equal(4, list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithDefaultHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -89,14 +89,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual(2, list[0]);
-				Assert.AreEqual(3, list[1]);
-				Assert.AreEqual(4, list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal(2, list[0]);
+				Assert.Equal(3, list[1]);
+				Assert.Equal(4, list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithNamedHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -114,14 +114,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual(2, list[0]);
-				Assert.AreEqual(3, list[1]);
-				Assert.AreEqual(4, list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal(2, list[0]);
+				Assert.Equal(3, list[1]);
+				Assert.Equal(4, list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderListItemsScattered()
 		{
 			using (var stream = new MemoryStream())
@@ -139,10 +139,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual(2, list[0]);
-				Assert.AreEqual(4, list[1]);
-				Assert.AreEqual(6, list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal(2, list[0]);
+				Assert.Equal(4, list[1]);
+				Assert.Equal(6, list[2]);
 			}
 		}
 

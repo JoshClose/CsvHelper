@@ -6,14 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
 	public class DelimiterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void MultipleCharDelimiterWithPartOfDelimiterInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -31,14 +31,14 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2<3", parser[1]);
-				Assert.AreEqual("4", parser[2]);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2<3", parser[1]);
+				Assert.Equal("4", parser[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void NullDelimiterTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -52,14 +52,14 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(3, parser.Count);
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("2", parser[1]);
-				Assert.AreEqual("3", parser[2]);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("2", parser[1]);
+				Assert.Equal("3", parser[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstCharOfDelimiterNextToDelimiterTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -73,8 +73,8 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual("1!", parser[0]);
-				Assert.AreEqual("2", parser[1]);
+				Assert.Equal("1!", parser[0]);
+				Assert.Equal("2", parser[1]);
 			}
 		}
 	}

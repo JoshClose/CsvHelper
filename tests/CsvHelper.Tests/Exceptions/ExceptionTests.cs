@@ -7,14 +7,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Exceptions
 {
-	[TestClass]
+	
 	public class ExceptionTests
 	{
-		[TestMethod]
+		[Fact]
 		public void NoDefaultConstructorTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.Exceptions
 				try
 				{
 					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException ex)
 				{

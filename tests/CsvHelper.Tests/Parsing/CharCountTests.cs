@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
     public class CharCountTests
     {
-		[TestMethod]
+		[Fact]
 		public void Read_CRLF_CharCountCorrect()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -30,11 +30,11 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(5, parser.CharCount);
+				Assert.Equal(5, parser.CharCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_CR_CharCountCorrect()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -47,11 +47,11 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(4, parser.CharCount);
+				Assert.Equal(4, parser.CharCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_LF_CharCountCorrect()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -64,11 +64,11 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(4, parser.CharCount);
+				Assert.Equal(4, parser.CharCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_NoLineEnding_CharCountCorrect()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -81,11 +81,11 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(3, parser.CharCount);
+				Assert.Equal(3, parser.CharCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void CharCountFirstCharOfDelimiterNextToDelimiterTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -99,11 +99,11 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(7, parser.CharCount);
+				Assert.Equal(7, parser.CharCount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_Trimmed_WhiteSpaceCorrect()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -117,7 +117,7 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual(4, parser.CharCount);
+				Assert.Equal(4, parser.CharCount);
 			}
 		}
 	}

@@ -5,7 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,26 +16,26 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
     public class CultureInfoAttributeTests
     {
 		private const decimal AMOUNT = 123_456.789M;
 		private const string CULTURE = "fr-FR";
 		private readonly string amount = AMOUNT.ToString(new CultureInfo(CULTURE));
 
-		[TestMethod]
+		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresParameterMaps()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.CultureInfo);
-			Assert.AreEqual(new CultureInfo(CULTURE), map.ParameterMaps[1].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(new CultureInfo(CULTURE), map.ParameterMaps[1].Data.TypeConverterOptions.CultureInfo);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithCultureInfoAttributes_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -47,13 +47,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(AMOUNT, records[0].Amount);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(AMOUNT, records[0].Amount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithCultureInfoAttributes_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -68,13 +68,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(AMOUNT, records[0].Amount);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(AMOUNT, records[0].Amount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithCultureInfoAttributes_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -91,7 +91,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Amount\r\n");
 				expected.Append($"1,{AMOUNT}\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

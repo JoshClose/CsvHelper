@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace CsvHelper.Tests.AutoMapping
 {
-	[TestClass]
+	
 	public class StructTests
 	{
-		[TestMethod]
+		[Fact]
 		public void StructTest()
 		{
 			using (var stream = new MemoryStream())
@@ -28,12 +28,12 @@ namespace CsvHelper.Tests.AutoMapping
 
 				var records = csv.GetRecords<B>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void StructPropertyTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -52,11 +52,11 @@ namespace CsvHelper.Tests.AutoMapping
 
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual(1, records[0].Simple1.Id);
-				Assert.AreEqual("one", records[0].Simple1.Name);
-				Assert.AreEqual(2, records[0].Simple2.Id);
-				Assert.AreEqual("two", records[0].Simple2.Name);
-				Assert.AreEqual("Works!", records[0].Title);
+				Assert.Equal(1, records[0].Simple1.Id);
+				Assert.Equal("one", records[0].Simple1.Name);
+				Assert.Equal(2, records[0].Simple2.Id);
+				Assert.Equal("two", records[0].Simple2.Name);
+				Assert.Equal("Works!", records[0].Title);
 			}
 		}
 

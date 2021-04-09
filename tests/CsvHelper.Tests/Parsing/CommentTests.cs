@@ -5,14 +5,14 @@
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
 	public class CommentTests
 	{
-		[TestMethod]
+		[Fact]
 		public void CommentThatCrossesBuffersShouldNotAddToFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -33,12 +33,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 				parser.Read();
-				Assert.AreEqual("3", parser[0]);
-				Assert.AreEqual("4", parser[1]);
+				Assert.Equal("3", parser[0]);
+				Assert.Equal("4", parser[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteCommentCharInFieldWithCommentsOffTest()
 		{
 			using (var stream = new MemoryStream())
@@ -53,11 +53,11 @@ namespace CsvHelper.Tests.Parsing
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual("#no comment\r\n", result);
+				Assert.Equal("#no comment\r\n", result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteCommentCharInFieldWithCommentsOnTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -76,11 +76,11 @@ namespace CsvHelper.Tests.Parsing
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual("#no comment\r\n", result);
+				Assert.Equal("#no comment\r\n", result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteCommentWithCommentsOffTest()
 		{
 			using (var stream = new MemoryStream())
@@ -95,11 +95,11 @@ namespace CsvHelper.Tests.Parsing
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual("#comment\"has\" quote\r\n", result);
+				Assert.Equal("#comment\"has\" quote\r\n", result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteCommentWithCommentsOnTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -118,7 +118,7 @@ namespace CsvHelper.Tests.Parsing
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual("#comment\"has\" quote\r\n", result);
+				Assert.Equal("#comment\"has\" quote\r\n", result);
 			}
 		}
 	}

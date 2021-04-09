@@ -4,21 +4,21 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class EmptyTextReaderTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EmptyStreamDoesntFailTest()
 		{
 			using( var stream = new MemoryStream() )
 			using( var reader = new StreamReader( stream ) )
 			using( var csv = new CsvReader(reader, CultureInfo.InvariantCulture) )
 			{
-				Assert.IsFalse( csv.Read() );
+				Assert.False( csv.Read() );
 			}
 		}
 	}

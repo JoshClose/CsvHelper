@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,10 +11,10 @@ using System.Text;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class ValidateTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ValidateTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -32,11 +32,11 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				csv.Context.RegisterClassMap<ValidateMap>();
-				Assert.ThrowsException<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
+				Assert.Throws<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void LogInsteadTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -60,11 +60,11 @@ namespace CsvHelper.Tests.Reading
 				var expected = new StringBuilder();
 				expected.AppendLine("Field '' is not valid!");
 
-				Assert.AreEqual(expected.ToString(), logger.ToString());
+				Assert.Equal(expected.ToString(), logger.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void CustomExceptionTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -82,7 +82,7 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				csv.Context.RegisterClassMap<CustomExceptionMap>();
-				Assert.ThrowsException<CustomException>(() => csv.GetRecords<Test>().ToList());
+				Assert.Throws<CustomException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}
 

@@ -4,15 +4,15 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Linq;
 
 namespace CsvHelper.Tests.Mappings.Attribute
 {
-	[TestClass]
+	
 	public class OptionalTests
 	{
-		[TestMethod]
+		[Fact]
 		public void OptionalTest()
 		{
 			var parser = new ParserMock
@@ -25,8 +25,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			{
 				var records = csv.GetRecords<OptionalTestClass>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 

@@ -6,14 +6,14 @@ using System;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
 	public class BadDataTests
 	{
-		[TestMethod]
+		[Fact]
 		public void CallbackTest()
 		{
 			string rawRecord = null;
@@ -32,16 +32,16 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 				var record = parser.Record;
-				Assert.AreEqual(" a\"bc\",d\r\n", rawRecord);
+				Assert.Equal(" a\"bc\",d\r\n", rawRecord);
 
 				rawRecord = null;
 				parser.Read();
 				record = parser.Record;
-				Assert.IsNull(rawRecord);
+				Assert.Null(rawRecord);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ThrowExceptionTest()
 		{
 			using (var stream = new MemoryStream())
@@ -59,13 +59,13 @@ namespace CsvHelper.Tests.Parsing
 				{
 					parser.Read();
 					var record = parser.Record;
-					Assert.Fail("Failed to throw exception on bad data.");
+					throw new XunitException("Failed to throw exception on bad data.");
 				}
 				catch (BadDataException) { }
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void IgnoreQuotesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -84,11 +84,11 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("2\"two", parser[1]);
+				Assert.Equal("2\"two", parser[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void LineBreakInQuotedFieldIsBadDataCrTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -99,11 +99,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.ThrowsException<BadDataException>(() => parser.Record);
+				Assert.Throws<BadDataException>(() => parser.Record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void LineBreakInQuotedFieldIsBadDataLfTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -114,11 +114,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.ThrowsException<BadDataException>(() => parser.Record);
+				Assert.Throws<BadDataException>(() => parser.Record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void LineBreakInQuotedFieldIsBadDataCrLfTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -129,11 +129,11 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.ThrowsException<BadDataException>(() => parser.Record);
+				Assert.Throws<BadDataException>(() => parser.Record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_AccessingParserRecordInBadDataFound_ThrowsParserException()
 		{
 			var badstring = new StringReader("Fish,\"DDDD");
@@ -147,7 +147,7 @@ namespace CsvHelper.Tests.Parsing
 
 			parser.Read();
 
-			Assert.ThrowsException<ParserException>(() => parser[1]);
+			Assert.Throws<ParserException>(() => parser[1]);
 		}
 	}
 }

@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Globalization;
 using System.IO;
@@ -11,10 +11,10 @@ using System.Linq;
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
 	public class RuntimeMapping
 	{
-		[TestMethod]
+		[Fact]
 		public void ConstantTest()
 		{
 			using (var stream = new MemoryStream())
@@ -35,11 +35,11 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap(map);
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual(4, records[0].AId);
+				Assert.Equal(4, records[0].AId);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DefaultTest()
 		{
 			using (var stream = new MemoryStream())
@@ -60,32 +60,32 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap(map);
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual(4, records[0].AId);
+				Assert.Equal(4, records[0].AId);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConstantValueTypeNullTest()
 		{
-			Assert.ThrowsException<ArgumentException>(() => new ConstantValueTypeNullMap());
+			Assert.Throws<ArgumentException>(() => new ConstantValueTypeNullMap());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConstantTypeMismatchTest()
 		{
-			Assert.ThrowsException<ArgumentException>(() => new ConstantTypeMismatchMap());
+			Assert.Throws<ArgumentException>(() => new ConstantTypeMismatchMap());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DefaultValueTypeNullTest()
 		{
-			Assert.ThrowsException<ArgumentException>(() => new DefaultValueTypeNullMap());
+			Assert.Throws<ArgumentException>(() => new DefaultValueTypeNullMap());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DefaultTypeMismatchTest()
 		{
-			Assert.ThrowsException<ArgumentException>(() => new DefaultTypeMismatchMap());
+			Assert.Throws<ArgumentException>(() => new DefaultTypeMismatchMap());
 		}
 
 		private class A

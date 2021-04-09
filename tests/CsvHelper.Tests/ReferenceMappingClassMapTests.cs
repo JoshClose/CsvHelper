@@ -5,14 +5,14 @@
 using System.Collections.Generic;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class ReferenceMappingClassMapTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReferenceMappingTest()
 		{
 			var parserMock = new ParserMock
@@ -50,19 +50,19 @@ namespace CsvHelper.Tests
 			reader.Read();
 			var person = reader.GetRecord<Person>();
 
-			Assert.AreEqual(row[0], person.FirstName);
-			Assert.AreEqual(row[1], person.LastName);
-			Assert.AreEqual(row[2], person.HomeAddress.Street);
-			Assert.AreEqual(row[3], person.HomeAddress.City);
-			Assert.AreEqual(row[4], person.HomeAddress.State);
-			Assert.AreEqual(row[5], person.HomeAddress.Zip);
-			Assert.AreEqual(row[6], person.WorkAddress.Street);
-			Assert.AreEqual(row[7], person.WorkAddress.City);
-			Assert.AreEqual(row[8], person.WorkAddress.State);
-			Assert.AreEqual(row[9], person.WorkAddress.Zip);
+			Assert.Equal(row[0], person.FirstName);
+			Assert.Equal(row[1], person.LastName);
+			Assert.Equal(row[2], person.HomeAddress.Street);
+			Assert.Equal(row[3], person.HomeAddress.City);
+			Assert.Equal(row[4], person.HomeAddress.State);
+			Assert.Equal(row[5], person.HomeAddress.Zip);
+			Assert.Equal(row[6], person.WorkAddress.Street);
+			Assert.Equal(row[7], person.WorkAddress.City);
+			Assert.Equal(row[8], person.WorkAddress.State);
+			Assert.Equal(row[9], person.WorkAddress.Zip);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OnlyReferencesTest()
 		{
 			var parserMock = new ParserMock()

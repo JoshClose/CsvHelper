@@ -5,14 +5,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvReaderSubClassingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void GetRecordTest()
 		{
 			var parserMock = new ParserMock

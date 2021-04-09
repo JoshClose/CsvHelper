@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,36 +15,36 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
 	public class NumberStylesMapTests
     {
 		private const decimal amount = 123;
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter("id");
 			map.Parameter("amount").TypeConverterOption.NumberStyles(NumberStyles.AllowParentheses);
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.NumberStyles);
-			Assert.AreEqual(NumberStyles.AllowParentheses, map.ParameterMaps[1].Data.TypeConverterOptions.NumberStyles);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.NumberStyles);
+			Assert.Equal(NumberStyles.AllowParentheses, map.ParameterMaps[1].Data.TypeConverterOptions.NumberStyles);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorFunctionAndName_CreatesParameterMaps()
 		{
 			var map = new DefaultClassMap<Foo>();
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "id");
 			map.Parameter(() => ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo))), "amount").TypeConverterOption.NumberStyles(NumberStyles.AllowParentheses);
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.NumberStyles);
-			Assert.AreEqual(NumberStyles.AllowParentheses, map.ParameterMaps[1].Data.TypeConverterOptions.NumberStyles);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.NumberStyles);
+			Assert.Equal(NumberStyles.AllowParentheses, map.ParameterMaps[1].Data.TypeConverterOptions.NumberStyles);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Parameter_WithConstructorAndProperty_CreatesParameterMaps()
 		{
 			var constructor = ConfigurationFunctions.GetConstructor(new GetConstructorArgs(typeof(Foo)));
@@ -54,12 +54,12 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			map.Parameter(constructor, parameters[0]);
 			map.Parameter(constructor, parameters[1]).TypeConverterOption.NumberStyles(NumberStyles.AllowParentheses);
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsNull(map.ParameterMaps[0].Data.TypeConverterOptions.NumberStyles);
-			Assert.AreEqual(NumberStyles.AllowParentheses, map.ParameterMaps[1].Data.TypeConverterOptions.NumberStyles);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.NumberStyles);
+			Assert.Equal(NumberStyles.AllowParentheses, map.ParameterMaps[1].Data.TypeConverterOptions.NumberStyles);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -72,13 +72,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				var map = csv.Context.RegisterClassMap<FooMap>();
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(-amount, records[0].Amount);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(-amount, records[0].Amount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithParameterMap_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -95,13 +95,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual(-amount, records[0].Amount);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal(-amount, records[0].Amount);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithParameterMap_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -120,7 +120,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Amount\r\n");
 				expected.Append($"1,{amount}\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

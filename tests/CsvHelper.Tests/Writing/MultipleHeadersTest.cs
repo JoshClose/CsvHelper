@@ -2,7 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
@@ -10,10 +10,10 @@ using System.Text;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
 	public class MultipleHeadersTest
 	{
-		[TestMethod]
+		[Fact]
 		public void GenericTypeTest()
 		{
 			using (var writer = new StringWriter())
@@ -36,11 +36,11 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("Name");
 				expected.AppendLine("one");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void DynamicTypeTest()
 		{
 			using (var writer = new StringWriter())
@@ -67,7 +67,7 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("Name");
 				expected.AppendLine("one");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

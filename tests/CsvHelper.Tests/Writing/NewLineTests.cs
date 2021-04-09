@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,10 +15,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
     public class NewLineTests
     {
-		[TestMethod]
+		[Fact]
 		public void CRLFTest()
 		{
 			var records = new List<Foo>
@@ -35,11 +35,11 @@ namespace CsvHelper.Tests.Writing
 			{
 				csv.WriteRecords(records);
 
-				Assert.AreEqual("1,one\r\n", writer.ToString());
+				Assert.Equal("1,one\r\n", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void CRTest()
 		{
 			var records = new List<Foo>
@@ -57,11 +57,11 @@ namespace CsvHelper.Tests.Writing
 			{
 				csv.WriteRecords(records);
 
-				Assert.AreEqual("1,one\r", writer.ToString());
+				Assert.Equal("1,one\r", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void LFTest()
 		{
 			var records = new List<Foo>
@@ -79,7 +79,7 @@ namespace CsvHelper.Tests.Writing
 			{
 				csv.WriteRecords(records);
 
-				Assert.AreEqual("1,one\n", writer.ToString());
+				Assert.Equal("1,one\n", writer.ToString());
 			}
 		}
 

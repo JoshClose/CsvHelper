@@ -8,14 +8,14 @@ using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class TypeConverterOptionsFactoryTests
 	{
-		[TestMethod]
+		[Fact]
 		public void AddGetRemoveTest()
 		{
 			var customOptions = new TypeConverterOptions
@@ -27,16 +27,16 @@ namespace CsvHelper.Tests.TypeConversion
 			typeConverterOptionsFactory.AddOptions<string>(customOptions);
 			var options = typeConverterOptionsFactory.GetOptions<string>();
 
-			Assert.AreEqual(customOptions.Formats, options.Formats);
+			Assert.Equal(customOptions.Formats, options.Formats);
 
 			typeConverterOptionsFactory.RemoveOptions<string>();
 
 			options = typeConverterOptionsFactory.GetOptions<string>();
 
-			Assert.AreNotEqual(customOptions.Formats, options.Formats);
+			Assert.NotEqual(customOptions.Formats, options.Formats);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetFieldTest()
 		{
 			var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
@@ -56,12 +56,12 @@ namespace CsvHelper.Tests.TypeConversion
 
 				csvReader.Context.TypeConverterOptionsCache.AddOptions<int>(options);
 				csvReader.Read();
-				Assert.AreEqual(1234, csvReader.GetField<int>(0));
-				Assert.AreEqual(5678, csvReader.GetField(typeof(int), 1));
+				Assert.Equal(1234, csvReader.GetField<int>(0));
+				Assert.Equal(5678, csvReader.GetField(typeof(int), 1));
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordsTest()
 		{
 			var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
@@ -84,7 +84,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordsAppliedWhenMappedTest()
 		{
 			var options = new TypeConverterOptions { NumberStyles = NumberStyles.AllowThousands };
@@ -108,7 +108,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteFieldTest()
 		{
 			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
@@ -129,11 +129,11 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 				var record = reader.ReadToEnd();
 
-				Assert.AreEqual("\"$1,234.00\"\r\n", record);
+				Assert.Equal("\"$1,234.00\"\r\n", record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsTest()
 		{
 			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
@@ -157,11 +157,11 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 				var record = reader.ReadToEnd();
 
-				Assert.AreEqual("\"$1,234.00\",\"$5,678.00\"\r\n", record);
+				Assert.Equal("\"$1,234.00\",\"$5,678.00\"\r\n", record);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecordsAppliedWhenMappedTest()
 		{
 			var options = new TypeConverterOptions { Formats = new string[] { "c" } };
@@ -186,7 +186,7 @@ namespace CsvHelper.Tests.TypeConversion
 				stream.Position = 0;
 				var record = reader.ReadToEnd();
 
-				Assert.AreEqual("\"$1,234.00\",\"5,678.00\"\r\n", record);
+				Assert.Equal("\"$1,234.00\",\"5,678.00\"\r\n", record);
 			}
 		}
 

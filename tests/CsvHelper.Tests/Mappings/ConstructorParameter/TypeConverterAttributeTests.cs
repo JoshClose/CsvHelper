@@ -6,7 +6,7 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,21 +17,21 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
 	public class TypeConverterAttributeTests
     {
-		[TestMethod]
+		[Fact]
 		public void AutoMap_WithConstantAttributes_ConfiguresParameterMaps()
 		{
 			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
 			var map = context.AutoMap<Foo>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.IsInstanceOfType(map.ParameterMaps[0].Data.TypeConverter, typeof(Int32Converter));
-			Assert.IsInstanceOfType(map.ParameterMaps[1].Data.TypeConverter, typeof(CustomConverter));
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.IsType<Int32Converter>(map.ParameterMaps[0].Data.TypeConverter);
+			Assert.IsType<CustomConverter>(map.ParameterMaps[1].Data.TypeConverter);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithConstantAttributes_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -43,13 +43,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithConstantAttributes_NoHeader_CreatesRecords()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -64,13 +64,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("Bar", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("Bar", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithConstantAttributes_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Name\r\n");
 				expected.Append("1,\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

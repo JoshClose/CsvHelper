@@ -5,7 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,21 +16,21 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	[TestClass]
+	
     public class NameIndexAttributeTests
     {
-		[TestMethod]
+		[Fact]
 		public void AutoMap_WithNameAttributes_ConfiguresParameterMaps()
 		{
 			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
 			var map = context.AutoMap<Foo>();
 
-			Assert.AreEqual(2, map.ParameterMaps.Count);
-			Assert.AreEqual(0, map.ParameterMaps[0].Data.NameIndex);
-			Assert.AreEqual(1, map.ParameterMaps[1].Data.NameIndex);
+			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Equal(0, map.ParameterMaps[0].Data.NameIndex);
+			Assert.Equal(1, map.ParameterMaps[1].Data.NameIndex);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithNameAttributes_HasHeader_CreatesRecords()
 		{
 			var parser = new ParserMock
@@ -42,13 +42,13 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			{
 				var records = csv.GetRecords<Foo>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_WithNameAttributes_NoHeader_CreatesRecordsUsingIndexes()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -62,11 +62,11 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			using (var csv = new CsvReader(parser))
 			{
 				// Can't read using names when no header is present.
-				Assert.ThrowsException<ReaderException>(() => csv.GetRecords<Foo>().ToList());
+				Assert.Throws<ReaderException>(() => csv.GetRecords<Foo>().ToList());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteRecords_WithNameAttributes_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
@@ -83,7 +83,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 				expected.Append("Id,Name\r\n");
 				expected.Append("1,one\r\n");
 
-				Assert.AreEqual(expected.ToString(), writer.ToString());
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 

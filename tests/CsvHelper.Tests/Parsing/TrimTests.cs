@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
 	public class TrimTests
 	{
-		[TestMethod]
+		[Fact]
 		public void OutsideStartTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -32,12 +32,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideStartNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -56,12 +56,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideStartSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -80,12 +80,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideStartSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -104,12 +104,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideEndTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -128,12 +128,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideEndNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -152,12 +152,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideEndSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -176,12 +176,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideEndSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -200,12 +200,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideBothTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -224,12 +224,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideBothNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -248,12 +248,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideBothSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -272,12 +272,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideBothSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -296,12 +296,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesStartTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -320,12 +320,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesStartNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -344,12 +344,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesStartSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -368,12 +368,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesStartSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -392,12 +392,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesEndTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -416,12 +416,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesEndNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -440,12 +440,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesEndSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -464,12 +464,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesEndSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -488,12 +488,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesBothTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -512,12 +512,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesBothNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -536,12 +536,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesBothSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -560,12 +560,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesBothSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -584,12 +584,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesBothSpacesInFieldMultipleRecordsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -608,13 +608,13 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual("d e f", parser[1]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal("d e f", parser[1]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesBothSpacesInFieldMultipleRecordsNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -633,13 +633,13 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual("d e f", parser[1]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal("d e f", parser[1]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesStartTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -658,12 +658,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesStartNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -682,12 +682,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesStartSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -706,12 +706,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesStartSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -730,12 +730,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesStartSpacesInFieldDelimiterInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -754,12 +754,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a ,b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a ,b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesStartSpacesInFieldDelimiterInFieldSmallBufferNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -779,12 +779,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a ,b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a ,b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesEndTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -803,12 +803,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesEndNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -827,12 +827,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesEndSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -851,12 +851,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesEndSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -875,12 +875,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -899,12 +899,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -923,12 +923,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothSpacesInFieldTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -947,12 +947,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothSpacesInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -971,12 +971,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothSpacesInFieldMultipleRecordsTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -995,13 +995,13 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual("d e f", parser[1]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal("d e f", parser[1]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothSpacesInFieldMultipleRecordsNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1020,13 +1020,13 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual("d e f", parser[1]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal("d e f", parser[1]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideAndInsideQuotesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1045,13 +1045,13 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual("d e f", parser[1]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal("d e f", parser[1]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideAndInsideQuotesNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1070,13 +1070,13 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b c", parser[0]);
-				Assert.AreEqual("d e f", parser[1]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b c", parser[0]);
+				Assert.Equal("d e f", parser[1]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesNoSpacesNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1095,12 +1095,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("abc", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("abc", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutsideQuotesNoSpacesHasSpaceInFieldNoNewlineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1119,12 +1119,12 @@ namespace CsvHelper.Tests.Parsing
 
 				parser.Read();
 
-				Assert.AreEqual("a b", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a b", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideNoSpacesQuotesFieldHasEscapedQuotesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1137,12 +1137,12 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual("a \"b\" c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a \"b\" c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothSpacesFieldHasEscapedQuotesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1155,12 +1155,12 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual("a \"b\" c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a \"b\" c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void InsideQuotesBothSpacesFieldHasEscapedQuotesNoNewLineTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1173,12 +1173,12 @@ namespace CsvHelper.Tests.Parsing
 			{
 				parser.Read();
 
-				Assert.AreEqual("a \"b\" c", parser[0]);
-				Assert.AreEqual(line, parser.RawRecord.ToString());
+				Assert.Equal("a \"b\" c", parser[0]);
+				Assert.Equal(line, parser.RawRecord.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadingTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1198,8 +1198,8 @@ namespace CsvHelper.Tests.Parsing
 				var records = csv.GetRecords<dynamic>().ToList();
 
 				var record = records[0];
-				Assert.AreEqual("a b c", record.A);
-				Assert.AreEqual("d e f", record.B);
+				Assert.Equal("a b c", record.A);
+				Assert.Equal("d e f", record.B);
 			}
 		}
 	}

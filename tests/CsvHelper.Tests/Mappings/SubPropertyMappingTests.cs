@@ -7,14 +7,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Mappings
 {
-	[TestClass]
+	
 	public class SubPropertyMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReadTest()
 		{
 			using (var stream = new MemoryStream())
@@ -30,13 +30,13 @@ namespace CsvHelper.Tests.Mappings
 				csv.Context.RegisterClassMap<AMap>();
 				var records = csv.GetRecords<A>().ToList();
 
-				Assert.AreEqual("p1", records[0].P1);
-				Assert.AreEqual("p2", records[0].B.P2);
-				Assert.AreEqual("p3", records[0].B.C.P3);
+				Assert.Equal("p1", records[0].P1);
+				Assert.Equal("p2", records[0].B.P2);
+				Assert.Equal("p3", records[0].B.C.P3);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteTest()
 		{
 			using (var stream = new MemoryStream())
@@ -69,11 +69,11 @@ namespace CsvHelper.Tests.Mappings
 				expected += "p3,p1,p2\r\n";
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual(expected, result);
+				Assert.Equal(expected, result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ChangeMemberMapTest()
 		{
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
@@ -82,7 +82,7 @@ namespace CsvHelper.Tests.Mappings
 			map.Map(m => m.B.C.P3).Index(3);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AutoMapInClassMapTest()
 		{
 			var map = new AAutoMap();

@@ -8,15 +8,15 @@ using CsvHelper.Configuration;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class IEnumerableConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void FullReadNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -37,14 +37,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.Cast<string>().ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual("2", list[0]);
-				Assert.AreEqual("3", list[1]);
-				Assert.AreEqual("4", list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list[0]);
+				Assert.Equal("3", list[1]);
+				Assert.Equal("4", list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -62,14 +62,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.Cast<string>().ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual("2", list[0]);
-				Assert.AreEqual("3", list[1]);
-				Assert.AreEqual("4", list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list[0]);
+				Assert.Equal("3", list[1]);
+				Assert.Equal("4", list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithDefaultHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -87,14 +87,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.Cast<string>().ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual("2", list[0]);
-				Assert.AreEqual("3", list[1]);
-				Assert.AreEqual("4", list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list[0]);
+				Assert.Equal("3", list[1]);
+				Assert.Equal("4", list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithNamedHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -112,14 +112,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.Cast<string>().ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual("2", list[0]);
-				Assert.AreEqual("3", list[1]);
-				Assert.AreEqual("4", list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list[0]);
+				Assert.Equal("3", list[1]);
+				Assert.Equal("4", list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderListItemsScattered()
 		{
 			using (var stream = new MemoryStream())
@@ -137,14 +137,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].List.Cast<string>().ToList();
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual("2", list[0]);
-				Assert.AreEqual("4", list[1]);
-				Assert.AreEqual("6", list[2]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list[0]);
+				Assert.Equal("4", list[1]);
+				Assert.Equal("6", list[2]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullWriteNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -166,11 +166,11 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual(",1,2,3,\r\n", result);
+				Assert.Equal(",1,2,3,\r\n", result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullWriteWithHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -192,11 +192,11 @@ namespace CsvHelper.Tests.TypeConversion
 				expected.AppendLine("Before,List1,List2,List3,After");
 				expected.AppendLine(",1,2,3,");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullWriteWithHeaderAutoMapTest()
 		{
 			using (var stream = new MemoryStream())
@@ -217,7 +217,7 @@ namespace CsvHelper.Tests.TypeConversion
 				expected.AppendLine("Before,After");
 				expected.AppendLine(",");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 

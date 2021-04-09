@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
     public class EndBufferTests
     {
-		[TestMethod]
+		[Fact]
 		public void Read_BufferEndsInOneCharDelimiter_ParsesFieldCorrectly()
 		{
 			var s = new StringBuilder();
@@ -29,14 +29,14 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(2, parser.Count);
-				Assert.AreEqual("abcdefghijklmno", parser[0]);
-				Assert.AreEqual("pqrs", parser[1]);
+				Assert.True(parser.Read());
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("abcdefghijklmno", parser[0]);
+				Assert.Equal("pqrs", parser[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_BufferEndsInFirstCharOfTwoCharDelimiter_ParsesFieldCorrectly()
 		{
 			var s = new StringBuilder();
@@ -49,14 +49,14 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(2, parser.Count);
-				Assert.AreEqual("abcdefghijklmnop", parser[0]);
-				Assert.AreEqual("qrs", parser[1]);
+				Assert.True(parser.Read());
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("abcdefghijklmnop", parser[0]);
+				Assert.Equal("qrs", parser[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_BufferEndsInSecondCharOfTwoCharDelimiter_ParsesFieldCorrectly()
 		{
 			var s = new StringBuilder();
@@ -69,10 +69,10 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual(2, parser.Count);
-				Assert.AreEqual("abcdefghijklmno", parser[0]);
-				Assert.AreEqual("pqrs", parser[1]);
+				Assert.True(parser.Read());
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("abcdefghijklmno", parser[0]);
+				Assert.Equal("pqrs", parser[1]);
 			}
 		}
 	}

@@ -7,14 +7,14 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class DateTimeConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConvertToStringTest()
 		{
 			var converter = new DateTimeConverter();
@@ -27,14 +27,14 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.AreEqual(dateTime.ToString(), converter.ConvertToString(dateTime, null, propertyMapData));
+			Assert.Equal(dateTime.ToString(), converter.ConvertToString(dateTime, null, propertyMapData));
 
 			// Invalid conversions.
-			Assert.AreEqual("1", converter.ConvertToString(1, null, propertyMapData));
-			Assert.AreEqual("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertFromStringTest()
 		{
 			var converter = new DateTimeConverter();
@@ -47,15 +47,15 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.AreEqual(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString(), null, propertyMapData).ToString());
-			Assert.AreEqual(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString("o"), null, propertyMapData).ToString());
-			Assert.AreEqual(dateTime.ToString(), converter.ConvertFromString(" " + dateTime + " ", null, propertyMapData).ToString());
+			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString(), null, propertyMapData).ToString());
+			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString("o"), null, propertyMapData).ToString());
+			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(" " + dateTime + " ", null, propertyMapData).ToString());
 
 			// Invalid conversions.
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ComponentModelCompatibilityTest()
 		{
 			var converter = new DateTimeConverter();
@@ -66,10 +66,10 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.ThrowsException<NotSupportedException>(() => cmConverter.ConvertFromString(null));
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
-			Assert.ThrowsException<FormatException>(() => cmConverter.ConvertFromString("blah"));
-			Assert.ThrowsException<FormatException>(() => converter.ConvertFromString("blah", row, propertyMapData));
+			Assert.Throws<NotSupportedException>(() => cmConverter.ConvertFromString(null));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
+			Assert.Throws<FormatException>(() => cmConverter.ConvertFromString("blah"));
+			Assert.Throws<FormatException>(() => converter.ConvertFromString("blah", row, propertyMapData));
 		}
 	}
 }

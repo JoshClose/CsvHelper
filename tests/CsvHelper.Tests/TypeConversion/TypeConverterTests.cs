@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
@@ -12,10 +12,10 @@ using System.Globalization;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class TypeConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ReaderInheritedConverter()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)

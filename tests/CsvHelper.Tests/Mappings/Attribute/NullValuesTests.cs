@@ -3,25 +3,25 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace CsvHelper.Tests.Mappings.Attribute
 {
-	[TestClass]
+	
 	public class NullValuesTests
 	{
-		[TestMethod]
+		[Fact]
 		public void NullValuesTest()
 		{
 			using (var reader = new StringReader("Id,Name\r\nNULL,null\r\n"))
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<NullValuesTestClass>().ToList();
-				Assert.IsNull(records[0].Id);
-				Assert.IsNull(records[0].Name);
+				Assert.Null(records[0].Id);
+				Assert.Null(records[0].Name);
 			}
 		}
 

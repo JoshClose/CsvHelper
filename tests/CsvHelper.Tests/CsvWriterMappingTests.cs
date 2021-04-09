@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvWriterMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteMultipleNamesTest()
 		{
 			var records = new List<MultipleNamesClass>
@@ -42,11 +42,11 @@ namespace CsvHelper.Tests
 			expected += "1,one\r\n";
 			expected += "2,two\r\n";
 
-			Assert.IsNotNull(csv);
-			Assert.AreEqual(expected, csv);
+			Assert.NotNull(csv);
+			Assert.Equal(expected, csv);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SameNameMultipleTimesTest()
 		{
 			using (var stream = new MemoryStream())
@@ -70,11 +70,11 @@ namespace CsvHelper.Tests
 
 				var text = reader.ReadToEnd();
 				var expected = "ColumnName,ColumnName,ColumnName\r\n1,2,3\r\n";
-				Assert.AreEqual(expected, text);
+				Assert.Equal(expected, text);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -100,10 +100,10 @@ namespace CsvHelper.Tests
 				result = reader.ReadToEnd();
 			}
 
-			Assert.AreEqual("Converted1\r\n", result);
+			Assert.Equal("Converted1\r\n", result);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingBlockTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -129,10 +129,10 @@ namespace CsvHelper.Tests
 				result = reader.ReadToEnd();
 			}
 
-			Assert.AreEqual("Converted1\r\n", result);
+			Assert.Equal("Converted1\r\n", result);
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingConstantTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -158,11 +158,11 @@ namespace CsvHelper.Tests
 				result = reader.ReadToEnd();
 			}
 
-			Assert.AreEqual("Constant\r\n", result);
+			Assert.Equal("Constant\r\n", result);
 		}
 
 
-		[TestMethod]
+		[Fact]
 		public void ConvertUsingNullTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -181,7 +181,7 @@ namespace CsvHelper.Tests
 				csv.Context.RegisterClassMap<ConvertUsingNullMap>();
 				csv.WriteRecords(records);
 
-				Assert.AreEqual(";test\r\n", writer.ToString());
+				Assert.Equal(";test\r\n", writer.ToString());
 			}
 		}
 

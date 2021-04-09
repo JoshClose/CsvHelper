@@ -5,14 +5,14 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class MultipleGetRecordsTests
 	{
-		[TestMethod]
+		[Fact]
 		public void GetRecordsAfterRefillingReaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -34,9 +34,9 @@ namespace CsvHelper.Tests.Reading
 
 				records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(2, records[0].Id);
-				Assert.AreEqual("two", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(2, records[0].Id);
+				Assert.Equal("two", records[0].Name);
 
 				position = stream.Position;
 				writer.WriteLine("3,three");
@@ -45,9 +45,9 @@ namespace CsvHelper.Tests.Reading
 
 				records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual(1, records.Count);
-				Assert.AreEqual(3, records[0].Id);
-				Assert.AreEqual("three", records[0].Name);
+				Assert.Single(records);
+				Assert.Equal(3, records[0].Id);
+				Assert.Equal("three", records[0].Name);
 			}
 		}
 

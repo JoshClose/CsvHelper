@@ -2,17 +2,17 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace CsvHelper.Tests.Issues
 {
-	[TestClass]
+	
 	public class Issue1073
 	{
-		[TestMethod]
+		[Fact]
 		public void GetFieldTest()
 		{
 			var originalResolver = ObjectResolver.Current;
@@ -20,8 +20,7 @@ namespace CsvHelper.Tests.Issues
 			{
 				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) =>
 				{
-					Assert.Fail();
-					return null;
+					throw new XunitException();
 				});
 
 				var s = new StringBuilder();
@@ -45,7 +44,7 @@ namespace CsvHelper.Tests.Issues
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteFieldTest()
 		{
 			var originalResolver = ObjectResolver.Current;
@@ -53,8 +52,7 @@ namespace CsvHelper.Tests.Issues
 			{
 				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) =>
 				{
-					Assert.Fail();
-					return null;
+					throw new XunitException();
 				});
 
 				using (var writer = new StringWriter())

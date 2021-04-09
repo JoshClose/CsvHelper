@@ -5,7 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,10 +16,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Mappings.Attribute
 {
-	[TestClass]
+	
     public class EnumIgnoreCaseTests
     {
-		[TestMethod]
+		[Fact]
 		public void GetRecords_UsingEnumIgnoreCaseFromClassMap_ReadsEnumValueWithDifferentCasing()
 		{
 			var s = new StringBuilder();
@@ -33,7 +33,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_UsingEnumIgnoreCaseFromAttribute_ReadsEnumValueWithDifferentCasing()
 		{
 			var s = new StringBuilder();
@@ -46,7 +46,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_UsingEnumIgnoreCaseFromGlobal_ReadsEnumValueWithDifferentCasing()
 		{
 			var s = new StringBuilder();

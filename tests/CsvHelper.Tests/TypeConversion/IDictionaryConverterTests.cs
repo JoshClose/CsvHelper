@@ -8,14 +8,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class IDictionaryConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void FullWriteTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -37,11 +37,11 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var result = reader.ReadToEnd();
 
-				Assert.AreEqual(",1,2,3,\r\n", result);
+				Assert.Equal(",1,2,3,\r\n", result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -63,14 +63,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var dict = records[0].Dictionary;
 
-				Assert.AreEqual(3, dict.Count);
-				Assert.AreEqual("2", dict["Prop2"]);
-				Assert.AreEqual("3", dict["Prop3"]);
-				Assert.AreEqual("4", dict["Prop4"]);
+				Assert.Equal(3, dict.Count);
+				Assert.Equal("2", dict["Prop2"]);
+				Assert.Equal("3", dict["Prop3"]);
+				Assert.Equal("4", dict["Prop4"]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -90,7 +90,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException)
 				{
@@ -100,7 +100,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderIndexDifferentNamesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -122,14 +122,14 @@ namespace CsvHelper.Tests.TypeConversion
 
 				var list = records[0].Dictionary;
 
-				Assert.AreEqual(3, list.Count);
-				Assert.AreEqual("2", list["Dictionary1"]);
-				Assert.AreEqual("3", list["Dictionary2"]);
-				Assert.AreEqual("4", list["Dictionary3"]);
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list["Dictionary1"]);
+				Assert.Equal("3", list["Dictionary2"]);
+				Assert.Equal("4", list["Dictionary3"]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderIndexSameNamesTest()
 		{
 			using (var stream = new MemoryStream())
@@ -146,7 +146,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException)
 				{
@@ -155,7 +155,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithDefaultHeaderDifferentNamesTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -176,7 +176,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException)
 				{
@@ -185,7 +185,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithDefaultHeaderSameNamesTest()
 		{
 			using (var stream = new MemoryStream())
@@ -202,7 +202,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException)
 				{
@@ -211,7 +211,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithNamedHeaderTest()
 		{
 			using (var stream = new MemoryStream())
@@ -228,7 +228,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException)
 				{
@@ -237,7 +237,7 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FullReadWithHeaderListItemsScattered()
 		{
 			using (var stream = new MemoryStream())
@@ -254,7 +254,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					Assert.Fail();
+					throw new XunitException();
 				}
 				catch (ReaderException)
 				{

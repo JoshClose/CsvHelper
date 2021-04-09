@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class YieldTests
 	{
-		[TestMethod]
+		[Fact]
 		public void GetRecordsGeneric_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
@@ -30,10 +30,10 @@ namespace CsvHelper.Tests.Reading
 			{
 				records = csv.GetRecords<Foo>();
 			}
-			Assert.ThrowsException<ObjectDisposedException>(() => records.ToList());
+			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecords_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
@@ -49,10 +49,10 @@ namespace CsvHelper.Tests.Reading
 				records = csv.GetRecords(typeof(Foo));
 			}
 
-			Assert.ThrowsException<ObjectDisposedException>(() => records.ToList());
+			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-		[TestMethod]
+		[Fact]
 		public void EnumerateRecords_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
@@ -69,11 +69,11 @@ namespace CsvHelper.Tests.Reading
 				records = csv.EnumerateRecords(record);
 			}
 
-			Assert.ThrowsException<ObjectDisposedException>(() => records.ToList());
+			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-#if !NET45
-		[TestMethod]
+#if !NET452
+		[Fact]
 		public async Task GetRecordsAsyncGeneric_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
@@ -89,10 +89,10 @@ namespace CsvHelper.Tests.Reading
 				records = csv.GetRecordsAsync<Foo>();
 			}
 
-			await Assert.ThrowsExceptionAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
+			await Assert.ThrowsAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task GetRecordsAsync_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
@@ -108,10 +108,10 @@ namespace CsvHelper.Tests.Reading
 				records = csv.GetRecordsAsync(typeof(Foo));
 			}
 
-			await Assert.ThrowsExceptionAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
+			await Assert.ThrowsAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
 		}
 
-		[TestMethod]
+		[Fact]
 		public async Task EnumerateRecordsAsync_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
@@ -128,7 +128,7 @@ namespace CsvHelper.Tests.Reading
 				records = csv.EnumerateRecordsAsync(record);
 			}
 
-			await Assert.ThrowsExceptionAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
+			await Assert.ThrowsAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
 		}
 #endif
 

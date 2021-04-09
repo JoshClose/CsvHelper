@@ -7,14 +7,14 @@ using System.Globalization;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	[TestClass]
+	
 	public class TimeSpanConverterTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ConvertToStringTest()
 		{
 			var converter = new TimeSpanConverter();
@@ -28,14 +28,14 @@ namespace CsvHelper.Tests.TypeConversion
 			var timeSpan = new TimeSpan(dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond);
 
 			// Valid conversions.
-			Assert.AreEqual(timeSpan.ToString(), converter.ConvertToString(timeSpan, null, propertyMapData));
+			Assert.Equal(timeSpan.ToString(), converter.ConvertToString(timeSpan, null, propertyMapData));
 
 			// Invalid conversions.
-			Assert.AreEqual("1", converter.ConvertToString(1, null, propertyMapData));
-			Assert.AreEqual("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ComponentModelCompatibilityTest()
 		{
 			var converter = new TimeSpanConverter();
@@ -45,10 +45,10 @@ namespace CsvHelper.Tests.TypeConversion
 			propertyMapData.TypeConverterOptions.CultureInfo = CultureInfo.CurrentCulture;
 			var row = new CsvReader(new ParserMock());
 
-			Assert.ThrowsException<FormatException>(() => cmConverter.ConvertFromString(""));
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString("", row, propertyMapData));
-			Assert.ThrowsException<NotSupportedException>(() => cmConverter.ConvertFromString(null));
-			Assert.ThrowsException<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
+			Assert.Throws<FormatException>(() => cmConverter.ConvertFromString(""));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("", row, propertyMapData));
+			Assert.Throws<NotSupportedException>(() => cmConverter.ConvertFromString(null));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 		}
 	}
 }

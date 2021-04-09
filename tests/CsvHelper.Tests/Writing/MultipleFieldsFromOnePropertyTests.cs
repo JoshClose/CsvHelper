@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,10 +13,10 @@ using System.Text;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
 	public class MultipleFieldsFromOnePropertyTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteMultipleFieldsFromSinglePropertyTest()
 		{
 			using (var stream = new MemoryStream())
@@ -37,11 +37,11 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("A,B,C");
 				expected.AppendLine("9/6/2017 12:00:00 AM,9/6/2017 12:00:00 AM,9/6/2017 12:00:00 AM");
 
-				Assert.AreEqual(expected.ToString(), reader.ReadToEnd());
+				Assert.Equal(expected.ToString(), reader.ReadToEnd());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReadingWhenMultipleMapsForAPropertyAreSpecifiedUsesTheLastMapTest()
 		{
 			using (var stream = new MemoryStream())
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests.Writing
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.AreEqual(DateTime.Parse("9/8/2017"), records[0].Dob);
+				Assert.Equal(DateTime.Parse("9/8/2017"), records[0].Dob);
 			}
 		}
 

@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class AnonymousTypesTests
 	{
-		[TestMethod]
+		[Fact]
 		public void ValueTypeSingleRecordTest()
 		{
 			var definition = new
@@ -37,12 +37,12 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ValueTypeAllRecordsTest()
 		{
 			var definition = new
@@ -62,15 +62,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ValueTypeAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -93,16 +93,16 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.Name);
 			}
 
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReferenceTypeSingleRecordTest()
 		{
 			var definition = new
@@ -125,12 +125,12 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(1, record.Reference.Id);
-				Assert.AreEqual("one", record.Reference.Name);
+				Assert.Equal(1, record.Reference.Id);
+				Assert.Equal("one", record.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReferenceTypeAllRecordsTest()
 		{
 			var definition = new
@@ -149,15 +149,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Reference.Id);
-				Assert.AreEqual("one", record.Reference.Name);
+				Assert.Equal(1, record.Reference.Id);
+				Assert.Equal("one", record.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ReferenceTypeAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -179,15 +179,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Reference.Id);
-				Assert.AreEqual("one", record.Reference.Name);
+				Assert.Equal(1, record.Reference.Id);
+				Assert.Equal("one", record.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ValueAndReferenceTypeSingleRecordTest()
 		{
 			var definition = new
@@ -212,14 +212,14 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(-1, record.A);
-				Assert.AreEqual("b", record.B);
-				Assert.AreEqual(1, record.Reference.Id);
-				Assert.AreEqual("one", record.Reference.Name);
+				Assert.Equal(-1, record.A);
+				Assert.Equal("b", record.B);
+				Assert.Equal(1, record.Reference.Id);
+				Assert.Equal("one", record.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ValueAndReferenceTypeAllRecordsTest()
 		{
 			var definition = new
@@ -240,17 +240,17 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(-1, record.A);
-				Assert.AreEqual("b", record.B);
-				Assert.AreEqual(1, record.Reference.Id);
-				Assert.AreEqual("one", record.Reference.Name);
+				Assert.Equal(-1, record.A);
+				Assert.Equal("b", record.B);
+				Assert.Equal(1, record.Reference.Id);
+				Assert.Equal("one", record.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ValueAndReferenceTypeAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -274,17 +274,17 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(-1, record.A);
-				Assert.AreEqual("b", record.B);
-				Assert.AreEqual(1, record.Reference.Id);
-				Assert.AreEqual("one", record.Reference.Name);
+				Assert.Equal(-1, record.A);
+				Assert.Equal("b", record.B);
+				Assert.Equal(1, record.Reference.Id);
+				Assert.Equal("one", record.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceSingleRecordTest()
 		{
 			var definition = new
@@ -311,12 +311,12 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.AnonymousReference.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.AnonymousReference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceAllRecordsTest()
 		{
 			var definition = new
@@ -339,15 +339,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.AnonymousReference.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.AnonymousReference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -373,15 +373,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.AnonymousReference.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.AnonymousReference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceHasAnonymousReferenceSingleRecordTest()
 		{
 			var definition = new
@@ -411,12 +411,12 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.AnonymousReference.AnonymousReference2.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.AnonymousReference.AnonymousReference2.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceHasAnonymousReferenceAllRecordsTest()
 		{
 			var definition = new
@@ -442,15 +442,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.AnonymousReference.AnonymousReference2.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.AnonymousReference.AnonymousReference2.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceHasAnonymousReferenceAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -479,15 +479,15 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Id);
-				Assert.AreEqual("one", record.AnonymousReference.AnonymousReference2.Name);
+				Assert.Equal(1, record.Id);
+				Assert.Equal("one", record.AnonymousReference.AnonymousReference2.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceHasReferenceSingleRecordTest()
 		{
 			var definition = new
@@ -514,13 +514,13 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(2, record.A);
-				Assert.AreEqual(1, record.AnonymousReference.Reference.Id);
-				Assert.AreEqual("one", record.AnonymousReference.Reference.Name);
+				Assert.Equal(2, record.A);
+				Assert.Equal(1, record.AnonymousReference.Reference.Id);
+				Assert.Equal("one", record.AnonymousReference.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceHasReferenceAllRecordsTest()
 		{
 			var definition = new
@@ -543,16 +543,16 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(2, record.A);
-				Assert.AreEqual(1, record.AnonymousReference.Reference.Id);
-				Assert.AreEqual("one", record.AnonymousReference.Reference.Name);
+				Assert.Equal(2, record.A);
+				Assert.Equal(1, record.AnonymousReference.Reference.Id);
+				Assert.Equal("one", record.AnonymousReference.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void AnonymousReferenceHasReferenceAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -578,16 +578,16 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(2, record.A);
-				Assert.AreEqual(1, record.AnonymousReference.Reference.Id);
-				Assert.AreEqual("one", record.AnonymousReference.Reference.Name);
+				Assert.Equal(2, record.A);
+				Assert.Equal(1, record.AnonymousReference.Reference.Id);
+				Assert.Equal("one", record.AnonymousReference.Reference.Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ParentChildReferenceSingleRecordTest()
 		{
 			var definition = new
@@ -610,14 +610,14 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				var record = csv.GetRecord(definition);
 
-				Assert.AreEqual(1, record.Reference.ParentId);
-				Assert.AreEqual("one", record.Reference.ParentName);
-				Assert.AreEqual(2, record.Reference.ChildId);
-				Assert.AreEqual("two", record.Reference.ChildName);
+				Assert.Equal(1, record.Reference.ParentId);
+				Assert.Equal("one", record.Reference.ParentName);
+				Assert.Equal(2, record.Reference.ChildId);
+				Assert.Equal("two", record.Reference.ChildName);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ParentChildReferenceAllRecordsTest()
 		{
 			var definition = new
@@ -636,17 +636,17 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Reference.ParentId);
-				Assert.AreEqual("one", record.Reference.ParentName);
-				Assert.AreEqual(2, record.Reference.ChildId);
-				Assert.AreEqual("two", record.Reference.ChildName);
+				Assert.Equal(1, record.Reference.ParentId);
+				Assert.Equal("one", record.Reference.ParentName);
+				Assert.Equal(2, record.Reference.ChildId);
+				Assert.Equal("two", record.Reference.ChildName);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ParentChildReferenceAllRecordsNoHeaderTest()
 		{
 			var definition = new
@@ -668,13 +668,13 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords(definition).ToList();
-				Assert.AreEqual(1, records.Count);
+				Assert.Single(records);
 
 				var record = records[0];
-				Assert.AreEqual(1, record.Reference.ChildId);
-				Assert.AreEqual("one", record.Reference.ChildName);
-				Assert.AreEqual(2, record.Reference.ParentId);
-				Assert.AreEqual("two", record.Reference.ParentName);
+				Assert.Equal(1, record.Reference.ChildId);
+				Assert.Equal("one", record.Reference.ChildName);
+				Assert.Equal(2, record.Reference.ParentId);
+				Assert.Equal("two", record.Reference.ParentName);
 			}
 		}
 

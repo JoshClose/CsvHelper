@@ -1,5 +1,5 @@
 ﻿using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
     public class CsvModeTests
     {
-		[TestMethod]
+		[Fact]
 		public void WriteField_EscapeMode_ContainsQuote_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -27,11 +27,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a\"b", true);
 				csv.Flush();
 
-				Assert.AreEqual("a\\\"b", writer.ToString());
+				Assert.Equal("a\\\"b", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_NoEscapeMode_ContainsQuote_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -44,11 +44,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a\"b", true);
 				csv.Flush();
 
-				Assert.AreEqual("a\"b", writer.ToString());
+				Assert.Equal("a\"b", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_EscapeMode_ContainsDelimiter_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -62,11 +62,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a,b", true);
 				csv.Flush();
 
-				Assert.AreEqual("a\\,b", writer.ToString());
+				Assert.Equal("a\\,b", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_NoEscapeMode_ContainsDelimiter_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -79,11 +79,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a,b", true);
 				csv.Flush();
 
-				Assert.AreEqual("a,b", writer.ToString());
+				Assert.Equal("a,b", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_EscapeMode_ContainsNewline_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -98,11 +98,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a\nb", true);
 				csv.Flush();
 
-				Assert.AreEqual("a\\\nb", writer.ToString());
+				Assert.Equal("a\\\nb", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_EscapeMode_Contains2CharNewline_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -117,11 +117,11 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a\r\nb", true);
 				csv.Flush();
 
-				Assert.AreEqual("a\\\r\\\nb", writer.ToString());
+				Assert.Equal("a\\\r\\\nb", writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteField_NoEscapeMode_ContainsNewline_EscapesWithoutQuotingField()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -134,7 +134,7 @@ namespace CsvHelper.Tests.Writing
 				csv.WriteField("a\r\nb", true);
 				csv.Flush();
 
-				Assert.AreEqual("a\r\nb", writer.ToString());
+				Assert.Equal("a\r\nb", writer.ToString());
 			}
 		}
 	}

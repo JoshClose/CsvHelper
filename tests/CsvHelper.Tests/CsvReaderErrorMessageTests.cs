@@ -9,20 +9,19 @@ using System.Linq;
 using System.Threading;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvReaderErrorMessageTests
 	{
-		[TestInitialize]
-		public void TestInitialize()
+		public CsvReaderErrorMessageTests()
 		{
 			Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstColumnEmptyFirstRowErrorWithNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -48,13 +47,13 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(1, ex.Context.Parser.Row);
-					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(1, ex.Context.Parser.Row);
+					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstColumnEmptySecondRowErrorWithHeader()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -80,13 +79,13 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(3, ex.Context.Parser.Row);
-					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(3, ex.Context.Parser.Row);
+					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstColumnEmptyErrorWithHeaderAndCommentRowTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -114,13 +113,13 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(4, ex.Context.Parser.Row);
-					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(4, ex.Context.Parser.Row);
+					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void FirstColumnErrorTest()
 		{
 			using (var stream = new MemoryStream())
@@ -143,13 +142,13 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(3, ex.Context.Parser.Row);
-					Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(3, ex.Context.Parser.Row);
+					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void SecondColumnEmptyErrorTest()
 		{
 			using (var stream = new MemoryStream())
@@ -171,13 +170,13 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.AreEqual(2, ex.Context.Parser.Row);
-					Assert.AreEqual(1, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(2, ex.Context.Parser.Row);
+					Assert.Equal(1, ex.Context.Reader.CurrentIndex);
 				}
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Test()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)

@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace CsvHelper.Tests.Mappings.Attribute
 {
-	[TestClass]
+	
 	public class NameIndexTests
 	{
-		[TestMethod]
+		[Fact]
 		public void NameIndexTest()
 		{
 			using (var reader = new StringReader("Id,Name,Name\r\n1,one,two\r\n"))
@@ -21,8 +21,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			{
 				var records = csv.GetRecords<NameIndexClass>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("two", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("two", records[0].Name);
 			}
 		}
 

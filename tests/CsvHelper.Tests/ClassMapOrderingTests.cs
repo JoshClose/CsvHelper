@@ -6,14 +6,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class ClassMapOrderingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void OrderingTest()
 		{
 			var list = new List<ContainerClass>
@@ -45,7 +45,7 @@ namespace CsvHelper.Tests
 				writer.Flush();
 				stream.Position = 0;
 
-				Assert.AreEqual("First,Second,Third", reader.ReadLine());
+				Assert.Equal("First,Second,Third", reader.ReadLine());
 			}
 		}
 

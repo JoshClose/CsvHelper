@@ -8,14 +8,14 @@ using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
 	public class DynamicTests
 	{
-		[TestMethod]
+		[Fact]
 		public void WriteDynamicExpandoObjectsTest()
 		{
 			using (var stream = new MemoryStream())
@@ -42,11 +42,11 @@ namespace CsvHelper.Tests.Writing
 				expected += "1,one\r\n";
 				expected += "2,two\r\n";
 
-				Assert.AreEqual(expected, reader.ReadToEnd());
+				Assert.Equal(expected, reader.ReadToEnd());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteDynamicExpandoObjectTest()
 		{
 			using (var stream = new MemoryStream())
@@ -75,11 +75,11 @@ namespace CsvHelper.Tests.Writing
 				expected += "1,one\r\n";
 				expected += "2,two\r\n";
 
-				Assert.AreEqual(expected, reader.ReadToEnd());
+				Assert.Equal(expected, reader.ReadToEnd());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingTest()
 		{
 			using (var writer = new StringWriter())
@@ -103,11 +103,11 @@ namespace CsvHelper.Tests.Writing
 				expected += "one,1\r\n";
 				expected += "two,2\r\n";
 
-				Assert.AreEqual(expected, writer.ToString());
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingTest()
 		{
 			using (var writer = new StringWriter())
@@ -131,11 +131,11 @@ namespace CsvHelper.Tests.Writing
 				expected += "one,1\r\n";
 				expected += "two,2\r\n";
 
-				Assert.AreEqual(expected, writer.ToString());
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteDynamicExpandoObjectHasDifferentPropertyOrderingWithDynamicSortTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -163,11 +163,11 @@ namespace CsvHelper.Tests.Writing
 				expected += "1,one\r\n";
 				expected += "2,two\r\n";
 
-				Assert.AreEqual(expected, writer.ToString());
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void WriteDynamicIDynamicMetaObjectProviderHasDifferentPropertyOrderingWithDynamicSortTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -195,7 +195,7 @@ namespace CsvHelper.Tests.Writing
 				expected += "1,one\r\n";
 				expected += "2,two\r\n";
 
-				Assert.AreEqual(expected, writer.ToString());
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 	}

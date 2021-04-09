@@ -7,14 +7,14 @@ using System.IO;
 using System.Linq;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Exceptions
 {
-	[TestClass]
+	
 	public class ExceptionMessageTests
 	{
-		[TestMethod]
+		[Fact]
 		public void GetMissingFieldTest()
 		{
 			var parser = new ParserMock
@@ -30,16 +30,16 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetField(2);
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (MissingFieldException ex)
 			{
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				Assert.AreEqual(2, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(2, ex.Context.Reader.CurrentIndex);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetGenericMissingFieldWithTypeTest()
 		{
 			var parser = new ParserMock
@@ -55,16 +55,16 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetField<int>(2);
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (MissingFieldException ex)
 			{
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				Assert.AreEqual(2, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(2, ex.Context.Reader.CurrentIndex);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordGenericTest()
 		{
 			var parser = new ParserMock
@@ -79,7 +79,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecord<Simple>();
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (TypeConverterException ex)
 			{
@@ -88,15 +88,15 @@ namespace CsvHelper.Tests.Exceptions
 				//        "Field Index: '0' (0 based)\r\n" +
 				//        "Field Name: 'Id'\r\n" +
 				//        "Field Value: 'a'\r\n";
-				//Assert.AreEqual( expected, ex.Data["CsvHelper"] );
+				//Assert.Equal( expected, ex.Data["CsvHelper"] );
 
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				//Assert.AreEqual( typeof( Simple ), ex.Type );
-				Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				//Assert.Equal( typeof( Simple ), ex.Type );
+				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordTest()
 		{
 			var parser = new ParserMock
@@ -111,16 +111,16 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecord(typeof(Simple));
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (TypeConverterException ex)
 			{
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordsGenericTest()
 		{
 			var parser = new ParserMock
@@ -134,16 +134,16 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecords<Simple>().ToList();
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (TypeConverterException ex)
 			{
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetRecordsTest()
 		{
 			var parser = new ParserMock
@@ -157,17 +157,17 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecords(typeof(Simple)).ToList();
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (TypeConverterException ex)
 			{
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				//Assert.AreEqual( typeof( Simple ), ex.Type );
-				Assert.AreEqual(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				//Assert.Equal( typeof( Simple ), ex.Type );
+				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetFieldIndexTest()
 		{
 			var parser = new ParserMock
@@ -185,12 +185,12 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetField("c");
-				Assert.Fail();
+				throw new XunitException();
 			}
 			catch (MissingFieldException ex)
 			{
-				Assert.AreEqual(2, ex.Context.Parser.Row);
-				Assert.AreEqual(-1, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(-1, ex.Context.Reader.CurrentIndex);
 			}
 		}
 

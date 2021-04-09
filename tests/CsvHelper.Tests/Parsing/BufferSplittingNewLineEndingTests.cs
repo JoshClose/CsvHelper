@@ -5,14 +5,14 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
 	public class BufferSplittingCrLnTests
 	{
-		[TestMethod]
+		[Fact]
 		public void Read_BufferSplitsCrLf_BufferNeedsResize_Parses()
 		{
 			var s = new StringBuilder();
@@ -27,12 +27,12 @@ namespace CsvHelper.Tests.Parsing
 			using (var parser = new CsvParser(reader, config))
 			{
 				parser.Read();
-				Assert.AreEqual("1", parser[0]);
-				Assert.AreEqual("0000000000321", parser[1]);
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("0000000000321", parser[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_BufferSplitsCrLf_NoBufferResize_DoesntAddExtraField()
 		{
 			var s = new StringBuilder();
@@ -50,11 +50,11 @@ namespace CsvHelper.Tests.Parsing
 				parser.Read();
 				parser.Read();
 				parser.Read();
-				Assert.AreEqual(2, parser.Count);
+				Assert.Equal(2, parser.Count);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_BufferSplitsCrLf_NoBufferResize_RawRecordIsCorrect()
 		{
 			var s = new StringBuilder();
@@ -72,11 +72,11 @@ namespace CsvHelper.Tests.Parsing
 				parser.Read();
 				parser.Read();
 				parser.Read();
-				Assert.AreEqual("5,600\r\n", parser.RawRecord);
+				Assert.Equal("5,600\r\n", parser.RawRecord);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void BufferSplitsCrLfWithLastFieldQuotedTest()
 		{
 			var s = new StringBuilder();
@@ -94,8 +94,8 @@ namespace CsvHelper.Tests.Parsing
 				parser.Read();
 				parser.Read();
 				parser.Read();
-				Assert.AreEqual(2, parser.Count);
-				Assert.AreEqual("5,\"600\"\r\n", parser.RawRecord);
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("5,\"600\"\r\n", parser.RawRecord);
 			}
 		}
 	}

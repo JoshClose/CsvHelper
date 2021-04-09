@@ -7,14 +7,14 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests.Writing
 {
-	[TestClass]
+	
 	public class NoPropertyMappingTests
 	{
-		[TestMethod]
+		[Fact]
 		public void NoPropertyWithHeaderAndNameTest()
 		{
 			using (var stream = new MemoryStream())
@@ -41,11 +41,11 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("1,const,");
 				expected.AppendLine("2,const,");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void NoPropertyWithHeaderAndNoNameTest()
 		{
 			using (var stream = new MemoryStream())
@@ -72,11 +72,11 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("1,const");
 				expected.AppendLine("2,const");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void NoPropertyWithNoHeaderAndNameTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -106,11 +106,11 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("1,const,");
 				expected.AppendLine("2,const,");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void NoPropertyWithNoHeaderAndNoNameTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -140,11 +140,11 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("1,const");
 				expected.AppendLine("2,const");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void OutOfOrderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -174,7 +174,7 @@ namespace CsvHelper.Tests.Writing
 				expected.AppendLine("one,,,1");
 				expected.AppendLine("two,,,2");
 
-				Assert.AreEqual(expected.ToString(), result);
+				Assert.Equal(expected.ToString(), result);
 			}
 		}
 

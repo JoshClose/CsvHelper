@@ -4,14 +4,14 @@
 // https://github.com/JoshClose/CsvHelper
 using System.Globalization;
 using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace CsvHelper.Tests
 {
-	[TestClass]
+	
 	public class CsvWriterConstructorTests
 	{
-		[TestMethod]
+		[Fact]
 		public void EnsureInternalsAreSetupWhenPassingWriterAndConfigTest()
 		{
 			using( var stream = new MemoryStream() )
@@ -20,7 +20,7 @@ namespace CsvHelper.Tests
 				var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 				using( var csv = new CsvWriter( writer, config ) )
 				{
-					Assert.AreSame( config, csv.Configuration );
+					Assert.Same( config, csv.Configuration );
 				}
 			}
 		}

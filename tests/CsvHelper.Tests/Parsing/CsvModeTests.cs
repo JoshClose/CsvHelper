@@ -3,7 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests.Parsing
 {
-	[TestClass]
+	
     public class CsvModeTests
     {
-		[TestMethod]
+		[Fact]
 		public void Read_HasEscapedDelimiter_Parses()
 		{
 			var s = new StringBuilder();
@@ -30,15 +30,15 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual("a,b", parser[0]);
-				Assert.AreEqual("c", parser[1]);
+				Assert.True(parser.Read());
+				Assert.Equal("a,b", parser[0]);
+				Assert.Equal("c", parser[1]);
 
-				Assert.IsFalse(parser.Read());
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_HasEscapedLineEnding_Parses()
 		{
 			var s = new StringBuilder();
@@ -51,14 +51,14 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual("a\nb", parser[0]);
-				Assert.AreEqual("c", parser[1]);
-				Assert.IsFalse(parser.Read());
+				Assert.True(parser.Read());
+				Assert.Equal("a\nb", parser[0]);
+				Assert.Equal("c", parser[1]);
+				Assert.False(parser.Read());
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_NoEscapeMode_HasRFC4180Format_Parses()
 		{
 			var s = new StringBuilder();
@@ -71,18 +71,18 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual("\"b", parser[1]);
-				Assert.AreEqual("\"\"c", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal("\"b", parser[1]);
+				Assert.Equal("\"\"c", parser[2]);
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual("d\"", parser[0]);
-				Assert.AreEqual("e", parser[1]);
+				Assert.True(parser.Read());
+				Assert.Equal("d\"", parser[0]);
+				Assert.Equal("e", parser[1]);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void Read_NoEscapeMode_HasEscapeFormat_Parses()
 		{
 			var s = new StringBuilder();
@@ -95,14 +95,14 @@ namespace CsvHelper.Tests.Parsing
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))
 			{
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual("a", parser[0]);
-				Assert.AreEqual("\\b\\", parser[1]);
-				Assert.AreEqual("c\\", parser[2]);
+				Assert.True(parser.Read());
+				Assert.Equal("a", parser[0]);
+				Assert.Equal("\\b\\", parser[1]);
+				Assert.Equal("c\\", parser[2]);
 
-				Assert.IsTrue(parser.Read());
-				Assert.AreEqual("d", parser[0]);
-				Assert.AreEqual("e", parser[1]);
+				Assert.True(parser.Read());
+				Assert.Equal("d", parser[0]);
+				Assert.Equal("e", parser[1]);
 			}
 		}
 	}

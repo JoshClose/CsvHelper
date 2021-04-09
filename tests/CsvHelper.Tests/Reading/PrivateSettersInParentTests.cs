@@ -3,17 +3,17 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 
 namespace CsvHelper.Tests.Reading
 {
-	[TestClass]
+	
 	public class PrivateSettersInParentTests
 	{
-		[TestMethod]
+		[Fact]
 		public void AutoMappingTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -31,12 +31,12 @@ namespace CsvHelper.Tests.Reading
 				stream.Position = 0;
 
 				var records = csv.GetRecords<Child>().ToList();
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void ClassMappingTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -56,8 +56,8 @@ namespace CsvHelper.Tests.Reading
 				csv.Context.RegisterClassMap<ChildMap>();
 
 				var records = csv.GetRecords<Child>().ToList();
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("one", records[0].Name);
+				Assert.Equal(1, records[0].Id);
+				Assert.Equal("one", records[0].Name);
 			}
 		}
 
