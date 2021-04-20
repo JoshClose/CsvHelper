@@ -63,6 +63,18 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
+		/// Adds the given <see cref="ITypeConverter"/> to all registered types.
+		/// </summary>
+		/// <param name="typeConverter">The type converter.</param>
+		public void AddConverter(ITypeConverter typeConverter)
+		{
+			foreach (var type in typeConverters.Keys)
+			{
+				typeConverters[type] = typeConverter;
+			}
+		}
+
+		/// <summary>
 		/// Removes the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <param name="type">The type to remove the converter for.</param>
