@@ -102,7 +102,7 @@ namespace CsvHelper.Tests.Parsing
 			{
 				Delimiter = "`",
 				DetectDelimiter = true,
-				DelimiterValues = new string[0],
+				DetectDelimiterValues = new string[0],
 			};
 			using (var reader = new StringReader(s.ToString()))
 			{ 
@@ -138,7 +138,7 @@ namespace CsvHelper.Tests.Parsing
 			{
 				Delimiter = "`",
 				DetectDelimiter = true,
-				DelimiterValues = new[] { ",," },
+				DetectDelimiterValues = new[] { ",," },
 			};
 			using (var reader = new StringReader(s.ToString()))
 			using (var parser = new CsvParser(reader, config))

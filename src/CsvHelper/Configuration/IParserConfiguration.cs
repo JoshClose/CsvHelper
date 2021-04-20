@@ -132,7 +132,7 @@ namespace CsvHelper.Configuration
 		/// The possible delimiter values used when detecting the delimiter.
 		/// Default is [",", ";", "|", "\t"].
 		/// </summary>
-		string[] DelimiterValues { get; }
+		string[] DetectDelimiterValues { get; }
 
 		/// <summary>
 		/// The character used to escape characters.

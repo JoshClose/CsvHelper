@@ -49,7 +49,7 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectDelimiter { get; set; }
 
 		/// <inheritdoc/>
-		public virtual string[] DelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
+		public virtual string[] DetectDelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
 
 		/// <inheritdoc/>
 		public virtual bool DetectColumnCountChanges { get; set; }
@@ -199,7 +199,7 @@ namespace CsvHelper.Configuration
 			if (whiteSpaceChars.Contains(Delimiter)) throw new ConfigurationException($"{Delimiter} cannot be a WhiteSpaceChar.");
 
 			// Detect Delimiter
-			if (DetectDelimiter && DelimiterValues.Length == 0) throw new ConfigurationException($"At least one value is required for {nameof(DelimiterValues)} when {nameof(DetectDelimiter)} is enabled.");
+			if (DetectDelimiter && DetectDelimiterValues.Length == 0) throw new ConfigurationException($"At least one value is required for {nameof(DetectDelimiterValues)} when {nameof(DetectDelimiter)} is enabled.");
 		}
 	}
 }

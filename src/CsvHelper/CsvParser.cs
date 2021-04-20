@@ -174,7 +174,7 @@ namespace CsvHelper
 			countBytes = configuration.CountBytes;
 			delimiter = configuration.Delimiter;
 			delimiterFirstChar = configuration.Delimiter[0];
-			delimiterValues = configuration.DelimiterValues;
+			delimiterValues = configuration.DetectDelimiterValues;
 			detectDelimiter = configuration.DetectDelimiter;
 			encoding = configuration.Encoding;
 			escape = configuration.Escape;
