@@ -40,6 +40,18 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
+		/// Adds the given <see cref="TypeConverterOptions"/> to all registered types.
+		/// </summary>
+		/// <param name="options"></param>
+		public void AddOptions(TypeConverterOptions options)
+		{
+			foreach (var type in typeConverterOptions.Keys)
+			{
+				typeConverterOptions[type] = options;
+			}
+		}
+
+		/// <summary>
 		/// Removes the <see cref="TypeConverterOptions"/> for the given type.
 		/// </summary>
 		/// <param name="type">The type to remove the options for.</param>
