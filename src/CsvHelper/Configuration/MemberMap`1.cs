@@ -113,10 +113,12 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual MemberMap<TClass, TMember> Default(TMember defaultValue)
+		/// <param name="useOnConversionFailure">Use default on conversion failure.</param>
+		public virtual MemberMap<TClass, TMember> Default(TMember defaultValue, bool useOnConversionFailure = false)
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
+			Data.UseDefaultOnConversionFailure = useOnConversionFailure;
 
 			return this;
 		}
@@ -128,10 +130,12 @@ namespace CsvHelper.Configuration
 		/// the field. This could potentially have runtime errors.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual MemberMap<TClass, TMember> Default(string defaultValue)
+		/// <param name="useOnConversionFailure">Use default on conversion failure.</param>
+		public virtual MemberMap<TClass, TMember> Default(string defaultValue, bool useOnConversionFailure = false)
 		{
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
+			Data.UseDefaultOnConversionFailure = useOnConversionFailure;
 
 			return this;
 		}

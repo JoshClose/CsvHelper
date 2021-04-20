@@ -16,6 +16,11 @@ namespace CsvHelper.TypeConversion
 		/// <inheritdoc/>
 		public virtual object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
+			if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member.MemberType() == memberMapData.Default?.GetType())
+			{
+				return memberMapData.Default;
+			}
+
 			if (!row.Configuration.ExceptionMessagesContainRawData)
 			{
 				text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";

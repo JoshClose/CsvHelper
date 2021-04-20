@@ -128,7 +128,8 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual MemberMap Default(object defaultValue)
+		/// <param name="useOnConversionFailure">Use default on conversion failure.</param>
+		public virtual MemberMap Default(object defaultValue, bool useOnConversionFailure = false)
 		{
 			if (defaultValue == null && Data.Member.MemberType().IsValueType)
 			{
@@ -142,6 +143,7 @@ namespace CsvHelper.Configuration
 
 			Data.Default = defaultValue;
 			Data.IsDefaultSet = true;
+			Data.UseDefaultOnConversionFailure = useOnConversionFailure;
 
 			return this;
 		}

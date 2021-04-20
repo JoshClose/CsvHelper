@@ -112,6 +112,13 @@ namespace CsvHelper.Configuration
 		public virtual bool IsDefaultSet { get; set; }
 
 		/// <summary>
+		/// Gets or setse a value indicating if the default value should be used when
+		/// a type conversion failure happens. <c>true</c> to use the default, otherwise
+		/// <c>false</c>.
+		/// </summary>
+		public virtual bool UseDefaultOnConversionFailure { get; set; }
+
+		/// <summary>
 		/// Gets or sets the constant value used for every record.
 		/// </summary>
 		public virtual object Constant { get; set; }
