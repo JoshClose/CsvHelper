@@ -37,6 +37,13 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="CsvHelper.net45.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.net47.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.net50.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.netstandard2.0.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.netstandard2.1.v3.ncrunchproject" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="\" />

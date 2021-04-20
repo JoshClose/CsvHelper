@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="CsvHelper.Website.v3.ncrunchproject" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Statiq.Web" Version="1.0.0-beta.24" />
   </ItemGroup>
 

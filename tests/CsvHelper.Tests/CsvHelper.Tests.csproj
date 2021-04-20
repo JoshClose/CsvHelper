@@ -2,10 +2,19 @@
 
 	<PropertyGroup>
 		<!--<TargetFrameworks>net50;netcoreapp3.1;netcoreapp2.1;net47;net452</TargetFrameworks>-->
-		<TargetFrameworks>net50;netcoreapp3.1;netcoreapp2.1;net47;net452</TargetFrameworks>
+		<TargetFrameworks>net50</TargetFrameworks>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="CsvHelper.Tests.net452.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.Tests.net47.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.Tests.net50.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.Tests.netcoreapp2.1.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.Tests.netcoreapp3.1.v3.ncrunchproject" />
+	  <None Remove="CsvHelper.Tests.v3.ncrunchproject" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Castle.Core" Version="4.4.1" />

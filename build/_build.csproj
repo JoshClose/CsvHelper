@@ -31,6 +31,7 @@
 
 		<None Include="..\.teamcity\settings.kts" LinkBase="ci" Condition="Exists('..\.teamcity\settings.kts')" />
 		<None Include="..\.github\workflows\*.yml" LinkBase="ci" />
+		<None Remove="_build.v3.ncrunchproject" />
 		<None Include="..\azure-pipelines.yml" LinkBase="ci" Condition="Exists('..\azure-pipelines.yml')" />
 		<None Include="..\Jenkinsfile" LinkBase="ci" Condition="Exists('..\Jenkinsfile')" />
 		<None Include="..\appveyor.yml" LinkBase="ci" Condition="Exists('..\appveyor.yml')" />

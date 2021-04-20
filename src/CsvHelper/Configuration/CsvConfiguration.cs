@@ -46,6 +46,12 @@ namespace CsvHelper.Configuration
 		public virtual string Delimiter { get; set; }
 
 		/// <inheritdoc/>
+		public virtual bool DetectDelimiter { get; set; }
+
+		/// <inheritdoc/>
+		public virtual string[] DelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
+
+		/// <inheritdoc/>
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <inheritdoc/>
@@ -173,20 +179,27 @@ namespace CsvHelper.Configuration
 			var escape = Escape.ToString();
 			var quote = Quote.ToString();
 			var lineEndings = new[] { "\r", "\n", "\r\n" };
+			var whiteSpaceChars = WhiteSpaceChars.Select(c => c.ToString()).ToArray();
 
 			// Escape
 			if (escape == Delimiter) throw new ConfigurationException($"{Escape} and {Delimiter} cannot be the same.");
 			if (escape == NewLine && IsNewLineSet) throw new ConfigurationException($"{Escape} and {NewLine} cannot be the same.");
 			if (lineEndings.Contains(Escape.ToString()) && !IsNewLineSet) throw new ConfigurationException($"{Escape} cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
+			if (whiteSpaceChars.Contains(escape)) throw new ConfigurationException($"{Escape} cannot be a WhiteSpaceChar.");
 
 			// Quote
 			if (quote == Delimiter) throw new ConfigurationException($"{Quote} and {Delimiter} cannot be the same.");
 			if (quote == NewLine && IsNewLineSet) throw new ConfigurationException($"{Quote} and {NewLine} cannot be the same.");
 			if (lineEndings.Contains(quote)) throw new ConfigurationException($"{Quote} cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
+			if (whiteSpaceChars.Contains(quote)) throw new ConfigurationException($"{Quote} cannot be a WhiteSpaceChar.");
 
 			// Delimiter
 			if (Delimiter == NewLine && IsNewLineSet) throw new ConfigurationException($"{Delimiter} and {NewLine} cannot be the same.");
 			if (lineEndings.Contains(Delimiter)) throw new ConfigurationException($"{Delimiter} cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
+			if (whiteSpaceChars.Contains(Delimiter)) throw new ConfigurationException($"{Delimiter} cannot be a WhiteSpaceChar.");
+
+			// Detect Delimiter
+			if (DetectDelimiter && DelimiterValues.Length == 0) throw new ConfigurationException($"At least one value is required for {nameof(DelimiterValues)} when {nameof(DetectDelimiter)} is enabled.");
 		}
 	}
 }

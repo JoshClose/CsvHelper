@@ -60,6 +60,11 @@ namespace CsvHelper
 		int RawRow { get; }
 
 		/// <summary>
+		/// The delimiter the parser is using.
+		/// </summary>
+		string Delimiter { get; }
+
+		/// <summary>
 		/// Gets the reading context.
 		/// </summary>
 		CsvContext Context { get; }

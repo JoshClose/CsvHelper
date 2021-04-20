@@ -18,6 +18,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				Delimiter = "\t",
+				WhiteSpaceChars = new[] { ' ' },
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

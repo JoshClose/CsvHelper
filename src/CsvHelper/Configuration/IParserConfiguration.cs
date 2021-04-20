@@ -2,6 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -116,10 +117,22 @@ namespace CsvHelper.Configuration
 		char Quote { get; }
 
 		/// <summary>
-		/// Gets the delimiter used to separate fields.
+		/// The delimiter used to separate fields.
 		/// Default is <see cref="TextInfo.ListSeparator"/>.
 		/// </summary>
 		string Delimiter { get; }
+
+		/// <summary>
+		/// Detect the delimiter instead of using the delimiter from configuration.
+		/// Default is <c>false</c>.
+		/// </summary>
+		bool DetectDelimiter { get; }
+
+		/// <summary>
+		/// The possible delimiter values used when detecting the delimiter.
+		/// Default is [",", ";", "|", "\t"].
+		/// </summary>
+		string[] DelimiterValues { get; }
 
 		/// <summary>
 		/// The character used to escape characters.
@@ -135,6 +148,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Characters considered whitespace.
 		/// Used when trimming fields.
+		/// Default is [' ', '\t'].
 		/// </summary>
 		char[] WhiteSpaceChars { get; }
 

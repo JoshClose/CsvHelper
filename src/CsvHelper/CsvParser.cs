@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CsvHelper
@@ -21,10 +22,9 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvParser : IParser, IDisposable
 	{
+		private readonly CsvConfiguration configuration;
 		private readonly FieldCache fieldCache = new FieldCache();
 		private readonly TextReader reader;
-		private readonly string delimiter;
-		private readonly char delimiterFirstChar;
 		private readonly char quote;
 		private readonly char escape;
 		private readonly bool countBytes;
@@ -42,7 +42,11 @@ namespace CsvHelper
 		private readonly char newLineFirstChar;
 		private readonly bool isNewLineSet;
 		private readonly bool cacheFields;
+		private readonly string[] delimiterValues;
+		private readonly bool detectDelimiter;
 
+		private string delimiter;
+		private char delimiterFirstChar;
 		private char[] buffer;
 		private int bufferSize;
 		private int charsRead;
@@ -108,10 +112,13 @@ namespace CsvHelper
 		public int RawRow => rawRow;
 
 		/// <inheritdoc/>
+		public string Delimiter => delimiter;
+
+		/// <inheritdoc/>
 		public CsvContext Context { get; private set; }
 
 		/// <inheritdoc/>
-		public IParserConfiguration Configuration { get; private set; }
+		public IParserConfiguration Configuration => configuration;
 
 		/// <inheritdoc/>
 		public string this[int index]
@@ -156,7 +163,7 @@ namespace CsvHelper
 			configuration.Validate();
 
 			this.reader = reader;
-			Configuration = configuration;
+			this.configuration = configuration;
 			Context = new CsvContext(this);
 
 			allowComments = configuration.AllowComments;
@@ -167,6 +174,8 @@ namespace CsvHelper
 			countBytes = configuration.CountBytes;
 			delimiter = configuration.Delimiter;
 			delimiterFirstChar = configuration.Delimiter[0];
+			delimiterValues = configuration.DelimiterValues;
+			detectDelimiter = configuration.DetectDelimiter;
 			encoding = configuration.Encoding;
 			escape = configuration.Escape;
 			ignoreBlankLines = configuration.IgnoreBlankLines;
@@ -206,6 +215,11 @@ namespace CsvHelper
 					{
 						return ReadEndOfFile();
 					}
+
+					if (row == 1 && detectDelimiter)
+					{
+						DetectDelimiter();
+					}
 				}
 
 				if (ReadLine(ref c, ref cPrev) == ReadLineResult.Complete)
@@ -235,12 +249,37 @@ namespace CsvHelper
 					{
 						return ReadEndOfFile();
 					}
+
+					if (row == 0 && detectDelimiter)
+					{
+						DetectDelimiter();
+					}
 				}
 
 				if (ReadLine(ref c, ref cPrev) == ReadLineResult.Complete)
 				{
 					return true;
 				}
+			}
+		}
+
+		private void DetectDelimiter()
+		{
+			var text = new string(buffer, 0, charsRead);
+			var delimiterCounts = new Dictionary<string, int>();
+			foreach (var delimiter in delimiterValues)
+			{
+				// Escape every character to use as regex pattern.
+				var pattern = Regex.Replace(delimiter, "(.)", "\\$1");
+				delimiterCounts[delimiter] = Regex.Matches(text, pattern).Count;
+			}
+
+			var maxCount = delimiterCounts.OrderByDescending(c => c.Value).First();
+			if (maxCount.Value > 0)
+			{
+				delimiter = maxCount.Key;
+				delimiterFirstChar = delimiter[0];
+				configuration.Validate();
 			}
 		}
 

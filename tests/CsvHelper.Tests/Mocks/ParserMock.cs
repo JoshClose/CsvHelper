@@ -37,6 +37,8 @@ namespace CsvHelper.Tests.Mocks
 
 		public long CharCount => 0;
 
+		public string Delimiter => Configuration.Delimiter;
+
 		public string this[int index] => record[index];
 
 		public ParserMock() : this(new CsvConfiguration(CultureInfo.InvariantCulture)) { }

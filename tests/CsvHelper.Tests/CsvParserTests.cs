@@ -527,6 +527,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				Delimiter = "\t",
+				WhiteSpaceChars = new[] { ' ' },
 			};
 			var parser = new CsvParser(reader, config);
 
