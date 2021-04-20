@@ -72,5 +72,15 @@ namespace CsvHelper
 		/// <param name="records">The records to write.</param>
 		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default);
+
+#if !NET45
+		/// <summary>
+		/// Writes the list of records to the CSV file.
+		/// </summary>
+		/// <typeparam name="T">Record type.</typeparam>
+		/// <param name="records">The records to write.</param>
+		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
+		Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default);
+#endif
 	}
 }
