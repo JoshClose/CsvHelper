@@ -1,5 +1,21 @@
 ﻿# Change Log
 
+### 27.0.0
+
+#### Features
+
+- Config option to auto detect delimiter. Off by default.
+- Added ability to apply a type converter to all registered types.
+- Added ability to apply type converter options to all registered types.
+- Added ability to pass an IAsyncEnumerable to WriteRecords.
+- Added option to use default value on conversion failure.
+
+#### Breaking Changes
+
+- Added `IParserConfiguration.DetectDelimiter`.
+- Added `IParserConfiguration.DetectDelimiterValues`.
+- Added `IWriter.WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)`.
+
 ### 26.1.0
 
 #### Features
