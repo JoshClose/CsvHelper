@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.0.1
+
+#### Bug Fixes
+
+- `\t` wasn't removed and just an exception was being thrown.
+
 ### 27.0.0
 
 #### Features
@@ -15,6 +21,7 @@
 - Added `IParserConfiguration.DetectDelimiter`.
 - Added `IParserConfiguration.DetectDelimiterValues`.
 - Added `IWriter.WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)`.
+- Removed `\t` from `CsvConfiguration.WhiteSpaceCharacters` as a default.
 
 ### 26.1.0
 
