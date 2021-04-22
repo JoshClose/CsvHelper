@@ -156,7 +156,7 @@ namespace CsvHelper.Configuration
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
 		/// <inheritdoc/>
-		public virtual char[] WhiteSpaceChars { get; set; } = new char[] { ' ', '\t' };
+		public virtual char[] WhiteSpaceChars { get; set; } = new char[] { ' ' };
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfiguration"/> class
