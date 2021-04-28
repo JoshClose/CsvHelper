@@ -27,16 +27,16 @@ namespace CsvHelper.Performance
 			//WriteField(50, 1_000_000, new CsvConfiguration(CultureInfo.InvariantCulture) { ShouldQuote = args => true }); return;
 			//WriteRecords(1_000_000);
 
-			for (var i = 0; i < 10; i++)
-			{
-				//Parse();
+			//for (var i = 0; i < 10; i++)
+			//{
+			//	Parse();
 
-				//ReadGetField();
-				//ReadGetRecords();
-				//ReadGetRecordsAsync().Wait();
+			//	ReadGetField();
+			//	ReadGetRecords();
+			//	ReadGetRecordsAsync().Wait();
 
-				//Console.WriteLine();
-			}
+			//	Console.WriteLine();
+			//}
 		}
 
 		public static string GetFilePath()

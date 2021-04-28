@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.0.2
+
+#### Bug Fixes
+
+- Fixed issue with delimiter detection.
+
 ### 27.0.1
 
 #### Bug Fixes

@@ -32,15 +32,7 @@ namespace CsvHelper.Tests.Exceptions
 				writer.Flush();
 				stream.Position = 0;
 
-				try
-				{
-					var list = csv.GetRecords<NoDefaultConstructor>().ToList();
-					throw new XunitException();
-				}
-				catch (ReaderException ex)
-				{
-					Console.WriteLine(ex.ToString());
-				}
+				Assert.Throws<MissingFieldException>(() => csv.GetRecords<NoDefaultConstructor>().ToList());
 			}
 		}
 
