@@ -174,5 +174,26 @@ namespace CsvHelper.Tests.Parsing
 				Assert.Equal("one", parser[1]);
 			}
 		}
+
+		[Fact]
+		public void Parse_TextHasRegularCharDelimiter_DetectsDelimiter()
+		{
+			var s = new StringBuilder();
+			s.Append("IdþName\r\n");
+			s.Append("1þone\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = "`",
+				DetectDelimiter = true,
+				DetectDelimiterValues = new[] { "þ" }
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.Equal("þ", parser.Delimiter);
+			}
+		}
 	}
 }

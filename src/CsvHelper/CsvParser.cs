@@ -269,8 +269,8 @@ namespace CsvHelper
 			var delimiterCounts = new Dictionary<string, int>();
 			foreach (var delimiter in delimiterValues)
 			{
-				// Escape every character to use as regex pattern.
-				var pattern = Regex.Replace(delimiter, "(.)", "\\$1");
+				// Escape regex special chars to use as regex pattern.
+				var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
 				delimiterCounts[delimiter] = Regex.Matches(text, pattern).Count;
 			}
 
