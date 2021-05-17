@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.0.3
+
+#### Bug Fixes
+
+- Specified exact dependency version matches.
+
 ### 27.0.2
 
 #### Bug Fixes
