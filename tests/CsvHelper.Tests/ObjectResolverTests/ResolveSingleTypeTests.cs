@@ -21,12 +21,21 @@ namespace CsvHelper.Tests.ObjectResolverTests
 				{ "1", "one" },
 			};
 
-			using (var csv = new CsvReader(parser))
-			{
-				ObjectResolver.Current = new ObjectResolver(CanResolve, Resolve);
-				var records = csv.GetRecords<A>().ToList();
+			var originalResolver = ObjectResolver.Current;
 
-				Assert.Single(records);
+			try
+			{
+				using (var csv = new CsvReader(parser))
+				{
+					ObjectResolver.Current = new ObjectResolver(CanResolve, Resolve);
+					var records = csv.GetRecords<A>().ToList();
+
+					Assert.Single(records);
+				}
+			}
+			finally
+			{
+				ObjectResolver.Current = originalResolver;
 			}
 		}
 
