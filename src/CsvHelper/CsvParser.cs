@@ -264,22 +264,34 @@ namespace CsvHelper
 		}
 
 		private void DetectDelimiter()
-		{
+		{			
 			var text = new string(buffer, 0, charsRead);
-			var delimiterCounts = new Dictionary<string, int>();
-			foreach (var delimiter in delimiterValues)
-			{
-				// Escape regex special chars to use as regex pattern.
-				var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
-				delimiterCounts[delimiter] = Regex.Matches(text, pattern).Count;
-			}
 
-			var maxCount = delimiterCounts.OrderByDescending(c => c.Value).First();
-			if (maxCount.Value > 0)
+			while (text.Length > 0)
 			{
-				delimiter = maxCount.Key;
-				delimiterFirstChar = delimiter[0];
-				configuration.Validate();
+				var index = text.IndexOf(newLine);
+
+				var line = index > -1 ? text.Substring(0, index + newLine.Length) : text;
+
+				var delimiterCounts = new Dictionary<string, int>();
+				foreach (var delimiter in delimiterValues)
+				{
+					// Escape regex special chars to use as regex pattern.
+					var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
+					delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
+				}
+
+				var maxCount = delimiterCounts.OrderByDescending(c => c.Value).First();
+				if (maxCount.Value > 0)
+				{
+					delimiter = maxCount.Key;
+					delimiterFirstChar = delimiter[0];
+					configuration.Validate();
+
+					break;
+				}
+
+				text = index > -1 ? text.Substring(index + newLine.Length) : string.Empty;
 			}
 		}
 

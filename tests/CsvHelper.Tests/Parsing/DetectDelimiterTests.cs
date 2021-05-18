@@ -195,5 +195,47 @@ namespace CsvHelper.Tests.Parsing
 				Assert.Equal("þ", parser.Delimiter);
 			}
 		}
+
+		[Fact]
+		public void Parse_MultipleLines_DetectsDelimiterFromFirstLineOnly()
+		{
+			var s = new StringBuilder();
+			s.Append("Id;Name\r\n");
+			s.Append("1,2,3,4;5,6,7,8\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = "`",
+				DetectDelimiter = true,
+				DetectDelimiterValues = new[] { ",", ";" }
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.Equal(";", parser.Delimiter);
+			}
+		}
+
+		[Fact]
+		public void Parse_NoDelimiter_DoesNotDetect()
+		{
+			var s = new StringBuilder();
+			s.Append("Id,Name\r\n");
+			s.Append("1,one\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = "`",
+				DetectDelimiter = true,
+				DetectDelimiterValues = new[] { ";" }
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.Equal("`", parser.Delimiter);
+			}
+		}
 	}
 }
