@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.0.4
+
+#### Bug Fixes
+
+- Changed delimiter detection to look line by line instead of the full buffer.
+
 ### 27.0.3
 
 #### Bug Fixes
