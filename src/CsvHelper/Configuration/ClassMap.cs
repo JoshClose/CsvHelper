@@ -336,12 +336,22 @@ namespace CsvHelper.Configuration
 
 			if ((context.Configuration.MemberTypes & MemberTypes.Fields) == MemberTypes.Fields)
 			{
+				// We need to go up the declaration tree and find the actual type the field
+				// exists on and use that FieldInfo instead.
 				var fields = new List<MemberInfo>();
-				foreach (var field in type.GetFields(flags))
+				foreach (var field in ReflectionHelper.GetUniqueFields(type, flags))
 				{
+					if (fields.Any(p => p.Name == field.Name))
+					{
+						// Multiple fields could have the same name if a child class field
+						// is hiding a parent class field by using `new`. It's possible that
+						// the order of the fields returned 
+						continue;
+					}
+
 					if (!field.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any())
 					{
-						fields.Add(field);
+						fields.Add(ReflectionHelper.GetDeclaringField(type, field, flags));
 					}
 				}
 

@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using CsvHelper.Configuration;
+using CsvHelper.Configuration.Attributes;
 
 namespace CsvHelper
 {
@@ -36,7 +37,25 @@ namespace CsvHelper
 		}
 
 		/// <summary>
-		/// Walk up the inheritance tree collecting properties. This will get a unique set or properties in the
+		/// Gets the <see cref="FieldInfo"/> from the type where the field was declared.
+		/// </summary>
+		/// <param name="type">The type the field belongs to.</param>
+		/// <param name="field">The field to search.</param>
+		/// <param name="flags">Flags for how the field is retrieved.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static FieldInfo GetDeclaringField(Type type, FieldInfo field, BindingFlags flags)
+		{
+			if (field.DeclaringType != type)
+			{
+				var declaringField = field.DeclaringType.GetField(field.Name, flags);
+				return GetDeclaringField(field.DeclaringType, declaringField, flags);
+			}
+
+			return field;
+		}
+
+		/// <summary>
+		/// Walk up the inheritance tree collecting properties. This will get a unique set of properties in the
 		/// case where parents have the same property names as children.
 		/// </summary>
 		/// <param name="type">The <see cref="Type"/> to get properties for.</param>
@@ -45,6 +64,8 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static List<PropertyInfo> GetUniqueProperties(Type type, BindingFlags flags, bool overwrite = false)
 		{
+			var ignoreBase = type.GetCustomAttribute(typeof(IgnoreBaseAttribute)) != null;
+
 			var properties = new Dictionary<string, PropertyInfo>();
 
 			flags |= BindingFlags.DeclaredOnly;
@@ -60,10 +81,53 @@ namespace CsvHelper
 					}
 				}
 
+				if (ignoreBase)
+				{
+					break;
+				}
+
 				currentType = currentType.BaseType;
 			}
 
 			return properties.Values.ToList();
+		}
+
+		/// <summary>
+		/// Walk up the inheritance tree collecting fields. This will get a unique set of fields in the
+		/// case where parents have the same field names as children.
+		/// </summary>
+		/// <param name="type">The <see cref="Type"/> to get fields for.</param>
+		/// <param name="flags">The flags for getting the fields.</param>
+		/// <param name="overwrite">If true, parent class fields that are hidden by `new` child fields will be overwritten.</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static List<FieldInfo> GetUniqueFields(Type type, BindingFlags flags, bool overwrite = false)
+		{
+			var ignoreBase = type.GetCustomAttribute(typeof(IgnoreBaseAttribute)) != null;
+
+			var fields = new Dictionary<string, FieldInfo>();
+
+			flags |= BindingFlags.DeclaredOnly;
+			var currentType = type;
+			while (currentType != null)
+			{
+				var currentFields = currentType.GetFields(flags);
+				foreach (var field in currentFields)
+				{
+					if (!fields.ContainsKey(field.Name) || overwrite)
+					{
+						fields[field.Name] = field;
+					}
+				}
+
+				if (ignoreBase)
+				{
+					break;
+				}
+
+				currentType = currentType.BaseType;
+			}
+
+			return fields.Values.ToList();
 		}
 
 		/// <summary>

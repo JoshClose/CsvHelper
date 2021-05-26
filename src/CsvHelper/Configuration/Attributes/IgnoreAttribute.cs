@@ -14,7 +14,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// this method will not ignore all the child members down the
 	/// tree that have already been mapped.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
 	public class IgnoreAttribute : Attribute, IMemberMapper, IMemberReferenceMapper, IParameterMapper
 	{
 		/// <summary>
@@ -22,9 +22,9 @@ namespace CsvHelper.Configuration.Attributes
 		/// </summary>
 		/// <param name="memberMap">The member map.</param>
 		public void ApplyTo(MemberMap memberMap)
-        {
-            memberMap.Data.Ignore = true;
-        }
+		{
+			memberMap.Data.Ignore = true;
+		}
 
 		/// <summary>
 		/// Applies configuration to the given <see cref="MemberMap" />.
