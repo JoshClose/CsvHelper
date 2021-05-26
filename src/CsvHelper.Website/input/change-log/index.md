@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.1.0
+
+#### Features
+
+- Added IgnoreBaseAttribute to not look at the base class when auto mapping.
+
 ### 27.0.4
 
 #### Bug Fixes
