@@ -324,13 +324,13 @@ No changes.
 - `IReaderConfiguration.AutoMap` removed.
 - `ISerializerConfiguration` removed and properties added to `IWriterConfiguration`.
 - All `IWriterConfiguration` setters removed.
-- `WriterConfiguration.QuoteString` removed.
-- `WriterConfiguration.TypeConverterCache` removed.
-- `WriterConfiguration.MemberTypes` removed.
-- `WriterConfiguration.Maps` removed.
-- `WriterConfiguration.RegisterClassMap` removed.
-- `WriterConfiguration.UnregisterClassMap` removed.
-- `WriterConfiguration.AutoMap` removed.
+- `IWriterConfiguration.QuoteString` removed.
+- `IWriterConfiguration.TypeConverterCache` removed.
+- `IWriterConfiguration.MemberTypes` removed.
+- `IWriterConfiguration.Maps` removed.
+- `IWriterConfiguration.RegisterClassMap` removed.
+- `IWriterConfiguration.UnregisterClassMap` removed.
+- `IWriterConfiguration.AutoMap` removed.
 - `MemberMap.Optional` added.
 - `MemberMap<TClass, TMember>.ConvertUsing` renamed to `Convert`.
 - `CsvFieldReader` removed.

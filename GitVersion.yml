@@ -1,4 +1,4 @@
-next-version: 21.0.5
+#next-version: 21.0.5
 assembly-versioning-scheme: Major
 assembly-file-versioning-format: '{Major}.{Minor}.{Patch}.{env:BUILD_NUMBER ?? 0}'
 branches:

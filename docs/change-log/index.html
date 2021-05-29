@@ -50,6 +50,7 @@
 			<div class="navbar-start">
 				<a class="navbar-item" href="/CsvHelper/getting-started">Getting Started</a>
 				<a class="navbar-item" href="/CsvHelper/examples">Examples</a>
+				<a class="navbar-item" href="/CsvHelper/migration">Migration</a>
 				<a class="navbar-item" href="/CsvHelper/change-log">Change Log</a>
 			</div>
 			<div class="navbar-end">
@@ -374,13 +375,13 @@
 <li><code>IReaderConfiguration.AutoMap</code> removed.</li>
 <li><code>ISerializerConfiguration</code> removed and properties added to <code>IWriterConfiguration</code>.</li>
 <li>All <code>IWriterConfiguration</code> setters removed.</li>
-<li><code>WriterConfiguration.QuoteString</code> removed.</li>
-<li><code>WriterConfiguration.TypeConverterCache</code> removed.</li>
-<li><code>WriterConfiguration.MemberTypes</code> removed.</li>
-<li><code>WriterConfiguration.Maps</code> removed.</li>
-<li><code>WriterConfiguration.RegisterClassMap</code> removed.</li>
-<li><code>WriterConfiguration.UnregisterClassMap</code> removed.</li>
-<li><code>WriterConfiguration.AutoMap</code> removed.</li>
+<li><code>IWriterConfiguration.QuoteString</code> removed.</li>
+<li><code>IWriterConfiguration.TypeConverterCache</code> removed.</li>
+<li><code>IWriterConfiguration.MemberTypes</code> removed.</li>
+<li><code>IWriterConfiguration.Maps</code> removed.</li>
+<li><code>IWriterConfiguration.RegisterClassMap</code> removed.</li>
+<li><code>IWriterConfiguration.UnregisterClassMap</code> removed.</li>
+<li><code>IWriterConfiguration.AutoMap</code> removed.</li>
 <li><code>MemberMap.Optional</code> added.</li>
 <li><code>MemberMap&lt;TClass, TMember&gt;.ConvertUsing</code> renamed to <code>Convert</code>.</li>
 <li><code>CsvFieldReader</code> removed.</li>
@@ -1624,6 +1625,8 @@
 				</div>
 		</div>
 	</main>
+
+	<br /><br />
 
 	<footer id="footer" class="footer">
 	<div class="has-text-centered">&copy; 2009-2021 Josh Close</div>
