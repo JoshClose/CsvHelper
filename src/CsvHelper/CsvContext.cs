@@ -102,9 +102,10 @@ namespace CsvHelper
 		/// Only member specified in the mapping are used.
 		/// </summary>
 		/// <typeparam name="TMap">The type of mapping class to use.</typeparam>
-		public virtual TMap RegisterClassMap<TMap>() where TMap : ClassMap
+		/// <param name="constructorArgs">Constructor arguments used to create the type of mapping class.</param>
+		public virtual TMap RegisterClassMap<TMap>(params object[] constructorArgs) where TMap : ClassMap
 		{
-			var map = ObjectResolver.Current.Resolve<TMap>();
+			var map = ObjectResolver.Current.Resolve<TMap>(constructorArgs);
 			RegisterClassMap(map);
 
 			return map;
@@ -116,14 +117,15 @@ namespace CsvHelper
 		/// Only members specified in the mapping are used.
 		/// </summary>
 		/// <param name="classMapType">The type of mapping class to use.</param>
-		public virtual ClassMap RegisterClassMap(Type classMapType)
+		/// <param name="constructorArgs">Constructor arguments used to create the type of mapping class.</param>
+		public virtual ClassMap RegisterClassMap(Type classMapType, params object[] constructorArgs)
 		{
 			if (!typeof(ClassMap).IsAssignableFrom(classMapType))
 			{
 				throw new ArgumentException("The class map type must inherit from CsvClassMap.");
 			}
 
-			var map = (ClassMap)ObjectResolver.Current.Resolve(classMapType);
+			var map = (ClassMap)ObjectResolver.Current.Resolve(classMapType, constructorArgs);
 			RegisterClassMap(map);
 
 			return map;
