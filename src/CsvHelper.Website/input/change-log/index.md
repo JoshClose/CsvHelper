@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.1.1
+
+#### Bug Fixes
+
+- Fixed issue with delimiter detection in parser async read.
+
 ### 27.1.0
 
 #### Features
