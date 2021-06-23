@@ -250,7 +250,7 @@ namespace CsvHelper
 						return ReadEndOfFile();
 					}
 
-					if (row == 0 && detectDelimiter)
+					if (row == 1 && detectDelimiter)
 					{
 						DetectDelimiter();
 					}
