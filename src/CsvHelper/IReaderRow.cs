@@ -74,6 +74,8 @@ namespace CsvHelper
 		/// <returns>The raw field.</returns>
 		string GetField(int index);
 
+		ReadOnlySpan<char> GetFieldSpan(int index);
+
 		/// <summary>
 		/// Gets the raw field at position (column) name.
 		/// </summary>

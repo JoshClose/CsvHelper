@@ -218,5 +218,10 @@ namespace CsvHelper.Tests.Mocks
 		{
 			throw new NotImplementedException();
 		}
+
+		public ReadOnlySpan<char> GetFieldSpan(int index)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

@@ -87,7 +87,6 @@ namespace CsvHelper.Expressions
 					continue;
 				}
 
-				var memberTypeParameter = Expression.Parameter(memberMap.Data.Member.MemberType(), "member");
 				var memberAccess = Expression.MakeMemberAccess(recordTypeParameter, memberMap.Data.Member);
 				var memberAssignment = Expression.Assign(memberAccess, fieldExpression);
 				memberAssignments.Add(memberAssignment);
@@ -104,8 +103,6 @@ namespace CsvHelper.Expressions
 				expressionManager.CreateMemberAssignmentsForMapping(referenceMap.Data.Mapping, referenceAssignments);
 
 				var referenceBody = expressionManager.CreateInstanceAndAssignMembers(referenceMap.Data.Member.MemberType(), referenceAssignments);
-
-				var memberTypeParameter = Expression.Parameter(referenceMap.Data.Member.MemberType(), "referenceMember");
 				var memberAccess = Expression.MakeMemberAccess(recordTypeParameter, referenceMap.Data.Member);
 				var memberAssignment = Expression.Assign(memberAccess, referenceBody);
 				memberAssignments.Add(memberAssignment);

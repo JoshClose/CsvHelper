@@ -11,6 +11,9 @@ namespace CsvHelper.TypeConversion
 	/// Converts an <see cref="int"/> to and from a <see cref="string"/>.
 	/// </summary>
 	public class Int32Converter : DefaultTypeConverter
+#if !NET45 && !NETSTANDARD2_0
+		, ISpanTypeConverter
+#endif
 	{
 		/// <summary>
 		/// Converts the string to an object.
@@ -30,5 +33,19 @@ namespace CsvHelper.TypeConversion
 
 			return base.ConvertFromString(text, row, memberMapData);
 		}
+
+#if !NET45 && !NETSTANDARD2_0
+		public object ConvertFromSpan(System.ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
+		{
+			var numberStyle = memberMapData.TypeConverterOptions.NumberStyles ?? NumberStyles.Integer;
+
+			if (int.TryParse(text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var i))
+			{
+				return i;
+			}
+
+			return ConvertFromString(text.ToString(), row, memberMapData);
+		}
+#endif
 	}
 }

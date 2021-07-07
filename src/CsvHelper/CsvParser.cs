@@ -831,6 +831,47 @@ namespace CsvHelper
 			return value;
 		}
 
+
+
+		public ReadOnlySpan<char> GetFieldSpan(int index)
+		{
+			if (index > fieldsPosition)
+			{
+				throw new IndexOutOfRangeException();
+			}
+
+			ref var field = ref fields[index];
+
+			if (field.Length == 0)
+			{
+				return ReadOnlySpan<char>.Empty;
+			}
+
+			var start = field.Start + rowStartPosition;
+			var length = field.Length;
+			var quoteCount = field.QuoteCount;
+
+			ProcessedField processedField;
+			switch (mode)
+			{
+				case CsvMode.RFC4180:
+					processedField = field.IsBad
+						? ProcessRFC4180BadField(start, length)
+						: ProcessRFC4180Field(start, length, quoteCount);
+					break;
+				case CsvMode.Escape:
+					processedField = ProcessEscapeField(start, length);
+					break;
+				case CsvMode.NoEscape:
+					processedField = ProcessNoEscapeField(start, length);
+					break;
+				default:
+					throw new InvalidOperationException($"ParseMode '{mode}' is not handled.");
+			}
+
+			return processedField.Buffer.AsSpan(processedField.Start, processedField.Length);
+		}
+
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected ProcessedField ProcessRFC4180Field(in int start, in int length, in int quoteCount)

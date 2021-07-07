@@ -37,6 +37,8 @@ namespace CsvHelper
 		/// <returns>The field.</returns>
 		string this[int index] { get; }
 
+		ReadOnlySpan<char> GetFieldSpan(int index);
+
 		/// <summary>
 		/// Gets the record for the current row. Note:
 		/// It is much more efficient to only get the fields you need. If

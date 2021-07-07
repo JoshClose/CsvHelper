@@ -58,6 +58,11 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static Type[] GetArgTypes(object[] args)
 		{
+			if (args.Length == 0)
+			{
+				return Type.EmptyTypes;
+			}
+
 			var argTypes = new Type[args.Length];
 			for (var i = 0; i < args.Length; i++)
 			{
