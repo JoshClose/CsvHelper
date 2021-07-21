@@ -213,7 +213,7 @@ namespace CsvHelper.Configuration
 		/// <param name="validateExpression"></param>
 		public virtual MemberMap Validate(Validate validateExpression)
 		{
-			var fieldParameter = Expression.Parameter(typeof(string), "field");
+			var fieldParameter = Expression.Parameter(typeof(ValidateArgs), "field");
 			var methodExpression = Expression.Call(
 				Expression.Constant(validateExpression.Target),
 				validateExpression.Method,
