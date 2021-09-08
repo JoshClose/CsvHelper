@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 27.2.0
+
+#### Features
+
+- Support for net60 `DateOnly` and `TimeOnly` types.
+
 ### 27.1.1
 
 #### Bug Fixes

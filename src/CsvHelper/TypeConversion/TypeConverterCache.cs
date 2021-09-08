@@ -226,6 +226,9 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(byte), new ByteConverter());
 			AddConverter(typeof(byte[]), new ByteArrayConverter());
 			AddConverter(typeof(char), new CharConverter());
+#if NET6_0
+			AddConverter(typeof(DateOnly), new DateOnlyConverter());
+#endif
 			AddConverter(typeof(DateTime), new DateTimeConverter());
 			AddConverter(typeof(DateTimeOffset), new DateTimeOffsetConverter());
 			AddConverter(typeof(decimal), new DecimalConverter());
@@ -237,6 +240,9 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(long), new Int64Converter());
 			AddConverter(typeof(sbyte), new SByteConverter());
 			AddConverter(typeof(string), new StringConverter());
+#if NET6_0
+			AddConverter(typeof(TimeOnly), new TimeOnlyConverter());
+#endif
 			AddConverter(typeof(TimeSpan), new TimeSpanConverter());
 			AddConverter(typeof(Type), new TypeConverter());
 			AddConverter(typeof(ushort), new UInt16Converter());

@@ -86,6 +86,8 @@ namespace CsvHelper.Performance
 			var stopwatch = new Stopwatch();
 			stopwatch.Start();
 
+			var random = new Random();
+
 			using (var stream = File.Create(GetFilePath()))
 			using (var writer = new StreamWriter(stream))
 			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
@@ -97,56 +99,56 @@ namespace CsvHelper.Performance
 				{
 					var record = new Columns50
 					{
-						Column1 = 1,
-						Column2 = 2,
-						Column3 = 3,
-						Column4 = 4,
-						Column5 = 5,
-						Column6 = 6,
-						Column7 = 7,
-						Column8 = 8,
-						Column9 = 9,
-						Column10 = 10,
-						Column11 = 11,
-						Column12 = 12,
-						Column13 = 13,
-						Column14 = 14,
-						Column15 = 15,
-						Column16 = 16,
-						Column17 = 17,
-						Column18 = 18,
-						Column19 = 19,
-						Column20 = 20,
-						Column21 = 21,
-						Column22 = 22,
-						Column23 = 23,
-						Column24 = 24,
-						Column25 = 25,
-						Column26 = 26,
-						Column27 = 27,
-						Column28 = 28,
-						Column29 = 29,
-						Column30 = 30,
-						Column31 = 31,
-						Column32 = 32,
-						Column33 = 33,
-						Column34 = 34,
-						Column35 = 35,
-						Column36 = 36,
-						Column37 = 37,
-						Column38 = 38,
-						Column39 = 39,
-						Column40 = 40,
-						Column41 = 41,
-						Column42 = 42,
-						Column43 = 43,
-						Column44 = 44,
-						Column45 = 45,
-						Column46 = 46,
-						Column47 = 47,
-						Column48 = 48,
-						Column49 = 49,
-						Column50 = 50,
+						Column1 = random.Next(),
+						Column2 = random.Next(),
+						Column3 = random.Next(),
+						Column4 = random.Next(),
+						Column5 = random.Next(),
+						Column6 = random.Next(),
+						Column7 = random.Next(),
+						Column8 = random.Next(),
+						Column9 = random.Next(),
+						Column10 = random.Next(),
+						Column11 = random.Next(),
+						Column12 = random.Next(),
+						Column13 = random.Next(),
+						Column14 = random.Next(),
+						Column15 = random.Next(),
+						Column16 = random.Next(),
+						Column17 = random.Next(),
+						Column18 = random.Next(),
+						Column19 = random.Next(),
+						Column20 = random.Next(),
+						Column21 = random.Next(),
+						Column22 = random.Next(),
+						Column23 = random.Next(),
+						Column24 = random.Next(),
+						Column25 = random.Next(),
+						Column26 = random.Next(),
+						Column27 = random.Next(),
+						Column28 = random.Next(),
+						Column29 = random.Next(),
+						Column30 = random.Next(),
+						Column31 = random.Next(),
+						Column32 = random.Next(),
+						Column33 = random.Next(),
+						Column34 = random.Next(),
+						Column35 = random.Next(),
+						Column36 = random.Next(),
+						Column37 = random.Next(),
+						Column38 = random.Next(),
+						Column39 = random.Next(),
+						Column40 = random.Next(),
+						Column41 = random.Next(),
+						Column42 = random.Next(),
+						Column43 = random.Next(),
+						Column44 = random.Next(),
+						Column45 = random.Next(),
+						Column46 = random.Next(),
+						Column47 = random.Next(),
+						Column48 = random.Next(),
+						Column49 = random.Next(),
+						Column50 = random.Next(),
 					};
 					records.Add(record);
 				}
@@ -271,7 +273,7 @@ namespace CsvHelper.Performance
 			}
 		}
 
-		private class Columns50
+		public class Columns50
 		{
 			public int Column1 { get; set; }
 			public int Column2 { get; set; }
@@ -349,6 +351,44 @@ namespace CsvHelper.Performance
 		}
 
 		[Benchmark]
+		public void GetRecordsFieldCache()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				CacheFields = false,
+			};
+			using (var stream = File.OpenRead(Program.GetFilePath()))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader, config))
+			{
+				Program.Columns50 record;
+				while (csv.Read())
+				{
+					record = csv.GetRecord<Program.Columns50>();
+				}
+			}
+		}
+
+		//[Benchmark]
+		public void GetRecordsSpan()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				CacheFields = false,
+			};
+			using (var stream = File.OpenRead(Program.GetFilePath()))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader, config))
+			{
+				Program.Columns50 record;
+				while (csv.Read())
+				{
+					record = csv.GetRecord<Program.Columns50>();
+				}
+			}
+		}
+
+		//[Benchmark]
 		public void Parse()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
