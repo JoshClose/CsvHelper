@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2021 Josh Close
+// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -30,9 +30,20 @@ namespace CsvHelper.TypeConversion
 			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo.GetFormat(typeof(DateTimeFormatInfo)) ?? memberMapData.TypeConverterOptions.CultureInfo;
 			var dateTimeStyle = memberMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
 
-			return memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
-				? DateTime.Parse(text, formatProvider, dateTimeStyle)
-				: DateTime.ParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle);
+			if (memberMapData.TypeConverterOptions.Formats == null ||
+			    memberMapData.TypeConverterOptions.Formats.Length == 0)
+			{
+				if (DateTime.TryParse(text, formatProvider, dateTimeStyle, out var dateTime))
+					return dateTime;
+			}
+			else
+			{
+				if (DateTime.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider,
+					dateTimeStyle, out var dateTime))
+					return dateTime;
+			}
+
+			return base.ConvertFromString(text, row, memberMapData);
 		}
 	}
 }
