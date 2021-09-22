@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2021 Josh Close
+// Copyright 2009-2021 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -53,6 +53,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 			// Invalid conversions.
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(" ", row, propertyMapData));
 		}
 
 		[Fact]
@@ -69,7 +70,7 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.Throws<NotSupportedException>(() => cmConverter.ConvertFromString(null));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 			Assert.Throws<FormatException>(() => cmConverter.ConvertFromString("blah"));
-			Assert.Throws<FormatException>(() => converter.ConvertFromString("blah", row, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("blah", row, propertyMapData));
 		}
 	}
 }
