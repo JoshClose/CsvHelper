@@ -91,7 +91,7 @@ namespace CsvHelper.Configuration
 		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-', '\t', '\r' };
 
 		/// <inheritdoc/>
-		public virtual char InjectionEscapeCharacter { get; set; } = '\t';
+		public virtual char InjectionEscapeCharacter { get; set; } = '\'';
 
 		/// <inheritdoc/>
 		public bool IsNewLineSet { get; private set; }

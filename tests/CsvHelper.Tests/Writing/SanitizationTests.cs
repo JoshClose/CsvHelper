@@ -26,7 +26,7 @@ namespace CsvHelper.Tests.Serializing
 				csv.Flush();
 				writer.Flush();
 
-				Assert.Equal("\t=one", writer.ToString());
+				Assert.Equal("\'=one", writer.ToString());
 			}
 		}
 
@@ -44,7 +44,7 @@ namespace CsvHelper.Tests.Serializing
 				csv.WriteField("\"=one\"");
 				csv.Flush();
 
-				Assert.Equal("\"\t=one\"", writer.ToString());
+				Assert.Equal("\"'=one\"", writer.ToString());
 			}
 		}
 
