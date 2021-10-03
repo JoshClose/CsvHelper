@@ -88,7 +88,7 @@ namespace CsvHelper.Configuration
 		public virtual bool IncludePrivateMembers { get; set; }
 
 		/// <inheritdoc/>
-		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-' };
+		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-', '\t', '\r' };
 
 		/// <inheritdoc/>
 		public virtual char InjectionEscapeCharacter { get; set; } = '\t';
