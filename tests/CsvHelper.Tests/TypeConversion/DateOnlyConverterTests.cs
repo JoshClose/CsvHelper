@@ -6,6 +6,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
+using System;
 using System.Globalization;
 using Xunit;
 

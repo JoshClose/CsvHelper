@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 #if NET6_0
 using CsvHelper.Configuration;
+using System;
 using System.Globalization;
 
 namespace CsvHelper.TypeConversion

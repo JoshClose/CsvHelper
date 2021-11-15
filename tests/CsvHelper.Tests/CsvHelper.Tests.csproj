@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<!--<TargetFrameworks>net60;net50;netcoreapp3.1;netcoreapp2.1;net47;net452</TargetFrameworks>-->
-		<TargetFrameworks>net60</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 		<LangVersion>preview</LangVersion>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
