@@ -1,0 +1,5 @@
+﻿<ProjectConfiguration>
+  <Settings>
+    <PreventSigningOfAssembly>True</PreventSigningOfAssembly>
+  </Settings>
+</ProjectConfiguration>
