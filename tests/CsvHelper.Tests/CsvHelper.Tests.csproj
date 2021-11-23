@@ -1,20 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--<TargetFrameworks>net60;net50;netcoreapp3.1;netcoreapp2.1;net47;net452</TargetFrameworks>-->
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netcoreapp2.1;net47;net45</TargetFrameworks>
+		<!--<TargetFrameworks>net6.0</TargetFrameworks>-->
 		<LangVersion>preview</LangVersion>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="CsvHelper.Tests.net452.v3.ncrunchproject" />
-	  <None Remove="CsvHelper.Tests.net47.v3.ncrunchproject" />
-	  <None Remove="CsvHelper.Tests.net50.v3.ncrunchproject" />
-	  <None Remove="CsvHelper.Tests.netcoreapp2.1.v3.ncrunchproject" />
-	  <None Remove="CsvHelper.Tests.netcoreapp3.1.v3.ncrunchproject" />
-	  <None Remove="CsvHelper.Tests.v3.ncrunchproject" />
+	  <None Remove="*.ncrunchproject" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -39,19 +34,26 @@
 		<PackageReference Include="System.Buffers" Version="4.5.1" />
 		<PackageReference Include="System.Memory" Version="4.5.4" />
 		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
-	</ItemGroup>
+        <PackageReference Remove="System.Linq.Async" Version="*" />
+    </ItemGroup>
 
 	<!-- .NET 4.7 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Buffers" Version="4.5.1" />
 		<PackageReference Include="System.Memory" Version="4.5.4" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 	</ItemGroup>
-	
-	<ItemGroup>
+
+    <!-- .NET Standard 2.0 -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    </ItemGroup>
+
+    <ItemGroup>
 		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
 	</ItemGroup>
 

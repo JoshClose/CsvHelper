@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NET45
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -42,3 +43,4 @@ namespace CsvHelper.Tests.Writing
 		}
     }
 }
+#endif
