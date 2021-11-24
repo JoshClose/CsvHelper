@@ -148,7 +148,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Characters considered whitespace.
 		/// Used when trimming fields.
-		/// Default is [' ', '\t'].
+		/// Default is [' '].
 		/// </summary>
 		char[] WhiteSpaceChars { get; }
 
