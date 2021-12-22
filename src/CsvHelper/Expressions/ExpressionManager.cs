@@ -101,35 +101,76 @@ namespace CsvHelper.Expressions
 					// Value type.
 
 					int index;
-					if (parameterMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !parameterMap.Data.IsIndexSet)
+					if (reader.Configuration.HasHeaderRecord)
 					{
-						// Use name.
-						index = reader.GetFieldIndex(parameterMap.Data.Names.ToArray(), parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
-						if (index == -1)
+						if (parameterMap.Data.IsNameSet || !parameterMap.Data.IsIndexSet)
 						{
-							if (parameterMap.Data.IsDefaultSet || parameterMap.Data.IsOptional)
+							// Use name.
+							index = reader.GetFieldIndex(parameterMap.Data.Names.ToArray(), parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
+
+							if (index == -1)
 							{
-								var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
-								argumentExpressions.Add(defaultExpression);
+								if (parameterMap.Data.IsDefaultSet || parameterMap.Data.IsOptional)
+								{
+									var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
+									argumentExpressions.Add(defaultExpression);
+
+									continue;
+								}
+
+								// Skip if the index was not found.
 								continue;
 							}
+						}
+						else if (!parameterMap.Data.IsIndexSet && parameterMap.Data.IsOptional)
+						{
+							// If there wasn't an index explicitly, use a default value since constructors need all
+							// arguments to be created.
+							var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
+							argumentExpressions.Add(defaultExpression);
 
-							// Skip if the index was not found.
 							continue;
 						}
-					}
-					else if (!parameterMap.Data.IsIndexSet && parameterMap.Data.IsOptional)
-					{
-						// If there wasn't an index explicitly, use a default value since constructors need all
-						// arguments to be created.
-						var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
-						argumentExpressions.Add(defaultExpression);
-						continue;
+						else
+						{
+							// Use index.
+							index = parameterMap.Data.Index;
+						}
 					}
 					else
 					{
-						// Use index.
-						index = parameterMap.Data.Index;
+						if (parameterMap.Data.IsNameSet && !parameterMap.Data.IsIndexSet)
+						{
+							index = reader.GetFieldIndex(parameterMap.Data.Names.ToArray(), parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
+
+							if (index == -1)
+							{
+								if (parameterMap.Data.IsDefaultSet || parameterMap.Data.IsOptional)
+								{
+									var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
+									argumentExpressions.Add(defaultExpression);
+
+									continue;
+								}
+
+								// Skip if the index was not found.
+								continue;
+							}
+						}
+						else if (parameterMap.Data.IsIndexSet || !parameterMap.Data.IsOptional)
+						{
+							// Use index.
+							index = parameterMap.Data.Index;
+						}
+						else
+						{
+							// If there wasn't an index set explicitly, use a default value since constructors need all
+							// arguments to be created.
+							var defaultExpression = CreateDefaultExpression(parameterMap, Expression.Constant(string.Empty));
+							argumentExpressions.Add(defaultExpression);
+
+							continue;
+						}
 					}
 
 					// Get the field using the field index.
@@ -225,19 +266,28 @@ namespace CsvHelper.Expressions
 			}
 
 			int index;
-			if (memberMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !memberMap.Data.IsIndexSet)
+			if (reader.Configuration.HasHeaderRecord)
 			{
-				// Use the name.
-				index = reader.GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional);
-				if (index == -1)
+				if (memberMap.Data.IsNameSet || !memberMap.Data.IsIndexSet)
 				{
-					if (memberMap.Data.IsDefaultSet)
-					{
-						return CreateDefaultExpression(memberMap, Expression.Constant(string.Empty));
-					}
+					// Use the name.
+					index = reader.GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional);
 
-					// Skip if the index was not found.
-					return null;
+					if (index == -1)
+					{
+						if (memberMap.Data.IsDefaultSet)
+						{
+							return CreateDefaultExpression(memberMap, Expression.Constant(string.Empty));
+						}
+
+						// Skip if the index was not found.
+						return null;
+					}
+				}
+				else
+				{
+					// Use the index.
+					index = memberMap.Data.Index;
 				}
 			}
 			else
@@ -403,7 +453,7 @@ namespace CsvHelper.Expressions
 				IsDefaultSet = parameterMap.Data.IsDefaultSet,
 				IsIndexSet = parameterMap.Data.IsIndexSet,
 				IsNameSet = parameterMap.Data.IsNameSet,
-				NameIndex = parameterMap.Data.NameIndex,				
+				NameIndex = parameterMap.Data.NameIndex,
 				TypeConverter = parameterMap.Data.TypeConverter,
 				TypeConverterOptions = parameterMap.Data.TypeConverterOptions
 			};
