@@ -10,7 +10,7 @@ using Xunit;
 
 namespace CsvHelper.Tests
 {
-	
+
 	public class CsvWriterMappingTests
 	{
 		[Fact]
@@ -185,6 +185,64 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[Fact]
+		public void ConvertUsingInstanceMethodTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			string result;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer, config))
+			{
+				var records = new List<TestClass>
+				{
+					new TestClass { IntColumn = 1 }
+				};
+
+				csv.Context.RegisterClassMap<ConvertUsingInstanceMethodMap>();
+				csv.WriteRecords(records);
+				writer.Flush();
+				stream.Position = 0;
+
+				result = reader.ReadToEnd();
+			}
+
+			Assert.Equal("Converted1\r\n", result);
+		}
+
+		[Fact]
+		public void ConvertUsingStaticFunctionTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			string result;
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvWriter(writer, config))
+			{
+				var records = new List<TestClass>
+				{
+					new TestClass { IntColumn = 1 }
+				};
+
+				csv.Context.RegisterClassMap<ConvertUsingStaticFunctionMap>();
+				csv.WriteRecords(records);
+				writer.Flush();
+				stream.Position = 0;
+
+				result = reader.ReadToEnd();
+			}
+
+			Assert.Equal("Converted1\r\n", result);
+		}
+
 		private class SameNameMultipleTimesClass
 		{
 			public string Name1 { get; set; }
@@ -260,6 +318,32 @@ namespace CsvHelper.Tests
 			{
 				Map(m => m.IntColumn).Convert(m => (string)null);
 				Map(m => m.StringColumn).Convert(args => args.Value.StringColumn);
+			}
+		}
+
+		private sealed class ConvertUsingInstanceMethodMap : ClassMap<TestClass>
+		{
+			public ConvertUsingInstanceMethodMap()
+			{
+				Map(m => m.IntColumn).Convert(ConvertToStringFunction);
+			}
+
+			private string ConvertToStringFunction(ConvertToStringArgs<TestClass> args)
+			{
+				return $"Converted{args.Value.IntColumn}";
+			}
+		}
+
+		private sealed class ConvertUsingStaticFunctionMap : ClassMap<TestClass>
+		{
+			public ConvertUsingStaticFunctionMap()
+			{
+				Map(m => m.IntColumn).Convert(ConvertToStringFunction);
+			}
+
+			private static string ConvertToStringFunction(ConvertToStringArgs<TestClass> args)
+			{
+				return $"Converted{args.Value.IntColumn}";
 			}
 		}
 	}
