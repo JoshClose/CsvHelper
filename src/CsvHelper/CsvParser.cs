@@ -380,6 +380,7 @@ namespace CsvHelper
 							var result = ReadSpaces(ref c);
 							if (result == ReadLineResult.Incomplete)
 							{
+								fieldStartPosition = bufferPosition;	// Transport info that we are at start of field to next call (#1954).
 								return result;
 							}
 						}
