@@ -57,7 +57,7 @@ namespace CsvHelper.Tests
 			{
 				"1",
 				"blah",
-				DateTime.Now.ToString(),
+				DateTime.Now.ToString("O"),
 				"true",
 				"c",
 				"",
