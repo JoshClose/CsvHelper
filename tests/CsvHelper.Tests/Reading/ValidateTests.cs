@@ -15,7 +15,7 @@ namespace CsvHelper.Tests.Reading
 	public class ValidateTests
 	{
 		[Fact]
-		public void ValidateTest()
+		public void GenericValidateTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
@@ -31,7 +31,29 @@ namespace CsvHelper.Tests.Reading
 				writer.Flush();
 				stream.Position = 0;
 
-				csv.Context.RegisterClassMap<ValidateMap>();
+				csv.Context.RegisterClassMap<GenericValidateMap>();
+				Assert.Throws<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
+			}
+		}
+
+		[Fact]
+		public void NonGenericValidateTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				MissingFieldFound = null,
+			};
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var csv = new CsvReader(reader, config))
+			{
+				writer.WriteLine("Id,Name");
+				writer.WriteLine(",one");
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Context.RegisterClassMap<NonGenericValidateMap>();
 				Assert.Throws<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
 			}
 		}
@@ -93,12 +115,24 @@ namespace CsvHelper.Tests.Reading
 			public string Name { get; set; }
 		}
 
-		private sealed class ValidateMap : ClassMap<Test>
+		private sealed class GenericValidateMap : ClassMap<Test>
 		{
-			public ValidateMap()
+			public GenericValidateMap()
 			{
 				Map(m => m.Id).Validate(args => !string.IsNullOrEmpty(args.Field));
 				Map(m => m.Name);
+			}
+		}
+
+		private sealed class NonGenericValidateMap : ClassMap<Test>
+		{
+			public NonGenericValidateMap()
+			{
+				AutoMap(System.Globalization.CultureInfo.InvariantCulture);
+				foreach (var memberMap in MemberMaps)
+				{
+					Map(typeof(Test), memberMap.Data.Member).Validate(args => !string.IsNullOrEmpty(args.Field));
+				}
 			}
 		}
 
