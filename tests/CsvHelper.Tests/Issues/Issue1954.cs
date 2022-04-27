@@ -5,25 +5,27 @@ using System.IO;
 using System.Linq;
 using Xunit;
 
-
-namespace CsvHelper.Tests.Issues {
-
-	public class Issue1954 {
-
+namespace CsvHelper.Tests.Issues
+{
+	public class Issue1954
+	{
 		[Fact]
-		public void Test1() {
+		public void Test1()
+		{
 			var data = @"field1, field2, field3
 1, 2, ""test""
 3, 4, ""TEST""";
 
-			var opts = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			var opts = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
 				Delimiter = ",",
 				TrimOptions = TrimOptions.Trim,
 				BufferSize = 44
 			};
 
 			using (var sr = new StringReader(data))
-			using (var csv = new CsvReader(sr, opts)) {
+			using (var csv = new CsvReader(sr, opts))
+			{
 				var records = csv.GetRecords<Row>().ToArray();
 
 				Assert.Equal(2, records.Length);
@@ -39,19 +41,22 @@ namespace CsvHelper.Tests.Issues {
 		}
 
 		[Fact]
-		public void Test2() {
+		public void Test2()
+		{
 			var data = @"field1, field2, field3
 1, 2, ""test""
 3, 4, ""TEST""";
 
-			var opts = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			var opts = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
 				Delimiter = ",",
 				TrimOptions = TrimOptions.Trim,
 				BufferSize = 45
 			};
 
 			using (var sr = new StringReader(data))
-			using (var csv = new CsvReader(sr, opts)) {
+			using (var csv = new CsvReader(sr, opts))
+			{
 				var records = csv.GetRecords<Row>().ToArray();
 
 				Assert.Equal(2, records.Length);
@@ -67,19 +72,22 @@ namespace CsvHelper.Tests.Issues {
 		}
 
 		[Fact]
-		public void Test3() {
+		public void Test3()
+		{
 			var data = @"field1, field2, field3
 1, 2, ""test""
 3, 4,    ""TEST""";
 
-			var opts = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			var opts = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
 				Delimiter = ",",
 				TrimOptions = TrimOptions.Trim,
 				BufferSize = 44
 			};
 
 			using (var sr = new StringReader(data))
-			using (var csv = new CsvReader(sr, opts)) {
+			using (var csv = new CsvReader(sr, opts))
+			{
 				var records = csv.GetRecords<Row>().ToArray();
 
 				Assert.Equal(2, records.Length);
@@ -95,19 +103,22 @@ namespace CsvHelper.Tests.Issues {
 		}
 
 		[Fact]
-		public void Test4() {
+		public void Test4()
+		{
 			var data = @"field1, field2, field3
 1, 2, ""test""
 3, 4,""TEST""";
 
-			var opts = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			var opts = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
 				Delimiter = ",",
 				TrimOptions = TrimOptions.Trim,
 				BufferSize = 44
 			};
 
 			using (var sr = new StringReader(data))
-			using (var csv = new CsvReader(sr, opts)) {
+			using (var csv = new CsvReader(sr, opts))
+			{
 				var records = csv.GetRecords<Row>().ToArray();
 
 				Assert.Equal(2, records.Length);
@@ -123,19 +134,22 @@ namespace CsvHelper.Tests.Issues {
 		}
 
 		[Fact]
-		public void Test5() {
+		public void Test5()
+		{
 			var data = @"field1, field2, field3
 1, 2, ""test""
 3, 4, TEST";
 
-			var opts = new CsvConfiguration(CultureInfo.InvariantCulture) {
+			var opts = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
 				Delimiter = ",",
 				TrimOptions = TrimOptions.Trim,
 				BufferSize = 44
 			};
 
 			using (var sr = new StringReader(data))
-			using (var csv = new CsvReader(sr, opts)) {
+			using (var csv = new CsvReader(sr, opts))
+			{
 				var records = csv.GetRecords<Row>().ToArray();
 
 				Assert.Equal(2, records.Length);
@@ -150,7 +164,8 @@ namespace CsvHelper.Tests.Issues {
 			}
 		}
 
-		private class Row {
+		private class Row
+		{
 			[Name("field1")] public int Field1 { get; set; }
 			[Name("field2")] public int Field2 { get; set; }
 			[Name("field3")] public string Field3 { get; set; }

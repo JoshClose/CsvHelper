@@ -4,7 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -264,7 +263,7 @@ namespace CsvHelper
 		}
 
 		private void DetectDelimiter()
-		{			
+		{
 			var text = new string(buffer, 0, charsRead);
 
 			while (text.Length > 0)
@@ -380,7 +379,7 @@ namespace CsvHelper
 							var result = ReadSpaces(ref c);
 							if (result == ReadLineResult.Incomplete)
 							{
-								fieldStartPosition = bufferPosition;	// Transport info that we are at start of field to next call (#1954).
+								fieldStartPosition = bufferPosition;
 								return result;
 							}
 						}
