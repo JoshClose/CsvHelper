@@ -1,10 +1,9 @@
-﻿// Copyright 2009-2021 Josh Close
+﻿// Copyright 2009-2022 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -264,7 +263,7 @@ namespace CsvHelper
 		}
 
 		private void DetectDelimiter()
-		{			
+		{
 			var text = new string(buffer, 0, charsRead);
 
 			while (text.Length > 0)
@@ -380,6 +379,7 @@ namespace CsvHelper
 							var result = ReadSpaces(ref c);
 							if (result == ReadLineResult.Incomplete)
 							{
+								fieldStartPosition = bufferPosition;
 								return result;
 							}
 						}

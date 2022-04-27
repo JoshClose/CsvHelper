@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2021 Josh Close
+﻿// Copyright 2009-2022 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -26,7 +26,7 @@ namespace CsvHelper.Tests.Writing
 			{
 				var records = new List<Test>
 				{
-					new Test { Dob = DateTime.Parse( "9/6/2017" ) }
+					new Test { Dob = DateTime.Parse("9/6/2017", new CultureInfo("en-US")) }
 				};
 				csv.Context.RegisterClassMap<TestMap>();
 				csv.WriteRecords(records);
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests.Writing
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.Equal(DateTime.Parse("9/8/2017"), records[0].Dob);
+				Assert.Equal(DateTime.Parse("9/8/2017", CultureInfo.InvariantCulture), records[0].Dob);
 			}
 		}
 
