@@ -101,7 +101,7 @@ namespace CsvHelper.Expressions
 					// Value type.
 
 					int index;
-					if (parameterMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !parameterMap.Data.IsIndexSet)
+					if (reader.Configuration.HasHeaderRecord && (parameterMap.Data.IsNameSet || !parameterMap.Data.IsIndexSet))
 					{
 						// Use name.
 						index = reader.GetFieldIndex(parameterMap.Data.Names.ToArray(), parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
@@ -225,7 +225,7 @@ namespace CsvHelper.Expressions
 			}
 
 			int index;
-			if (memberMap.Data.IsNameSet || reader.Configuration.HasHeaderRecord && !memberMap.Data.IsIndexSet)
+			if (reader.Configuration.HasHeaderRecord && (memberMap.Data.IsNameSet || !memberMap.Data.IsIndexSet))
 			{
 				// Use the name.
 				index = reader.GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional);

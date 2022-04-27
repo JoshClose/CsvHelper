@@ -77,26 +77,6 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		}
 
 		[Fact]
-		public void GetRecords_WithParameterMap_NoHeader_CreatesRecords()
-		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = false,
-			};
-			var parser = new ParserMock(config)
-			{
-				{ "1", "one" },
-			};
-			using (var csv = new CsvReader(parser))
-			{
-				csv.Context.RegisterClassMap<FooMap>();
-
-				// Can't read using names when no header is present.
-				Assert.Throws<ReaderException>(() => csv.GetRecords<Foo>().ToList());
-			}
-		}
-
-		[Fact]
 		public void WriteRecords()
 		{
 			var records = new List<Foo>

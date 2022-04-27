@@ -49,24 +49,6 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		}
 
 		[Fact]
-		public void GetRecords_WithNameAttributes_NoHeader_CreatesRecordsUsingIndexes()
-		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = false,
-			};
-			var parser = new ParserMock(config)
-			{
-				{ "1", "one" },
-			};
-			using (var csv = new CsvReader(parser))
-			{
-				// Can't read using names when no header is present.
-				Assert.Throws<ReaderException>(() => csv.GetRecords<Foo>().ToList());
-			}
-		}
-
-		[Fact]
 		public void WriteRecords_WithNameAttributes_DoesntUseParameterMaps()
 		{
 			var records = new List<Foo>
