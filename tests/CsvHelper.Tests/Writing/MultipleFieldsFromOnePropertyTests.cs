@@ -26,7 +26,7 @@ namespace CsvHelper.Tests.Writing
 			{
 				var records = new List<Test>
 				{
-					new Test { Dob = DateTime.Parse( "9/6/2017" ) }
+					new Test { Dob = DateTime.Parse("9/6/2017", new CultureInfo("en-US")) }
 				};
 				csv.Context.RegisterClassMap<TestMap>();
 				csv.WriteRecords(records);
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests.Writing
 				csv.Context.RegisterClassMap<TestMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				Assert.Equal(DateTime.Parse("9/8/2017"), records[0].Dob);
+				Assert.Equal(DateTime.Parse("9/8/2017", CultureInfo.InvariantCulture), records[0].Dob);
 			}
 		}
 
