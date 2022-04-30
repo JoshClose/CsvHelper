@@ -246,9 +246,20 @@ namespace CsvHelper.Expressions
 				index = memberMap.Data.Index;
 			}
 
-			// Get the field using the field index.
-			var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();
-			Expression fieldExpression = Expression.Call(Expression.Constant(reader), method, Expression.Constant(index, typeof(int)));
+			Expression fieldExpression;
+
+			if (memberMap.Data.TypeConverter is ISpanTypeConverter)
+			{
+				var method = typeof(IReaderRow).GetMethod(nameof(IReaderRow.GetFieldSpan), new[] { typeof(int) });
+				fieldExpression = Expression.Call(Expression.Constant(reader), method, Expression.Constant(index, typeof(int)));
+			}
+			else
+			{
+				// Get the field using the field index.
+				var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();
+				fieldExpression = Expression.Call(Expression.Constant(reader), method, Expression.Constant(index, typeof(int)));
+			}
+
 
 			// Validate the field.
 			if (memberMap.Data.ValidateExpression != null)
@@ -373,10 +384,19 @@ namespace CsvHelper.Expressions
 		{
 			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Configuration.CultureInfo }, reader.Context.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
 
-			Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
-			typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
+			if (memberMap.Data.TypeConverter is ISpanTypeConverter)
+			{
+				Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ISpanTypeConverter.ConvertFromSpan), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
+				typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
+				return typeConverterFieldExpression;
+			}
+			else
+			{
+				Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
+				typeConverterFieldExpression = Expression.Convert(typeConverterFieldExpression, memberMap.Data.Member.MemberType());
 
-			return typeConverterFieldExpression;
+				return typeConverterFieldExpression;
+			}
 		}
 
 		/// <summary>

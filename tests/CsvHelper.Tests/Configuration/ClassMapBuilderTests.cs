@@ -315,6 +315,11 @@ namespace CsvHelper.Tests.Configuration
 			{
 				throw new NotImplementedException();
 			}
+
+			public ReadOnlySpan<char> GetFieldSpan(int index)
+			{
+				throw new NotImplementedException();
+			}
 		}
 
 		private class FakeClass

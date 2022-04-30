@@ -109,14 +109,6 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns <c>false</c>.
-		/// </summary>
-		public static bool ShouldSkipRecord(ShouldSkipRecordArgs args)
-		{
-			return false;
-		}
-
-		/// <summary>
 		/// Returns the <see name="PrepareHeaderForMatchArgs.Header"/> as given.
 		/// </summary>
 		public static string PrepareHeaderForMatch(PrepareHeaderForMatchArgs args)

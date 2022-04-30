@@ -242,7 +242,7 @@ namespace CsvHelper
 			{
 				hasMoreRecords = parser.Read();
 			}
-			while (hasMoreRecords && shouldSkipRecord(new ShouldSkipRecordArgs(parser.Record)));
+			while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(parser.Record)) ?? false));
 
 			currentIndex = -1;
 			hasBeenRead = true;
@@ -274,7 +274,7 @@ namespace CsvHelper
 			{
 				hasMoreRecords = await parser.ReadAsync();
 			}
-			while (hasMoreRecords && shouldSkipRecord(new ShouldSkipRecordArgs(parser.Record)));
+			while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(parser.Record)) ?? false));
 
 			currentIndex = -1;
 			hasBeenRead = true;
@@ -354,6 +354,30 @@ namespace CsvHelper
 
 			var field = parser[index];
 
+			return field;
+		}
+
+		public virtual ReadOnlySpan<char> GetFieldSpan(int index)
+		{
+			CheckHasBeenRead();
+
+			// Set the current index being used so we
+			// have more information if an error occurs
+			// when reading records.
+			currentIndex = index;
+
+			if (index >= parser.Count || index < 0)
+			{
+				if (ignoreBlankLines)
+				{
+					var args = new MissingFieldFoundArgs(null, index, context);
+					missingFieldFound?.Invoke(args);
+				}
+
+				return default;
+			}
+
+			var field = parser.GetFieldSpan(index);
 			return field;
 		}
 

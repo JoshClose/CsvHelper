@@ -91,6 +91,11 @@ namespace CsvHelper.Tests.Mocks
 			return GetEnumerator();
 		}
 
+		public ReadOnlySpan<char> GetFieldSpan(int index)
+		{
+			throw new NotImplementedException();
+		}
+
 		#endregion Mock Methods
 	}
 }

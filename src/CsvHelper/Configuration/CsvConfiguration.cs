@@ -144,7 +144,7 @@ namespace CsvHelper.Configuration
 		public ShouldQuote ShouldQuote { get; set; } = ConfigurationFunctions.ShouldQuote;
 
 		/// <inheritdoc/>
-		public virtual ShouldSkipRecord ShouldSkipRecord { get; set; } = ConfigurationFunctions.ShouldSkipRecord;
+		public virtual ShouldSkipRecord ShouldSkipRecord { get; set; }
 
 		/// <inheritdoc/>
 		public virtual ShouldUseConstructorParameters ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;
