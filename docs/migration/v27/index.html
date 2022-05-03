@@ -75,7 +75,7 @@
 				<div class="column">
 					<div class="content">
 						<h1 id="migrating-from-version-26-to-27">Migrating from version 26 to 27</h1>
-<h2 id="csvconfiugration.whitespacecharacters">CsvConfiugration.WhiteSpaceCharacters</h2>
+<h2 id="csvconfiguration.whitespacechars">CsvConfiguration.WhiteSpaceChars</h2>
 <ul>
 <li>Removed <code>\t</code> from the array of default characters.</li>
 </ul>
@@ -83,7 +83,7 @@
 whitespace characters.</p>
 <pre><code class="language-cs">var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	WhiteSpaceCharacters = new[] { ' ', '\t' },
+	WhiteSpaceChars = new[] { ' ', '\t' },
 };
 </code></pre>
 <h2 id="iparserconfiguration">IParserConfiguration</h2>
