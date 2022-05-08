@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using System.Linq;
 
 namespace CsvHelper.Tests.Async
 {
@@ -19,9 +20,9 @@ namespace CsvHelper.Tests.Async
 		{
 			var parser = new ParserMock
 			{
-				new [] { "Id", "Name" },
-				new [] { "1", "one" },
-				new [] { "2", "two" },
+				{ "Id", "Name" },
+				{ "1", "one" },
+				{ "2", "two" },
 				null
 			};
 			using (var csv = new CsvReader(parser))
@@ -52,9 +53,9 @@ namespace CsvHelper.Tests.Async
 		{
 			var parser = new ParserMock
 			{
-				new [] { "Id", "Name" },
-				new [] { "1", "one" },
-				new [] { "2", "two" },
+				{ "Id", "Name" },
+				{ "1", "one" },
+				{ "2", "two" },
 				null
 			};
 			using (var csv = new CsvReader(parser))
@@ -77,9 +78,9 @@ namespace CsvHelper.Tests.Async
 		{
 			var parser = new ParserMock
 			{
-				new [] { "Id", "Name" },
-				new [] { "1", "one" },
-				new [] { "2", "two" },
+				{ "Id", "Name" },
+				{ "1", "one" },
+				{ "2", "two" },
 				null
 			};
 			using (var source = new CancellationTokenSource())

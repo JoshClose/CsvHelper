@@ -59,6 +59,7 @@ namespace CsvHelper
 		private bool inQuotes;
 		private bool inEscape;
 		private Field[] fields;
+		private string[] processedFields;
 		private int fieldsPosition;
 		private bool disposed;
 		private int quoteCount;
@@ -192,6 +193,7 @@ namespace CsvHelper
 			buffer = new char[bufferSize];
 			processFieldBuffer = new char[processFieldBufferSize];
 			fields = new Field[128];
+			processedFields = new string[128];
 		}
 
 		/// <inheritdoc/>
@@ -710,7 +712,9 @@ namespace CsvHelper
 		{
 			if (fieldsPosition >= fields.Length)
 			{
-				Array.Resize(ref fields, fields.Length * 2);
+				var newSize = fields.Length * 2;
+				Array.Resize(ref fields, newSize);
+				Array.Resize(ref processedFields, newSize);
 			}
 
 			ref var field = ref fields[fieldsPosition];
@@ -718,6 +722,7 @@ namespace CsvHelper
 			field.Length = length;
 			field.QuoteCount = quoteCount;
 			field.IsBad = fieldIsBadData;
+			field.IsProcessed = false;
 
 			fieldsPosition++;
 			quoteCount = 0;
@@ -802,6 +807,11 @@ namespace CsvHelper
 				return string.Empty;
 			}
 
+			if (field.IsProcessed)
+			{
+				return processedFields[index];
+			}
+
 			var start = field.Start + rowStartPosition;
 			var length = field.Length;
 			var quoteCount = field.QuoteCount;
@@ -827,6 +837,9 @@ namespace CsvHelper
 			var value = cacheFields
 				? fieldCache.GetField(processedField.Buffer, processedField.Start, processedField.Length)
 				: new string(processedField.Buffer, processedField.Start, processedField.Length);
+
+			processedFields[index] = value;
+			field.IsProcessed = true;
 
 			return value;
 		}
@@ -1161,6 +1174,8 @@ namespace CsvHelper
 			public int QuoteCount;
 
 			public bool IsBad;
+
+			public bool IsProcessed;
 		}
 	}
 }

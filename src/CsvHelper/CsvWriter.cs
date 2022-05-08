@@ -516,7 +516,7 @@ namespace CsvHelper
 			try
 			{
 				// Write the header. If records is a List<dynamic>, the header won't be written.
-				// This is because typeof( T ) = Object.
+				// This is because typeof(T) = Object.
 				var recordType = typeof(T);
 				var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
 				if (hasHeaderRecord && !hasHeaderBeenWritten && !isPrimitive && recordType != typeof(object))
