@@ -44,7 +44,7 @@ namespace CsvHelper
 		private int columnCount;
 		private int currentIndex = -1;
 		private bool hasBeenRead;
-		private string[] headerRecord;
+		private string[]? headerRecord;
 
 		/// <inheritdoc/>
 		public virtual int ColumnCount => columnCount;
@@ -53,7 +53,7 @@ namespace CsvHelper
 		public virtual int CurrentIndex => currentIndex;
 
 		/// <inheritdoc/>
-		public virtual string[] HeaderRecord => headerRecord;
+		public virtual string[]? HeaderRecord => headerRecord;
 
 		/// <inheritdoc/>
 		public virtual CsvContext Context => context;
@@ -78,7 +78,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvReader(TextReader reader, CsvConfiguration configuration) : this(new CsvParser(reader, configuration)) { }
+		public CsvReader(TextReader reader, IReaderConfiguration configuration) : this(new CsvParser(reader, configuration)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="IParser" />.

@@ -21,7 +21,7 @@ namespace CsvHelper
 	/// </summary>
 	public class CsvParser : IParser, IDisposable
 	{
-		private readonly CsvConfiguration configuration;
+		private readonly IParserConfiguration configuration;
 		private readonly FieldCache fieldCache = new FieldCache();
 		private readonly TextReader reader;
 		private readonly char quote;
@@ -168,7 +168,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser(TextReader reader, CsvConfiguration configuration)
+		public CsvParser(TextReader reader, IParserConfiguration configuration)
 		{
 			configuration.Validate();
 

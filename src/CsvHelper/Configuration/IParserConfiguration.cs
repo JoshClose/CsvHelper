@@ -158,5 +158,10 @@ namespace CsvHelper.Configuration
 		/// Default is <c>true</c>.
 		/// </summary>
 		bool ExceptionMessagesContainRawData { get; }
+
+		/// <summary>
+		/// Validates the configuration.
+		/// </summary>
+		void Validate();
 	}
 }

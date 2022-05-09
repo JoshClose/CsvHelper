@@ -28,7 +28,7 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the header record.
 		/// </summary>
-		string[] HeaderRecord { get; }
+		string[]? HeaderRecord { get; }
 
 		/// <summary>
 		/// Gets the parser.
