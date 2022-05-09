@@ -19,7 +19,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldSkipRecord = args => args.Record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace),
 			};
 			var parser = new ParserMock(config)
 			{
@@ -42,7 +42,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldSkipRecord = args => args.Record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace),
 			};
 			var parser = new ParserMock(config)
 			{
@@ -65,7 +65,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				ShouldSkipRecord = args => args.Record[0].StartsWith("skipme") || args.Record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Row[0].StartsWith("skipme") || args.Row.Parser.Record.All(string.IsNullOrWhiteSpace),
 			};
 
 			var parser = new ParserMock(config)

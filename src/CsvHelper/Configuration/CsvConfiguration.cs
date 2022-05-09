@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <inheritdoc/>
-		public virtual IComparer<string> DynamicPropertySort { get; set; }
+		public virtual IComparer<string>? DynamicPropertySort { get; set; }
 
 		/// <inheritdoc/>
 		public virtual Encoding Encoding { get; set; } = Encoding.UTF8;
@@ -135,7 +135,7 @@ namespace CsvHelper.Configuration
 		public virtual ReadingExceptionOccurred ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 		/// <inheritdoc/>
-		public virtual ReferenceHeaderPrefix ReferenceHeaderPrefix { get; set; }
+		public virtual ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; set; }
 
 		/// <inheritdoc/>
 		public virtual bool SanitizeForInjection { get; set; }
@@ -144,7 +144,7 @@ namespace CsvHelper.Configuration
 		public ShouldQuote ShouldQuote { get; set; } = ConfigurationFunctions.ShouldQuote;
 
 		/// <inheritdoc/>
-		public virtual ShouldSkipRecord ShouldSkipRecord { get; set; } = ConfigurationFunctions.ShouldSkipRecord;
+		public virtual ShouldSkipRecord? ShouldSkipRecord { get; set; }
 
 		/// <inheritdoc/>
 		public virtual ShouldUseConstructorParameters ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;

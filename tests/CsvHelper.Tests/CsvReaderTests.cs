@@ -641,7 +641,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				ShouldSkipRecord = args => args.Record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace),
 			};
 
 			var parserMock = new ParserMock(config)
@@ -672,7 +672,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				ShouldSkipRecord = args => args.Record[1] == "2",
+				ShouldSkipRecord = args => args.Row[1] == "2",
 			};
 
 			var parserMock = new ParserMock(config)

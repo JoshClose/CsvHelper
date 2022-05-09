@@ -71,6 +71,8 @@ namespace CsvHelper
 		private bool fieldIsBadData;
 		private bool fieldIsQuoted;
 		private bool isProcessingField;
+		private bool isRecordProcessed;
+		private string[]? record;
 
 		/// <inheritdoc/>
 		public long CharCount => charCount;
@@ -82,10 +84,15 @@ namespace CsvHelper
 		public int Row => row;
 
 		/// <inheritdoc/>
-		public string[] Record
+		public string[]? Record
 		{
 			get
 			{
+				if (isRecordProcessed == true)
+				{
+					return this.record;
+				}
+
 				if (fieldsPosition == 0)
 				{
 					return null;
@@ -98,7 +105,10 @@ namespace CsvHelper
 					record[i] = this[i];
 				}
 
-				return record;
+				this.record = record;
+				isRecordProcessed = true;
+
+				return this.record;
 			}
 		}
 
@@ -199,6 +209,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public bool Read()
 		{
+			isRecordProcessed = false;
 			rowStartPosition = bufferPosition;
 			fieldStartPosition = rowStartPosition;
 			fieldsPosition = 0;
@@ -233,6 +244,7 @@ namespace CsvHelper
 		/// <inheritdoc/>
 		public async Task<bool> ReadAsync()
 		{
+			isRecordProcessed = false;
 			rowStartPosition = bufferPosition;
 			fieldStartPosition = rowStartPosition;
 			fieldsPosition = 0;

@@ -85,7 +85,7 @@ namespace CsvHelper.Configuration
 		/// Gets the callback that will be called to
 		/// determine whether to skip the given record or not.
 		/// </summary>
-		ShouldSkipRecord ShouldSkipRecord { get; }
+		ShouldSkipRecord? ShouldSkipRecord { get; }
 
 		/// <summary>
 		/// Gets a value indicating if private

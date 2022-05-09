@@ -23,15 +23,15 @@ namespace CsvHelper
 		/// <summary>
 		/// The record.
 		/// </summary>
-		public readonly string[] Record;
+		public readonly IReaderRow Row;
 
 		/// <summary>
 		/// Creates a new instance of ShouldSkipRecordArgs.
 		/// </summary>
-		/// <param name="record">The record.</param>
-		public ShouldSkipRecordArgs(string[] record)
+		/// <param name="row">The row.</param>
+		public ShouldSkipRecordArgs(IReaderRow row)
 		{
-			Record = record;
+			Row = row;
 		}
 	}
 }

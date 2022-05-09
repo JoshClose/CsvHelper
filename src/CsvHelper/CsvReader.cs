@@ -30,7 +30,7 @@ namespace CsvHelper
 		private readonly MemberMapData reusableMemberMapData = new MemberMapData(null);
 		private readonly bool hasHeaderRecord;
 		private readonly HeaderValidated headerValidated;
-		private readonly ShouldSkipRecord shouldSkipRecord;
+		private readonly ShouldSkipRecord? shouldSkipRecord;
 		private readonly ReadingExceptionOccurred readingExceptionOccurred;
 		private readonly CultureInfo cultureInfo;
 		private readonly bool ignoreBlankLines;
@@ -241,11 +241,11 @@ namespace CsvHelper
 			do
 			{
 				hasMoreRecords = parser.Read();
+				hasBeenRead = true;
 			}
-			while (hasMoreRecords && shouldSkipRecord(new ShouldSkipRecordArgs(parser.Record)));
+			while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(this)) ?? false));
 
 			currentIndex = -1;
-			hasBeenRead = true;
 
 			if (detectColumnCountChanges && hasMoreRecords)
 			{
@@ -273,11 +273,11 @@ namespace CsvHelper
 			do
 			{
 				hasMoreRecords = await parser.ReadAsync();
+				hasBeenRead = true;
 			}
-			while (hasMoreRecords && shouldSkipRecord(new ShouldSkipRecordArgs(parser.Record)));
+			while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(this)) ?? false));
 
 			currentIndex = -1;
-			hasBeenRead = true;
 
 			if (detectColumnCountChanges && hasMoreRecords)
 			{

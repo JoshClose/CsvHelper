@@ -42,7 +42,7 @@ namespace CsvHelper
 		/// It is much more efficient to only get the fields you need. If
 		/// you need all fields, then use this.
 		/// </summary>
-		string[] Record { get; }
+		string[]? Record { get; }
 
 		/// <summary>
 		/// Gets the raw record for the current row.
