@@ -25,6 +25,7 @@ namespace CsvHelper.TypeConversion
 		{
 			Array array;
 			var type = memberMapData.Member.MemberType().GetElementType();
+			var converter = row.Context.TypeConverterCache.GetConverter(type);
 
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{
@@ -60,7 +61,8 @@ namespace CsvHelper.TypeConversion
 				var arrayIndex = 0;
 				for (var i = memberMapData.Index; i <= indexEnd; i++)
 				{
-					array.SetValue(row.GetField(type, i), arrayIndex);
+					var field = converter.ConvertFromString(row.GetField(i), row, memberMapData);
+					array.SetValue(field, arrayIndex);
 					arrayIndex++;
 				}
 			}

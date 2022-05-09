@@ -12,10 +12,11 @@ using System.IO;
 using Xunit;
 using System.Reflection;
 using CsvHelper.Tests.Mocks;
+using CsvHelper.Configuration.Attributes;
 
 namespace CsvHelper.Tests.TypeConversion
 {
-	
+
 	public class ArrayConverterTests
 	{
 		[Fact]
@@ -144,6 +145,30 @@ namespace CsvHelper.Tests.TypeConversion
 				Assert.Equal(4, list[1]);
 				Assert.Equal(6, list[2]);
 			}
+		}
+
+		[Fact]
+		public void GetRecords_NullValuesAttributeWithIndex_UsesCustomNullValue()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			var parser = new ParserMock(config)
+			{
+				{ "NULL", "", "2" },
+			};
+			using (var csv = new CsvReader(parser))
+			{
+				var records = csv.GetRecords<NullValuesAttributeIndexTest>().ToList();
+			}
+		}
+
+		private class NullValuesAttributeIndexTest
+		{
+			[Index(0, 2)]
+			[NullValues("NULL")]
+			public int?[] List { get; set; }
 		}
 
 		private class Test

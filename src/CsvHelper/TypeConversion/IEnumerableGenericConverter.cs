@@ -27,6 +27,7 @@ namespace CsvHelper.TypeConversion
 			var listType = typeof(List<>);
 			listType = listType.MakeGenericType(type);
 			var list = (IList)ObjectResolver.Current.Resolve(listType);
+			var converter = row.Context.TypeConverterCache.GetConverter(type);
 
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{
@@ -52,7 +53,7 @@ namespace CsvHelper.TypeConversion
 
 				for (var i = memberMapData.Index; i <= indexEnd; i++)
 				{
-					var field = row.GetField(type, i);
+					var field = converter.ConvertFromString(row.GetField(i), row, memberMapData);
 
 					list.Add(field);
 				}

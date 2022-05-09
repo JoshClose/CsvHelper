@@ -67,7 +67,7 @@ namespace CsvHelper.Tests.Mappings.Property
 			public FooMap()
 			{
 				Map(m => m.Id).Index(0);
-				Map(m => m.Name).Constant("Bar");
+				Map(m => m.Name).Index(1).Constant("Bar");
 			}
 		}
 	}

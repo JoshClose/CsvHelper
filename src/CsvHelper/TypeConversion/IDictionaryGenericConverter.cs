@@ -27,6 +27,7 @@ namespace CsvHelper.TypeConversion
 			var dictionaryType = typeof(Dictionary<,>);
 			dictionaryType = dictionaryType.MakeGenericType(keyType, valueType);
 			var dictionary = (IDictionary)ObjectResolver.Current.Resolve(dictionaryType);
+			var converter = row.Context.TypeConverterCache.GetConverter(valueType);
 
 			var indexEnd = memberMapData.IndexEnd < memberMapData.Index
 				? row.Parser.Count - 1
@@ -34,7 +35,7 @@ namespace CsvHelper.TypeConversion
 
 			for (var i = memberMapData.Index; i <= indexEnd; i++)
 			{
-				var field = row.GetField(valueType, i);
+				var field = converter.ConvertFromString(row.GetField(i), row, memberMapData);
 
 				dictionary.Add(row.HeaderRecord[i], field);
 			}

@@ -27,6 +27,7 @@ namespace CsvHelper.TypeConversion
 			// as long as they implement IList.
 			var list = (IList)ObjectResolver.Current.Resolve(memberMapData.Member.MemberType());
 			var type = memberMapData.Member.MemberType().GetGenericArguments()[0];
+			var converter = row.Context.TypeConverterCache.GetConverter(type);
 
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{
@@ -52,8 +53,7 @@ namespace CsvHelper.TypeConversion
 
 				for (var i = memberMapData.Index; i <= indexEnd; i++)
 				{
-					var field = row.GetField(type, i);
-
+					var field = converter.ConvertFromString(row.GetField(i), row, memberMapData);
 					list.Add(field);
 				}
 			}
