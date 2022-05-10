@@ -201,7 +201,7 @@ namespace CsvHelper.Tests.Parsing
 		}
 
 		[Fact]
-		public void Parse_MultipleLines_DetectsDelimiterFromFirstLineOnly()
+		public void Parse_MultipleLines_DetectsDelimiterThatIsOnEveryLine()
 		{
 			var s = new StringBuilder();
 			s.Append("Id;Name\r\n");
@@ -239,6 +239,44 @@ namespace CsvHelper.Tests.Parsing
 				parser.Read();
 
 				Assert.Equal("`", parser.Delimiter);
+			}
+		}
+
+		[Fact]
+		public void Parse_CulturesSeparatorOccursLessButIsOnEveryLine_CulturesSeparatorIsDetected()
+		{
+			var s = new StringBuilder();
+			s.Append("1;2,3;4\r\n");
+			s.Append("5;6,7;8\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectDelimiter = true,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.Equal(",", parser.Delimiter);
+			}
+		}
+
+		[Fact]
+		public void Parse_CulturesSeparatorOccursLessAndIsNotOnEveryLine_CulturesSeparatorIsDetected()
+		{
+			var s = new StringBuilder();
+			s.Append("1;2;3;4\r\n");
+			s.Append("5;6,7;8\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectDelimiter = true,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.Equal(";", parser.Delimiter);
 			}
 		}
 	}

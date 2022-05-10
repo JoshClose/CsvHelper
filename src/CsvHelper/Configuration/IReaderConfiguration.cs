@@ -46,11 +46,6 @@ namespace CsvHelper.Configuration
 		ReadingExceptionOccurred ReadingExceptionOccurred { get; }
 
 		/// <summary>
-		/// Gets the culture info used to read an write CSV files.
-		/// </summary>
-		CultureInfo CultureInfo { get; }
-
-		/// <summary>
 		/// Prepares the header field for matching against a member name.
 		/// The header field and the member name are both ran through this function.
 		/// You should do things like trimming, removing whitespace, removing underscores,

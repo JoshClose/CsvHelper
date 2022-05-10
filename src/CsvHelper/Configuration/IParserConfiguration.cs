@@ -15,6 +15,11 @@ namespace CsvHelper.Configuration
 	public interface IParserConfiguration
 	{
 		/// <summary>
+		/// Gets the culture info used to read an write CSV files.
+		/// </summary>
+		CultureInfo CultureInfo { get; }
+
+		/// <summary>
 		/// Cache fields that are created when parsing.
 		/// Default is false.
 		/// </summary>
