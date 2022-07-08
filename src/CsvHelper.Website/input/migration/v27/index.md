@@ -1,6 +1,6 @@
 ﻿# Migrating from version 26 to 27
 
-## CsvConfiugration.WhiteSpaceCharacters
+## CsvConfiguration.WhiteSpaceCharacters
 
 - Removed `\t` from the array of default characters.
 

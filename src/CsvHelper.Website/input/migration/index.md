@@ -2,6 +2,7 @@
 
 Migration steps for major version bumps.
 
+- [27 to 28](~/migration/v28)
 - [26 to 27](~/migration/v27)
 - [25 to 26](~/migration/v26)
 - [24 to 25](~/migration/v25)
