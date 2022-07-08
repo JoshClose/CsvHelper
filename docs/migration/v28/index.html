@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>V27 | CsvHelper</title>
+	<title>V28 | CsvHelper</title>
 
 	
 	
@@ -74,36 +74,36 @@
 		<div class="columns is-variable is-1">
 				<div class="column">
 					<div class="content">
-						<h1 id="migrating-from-version-26-to-27">Migrating from version 26 to 27</h1>
-<h2 id="csvconfiguration.whitespacecharacters">CsvConfiguration.WhiteSpaceCharacters</h2>
+						<h1 id="migrating-from-version-27-to-28">Migrating from version 27 to 28</h1>
+<h2 id="shouldskiprecordargs">ShouldSkipRecordArgs</h2>
 <ul>
-<li>Removed <code>\t</code> from the array of default characters.</li>
+<li><code>string[] ShouldSkipRecordArgs.Record</code> changed to <code>IRecordRow ShouldSkipRecordArgs.Row</code>.</li>
 </ul>
-<p>If you are expecting <code>\t</code> to be trimmed, you will need to add this to the
-whitespace characters.</p>
-<pre><code class="language-cs">var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+<pre><code class="language-cs">// 27
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	WhiteSpaceCharacters = new[] { ' ', '\t' },
+	ShouldSkipRecord = args =&gt; args.Record.Length &lt; 10;
+};
+
+// 28
+
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+{
+	ShouldSkipRecord = args =&gt; args.Parser.Record.Length &lt; 10;
 };
 </code></pre>
-<h2 id="iparserconfiguration">IParserConfiguration</h2>
+<h2 id="configurationfunctions.shouldskiprecord">ConfigurationFunctions.ShouldSkipRecord</h2>
 <ul>
-<li>Added property <code>bool DetectDelimiter { get; }</code>.</li>
-<li>Added property <code>string[] DetectDelimiterValues { get; }</code>.</li>
+<li>Removed <code>ConfigurationFunctions.ShouldSkipRecord</code>.</li>
 </ul>
-<p>Any class that implements <code>IParserConfiguration</code> will need these changes
-applied to it.</p>
-<h2 id="iwriter">IWriter</h2>
-<ul>
-<li>Added method <code>Task WriteRecordsAsync&lt;T&gt;(IAsyncEnumerable&lt;T&gt; records, CancellationToken cancellationToken = default)</code>.
-This does not apply to projects that reference the <code>net45</code> version of CsvHelper.</li>
-</ul>
-<p>Any class that implements <code>IWriter</code> will need these changes applied to it.</p>
-<h2 id="iparser">IParser</h2>
-<ul>
-<li>Added property <code>string Delimiter { get; }</code>.</li>
-</ul>
-<p>Any class that implements <code>IParser</code> will need these changes applied to it.</p>
+<p><code>null</code> can be used in place of this now, and is the default.</p>
+<pre><code class="language-cs">var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+{
+	ShouldSkipRecord = null
+};
+</code></pre>
+<h2 id="iparserconfiguration.validate">IParserConfiguration.Validate</h2>
+<p>Implement the <code>Validate</code> method.</p>
 
 					</div>
 				</div>

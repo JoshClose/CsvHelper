@@ -384,7 +384,166 @@
 				<div class="column">
 					<div class="content">
 						<h1 id="type-conversion">Type Conversion</h1>
-<p>Coming soon...</p>
+<p>When reading and writing a custom class will get converted to and from
+a CSV row. Each CSV field can be converted to and from a class property.
+This conversion for class properties is done via type converters.</p>
+<p>There are many built in converters already available to you.</p>
+<table>
+<thead>
+<tr>
+<th>CsvHelper Converter</th>
+<th>C# type keyword</th>
+<th>.NET Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ArrayConverter</td>
+<td>[ ]</td>
+<td>System.Array</td>
+</tr>
+<tr>
+<td>BigIntegerConverter</td>
+<td></td>
+<td>System.Numerics.BigInteger</td>
+</tr>
+<tr>
+<td>BooleanConverter</td>
+<td>bool</td>
+<td>System.Boolean</td>
+</tr>
+<tr>
+<td>ByteArrayConverter</td>
+<td>byte[ ]</td>
+<td>System.Array</td>
+</tr>
+<tr>
+<td>ByteConverter</td>
+<td>byte</td>
+<td>System.Byte</td>
+</tr>
+<tr>
+<td>CharConverter</td>
+<td>char</td>
+<td>System.Char</td>
+</tr>
+<tr>
+<td>CollectionGenericConverter</td>
+<td></td>
+<td>System.Collections.IList</td>
+</tr>
+<tr>
+<td>DateOnlyConverter</td>
+<td></td>
+<td>System.DateOnly</td>
+</tr>
+<tr>
+<td>DateTimeConverter</td>
+<td></td>
+<td>System.DateTime</td>
+</tr>
+<tr>
+<td>DateTimeOffsetConverter</td>
+<td></td>
+<td>System.DateTimeOffset</td>
+</tr>
+<tr>
+<td>DecimalConverter</td>
+<td>decimal</td>
+<td>System.Decimal</td>
+</tr>
+<tr>
+<td>DoubleConverter</td>
+<td>double</td>
+<td>System.Double</td>
+</tr>
+<tr>
+<td>EnumConverter</td>
+<td>enum</td>
+<td>System.Enum</td>
+</tr>
+<tr>
+<td>GuidConverter</td>
+<td></td>
+<td>System.Guid</td>
+</tr>
+<tr>
+<td>IDictionaryConverter</td>
+<td></td>
+<td>System.Collections.Generic.Dictionary&lt;string, string&gt;</td>
+</tr>
+<tr>
+<td>IDictionaryGenericConverter</td>
+<td></td>
+<td>System.Collections.GenericDictionary&lt;TKey, TValue&gt;</td>
+</tr>
+<tr>
+<td>IEnumerableConverter</td>
+<td></td>
+<td>System.Collections.Generic.List&lt;string&gt;</td>
+</tr>
+<tr>
+<td>Int16Converter</td>
+<td>short</td>
+<td>System.Int16</td>
+</tr>
+<tr>
+<td>Int32Converter</td>
+<td>int</td>
+<td>System.Int32</td>
+</tr>
+<tr>
+<td>Int64Converter</td>
+<td>long</td>
+<td>System.Int64</td>
+</tr>
+<tr>
+<td>NullableConverter</td>
+<td></td>
+<td>System.Nullable&lt;T&gt;</td>
+</tr>
+<tr>
+<td>SByteConverter</td>
+<td>sbyte</td>
+<td>System.SByte</td>
+</tr>
+<tr>
+<td>SingleConverter</td>
+<td>float</td>
+<td>System.Single</td>
+</tr>
+<tr>
+<td>StringConverter</td>
+<td>string</td>
+<td>System.String</td>
+</tr>
+<tr>
+<td>TimeOnlyConverter</td>
+<td></td>
+<td>System.TimeOnly</td>
+</tr>
+<tr>
+<td>UInt16Converter</td>
+<td>ushort</td>
+<td>System.UInt16</td>
+</tr>
+<tr>
+<td>UInt32Converter</td>
+<td>uint</td>
+<td>System.UInt32</td>
+</tr>
+<tr>
+<td>UInt64Converter</td>
+<td>ulong</td>
+<td>System.UInt64</td>
+</tr>
+<tr>
+<td>UriConverter</td>
+<td></td>
+<td>System.Uri</td>
+</tr>
+</tbody>
+</table>
 
 					</div>
 				</div>
