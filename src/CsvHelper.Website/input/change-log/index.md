@@ -1,5 +1,39 @@
 ﻿# Change Log
 
+### 28.0.0
+
+#### Features
+
+- Updated delimiter detection algorithm.
+  - Strips escaped text based on mode.
+  - Only looks for delimiters that appear on every line.
+  - Uses `CultureInfo.TextInfo.ListSeparator` if it's on every line.
+- Cache processed fields in parser so they're not processed on every access.
+- Cache `CsvParser.Record[]` so multiple calls wont' regenerate it.
+- `ShouldSkipRecord` is `null` by default and won't get called if not set.
+- `ShouldSkipRecordArgs` holds `IReaderRow` now instead of `string[]`.
+- Changed `CsvParser` constructor to take in `IParserConfiguration` instead of `CsvConfiguration`.
+- Changed `CsvReader` constructor to take in `IReaderConfiguration` instead of `CsvConfiguration`.
+
+#### Bug Fixes
+
+- Fixed issue where collection types weren't getting the correct `MemberMapData` passed to them when converting the item.
+- Fixed issue where `BadDataFound` was being called multiple times for the same field.
+- Fixed issue where you can't read with no header when a name has been mapped.
+- Fixed issue where quoted fields not correctly being identified if there was a buffer swap on white space before quote.
+
+#### Breaking Changes
+
+- `ShouldSkipRecordArgs` holds `IReaderRow` now instead of `string[]`.
+- Removed `ConfigurationFunctions.ShouldSkipRecord` as the default is now `null`.
+- Added `IParserConfiguration.Validate`.
+
+### 27.2.1
+
+#### Bug Fixes
+
+- Changed dependencies to minimal needed version.
+
 ### 27.2.0
 
 #### Features
