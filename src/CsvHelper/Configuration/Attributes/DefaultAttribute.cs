@@ -16,14 +16,14 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Gets the default value.
 		/// </summary>
-		public object Default { get; private set; }
+		public object? Default { get; private set; }
 
 		/// <summary>
 		/// The default value that will be used when reading when
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value</param>
-		public DefaultAttribute(object defaultValue)
+		public DefaultAttribute(object? defaultValue)
 		{
 			Default = defaultValue;
 		}
