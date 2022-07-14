@@ -2,7 +2,7 @@
 
 ## ShouldSkipRecordArgs
 
-- `string[] ShouldSkipRecordArgs.Record` changed to `IRecordRow ShouldSkipRecordArgs.Row`.
+- `string[] ShouldSkipRecordArgs.Record` changed to `IReaderRow ShouldSkipRecordArgs.Row`.
 
 ```cs
 // 27

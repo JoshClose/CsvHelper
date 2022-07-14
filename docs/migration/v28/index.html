@@ -77,7 +77,7 @@
 						<h1 id="migrating-from-version-27-to-28">Migrating from version 27 to 28</h1>
 <h2 id="shouldskiprecordargs">ShouldSkipRecordArgs</h2>
 <ul>
-<li><code>string[] ShouldSkipRecordArgs.Record</code> changed to <code>IRecordRow ShouldSkipRecordArgs.Row</code>.</li>
+<li><code>string[] ShouldSkipRecordArgs.Record</code> changed to <code>IReaderRow ShouldSkipRecordArgs.Row</code>.</li>
 </ul>
 <pre><code class="language-cs">// 27
 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
