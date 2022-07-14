@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 28.0.1
+
+#### Bug Fixes
+
+- Disabled nullable until all null issues are fixed.
+
 ### 28.0.0
 
 #### Features
