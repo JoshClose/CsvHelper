@@ -89,7 +89,7 @@ var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 
 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	ShouldSkipRecord = args =&gt; args.Row.Parser.Length &lt; 10;
+	ShouldSkipRecord = args =&gt; args.Row.Parser.Record.Length &lt; 10;
 };
 </code></pre>
 <h2 id="configurationfunctions.shouldskiprecord">ConfigurationFunctions.ShouldSkipRecord</h2>

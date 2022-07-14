@@ -15,7 +15,7 @@ var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 
 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	ShouldSkipRecord = args => args.Row.Parser.Length < 10;
+	ShouldSkipRecord = args => args.Row.Parser.Record.Length < 10;
 };
 ```
 
