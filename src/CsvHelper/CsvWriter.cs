@@ -601,7 +601,7 @@ namespace CsvHelper
 				}
 
 				var getRecordType = recordType == typeof(object);
-				await foreach (var record in records)
+				await foreach (var record in records.ConfigureAwait(false))
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
@@ -663,7 +663,7 @@ namespace CsvHelper
 		public virtual async Task NextRecordAsync()
 		{
 			WriteToBuffer(newLine);
-			await FlushBufferAsync();
+			await FlushBufferAsync().ConfigureAwait(false);
 
 			index = 0;
 			row++;
@@ -695,7 +695,7 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual async Task FlushBufferAsync()
 		{
-			await writer.WriteAsync(buffer, 0, bufferPosition);
+			await writer.WriteAsync(buffer, 0, bufferPosition).ConfigureAwait(false);
 			bufferPosition = 0;
 		}
 

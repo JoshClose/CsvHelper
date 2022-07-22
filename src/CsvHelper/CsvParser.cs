@@ -258,7 +258,7 @@ namespace CsvHelper
 			{
 				if (bufferPosition >= charsRead)
 				{
-					if (!await FillBufferAsync())
+					if (!await FillBufferAsync().ConfigureAwait(false))
 					{
 						return ReadEndOfFile();
 					}
@@ -838,7 +838,7 @@ namespace CsvHelper
 			rowStartPosition = 0;
 			bufferPosition = charsLeft;
 
-			charsRead = await reader.ReadAsync(buffer, charsLeft, buffer.Length - charsLeft);
+			charsRead = await reader.ReadAsync(buffer, charsLeft, buffer.Length - charsLeft).ConfigureAwait(false);
 			if (charsRead == 0)
 			{
 				return false;
