@@ -17,7 +17,7 @@ void Main()
         HasHeaderRecord = false,
     };
     using (var reader = new StreamReader("path\\to\\file.csv"))
-    using (var csv = new CsvReader(reader, ))
+    using (var csv = new CsvReader(reader, config))
     {
         csv.Context.RegisterClassMap<FooMap>();
         var records = csv.GetRecords<Foo>();
