@@ -385,13 +385,22 @@
 					<div class="content">
 						<h1 id="writing">Writing</h1>
 <h2 class="title is-2 has-text-danger">Injection Warning</h2>
-<p>When opening a CSV in an external program, a formula in a field could be ran that contains a vulnerability. Read more here: <a href="https://www.contextis.com/blog/comma-separated-vulnerabilities">Comma Separated Vulnerabilities</a>. Due to this issue, if a field starts with characters <code>=</code>, <code>&#64;</code>, <code>+</code>, or <code>-</code>, that field will be prepended with a <code>\t</code>. If the field is quoted, the <code>\t</code> will come after the <code>&quot;</code>.</p>
+<p>When opening a CSV in an external program, a formula in a field could be ran that contains a vulnerability.
+Read more here: <a href="http://georgemauer.net/2017/10/07/csv-injection.html">The Absurdly Underestimated Dangers of CSV Injection</a>.
+Due to this issue, there is an option <code>SanitizeForInjection</code>.
+If a field starts with characters <code>=</code>, <code>&#64;</code>, <code>+</code>, or <code>-</code>, that field will be prepended with a <code>\t</code>.
+If the field is quoted, the <code>\t</code> will come after the <code>&quot;</code>.</p>
 <p><code>=one</code> -&gt; <code>\t=one</code></p>
 <p><code>&quot;=one&quot;</code> -&gt; <code>&quot;\t=one&quot;</code></p>
-<p>You are able to turn this functionality off in configuration.</p>
-<pre><code class="language-cs">csv.Configuration.SanitizeForInjection = false;
+<p>This option is disabled by default because the primary goal if this library is to read and write CSV
+files. If you are storing user entered data that you haven't sanitized yourself and you're letting
+it be accessed by people that may open in Excel/Sheets/etc, you might consider enabling this feature.
+The <code>\t</code> is not removed when reading.</p>
+<p>You can enable this functionality in the configuration.</p>
+<pre><code class="language-cs">csv.Configuration.SanitizeForInjection = true;
 </code></pre>
-<p>When writing, you can throw an enumerable of class objects, dynamic objects, anonymous type objects, or pretty much anything else, and it will get written.</p>
+<p>When writing, you can throw an enumerable of class objects, dynamic objects, anonymous type objects, or pretty much
+anything else, and it will get written.</p>
 <table>
 <thead>
 <tr>
