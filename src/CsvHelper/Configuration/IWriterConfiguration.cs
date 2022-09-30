@@ -51,11 +51,9 @@ namespace CsvHelper.Configuration
 		TrimOptions TrimOptions { get; }
 
 		/// <summary>
-		/// Gets a value indicating if fields should be sanitized
-		/// to prevent malicious injection. This covers MS Excel, 
-		/// Google Sheets and Open Office Calc.
+		/// Gets the injection options.
 		/// </summary>
-		bool SanitizeForInjection { get; }
+		InjectionOptions InjectionOptions { get; }
 
 		/// <summary>
 		/// Gets the characters that are used for injection attacks.

@@ -50,7 +50,7 @@ namespace CsvHelper
 		private readonly string newLine;
 		private readonly char[] injectionCharacters;
 		private readonly char injectionEscapeCharacter;
-		private readonly bool sanitizeForInjection;
+		private readonly InjectionOptions injectionOptions;
 		private readonly CsvMode mode;
 		private readonly string escapeQuoteString;
 		private readonly string escapeDelimiterString;
@@ -120,7 +120,7 @@ namespace CsvHelper
 			newLine = configuration.NewLine;
 			quote = configuration.Quote;
 			quoteString = configuration.Quote.ToString();
-			sanitizeForInjection = configuration.SanitizeForInjection;
+			injectionOptions = configuration.InjectionOptions;
 			shouldQuote = configuration.ShouldQuote;
 			trimOptions = configuration.TrimOptions;
 
@@ -176,7 +176,7 @@ namespace CsvHelper
 					.Replace(newLine, escapeNewlineString);
 			}
 
-			if (sanitizeForInjection)
+			if (injectionOptions != InjectionOptions.None)
 			{
 				field = SanitizeForInjection(field);
 			}
@@ -740,14 +740,54 @@ namespace CsvHelper
 				return field;
 			}
 
+			int injectionCharIndex;
 			if (ArrayHelper.Contains(injectionCharacters, field[0]))
 			{
-				return injectionEscapeCharacter + field;
+				injectionCharIndex = 0;
+			}
+			else if (field[0] == quote && field[field.Length - 1] == quote && ArrayHelper.Contains(injectionCharacters, field[1]))
+			{
+				injectionCharIndex = 1;
+			}
+			else
+			{
+				return field;
 			}
 
-			if (field[0] == quote && ArrayHelper.Contains(injectionCharacters, field[1]))
+			if (injectionOptions == InjectionOptions.Exception)
 			{
-				return field[0].ToString() + injectionEscapeCharacter.ToString() + field.Substring(1);
+				throw new WriterException(context, $"Injection character '{field[injectionCharIndex]}' detected");
+			}
+
+			if (injectionOptions == InjectionOptions.Escape)
+			{
+				if (injectionCharIndex == 0)
+				{
+					// =1+"2 -> "'=1+""2"
+					field = quoteString + injectionEscapeCharacter + field.Replace(quoteString, escapeQuoteString) + quoteString;
+				}
+				else
+				{
+					// "=1+2" -> "'=1+2"
+					field = quoteString + injectionEscapeCharacter + field.Substring(injectionCharIndex);
+				}
+			}
+			else if (injectionOptions == InjectionOptions.Strip)
+			{
+				while (true)
+				{
+					field = field.Substring(1);
+
+					if (field.Length == 0 || !ArrayHelper.Contains(injectionCharacters, field[0]))
+					{
+						break;
+					}
+				}
+
+				if (injectionCharIndex == 1)
+				{
+					field = quoteString + field;
+				}
 			}
 
 			return field;

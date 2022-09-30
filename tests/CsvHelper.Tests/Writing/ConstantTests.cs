@@ -73,7 +73,6 @@ namespace CsvHelper.Tests.Writing
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				SanitizeForInjection = false,
 			};
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))

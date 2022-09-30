@@ -88,10 +88,13 @@ namespace CsvHelper.Configuration
 		public virtual bool IncludePrivateMembers { get; set; }
 
 		/// <inheritdoc/>
-		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-' };
+		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-', '\t', '\r' };
 
 		/// <inheritdoc/>
-		public virtual char InjectionEscapeCharacter { get; set; } = '\t';
+		public virtual char InjectionEscapeCharacter { get; set; } = '\'';
+
+		/// <inheritdoc />
+		public virtual InjectionOptions InjectionOptions { get; set; }
 
 		/// <inheritdoc/>
 		public bool IsNewLineSet { get; private set; }
@@ -136,9 +139,6 @@ namespace CsvHelper.Configuration
 
 		/// <inheritdoc/>
 		public virtual ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; set; }
-
-		/// <inheritdoc/>
-		public virtual bool SanitizeForInjection { get; set; }
 
 		/// <inheritdoc/>
 		public ShouldQuote ShouldQuote { get; set; } = ConfigurationFunctions.ShouldQuote;
