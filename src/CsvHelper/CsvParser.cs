@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
+using CsvHelper.Delegates;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -276,75 +277,11 @@ namespace CsvHelper
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void DetectDelimiter()
 		{
 			var text = new string(buffer, 0, charsRead);
-
-			if (mode == CsvMode.RFC4180)
-			{
-				// Remove text in between pairs of quotes.
-				text = Regex.Replace(text, $"({quote}.*?{quote})", string.Empty);
-			}
-			else if (mode == CsvMode.Escape)
-			{
-				// Remove escaped characters.
-				text = Regex.Replace(text, $"({escape}.)", string.Empty);
-			}
-
-			var lineDelimiterCounts = new List<Dictionary<string, int>>();
-			while (text.Length > 0)
-			{
-				// Since all escaped text has been removed, we can reliably read line by line.
-				var index = text.IndexOf(newLine);
-				var line = index > -1 ? text.Substring(0, index + newLine.Length) : text;
-
-				var delimiterCounts = new Dictionary<string, int>();
-				foreach (var delimiter in delimiterValues)
-				{
-					// Escape regex special chars to use as regex pattern.
-					var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
-					delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
-				}
-
-				lineDelimiterCounts.Add(delimiterCounts);
-
-				text = index > -1 ? text.Substring(index + newLine.Length) : string.Empty;
-			}
-
-			if (lineDelimiterCounts.Count > 1)
-			{
-				// The last line isn't complete and can't be used to reliably detect a delimiter.
-				lineDelimiterCounts.Remove(lineDelimiterCounts.Last());
-			}
-
-			// Rank only the delimiters that appear on every line.
-			var delimiters =
-			(
-				from counts in lineDelimiterCounts
-				from count in counts
-				group count by count.Key into g
-				where g.All(x => x.Value > 0)
-				let sum = g.Sum(x => x.Value)
-				orderby sum descending
-				select new
-				{
-					Delimiter = g.Key,
-					Count = sum
-				}
-			).ToList();
-
-			string? newDelimiter = null;
-			if (delimiters.Any(x => x.Delimiter == configuration.CultureInfo.TextInfo.ListSeparator))
-			{
-				// The culture's separator is on every line. Assume this is the delimiter.
-				newDelimiter = configuration.CultureInfo.TextInfo.ListSeparator;
-			}
-			else
-			{
-				// Choose the highest ranked delimiter.
-				newDelimiter = delimiters.Select(x => x.Delimiter).FirstOrDefault();
-			}
-
+			var newDelimiter = configuration.GetDelimiter(new GetDelimiterArgs(text, configuration));
 			if (newDelimiter != null)
 			{
 				delimiter = newDelimiter;

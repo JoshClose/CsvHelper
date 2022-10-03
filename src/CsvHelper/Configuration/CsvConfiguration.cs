@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-
+using CsvHelper.Delegates;
 using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
@@ -47,6 +47,9 @@ namespace CsvHelper.Configuration
 
 		/// <inheritdoc/>
 		public virtual bool DetectDelimiter { get; set; }
+
+		/// <inheritdoc/>
+		public virtual GetDelimiter GetDelimiter { get; set; } = ConfigurationFunctions.GetDelimiter;
 
 		/// <inheritdoc/>
 		public virtual string[] DetectDelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
