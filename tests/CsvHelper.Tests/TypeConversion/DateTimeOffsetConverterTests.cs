@@ -69,7 +69,7 @@ namespace CsvHelper.Tests.TypeConversion
 			Assert.Throws<NotSupportedException>(() => cmConverter.ConvertFromString(null));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 			Assert.Throws<FormatException>(() => cmConverter.ConvertFromString("blah"));
-			Assert.Throws<FormatException>(() => converter.ConvertFromString("blah", row, propertyMapData));
+			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("blah", row, propertyMapData));
 		}
 	}
 }
