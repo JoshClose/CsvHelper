@@ -31,11 +31,7 @@ namespace CsvHelper.Configuration.Attributes
 				throw new ArgumentNullException(nameof(typeConverterType));
 			}
 
-			TypeConverter = ObjectResolver.Current.Resolve(typeConverterType) as ITypeConverter;
-			if (TypeConverter is null)
-			{
-				throw new ArgumentException($"Type '{typeConverterType.FullName}' does not implement {nameof(ITypeConverter)}");
-			}
+			TypeConverter = ObjectResolver.Current.Resolve(typeConverterType) as ITypeConverter ?? throw new ArgumentException($"Type '{typeConverterType.FullName}' does not implement {nameof(ITypeConverter)}");
 		}
 
 		/// <summary>

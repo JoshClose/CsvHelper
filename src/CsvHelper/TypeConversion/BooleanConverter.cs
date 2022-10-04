@@ -14,7 +14,7 @@ namespace CsvHelper.TypeConversion
 	public class BooleanConverter : DefaultTypeConverter
 	{
 		/// <inheritdoc/>
-		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 		{
 			if (bool.TryParse(text, out var b))
 			{
@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+		public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 		{
 			var b = value as bool?;
 			if (b == true && memberMapData.TypeConverterOptions.BooleanTrueValues.Count > 0)

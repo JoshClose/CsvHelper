@@ -25,7 +25,7 @@ namespace CsvHelper.Configuration
 		/// </value>
 		/// <param name="type">The record type.</param>
 		/// <returns>The <see cref="ClassMap"/> for the specified record type.</returns>
-		public virtual ClassMap this[Type type]
+		public virtual ClassMap? this[Type type]
 		{
 			get
 			{
@@ -63,9 +63,9 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <returns>The <see cref="ClassMap"/> for the specified record type.</returns>
-		public virtual ClassMap<T> Find<T>()
+		public virtual ClassMap<T>? Find<T>()
 		{
-			return (ClassMap<T>)this[typeof(T)];
+			return (ClassMap<T>?)this[typeof(T)];
 		}
 
 		/// <summary>

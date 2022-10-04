@@ -76,7 +76,7 @@ namespace CsvHelper.TypeConversion
 		/// </summary>
 		/// <param name="sources">The sources that will be applied.</param>
 		/// <returns>The updated source object.</returns>
-		public static TypeConverterOptions Merge(params TypeConverterOptions[] sources)
+		public static TypeConverterOptions? Merge(params TypeConverterOptions[] sources)
 		{
 			if (sources == null || sources.Length == 0)
 			{

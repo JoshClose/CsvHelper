@@ -44,9 +44,9 @@ namespace CsvHelper.TypeConversion
 
 			foreach (var value in Enum.GetValues(type))
 			{
-				var enumName = Enum.GetName(type, value);
+				var enumName = Enum.GetName(type, value) ?? string.Empty;
 
-				var nameAttribute = type.GetField(enumName).GetCustomAttribute<NameAttribute>();
+				var nameAttribute = type.GetField(enumName)?.GetCustomAttribute<NameAttribute>();
 				if (nameAttribute != null && nameAttribute.Names.Length > 0)
 				{
 					foreach (var attributeName in nameAttribute.Names)
@@ -71,7 +71,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase ?? false;
 
@@ -108,7 +108,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+		public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 		{
 			if (value != null && attributeNamesByEnumValues.ContainsKey(value))
 			{

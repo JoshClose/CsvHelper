@@ -553,12 +553,12 @@ namespace CsvHelper.Configuration
 			var node = mapParents.Last;
 			while (true)
 			{
-				if (node.Value == type)
+				if (node?.Value == type)
 				{
 					return true;
 				}
 
-				node = node.Previous;
+				node = node?.Previous;
 				if (node == null)
 				{
 					break;
@@ -573,7 +573,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		protected virtual Type GetGenericType()
 		{
-			return GetType().GetTypeInfo().BaseType.GetGenericArguments()[0];
+			return GetType().GetTypeInfo().BaseType?.GetGenericArguments()[0] ?? throw new ConfigurationException();
 		}
 
 		/// <summary>
@@ -612,6 +612,11 @@ namespace CsvHelper.Configuration
 		/// <param name="memberMap">The member map.</param>
 		protected virtual void ApplyAttributes(MemberMap memberMap)
 		{
+			if (memberMap.Data.Member == null)
+			{
+				return;
+			}
+
 			var member = memberMap.Data.Member;
 			var attributes = member.GetCustomAttributes().OfType<IMemberMapper>();
 

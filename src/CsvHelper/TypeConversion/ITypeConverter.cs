@@ -18,7 +18,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData);
+		object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData);
 
 		/// <summary>
 		/// Converts the object to a string.
@@ -27,6 +27,6 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData);
+		string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData);
 	}
 }

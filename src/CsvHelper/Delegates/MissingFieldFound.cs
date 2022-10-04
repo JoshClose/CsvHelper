@@ -25,7 +25,7 @@ namespace CsvHelper
 		/// <summary>
 		/// The header names.
 		/// </summary>
-		public readonly string[] HeaderNames;
+		public readonly string[]? HeaderNames;
 
 		/// <summary>
 		/// The index.
@@ -43,7 +43,7 @@ namespace CsvHelper
 		/// <param name="headerNames">The header names.</param>
 		/// <param name="index">The index.</param>
 		/// <param name="context">The context.</param>
-		public MissingFieldFoundArgs(string[] headerNames, int index, CsvContext context)
+		public MissingFieldFoundArgs(string[]? headerNames, int index, CsvContext context)
 		{
 			HeaderNames = headerNames;
 			Index = index;

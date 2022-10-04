@@ -14,7 +14,7 @@ namespace CsvHelper.TypeConversion
     public class DefaultTypeConverter : ITypeConverter
     {
 		/// <inheritdoc/>
-		public virtual object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+		public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 		{
 			if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member.MemberType() == memberMapData.Default?.GetType())
 			{
@@ -26,6 +26,8 @@ namespace CsvHelper.TypeConversion
 				text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
 			}
 
+			text ??= string.Empty;
+
 			var message =
 				$"The conversion cannot be performed.{Environment.NewLine}" +
 				$"    Text: '{text}'{Environment.NewLine}" +
@@ -35,7 +37,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public virtual string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+		public virtual string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
         {
             if (value == null)
             {
@@ -53,7 +55,7 @@ namespace CsvHelper.TypeConversion
                 return formattable.ToString(format, memberMapData.TypeConverterOptions.CultureInfo);
             }
 
-            return value.ToString();
+            return value?.ToString() ?? string.Empty;
         }
     }
 }

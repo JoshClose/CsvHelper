@@ -47,7 +47,14 @@ namespace CsvHelper.Expressions
 			}
 			catch (TargetInvocationException ex)
 			{
-				throw ex.InnerException;
+				if (ex.InnerException != null)
+				{
+					throw ex.InnerException;
+				}
+				else
+				{
+					throw;
+				}
 			}
 		}
 
@@ -55,7 +62,7 @@ namespace CsvHelper.Expressions
 		/// Create a record of the given type using the current row.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		public object Create(Type recordType)
+		public object? Create(Type recordType)
 		{
 			try
 			{
@@ -63,7 +70,14 @@ namespace CsvHelper.Expressions
 			}
 			catch (TargetInvocationException ex)
 			{
-				throw ex.InnerException;
+				if (ex.InnerException != null)
+				{
+					throw ex.InnerException;
+				}
+				else
+				{
+					throw;
+				}
 			}
 		}
 

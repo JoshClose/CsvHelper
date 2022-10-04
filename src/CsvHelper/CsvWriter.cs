@@ -373,7 +373,14 @@ namespace CsvHelper
 					}
 					catch (TargetInvocationException ex)
 					{
-						throw ex.InnerException;
+						if (ex.InnerException != null)
+						{
+							throw ex.InnerException;
+						}
+						else
+						{
+							throw;
+						}
 					}
 
 					NextRecord();
@@ -439,7 +446,14 @@ namespace CsvHelper
 					}
 					catch (TargetInvocationException ex)
 					{
-						throw ex.InnerException;
+						if (ex.InnerException != null)
+						{
+							throw ex.InnerException;
+						}
+						else
+						{
+							throw;
+						}
 					}
 
 					NextRecord();
@@ -493,7 +507,14 @@ namespace CsvHelper
 					}
 					catch (TargetInvocationException ex)
 					{
-						throw ex.InnerException;
+						if (ex.InnerException != null)
+						{
+							throw ex.InnerException;
+						}
+						else
+						{
+							throw;
+						}
 					}
 
 					await NextRecordAsync().ConfigureAwait(false);
@@ -564,7 +585,14 @@ namespace CsvHelper
 					}
 					catch (TargetInvocationException ex)
 					{
-						throw ex.InnerException;
+						if (ex.InnerException != null)
+						{
+							throw ex.InnerException;
+						}
+						else
+						{
+							throw;
+						}
 					}
 
 					await NextRecordAsync().ConfigureAwait(false);
@@ -636,7 +664,14 @@ namespace CsvHelper
 					}
 					catch (TargetInvocationException ex)
 					{
-						throw ex.InnerException;
+						if (ex.InnerException != null)
+						{
+							throw ex.InnerException;
+						}
+						else
+						{
+							throw;
+						}
 					}
 
 					await NextRecordAsync().ConfigureAwait(false);

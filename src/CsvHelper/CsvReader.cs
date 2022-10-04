@@ -299,7 +299,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual string this[int index]
+		public virtual string? this[int index]
 		{
 			get
 			{
@@ -310,7 +310,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual string this[string name]
+		public virtual string? this[string name]
 		{
 			get
 			{
@@ -321,7 +321,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual string this[string name, int index]
+		public virtual string? this[string name, int index]
 		{
 			get
 			{
@@ -332,7 +332,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual string GetField(int index)
+		public virtual string? GetField(int index)
 		{
 			CheckHasBeenRead();
 
@@ -358,7 +358,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual string GetField(string name)
+		public virtual string? GetField(string name)
 		{
 			CheckHasBeenRead();
 
@@ -372,7 +372,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual string GetField(string name, int index)
+		public virtual string? GetField(string name, int index)
 		{
 			CheckHasBeenRead();
 
@@ -386,7 +386,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetField(Type type, int index)
+		public virtual object? GetField(Type type, int index)
 		{
 			CheckHasBeenRead();
 
@@ -395,7 +395,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetField(Type type, string name)
+		public virtual object? GetField(Type type, string name)
 		{
 			CheckHasBeenRead();
 
@@ -404,7 +404,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetField(Type type, string name, int index)
+		public virtual object? GetField(Type type, string name, int index)
 		{
 			CheckHasBeenRead();
 
@@ -413,7 +413,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetField(Type type, int index, ITypeConverter converter)
+		public virtual object? GetField(Type type, int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
@@ -432,7 +432,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetField(Type type, string name, ITypeConverter converter)
+		public virtual object? GetField(Type type, string name, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
@@ -441,7 +441,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetField(Type type, string name, int index, ITypeConverter converter)
+		public virtual object? GetField(Type type, string name, int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
@@ -450,7 +450,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T>(int index)
+		public virtual T? GetField<T>(int index)
 		{
 			CheckHasBeenRead();
 
@@ -459,7 +459,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T>(string name)
+		public virtual T? GetField<T>(string name)
 		{
 			CheckHasBeenRead();
 
@@ -468,7 +468,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T>(string name, int index)
+		public virtual T? GetField<T>(string name, int index)
 		{
 			CheckHasBeenRead();
 
@@ -477,7 +477,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T>(int index, ITypeConverter converter)
+		public virtual T? GetField<T>(int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
@@ -497,7 +497,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T>(string name, ITypeConverter converter)
+		public virtual T? GetField<T>(string name, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
@@ -506,7 +506,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T>(string name, int index, ITypeConverter converter)
+		public virtual T? GetField<T>(string name, int index, ITypeConverter converter)
 		{
 			CheckHasBeenRead();
 
@@ -515,7 +515,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T, TConverter>(int index) where TConverter : ITypeConverter
+		public virtual T? GetField<T, TConverter>(int index) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
@@ -524,7 +524,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T, TConverter>(string name) where TConverter : ITypeConverter
+		public virtual T? GetField<T, TConverter>(string name) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
@@ -533,7 +533,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetField<T, TConverter>(string name, int index) where TConverter : ITypeConverter
+		public virtual T? GetField<T, TConverter>(string name, int index) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
@@ -542,7 +542,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField(Type type, int index, out object field)
+		public virtual bool TryGetField(Type type, int index, out object? field)
 		{
 			CheckHasBeenRead();
 
@@ -551,7 +551,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField(Type type, string name, out object field)
+		public virtual bool TryGetField(Type type, string name, out object? field)
 		{
 			CheckHasBeenRead();
 
@@ -560,7 +560,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField(Type type, string name, int index, out object field)
+		public virtual bool TryGetField(Type type, string name, int index, out object? field)
 		{
 			CheckHasBeenRead();
 
@@ -569,7 +569,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField(Type type, int index, ITypeConverter converter, out object field)
+		public virtual bool TryGetField(Type type, int index, ITypeConverter converter, out object? field)
 		{
 			CheckHasBeenRead();
 
@@ -589,7 +589,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField(Type type, string name, ITypeConverter converter, out object field)
+		public virtual bool TryGetField(Type type, string name, ITypeConverter converter, out object? field)
 		{
 			CheckHasBeenRead();
 
@@ -604,7 +604,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField(Type type, string name, int index, ITypeConverter converter, out object field)
+		public virtual bool TryGetField(Type type, string name, int index, ITypeConverter converter, out object? field)
 		{
 			CheckHasBeenRead();
 
@@ -619,7 +619,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T>(int index, out T field)
+		public virtual bool TryGetField<T>(int index, out T? field)
 		{
 			CheckHasBeenRead();
 
@@ -628,7 +628,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T>(string name, out T field)
+		public virtual bool TryGetField<T>(string name, out T? field)
 		{
 			CheckHasBeenRead();
 
@@ -637,7 +637,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T>(string name, int index, out T field)
+		public virtual bool TryGetField<T>(string name, int index, out T? field)
 		{
 			CheckHasBeenRead();
 
@@ -646,7 +646,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T>(int index, ITypeConverter converter, out T field)
+		public virtual bool TryGetField<T>(int index, ITypeConverter converter, out T? field)
 		{
 			CheckHasBeenRead();
 
@@ -666,7 +666,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T>(string name, ITypeConverter converter, out T field)
+		public virtual bool TryGetField<T>(string name, ITypeConverter converter, out T? field)
 		{
 			CheckHasBeenRead();
 
@@ -681,7 +681,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T>(string name, int index, ITypeConverter converter, out T field)
+		public virtual bool TryGetField<T>(string name, int index, ITypeConverter converter, out T? field)
 		{
 			CheckHasBeenRead();
 
@@ -696,7 +696,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T, TConverter>(int index, out T field) where TConverter : ITypeConverter
+		public virtual bool TryGetField<T, TConverter>(int index, out T? field) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
@@ -705,7 +705,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T, TConverter>(string name, out T field) where TConverter : ITypeConverter
+		public virtual bool TryGetField<T, TConverter>(string name, out T? field) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
@@ -714,7 +714,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual bool TryGetField<T, TConverter>(string name, int index, out T field) where TConverter : ITypeConverter
+		public virtual bool TryGetField<T, TConverter>(string name, int index, out T? field) where TConverter : ITypeConverter
 		{
 			CheckHasBeenRead();
 
@@ -723,7 +723,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetRecord<T>()
+		public virtual T? GetRecord<T>()
 		{
 			CheckHasBeenRead();
 
@@ -767,7 +767,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual T GetRecord<T>(T anonymousTypeDefinition)
+		public virtual T? GetRecord<T>(T anonymousTypeDefinition)
 		{
 			if (anonymousTypeDefinition == null)
 			{
@@ -783,7 +783,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual object GetRecord(Type type)
+		public virtual object? GetRecord(Type type)
 		{
 			CheckHasBeenRead();
 
@@ -901,7 +901,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual IEnumerable<object> GetRecords(Type type)
+		public virtual IEnumerable<object?> GetRecords(Type type)
 		{
 			if (disposed)
 			{
@@ -928,7 +928,7 @@ namespace CsvHelper
 
 			while (Read())
 			{
-				object record;
+				object? record;
 				try
 				{
 					record = recordManager.Value.Create(type);
@@ -1092,7 +1092,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+		public virtual async IAsyncEnumerable<object?> GetRecordsAsync(Type type, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			if (disposed)
 			{
