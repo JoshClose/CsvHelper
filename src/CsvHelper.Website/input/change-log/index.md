@@ -97,7 +97,7 @@
 - Added `IParserConfiguration.DetectDelimiter`.
 - Added `IParserConfiguration.DetectDelimiterValues`.
 - Added `IWriter.WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)`.
-- Removed `\t` from `CsvConfiguration.WhiteSpaceCharacters` as a default.
+- Removed `\t` from `CsvConfiguration.WhiteSpaceChars` as a default.
 
 ### 26.1.0
 
