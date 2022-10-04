@@ -30,9 +30,14 @@ namespace CsvHelper.TypeConversion
 			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo.GetFormat(typeof(DateTimeFormatInfo)) ?? memberMapData.TypeConverterOptions.CultureInfo;
 			var dateTimeStyle = memberMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
 
-			return memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
-				? DateTimeOffset.Parse(text, formatProvider, dateTimeStyle)
-				: DateTimeOffset.ParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle);
+			DateTimeOffset dateTimeOffset;
+			var success = memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
+				? DateTimeOffset.TryParse(text, formatProvider, dateTimeStyle, out dateTimeOffset)
+				: DateTimeOffset.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle, out dateTimeOffset);
+
+			return success
+				? dateTimeOffset
+				: base.ConvertFromString(null, row, memberMapData);
 		}
 	}
 }
