@@ -188,7 +188,7 @@ namespace CsvHelper.Configuration
 		{
 			var fieldParameter = Expression.Parameter(typeof(ConvertFromStringArgs), "args");
 			var methodExpression = Expression.Call(
-				Expression.Constant(convertFromStringFunction.Target),
+				convertFromStringFunction.Target != null ? Expression.Constant(convertFromStringFunction.Target) : null,
 				convertFromStringFunction.Method,
 				fieldParameter
 			);
@@ -208,7 +208,7 @@ namespace CsvHelper.Configuration
 		{
 			var fieldParameter = Expression.Parameter(typeof(ConvertToStringArgs<TClass>), "args");
 			var methodExpression = Expression.Call(
-				Expression.Constant(convertToStringFunction.Target),
+				convertToStringFunction.Target != null ? Expression.Constant(convertToStringFunction.Target) : null,
 				convertToStringFunction.Method,
 				fieldParameter
 			);
