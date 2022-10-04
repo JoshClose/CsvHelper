@@ -46,7 +46,7 @@ namespace CsvHelper.Tests.DataTableTests
 				Assert.Equal('a', charBuffer[0]);
 				Assert.Equal('b', charBuffer[1]);
 
-				Assert.Null(dataReader.GetData(0));
+				Assert.Throws<NotSupportedException>(() => dataReader.GetData(0));
 				Assert.Equal(DateTime.Parse("1/1/2019"), dataReader.GetDateTime(5));
 				Assert.Equal(typeof(string).Name, dataReader.GetDataTypeName(0));
 				Assert.Equal(1.23m, dataReader.GetDecimal(6));
