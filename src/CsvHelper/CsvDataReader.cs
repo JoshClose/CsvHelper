@@ -154,29 +154,20 @@ namespace CsvHelper
 		/// <inheritdoc />
 		public string GetDataTypeName(int i)
 		{
-			if (schemaTable is not null)
+			if (i >= schemaTable.Rows.Count)
 			{
-				try
-				{
-					return ((Type)schemaTable.Rows[i]["DataType"]).Name;
-				}
-				catch (IndexOutOfRangeException ex)
-				{
-					throw new IndexOutOfRangeException("The index of the field to find was not within the range of known fields in the schema", ex);
-				}
-				catch (ArgumentException ex) when (ex.Message.Contains("Column 'DataType' does not belong to table"))
-				{
-					throw new ArgumentException("Expected the schema to define the 'DataType', but no such definition was found", ex);
-				}
-				catch (InvalidCastException ex)
-				{
-					throw new InvalidCastException("Expected the 'DataType' to describe the underlying type of the column", ex);
-				}
+				throw new IndexOutOfRangeException($"SchemaTable does not contain a definition for field '{i}'.");
 			}
-			else
+
+			var row = schemaTable.Rows[i];
+			var field = row["DataType"] as Type;
+
+			if (field == null)
 			{
-				return typeof(string).Name;
+				throw new InvalidOperationException($"SchemaTable does not contain a 'DataType' of type 'Type' for field '{i}'.");
 			}
+
+			return field.Name;
 		}
 
 		/// <inheritdoc />

@@ -380,11 +380,7 @@ namespace CsvHelper.Tests.DataTableTests
 				var badSchema = new DataTable();
 				var dataReader = new CsvDataReader(csv, badSchema);
 				dataReader.Read();
-				var exceptionMessage = Assert.Throws<IndexOutOfRangeException>(() => dataReader.GetDataTypeName(0)).Message;
-				Assert.Equal(
-					"The index of the field to find was not within the range of known fields in the schema",
-					exceptionMessage
-				);
+				Assert.Throws<IndexOutOfRangeException>(() => dataReader.GetDataTypeName(0));
 			}
 		}
 
@@ -405,11 +401,7 @@ namespace CsvHelper.Tests.DataTableTests
 				badSchema.Rows.Add(badSchema.NewRow());
 				var dataReader = new CsvDataReader(csv, badSchema);
 				dataReader.Read();
-				var exceptionMessage = Assert.Throws<ArgumentException>(() => dataReader.GetDataTypeName(0)).Message;
-				Assert.Equal(
-					"Expected the schema to define the 'DataType', but no such definition was found",
-					exceptionMessage
-				);
+				Assert.Throws<ArgumentException>(() => dataReader.GetDataTypeName(0));
 			}
 		}
 
@@ -433,11 +425,7 @@ namespace CsvHelper.Tests.DataTableTests
 				badSchema.Rows.Add(row);
 				var dataReader = new CsvDataReader(csv, badSchema);
 				dataReader.Read();
-				var exceptionMessage = Assert.Throws<InvalidCastException>(() => dataReader.GetDataTypeName(0)).Message;
-				Assert.Equal(
-					"Expected the 'DataType' to describe the underlying type of the column",
-					exceptionMessage
-				);
+				Assert.Throws<InvalidOperationException>(() => dataReader.GetDataTypeName(0));
 			}
 		}
 
