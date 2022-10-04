@@ -186,9 +186,11 @@ namespace CsvHelper.Configuration
 		/// <param name="convertFromStringFunction">The convert expression.</param>
 		public virtual MemberMap<TClass, TMember> Convert(ConvertFromString<TMember> convertFromStringFunction)
 		{
+			var instance = convertFromStringFunction.Target != null ? Expression.Constant(convertFromStringFunction.Target) : null;
 			var fieldParameter = Expression.Parameter(typeof(ConvertFromStringArgs), "args");
-			var methodExpression = Expression.Call(
-				convertFromStringFunction.Target != null ? Expression.Constant(convertFromStringFunction.Target) : null,
+			var methodExpression = Expression.Call
+			(
+				instance,
 				convertFromStringFunction.Method,
 				fieldParameter
 			);
@@ -206,9 +208,11 @@ namespace CsvHelper.Configuration
 		/// <param name="convertToStringFunction">The convert expression.</param>
 		public virtual MemberMap<TClass, TMember> Convert(ConvertToString<TClass> convertToStringFunction)
 		{
+			var instance = convertToStringFunction.Target != null ? Expression.Constant(convertToStringFunction.Target) : null;
 			var fieldParameter = Expression.Parameter(typeof(ConvertToStringArgs<TClass>), "args");
-			var methodExpression = Expression.Call(
-				convertToStringFunction.Target != null ? Expression.Constant(convertToStringFunction.Target) : null,
+			var methodExpression = Expression.Call
+			(
+				instance,
 				convertToStringFunction.Method,
 				fieldParameter
 			);
