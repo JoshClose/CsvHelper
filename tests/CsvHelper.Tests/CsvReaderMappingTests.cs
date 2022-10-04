@@ -11,7 +11,7 @@ using Xunit;
 
 namespace CsvHelper.Tests
 {
-	
+
 	public class CsvReaderMappingTests
 	{
 		[Fact]
@@ -169,6 +169,54 @@ namespace CsvHelper.Tests
 			Assert.Single(records);
 		}
 
+		[Fact]
+		public void ConvertUsingInstanceMethodTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			var parserMock = new ParserMock(config)
+			{
+				{ "1", "2" },
+				{ "3", "4" },
+			};
+
+			var csvReader = new CsvReader(parserMock);
+			csvReader.Context.RegisterClassMap<ConvertUsingInstanceMethodMap>();
+
+			var records = csvReader.GetRecords<TestClass>().ToList();
+
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(3, records[0].IntColumn);
+			Assert.Equal(7, records[1].IntColumn);
+		}
+
+		[Fact]
+		public void ConvertUsingStaticFunctionTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			var parserMock = new ParserMock(config)
+			{
+				{ "1", "2" },
+				{ "3", "4" },
+			};
+
+			var csvReader = new CsvReader(parserMock);
+			csvReader.Context.RegisterClassMap<ConvertUsingStaticFunctionMap>();
+
+			var records = csvReader.GetRecords<TestClass>().ToList();
+
+			Assert.NotNull(records);
+			Assert.Equal(2, records.Count);
+			Assert.Equal(3, records[0].IntColumn);
+			Assert.Equal(7, records[1].IntColumn);
+		}
+
 		private class CovarianceClass
 		{
 			public int? Id { get; set; }
@@ -275,6 +323,32 @@ namespace CsvHelper.Tests
 			{
 				Map(m => m.IntColumn).Name("int2");
 				Map(m => m.StringColumn).Convert(args => args.Row.GetField("string.3"));
+			}
+		}
+
+		private sealed class ConvertUsingInstanceMethodMap : ClassMap<TestClass>
+		{
+			public ConvertUsingInstanceMethodMap()
+			{
+				Map(m => m.IntColumn).Convert(ConvertFromStringFunction);
+			}
+
+			private int ConvertFromStringFunction(ConvertFromStringArgs args)
+			{
+				return args.Row.GetField<int>(0) + args.Row.GetField<int>(1);
+			}
+		}
+
+		private sealed class ConvertUsingStaticFunctionMap : ClassMap<TestClass>
+		{
+			public ConvertUsingStaticFunctionMap()
+			{
+				Map(m => m.IntColumn).Convert(ConvertFromStringFunction);
+			}
+
+			private static int ConvertFromStringFunction(ConvertFromStringArgs args)
+			{
+				return args.Row.GetField<int>(0) + args.Row.GetField<int>(1);
 			}
 		}
 	}
