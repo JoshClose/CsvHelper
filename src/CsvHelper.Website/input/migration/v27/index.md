@@ -1,6 +1,6 @@
 ﻿# Migrating from version 26 to 27
 
-## CsvConfiguration.WhiteSpaceCharacters
+## CsvConfiguration.WhiteSpaceChars
 
 - Removed `\t` from the array of default characters.
 
@@ -10,7 +10,7 @@ whitespace characters.
 ```cs
 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	WhiteSpaceCharacters = new[] { ' ', '\t' },
+	WhiteSpaceChars = new[] { ' ', '\t' },
 };
 ```
 
