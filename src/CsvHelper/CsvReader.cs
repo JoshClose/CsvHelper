@@ -1362,6 +1362,7 @@ namespace CsvHelper
 			}
 
 			namedIndexes.Clear();
+			namedIndexCache.Clear();
 
 			for (var i = 0; i < headerRecord.Length; i++)
 			{

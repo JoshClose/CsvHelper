@@ -944,7 +944,7 @@ namespace CsvHelper.Tests
 				{ "Id", "Name" },
 				{ "1", "one" },
 				{ "2", "two" },
-				null,
+				null
 			};
 
 			var csv = new CsvReader(parserMock);
@@ -978,6 +978,28 @@ namespace CsvHelper.Tests
 			Assert.Equal("one", row.Field2);
 		}
 
+		[Fact]
+		public void TryGetFieldNotInHeaderTest() // https://github.com/JoshClose/CsvHelper/issues/1981
+		{
+			var parserMock = new ParserMock
+			{
+				{ "Id", "piz z/a"},
+				{ "1", "one" },
+				{ "Id" },
+				{ "2" }
+			};
+			var csv = new CsvReader(parserMock);
+			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
+			csv.GetField<string>("piz z/a");
+
+			csv.Read();
+			csv.ReadHeader();
+			csv.Read();
+
+			Assert.False(csv.TryGetField<string>("piz z/a", out var tmp));
+		}
 		private class Nested
 		{
 			public Simple Simple1 { get; set; }
