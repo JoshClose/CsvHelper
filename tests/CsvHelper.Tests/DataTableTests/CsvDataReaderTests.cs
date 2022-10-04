@@ -317,5 +317,193 @@ namespace CsvHelper.Tests.DataTableTests
 				table.Load(dr);
 			}
 		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void GetDataTypeNameTest(bool useDefaultSchema)
+		{
+			var s = new StringBuilder();
+			s.AppendLine("Boolean,Byte,Int,Decimal,Double,DateTime,String,Guid");
+			s.AppendLine("true,1,2,4.56,7.89,2/17/2022,foo,eca0c8c6-9a2a-4e6c-8599-3561abda13f1");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = true,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, config))
+			{
+				if (useDefaultSchema)
+				{
+					var dataReader = new CsvDataReader(csv);
+					dataReader.Read();
+					for (var i = 0; i < dataReader.FieldCount; ++i)
+					{
+						Assert.Equal(typeof(string).Name, dataReader.GetDataTypeName(i));
+					}
+				}
+				else
+				{
+					var expectedDataTypeNames = new[]
+					{
+						typeof(bool).Name,
+						typeof(byte).Name,
+						typeof(int).Name,
+						typeof(decimal).Name,
+						typeof(double).Name,
+						typeof(DateTime).Name,
+						typeof(string).Name,
+						typeof(Guid).Name,
+					};
+					var dataReader = new CsvDataReader(csv, GetOverridingSchemaTable());
+					for (var i = 0; i < expectedDataTypeNames.Length; ++i)
+					{
+						Assert.Equal(expectedDataTypeNames[i], dataReader.GetDataTypeName(i));
+					}
+				}
+			}
+		}
+
+		[Fact]
+		public void GetDataTypeNameThrowsArgumentOutOfRangeExceptionWhenGivenAnEmptySchema()
+		{
+			var s = new StringBuilder();
+			s.AppendLine("Boolean,Byte,Int,Decimal,Double,DateTime,String,Guid");
+			s.AppendLine("true,1,2,4.56,7.89,2/17/2022,foo,eca0c8c6-9a2a-4e6c-8599-3561abda13f1");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = true,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, config))
+			{
+				var badSchema = new DataTable();
+				var dataReader = new CsvDataReader(csv, badSchema);
+				dataReader.Read();
+				Assert.Throws<IndexOutOfRangeException>(() => dataReader.GetDataTypeName(0));
+			}
+		}
+
+		[Fact]
+		public void GetDataTypeNameThrowsArgumentExceptionWhenGivenASchemaMissingDataType()
+		{
+			var s = new StringBuilder();
+			s.AppendLine("Boolean,Byte,Int,Decimal,Double,DateTime,String,Guid");
+			s.AppendLine("true,1,2,4.56,7.89,2/17/2022,foo,eca0c8c6-9a2a-4e6c-8599-3561abda13f1");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = true,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, config))
+			{
+				var badSchema = new DataTable();
+				badSchema.Rows.Add(badSchema.NewRow());
+				var dataReader = new CsvDataReader(csv, badSchema);
+				dataReader.Read();
+				Assert.Throws<ArgumentException>(() => dataReader.GetDataTypeName(0));
+			}
+		}
+
+		[Fact]
+		public void GetDataTypeNameThrowsInvalidCastExceptionWhenGivenASchemaWithAnUnexpectedDataTypeValue()
+		{
+			var s = new StringBuilder();
+			s.AppendLine("Boolean,Byte,Int,Decimal,Double,DateTime,String,Guid");
+			s.AppendLine("true,1,2,4.56,7.89,2/17/2022,foo,eca0c8c6-9a2a-4e6c-8599-3561abda13f1");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = true,
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, config))
+			{
+				var badSchema = new DataTable();
+				badSchema.Columns.Add("DataType");
+				var row = badSchema.NewRow();
+				row["DataType"] = "foo";
+				badSchema.Rows.Add(row);
+				var dataReader = new CsvDataReader(csv, badSchema);
+				dataReader.Read();
+				Assert.Throws<InvalidOperationException>(() => dataReader.GetDataTypeName(0));
+			}
+		}
+
+		private DataTable GetOverridingSchemaTable()
+		{
+			var columnTypeMapping = new Tuple<string, Type, DbType>[]
+			{
+				new Tuple<string, Type, DbType>("Boolean", typeof(bool), DbType.Boolean),
+				new Tuple<string, Type, DbType>("Byte", typeof(byte), DbType.Byte),
+				new Tuple<string, Type, DbType>("Int", typeof(int), DbType.Int32),
+				new Tuple<string, Type, DbType>("Decimal", typeof(decimal), DbType.Decimal),
+				new Tuple<string, Type, DbType>("Double", typeof(double), DbType.Double),
+				new Tuple<string, Type, DbType>("DateTime", typeof(DateTime), DbType.DateTime),
+				new Tuple<string, Type, DbType>("String", typeof(string), DbType.String),
+				new Tuple<string, Type, DbType>("Guid", typeof(Guid), DbType.Guid),
+			};
+
+			// https://docs.microsoft.com/en-us/dotnet/api/system.data.datatablereader.getschematable?view=netframework-4.7.2
+			var dt = new DataTable("SchemaTable");
+			dt.Columns.Add("AllowDBNull", typeof(bool));
+			dt.Columns.Add("AutoIncrementSeed", typeof(long));
+			dt.Columns.Add("AutoIncrementStep", typeof(long));
+			dt.Columns.Add("BaseCatalogName");
+			dt.Columns.Add("BaseColumnName");
+			dt.Columns.Add("BaseColumnNamespace");
+			dt.Columns.Add("BaseSchemaName");
+			dt.Columns.Add("BaseTableName");
+			dt.Columns.Add("BaseTableNamespace");
+			dt.Columns.Add("ColumnName");
+			dt.Columns.Add("ColumnMapping", typeof(MappingType));
+			dt.Columns.Add("ColumnOrdinal", typeof(int));
+			dt.Columns.Add("ColumnSize", typeof(int));
+			dt.Columns.Add("DataType", typeof(Type));
+			dt.Columns.Add("DefaultValue", typeof(object));
+			dt.Columns.Add("Expression");
+			dt.Columns.Add("IsAutoIncrement", typeof(bool));
+			dt.Columns.Add("IsKey", typeof(bool));
+			dt.Columns.Add("IsLong", typeof(bool));
+			dt.Columns.Add("IsReadOnly", typeof(bool));
+			dt.Columns.Add("IsRowVersion", typeof(bool));
+			dt.Columns.Add("IsUnique", typeof(bool));
+			dt.Columns.Add("NumericPrecision", typeof(short));
+			dt.Columns.Add("NumericScale", typeof(short));
+			dt.Columns.Add("ProviderType", typeof(int));
+
+			for (var i = 0; i < columnTypeMapping.Length; i++)
+			{
+				var row = dt.NewRow();
+				row["AllowDBNull"] = true;
+				row["AutoIncrementSeed"] = DBNull.Value;
+				row["AutoIncrementStep"] = DBNull.Value;
+				row["BaseCatalogName"] = null;
+				row["BaseColumnName"] = columnTypeMapping[i].Item1;
+				row["BaseColumnNamespace"] = null;
+				row["BaseSchemaName"] = null;
+				row["BaseTableName"] = null;
+				row["BaseTableNamespace"] = null;
+				row["ColumnName"] = columnTypeMapping[i].Item1;
+				row["ColumnMapping"] = MappingType.Element;
+				row["ColumnOrdinal"] = i;
+				row["ColumnSize"] = int.MaxValue;
+				row["DataType"] = columnTypeMapping[i].Item2;
+				row["DefaultValue"] = null;
+				row["Expression"] = null;
+				row["IsAutoIncrement"] = false;
+				row["IsKey"] = false;
+				row["IsLong"] = false;
+				row["IsReadOnly"] = true;
+				row["IsRowVersion"] = false;
+				row["IsUnique"] = false;
+				row["NumericPrecision"] = columnTypeMapping[i].Item3 == DbType.Decimal ? 10 : DBNull.Value;
+				row["NumericScale"] = columnTypeMapping[i].Item3 == DbType.Decimal ? 2 : DBNull.Value;
+				row["ProviderType"] = columnTypeMapping[i].Item3;
+
+				dt.Rows.Add(row);
+			}
+
+			return dt;
+		}
 	}
 }

@@ -154,7 +154,20 @@ namespace CsvHelper
 		/// <inheritdoc />
 		public string GetDataTypeName(int i)
 		{
-			return typeof(string).Name;
+			if (i >= schemaTable.Rows.Count)
+			{
+				throw new IndexOutOfRangeException($"SchemaTable does not contain a definition for field '{i}'.");
+			}
+
+			var row = schemaTable.Rows[i];
+			var field = row["DataType"] as Type;
+
+			if (field == null)
+			{
+				throw new InvalidOperationException($"SchemaTable does not contain a 'DataType' of type 'Type' for field '{i}'.");
+			}
+
+			return field.Name;
 		}
 
 		/// <inheritdoc />
