@@ -160,7 +160,7 @@ public class Foo
 }
 ```
 
-[There are many other attributes you can use also.](~/api/CsvHelper.Configuration.Attributes)
+[There are many other attributes you can use also.](~/examples/configuration/attributes)
 
 What if we don't have control over the class we want to map to so we can't add attributes to it?
 In this case, we can use a fluent `ClassMap` to do the mapping.
