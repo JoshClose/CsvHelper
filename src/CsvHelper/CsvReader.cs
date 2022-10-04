@@ -272,7 +272,7 @@ namespace CsvHelper
 			bool hasMoreRecords;
 			do
 			{
-				hasMoreRecords = await parser.ReadAsync();
+				hasMoreRecords = await parser.ReadAsync().ConfigureAwait(false);
 				hasBeenRead = true;
 			}
 			while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(this)) ?? false));
