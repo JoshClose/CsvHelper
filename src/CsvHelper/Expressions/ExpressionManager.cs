@@ -104,7 +104,7 @@ namespace CsvHelper.Expressions
 					if (reader.Configuration.HasHeaderRecord && (parameterMap.Data.IsNameSet || !parameterMap.Data.IsIndexSet))
 					{
 						// Use name.
-						index = reader.GetFieldIndex(parameterMap.Data.Names.ToArray(), parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
+						index = reader.GetFieldIndex(parameterMap.Data.Names, parameterMap.Data.NameIndex, parameterMap.Data.IsOptional);
 						if (index == -1)
 						{
 							if (parameterMap.Data.IsDefaultSet || parameterMap.Data.IsOptional)
@@ -228,7 +228,7 @@ namespace CsvHelper.Expressions
 			if (reader.Configuration.HasHeaderRecord && (memberMap.Data.IsNameSet || !memberMap.Data.IsIndexSet))
 			{
 				// Use the name.
-				index = reader.GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, memberMap.Data.IsOptional);
+				index = reader.GetFieldIndex(memberMap.Data.Names, memberMap.Data.NameIndex, memberMap.Data.IsOptional);
 				if (index == -1)
 				{
 					if (memberMap.Data.IsDefaultSet)
