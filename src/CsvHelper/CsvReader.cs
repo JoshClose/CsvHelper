@@ -185,7 +185,7 @@ namespace CsvHelper
 				}
 				else
 				{
-					var index = GetFieldIndex(parameter.Data.Names.ToArray(), parameter.Data.NameIndex, true);
+					var index = GetFieldIndex(parameter.Data.Names, parameter.Data.NameIndex, true);
 					var isValid = index != -1 || parameter.Data.IsOptional;
 					if (!isValid)
 					{
@@ -213,7 +213,7 @@ namespace CsvHelper
 					continue;
 				}
 
-				var index = GetFieldIndex(memberMap.Data.Names.ToArray(), memberMap.Data.NameIndex, true);
+				var index = GetFieldIndex(memberMap.Data.Names, memberMap.Data.NameIndex, true);
 				var isValid = index != -1 || memberMap.Data.IsOptional;
 				if (!isValid)
 				{
@@ -1209,7 +1209,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual int GetFieldIndex(string[] names, int index = 0, bool isTryGet = false, bool isOptional = false)
+		public virtual int GetFieldIndex(IEnumerable<string> names, int index = 0, bool isTryGet = false, bool isOptional = false)
 		{
 			if (names == null)
 			{
@@ -1236,9 +1236,9 @@ namespace CsvHelper
 
 			// Check all possible names for this field.
 			string name = null;
-			for (var i = 0; i < names.Length; i++)
+			var i = 0;
+			foreach (var n in names)
 			{
-				var n = names[i];
 				// Get the list of indexes for this name.
 				var args = new PrepareHeaderForMatchArgs(n, i);
 				var fieldName = prepareHeaderForMatch(args);
@@ -1247,6 +1247,8 @@ namespace CsvHelper
 					name = fieldName;
 					break;
 				}
+
+				i++;
 			}
 
 			// Check if the index position exists.
@@ -1255,7 +1257,7 @@ namespace CsvHelper
 				// It doesn't exist. The field is missing.
 				if (!isTryGet && !isOptional)
 				{
-					var args = new MissingFieldFoundArgs(names, index, context);
+					var args = new MissingFieldFoundArgs(names.ToArray(), index, context);
 					missingFieldFound?.Invoke(args);
 				}
 
