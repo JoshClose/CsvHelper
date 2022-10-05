@@ -18,6 +18,7 @@ namespace CsvHelper.TypeConversion
 	public class TypeConverterCache
 	{
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
+		private readonly List<ITypeConverterFactory> generalTypeConverters = new List<ITypeConverterFactory>();
 
 		/// <summary>
 		/// Initializes the <see cref="TypeConverterCache" /> class.
@@ -25,6 +26,15 @@ namespace CsvHelper.TypeConversion
 		public TypeConverterCache()
 		{
 			CreateDefaultConverters();
+		}
+
+		/// <summary>
+		/// Adds the <see cref="ITypeConverterFactory"/>. Factories are queried in order of being added and first factory that handles the type is used for creating the <see cref="ITypeConverter"/>.
+		/// </summary>
+		/// <param name="typeConverterFactory">Type converter factory</param>
+		public void AddTypeConverterFactory(ITypeConverterFactory typeConverterFactory)
+		{
+			generalTypeConverters.Add(typeConverterFactory);
 		}
 
 		/// <summary>
@@ -97,6 +107,19 @@ namespace CsvHelper.TypeConversion
 			RemoveConverter(typeof(T));
 		}
 
+		private ITypeConverter CheckFactoriesForTypeConverter(Type type)
+		{
+			foreach (ITypeConverterFactory typeConv in generalTypeConverters)
+			{
+				if (typeConv.Handles(type))
+				{
+					return typeConv.CreateTypeConverter(type, this);
+				}
+			}
+
+			return null;
+		}
+
 		/// <summary>
 		/// Gets the converter for the given <see cref="System.Type"/>.
 		/// </summary>
@@ -112,6 +135,18 @@ namespace CsvHelper.TypeConversion
 			if (typeConverters.TryGetValue(type, out ITypeConverter typeConverter))
 			{
 				return typeConverter;
+			}
+
+			if (generalTypeConverters.Count > 0)
+			{
+				ITypeConverter factoryCreatedTypeConverter = CheckFactoriesForTypeConverter(type);
+
+				if (factoryCreatedTypeConverter != null)
+				{
+					AddConverter(type, factoryCreatedTypeConverter);
+
+					return factoryCreatedTypeConverter;
+				}
 			}
 
 			if (typeof(Enum).IsAssignableFrom(type))
