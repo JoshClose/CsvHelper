@@ -130,7 +130,7 @@ namespace CsvHelper.Configuration
 		/// 2. has a constructor
 		/// 3. is not a user defined struct
 		/// 4. is not an interface
-		/// 5. TypeCode is not an Object.
+		/// 5. TypeCode is an Object.
 		/// </summary>
 		public static bool ShouldUseConstructorParameters(ShouldUseConstructorParametersArgs args)
 		{
