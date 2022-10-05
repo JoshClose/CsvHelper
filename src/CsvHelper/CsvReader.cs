@@ -343,12 +343,8 @@ namespace CsvHelper
 
 			if (index >= parser.Count || index < 0)
 			{
-				if (ignoreBlankLines)
-				{
 					var args = new MissingFieldFoundArgs(null, index, context);
 					missingFieldFound?.Invoke(args);
-				}
-
 				return default;
 			}
 
@@ -484,11 +480,8 @@ namespace CsvHelper
 			if (index >= parser.Count || index < 0)
 			{
 				currentIndex = index;
-				if (ignoreBlankLines)
-				{
 					var args = new MissingFieldFoundArgs(null, index, context);
 					missingFieldFound?.Invoke(args);
-				}
 
 				return default;
 			}

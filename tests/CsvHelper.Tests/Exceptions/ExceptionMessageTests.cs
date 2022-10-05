@@ -5,6 +5,7 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using CsvHelper.Configuration;
 using CsvHelper.Tests.Mocks;
 using CsvHelper.TypeConversion;
 using Xunit;
@@ -17,13 +18,16 @@ namespace CsvHelper.Tests.Exceptions
 		[Fact]
 		public void GetMissingFieldTest()
 		{
-			var parser = new ParserMock
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreBlankLines = false,
+			};
+			var parser = new ParserMock(config)
 			{
 				{ "Id", "Name" },
 				{ "a", "b" },
 				null
 			};
-
 			var reader = new CsvReader(parser);
 			reader.Read();
 			reader.Read();
