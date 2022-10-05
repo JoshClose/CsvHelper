@@ -222,6 +222,10 @@ namespace CsvHelper.Tests
 				null,
 			};
 
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreBlankLines = false,
+			};
 			var reader = new CsvReader(parserMock);
 			reader.Read();
 
@@ -881,7 +885,9 @@ namespace CsvHelper.Tests
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
+				Delimiter = ",",
 				IgnoreBlankLines = false,
+				MissingFieldFound = null,
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))

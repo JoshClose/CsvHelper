@@ -18,6 +18,7 @@ namespace CsvHelper.Tests.Reading
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				IgnoreBlankLines = false,
+				MissingFieldFound = null,
 			};
 			var parser = new ParserMock(config)
 			{
@@ -55,6 +56,7 @@ namespace CsvHelper.Tests.Reading
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				IgnoreBlankLines = false,
+				MissingFieldFound = null,
 			};
 			var parser = new ParserMock(config)
 			{
@@ -118,6 +120,7 @@ namespace CsvHelper.Tests.Reading
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				IgnoreBlankLines = false,
+				MissingFieldFound = null,
 			};
 			var parser = new ParserMock(config)
 			{
