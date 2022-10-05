@@ -171,10 +171,11 @@ namespace CsvHelper
 		/// <param name="configuration">The configuration.</param>
 		public CsvParser(TextReader reader, IParserConfiguration configuration)
 		{
+			this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
+			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+
 			configuration.Validate();
 
-			this.reader = reader;
-			this.configuration = configuration;
 			Context = new CsvContext(this);
 
 			allowComments = configuration.AllowComments;
