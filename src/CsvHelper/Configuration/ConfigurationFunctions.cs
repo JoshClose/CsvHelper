@@ -33,6 +33,14 @@ namespace CsvHelper.Configuration
 				errorMessage.AppendLine($"Header with name '{string.Join("' or '", invalidHeader.Names)}'[{invalidHeader.Index}] was not found.");
 			}
 
+			if (args.Context.Reader.HeaderRecord != null)
+			{
+				foreach (var header in args.Context.Reader.HeaderRecord)
+				{
+					errorMessage.AppendLine($"Headers: '{string.Join("', '", args.Context.Reader.HeaderRecord)}'");
+				}
+			}
+
 			var messagePostfix =
 				$"If you are expecting some headers to be missing and want to ignore this validation, " +
 				$"set the configuration {nameof(HeaderValidated)} to null. You can also change the " +
