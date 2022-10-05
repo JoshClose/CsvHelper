@@ -1228,9 +1228,9 @@ namespace CsvHelper
 
 			// Caching the named index speeds up mappings that use ConvertUsing tremendously.
 			var nameKey = string.Join("_", names) + index;
-			if (namedIndexCache.ContainsKey(nameKey))
+			if (namedIndexCache.TryGetValue(nameKey, out var cache))
 			{
-				(var cachedName, var cachedIndex) = namedIndexCache[nameKey];
+				(var cachedName, var cachedIndex) = cache;
 				return namedIndexes[cachedName][cachedIndex];
 			}
 
@@ -1363,9 +1363,9 @@ namespace CsvHelper
 			{
 				var args = new PrepareHeaderForMatchArgs(headerRecord[i], i);
 				var name = prepareHeaderForMatch(args);
-				if (namedIndexes.ContainsKey(name))
+				if (namedIndexes.TryGetValue(name, out var index))
 				{
-					namedIndexes[name].Add(i);
+					index.Add(i);
 				}
 				else
 				{
