@@ -59,7 +59,7 @@ namespace CsvHelper.Tests.Parsing
 				{
 					parser.Read();
 					var record = parser.Record;
-					throw new XunitException("Failed to throw exception on bad data.");
+					throw new XUnitException("Failed to throw exception on bad data.");
 				}
 				catch (BadDataException) { }
 			}

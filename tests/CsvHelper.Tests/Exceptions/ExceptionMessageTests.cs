@@ -34,7 +34,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetField(2);
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (MissingFieldException ex)
 			{
@@ -59,7 +59,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetField<int>(2);
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (MissingFieldException ex)
 			{
@@ -83,7 +83,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecord<Simple>();
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (TypeConverterException ex)
 			{
@@ -115,7 +115,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecord(typeof(Simple));
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (TypeConverterException ex)
 			{
@@ -138,7 +138,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecords<Simple>().ToList();
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (TypeConverterException ex)
 			{
@@ -161,7 +161,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetRecords(typeof(Simple)).ToList();
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (TypeConverterException ex)
 			{
@@ -189,7 +189,7 @@ namespace CsvHelper.Tests.Exceptions
 			try
 			{
 				reader.GetField("c");
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (MissingFieldException ex)
 			{

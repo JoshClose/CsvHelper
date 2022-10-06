@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace CsvHelper.Tests
 {
-	public class XunitException : Exception
+	public class XUnitException : Exception
 	{
-		public XunitException() : base() { }
+		public XUnitException() : base() { }
 
-		public XunitException(string message) : base(message) { }
+		public XUnitException(string message) : base(message) { }
     }
 }

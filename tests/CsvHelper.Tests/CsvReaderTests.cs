@@ -513,7 +513,7 @@ namespace CsvHelper.Tests
 				csvReader.Read();
 				csvReader.ReadHeader();
 				csvReader.Read();
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (ReaderException) { }
 		}
