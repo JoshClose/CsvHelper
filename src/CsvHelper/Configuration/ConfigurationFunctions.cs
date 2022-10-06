@@ -81,7 +81,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public static void BadDataFound(BadDataFoundArgs args)
 		{
-			throw new BadDataException(args.Context, $"You can ignore bad data by setting {nameof(BadDataFound)} to null.");
+			throw new BadDataException(args.Field, args.RawRecord, args.Context, $"You can ignore bad data by setting {nameof(BadDataFound)} to null.");
 		}
 
 		/// <summary>

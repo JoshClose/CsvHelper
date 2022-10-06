@@ -251,7 +251,7 @@ namespace CsvHelper
 			{
 				if (columnCount > 0 && columnCount != parser.Count)
 				{
-					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
+					var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
 
 					var args = new ReadingExceptionOccurredArgs(csvException);
 					if (readingExceptionOccurred?.Invoke(args) ?? true)
@@ -283,7 +283,7 @@ namespace CsvHelper
 			{
 				if (columnCount > 0 && columnCount != parser.Count)
 				{
-					var csvException = new BadDataException(context, "An inconsistent number of columns has been detected.");
+					var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
 
 					var args = new ReadingExceptionOccurredArgs(csvException);
 					if (readingExceptionOccurred?.Invoke(args) ?? true)
