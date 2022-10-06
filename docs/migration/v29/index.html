@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>V27 | CsvHelper</title>
+	<title>V29 | CsvHelper</title>
 
 	
 	
@@ -74,36 +74,27 @@
 		<div class="columns is-variable is-1">
 				<div class="column">
 					<div class="content">
-						<h1 id="migrating-from-version-26-to-27">Migrating from version 26 to 27</h1>
-<h2 id="csvconfiguration.whitespacechars">CsvConfiguration.WhiteSpaceChars</h2>
-<ul>
-<li>Removed <code>\t</code> from the array of default characters.</li>
-</ul>
-<p>If you are expecting <code>\t</code> to be trimmed, you will need to add this to the
-whitespace characters.</p>
-<pre><code class="language-cs">var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+						<h1 id="migrating-from-version-28-to-29">Migrating from version 28 to 29</h1>
+<h2 id="csvconfiguration.sanitizeforinjection">CsvConfiguration.SanitizeForInjection</h2>
+<p><code>bool CsvConfiguration.SanitizeInjection</code> changed to <code>InjectionOptions CsvConfiguration.InjectionOptions</code>.</p>
+<pre><code class="language-cs">// 28
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 {
-	WhiteSpaceChars = new[] { ' ', '\t' },
-};
+    SanitizeForInjection = true,
+}
+
+// 29
+var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+{
+    InjectionOptions = InjectionOptions.Escape,
+}
 </code></pre>
-<h2 id="iparserconfiguration">IParserConfiguration</h2>
-<ul>
-<li>Added property <code>bool DetectDelimiter { get; }</code>.</li>
-<li>Added property <code>string[] DetectDelimiterValues { get; }</code>.</li>
-</ul>
-<p>Any class that implements <code>IParserConfiguration</code> will need these changes
-applied to it.</p>
-<h2 id="iwriter">IWriter</h2>
-<ul>
-<li>Added method <code>Task WriteRecordsAsync&lt;T&gt;(IAsyncEnumerable&lt;T&gt; records, CancellationToken cancellationToken = default)</code>.
-This does not apply to projects that reference the <code>net45</code> version of CsvHelper.</li>
-</ul>
-<p>Any class that implements <code>IWriter</code> will need these changes applied to it.</p>
-<h2 id="iparser">IParser</h2>
-<ul>
-<li>Added property <code>string Delimiter { get; }</code>.</li>
-</ul>
-<p>Any class that implements <code>IParser</code> will need these changes applied to it.</p>
+<h2 id="iwriterconfiguration.sanitizeforinjection">IWriterConfiguration.SanitizeForInjection</h2>
+<p><code>bool IWriterConfiguration.SanitizeInjection</code> changed to <code>InjectionOptions IWriterConfiguration.InjectionOptions</code>.
+Any class that implements <code>IWriterConfiguration</code> will need this changed.</p>
+<h2 id="iparserconfiguration.getdelimiter">IParserConfiguration.GetDelimiter</h2>
+<p><code>GetDelimiter IParserConfiguration.GetDelimiter</code> was added.
+Any class that implements <code>IParserConfiguration</code> will need to add this.</p>
 
 					</div>
 				</div>

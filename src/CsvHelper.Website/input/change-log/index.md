@@ -1,5 +1,44 @@
 ﻿# Change Log
 
+### 29.0.0
+
+#### Features
+
+- Added support for `TypeConverter` factories. This allows for the ability to handle many types at once.
+Code that manually handle nullable, enums, and collections were changed into factories.
+- Moved delimiter detection into a configuration function. 
+This allows for a user to easily change the detection logic.
+Default logic is in `ConfigurationFunction.GetDelimiter`.
+- Changed `CsvConfiguration.SanitizeInjection` flag to `CsvConfiguration.InjectionOptions` enum.
+  - Options are:
+    - None - Default. Does no injection protection. The is default because it's not a part of CSV and is used for an external tool.
+    - Escape - Escapes the field based on OWASP recommendations if an injection char is detected.
+    - Strip - Removes the injection character.
+    - Exception - Throws an exception if an injection char is detected.
+  - Added `\t` and `\r` to `CsvConfiguration.InjectionEscapeCharacter`.
+  - Changed `CsvConfiguration.InjectionEscapeCharacter` from `\t` to `'`.
+- `CsvDataReader.GetDataTypeName` will use types when the schema table is overridden.
+- More detail added to `CsvConfiguration.Validate` exception messages.
+- Reduce double dictionary lookup in a few places.
+
+#### Bug Fixes
+
+- Fixed issues with delimiter detection logic.
+- Missing `ConfigureAwait(false)` added to async calls.
+- Fixed issue with `CsvReader.TryGetField` throwing an exception when multiple headers are read.
+- Fixed issue with `MemberMap.Validate` passing the wrong type into the expression call.
+- Fixed issue with `MemberMap<T>.Convert` not working with `static` methods.
+- Fixed issue with `DateTimeConverter` and `DateTimeOffsetConverter` throwing an exception other than `TypeConverterException` on failure.
+- Fixed issue where `MissingFieldFound` was not being called if `IgnoreBlankLines` was off.
+
+#### Breaking Changes
+
+- `CsvConfiguration.SanitizeForInjection` -> `CsvConfiguration.InjectionOptions`
+- `bool IWriterConfiguration.SanitizeForInjection` -> `InjectionOptions IWriterConfiguration.InjectionOptions`
+- `CsvConfiguration.InjectionEscapeCharacter` changed from `\t` to `'`.
+- Added `\t` and `\r` to `CsvConfiguration.InjectionCharacters`.
+- Added `GetDelimiter IParserConfiguration.GetDelimiter` delegate.
+
 ### 28.0.1
 
 #### Bug Fixes
