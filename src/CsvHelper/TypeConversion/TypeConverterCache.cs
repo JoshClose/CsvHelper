@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 
@@ -18,7 +19,8 @@ namespace CsvHelper.TypeConversion
 	public class TypeConverterCache
 	{
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
-		private readonly List<ITypeConverterFactory> generalTypeConverters = new List<ITypeConverterFactory>();
+		private readonly List<ITypeConverterFactory> typeConverterFactories = new List<ITypeConverterFactory>();
+		private readonly Dictionary<Type, ITypeConverterFactory> typeConverterFactoryCache = new Dictionary<Type, ITypeConverterFactory>();
 
 		/// <summary>
 		/// Initializes the <see cref="TypeConverterCache" /> class.
@@ -29,12 +31,28 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
-		/// Adds the <see cref="ITypeConverterFactory"/>. Factories are queried in order of being added and first factory that handles the type is used for creating the <see cref="ITypeConverter"/>.
+		/// Determines if there is a converter registered for the given type.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <returns><c>true</c> if the converter is registered, otherwise false.</returns>
+		public bool Contains(Type type)
+		{
+			return typeConverters.ContainsKey(type);
+		}
+
+		/// <summary>
+		/// Adds the <see cref="ITypeConverterFactory"/>.
+		/// Factories are queried in order of being added and first factory that handles the type is used for creating the <see cref="ITypeConverter"/>.
 		/// </summary>
 		/// <param name="typeConverterFactory">Type converter factory</param>
-		public void AddTypeConverterFactory(ITypeConverterFactory typeConverterFactory)
+		public void AddConverterFactory(ITypeConverterFactory typeConverterFactory)
 		{
-			generalTypeConverters.Add(typeConverterFactory);
+			if (typeConverterFactory == null)
+			{
+				throw new ArgumentNullException(nameof(typeConverterFactory));
+			}
+
+			typeConverterFactories.Add(typeConverterFactory);
 		}
 
 		/// <summary>
@@ -107,17 +125,18 @@ namespace CsvHelper.TypeConversion
 			RemoveConverter(typeof(T));
 		}
 
-		private ITypeConverter CheckFactoriesForTypeConverter(Type type)
+		/// <summary>
+		/// Removes the ITypeConverterFactory.
+		/// </summary>
+		/// <param name="typeConverterFactory">The ITypeConverterFactory to remove.</param>
+		public void RemoveConverterFactory(ITypeConverterFactory typeConverterFactory)
 		{
-			foreach (ITypeConverterFactory typeConv in generalTypeConverters)
+			typeConverterFactories.Remove(typeConverterFactory);
+			var toRemove = typeConverterFactoryCache.Where(pair => pair.Value == typeConverterFactory);
+			foreach (var pair in toRemove)
 			{
-				if (typeConv.Handles(type))
-				{
-					return typeConv.CreateTypeConverter(type, this);
-				}
+				typeConverterFactoryCache.Remove(pair.Key);
 			}
-
-			return null;
 		}
 
 		/// <summary>
@@ -137,91 +156,23 @@ namespace CsvHelper.TypeConversion
 				return typeConverter;
 			}
 
-			if (generalTypeConverters.Count > 0)
+			if (!typeConverterFactoryCache.TryGetValue(type, out var factory))
 			{
-				ITypeConverter factoryCreatedTypeConverter = CheckFactoriesForTypeConverter(type);
-
-				if (factoryCreatedTypeConverter != null)
+				factory = typeConverterFactories.FirstOrDefault(f => f.CanCreate(type));
+				if (factory != null)
 				{
-					AddConverter(type, factoryCreatedTypeConverter);
-
-					return factoryCreatedTypeConverter;
+					typeConverterFactoryCache[type] = factory;
 				}
 			}
 
-			if (typeof(Enum).IsAssignableFrom(type))
+			if (factory != null)
 			{
-				if (typeConverters.TryGetValue(typeof(Enum), out typeConverter))
+				if (factory.Create(type, this, out typeConverter))
 				{
-					// If the user has registered a converter for the generic Enum type,
-					// that converter will be used as a default for all enums. If a
-					// converter was registered for a specific enum type, it would be
-					// returned from above already.
-					return typeConverter;
+					AddConverter(type, typeConverter);
 				}
 
-				AddConverter(type, new EnumConverter(type));
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-			{
-				AddConverter(type, new NullableConverter(type, this));
-				return GetConverter(type);
-			}
-
-			if (type.IsArray)
-			{
-				AddConverter(type, new ArrayConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-			{
-				AddConverter(type, new IDictionaryGenericConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-			{
-				AddConverter(type, new IDictionaryGenericConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
-			{
-				AddConverter(type, new CollectionGenericConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Collection<>))
-			{
-				AddConverter(type, new CollectionGenericConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IList<>))
-			{
-				AddConverter(type, new IEnumerableGenericConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ICollection<>))
-			{
-				AddConverter(type, new IEnumerableGenericConverter());
-				return GetConverter(type);
-			}
-
-			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-			{
-				AddConverter(type, new IEnumerableGenericConverter());
-				return GetConverter(type);
-			}
-
-			// A specific IEnumerable converter doesn't exist.
-			if (typeof(IEnumerable).IsAssignableFrom(type))
-			{
-				return new EnumerableConverter();
+				return typeConverter;
 			}
 
 			return new DefaultTypeConverter();
@@ -261,9 +212,6 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(byte), new ByteConverter());
 			AddConverter(typeof(byte[]), new ByteArrayConverter());
 			AddConverter(typeof(char), new CharConverter());
-#if NET6_0
-			AddConverter(typeof(DateOnly), new DateOnlyConverter());
-#endif
 			AddConverter(typeof(DateTime), new DateTimeConverter());
 			AddConverter(typeof(DateTimeOffset), new DateTimeOffsetConverter());
 			AddConverter(typeof(decimal), new DecimalConverter());
@@ -275,20 +223,20 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(long), new Int64Converter());
 			AddConverter(typeof(sbyte), new SByteConverter());
 			AddConverter(typeof(string), new StringConverter());
-#if NET6_0
-			AddConverter(typeof(TimeOnly), new TimeOnlyConverter());
-#endif
 			AddConverter(typeof(TimeSpan), new TimeSpanConverter());
 			AddConverter(typeof(Type), new TypeConverter());
 			AddConverter(typeof(ushort), new UInt16Converter());
 			AddConverter(typeof(uint), new UInt32Converter());
 			AddConverter(typeof(ulong), new UInt64Converter());
 			AddConverter(typeof(Uri), new UriConverter());
-			// Collection types need to come after value types.
-			AddConverter(typeof(IList), new IEnumerableConverter());
-			AddConverter(typeof(ICollection), new IEnumerableConverter());
-			AddConverter(typeof(IEnumerable), new IEnumerableConverter());
-			AddConverter(typeof(IDictionary), new IDictionaryConverter());
+#if NET6_0
+			AddConverter(typeof(DateOnly), new DateOnlyConverter());
+			AddConverter(typeof(TimeOnly), new TimeOnlyConverter());
+#endif
+
+			AddConverterFactory(new EnumConverterFactory());
+			AddConverterFactory(new NullableConverterFactory());
+			AddConverterFactory(new CollectionConverterFactory());
 		}
 	}
 }

@@ -35,7 +35,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.ValidateHeader<Test>();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.ValidateHeader<HasReference>();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -73,7 +73,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.ValidateHeader<HasConstructor>();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -91,7 +91,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.GetRecord(typeof(Test));
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -109,7 +109,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.GetRecord<Test>();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -126,7 +126,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.GetRecords(typeof(Test)).ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -143,7 +143,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{
@@ -208,7 +208,7 @@ namespace CsvHelper.Tests
 				try
 				{
 					csv.ValidateHeader<Test>();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (HeaderValidationException ex)
 				{

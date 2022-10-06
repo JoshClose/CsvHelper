@@ -3,24 +3,31 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace CsvHelper.TypeConversion
 {
 	/// <inheritdoc />
-	public class NullableConverterFactory : ITypeConverterFactory
+	public class EnumConverterFactory : ITypeConverterFactory
 	{
 		/// <inheritdoc />
 		public bool CanCreate(Type type)
 		{
-			return (type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>)));
+			return typeof(Enum).IsAssignableFrom(type);
 		}
 
 		/// <inheritdoc />
 		public bool Create(Type type, TypeConverterCache cache, out ITypeConverter typeConverter)
 		{
-			typeConverter = new NullableConverter(type, cache);
+			if (cache.Contains(typeof(Enum)))
+			{
+				// If the user has registered a converter for the generic Enum type,
+				// that converter will be used as a default for all enums.
+				typeConverter = cache.GetConverter<Enum>();
+
+				return false;
+			}
+
+			typeConverter = new EnumConverter(type);
 
 			return true;
 		}

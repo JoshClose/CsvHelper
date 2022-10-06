@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Reading
 				try
 				{
 					csv.Read();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (BadDataException)
 				{
@@ -133,7 +133,7 @@ namespace CsvHelper.Tests.Reading
 				try
 				{
 					csv.Read();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (BadDataException)
 				{

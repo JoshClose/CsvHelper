@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Issues
 			{
 				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) =>
 				{
-					throw new XunitException();
+					throw new XUnitException();
 				});
 
 				var s = new StringBuilder();
@@ -52,7 +52,7 @@ namespace CsvHelper.Tests.Issues
 			{
 				ObjectResolver.Current = new ObjectResolver(type => true, (type, args) =>
 				{
-					throw new XunitException();
+					throw new XUnitException();
 				});
 
 				using (var writer = new StringWriter())

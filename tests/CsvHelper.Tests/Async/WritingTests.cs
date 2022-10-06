@@ -105,7 +105,7 @@ namespace CsvHelper.Tests.Async
 					}
 				}
 
-				throw new XunitException("Did not throw exception");
+				throw new XUnitException("Did not throw exception");
 			}
 		}
 

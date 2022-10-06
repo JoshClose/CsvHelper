@@ -90,7 +90,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (ReaderException)
 				{
@@ -146,7 +146,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (ReaderException)
 				{
@@ -176,7 +176,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (ReaderException)
 				{
@@ -202,7 +202,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (ReaderException)
 				{
@@ -228,7 +228,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (ReaderException)
 				{
@@ -254,7 +254,7 @@ namespace CsvHelper.Tests.TypeConversion
 				try
 				{
 					var records = csv.GetRecords<Test>().ToList();
-					throw new XunitException();
+					throw new XUnitException();
 				}
 				catch (ReaderException)
 				{

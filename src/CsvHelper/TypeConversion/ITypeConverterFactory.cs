@@ -1,5 +1,10 @@
-﻿using System;
+﻿// Copyright 2009-2022 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace CsvHelper.TypeConversion
@@ -10,18 +15,19 @@ namespace CsvHelper.TypeConversion
 	public interface ITypeConverterFactory
 	{
 		/// <summary>
-		/// Checks whether the type is handled by this <see cref="ITypeConverterFactory"/>.
+		/// Determines if the factory can create a type converter for the given type.
 		/// </summary>
-		/// <param name="type"><see cref="System.Type"/> to be checked</param>
-		/// <returns>Whether the type is handled by this <see cref="ITypeConverterFactory"/></returns>
-		bool Handles(Type type);
+		/// <param name="type">The <see cref="Type"/> to be checked</param>
+		/// <returns><c>true</c> if the factory can create the type, otherwise <c>false</c>.</returns>
+		bool CanCreate(Type type);
 
 		/// <summary>
-		/// Produces <see cref="ITypeConverter"/> for the specified <see cref="System.Type"/>.
+		/// Creates a type converter for the given type and assigns it to the given out typeConverter parameter.
 		/// </summary>
-		/// <param name="type"><see cref="System.Type"/> we want <see cref="ITypeConverter"/> for</param>
-		/// <param name="typeConverterCache"><see cref="TypeConverterCache"/> that is used for retrieving already exising type converters that are used to build the new one</param>
-		/// <returns>Created <see cref="ITypeConverter"/> for the specified <see cref="System.Type"/></returns>
-		ITypeConverter CreateTypeConverter(Type type, TypeConverterCache typeConverterCache);
+		/// <param name="type">The type to create the converter for.</param>
+		/// <param name="cache">The type converter cache.</param>
+		/// <param name="typeConverter">The parameter to set the converter to.</param>
+		/// <returns><c>true</c> if the converter should be added to the cache, otherwise <c>false</c>.</returns>
+		bool Create(Type type, TypeConverterCache cache, out ITypeConverter typeConverter);
 	}
 }

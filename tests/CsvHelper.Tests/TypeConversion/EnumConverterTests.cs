@@ -24,7 +24,7 @@ namespace CsvHelper.Tests.TypeConversion
 			try
 			{
 				new EnumConverter(typeof(string));
-				throw new XunitException();
+				throw new XUnitException();
 			}
 			catch (ArgumentException ex)
 			{
