@@ -93,7 +93,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="writer">The writer.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvWriter(TextWriter writer, CsvConfiguration configuration)
+		public CsvWriter(TextWriter writer, IWriterConfiguration configuration)
 		{
 			configuration.Validate();
 

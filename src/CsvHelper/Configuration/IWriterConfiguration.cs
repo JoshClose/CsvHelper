@@ -14,6 +14,13 @@ namespace CsvHelper.Configuration
 	public interface IWriterConfiguration
 	{
 		/// <summary>
+		/// Gets the size of the buffer
+		/// used for parsing and writing CSV files.
+		/// Default is 0x1000.
+		/// </summary>
+		int BufferSize { get; }
+
+		/// <summary>
 		/// The mode.
 		/// See <see cref="CsvMode"/> for more details.
 		/// </summary>
@@ -160,5 +167,10 @@ namespace CsvHelper.Configuration
 		/// Default is <c>true</c>.
 		/// </summary>
 		bool ExceptionMessagesContainRawData { get; }
+
+		/// <summary>
+		/// Validates the configuration.
+		/// </summary>
+		void Validate();
 	}
 }
