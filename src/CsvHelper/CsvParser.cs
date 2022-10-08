@@ -694,7 +694,7 @@ namespace CsvHelper
 			return fieldsPosition > 0;
 		}
 
-		private void AddField(in int start, in int length)
+		private void AddField(int start, int length)
 		{
 			if (fieldsPosition >= fields.Length)
 			{
@@ -776,7 +776,7 @@ namespace CsvHelper
 			return true;
 		}
 
-		private string GetField(in int index)
+		private string GetField(int index)
 		{
 			if (index > fieldsPosition)
 			{
@@ -828,7 +828,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		protected ProcessedField ProcessRFC4180Field(in int start, in int length, in int quoteCount)
+		protected ProcessedField ProcessRFC4180Field(int start, int length, int quoteCount)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -916,7 +916,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		protected ProcessedField ProcessRFC4180BadField(in int start, in int length)
+		protected ProcessedField ProcessRFC4180BadField(int start, int length)
 		{
 			// If field is already known to be bad, different rules can be applied.
 
@@ -995,7 +995,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		protected ProcessedField ProcessEscapeField(in int start, in int length)
+		protected ProcessedField ProcessEscapeField(int start, int length)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -1041,7 +1041,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		protected ProcessedField ProcessNoEscapeField(in int start, in int length)
+		protected ProcessedField ProcessNoEscapeField(int start, int length)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -1091,7 +1091,7 @@ namespace CsvHelper
 		/// This will remove quotes, remove escapes, and trim if configured to.
 		/// </summary>
 		[DebuggerDisplay("Start = {Start}, Length = {Length}, Buffer.Length = {Buffer.Length}")]
-		protected readonly ref struct ProcessedField
+		protected readonly struct ProcessedField
 		{
 			/// <summary>
 			/// The start of the field in the buffer.
