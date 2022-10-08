@@ -28,5 +28,7 @@ namespace CsvHelper.Tests
 		}
 
 		public override string ToString() => builder.ToString();
+
+		public static implicit operator string(TestStringBuilder sb) => sb.ToString();
 	}
 }
