@@ -128,15 +128,19 @@ namespace CsvHelper.Configuration
 		/// Returns <c>true</c> if <paramref name="args.ParameterType"/>:
 		/// 1. does not have a parameterless constructor
 		/// 2. has a constructor
-		/// 3. is not a user defined struct
-		/// 4. is not an interface
-		/// 5. TypeCode is an Object.
+		/// 3. is not a value type
+		/// 4. is not a primitive
+		/// 5. is not an enum
+		/// 6. is not an interface
+		/// 7. TypeCode is an Object.
 		/// </summary>
 		public static bool ShouldUseConstructorParameters(ShouldUseConstructorParametersArgs args)
 		{
 			return !args.ParameterType.HasParameterlessConstructor()
 				&& args.ParameterType.HasConstructor()
-				&& !args.ParameterType.IsUserDefinedStruct()
+				&& !args.ParameterType.IsValueType
+				&& !args.ParameterType.IsPrimitive
+				&& !args.ParameterType.IsEnum
 				&& !args.ParameterType.IsInterface
 				&& Type.GetTypeCode(args.ParameterType) == TypeCode.Object;
 		}
