@@ -254,9 +254,10 @@ namespace CsvHelper.Tests
 			stream.Position = 0;
 			var reader = new StreamReader(stream);
 			var csvFile = reader.ReadToEnd();
-			var expected = "first column,1,string column,test\r\n";
-			expected += ",,,\r\n";
-			expected += "first column,1,string column,test\r\n";
+			var expected = new TestStringBuilder(csv.Configuration.NewLine);
+			expected.AppendLine("first column,1,string column,test");
+			expected.AppendLine(",,,");
+			expected.AppendLine("first column,1,string column,test");
 
 			Assert.Equal(expected, csvFile);
 		}
