@@ -278,7 +278,6 @@ namespace CsvHelper
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void DetectDelimiter()
 		{
 			var text = new string(buffer, 0, charsRead);
@@ -291,7 +290,6 @@ namespace CsvHelper
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ReadLineResult ReadLine(ref char c, ref char cPrev)
 		{
 			while (bufferPosition < charsRead)
@@ -483,7 +481,6 @@ namespace CsvHelper
 			return ReadLineResult.Incomplete;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ReadLineResult ReadSpaces(ref char c)
 		{
 			while (ArrayHelper.Contains(whiteSpaceChars, c))
@@ -505,7 +502,6 @@ namespace CsvHelper
 			return ReadLineResult.Complete;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ReadLineResult ReadBlankLine(ref char c)
 		{
 			while (bufferPosition < charsRead)
@@ -536,7 +532,6 @@ namespace CsvHelper
 			return ReadLineResult.Incomplete;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ReadLineResult ReadDelimiter(ref char c)
 		{
 			for (var i = delimiterPosition; i < delimiter.Length; i++)
@@ -579,7 +574,6 @@ namespace CsvHelper
 			return ReadLineResult.Complete;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ReadLineResult ReadLineEnding(ref char c)
 		{
 			var lessChars = 1;
@@ -615,7 +609,6 @@ namespace CsvHelper
 			return ReadLineResult.Complete;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private ReadLineResult ReadNewLine(ref char c)
 		{
 			for (var i = newLinePosition; i < newLine.Length; i++)
@@ -658,7 +651,6 @@ namespace CsvHelper
 			return ReadLineResult.Complete;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool ReadEndOfFile()
 		{
 			var state = this.state;
@@ -702,7 +694,6 @@ namespace CsvHelper
 			return fieldsPosition > 0;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void AddField(in int start, in int length)
 		{
 			if (fieldsPosition >= fields.Length)
@@ -723,7 +714,6 @@ namespace CsvHelper
 			quoteCount = 0;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool FillBuffer()
 		{
 			// Don't forget the async method below.
@@ -756,7 +746,6 @@ namespace CsvHelper
 			return true;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task<bool> FillBufferAsync()
 		{
 			if (rowStartPosition == 0 && charCount > 0 && charsRead == bufferSize)
@@ -787,7 +776,6 @@ namespace CsvHelper
 			return true;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private string GetField(in int index)
 		{
 			if (index > fieldsPosition)
@@ -840,7 +828,6 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected ProcessedField ProcessRFC4180Field(in int start, in int length, in int quoteCount)
 		{
 			var newStart = start;
@@ -929,7 +916,6 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected ProcessedField ProcessRFC4180BadField(in int start, in int length)
 		{
 			// If field is already known to be bad, different rules can be applied.
@@ -1009,7 +995,6 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected ProcessedField ProcessEscapeField(in int start, in int length)
 		{
 			var newStart = start;
@@ -1056,7 +1041,6 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected ProcessedField ProcessNoEscapeField(in int start, in int length)
 		{
 			var newStart = start;
