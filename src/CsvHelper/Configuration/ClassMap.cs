@@ -511,8 +511,12 @@ namespace CsvHelper.Configuration
 
 					parameterMap.ReferenceMap = referenceMap;
 				}
-				else if (context.Configuration.ShouldUseConstructorParameters(new ShouldUseConstructorParametersArgs(parameter.ParameterType)))
+				else if (isDefaultConverter && context.Configuration.ShouldUseConstructorParameters(new ShouldUseConstructorParametersArgs(parameter.ParameterType)))
 				{
+					// If the type is not one covered by our type converters
+					// and it should use contructor parameters, create a
+					// constructor map for it.
+
 					mapParents.AddLast(type);
 					var constructorMapType = typeof(DefaultClassMap<>).MakeGenericType(parameter.ParameterType);
 					var constructorMap = (ClassMap)ObjectResolver.Current.Resolve(constructorMapType);
