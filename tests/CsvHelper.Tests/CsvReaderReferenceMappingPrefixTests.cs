@@ -7,29 +7,26 @@ using System.Linq;
 using Xunit;
 using CsvHelper.Configuration;
 using System.Globalization;
+using CsvHelper.Tests.Mocks;
 
 namespace CsvHelper.Tests
-{
-	
+{	
 	public class CsvReaderReferenceMappingPrefixTests
 	{
 		[Fact]
 		public void ReferencesWithPrefixTest()
 		{
-			using (var stream = new MemoryStream())
-			using (var reader = new StreamReader(stream))
-			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			var parser = new ParserMock
+			{
+				{ "Id", "BPrefix_Id", "C.CId" },
+				{ "a1", "b1", "c1" },
+				{ "a2", "b2", "c2" },
+				{ "a3", "b3", "c3" },
+				{ "a4", "b4", "c4" },
+			};
+			using (var csv = new CsvReader(parser))
 			{
 				csv.Context.RegisterClassMap<AMap>();
-
-				writer.WriteLine("Id,BPrefix_Id,C.CId");
-				writer.WriteLine("a1,b1,c1");
-				writer.WriteLine("a2,b2,c2");
-				writer.WriteLine("a3,b3,c3");
-				writer.WriteLine("a4,b4,c4");
-				writer.Flush();
-				stream.Position = 0;
 
 				var list = csv.GetRecords<A>().ToList();
 
@@ -71,7 +68,7 @@ namespace CsvHelper.Tests
 			public AMap()
 			{
 				Map(m => m.Id);
-				References<BMap>(m => m.B).Prefix("BPrefix_");
+				References<BMap>(m => m.B).Prefix("BPrefix_", false);
 			}
 		}
 
