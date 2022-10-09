@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace CsvHelper.Tests.TypeConversion
 {
@@ -80,6 +81,26 @@ namespace CsvHelper.Tests.TypeConversion
 			var converter = cache.GetConverter<Uri>();
 
 			Assert.IsType<UriConverter>(converter);
+		}
+
+		[Fact]
+		public void AnonymousTypeTest()
+		{
+			var sw = new StringWriter();
+			var entries = new[]
+			{
+				new { Uri = new Uri("http://host/path") }
+			};
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = ";",
+			};
+			using (var cw = new CsvWriter(sw, config))
+			{
+				cw.WriteRecords(entries);
+			}
+
+			Assert.Equal("Uri\r\nhttp://host/path\r\n", sw.ToString());
 		}
 	}
 }
