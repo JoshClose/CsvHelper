@@ -82,7 +82,7 @@ namespace CsvHelper.Tests
 			public AMap()
 			{
 				Map(m => m.Id);
-				References<BMap>(m => m.B).Prefix("BPrefix_");
+				References<BMap>(m => m.B).Prefix("BPrefix_", false);
 			}
 		}
 

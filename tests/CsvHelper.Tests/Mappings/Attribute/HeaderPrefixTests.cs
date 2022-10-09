@@ -1,109 +1,205 @@
-﻿// Copyright 2009-2022 Josh Close
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// https://github.com/JoshClose/CsvHelper
+﻿using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using Xunit;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace CsvHelper.Tests.Mappings.Attribute
 {
-	
 	public class HeaderPrefixTests
 	{
 		[Fact]
-		public void DefaultHeaderPrefixTest()
+		public void WriteHeader_PrefixCustom_WritesCustomPrefixesOwnLevelOnly()
 		{
-			using (var reader = new StringReader("Id,B.Name,C.Name\r\n1,b,c"))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
 			{
-				var records = csv.GetRecords<ADefault>().ToList();
+				csv.WriteHeader<ACustom>();
+				csv.Flush();
 
-				Assert.Equal(1, records[0].Id);
-				Assert.Equal("b", records[0].B.Name);
-				Assert.Equal("c", records[0].C.Name);
+				Assert.Equal("AId,b_BId,c_CId", writer.ToString());
 			}
 		}
 
 		[Fact]
-		public void CustomHeaderPrefixTest()
+		public void WriteHeader_PrefixInherit_WritesPrefixesForEachLevel()
 		{
-			using (var reader = new StringReader("Id,B_Name,C_Name\r\n1,b,c"))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				csv.WriteHeader<AInherit>();
+				csv.Flush();
+
+				Assert.Equal("AId,B.BId,B.C.CId", writer.ToString());
+			}
+		}
+
+		[Fact]
+		public void WriteHeader_PrefixNoInherit_WritesPrefixesOwnLevelOnly()
+		{
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				csv.WriteHeader<ANoInherit>();
+				csv.Flush();
+
+				Assert.Equal("AId,B.BId,C.CId", writer.ToString());
+			}
+		}
+
+		[Fact]
+		public void WriteHeader_PrefixDefaultInherit_WritesPrefixesOwnLevelOnly()
+		{
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				csv.WriteHeader<ADefaultInherit>();
+				csv.Flush();
+
+				Assert.Equal("AId,B.BId,C.CId", writer.ToString());
+			}
+		}
+
+		[Fact]
+		public void GetRecords_PrefixCustom_ReadsCustomHeader()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			var s = new TestStringBuilder(config.NewLine);
+			s.AppendLine("AId,b_BId,c_CId");
+			s.AppendLine("aid,bid,cid");
+			using (var reader = new StringReader(s))
+			using (var csv = new CsvReader(reader, config))
 			{
 				var records = csv.GetRecords<ACustom>().ToList();
 
-				Assert.Equal(1, records[0].Id);
-				Assert.Equal("b", records[0].B.Name);
-				Assert.Equal("c", records[0].C.Name);
+				Assert.Single(records);
+				Assert.Equal("aid", records[0].AId);
+				Assert.Equal("bid", records[0].B.BId);
+				Assert.Equal("cid", records[0].B.C.CId);
 			}
 		}
 
-		[TestMethod]
-		public void InheritedHeaderPrefixTest()
+		[Fact]
+		public void GetRecords_PrefixInherit_ReadsInheritedHeader()
 		{
-			using (var reader = new StringReader("Id,D.B.Name,D.C.Name\r\n1,b,c"))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			var s = new TestStringBuilder(config.NewLine);
+			s.AppendLine("AId,B.BId,B.C.CId");
+			s.AppendLine("aid,bid,cid");
+			using (var reader = new StringReader(s))
+			using (var csv = new CsvReader(reader, config))
 			{
-				csv.Configuration.Delimiter = ",";
-				var records = csv.GetRecords<ADefaultInherited>().ToList();
+				var records = csv.GetRecords<AInherit>().ToList();
 
-				Assert.AreEqual(1, records[0].Id);
-				Assert.AreEqual("b", records[0].D.B.Name);
-				Assert.AreEqual("c", records[0].D.C.Name);
+				Assert.Single(records);
+				Assert.Equal("aid", records[0].AId);
+				Assert.Equal("bid", records[0].B.BId);
+				Assert.Equal("cid", records[0].B.C.CId);
 			}
 		}
 
-		private class ADefault
+		[Fact]
+		public void GetRecords_PrefixNoInherit_ReadsNonInheritedHeader()
 		{
-			public int Id { get; set; }
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			var s = new TestStringBuilder(config.NewLine);
+			s.AppendLine("AId,B.BId,C.CId");
+			s.AppendLine("aid,bid,cid");
+			using (var reader = new StringReader(s))
+			using (var csv = new CsvReader(reader, config))
+			{
+				var records = csv.GetRecords<ANoInherit>().ToList();
 
-			[HeaderPrefixAttribute]
-			public B B { get; set; }
+				Assert.Single(records);
+				Assert.Equal("bid", records[0].B.BId);
+				Assert.Equal("aid", records[0].AId);
+				Assert.Equal("cid", records[0].B.C.CId);
+			}
+		}
 
-			[HeaderPrefixAttribute]
-			public C C { get; set; }
+		[Fact]
+		public void GetRecords_PrefixDefaultInherit_ReadsNonInheritedHeader()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			var s = new TestStringBuilder(config.NewLine);
+			s.AppendLine("AId,B.BId,C.CId");
+			s.AppendLine("aid,bid,cid");
+			using (var reader = new StringReader(s))
+			using (var csv = new CsvReader(reader, config))
+			{
+				var records = csv.GetRecords<ADefaultInherit>().ToList();
+
+				Assert.Single(records);
+				Assert.Equal("aid", records[0].AId);
+				Assert.Equal("bid", records[0].B.BId);
+				Assert.Equal("cid", records[0].B.C.CId);
+			}
 		}
 
 		private class ACustom
 		{
-			public int Id { get; set; }
+			public string AId { get; set; }
+			[HeaderPrefix("b_")]
+			public BCustom B { get; set; }
+		}
 
-			[HeaderPrefixAttribute("B_")]
-			public B B { get; set; }
-
-			[HeaderPrefixAttribute("C_")]
+		private class BCustom
+		{
+			public string BId { get; set; }
+			[HeaderPrefix("c_")]
 			public C C { get; set; }
 		}
 
-		private class B
+		private class AInherit
 		{
-			public string Name { get; set; }
+			public string AId { get; set; }
+			[HeaderPrefix(true)]
+			public BInherit B { get; set; }
+		}
+
+		private class BInherit
+		{
+			public string BId { get; set; }
+			[HeaderPrefix(true)]
+			public C C { get; set; }
+		}
+
+		private class ANoInherit
+		{
+			public string AId { get; set; }
+			[HeaderPrefix(false)]
+			public BInherit B { get; set; }
+		}
+
+		private class BNoInherit
+		{
+			public string BId { get; set; }
+			[HeaderPrefix(false)]
+			public C C { get; set; }
+		}
+
+		private class ADefaultInherit
+		{
+			public string AId { get; set; }
+			[HeaderPrefix]
+			public BInherit B { get; set; }
+		}
+
+		private class BDefaultInherit
+		{
+			public string BId { get; set; }
+			[HeaderPrefix]
+			public C C { get; set; }
 		}
 
 		private class C
 		{
-			public string Name { get; set; }
-		}
-
-		private class D
-		{
-			[HeaderPrefixAttribute]
-			public B B { get; set; }
-
-			[HeaderPrefixAttribute]
-			public C C { get; set; }
-		}
-
-		private class ADefaultInherited
-		{
-			public int Id { get; set; }
-
-			[HeaderPrefixAttribute]
-			public D D { get; set; }
-
+			public string CId { get; set; }
 		}
 	}
 }

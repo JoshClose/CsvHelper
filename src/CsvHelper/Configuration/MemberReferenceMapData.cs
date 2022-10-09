@@ -27,12 +27,21 @@ namespace CsvHelper.Configuration
 					memberMap.Data.Names.Prefix = value;
 				}
 
-				foreach( var memberRef in Mapping.ReferenceMaps )
+				if (Inherit)
 				{
-					memberRef.Data.Prefix = memberRef.Data.Prefix == null ? value : string.Concat(value, memberRef.Data.Prefix);
+					foreach (var memberRef in Mapping.ReferenceMaps)
+					{
+						memberRef.Data.Prefix = memberRef.Data.Prefix == null ? value : string.Concat(value, memberRef.Data.Prefix);
+					}
 				}
 			}
 		}
+
+		/// <summary>
+		/// Gets or sets a value indicating if a prefix should inherit its parent.
+		/// <c>true</c> to inherit, otherwise <c>false</c>.
+		/// </summary>
+		public virtual bool Inherit { get; set; }
 
 		/// <summary>
 		/// Gets the <see cref="MemberInfo"/> that the data

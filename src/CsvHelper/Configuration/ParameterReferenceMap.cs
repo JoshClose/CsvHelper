@@ -38,14 +38,16 @@ namespace CsvHelper.Configuration
 		/// Appends a prefix to the header of each field of the reference parameter.
 		/// </summary>
 		/// <param name="prefix">The prefix to be prepended to headers of each reference parameter.</param>
+		/// <param name="inherit">Inherit parent prefixes.</param>
 		/// <returns>The current <see cref="ParameterReferenceMap" /></returns>
-		public ParameterReferenceMap Prefix(string prefix = null)
+		public ParameterReferenceMap Prefix(string prefix = null, bool inherit = false)
 		{
 			if (string.IsNullOrEmpty(prefix))
 			{
 				prefix = data.Parameter.Name + ".";
 			}
 
+			data.Inherit = inherit;
 			data.Prefix = prefix;
 
 			return this;

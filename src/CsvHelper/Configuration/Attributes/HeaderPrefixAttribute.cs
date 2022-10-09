@@ -18,6 +18,11 @@ namespace CsvHelper.Configuration.Attributes
 		public string? Prefix { get; private set; }
 
 		/// <summary>
+		/// Gets a value indicating if the prefix should inherit parent prefixes.
+		/// </summary>
+		public bool Inherit { get; private set; }
+
+		/// <summary>
 		/// Appends a prefix to the header of each field of the reference member.
 		/// </summary>
 		public HeaderPrefixAttribute() { }
@@ -32,11 +37,32 @@ namespace CsvHelper.Configuration.Attributes
 		}
 
 		/// <summary>
+		/// Appends a prefix to the header of each field of the reference member.
+		/// </summary>
+		/// <param name="inherit">Inherits parent object prefixes.</param>
+		public HeaderPrefixAttribute(bool inherit)
+		{
+			Inherit = inherit;
+		}
+
+		/// <summary>
+		/// Appends a prefix to the header of each field of the reference member.
+		/// </summary>
+		/// <param name="prefix">The prefix.</param>
+		/// <param name="inherit">Inherits parent object prefixes.</param>
+		public HeaderPrefixAttribute(string prefix, bool inherit)
+		{
+			Prefix = prefix;
+			Inherit = inherit;
+		}
+
+		/// <summary>
 		/// Applies configuration to the given <see cref="MemberMap" />.
 		/// </summary>
 		/// <param name="referenceMap">The reference map.</param>
 		public void ApplyTo(MemberReferenceMap referenceMap)
 		{
+			referenceMap.Data.Inherit = Inherit;
 			referenceMap.Data.Prefix = Prefix ?? referenceMap.Data.Member.Name + ".";
 		}
 
@@ -47,6 +73,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <exception cref="NotImplementedException"></exception>
 		public void ApplyTo(ParameterReferenceMap referenceMap)
 		{
+			referenceMap.Data.Inherit = Inherit;
 			referenceMap.Data.Prefix = Prefix ?? referenceMap.Data.Parameter.Name + ".";
 		}
 	}
