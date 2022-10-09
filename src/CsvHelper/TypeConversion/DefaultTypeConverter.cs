@@ -31,6 +31,7 @@ namespace CsvHelper.TypeConversion
 			var message =
 				$"The conversion cannot be performed.{Environment.NewLine}" +
 				$"    Text: '{text}'{Environment.NewLine}" +
+				$"    MemberName: {memberMapData.Member?.Name}{Environment.NewLine}" +
 				$"    MemberType: {memberMapData.Member?.MemberType().FullName}{Environment.NewLine}" +
 				$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
 			throw new TypeConverterException(this, memberMapData, text, row.Context, message);
