@@ -26,6 +26,11 @@ namespace CsvHelper.Configuration
 				{
 					memberMap.Data.Names.Prefix = value;
 				}
+
+				foreach( var memberRef in Mapping.ReferenceMaps )
+				{
+					memberRef.Data.Prefix = memberRef.Data.Prefix == null ? value : string.Concat(value, memberRef.Data.Prefix);
+				}
 			}
 		}
 
