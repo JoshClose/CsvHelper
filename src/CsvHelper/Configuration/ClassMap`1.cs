@@ -28,46 +28,10 @@ namespace CsvHelper.Configuration
 		/// <returns>The member mapping.</returns>
 		public virtual MemberMap<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
 		{
-			var stack = ReflectionHelper.GetMembers(expression);
-			if (stack.Count == 0)
-			{
-				throw new InvalidOperationException("No members were found in expression '{expression}'.");
-			}
+			var (classMap, member) = GetMemberMap(expression);
+			var memberMap = classMap.Map(typeof(TClass), member, useExistingMap); ;
 
-			ClassMap currentClassMap = this;
-			MemberInfo member;
-
-			if (stack.Count > 1)
-			{
-				// We need to add a reference map for every sub member.
-				while (stack.Count > 1)
-				{
-					member = stack.Pop();
-					Type mapType;
-					var property = member as PropertyInfo;
-					var field = member as FieldInfo;
-					if (property != null)
-					{
-						mapType = typeof(DefaultClassMap<>).MakeGenericType(property.PropertyType);
-					}
-					else if (field != null)
-					{
-						mapType = typeof(DefaultClassMap<>).MakeGenericType(field.FieldType);
-					}
-					else
-					{
-						throw new InvalidOperationException("The given expression was not a property or a field.");
-					}
-
-					var referenceMap = currentClassMap.References(mapType, member);
-					currentClassMap = referenceMap.Data.Mapping;
-				}
-			}
-
-			// Add the member map to the last reference map.
-			member = stack.Pop();
-
-			return (MemberMap<TClass, TMember>)currentClassMap.Map(typeof(TClass), member, useExistingMap);
+			return (MemberMap<TClass, TMember>)memberMap;
 		}
 
 		/// <summary>
@@ -77,48 +41,12 @@ namespace CsvHelper.Configuration
 		/// <param name="useExistingMap">If true, an existing map will be used if available.
 		/// If false, a new map is created for the same member.</param>
 		/// <returns>The member mapping.</returns>
-		public virtual MemberMap Map<T>( Expression<Func<T, object>> expression, bool useExistingMap = true )
+		public virtual MemberMap Map<T>(Expression<Func<T, object>> expression, bool useExistingMap = true)
 		{
-			var stack = ReflectionHelper.GetMembers(expression);
-			if (stack.Count == 0)
-			{
-				throw new InvalidOperationException("No members were found in expression '{expression}'.");
-			}
+			var (classMap, member) = GetMemberMap(expression);
+			var memberMap = classMap.Map(typeof(TClass), member, useExistingMap);
 
-			ClassMap currentClassMap = this;
-			MemberInfo member;
-
-			if (stack.Count > 1)
-			{
-				// We need to add a reference map for every sub member.
-				while (stack.Count > 1)
-				{
-					member = stack.Pop();
-					Type mapType;
-					var property = member as PropertyInfo;
-					var field = member as FieldInfo;
-					if (property != null)
-					{
-						mapType = typeof(DefaultClassMap<>).MakeGenericType(property.PropertyType);
-					}
-					else if (field != null)
-					{
-						mapType = typeof(DefaultClassMap<>).MakeGenericType(field.FieldType);
-					}
-					else
-					{
-						throw new InvalidOperationException("The given expression was not a property or a field.");
-					}
-
-					var referenceMap = currentClassMap.References(mapType, member);
-					currentClassMap = referenceMap.Data.Mapping;
-				}
-			}
-
-			// Add the member map to the last reference map.
-			member = stack.Pop();
-
-			return currentClassMap.Map( typeof(TClass), member, useExistingMap );
+			return memberMap;
 		}
 
 		/// <summary>
@@ -135,6 +63,50 @@ namespace CsvHelper.Configuration
 		{
 			var member = ReflectionHelper.GetMember(expression);
 			return References(typeof(TClassMap), member, constructorArgs);
+		}
+
+		private (ClassMap, MemberInfo) GetMemberMap<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression)
+		{
+			var stack = ReflectionHelper.GetMembers(expression);
+			if (stack.Count == 0)
+			{
+				throw new InvalidOperationException("No members were found in expression '{expression}'.");
+			}
+
+			ClassMap currentClassMap = this;
+			MemberInfo member;
+
+			if (stack.Count > 1)
+			{
+				// We need to add a reference map for every sub member.
+				while (stack.Count > 1)
+				{
+					member = stack.Pop();
+					Type mapType;
+					var property = member as PropertyInfo;
+					var field = member as FieldInfo;
+					if (property != null)
+					{
+						mapType = typeof(DefaultClassMap<>).MakeGenericType(property.PropertyType);
+					}
+					else if (field != null)
+					{
+						mapType = typeof(DefaultClassMap<>).MakeGenericType(field.FieldType);
+					}
+					else
+					{
+						throw new InvalidOperationException("The given expression was not a property or a field.");
+					}
+
+					var referenceMap = currentClassMap.References(mapType, member);
+					currentClassMap = referenceMap.Data.Mapping;
+				}
+			}
+
+			// Add the member map to the last reference map.
+			member = stack.Pop();
+
+			return (currentClassMap, member);
 		}
 	}
 }
