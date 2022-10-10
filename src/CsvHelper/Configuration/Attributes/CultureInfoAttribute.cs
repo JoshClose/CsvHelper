@@ -10,7 +10,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// The <see cref="CultureInfo"/> used when type converting.
 	/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
-	/// setting.
+	/// setting. Or set the same if the attribute is specified on class level.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
 	public class CultureInfoAttribute : Attribute, IMemberMapper, IParameterMapper
@@ -23,7 +23,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// The <see cref="CultureInfo"/> used when type converting.
 		/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
-		/// setting.
+		/// setting. Or set the same if the attribute is specified on class level.
 		/// </summary>
 		/// <param name="culture">The culture.</param>
 		public CultureInfoAttribute(string culture)
@@ -31,19 +31,13 @@ namespace CsvHelper.Configuration.Attributes
 			CultureInfo = CultureInfo.GetCultureInfo(culture);
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="memberMap">The member map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.TypeConverterOptions.CultureInfo = CultureInfo;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="ParameterMap" />.
-		/// </summary>
-		/// <param name="parameterMap">The parameter map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(ParameterMap parameterMap)
 		{
 			parameterMap.Data.TypeConverterOptions.CultureInfo = CultureInfo;

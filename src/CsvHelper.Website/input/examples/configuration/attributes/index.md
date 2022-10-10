@@ -22,6 +22,8 @@ void Main()
 	}
 }
 
+[Delimiter(",")]
+[CultureInfo("")]  // Set CultureInfo to InvariantCulture
 public class Foo
 {
 	[Name("Identifier")]

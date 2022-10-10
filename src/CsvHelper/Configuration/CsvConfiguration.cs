@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using CsvHelper.Configuration.Attributes;
 using CsvHelper.Delegates;
 using CsvHelper.TypeConversion;
 
@@ -103,9 +104,6 @@ namespace CsvHelper.Configuration
 		public bool IsNewLineSet { get; private set; }
 
 		/// <inheritdoc/>
-		public virtual bool LeaveOpen { get; set; }
-
-		/// <inheritdoc/>
 		public virtual bool LineBreakInQuotedFieldIsBadData { get; set; }
 
 		/// <inheritdoc/>
@@ -171,10 +169,17 @@ namespace CsvHelper.Configuration
 		/// will be used instead.
 		/// </summary>
 		/// <param name="cultureInfo">The culture information.</param>
-		public CsvConfiguration(CultureInfo cultureInfo)
+		/// <param name="attributesType">The type that contains the configuration attributes.
+		/// This will call <see cref="ApplyAttributes(Type)"/> automatically.</param>
+		public CsvConfiguration(CultureInfo cultureInfo, Type? attributesType = null)
 		{
 			CultureInfo = cultureInfo;
 			Delimiter = cultureInfo.TextInfo.ListSeparator;
+
+			if (attributesType != null)
+			{
+				ApplyAttributes(attributesType);
+			}
 		}
 
 		/// <summary>
@@ -206,6 +211,19 @@ namespace CsvHelper.Configuration
 
 			// Detect Delimiter
 			if (DetectDelimiter && DetectDelimiterValues.Length == 0) throw new ConfigurationException($"At least one value is required for {nameof(DetectDelimiterValues)} when {nameof(DetectDelimiter)} is enabled.");
+		}
+
+		/// <summary>
+		/// Applies class level attribute to configuration.
+		/// </summary>
+		/// <param name="type">Type with attributes.</param>
+		public void ApplyAttributes(Type type)
+		{
+			var attributes = type.GetCustomAttributes().OfType<IClassMapper>();
+			foreach (var attribute in attributes)
+			{
+				attribute.ApplyTo(this);
+			}
 		}
 	}
 }

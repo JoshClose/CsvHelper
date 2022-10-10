@@ -56,21 +56,14 @@ namespace CsvHelper.Configuration.Attributes
 			Inherit = inherit;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="referenceMap">The reference map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(MemberReferenceMap referenceMap)
 		{
 			referenceMap.Data.Inherit = Inherit;
 			referenceMap.Data.Prefix = Prefix ?? referenceMap.Data.Member.Name + ".";
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="ParameterReferenceMap" />.
-		/// </summary>
-		/// <param name="referenceMap">The reference map.</param>
-		/// <exception cref="NotImplementedException"></exception>
+		/// <inheritdoc />
 		public void ApplyTo(ParameterReferenceMap referenceMap)
 		{
 			referenceMap.Data.Inherit = Inherit;

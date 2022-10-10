@@ -30,19 +30,13 @@ namespace CsvHelper.Configuration.Attributes
 			NameIndex = nameIndex;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="memberMap">The member map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.NameIndex = NameIndex;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="ParameterMap" />.
-		/// </summary>
-		/// <param name="parameterMap">The parameter map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(ParameterMap parameterMap)
 		{
 			parameterMap.Data.NameIndex = NameIndex;
