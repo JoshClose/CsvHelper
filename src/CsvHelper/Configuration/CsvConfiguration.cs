@@ -217,13 +217,15 @@ namespace CsvHelper.Configuration
 		/// Applies class level attribute to configuration.
 		/// </summary>
 		/// <param name="type">Type with attributes.</param>
-		public void ApplyAttributes(Type type)
+		public CsvConfiguration ApplyAttributes(Type type)
 		{
 			var attributes = type.GetCustomAttributes().OfType<IClassMapper>();
 			foreach (var attribute in attributes)
 			{
 				attribute.ApplyTo(this);
 			}
+
+			return this;
 		}
 	}
 }
