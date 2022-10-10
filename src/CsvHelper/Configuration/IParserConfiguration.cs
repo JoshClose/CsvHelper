@@ -27,14 +27,6 @@ namespace CsvHelper.Configuration
 		bool CacheFields { get; }
 
 		/// <summary>
-		/// A value indicating whether to leave the <see cref="TextReader"/> or <see cref="TextWriter"/> open after this object is disposed.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> to leave open, otherwise <c>false</c>.
-		/// </value>
-		bool LeaveOpen { get; }
-
-		/// <summary>
 		/// The newline string to use. Default is \r\n (CRLF).
 		/// When writing, this value is always used.
 		/// When reading, this value is only used if explicitly set.

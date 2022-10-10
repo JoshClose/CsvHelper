@@ -35,20 +35,14 @@ namespace CsvHelper.Configuration.Attributes
 			FalseValues = falseValues;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="memberMap">The member map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
 			memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(FalseValues);
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="ParameterMap"/>.
-		/// </summary>
-		/// <param name="parameterMap">The parameter map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(ParameterMap parameterMap)
 		{
 			parameterMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();

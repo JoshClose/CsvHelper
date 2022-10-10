@@ -30,20 +30,14 @@ namespace CsvHelper.Configuration.Attributes
 			Constant = constant;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="memberMap">The member map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.Constant = Constant;
 			memberMap.Data.IsConstantSet = true;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="ParameterMap"/>.
-		/// </summary>
-		/// <param name="parameterMap">The parameter map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(ParameterMap parameterMap)
 		{
 			parameterMap.Data.Constant = Constant;

@@ -27,14 +27,6 @@ namespace CsvHelper.Configuration
 		CsvMode Mode { get; }
 
 		/// <summary>
-		/// A value indicating whether to leave the <see cref="TextReader"/> or <see cref="TextWriter"/> open after this object is disposed.
-		/// </summary>
-		/// <value>
-		///   <c>true</c> to leave open, otherwise <c>false</c>.
-		/// </value>
-		bool LeaveOpen { get; }
-
-		/// <summary>
 		/// Gets the delimiter used to separate fields.
 		/// Default is ',';
 		/// </summary>

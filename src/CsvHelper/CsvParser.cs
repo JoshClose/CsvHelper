@@ -163,14 +163,15 @@ namespace CsvHelper
 		/// <param name="reader">The reader.</param>
 		/// <param name="culture">The culture.</param>
 		/// <param name="leaveOpen">if set to <c>true</c> [leave open].</param>
-		public CsvParser(TextReader reader, CultureInfo culture, bool leaveOpen = false) : this(reader, new CsvConfiguration(culture) { LeaveOpen = leaveOpen }) { }
+		public CsvParser(TextReader reader, CultureInfo culture, bool leaveOpen = false) : this(reader, new CsvConfiguration(culture), leaveOpen) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvParser"/> class.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser(TextReader reader, IParserConfiguration configuration)
+		/// <param name="leaveOpen">if set to <c>true</c> [leave open].</param>
+		public CsvParser(TextReader reader, IParserConfiguration configuration, bool leaveOpen = false)
 		{
 			this.reader = reader ?? throw new ArgumentNullException(nameof(reader));
 			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -193,7 +194,7 @@ namespace CsvHelper
 			escape = configuration.Escape;
 			ignoreBlankLines = configuration.IgnoreBlankLines;
 			isNewLineSet = configuration.IsNewLineSet;
-			leaveOpen = configuration.LeaveOpen;
+			this.leaveOpen = leaveOpen;
 			lineBreakInQuotedFieldIsBadData = configuration.LineBreakInQuotedFieldIsBadData;
 			maxFieldSize = configuration.MaxFieldSize;
 			newLine = configuration.NewLine;

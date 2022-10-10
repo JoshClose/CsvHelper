@@ -86,14 +86,15 @@ namespace CsvHelper
 		/// <param name="writer">The writer.</param>
 		/// <param name="culture">The culture.</param>
 		/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextWriter"/> open after the <see cref="CsvWriter"/> object is disposed, otherwise <c>false</c>.</param>
-		public CsvWriter(TextWriter writer, CultureInfo culture, bool leaveOpen = false) : this(writer, new CsvConfiguration(culture) { LeaveOpen = leaveOpen }) { }
+		public CsvWriter(TextWriter writer, CultureInfo culture, bool leaveOpen = false) : this(writer, new CsvConfiguration(culture)) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvWriter"/> class.
 		/// </summary>
 		/// <param name="writer">The writer.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvWriter(TextWriter writer, IWriterConfiguration configuration)
+		/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextWriter"/> open after the <see cref="CsvWriter"/> object is disposed, otherwise <c>false</c>.</param>
+		public CsvWriter(TextWriter writer, IWriterConfiguration configuration, bool leaveOpen = false)
 		{
 			configuration.Validate();
 
@@ -115,7 +116,7 @@ namespace CsvHelper
 			includePrivateMembers = configuration.IncludePrivateMembers;
 			injectionCharacters = configuration.InjectionCharacters;
 			injectionEscapeCharacter = configuration.InjectionEscapeCharacter;
-			leaveOpen = configuration.LeaveOpen;
+			this.leaveOpen = leaveOpen;
 			mode = configuration.Mode;
 			newLine = configuration.NewLine;
 			quote = configuration.Quote;

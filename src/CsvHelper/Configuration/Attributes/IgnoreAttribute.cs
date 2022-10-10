@@ -17,20 +17,13 @@ namespace CsvHelper.Configuration.Attributes
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
 	public class IgnoreAttribute : Attribute, IMemberMapper, IMemberReferenceMapper, IParameterMapper
 	{
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="memberMap">The member map.</param>
+		/// <inheritdoc />
 		public void ApplyTo(MemberMap memberMap)
 		{
 			memberMap.Data.Ignore = true;
 		}
 
-		/// <summary>
-		/// Applies configuration to the given <see cref="MemberMap" />.
-		/// </summary>
-		/// <param name="referenceMap">The reference map.</param>
-		/// <exception cref="NotImplementedException"></exception>
+		/// <inheritdoc />
 		public void ApplyTo(MemberReferenceMap referenceMap)
 		{
 			foreach (var memberMap in referenceMap.Data.Mapping.MemberMaps)
@@ -39,9 +32,7 @@ namespace CsvHelper.Configuration.Attributes
 			}
 		}
 
-		/// <summary>
-		/// Defines methods to enable pluggable configuration of parameter mapping.
-		/// </summary>
+		/// <inheritdoc />
 		public void ApplyTo(ParameterMap parameterMap)
 		{
 			parameterMap.Data.Ignore = true;
