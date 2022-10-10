@@ -109,6 +109,9 @@ namespace CsvHelper.Configuration
 		public virtual bool LineBreakInQuotedFieldIsBadData { get; set; }
 
 		/// <inheritdoc/>
+		public double MaxFieldSize { get; set; }
+
+		/// <inheritdoc/>
 		public virtual MemberTypes MemberTypes { get; set; } = MemberTypes.Properties;
 
 		/// <inheritdoc/>

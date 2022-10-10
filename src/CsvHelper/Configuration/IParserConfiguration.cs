@@ -91,6 +91,12 @@ namespace CsvHelper.Configuration
 		BadDataFound BadDataFound { get; }
 
 		/// <summary>
+		/// Gets or sets the maximum size of a field.
+		/// Defaults to 0, indicating maximum field size is not checked.
+		/// </summary>
+		double MaxFieldSize { get; }
+
+		/// <summary>
 		/// Gets a value indicating if a line break found in a quote field should
 		/// be considered bad data. <c>true</c> to consider a line break bad data, otherwise <c>false</c>.
 		/// Defaults to false.
