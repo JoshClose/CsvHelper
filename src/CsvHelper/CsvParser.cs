@@ -44,6 +44,7 @@ namespace CsvHelper
 		private readonly bool cacheFields;
 		private readonly string[] delimiterValues;
 		private readonly bool detectDelimiter;
+		private readonly double maxFieldSize;
 
 		private string delimiter;
 		private char delimiterFirstChar;
@@ -194,6 +195,7 @@ namespace CsvHelper
 			isNewLineSet = configuration.IsNewLineSet;
 			leaveOpen = configuration.LeaveOpen;
 			lineBreakInQuotedFieldIsBadData = configuration.LineBreakInQuotedFieldIsBadData;
+			maxFieldSize = configuration.MaxFieldSize;
 			newLine = configuration.NewLine;
 			newLineFirstChar = configuration.NewLine[0];
 			mode = configuration.Mode;
@@ -341,9 +343,15 @@ namespace CsvHelper
 				c = buffer[bufferPosition];
 				bufferPosition++;
 				charCount++;
+
 				if (countBytes)
 				{
 					byteCount += encoding.GetByteCount(new char[] { c });
+				}
+
+				if (maxFieldSize > 0 && bufferPosition - fieldStartPosition - 1 > maxFieldSize)
+				{
+					throw new MaxFieldSizeException(Context);
 				}
 
 				var isFirstCharOfRow = rowStartPosition == bufferPosition - 1;
