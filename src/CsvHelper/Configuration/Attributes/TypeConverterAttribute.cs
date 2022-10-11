@@ -23,8 +23,15 @@ namespace CsvHelper.Configuration.Attributes
 		/// Specifies the <see cref="TypeConverter"/> to use
 		/// when converting the member to and from a CSV field.
 		/// </summary>
-		/// <param name="typeConverterType"></param>
-		/// <param name="constructorArgs"></param>
+		/// <param name="typeConverterType">The type of the <see cref="ITypeConverter"/>.</param>
+		public TypeConverterAttribute(Type typeConverterType) : this(typeConverterType, new object[0]) { }
+
+		/// <summary>
+		/// Specifies the <see cref="TypeConverter"/> to use
+		/// when converting the member to and from a CSV field.
+		/// </summary>
+		/// <param name="typeConverterType">The type of the <see cref="ITypeConverter"/>.</param>
+		/// <param name="constructorArgs">Type constructor arguments for the type converter.</param>
 		public TypeConverterAttribute(Type typeConverterType, params object[] constructorArgs)
 		{
 			if (typeConverterType == null)
