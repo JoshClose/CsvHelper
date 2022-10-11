@@ -3,15 +3,15 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
-using Xunit;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	
+
 	public class ValidateTests
 	{
 		[Fact]
@@ -108,6 +108,24 @@ namespace CsvHelper.Tests.Reading
 			}
 		}
 
+		[Fact]
+		public void ValidateMessageTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+			};
+			var s = new TestStringBuilder(config.NewLine);
+			s.AppendLine("Id,Name");
+			s.AppendLine("1,one");
+			using (var reader = new StringReader(s))
+			using (var csv = new CsvReader(reader, config))
+			{
+				csv.Context.RegisterClassMap<ValidationMessageMap>();
+				var exception = Assert.Throws<FieldValidationException>(() => csv.GetRecords<Test>().ToList());
+				Assert.StartsWith("Field 'one' was not foo.", exception.Message);
+			}
+		}
+
 		private class Test
 		{
 			public int Id { get; set; }
@@ -142,15 +160,15 @@ namespace CsvHelper.Tests.Reading
 			{
 				Map(m => m.Id);
 				Map(m => m.Name).Validate(args =>
-			 {
-				 var isValid = !string.IsNullOrEmpty(args.Field);
-				 if (!isValid)
-				 {
-					 logger.AppendLine($"Field '{args.Field}' is not valid!");
-				 }
+				{
+					var isValid = !string.IsNullOrEmpty(args.Field);
+					if (!isValid)
+					{
+						logger.AppendLine($"Field '{args.Field}' is not valid!");
+					}
 
-				 return true;
-			 });
+					return true;
+				});
 			}
 		}
 
@@ -165,6 +183,15 @@ namespace CsvHelper.Tests.Reading
 
 		private class CustomException : CsvHelperException
 		{
+		}
+
+		private class ValidationMessageMap : ClassMap<Test>
+		{
+			public ValidationMessageMap()
+			{
+				Map(m => m.Id);
+				Map(m => m.Name).Validate(args => args.Field == "foo", args => $"Field '{args.Field}' was not foo.");
+			}
 		}
 	}
 }

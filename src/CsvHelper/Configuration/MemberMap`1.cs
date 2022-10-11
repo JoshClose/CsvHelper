@@ -35,7 +35,7 @@ namespace CsvHelper.Configuration
 		/// The first name will be used.
 		/// </summary>
 		/// <param name="names">The possible names of the CSV field.</param>
-		public virtual new MemberMap<TClass, TMember> Name(params string[] names)
+		public new virtual MemberMap<TClass, TMember> Name(params string[] names)
 		{
 			if (names == null || names.Length == 0)
 			{
@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		/// are multiple names that are the same.
 		/// </summary>
 		/// <param name="index">The index of the name.</param>
-		public virtual new MemberMap<TClass, TMember> NameIndex(int index)
+		public new virtual MemberMap<TClass, TMember> NameIndex(int index)
 		{
 			Data.NameIndex = index;
 
@@ -70,7 +70,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="index">The index of the CSV field.</param>
 		/// <param name="indexEnd">The end index used when mapping to an <see cref="IEnumerable"/> member.</param>
-		public virtual new MemberMap<TClass, TMember> Index(int index, int indexEnd = -1)
+		public new virtual MemberMap<TClass, TMember> Index(int index, int indexEnd = -1)
 		{
 			Data.Index = index;
 			Data.IsIndexSet = true;
@@ -86,7 +86,7 @@ namespace CsvHelper.Configuration
 		/// this method will not ignore all the child members down the
 		/// tree that have already been mapped.
 		/// </summary>
-		public virtual new MemberMap<TClass, TMember> Ignore()
+		public new virtual MemberMap<TClass, TMember> Ignore()
 		{
 			Data.Ignore = true;
 
@@ -101,7 +101,7 @@ namespace CsvHelper.Configuration
 		/// tree that have already been mapped.
 		/// </summary>
 		/// <param name="ignore">True to ignore, otherwise false.</param>
-		public virtual new MemberMap<TClass, TMember> Ignore(bool ignore)
+		public new virtual MemberMap<TClass, TMember> Ignore(bool ignore)
 		{
 			Data.Ignore = ignore;
 
@@ -159,7 +159,7 @@ namespace CsvHelper.Configuration
 		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverter">The TypeConverter to use.</param>
-		public virtual new MemberMap<TClass, TMember> TypeConverter(ITypeConverter typeConverter)
+		public new virtual MemberMap<TClass, TMember> TypeConverter(ITypeConverter typeConverter)
 		{
 			Data.TypeConverter = typeConverter;
 
@@ -172,7 +172,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <typeparam name="TConverter">The <see cref="System.Type"/> of the 
 		/// <see cref="TypeConverter"/> to use.</typeparam>
-		public virtual new MemberMap<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
+		public new virtual MemberMap<TClass, TMember> TypeConverter<TConverter>() where TConverter : ITypeConverter
 		{
 			TypeConverter(ObjectResolver.Current.Resolve<TConverter>());
 
@@ -226,7 +226,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Ignore the member when reading if no matching field name can be found.
 		/// </summary>
-		public virtual new MemberMap<TClass, TMember> Optional()
+		public new virtual MemberMap<TClass, TMember> Optional()
 		{
 			Data.IsOptional = true;
 
@@ -237,17 +237,32 @@ namespace CsvHelper.Configuration
 		/// Specifies an expression to be used to validate a field when reading.
 		/// </summary>
 		/// <param name="validateExpression"></param>
-		public virtual new MemberMap<TClass, TMember> Validate(Validate validateExpression)
+		public new virtual MemberMap<TClass, TMember> Validate(Validate validateExpression)
+		{
+			return Validate(validateExpression, args => $"Field '{args.Field}' is not valid.");
+		}
+
+		/// <summary>
+		/// Specifies an expression to be used to validate a field when reading along with specified exception message.
+		/// </summary>
+		/// <param name="validateExpression"></param>
+		/// <param name="validateMessageExpression"></param>
+		public new virtual MemberMap<TClass, TMember> Validate(Validate validateExpression, ValidateMessage validateMessageExpression)
 		{
 			var fieldParameter = Expression.Parameter(typeof(ValidateArgs), "args");
-			var methodExpression = Expression.Call(
+			var validateCallExpression = Expression.Call(
 				Expression.Constant(validateExpression.Target),
 				validateExpression.Method,
 				fieldParameter
 			);
-			var lambdaExpression = Expression.Lambda<Validate>(methodExpression, fieldParameter);
+			var messageCallExpression = Expression.Call(
+				Expression.Constant(validateMessageExpression.Target),
+				validateMessageExpression.Method,
+				fieldParameter
+			);
 
-			Data.ValidateExpression = lambdaExpression;
+			Data.ValidateExpression = Expression.Lambda<Validate>(validateCallExpression, fieldParameter);
+			Data.ValidateMessageExpression = Expression.Lambda<ValidateMessage>(messageCallExpression, fieldParameter);
 
 			return this;
 		}
