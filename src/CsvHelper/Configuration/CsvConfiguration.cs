@@ -216,6 +216,15 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Applies class level attribute to configuration.
 		/// </summary>
+		/// <typeparam name="T">Type with attributes.</typeparam>
+		public CsvConfiguration ApplyAttributes<T>()
+		{
+			return ApplyAttributes(typeof(T));
+		}
+
+		/// <summary>
+		/// Applies class level attribute to configuration.
+		/// </summary>
 		/// <param name="type">Type with attributes.</param>
 		public CsvConfiguration ApplyAttributes(Type type)
 		{
