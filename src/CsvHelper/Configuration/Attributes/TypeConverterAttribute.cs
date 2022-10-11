@@ -24,14 +24,15 @@ namespace CsvHelper.Configuration.Attributes
 		/// when converting the member to and from a CSV field.
 		/// </summary>
 		/// <param name="typeConverterType"></param>
-		public TypeConverterAttribute(Type typeConverterType)
+		/// <param name="constructorArgs"></param>
+		public TypeConverterAttribute(Type typeConverterType, params object[] constructorArgs)
 		{
 			if (typeConverterType == null)
 			{
 				throw new ArgumentNullException(nameof(typeConverterType));
 			}
 
-			TypeConverter = ObjectResolver.Current.Resolve(typeConverterType) as ITypeConverter ?? throw new ArgumentException($"Type '{typeConverterType.FullName}' does not implement {nameof(ITypeConverter)}");
+			TypeConverter = ObjectResolver.Current.Resolve(typeConverterType, constructorArgs) as ITypeConverter ?? throw new ArgumentException($"Type '{typeConverterType.FullName}' does not implement {nameof(ITypeConverter)}");
 		}
 
 		/// <inheritdoc />
