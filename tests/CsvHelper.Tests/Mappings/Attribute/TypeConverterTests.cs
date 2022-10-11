@@ -65,6 +65,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			}
 		}
 
+		[Fact]
+		public void Constructor_TypeConverterWithConstructorArgs_Creates()
+		{
+			var attribute = new TypeConverterAttribute(typeof(TypeConverterWithConstructorArgs), 2);
+			Assert.IsType<TypeConverterWithConstructorArgs>(attribute.TypeConverter);
+			Assert.Equal(2, ((TypeConverterWithConstructorArgs)attribute.TypeConverter).Value);
+		}
+
 		private class TypeConverterClass
 		{
 			public int Id { get; set; }
@@ -86,22 +94,32 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			}
 		}
 
-		public class AClass
+		private class AClass
 		{
 			public int Id { get; set; }
 			[TypeConverter(typeof(StringTypeConverter))]
 			public BClass Name { get; set; }
 		}
 
-		public class BClass { }
+		private class BClass { }
 
-		public class AStruct
+		private class AStruct
 		{
 			public int Id { get; set; }
 			[TypeConverter(typeof(StringTypeConverter))]
 			public BStruct Name { get; set; }
 		}
 
-		public class BStruct { }
+		private class BStruct { }
+
+		private class TypeConverterWithConstructorArgs : DefaultTypeConverter
+		{
+			public int Value { get; private set; }
+
+			public TypeConverterWithConstructorArgs(int value)
+			{
+				Value = value;
+			}
+		}
 	}
 }
