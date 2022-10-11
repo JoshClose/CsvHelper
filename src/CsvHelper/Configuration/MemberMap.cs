@@ -2,12 +2,12 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.TypeConversion;
 using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
@@ -136,9 +136,9 @@ namespace CsvHelper.Configuration
 				throw new ArgumentException($"Member of type '{Data.Member.MemberType().FullName}' can't have a default value of null.");
 			}
 
-			if (defaultValue != null && defaultValue.GetType() != Data.Member.MemberType())
+			if (defaultValue != null && !Data.Member.MemberType().IsAssignableFrom(defaultValue.GetType()))
 			{
-				throw new ArgumentException($"Default of type '{defaultValue.GetType().FullName}' does not match member of type '{Data.Member.MemberType().FullName}'.");
+				throw new ArgumentException($"Default of type '{defaultValue.GetType().FullName}' is not assignable to '{Data.Member.MemberType().FullName}'.");
 			}
 
 			Data.Default = defaultValue;
@@ -161,9 +161,9 @@ namespace CsvHelper.Configuration
 				throw new ArgumentException($"Member of type '{Data.Member.MemberType().FullName}' can't have a constant value of null.");
 			}
 
-			if (constantValue != null && constantValue.GetType() != Data.Member.MemberType())
+			if (constantValue != null && !Data.Member.MemberType().IsAssignableFrom(constantValue.GetType()))
 			{
-				throw new ArgumentException($"Constant of type '{constantValue.GetType().FullName}' does not match member of type '{Data.Member.MemberType().FullName}'.");
+				throw new ArgumentException($"Constant of type '{constantValue.GetType().FullName}' is not assignable to '{Data.Member.MemberType().FullName}'.");
 			}
 
 			Data.Constant = constantValue;
