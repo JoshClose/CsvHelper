@@ -146,11 +146,16 @@ namespace CsvHelper.Configuration
 		public virtual Expression ValidateExpression { get; set; }
 
 		/// <summary>
+		/// Gets or sets the expression used to get the validation message when validation fails.
+		/// </summary>
+		public virtual Expression ValidateMessageExpression { get; set; }
+
+		/// <summary>
 		/// Gets or sets a value indicating if a field is optional.
 		/// </summary>
 		public virtual bool IsOptional { get; set; }
 
-		/// <summary>
+        /// <summary>
 		/// Initializes a new instance of the <see cref="MemberMapData"/> class.
 		/// </summary>
 		/// <param name="member">The member.</param>

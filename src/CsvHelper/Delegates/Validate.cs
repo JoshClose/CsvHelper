@@ -18,6 +18,13 @@ namespace CsvHelper
 	public delegate bool Validate(ValidateArgs args);
 
 	/// <summary>
+	/// Function that gets the exception message when validation fails.
+	/// </summary>
+	/// <param name="args">The args.</param>
+	/// <returns>The exception message.</returns>
+	public delegate string ValidateMessage(ValidateArgs args);
+
+	/// <summary>
 	/// Validate args.
 	/// </summary>
 	public readonly struct ValidateArgs
@@ -28,12 +35,19 @@ namespace CsvHelper
 		public readonly string Field;
 
 		/// <summary>
+		/// The row.
+		/// </summary>
+		public readonly IReaderRow Row;
+
+		/// <summary>
 		/// Creates a new instance of ValidateArgs.
 		/// </summary>
 		/// <param name="field">The field.</param>
-		public ValidateArgs(string field)
+		/// <param name="row">The row.</param>
+		public ValidateArgs(string field, IReaderRow row)
 		{
 			Field = field;
+			Row = row;
 		}
 	}
 }

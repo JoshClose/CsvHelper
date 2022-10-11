@@ -213,15 +213,30 @@ namespace CsvHelper.Configuration
 		/// <param name="validateExpression"></param>
 		public virtual MemberMap Validate(Validate validateExpression)
 		{
+			return Validate(validateExpression, args => $"Field '{args.Field}' is not valid.");
+		}
+
+		/// <summary>
+		/// Specifies an expression to be used to validate a field when reading along with specified exception message.
+		/// </summary>
+		/// <param name="validateExpression"></param>
+		/// <param name="validateMessageExpression"></param>
+		public virtual MemberMap Validate(Validate validateExpression, ValidateMessage validateMessageExpression)
+		{
 			var fieldParameter = Expression.Parameter(typeof(ValidateArgs), "field");
-			var methodExpression = Expression.Call(
+			var validateCallExpression = Expression.Call(
 				Expression.Constant(validateExpression.Target),
 				validateExpression.Method,
 				fieldParameter
 			);
-			var lambdaExpression = Expression.Lambda<Validate>(methodExpression, fieldParameter);
+			var messageCallExpression = Expression.Call(
+				Expression.Constant(validateMessageExpression.Target),
+				validateMessageExpression.Method,
+				fieldParameter
+			);
 
-			Data.ValidateExpression = lambdaExpression;
+			Data.ValidateExpression = Expression.Lambda<Validate>(validateCallExpression, fieldParameter);
+			Data.ValidateMessageExpression = Expression.Lambda<ValidateMessage>(messageCallExpression, fieldParameter);
 
 			return this;
 		}
