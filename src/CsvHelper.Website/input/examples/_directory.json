@@ -140,7 +140,17 @@
 		},
 		{
 			"title": "Type Conversion",
-			"link": "~/examples/type-conversion"
+			"link": "~/examples/type-conversion",
+			"children": [
+				{
+					"title": "Type Converter Options",
+					"link": "~/examples/type-conversion/type-converter-options"
+				},
+				{
+					"title": "Custom Type Converters",
+					"link": "~/examples/type-conversion/custom-type-converter"
+				}
+			]
 		},
 		{
 			"title": "CsvDataReader",

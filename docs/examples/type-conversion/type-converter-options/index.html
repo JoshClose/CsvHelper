@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Mapping Properties | CsvHelper</title>
+	<title>Type Converter Options | CsvHelper</title>
 
 	
 	
@@ -403,36 +403,24 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<h1 id="mapping-properties">Mapping Properties</h1>
-<p>This will map the properties of a class to the header names of the CSV data. The mapping needs to be registered in the context. This example is identical to not using a class mapping at all. The headers match the property names.</p>
-<h6 id="data">Data</h6>
-<pre><code>Id,Name
-1,one
+						<h1 id="type-converter-options">Type Converter Options</h1>
+<p>Options can be passed to the type converters.
+Most type converters use <code>IFormattable.ToString</code> to write and <code>TryParse</code> to read.
+Any option for these methods should be available through configuration.</p>
+<h6 id="mapping-example">Mapping Example</h6>
+<pre><code class="language-cs">public sealed class FooMap : ClassMap\&lt;Foo\&gt;
+{
+    public FooMap()
+    {
+        Map(m =&gt; m.DateTimeProps).TypeConverterOption.DateTimeStyles(DateTimeStyles.AllowInnerWhite | DateTimeStyles.RoundtripKind);
+    }
+}
 </code></pre>
-<h6 id="example">Example</h6>
-<pre><code class="language-cs">void Main()
+<h6 id="attributes-example">Attributes Example</h6>
+<pre><code class="language-cs">public class Foo
 {
-	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
-	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-	{		
-		csv.Context.RegisterClassMap&lt;FooMap&gt;();
-		var records = csv.GetRecords&lt;Foo&gt;();
-	}
-}
-
-public class Foo
-{
-	public int Id { get; set; }	
-	public string Name { get; set; }
-}
-
-public sealed class FooMap : ClassMap&lt;Foo&gt;
-{
-	public FooMap()
-	{
-		Map(m =&gt; m.Id);
-		Map(m =&gt; m.Name);
-	}
+    [DateTimeStyles(DateTimeStyles.AllowInnerWhite | DateTimeStyles.RoundtripKind)]
+    public DateTime DateTimeProp { get; set; }
 }
 </code></pre>
 
