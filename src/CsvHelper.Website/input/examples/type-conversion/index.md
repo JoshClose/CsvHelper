@@ -1,10 +1,10 @@
 ﻿# Type Conversion
 
 When reading and writing a custom class will get converted to and from
-a CSV row. Each CSV field can be converted to and from a class property.
-This conversion for class properties is done via type converters.
+a CSV row. Each CSV field can be converted to and from a class property.  
+This conversion for class properties is done via type converters.  
 
-There are many built in converters already available to you.
+There are many built in converters already available to you.  
 
 CsvHelper Converter | C# type keyword | .NET Type
 - | -
