@@ -1,68 +1,58 @@
-﻿# Custom type converters
+﻿# Custom Type Converters
 
-Data formats can be specified on the properties using the attributes or `ClassMap` can be used to do the same.  
-The below method performs the same on the csv reader/writer level using custom type converters by implementing `ITypeConverter` from `CsvHelper.TypeConversion` namespace.  
+The built in type converters will handle most situations for you, but if you find
+a situation where they don't you can create your own type converter.
+
+You can register the converter globally or per member via an attribute or class map.
+You only need to use one, but all are shown in the example.
+
+###### Data
+
+```
+Id,Name,Json
+1,one,"{""foo"": ""bar""}"
+```
 
 ###### Example
 
 ```cs
-// sample data to be written.
-var reportingRows = new List<PositionRow>
+void Main()
 {
-    new PositionRow
+    using (var reader = new new StreamReader("path\\to\\file.csv"))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
-        Date = new DateTime(2022, 10, 22),
-        Position = 10.0
-    },
-
-    new PositionRow
-    {
-        Date = new DateTime(2022, 10, 23),
-        Position = 20.0,
+        // Register globally.
+        csv.Context.TypeConverterCache.AddConverter<JsonNode>(new JsonNodeConverter());
+        csv.Context.RegisterClassMap<FooMap>();
+        csv.GetRecords<Foo>().ToList().Dump();
     }
-};
-
-var configuration = new CsvConfiguration(CultureInfo.InvariantCulture);
-var dateTimeConverterOptions = new TypeConversion.TypeConverterOptions()
-{
-    Formats = new[]
-    {
-        "yyyy-MM-ddTHH:mm",
-    }
-};
-
-// Declare a writer and configure the custom type converter before writing.
-using var writer = new StreamWriter(@"C:\Temp\csv-helper\position-report-using-type-converter-options.csv");
-using var csvWriter = new CsvWriter(writer, configuration);
-csvWriter.Context.TypeConverterOptionsCache.AddOptions<DateTime>(dateTimeConverterOptions);
-csvWriter.WriteRecords(reportingRows);
-
-
-// Csv row definition
-public class PositionRow
-{
-    public DateTime Date { get; set; }
-
-    public double Position { get; set; }
 }
 
-
-// Custom type converter
-public class IsoDateTimeConverter : ITypeConverter
+public class Foo
 {
-    public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData) =>
-        DateTime.ParseExact(text.AsSpan(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None);
+    public int Id { get; set; }
+    public string Name { get; set; }
+    // Register via attribute.
+    [TypeConverter(typeof(JsonNodeConverter))]
+    public JsonNode Json { get; set; }
+}
 
-    public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData) =>
-        $"{(DateTime)value:yyyy-MM-dd}";
+public class FooMap : ClassMap<Foo>
+{
+    public FooMap()
+    {
+        Map(m => m.Id);
+        Map(m => m.Name);
+        // Register via map.
+        Map(m => m.Json).TypeConverter<JsonNodeConverter>();
+    }
+}
+
+public class JsonNodeConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+    {
+        return JsonSerializer.Deserialize<JsonNode>(text);
+    }
 }
 ```
-
-###### Output
-
-```
-Date,Position
-2022-10-22,10
-2022-10-23,20
-```
-

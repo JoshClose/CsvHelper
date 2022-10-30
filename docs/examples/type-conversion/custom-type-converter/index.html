@@ -20,7 +20,7 @@
 	<meta name="msapplication-TileColor" content="#ffffff" />
 	<meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
 	<meta name="theme-color" content="#ffffff" />
-	<title>Mapping Properties | CsvHelper</title>
+	<title>Custom Type Converter | CsvHelper</title>
 
 	
 	
@@ -403,36 +403,54 @@
 					</div>
 				<div class="column">
 					<div class="content">
-						<h1 id="mapping-properties">Mapping Properties</h1>
-<p>This will map the properties of a class to the header names of the CSV data. The mapping needs to be registered in the context. This example is identical to not using a class mapping at all. The headers match the property names.</p>
+						<h1 id="custom-type-converters">Custom Type Converters</h1>
+<p>The built in type converters will handle most situations for you, but if you find
+a situation where they don't you can create your own type converter.</p>
+<p>You can register the converter globally or per member via an attribute or class map.
+You only need to use one, but all are shown in the example.</p>
 <h6 id="data">Data</h6>
-<pre><code>Id,Name
-1,one
+<pre><code>Id,Name,Json
+1,one,&quot;{&quot;&quot;foo&quot;&quot;: &quot;&quot;bar&quot;&quot;}&quot;
 </code></pre>
 <h6 id="example">Example</h6>
 <pre><code class="language-cs">void Main()
 {
-	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
-	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-	{		
-		csv.Context.RegisterClassMap&lt;FooMap&gt;();
-		var records = csv.GetRecords&lt;Foo&gt;();
-	}
+    using (var reader = new new StreamReader(&quot;path\\to\\file.csv&quot;))
+    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+    {
+        // Register globally.
+        csv.Context.TypeConverterCache.AddConverter&lt;JsonNode&gt;(new JsonNodeConverter());
+        csv.Context.RegisterClassMap&lt;FooMap&gt;();
+        csv.GetRecords&lt;Foo&gt;().ToList().Dump();
+    }
 }
 
 public class Foo
 {
-	public int Id { get; set; }	
-	public string Name { get; set; }
+    public int Id { get; set; }
+    public string Name { get; set; }
+    // Register via attribute.
+    [TypeConverter(typeof(JsonNodeConverter))]
+    public JsonNode Json { get; set; }
 }
 
-public sealed class FooMap : ClassMap&lt;Foo&gt;
+public class FooMap : ClassMap&lt;Foo&gt;
 {
-	public FooMap()
-	{
-		Map(m =&gt; m.Id);
-		Map(m =&gt; m.Name);
-	}
+    public FooMap()
+    {
+        Map(m =&gt; m.Id);
+        Map(m =&gt; m.Name);
+        // Register via map.
+        Map(m =&gt; m.Json).TypeConverter&lt;JsonNodeConverter&gt;();
+    }
+}
+
+public class JsonNodeConverter : DefaultTypeConverter
+{
+    public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+    {
+        return JsonSerializer.Deserialize&lt;JsonNode&gt;(text);
+    }
 }
 </code></pre>
 

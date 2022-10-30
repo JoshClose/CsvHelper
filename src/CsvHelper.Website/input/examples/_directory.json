@@ -143,11 +143,11 @@
 			"link": "~/examples/type-conversion",
 			"children": [
 				{
-					"title": "Type converter options",
+					"title": "Type Converter Options",
 					"link": "~/examples/type-conversion/type-converter-options"
 				},
 				{
-					"title": "Custom type converters",
+					"title": "Custom Type Converters",
 					"link": "~/examples/type-conversion/custom-type-converter"
 				}
 			]

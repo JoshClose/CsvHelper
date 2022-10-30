@@ -1,58 +1,27 @@
-﻿# Type converter options
+﻿# Type Converter Options
 
-Data formats can be specified on the properties using the attributes or `ClassMap` can be used to do the same.  
-The below method performs the same on the csv reader/writer level using `TypeConverterOptions` from `CsvHelper.TypeConversion` namespace.  
+Options can be passed to the type converters. 
+Most type converters use `IFormattable.ToString` to write and `TryParse` to read.
+Any option for these methods should be available through configuration.
 
-###### Example
+###### Mapping Example
 
 ```cs
-// sample data to be written.
-var reportingRows = new List<PositionRow>
+public sealed class FooMap : ClassMap\<Foo\>
 {
-    new PositionRow
+    public FooMap()
     {
-        Date = new DateTime(2022, 10, 22),
-        Position = 10.0
-    },
-
-    new PositionRow
-    {
-        Date = new DateTime(2022, 10, 23),
-        Position = 20.0,
+        Map(m => m.DateTimeProps).TypeConverterOption.DateTimeStyles(DateTimeStyles.AllowInnerWhite | DateTimeStyles.RoundtripKind);
     }
-};
-
-var configuration = new CsvConfiguration(CultureInfo.InvariantCulture);
-var dateTimeConverterOptions = new TypeConversion.TypeConverterOptions()
-{
-    Formats = new[]
-    {
-        "yyyy-MM-dd",
-    }
-};
-
-// Declare a writer and configure the type converter options before writing.
-using var writer = new StreamWriter(@"C:\Temp\csv-helper\position-report-using-type-converter-options.csv");
-using var csvWriter = new CsvWriter(writer, configuration);
-csvWriter.Context.TypeConverterOptionsCache.AddOptions<DateTime>(dateTimeConverterOptions);
-csvWriter.WriteRecords(reportingRows);
-
-
-// Csv row definition
-public class PositionRow
-{
-    public DateTime Date { get; set; }
-
-    public double Position { get; set; }
 }
-
 ```
 
-###### Output
+###### Attributes Example
 
+```cs
+public class Foo
+{
+    [DateTimeStyles(DateTimeStyles.AllowInnerWhite | DateTimeStyles.RoundtripKind)]
+    public DateTime DateTimeProp { get; set; }
+}
 ```
-Date,Position
-2022-10-22T00:00,10
-2022-10-23T00:00,20
-```
-
