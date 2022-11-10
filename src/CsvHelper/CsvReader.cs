@@ -78,7 +78,8 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvReader(TextReader reader, IReaderConfiguration configuration) : this(new CsvParser(reader, configuration)) { }
+		/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextReader"/> open after the <see cref="CsvReader"/> object is disposed, otherwise <c>false</c>.</param>
+		public CsvReader(TextReader reader, IReaderConfiguration configuration, bool leaveOpen = false) : this(new CsvParser(reader, configuration, leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="IParser" />.
