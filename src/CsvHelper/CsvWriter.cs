@@ -88,7 +88,7 @@ namespace CsvHelper
 		/// <param name="writer">The writer.</param>
 		/// <param name="culture">The culture.</param>
 		/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextWriter"/> open after the <see cref="CsvWriter"/> object is disposed, otherwise <c>false</c>.</param>
-		public CsvWriter(TextWriter writer, CultureInfo culture, bool leaveOpen = false) : this(writer, new CsvConfiguration(culture)) { }
+		public CsvWriter(TextWriter writer, CultureInfo culture, bool leaveOpen = false) : this(writer, new CsvConfiguration(culture), leaveOpen) { }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvWriter"/> class.
