@@ -52,9 +52,11 @@ namespace CsvHelper
 		private readonly char injectionEscapeCharacter;
 		private readonly InjectionOptions injectionOptions;
 		private readonly CsvMode mode;
+		private readonly string escapeString;
 		private readonly string escapeQuoteString;
 		private readonly string escapeDelimiterString;
 		private readonly string escapeNewlineString;
+		private readonly string escapeEscapeString;
 
 		private bool disposed;
 		private bool hasHeaderBeenWritten;
@@ -112,6 +114,7 @@ namespace CsvHelper
 			escapeDelimiterString = new string(configuration.Delimiter.SelectMany(c => new[] { configuration.Escape, c }).ToArray());
 			escapeNewlineString = new string(configuration.NewLine.SelectMany(c => new[] { configuration.Escape, c }).ToArray());
 			escapeQuoteString = new string(new[] { configuration.Escape, configuration.Quote });
+			escapeEscapeString = new string(new[] { configuration.Escape, configuration.Escape });
 			hasHeaderRecord = configuration.HasHeaderRecord;
 			includePrivateMembers = configuration.IncludePrivateMembers;
 			injectionCharacters = configuration.InjectionCharacters;
@@ -121,6 +124,7 @@ namespace CsvHelper
 			newLine = configuration.NewLine;
 			quote = configuration.Quote;
 			quoteString = configuration.Quote.ToString();
+			escapeString = configuration.Escape.ToString();
 			injectionOptions = configuration.InjectionOptions;
 			shouldQuote = configuration.ShouldQuote;
 			trimOptions = configuration.TrimOptions;
@@ -165,6 +169,11 @@ namespace CsvHelper
 				// All quotes must be escaped.
 				if (shouldQuote)
 				{
+					if (escapeString != quoteString)
+					{
+						field = field?.Replace(escapeString, escapeEscapeString);
+					}
+
 					field = field?.Replace(quoteString, escapeQuoteString);
 					field = quote + field + quote;
 				}
@@ -172,6 +181,7 @@ namespace CsvHelper
 			else if (mode == CsvMode.Escape)
 			{
 				field = field?
+					.Replace(escapeString, escapeEscapeString)
 					.Replace(quoteString, escapeQuoteString)
 					.Replace(delimiter, escapeDelimiterString)
 					.Replace(newLine, escapeNewlineString);
