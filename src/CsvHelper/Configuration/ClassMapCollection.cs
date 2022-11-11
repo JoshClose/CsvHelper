@@ -162,7 +162,7 @@ namespace CsvHelper.Configuration
 					continue;
 				}
 
-				if (memberMap.Data.TypeConverter == null)
+				if (memberMap.Data.TypeConverter == null && memberMap.Data.ReadingConvertExpression == null && memberMap.Data.WritingConvertExpression == null)
 				{
 					memberMap.Data.TypeConverter = context.TypeConverterCache.GetConverter(memberMap.Data.Member.MemberType());
 				}

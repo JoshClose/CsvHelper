@@ -5,6 +5,8 @@
 using CsvHelper.Configuration;
 using Xunit;
 using System.Globalization;
+using System.Collections;
+using System;
 
 namespace CsvHelper.Tests.Configuration
 {
@@ -25,6 +27,17 @@ namespace CsvHelper.Tests.Configuration
 			Assert.Equal(childMap, map);
 		}
 
+		[Fact]		
+		public void Add_Enumerable_HasConvertSet_DoesNotAssignTypeConverter()
+		{
+			var context = new CsvContext(new CsvConfiguration(CultureInfo.InvariantCulture));
+			var collection = new ClassMapCollection(context);
+
+			var map = new EnumerablePropertyClassMap();
+			collection.Add(map);
+			Assert.Null(map.MemberMaps.Find<EnumerablePropertyClass>(m => m.Enumerable).Data.TypeConverter);
+		}
+
 		private class Parent { }
 
 		private class Child : Parent { }
@@ -32,5 +45,26 @@ namespace CsvHelper.Tests.Configuration
 		private sealed class ParentMap : ClassMap<Parent> { }
 
 		private sealed class ChildMap : ClassMap<Child> { }
+
+		private class EnumerablePropertyClass
+		{
+			public Enumerable Enumerable { get; set; }
+		}
+
+		private class EnumerablePropertyClassMap : ClassMap<EnumerablePropertyClass>
+		{
+			public EnumerablePropertyClassMap()
+			{
+				Map(m => m.Enumerable).Convert(_ => new Enumerable());
+			}
+		}
+
+		private class Enumerable : IEnumerable
+		{
+			public IEnumerator GetEnumerator()
+			{
+				throw new NotSupportedException();
+			}
+		}
 	}
 }
