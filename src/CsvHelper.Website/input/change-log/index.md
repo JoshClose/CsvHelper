@@ -1,5 +1,13 @@
 ﻿# Change Log
 
+### 30.0.1
+
+#### Bug Fixes
+
+- Fixed issue when writing with the escape char not being escaped if it was different than the quote char.
+- Fixed issue with `CsvWriter` not passing `leavOpen` parameter to other constructor call.
+- Fixed issue with TypeConverter being assigned to a member that has a Convert expression assigned to it.
+
 ### 30.0.0
 
 #### Features
