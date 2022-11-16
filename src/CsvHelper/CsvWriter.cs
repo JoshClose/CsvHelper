@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+// Copyright 2009-2022 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -299,7 +299,11 @@ namespace CsvHelper
 			hasHeaderBeenWritten = true;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Writes a dynamic header record.
+		/// </summary>
+		/// <param name="record">The header record to write.</param>
+		/// <exception cref="ArgumentNullException">Thrown when no record is passed.</exception>
 		public virtual void WriteDynamicHeader(IDynamicMetaObjectProvider record)
 		{
 			if (record == null)
@@ -526,7 +530,9 @@ namespace CsvHelper
 			await writer.FlushAsync().ConfigureAwait(false);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Flushes the buffer.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void FlushBuffer()
 		{
@@ -534,7 +540,9 @@ namespace CsvHelper
 			bufferPosition = 0;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Asynchronously flushes the buffer.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual async Task FlushBufferAsync()
 		{
@@ -542,7 +550,11 @@ namespace CsvHelper
 			bufferPosition = 0;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Indicates if values can be written.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		/// <returns>True if values can be written.</returns>
 		public virtual bool CanWrite(MemberMap memberMap)
 		{
 			var cantWrite =
@@ -562,7 +574,12 @@ namespace CsvHelper
 			return !cantWrite;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Determines the type for the given record.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <param name="record">The record to determine the type of.</param>
+		/// <returns>The System.Type for the record.</returns>
 		public virtual Type GetTypeForRecord<T>(T record)
 		{
 			var type = typeof(T);
@@ -574,7 +591,12 @@ namespace CsvHelper
 			return type;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Sanitizes the given field, before it is injected.
+		/// </summary>
+		/// <param name="field">The field to sanitize.</param>
+		/// <returns>The sanitized field.</returns>
+		/// <exception cref="WriterException">Thrown when an injection character is found in the field.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual string SanitizeForInjection(string field)
 		{
@@ -636,7 +658,10 @@ namespace CsvHelper
 			return field;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Writes the given value to the buffer.
+		/// </summary>
+		/// <param name="value">The value to write.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected void WriteToBuffer(string value)
 		{
@@ -670,7 +695,10 @@ namespace CsvHelper
 			GC.SuppressFinalize(this);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Disposes the object.
+		/// </summary>
+		/// <param name="disposing">Indicates if the object is being disposed.</param>
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposed)
