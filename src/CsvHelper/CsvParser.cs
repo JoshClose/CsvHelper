@@ -49,6 +49,8 @@ namespace CsvHelper
 		private string delimiter;
 		private char delimiterFirstChar;
 		private char[] buffer;
+		private char[] surrogateBuffer;
+		private char[] charCountBuffer;
 		private int bufferSize;
 		private int charsRead;
 		private int bufferPosition;
@@ -73,6 +75,7 @@ namespace CsvHelper
 		private bool fieldIsBadData;
 		private bool fieldIsQuoted;
 		private bool isProcessingField;
+		private bool isProcessingSurrogate;
 		private bool isRecordProcessed;
 		private string[]? record;
 
@@ -204,6 +207,11 @@ namespace CsvHelper
 			quote = configuration.Quote;
 			whiteSpaceChars = configuration.WhiteSpaceChars;
 			trimOptions = configuration.TrimOptions;
+			if (configuration.CountBytes)
+			{
+				surrogateBuffer = new char[2];
+				charCountBuffer = new char[1];
+			}
 
 			buffer = new char[bufferSize];
 			processFieldBuffer = new char[processFieldBufferSize];
@@ -347,7 +355,10 @@ namespace CsvHelper
 
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new char[] { c });
+					if (CountBytes(ref c) == ReadLineResult.Incomplete)
+					{
+						return ReadLineResult.Incomplete;
+					}
 				}
 
 				if (maxFieldSize > 0 && bufferPosition - fieldStartPosition - 1 > maxFieldSize)
@@ -504,8 +515,38 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new char[] { c });
+					return CountBytes(ref c);
 				}
+			}
+
+			return ReadLineResult.Complete;
+		}
+
+		private ReadLineResult CountBytes(ref char c)
+		{
+			if (char.IsSurrogate(c))
+			{
+				if (bufferPosition + 1 >= charsRead)
+				{
+					surrogateBuffer[0] = c;
+					isProcessingSurrogate = true;
+					return ReadLineResult.Incomplete;
+				}
+
+				char secondSurrogateChar = buffer[bufferPosition + 1];
+				if (!char.IsSurrogatePair(c, secondSurrogateChar))
+				{
+					throw new ParserException(Context, "CSV file contains invalid surrogate pairs.");
+				}
+				surrogateBuffer[0] = c;
+				surrogateBuffer[1] = secondSurrogateChar;
+
+				byteCount += encoding.GetByteCount(surrogateBuffer);
+			}
+			else
+			{
+				charCountBuffer[0] = c;
+				byteCount += encoding.GetByteCount(charCountBuffer);
 			}
 
 			return ReadLineResult.Complete;
@@ -534,7 +575,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new char[] { c });
+					return CountBytes(ref c);
 				}
 			}
 
@@ -565,7 +606,10 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new[] { c });
+					if (CountBytes(ref c) == ReadLineResult.Incomplete)
+					{
+						return ReadLineResult.Incomplete;
+					}
 				}
 
 				if (bufferPosition >= charsRead)
@@ -603,7 +647,10 @@ namespace CsvHelper
 					charCount++;
 					if (countBytes)
 					{
-						byteCount += encoding.GetByteCount(new char[] { c });
+						if (CountBytes(ref c) == ReadLineResult.Incomplete)
+						{
+							return ReadLineResult.Incomplete;
+						}
 					}
 				}
 			}
@@ -642,7 +689,10 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new[] { c });
+					if (CountBytes(ref c) == ReadLineResult.Incomplete)
+					{
+						return ReadLineResult.Incomplete;
+					}
 				}
 
 				if (bufferPosition >= charsRead)
@@ -747,10 +797,31 @@ namespace CsvHelper
 			charsRead = reader.Read(buffer, charsLeft, buffer.Length - charsLeft);
 			if (charsRead == 0)
 			{
+				if (isProcessingSurrogate)
+				{
+					throw new ParserException(Context, "CSV file contains invalid surrogate pairs.");
+				}
+
 				return false;
 			}
 
 			charsRead += charsLeft;
+
+			if (isProcessingSurrogate)
+			{
+				Debug.Assert(countBytes);
+
+				char secondSurrogate = buffer[bufferPosition];
+				if (!char.IsSurrogatePair(surrogateBuffer[0], secondSurrogate))
+				{
+					throw new ParserException(Context, "CSV file contains invalid surrogate pairs.");
+				}
+
+				surrogateBuffer[1] = secondSurrogate;
+				byteCount += encoding.GetByteCount(surrogateBuffer);
+
+				isProcessingSurrogate = false;
+			}
 
 			return true;
 		}
