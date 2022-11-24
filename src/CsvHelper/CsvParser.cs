@@ -75,7 +75,7 @@ namespace CsvHelper
 		private bool fieldIsBadData;
 		private bool fieldIsQuoted;
 		private bool isProcessingField;
-		private bool isProcessingSurrogate;
+		private bool isPartiallyProcessedSurrogate;
 		private bool isRecordProcessed;
 		private string[]? record;
 
@@ -355,10 +355,7 @@ namespace CsvHelper
 
 				if (countBytes)
 				{
-					if (CountBytes(ref c) == ReadLineResult.Incomplete)
-					{
-						return ReadLineResult.Incomplete;
-					}
+					CountBytes(ref c);
 				}
 
 				if (maxFieldSize > 0 && bufferPosition - fieldStartPosition - 1 > maxFieldSize)
@@ -515,33 +512,32 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					return CountBytes(ref c);
+					CountBytes(ref c);
 				}
 			}
 
 			return ReadLineResult.Complete;
 		}
 
-		private ReadLineResult CountBytes(ref char c)
+		private void CountBytes(ref char c)
 		{
-			if (char.IsSurrogate(c))
+			if (isPartiallyProcessedSurrogate)
 			{
-				if (bufferPosition + 1 >= charsRead)
-				{
-					surrogateBuffer[0] = c;
-					isProcessingSurrogate = true;
-					return ReadLineResult.Incomplete;
-				}
-
-				char secondSurrogateChar = buffer[bufferPosition + 1];
-				if (!char.IsSurrogatePair(c, secondSurrogateChar))
+				if (!char.IsSurrogatePair(surrogateBuffer[0], c))
 				{
 					throw new ParserException(Context, "CSV file contains invalid surrogate pairs.");
 				}
-				surrogateBuffer[0] = c;
-				surrogateBuffer[1] = secondSurrogateChar;
 
+				surrogateBuffer[1] = c;
 				byteCount += encoding.GetByteCount(surrogateBuffer);
+				isPartiallyProcessedSurrogate = false;
+				return;
+			}
+
+			if (char.IsSurrogate(c))
+			{
+				surrogateBuffer[0] = c;
+				isPartiallyProcessedSurrogate = true;
 			}
 			else
 			{
@@ -549,7 +545,6 @@ namespace CsvHelper
 				byteCount += encoding.GetByteCount(charCountBuffer);
 			}
 
-			return ReadLineResult.Complete;
 		}
 
 		private ReadLineResult ReadBlankLine(ref char c)
@@ -575,7 +570,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					return CountBytes(ref c);
+					CountBytes(ref c);
 				}
 			}
 
@@ -606,10 +601,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					if (CountBytes(ref c) == ReadLineResult.Incomplete)
-					{
-						return ReadLineResult.Incomplete;
-					}
+					CountBytes(ref c);
 				}
 
 				if (bufferPosition >= charsRead)
@@ -647,10 +639,7 @@ namespace CsvHelper
 					charCount++;
 					if (countBytes)
 					{
-						if (CountBytes(ref c) == ReadLineResult.Incomplete)
-						{
-							return ReadLineResult.Incomplete;
-						}
+						CountBytes(ref c);
 					}
 				}
 			}
@@ -689,10 +678,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					if (CountBytes(ref c) == ReadLineResult.Incomplete)
-					{
-						return ReadLineResult.Incomplete;
-					}
+					CountBytes(ref c);
 				}
 
 				if (bufferPosition >= charsRead)
@@ -797,7 +783,7 @@ namespace CsvHelper
 			charsRead = reader.Read(buffer, charsLeft, buffer.Length - charsLeft);
 			if (charsRead == 0)
 			{
-				if (isProcessingSurrogate)
+				if (isPartiallyProcessedSurrogate)
 				{
 					throw new ParserException(Context, "CSV file contains invalid surrogate pairs.");
 				}
@@ -806,22 +792,6 @@ namespace CsvHelper
 			}
 
 			charsRead += charsLeft;
-
-			if (isProcessingSurrogate)
-			{
-				Debug.Assert(countBytes);
-
-				char secondSurrogate = buffer[bufferPosition];
-				if (!char.IsSurrogatePair(surrogateBuffer[0], secondSurrogate))
-				{
-					throw new ParserException(Context, "CSV file contains invalid surrogate pairs.");
-				}
-
-				surrogateBuffer[1] = secondSurrogate;
-				byteCount += encoding.GetByteCount(surrogateBuffer);
-
-				isProcessingSurrogate = false;
-			}
 
 			return true;
 		}
