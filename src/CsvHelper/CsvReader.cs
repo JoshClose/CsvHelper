@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+// Copyright 2009-2022 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -14,6 +14,7 @@ using CsvHelper.Expressions;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Configuration;
 
 namespace CsvHelper
 {
@@ -120,13 +121,19 @@ namespace CsvHelper
 			return headerRecord != null;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Validates the header to be of the given type.
+		/// </summary>
+		/// <typeparam name="T">The expected type of the header</typeparam>
 		public virtual void ValidateHeader<T>()
 		{
 			ValidateHeader(typeof(T));
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Validates the header to be of the given type.
+		/// </summary>
+		/// <param name="type">The expected type of the header.</param>
 		public virtual void ValidateHeader(Type type)
 		{
 			if (hasHeaderRecord == false)
@@ -154,7 +161,11 @@ namespace CsvHelper
 			headerValidated?.Invoke(args);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Validates the header to be of the given type.
+		/// </summary>
+		/// <param name="map">The mapped classes.</param>
+		/// <param name="invalidHeaders">The invalid headers.</param>
 		protected virtual void ValidateHeader(ClassMap map, List<InvalidHeader> invalidHeaders)
 		{
 			foreach (var parameter in map.ParameterMaps)
@@ -344,8 +355,8 @@ namespace CsvHelper
 
 			if (index >= parser.Count || index < 0)
 			{
-					var args = new MissingFieldFoundArgs(null, index, context);
-					missingFieldFound?.Invoke(args);
+				var args = new MissingFieldFoundArgs(null, index, context);
+				missingFieldFound?.Invoke(args);
 				return default;
 			}
 
@@ -481,8 +492,8 @@ namespace CsvHelper
 			if (index >= parser.Count || index < 0)
 			{
 				currentIndex = index;
-					var args = new MissingFieldFoundArgs(null, index, context);
-					missingFieldFound?.Invoke(args);
+				var args = new MissingFieldFoundArgs(null, index, context);
+				missingFieldFound?.Invoke(args);
 
 				return default;
 			}
@@ -1011,7 +1022,7 @@ namespace CsvHelper
 
 #if !NET45
 		/// <inheritdoc/>
-		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation]CancellationToken cancellationToken = default(CancellationToken))
+		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default(CancellationToken))
 		{
 			if (disposed)
 			{
@@ -1203,13 +1214,26 @@ namespace CsvHelper
 		}
 #endif
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Gets the index of the field with the given name.
+		/// </summary>
+		/// <param name="name">The name of the field.</param>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="isTryGet">Indicates if a TryGet is executed.</param>
+		/// <returns>The index of the field.</returns>
 		public virtual int GetFieldIndex(string name, int index = 0, bool isTryGet = false)
 		{
 			return GetFieldIndex(new[] { name }, index, isTryGet);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Gets the index of the field with the given name.
+		/// </summary>
+		/// <param name="names">The names of the field.</param>
+		/// <param name="index">The index of the field.</param>
+		/// <param name="isTryGet">Indicates if a TryGet is executed.</param>
+		/// <param name="isOptional">Indicates if the field is optional.</param>
+		/// <returns>The index of the field.</returns>
 		public virtual int GetFieldIndex(IEnumerable<string> names, int index = 0, bool isTryGet = false, bool isOptional = false)
 		{
 			if (names == null)
@@ -1270,7 +1294,11 @@ namespace CsvHelper
 			return namedIndexes[name][index];
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Indicates if values can be read.
+		/// </summary>
+		/// <param name="memberMap">The member map.</param>
+		/// <returns>True if values can be read.</returns>
 		public virtual bool CanRead(MemberMap memberMap)
 		{
 			var cantRead =
@@ -1291,7 +1319,11 @@ namespace CsvHelper
 			return !cantRead;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Indicates if values can be read.
+		/// </summary>
+		/// <param name="memberReferenceMap">The member reference map.</param>
+		/// <returns>True if values can be read.</returns>
 		public virtual bool CanRead(MemberReferenceMap memberReferenceMap)
 		{
 			var cantRead = false;
@@ -1317,7 +1349,10 @@ namespace CsvHelper
 			GC.SuppressFinalize(this);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Disposes the object.
+		/// </summary>
+		/// <param name="disposing">Indicates if the object is being disposed.</param>
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposed)
@@ -1338,7 +1373,10 @@ namespace CsvHelper
 			disposed = true;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Checks if the file has been read.
+		/// </summary>
+		/// <exception cref="ReaderException">Thrown when the file has not yet been read.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void CheckHasBeenRead()
 		{
@@ -1348,7 +1386,10 @@ namespace CsvHelper
 			}
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Parses the named indexes.
+		/// </summary>
+		/// <exception cref="ReaderException">Thrown when no header record was found.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void ParseNamedIndexes()
 		{
