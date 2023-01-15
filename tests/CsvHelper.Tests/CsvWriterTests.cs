@@ -13,6 +13,7 @@ using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 using System.Dynamic;
 using Xunit;
 using System.Threading;
+using System.Collections;
 
 namespace CsvHelper.Tests
 {
@@ -832,6 +833,37 @@ namespace CsvHelper.Tests
 
 				var text = reader.ReadToEnd();
 				Assert.Equal("One\r\n", text);
+			}
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void WriteRecords_NonGeneric_HasHeaderRecord(bool hasHeaderRecord)
+		{
+			var confg = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = hasHeaderRecord
+			};
+
+			using var stringWriter = new StringWriter();
+			using var csvWriter = new CsvWriter(stringWriter, confg);
+
+			IEnumerable records = new object[] {
+				new TestSinglePropertyRecord { Name = "test" },
+				new TestRecord { IntColumn = 4 }
+			};
+
+			csvWriter.WriteRecords(records);
+			var csv = stringWriter.ToString();
+
+			if (hasHeaderRecord)
+			{
+				Assert.Equal("Name\r\ntest\r\n4,,,,\r\n", csv);
+			}
+			else
+			{
+				Assert.Equal("test\r\n4,,,,\r\n", csv);
 			}
 		}
 
