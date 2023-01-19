@@ -3,16 +3,15 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Tests.Mocks;
-using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace CsvHelper.Tests.Reading
 {
-	
+
 	public class YieldTests
 	{
 		[Fact]
@@ -72,7 +71,7 @@ namespace CsvHelper.Tests.Reading
 			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-#if !NET45
+#if !NET462
 		[Fact]
 		public async Task GetRecordsAsyncGeneric_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
@@ -138,5 +137,5 @@ namespace CsvHelper.Tests.Reading
 
 			public string Name { get; set; }
 		}
-    }
+	}
 }

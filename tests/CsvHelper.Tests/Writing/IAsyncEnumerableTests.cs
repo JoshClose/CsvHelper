@@ -2,8 +2,7 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-#if !NET45
-using System;
+#if !NET462
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -14,10 +13,10 @@ using Xunit;
 
 namespace CsvHelper.Tests.Writing
 {
-    public class IAsyncEnumerableTests
-    {
+	public class IAsyncEnumerableTests
+	{
 		[Fact]
-        public async Task Test()
+		public async Task Test()
 		{
 			var records = new List<Foo>
 			{
@@ -45,6 +44,6 @@ namespace CsvHelper.Tests.Writing
 
 			public string Name { get; set; }
 		}
-    }
+	}
 }
 #endif

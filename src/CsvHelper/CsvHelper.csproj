@@ -8,8 +8,7 @@
 
 		<!-- Build -->
 		<AssemblyName>CsvHelper</AssemblyName>
-		<TargetFrameworks>net6.0;net5.0;netstandard2.1;netstandard2.0;net47;net45</TargetFrameworks>
-		<!--<TargetFrameworks>net60</TargetFrameworks>-->
+		<TargetFrameworks>net6.0;netstandard2.1;netstandard2.0;net47;net462</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>CsvHelper</RootNamespace>
 		<DefaultLanguage>en-US</DefaultLanguage>
@@ -48,10 +47,10 @@
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<!-- .NET 4.5 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+	<!-- .NET 4.6.2 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
 		<PackageReference Include="System.ValueTuple" Version="4.3.0" />
 	</ItemGroup>
 
@@ -60,8 +59,8 @@
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
 		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 	</ItemGroup>
 
 	<!-- .NET Standard 2.0 -->
@@ -69,8 +68,8 @@
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
 		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
 	</ItemGroup>
 
 	<!-- .NET Standard 2.1 -->
@@ -83,10 +82,6 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
 
 </Project>

@@ -1,12 +1,8 @@
 ﻿using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CsvHelper.Tests.Reading
@@ -28,13 +24,13 @@ namespace CsvHelper.Tests.Reading
 			};
 			var csv = "SKU;Min quantity;List price;Sale price\r\nTestSku1;2;10.99;9.99\r\nTestSku2;2;10.99;9\r\nXXX;\"9;10.9;9";
 			var stream = new MemoryStream();
-			using (var writer = new StreamWriter(stream, leaveOpen: true))
+			using (var writer = new StreamWriter(stream, Encoding.UTF8, 1024, leaveOpen: true))
 			{
 				writer.Write(csv);
 				writer.Flush();
 				stream.Position = 0;
 			}
-			var textReader = new StreamReader(stream, leaveOpen: true);
+			var textReader = new StreamReader(stream);
 
 			var csvReader = new CsvReader(textReader, csvConfiguration);
 

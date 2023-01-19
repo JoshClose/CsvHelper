@@ -2,19 +2,18 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
+using CsvHelper.Expressions;
+using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using CsvHelper.Expressions;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Configuration;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -88,7 +87,7 @@ namespace CsvHelper
 		/// <param name="parser">The <see cref="IParser" /> used to parse the CSV file.</param>
 		public CsvReader(IParser parser)
 		{
-			Configuration = parser.Configuration as IReaderConfiguration ?? throw new ConfigurationException($"The {nameof(IParser)} configuration must implement {nameof(IReaderConfiguration)} to be used in {nameof(CsvReader)}.");
+			Configuration = parser.Configuration as IReaderConfiguration ?? throw new Configuration.ConfigurationException($"The {nameof(IParser)} configuration must implement {nameof(IReaderConfiguration)} to be used in {nameof(CsvReader)}.");
 
 			this.parser = parser ?? throw new ArgumentNullException(nameof(parser));
 			context = parser.Context ?? throw new InvalidOperationException($"For {nameof(IParser)} to be used in {nameof(CsvReader)}, {nameof(IParser.Context)} must also implement {nameof(CsvContext)}.");
@@ -1020,7 +1019,7 @@ namespace CsvHelper
 			}
 		}
 
-#if !NET45
+#if !NET462
 		/// <inheritdoc/>
 		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default(CancellationToken))
 		{

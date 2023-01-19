@@ -8,8 +8,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -17,7 +15,7 @@ namespace CsvHelper
 	/// Efficiently creates instances of object types.
 	/// </summary>
 	public class ObjectCreator
-    {
+	{
 		private readonly Dictionary<int, Func<object[], object>> cache = new Dictionary<int, Func<object[], object>>();
 
 		/// <summary>
@@ -70,7 +68,7 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetConstructorCacheKey(Type type, Type[] args)
 		{
-#if !NET45
+#if !NET462
 			var hashCode = new HashCode();
 			hashCode.Add(type.GetHashCode());
 			for (var i = 0; i < args.Length; i++)

@@ -2,17 +2,17 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using CsvHelper.Configuration;
 using Xunit;
 
 namespace CsvHelper.Tests.AutoMapping
-{	
+{
 	public class AutoMappingTests
 	{
 		public AutoMappingTests()
@@ -66,13 +66,13 @@ namespace CsvHelper.Tests.AutoMapping
 				Assert.NotNull(list);
 				Assert.Equal(2, list.Count);
 				var row = list[0];
-				Assert.Equal(1.1f, row.Single, 4);
-				Assert.Equal(2.2d, row.Double, 4);
+				Assert.Equal(1.1f, row.Single, 4f);
+				Assert.Equal(2.2d, row.Double, 4f);
 				Assert.Equal(3.3m, row.Decimal);
 
 				row = list[1];
-				Assert.Equal(-0.1f, row.Single, 4);
-				Assert.Equal(-0.2d, row.Double, 4);
+				Assert.Equal(-0.1f, row.Single, 4f);
+				Assert.Equal(-0.2d, row.Double, 4f);
 				Assert.Equal(-0.3m, row.Decimal);
 			}
 		}

@@ -4,10 +4,10 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections;
-using System.IO;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -15,7 +15,7 @@ namespace CsvHelper
 	/// Defines methods used to write to a CSV file.
 	/// </summary>
 	public interface IWriter : IWriterRow, IDisposable
-#if !NET45 && !NET47 && !NETSTANDARD2_0
+#if !NET462 && !NET47 && !NETSTANDARD2_0
 		, IAsyncDisposable
 #endif
 	{
@@ -73,7 +73,7 @@ namespace CsvHelper
 		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default);
 
-#if !NET45
+#if !NET462
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
