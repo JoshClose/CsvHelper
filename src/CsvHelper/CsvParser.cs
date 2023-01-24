@@ -29,6 +29,7 @@ namespace CsvHelper
 		private readonly char quote;
 		private readonly char escape;
 		private readonly bool countBytes;
+		private readonly Encoding encoding;
 		private readonly Encoder encoder;
 		private readonly bool ignoreBlankLines;
 		private readonly char comment;
@@ -191,8 +192,9 @@ namespace CsvHelper
 			delimiterFirstChar = configuration.Delimiter[0];
 			delimiterValues = configuration.DetectDelimiterValues;
 			detectDelimiter = configuration.DetectDelimiter;
-			// encoder only used when counting bytes, so avoid NRE when configuration.Encoding is null 
-			encoder = countBytes ? configuration.Encoding.GetEncoder() : null;
+			encoding = configuration.Encoding;
+			// encoder only used when counting bytes, so avoid NRE when configuration.Encoding is null
+			encoder = countBytes ? encoding.GetEncoder() : null;
 			escape = configuration.Escape;
 			ignoreBlankLines = configuration.IgnoreBlankLines;
 			isNewLineSet = configuration.IsNewLineSet;
@@ -236,7 +238,7 @@ namespace CsvHelper
 
 						if (countBytes && !haveMoreData)
 						{
-							byteCount += FlushEncoder(encoder);
+							byteCount += FlushEncoder();
 						}
 
 						return haveMoreData;
@@ -278,7 +280,7 @@ namespace CsvHelper
 
 						if (countBytes && !haveMoreData)
 						{
-							byteCount += FlushEncoder(encoder);
+							byteCount += FlushEncoder();
 						}
 
 						return haveMoreData;
@@ -363,7 +365,7 @@ namespace CsvHelper
 
 				if (countBytes)
 				{
-					byteCount += PushCharToEncoder(encoder, c);
+					byteCount += PushCharToEncoder(c);
 				}
 
 				if (maxFieldSize > 0 && bufferPosition - fieldStartPosition - 1 > maxFieldSize)
@@ -520,7 +522,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += PushCharToEncoder(encoder, c);
+					byteCount += PushCharToEncoder(c);
 				}
 			}
 
@@ -550,7 +552,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += PushCharToEncoder(encoder, c);
+					byteCount += PushCharToEncoder(c);
 				}
 			}
 
@@ -581,7 +583,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += PushCharToEncoder(encoder, c);
+					byteCount += PushCharToEncoder(c);
 				}
 
 				if (bufferPosition >= charsRead)
@@ -619,7 +621,7 @@ namespace CsvHelper
 					charCount++;
 					if (countBytes)
 					{
-						byteCount += PushCharToEncoder(encoder, c);
+						byteCount += PushCharToEncoder(c);
 					}
 				}
 			}
@@ -658,7 +660,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += PushCharToEncoder(encoder, c);
+					byteCount += PushCharToEncoder(c);
 				}
 
 				if (bufferPosition >= charsRead)
@@ -1101,28 +1103,27 @@ namespace CsvHelper
 			return new ProcessedField(newStart, newLength, buffer);
 		}
 
-		private static int PushCharToEncoder(Encoder encoder, char c)
+		private int PushCharToEncoder(char c)
 		{
 			// We use GetBytes instead of GetByteCount because the former updates the internal state
-			// of the encoder and the latter doesn't. We use a throwaway buffer for the encoded bytes,
-			// whose length of 16 *should* comfortably hold the bytes for a single character in a given encoding.
+			// of the encoder and the latter doesn't. We use a throwaway buffer for the encoded bytes.
 #if NETSTANDARD2_1 || NET
-			Span<byte> bytesBuffer = stackalloc byte[16];
+			Span<byte> bytesBuffer = encoding.GetMaxByteCount(1) <= 16 ? stackalloc byte[16] : new byte[encoding.GetMaxByteCount(1)];
 			return encoder.GetBytes(MemoryMarshal.CreateReadOnlySpan(ref c, 1), bytesBuffer, flush: false);
 #else
 			char[] chars = { c };
-			byte[] bytes = new byte[16];
+			byte[] bytes = new byte[encoding.GetMaxByteCount(1)];
 			return encoder.GetBytes(chars, 0, 1, bytes, 0, flush: false);
 #endif
 		}
 
-		private static int FlushEncoder(Encoder encoder)
+		private int FlushEncoder()
 		{
 #if NETSTANDARD2_1 || NET
-			Span<byte> bytesBuffer = stackalloc byte[16];
+			Span<byte> bytesBuffer = encoding.GetMaxByteCount(1) <= 16 ? stackalloc byte[16] : new byte[encoding.GetMaxByteCount(1)];
 			return encoder.GetBytes(Array.Empty<char>(), bytesBuffer, flush: true);
 #else
-			byte[] bytes = new byte[16];
+			byte[] bytes = new byte[encoding.GetMaxByteCount(1)];
 			return encoder.GetBytes(new char[]{ }, 0, 0, bytes, 0, flush: true);
 #endif
 		}
