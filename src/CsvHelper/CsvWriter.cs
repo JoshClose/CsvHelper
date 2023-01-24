@@ -464,7 +464,6 @@ namespace CsvHelper
 			}
 		}
 
-#if !NET462
 		/// <inheritdoc/>
 		public virtual async Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)
 		{
@@ -493,7 +492,6 @@ namespace CsvHelper
 				throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 			}
 		}
-#endif
 
 		/// <inheritdoc/>
 		public virtual void NextRecord()
@@ -725,7 +723,7 @@ namespace CsvHelper
 			disposed = true;
 		}
 
-#if !NET462 && !NET47 && !NETSTANDARD2_0
+#if !NET462 && !NETSTANDARD2_0
 		/// <inheritdoc/>
 		public async ValueTask DisposeAsync()
 		{
@@ -761,8 +759,6 @@ namespace CsvHelper
 			disposed = true;
 		}
 #endif
-
-#if !NET462
 		private async Task<bool> WriteHeaderAsync<T>(IAsyncEnumerable<T> records)
 		{
 			if (!hasHeaderRecord || hasHeaderBeenWritten)
@@ -780,7 +776,6 @@ namespace CsvHelper
 
 			return WriteHeader(await records.FirstOrDefaultAsync());
 		}
-#endif
 
 		private bool WriteHeader<T>(IEnumerable<T> records)
 		{

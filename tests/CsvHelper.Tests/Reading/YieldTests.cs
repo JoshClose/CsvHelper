@@ -71,7 +71,6 @@ namespace CsvHelper.Tests.Reading
 			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-#if !NET462
 		[Fact]
 		public async Task GetRecordsAsyncGeneric_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
@@ -129,7 +128,6 @@ namespace CsvHelper.Tests.Reading
 
 			await Assert.ThrowsAsync<ObjectDisposedException>(async () => await records.GetAsyncEnumerator().MoveNextAsync());
 		}
-#endif
 
 		private class Foo
 		{
