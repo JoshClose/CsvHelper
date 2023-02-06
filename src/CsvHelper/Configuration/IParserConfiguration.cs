@@ -144,6 +144,13 @@ namespace CsvHelper.Configuration
 		string[] DetectDelimiterValues { get; }
 
 		/// <summary>
+		/// When true, <see cref="TextInfo.ListSeparator"/> of the <see cref="CultureInfo"/> is not weighted as a delimiter.
+		/// Consider setting this value to true if your data includes the <see cref="TextInfo.ListSeparator"/> as data rather than as delimiters.
+		/// </summary>
+		bool IgnoreCultureListSeparator { get; } 
+
+
+		/// <summary>
 		/// The character used to escape characters.
 		/// Default is '"'.
 		/// </summary>

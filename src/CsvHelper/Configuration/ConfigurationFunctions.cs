@@ -245,7 +245,7 @@ namespace CsvHelper.Configuration
 			).ToList();
 
 			string? newDelimiter = null;
-			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
+			if (!config.IgnoreCultureListSeparator && delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
 			{
 				// The culture's separator is on every line. Assume this is the delimiter.
 				newDelimiter = config.CultureInfo.TextInfo.ListSeparator;

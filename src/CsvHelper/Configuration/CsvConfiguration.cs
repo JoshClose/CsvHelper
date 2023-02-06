@@ -55,6 +55,12 @@ namespace CsvHelper.Configuration
 		/// <inheritdoc/>
 		public virtual string[] DetectDelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
 
+		/// <summary>
+		/// When true, if <see cref="TextInfo.ListSeparator"/> of the <see cref="CultureInfo"/> is present on all lines, it will be used.
+		/// Consider setting this value to false if your data includes the <see cref="TextInfo.ListSeparator"/> as data rather than as delimiters.
+		/// </summary>
+		public bool IgnoreCultureListSeparator { get; set; }
+
 		/// <inheritdoc/>
 		public virtual bool DetectColumnCountChanges { get; set; }
 

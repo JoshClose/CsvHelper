@@ -180,6 +180,23 @@ namespace CsvHelper.Tests.Parsing
 			Assert.Equal(CultureInfo.InvariantCulture.TextInfo.ListSeparator, ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config)));
 		}
 
+		/// <summary>
+		/// Ensure <see cref="IParserConfiguration.IgnoreCultureListSeparator"/> is respected by <see cref="ConfigurationFunctions.GetDelimiter(Delegates.GetDelimiterArgs)"/>
+		/// </summary>
+		[Fact]
+		public void GetDelimiter_CulturesSeparatorOccursLessButIsOnEveryLine_CanBeIgnored()
+		{
+			var s = new StringBuilder();
+			s.Append("1;2,3;4\r\n");
+			s.Append("5;6,7;8\r\n");
+			s.Append("9;10,11;12\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				IgnoreCultureListSeparator = true
+			};
+			Assert.NotEqual(CultureInfo.InvariantCulture.TextInfo.ListSeparator, ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config)));
+		}
+
 		[Fact]
 		public void GetDelimiter_CulturesSeparatorOccursLessAndIsOnFirstLine_CulturesSeparatorIsNotDetected()
 		{

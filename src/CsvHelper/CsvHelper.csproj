@@ -8,8 +8,8 @@
 
 		<!-- Build -->
 		<AssemblyName>CsvHelper</AssemblyName>
-		<TargetFrameworks>net6.0;net5.0;netstandard2.1;netstandard2.0;net47;net45</TargetFrameworks>
-		<!--<TargetFrameworks>net60</TargetFrameworks>-->
+		<!--<TargetFrameworks>net6.0;net5.0;netstandard2.1;netstandard2.0;net47;net45</TargetFrameworks>-->
+		<TargetFrameworks>net60</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>CsvHelper</RootNamespace>
 		<DefaultLanguage>en-US</DefaultLanguage>
