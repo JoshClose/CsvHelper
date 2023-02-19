@@ -16,6 +16,8 @@ namespace CsvHelper.Configuration
 	public static class ConfigurationFunctions
 	{
 		private static readonly char[] lineEndingChars = new char[] { '\r', '\n' };
+		private static readonly string[] lineEndings = new[] { "\r\n", "\r", "\n" };
+		private static readonly Regex specialCharsRegex = new Regex(@"([.$^{\[(|)*+?\\])");
 
 		/// <summary>
 		/// Throws a <see cref="ValidationException"/> if <see name="HeaderValidatedArgs.InvalidHeaders"/> is not empty.
@@ -197,12 +199,14 @@ namespace CsvHelper.Configuration
 			}
 
 			var newLine = config.NewLine;
-			if ((new[] { "\r\n", "\r", "\n" }).Contains(newLine))
+			if (lineEndings.Contains(newLine))
 			{
 				newLine = "\r\n|\r|\n";
 			}
 
 			var lineDelimiterCounts = new List<Dictionary<string, int>>();
+			var delimitersToCheck = new List<string>(config.DetectDelimiterValues);
+
 			while (text.Length > 0)
 			{
 				// Since all escaped text has been removed, we can reliably read line by line.
@@ -210,11 +214,21 @@ namespace CsvHelper.Configuration
 				var line = match.Success ? text.Substring(0, match.Index + match.Length) : text;
 
 				var delimiterCounts = new Dictionary<string, int>();
-				foreach (var delimiter in config.DetectDelimiterValues)
+				for (var i = 0; i < delimitersToCheck.Count; i++)
 				{
+					var delimiter = delimitersToCheck[i];
 					// Escape regex special chars to use as regex pattern.
-					var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
-					delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
+					var pattern = specialCharsRegex.Replace(delimiter, "\\$1");
+					var count = Regex.Matches(line, pattern).Count;
+					if (count > 0)
+					{
+						delimiterCounts[delimiter] = count;
+					}
+					else
+					{
+						// Remove delimiter that does not appear on every line.
+						delimitersToCheck.RemoveAt(i);
+					}
 				}
 
 				lineDelimiterCounts.Add(delimiterCounts);
@@ -228,13 +242,11 @@ namespace CsvHelper.Configuration
 				lineDelimiterCounts.Remove(lineDelimiterCounts.Last());
 			}
 
-			// Rank only the delimiters that appear on every line.
 			var delimiters =
 			(
 				from counts in lineDelimiterCounts
 				from count in counts
 				group count by count.Key into g
-				where g.All(x => x.Value > 0)
 				let sum = g.Sum(x => x.Value)
 				orderby sum descending
 				select new
