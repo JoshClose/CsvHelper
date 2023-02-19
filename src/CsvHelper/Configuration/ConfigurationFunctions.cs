@@ -24,7 +24,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		public static void HeaderValidated(HeaderValidatedArgs args)
 		{
-			if (args.InvalidHeaders.Count() == 0)
+			if (!args.InvalidHeaders.Any())
 			{
 				return;
 			}
@@ -239,7 +239,7 @@ namespace CsvHelper.Configuration
 			if (lineDelimiterCounts.Count > 1)
 			{
 				// The last line isn't complete and can't be used to reliably detect a delimiter.
-				lineDelimiterCounts.Remove(lineDelimiterCounts.Last());
+				lineDelimiterCounts.RemoveAt(lineDelimiterCounts.Count - 1);
 			}
 
 			var delimiters =
@@ -254,7 +254,7 @@ namespace CsvHelper.Configuration
 					Delimiter = g.Key,
 					Count = sum
 				}
-			).ToList();
+			);
 
 			string? newDelimiter = null;
 			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
