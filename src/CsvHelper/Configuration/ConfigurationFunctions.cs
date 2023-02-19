@@ -246,6 +246,7 @@ namespace CsvHelper.Configuration
 
 			var lineCount = lineDelimiterCounts.Count;
 
+			// Select only the delimiters that appear on every line.
 			var delimiters =
 			(
 				from counts in lineDelimiterCounts
