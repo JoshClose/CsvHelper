@@ -214,7 +214,8 @@ namespace CsvHelper.Configuration
 				var line = match.Success ? text.Substring(0, match.Index + match.Length) : text;
 
 				var delimiterCounts = new Dictionary<string, int>();
-				for (var i = 0; i < delimitersToCheck.Count; i++)
+				var i = 0;
+				while (i < delimitersToCheck.Count)
 				{
 					var delimiter = delimitersToCheck[i];
 					// Escape regex special chars to use as regex pattern.
@@ -223,6 +224,7 @@ namespace CsvHelper.Configuration
 					if (count > 0)
 					{
 						delimiterCounts[delimiter] = count;
+						i++;
 					}
 					else
 					{
@@ -242,22 +244,26 @@ namespace CsvHelper.Configuration
 				lineDelimiterCounts.RemoveAt(lineDelimiterCounts.Count - 1);
 			}
 
+			var lineCount = lineDelimiterCounts.Count;
+
 			var delimiters =
 			(
 				from counts in lineDelimiterCounts
 				from count in counts
 				group count by count.Key into g
-				let sum = g.Sum(x => x.Value)
-				orderby sum descending
 				select new
 				{
 					Delimiter = g.Key,
-					Count = sum
-				}
+					Count = g.Sum(x => x.Value),
+					LineCount = g.Count()
+				} into t
+				where t.LineCount == lineCount
+				orderby t.Count descending
+				select t
 			);
 
 			string? newDelimiter = null;
-			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
+			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineCount > 1)
 			{
 				// The culture's separator is on every line. Assume this is the delimiter.
 				newDelimiter = config.CultureInfo.TextInfo.ListSeparator;
