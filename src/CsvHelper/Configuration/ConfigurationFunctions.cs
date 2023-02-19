@@ -32,21 +32,21 @@ namespace CsvHelper.Configuration
 			var errorMessage = new StringBuilder();
 			foreach (var invalidHeader in args.InvalidHeaders)
 			{
-				errorMessage.AppendLine($"Header with name '{string.Join("' or '", invalidHeader.Names)}'[{invalidHeader.Index}] was not found.");
+				errorMessage.Append("Header with name '").Append(string.Join("' or '", invalidHeader.Names)).Append("'[").Append(invalidHeader.Index).AppendLine("] was not found.");
 			}
 
 			if (args.Context.Reader.HeaderRecord != null)
 			{
 				foreach (var header in args.Context.Reader.HeaderRecord)
 				{
-					errorMessage.AppendLine($"Headers: '{string.Join("', '", args.Context.Reader.HeaderRecord)}'");
+					errorMessage.Append("Headers: '").Append(string.Join("', '", args.Context.Reader.HeaderRecord)).AppendLine("'");
 				}
 			}
 
 			var messagePostfix =
-				$"If you are expecting some headers to be missing and want to ignore this validation, " +
+				"If you are expecting some headers to be missing and want to ignore this validation, " +
 				$"set the configuration {nameof(HeaderValidated)} to null. You can also change the " +
-				$"functionality to do something else, like logging the issue.";
+				"functionality to do something else, like logging the issue.";
 			errorMessage.AppendLine(messagePostfix);
 
 			throw new HeaderValidationException(args.Context, args.InvalidHeaders, errorMessage.ToString());
@@ -148,7 +148,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns the type's constructor with the most parameters. 
+		/// Returns the type's constructor with the most parameters.
 		/// If two constructors have the same number of parameters, then
 		/// there is no guarantee which one will be returned. If you have
 		/// that situation, you should probably implement this function yourself.
