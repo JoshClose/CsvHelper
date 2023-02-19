@@ -33,14 +33,14 @@ namespace CsvHelper.Expressions
 		protected virtual dynamic CreateDynamicRecord()
 		{
 			var obj = new ExpandoObject();
-			var dict = obj as IDictionary<string, object>;
+			var dict = obj as IDictionary<string, object?>;
 			if (Reader.HeaderRecord != null)
 			{
 				for (var i = 0; i < Reader.HeaderRecord.Length; i++)
 				{
 					var args = new GetDynamicPropertyNameArgs(i, Reader.Context);
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(args);
-					Reader.TryGetField(i, out string field);
+					Reader.TryGetField(i, out string? field);
 					dict.Add(propertyName, field);
 				}
 			}

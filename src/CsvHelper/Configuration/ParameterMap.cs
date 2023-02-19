@@ -30,12 +30,12 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the map for a constructor type.
 		/// </summary>
-		public virtual ClassMap ConstructorTypeMap { get; set; }
+		public virtual ClassMap? ConstructorTypeMap { get; set; }
 
 		/// <summary>
 		/// Gets or sets the map for a reference type.
 		/// </summary>
-		public virtual ParameterReferenceMap ReferenceMap { get; set; }
+		public virtual ParameterReferenceMap? ReferenceMap { get; set; }
 
 		/// <summary>
 		/// Creates an instance of <see cref="ParameterMap"/> using

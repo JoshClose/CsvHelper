@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -27,9 +28,12 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static PropertyInfo GetDeclaringProperty(Type type, PropertyInfo property, BindingFlags flags)
 		{
+			Debug.Assert(property.DeclaringType != null);
+
 			if (property.DeclaringType != type)
 			{
 				var declaringProperty = property.DeclaringType.GetProperty(property.Name, flags);
+				Debug.Assert(declaringProperty != null, $"Property \"{property.Name}\" not found on {property.DeclaringType}. Are the flags correct?");
 				return GetDeclaringProperty(property.DeclaringType, declaringProperty, flags);
 			}
 
@@ -45,9 +49,12 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static FieldInfo GetDeclaringField(Type type, FieldInfo field, BindingFlags flags)
 		{
+			Debug.Assert(field.DeclaringType != null);
+
 			if (field.DeclaringType != type)
 			{
 				var declaringField = field.DeclaringType.GetField(field.Name, flags);
+				Debug.Assert(declaringField != null, $"Field \"{field.Name}\" not found on {field.DeclaringType}. Are the flags correct?");
 				return GetDeclaringField(field.DeclaringType, declaringField, flags);
 			}
 
@@ -140,7 +147,7 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MemberInfo GetMember<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression)
 		{
-			var member = GetMemberExpression(expression.Body).Member;
+			var member = GetMemberExpression(expression.Body)?.Member;
 			var property = member as PropertyInfo;
 			if (property != null)
 			{
@@ -153,7 +160,7 @@ namespace CsvHelper
 				return field;
 			}
 
-			throw new ConfigurationException($"'{member.Name}' is not a member.");
+			throw new ConfigurationException($"Expression '{expression}' does not return a member.");
 		}
 
 		/// <summary>
@@ -185,20 +192,17 @@ namespace CsvHelper
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static MemberExpression? GetMemberExpression(Expression expression)
+		private static MemberExpression? GetMemberExpression(Expression? expression)
 		{
-			MemberExpression? memberExpression = null;
-			if (expression.NodeType == ExpressionType.Convert)
+			switch (expression?.NodeType)
 			{
-				var body = (UnaryExpression)expression;
-				memberExpression = body.Operand as MemberExpression;
+				case ExpressionType.Convert:
+					return ((UnaryExpression)expression).Operand as MemberExpression;
+				case ExpressionType.MemberAccess:
+					return expression as MemberExpression;
+				default:
+					return null;
 			}
-			else if (expression.NodeType == ExpressionType.MemberAccess)
-			{
-				memberExpression = expression as MemberExpression;
-			}
-
-			return memberExpression;
 		}
 	}
 }

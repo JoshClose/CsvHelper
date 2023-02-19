@@ -28,6 +28,18 @@ namespace CsvHelper.Configuration
 		public virtual MemberMapTypeConverterOption TypeConverterOption { get; protected set; }
 
 		/// <summary>
+		/// Creates a new <see cref="MemberMap"/> instance using the specified <see cref="MemberMapData"/>
+		/// and optionally, a <see cref="MemberMapTypeConverterOption"/> instance.
+		/// If <paramref name="typeConverterOption"/> is not specified or is <see langword="null"/>,
+		/// a new instance will be created.
+		/// </summary>
+		protected MemberMap(MemberMapData data, MemberMapTypeConverterOption? typeConverterOption = null)
+		{
+			Data = data;
+			TypeConverterOption = typeConverterOption ?? new MemberMapTypeConverterOption(this);
+		}
+
+		/// <summary>
 		/// Creates an instance of <see cref="MemberMap"/> using the given Type and <see cref="MemberInfo"/>.
 		/// </summary>
 		/// <param name="classType">Type of the class the member being mapped belongs to.</param>

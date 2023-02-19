@@ -22,7 +22,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo;
+			var formatProvider = (IFormatProvider?)memberMapData.TypeConverterOptions.CultureInfo;
 
 			var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
 			if (memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span))

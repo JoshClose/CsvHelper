@@ -16,7 +16,7 @@ namespace CsvHelper
 		/// <summary>
 		/// The header record.
 		/// </summary>
-		string[] HeaderRecord { get; }
+		string[]? HeaderRecord { get; }
 
 		/// <summary>
 		/// The current row.
@@ -48,7 +48,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="field">The converted field to write.</param>
 		/// <param name="fieldType">The type of the field before it was converted into a string.</param>
-		void WriteConvertedField(string field, Type fieldType);
+		void WriteConvertedField(string? field, Type fieldType);
 
 		/// <summary>
 		/// Writes the field to the CSV file. The field
@@ -58,7 +58,7 @@ namespace CsvHelper
 		/// to complete writing of the current record.
 		/// </summary>
 		/// <param name="field">The field to write.</param>
-		void WriteField(string field);
+		void WriteField(string? field);
 
 		/// <summary>
 		/// Writes the field to the CSV file. This will
@@ -72,7 +72,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="field">The field to write.</param>
 		/// <param name="shouldQuote">True to quote the field, otherwise false.</param>
-		void WriteField(string field, bool shouldQuote);
+		void WriteField(string? field, bool shouldQuote);
 
 		/// <summary>
 		/// Writes the field to the CSV file.

@@ -23,7 +23,7 @@ namespace CsvHelper
 		/// <summary>
 		/// The field.
 		/// </summary>
-		public readonly string Field;
+		public readonly string? Field;
 
 		/// <summary>
 		/// The field type.
@@ -41,7 +41,7 @@ namespace CsvHelper
 		/// <param name="field">The field.</param>
 		/// <param name="fieldType">The field type.</param>
 		/// <param name="row">The row.</param>
-		public ShouldQuoteArgs(string field, Type fieldType, IWriterRow row)
+		public ShouldQuoteArgs(string? field, Type fieldType, IWriterRow row)
 		{
 			Field = field;
 			FieldType = fieldType;

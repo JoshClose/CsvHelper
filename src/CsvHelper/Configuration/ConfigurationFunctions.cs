@@ -33,7 +33,7 @@ namespace CsvHelper.Configuration
 				errorMessage.AppendLine($"Header with name '{string.Join("' or '", invalidHeader.Names)}'[{invalidHeader.Index}] was not found.");
 			}
 
-			if (args.Context.Reader.HeaderRecord != null)
+			if (args.Context.Reader?.HeaderRecord != null)
 			{
 				foreach (var header in args.Context.Reader.HeaderRecord)
 				{
@@ -163,7 +163,7 @@ namespace CsvHelper.Configuration
 		/// <param name="args">The args.</param>
 		public static string GetDynamicPropertyName(GetDynamicPropertyNameArgs args)
 		{
-			if (args.Context.Reader.HeaderRecord == null)
+			if (args.Context.Reader?.HeaderRecord == null)
 			{
 				return $"Field{args.FieldIndex + 1}";
 			}

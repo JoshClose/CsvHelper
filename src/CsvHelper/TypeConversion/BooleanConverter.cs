@@ -36,7 +36,7 @@ namespace CsvHelper.TypeConversion
 			var t = (text ?? string.Empty).Trim();
 			foreach (var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues)
 			{
-				if (memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare(trueValue, t, CompareOptions.IgnoreCase) == 0)
+				if (memberMapData.TypeConverterOptions.CultureInfo?.CompareInfo.Compare(trueValue, t, CompareOptions.IgnoreCase) == 0)
 				{
 					return true;
 				}
@@ -44,7 +44,7 @@ namespace CsvHelper.TypeConversion
 
 			foreach (var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues)
 			{
-				if (memberMapData.TypeConverterOptions.CultureInfo.CompareInfo.Compare(falseValue, t, CompareOptions.IgnoreCase) == 0)
+				if (memberMapData.TypeConverterOptions.CultureInfo?.CompareInfo.Compare(falseValue, t, CompareOptions.IgnoreCase) == 0)
 				{
 					return false;
 				}

@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -63,7 +64,7 @@ namespace CsvHelper
 		{
 			get
 			{
-				return csv?.Parser.Count ?? 0;
+				return csv.Parser.Count;
 			}
 		}
 
@@ -120,9 +121,15 @@ namespace CsvHelper
 		{
 			var bytes = csv.GetField<byte[]>(i);
 
-			buffer ??= new byte[bytes.Length];
+			if (bytes == null)
+			{
+				return 0;
+			}
 
-			Array.Copy(bytes, fieldOffset, buffer, bufferoffset, length);
+			if (buffer != null)
+			{
+				Array.Copy(bytes, fieldOffset, buffer, bufferoffset, length);
+			}
 
 			return bytes.Length;
 		}
@@ -136,13 +143,19 @@ namespace CsvHelper
 		/// <inheritdoc />
 		public long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length)
 		{
-			var chars = csv.GetField(i).ToCharArray();
+			var s = csv.GetField(i);
 
-			buffer ??= new char[chars.Length];
+			if (string.IsNullOrEmpty(s))
+			{
+				return 0;
+			}
 
-			Array.Copy(chars, fieldoffset, buffer, bufferoffset, length);
+			if (buffer != null)
+			{
+				s.CopyTo((int)fieldoffset, buffer, bufferoffset, length);
+			}
 
-			return chars.Length;
+			return s.Length;
 		}
 
 		/// <inheritdoc />
@@ -227,8 +240,11 @@ namespace CsvHelper
 		/// <inheritdoc />
 		public string GetName(int i)
 		{
+			Debug.Assert(!csv.Configuration.HasHeaderRecord || csv.HeaderRecord != null,
+				$"Expected {nameof(csv.ReadHeader)} to have already been called (i.e in the constructor)");
+
 			return csv.Configuration.HasHeaderRecord
-				? csv.HeaderRecord[i]
+				? csv.HeaderRecord![i]
 				: string.Empty;
 		}
 
@@ -245,6 +261,9 @@ namespace CsvHelper
 			var namePrepared = csv.Configuration.PrepareHeaderForMatch(args);
 
 			var headerRecord = csv.HeaderRecord;
+
+			Debug.Assert(headerRecord != null, $"Expected {nameof(csv.GetFieldIndex)} to throw if header not read");
+
 			for (var i = 0; i < headerRecord.Length; i++)
 			{
 				args = new PrepareHeaderForMatchArgs(headerRecord[i], i);
@@ -297,6 +316,8 @@ namespace CsvHelper
 			if (csv.Configuration.HasHeaderRecord)
 			{
 				var header = csv.HeaderRecord;
+
+				Debug.Assert(header != null, $"Expected {nameof(csv.ReadHeader)} to have already been called (i.e in the constructor)");
 
 				for (var i = 0; i < header.Length; i++)
 				{

@@ -221,8 +221,8 @@ namespace CsvHelper.Configuration
 			   m.Data.Member != null &&
 			   m.Data.Member.Name == member.Name &&
 			   (
-				   m.Data.Member.DeclaringType.IsAssignableFrom(member.DeclaringType) ||
-				   member.DeclaringType.IsAssignableFrom(m.Data.Member.DeclaringType)
+				   m.Data.Member.DeclaringType?.IsAssignableFrom(member.DeclaringType) == true ||
+				   member.DeclaringType?.IsAssignableFrom(m.Data.Member.DeclaringType) == true
 			   )
 			);
 

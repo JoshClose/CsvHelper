@@ -132,23 +132,23 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the expression used to convert data in the
 		/// row to the member.
 		/// </summary>
-		public virtual Expression ReadingConvertExpression { get; set; }
+		public virtual Expression? ReadingConvertExpression { get; set; }
 
 		/// <summary>
 		/// Gets or sets the expression to be used to convert the object
 		/// to a field.
 		/// </summary>
-		public virtual Expression WritingConvertExpression { get; set; }
+		public virtual Expression? WritingConvertExpression { get; set; }
 
 		/// <summary>
 		/// Gets or sets the expression use to validate a field.
 		/// </summary>
-		public virtual Expression ValidateExpression { get; set; }
+		public virtual Expression? ValidateExpression { get; set; }
 
 		/// <summary>
 		/// Gets or sets the expression used to get the validation message when validation fails.
 		/// </summary>
-		public virtual Expression ValidateMessageExpression { get; set; }
+		public virtual Expression? ValidateMessageExpression { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if a field is optional.

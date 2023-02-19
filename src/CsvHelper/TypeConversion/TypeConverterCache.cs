@@ -151,7 +151,7 @@ namespace CsvHelper.TypeConversion
 				throw new ArgumentNullException(nameof(type));
 			}
 
-			if (typeConverters.TryGetValue(type, out ITypeConverter typeConverter))
+			if (typeConverters.TryGetValue(type, out ITypeConverter? typeConverter))
 			{
 				return typeConverter;
 			}

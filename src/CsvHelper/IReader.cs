@@ -63,7 +63,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <returns>An <see cref="IEnumerable{Object}" /> of records.</returns>
-		IEnumerable<object> GetRecords(Type type);
+		IEnumerable<object?> GetRecords(Type type);
 
 		/// <summary>
 		/// Enumerates the records hydrating the given record instance with row data.
@@ -107,7 +107,7 @@ namespace CsvHelper
 		/// <param name="type">The <see cref="Type"/> of the record.</param>
 		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
-		IAsyncEnumerable<object> GetRecordsAsync(Type type, CancellationToken cancellationToken = default(CancellationToken));
+		IAsyncEnumerable<object?> GetRecordsAsync(Type type, CancellationToken cancellationToken = default(CancellationToken));
 
 		/// <summary>
 		/// Enumerates the records hydrating the given record instance with row data.

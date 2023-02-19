@@ -15,8 +15,9 @@
 		<DefaultLanguage>en-US</DefaultLanguage>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <!--<Nullable>enable</Nullable>
-        <WarningsAsErrors>nullable</WarningsAsErrors>-->
+		<Nullable>enable</Nullable>
+		<!-- This breaks .NET Framework and Standard builds due to not recognizing nullable attributes -->
+		<!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
 
 		<!-- Sign -->
 		<SignAssembly>true</SignAssembly>

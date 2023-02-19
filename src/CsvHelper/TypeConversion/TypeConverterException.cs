@@ -16,12 +16,12 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// The text used in ConvertFromString.
 		/// </summary>
-		public string Text { get; private set; }
+		public string? Text { get; private set; }
 
 		/// <summary>
 		/// The value used in ConvertToString.
 		/// </summary>
-		public object Value { get; private set; }
+		public object? Value { get; private set; }
 
 		/// <summary>
 		/// The type converter.
@@ -40,7 +40,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="memberMapData">The member map data.</param>
 		/// <param name="text">The text.</param>
 		/// <param name="context">The reading context.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, CsvContext context) : base(context)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string? text, CsvContext context) : base(context)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="memberMapData">The member map data.</param>
 		/// <param name="value">The value.</param>
 		/// <param name="context">The writing context.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, CsvContext context) : base(context)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object? value, CsvContext context) : base(context)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -70,7 +70,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="text">The text.</param>
 		/// <param name="context">The reading context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, CsvContext context, string message) : base(context, message)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string? text, CsvContext context, string message) : base(context, message)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -86,7 +86,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="value">The value.</param>
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The message that describes the error.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, CsvContext context, string message) : base(context, message)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object? value, CsvContext context, string message) : base(context, message)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -104,7 +104,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="context">The reading context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string text, CsvContext context, string message, Exception innerException) : base(context, message, innerException)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, string? text, CsvContext context, string message, Exception innerException) : base(context, message, innerException)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;
@@ -122,7 +122,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="context">The writing context.</param>
 		/// <param name="message">The error message that explains the reason for the exception.</param>
 		/// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object value, CsvContext context, string message, Exception innerException) : base(context, message, innerException)
+		public TypeConverterException(ITypeConverter typeConverter, MemberMapData memberMapData, object? value, CsvContext context, string message, Exception innerException) : base(context, message, innerException)
 		{
 			TypeConverter = typeConverter;
 			MemberMapData = memberMapData;

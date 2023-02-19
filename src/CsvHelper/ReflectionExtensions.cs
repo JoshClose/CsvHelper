@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CsvHelper
 {
@@ -21,16 +22,14 @@ namespace CsvHelper
 		/// <param name="member">The member to get the type from.</param>
 		/// <returns>The type.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type MemberType(this MemberInfo member)
+		public static Type MemberType([NotNull] this MemberInfo? member)
 		{
-			var property = member as PropertyInfo;
-			if (property != null)
+			if (member is PropertyInfo property)
 			{
 				return property.PropertyType;
 			}
 
-			var field = member as FieldInfo;
-			if (field != null)
+			if (member is FieldInfo field)
 			{
 				return field.FieldType;
 			}
