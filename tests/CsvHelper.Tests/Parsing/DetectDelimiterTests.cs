@@ -66,6 +66,24 @@ namespace CsvHelper.Tests.Parsing
 				Assert.Equal("|", ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config)));
 			}
 		}
+		[Fact]
+		public void GetDelimiter_TextHasPlus_DetectsPlus()
+		{
+			var s = new StringBuilder();
+			s.Append("Id+Name+City\r\n");
+			s.Append("1+one+Irvine\r\n");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = "+",
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+
+				Assert.Equal("+", ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config)));
+			}
+		}
 
 		[Fact]
 		public void GetDelimiter_TextHasTabs_DetectsTab()
