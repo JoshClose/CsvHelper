@@ -17,14 +17,13 @@ namespace CsvHelper.Configuration
 	{
 		private static readonly char[] lineEndingChars = new char[] { '\r', '\n' };
 		private static readonly string[] lineEndings = new[] { "\r\n", "\r", "\n" };
-		private static readonly Regex specialCharsRegex = new Regex(@"([.$^{\[(|)*+?\\])");
 
 		/// <summary>
 		/// Throws a <see cref="ValidationException"/> if <see name="HeaderValidatedArgs.InvalidHeaders"/> is not empty.
 		/// </summary>
 		public static void HeaderValidated(HeaderValidatedArgs args)
 		{
-			if (!args.InvalidHeaders.Any())
+			if (args.InvalidHeaders.Length == 0)
 			{
 				return;
 			}
@@ -219,7 +218,7 @@ namespace CsvHelper.Configuration
 				{
 					var delimiter = delimitersToCheck[i];
 					// Escape regex special chars to use as regex pattern.
-					var pattern = specialCharsRegex.Replace(delimiter, "\\$1");
+					var pattern = Regex.Escape(delimiter);
 					var count = Regex.Matches(line, pattern).Count;
 					if (count > 0)
 					{
@@ -260,11 +259,12 @@ namespace CsvHelper.Configuration
 				} into t
 				where t.LineCount == lineCount
 				orderby t.Count descending
-				select t
+				select t.Delimiter
 			);
 
 			string? newDelimiter = null;
-			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineCount > 1)
+			// At this point, delimitersToCheck only contains delimiters on every line.
+			if (lineCount > 1 && delimitersToCheck.Contains(config.CultureInfo.TextInfo.ListSeparator))
 			{
 				// The culture's separator is on every line. Assume this is the delimiter.
 				newDelimiter = config.CultureInfo.TextInfo.ListSeparator;
@@ -272,7 +272,7 @@ namespace CsvHelper.Configuration
 			else
 			{
 				// Choose the highest ranked delimiter.
-				newDelimiter = delimiters.Select(x => x.Delimiter).FirstOrDefault();
+				newDelimiter = delimiters.FirstOrDefault();
 			}
 
 			if (newDelimiter != null)
