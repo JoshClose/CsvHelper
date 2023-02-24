@@ -18,7 +18,7 @@ namespace CsvHelper.Configuration.Attributes
 		public string? Prefix { get; private set; }
 
 		/// <summary>
-		/// Gets a value indicating if the prefix should inherit parent prefixes.
+		/// Gets a value indicating whether the prefix should inherit parent prefixes.
 		/// </summary>
 		public bool Inherit { get; private set; }
 

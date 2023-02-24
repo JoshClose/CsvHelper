@@ -8,26 +8,25 @@ namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
 	/// Gets a value indicating whether references
-	/// should be ignored when auto mapping. <c>true</c> to ignore
-	/// references, otherwise <c>false</c>. Default is false.
+	/// should be ignored when auto mapping. <see langword="true"/> to ignore
+	/// references, otherwise <see langword="false"/>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class IgnoreReferencesAttribute : Attribute, IClassMapper
 	{
 		/// <summary>
 		/// Gets a value indicating whether references
-		/// should be ignored when auto mapping. <c>true</c> to ignore
-		/// references, otherwise <c>false</c>. Default is false.
+		/// should be ignored when auto mapping. <see langword="true"/> to ignore
+		/// references, otherwise <see langword="false"/>.
 		/// </summary>
 		public bool IgnoreReferences { get; private set; }
 
 		/// <summary>
 		/// Gets a value indicating whether references
-		/// should be ignored when auto mapping. <c>true</c> to ignore
-		/// references, otherwise <c>false</c>. Default is false.
+		/// should be ignored when auto mapping. <see langword="true"/> to ignore
+		/// references, otherwise <see langword="false"/>.
 		/// </summary>
-		/// <param name="ignoreReferences">Ignore references value.</param>
-		public IgnoreReferencesAttribute(bool ignoreReferences)
+		public IgnoreReferencesAttribute(bool ignoreReferences = true)
 		{
 			IgnoreReferences = ignoreReferences;
 		}

@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
     /// <summary>
     /// The fields trimming options.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class TrimOptionsAttribute : Attribute, IClassMapper
     {
         /// <summary>
@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
         /// The fields trimming options.
         /// </summary>
         /// <param name="trimOptions">The TrimOptions.</param>
-        public TrimOptionsAttribute( TrimOptions trimOptions )
+        public TrimOptionsAttribute(TrimOptions trimOptions)
         {
             TrimOptions = trimOptions;
         }

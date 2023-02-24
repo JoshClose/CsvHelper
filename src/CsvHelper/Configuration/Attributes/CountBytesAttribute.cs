@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
 	/// A value indicating whether the number of bytes should
-	/// be counted while parsing. Default is false. This will slow down parsing
+	/// be counted while parsing. This will slow down parsing
 	/// because it needs to get the byte count of every char for the given encoding.
 	/// The <see cref="Encoding"/> needs to be set correctly for this to be accurate.
 	/// </summary>
@@ -18,7 +18,7 @@ namespace CsvHelper.Configuration.Attributes
 	{
 		/// <summary>
 		/// A value indicating whether the number of bytes should
-		/// be counted while parsing. Default is false. This will slow down parsing
+		/// be counted while parsing. This will slow down parsing
 		/// because it needs to get the byte count of every char for the given encoding.
 		/// The <see cref="Encoding"/> needs to be set correctly for this to be accurate.
 		/// </summary>
@@ -26,12 +26,12 @@ namespace CsvHelper.Configuration.Attributes
 
 		/// <summary>
 		/// A value indicating whether the number of bytes should
-		/// be counted while parsing. Default is false. This will slow down parsing
+		/// be counted while parsing. This will slow down parsing
 		/// because it needs to get the byte count of every char for the given encoding.
 		/// The <see cref="Encoding"/> needs to be set correctly for this to be accurate.
 		/// </summary>
 		/// <param name="countBytes"></param>
-		public CountBytesAttribute(bool countBytes)
+		public CountBytesAttribute(bool countBytes = true)
 		{
 			CountBytes = countBytes;
 		}

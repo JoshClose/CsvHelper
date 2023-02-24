@@ -1,11 +1,6 @@
 ﻿using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CsvHelper.Tests.Mappings.Attribute
@@ -15,11 +10,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
-			Assert.True(config.IgnoreReferences);
+			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooTrue)).IgnoreReferences);
+			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooFalse)).IgnoreReferences);
 		}
 
-		[IgnoreReferences(true)]
-		private class Foo { }
+		[IgnoreReferences]
+		private class FooTrue { }
+
+		[IgnoreReferences(false)]
+		private class FooFalse { }
 	}
 }

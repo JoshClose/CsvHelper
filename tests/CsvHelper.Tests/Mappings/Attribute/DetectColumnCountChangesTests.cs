@@ -10,11 +10,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
-			Assert.True(config.DetectColumnCountChanges);
+			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooTrue)).DetectColumnCountChanges);
+			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooFalse)).DetectColumnCountChanges);
 		}
 
-		[DetectColumnCountChanges(true)]
-		private class Foo { }
+		[DetectColumnCountChanges]
+		private class FooTrue { }
+
+		[DetectColumnCountChanges(false)]
+		private class FooFalse { }
 	}
 }

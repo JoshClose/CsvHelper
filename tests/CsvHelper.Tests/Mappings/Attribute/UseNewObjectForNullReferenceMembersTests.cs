@@ -10,11 +10,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
-			Assert.False(config.UseNewObjectForNullReferenceMembers);
+			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooTrue)).UseNewObjectForNullReferenceMembers);
+			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooFalse)).UseNewObjectForNullReferenceMembers);
 		}
 
+		[UseNewObjectForNullReferenceMembers]
+		private class FooTrue { }
+
 		[UseNewObjectForNullReferenceMembers(false)]
-		private class Foo { }
+		private class FooFalse { }
 	}
 }

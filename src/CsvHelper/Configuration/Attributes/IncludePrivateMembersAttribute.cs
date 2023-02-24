@@ -7,21 +7,20 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
     /// <summary>
-    /// A value indicating if private member should be read from and written to.
+    /// A value indicating whether private members should be read from and written to.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class IncludePrivateMembersAttribute : Attribute, IClassMapper
     {
         /// <summary>
-        /// Gets a value indicating if private member should be read from and written to.
+        /// Gets a value indicating whether private members should be read from and written to.
         /// </summary>
         public bool IncludePrivateMembers { get; private set; }
 
         /// <summary>
-        /// A value indicating if private member should be read from and written to.
+        /// A value indicating whether private members should be read from and written to.
         /// </summary>
-        /// <param name="includePrivateMembers">The Include Private Members Flag.</param>
-        public IncludePrivateMembersAttribute( bool includePrivateMembers )
+        public IncludePrivateMembersAttribute(bool includePrivateMembers = true)
         {
             IncludePrivateMembers = includePrivateMembers;
         }

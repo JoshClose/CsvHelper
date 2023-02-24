@@ -7,25 +7,23 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// A value indicating if a line break found in a quote field should
-	/// be considered bad data. <c>true</c> to consider a line break bad data, otherwise <c>false</c>.
-	/// Defaults to false.
+	/// A value indicating whether a line break found in a quote field should
+	/// be considered bad data. <see langword="true"/> to consider a line break bad data, otherwise <see langword="false"/>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class LineBreakInQuotedFieldIsBadDataAttribute : Attribute, IClassMapper
 	{
 		/// <summary>
-		/// A value indicating if a line break found in a quote field should
-		/// be considered bad data. <c>true</c> to consider a line break bad data, otherwise <c>false</c>.
+		/// A value indicating whether a line break found in a quote field should
+		/// be considered bad data. <see langword="true"/> to consider a line break bad data, otherwise <see langword="false"/>.
 		/// </summary>
 		public bool LineBreakInQuotedFieldIsBadData { get; private set; }
 
 		/// <summary>
-		/// A value indicating if a line break found in a quote field should
-		/// be considered bad data. <c>true</c> to consider a line break bad data, otherwise <c>false</c>.
+		/// A value indicating whether a line break found in a quote field should
+		/// be considered bad data. <see langword="true"/> to consider a line break bad data, otherwise <see langword="false"/>.
 		/// </summary>
-		/// <param name="lineBreakInQuotedFieldIsBadData"></param>
-		public LineBreakInQuotedFieldIsBadDataAttribute(bool lineBreakInQuotedFieldIsBadData)
+		public LineBreakInQuotedFieldIsBadDataAttribute(bool lineBreakInQuotedFieldIsBadData = true)
 		{
 			LineBreakInQuotedFieldIsBadData = lineBreakInQuotedFieldIsBadData;
 		}
