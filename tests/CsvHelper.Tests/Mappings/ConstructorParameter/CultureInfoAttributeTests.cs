@@ -6,24 +6,17 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
 using Xunit;
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
 	
     public class CultureInfoAttributeTests
     {
-		private const decimal AMOUNT = 123_456.789M;
-		private const string CULTURE = "fr-FR";
-		private readonly string amount = AMOUNT.ToString(new CultureInfo(CULTURE));
-
 		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresParameterMaps()
 		{
@@ -31,18 +24,35 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo>();
 
-			Assert.Equal(2, map.ParameterMaps.Count);
+			Assert.Equal(3, map.ParameterMaps.Count);
 			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.CultureInfo);
-			Assert.Equal(new CultureInfo(CULTURE), map.ParameterMaps[1].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(new CultureInfo("fr-FR"), map.ParameterMaps[1].Data.TypeConverterOptions.CultureInfo);
+			Assert.Null(map.ParameterMaps[2].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(CultureInfo.InvariantCulture, context.Configuration.CultureInfo);
 		}
 
 		[Fact]
-		public void GetRecords_WithCultureInfoAttributes_HasHeader_CreatesRecords()
+		public void AutoMap_WithCultureInfoAttributes_ConfiguresMemberMaps()
+		{
+			var config = new CsvConfiguration(CultureInfo.GetCultureInfo("en-GB"));
+			var context = new CsvContext(config);
+			var map = context.AutoMap<Foo2>();
+
+			Assert.Equal(4, map.MemberMaps.Count);
+			Assert.Null(map.MemberMaps[0].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(new CultureInfo("fr-FR"), map.MemberMaps[1].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(CultureInfo.InvariantCulture, map.MemberMaps[2].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(new CultureInfo("ps-AF"), map.MemberMaps[3].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(new CultureInfo("en-GB"), context.Configuration.CultureInfo);
+		}
+
+		[Fact]
+		public void GetRecords_WithCultureInfoAttributes_CreatesRecords()
 		{
 			var parser = new ParserMock
 			{
-				{ "id", "amount" },
-				{ "1", amount },
+				{ "id", "amount1", "amount2" },
+				{ "1", "1,234", "1,234" },
 			};
 			using (var csv = new CsvReader(parser))
 			{
@@ -50,28 +60,8 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 				Assert.Single(records);
 				Assert.Equal(1, records[0].Id);
-				Assert.Equal(AMOUNT, records[0].Amount);
-			}
-		}
-
-		[Fact]
-		public void GetRecords_WithCultureInfoAttributes_NoHeader_CreatesRecords()
-		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-			{
-				HasHeaderRecord = false,
-			};
-			var parser = new ParserMock(config)
-			{
-				{ "1", amount },
-			};
-			using (var csv = new CsvReader(parser))
-			{
-				var records = csv.GetRecords<Foo>().ToList();
-
-				Assert.Single(records);
-				Assert.Equal(1, records[0].Id);
-				Assert.Equal(AMOUNT, records[0].Amount);
+				Assert.Equal(1.234m, records[0].Amount1);
+				Assert.Equal(1234, records[0].Amount2);
 			}
 		}
 
@@ -80,25 +70,46 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		{
 			var records = new List<Foo>
 			{
-				new Foo(1, AMOUNT),
+				new Foo(1, 1.234m, 1.234m),
 			};
 
-			var prevCulture = Thread.CurrentThread.CurrentCulture;
-			try {
-				Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-				using (var writer = new StringWriter())
-				using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+			{
+				csv.WriteRecords(records);
+
+				var expected = new StringBuilder();
+				expected.Append("Id,Amount1,Amount2\r\n");
+				expected.Append("1,1.234,1.234\r\n");
+
+				Assert.Equal(expected.ToString(), writer.ToString());
+			}
+		}
+
+		[Fact]
+		public void WriteRecords_WithCultureInfoAttributes_DoesUseMemberMaps()
+		{
+			var records = new List<Foo2>
+			{
+				new Foo2
 				{
-					csv.WriteRecords(records);
+					Id = 1,
+					Amount1 = 1.234m,
+					Amount2 = 1.234m,
+					Amount3 = 1.234m,
+				},
+			};
 
-					var expected = new StringBuilder();
-					expected.Append("Id,Amount\r\n");
-					expected.Append($"1,{AMOUNT}\r\n");
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+			{
+				csv.WriteRecords(records);
 
-					Assert.Equal(expected.ToString(), writer.ToString());
-				}
-			} finally {
-				Thread.CurrentThread.CurrentCulture = prevCulture;
+				var expected = new StringBuilder();
+				expected.Append("Id,Amount1,Amount2,Amount3\r\n");
+				expected.Append("1,\"1,234\",1.234,1٫234\r\n");
+
+				Assert.Equal(expected.ToString(), writer.ToString());
 			}
 		}
 
@@ -106,13 +117,30 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		{
 			public int Id { get; private set; }
 
-			public decimal Amount { get; private set; }
+			public decimal Amount1 { get; private set; }
 
-			public Foo(int id, [CultureInfo(CULTURE)] decimal amount)
+			public decimal Amount2 { get; private set; }
+
+			public Foo(int id, [CultureInfo("fr-FR")] decimal amount1, decimal amount2)
 			{
 				Id = id;
-				Amount = amount;
+				Amount1 = amount1;
+				Amount2 = amount2;
 			}
+		}
+
+		private class Foo2
+		{
+			public int Id { get; set; }
+
+			[CultureInfo("fr-FR")]
+			public decimal Amount1 { get; set; }
+
+			[CultureInfo(nameof(CultureInfo.InvariantCulture))]
+			public decimal Amount2 { get; set; }
+
+			[CultureInfo("ps-AF")] // Pashto (Afghanistan) uses U+066B ARABIC DECIMAL SEPARATOR (٫ instead of ,)
+			public decimal Amount3 { get; set; }
 		}
 
 	}
