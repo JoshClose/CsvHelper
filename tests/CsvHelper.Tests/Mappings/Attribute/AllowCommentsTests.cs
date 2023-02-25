@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void AllowCommentsTest()
 		{
-			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(AllowCommentsTrueTestClass)).AllowComments);
-			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(AllowCommentsFalseTestClass)).AllowComments);
+			Assert.True(CsvConfiguration.FromType<AllowCommentsTrueTestClass>(CultureInfo.InvariantCulture).AllowComments);
+			Assert.False(CsvConfiguration.FromType<AllowCommentsFalseTestClass>(CultureInfo.InvariantCulture).AllowComments);
 		}
 
 		[AllowComments]

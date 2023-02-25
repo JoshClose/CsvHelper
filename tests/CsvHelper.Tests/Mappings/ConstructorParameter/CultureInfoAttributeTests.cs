@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
@@ -19,8 +20,8 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
     {
 		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresParameterMaps()
-		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+		{			
+			var config = CsvConfiguration.FromType<Foo>();
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo>();
 
@@ -34,7 +35,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresMemberMaps()
 		{
-			var config = new CsvConfiguration(CultureInfo.GetCultureInfo("en-GB"));
+			var config = CsvConfiguration.FromType<Foo2>();
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo2>();
 
@@ -113,6 +114,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			}
 		}
 
+		[CultureInfo(nameof(CultureInfo.InvariantCulture))]
 		private class Foo
 		{
 			public int Id { get; private set; }
@@ -129,6 +131,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			}
 		}
 
+		[CultureInfo("en-GB")]
 		private class Foo2
 		{
 			public int Id { get; set; }
@@ -143,5 +146,79 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			public decimal Amount3 { get; set; }
 		}
 
+		[Fact]
+		public void CsvConfiguration_FromTypeWithParameter_IgnoresAttribute()
+		{
+			// First just validate we have an attribute to ignore
+			Assert.Equal(new CultureInfo("en-GB"), ((CultureInfoAttribute)System.Attribute.GetCustomAttribute(typeof(Foo2), typeof(CultureInfoAttribute))).CultureInfo);
+
+			Assert.Equal(new CultureInfo("es-ES"), CsvConfiguration.FromType<Foo2>(CultureInfo.GetCultureInfo("es-ES")).CultureInfo);
+		}
+
+		[Fact]
+		public void CsvConfiguration_FromType_NoAttribute_ThrowsConfigurationException()
+		{
+			Assert.Throws<ConfigurationException>(CsvConfiguration.FromType<NoAttribute>);
+		}
+
+		[Fact]
+		public void CsvConfiguration_FromType_NullAttribute_ThrowsArgumentNullException()
+		{
+			Assert.Throws<ArgumentNullException>(CsvConfiguration.FromType<NullAttribute>);
+		}
+
+		[Fact]
+		public void CsvConfiguration_FromType_InvalidAttribute_ThrowsCultureNotFoundException()
+		{
+			Assert.Throws<CultureNotFoundException>(CsvConfiguration.FromType<InvalidAttribute>);
+		}
+
+		[Fact]
+		public void CsvConfiguration_FromType_DerivedNoAttribute_TakesBaseClassValue()
+		{
+			Assert.Equal(new CultureInfo("en-GB"), CsvConfiguration.FromType<Foo2DerivedNoAttribute>().CultureInfo);
+		}
+
+		[Fact]
+		public void CsvConfiguration_FromType_DerivedWithAttribute_TakesDerviedClassValue()
+		{
+			Assert.Equal(CultureInfo.CurrentCulture, CsvConfiguration.FromType<Foo2DerivedWithAttribute>().CultureInfo);
+		}
+
+		private class NoAttribute
+		{
+			[CultureInfo("fr-FR")]
+			public int Id { get; set; }
+
+			[CultureInfo("fr-FR")]
+			public decimal Amount { get; set; }
+		}
+
+		[CultureInfo(null)]
+		private class NullAttribute
+		{
+			[CultureInfo("fr-FR")]
+			public int Id { get; set; }
+
+			[CultureInfo("fr-FR")]
+			public decimal Amount { get; set; }
+		}
+
+		[CultureInfo("invalid")]
+		private class InvalidAttribute
+		{
+			[CultureInfo("fr-FR")]
+			public int Id { get; set; }
+
+			[CultureInfo("fr-FR")]
+			public decimal Amount { get; set; }
+		}
+
+		private class Foo2DerivedNoAttribute : Foo2
+		{ }
+
+		[CultureInfo(nameof(CultureInfo.CurrentCulture))]
+		private class Foo2DerivedWithAttribute : Foo2
+		{ }
 	}
 }

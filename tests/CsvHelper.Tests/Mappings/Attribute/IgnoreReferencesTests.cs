@@ -10,8 +10,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooTrue)).IgnoreReferences);
-			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooFalse)).IgnoreReferences);
+			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).IgnoreReferences);
+			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).IgnoreReferences);
 		}
 
 		[IgnoreReferences]

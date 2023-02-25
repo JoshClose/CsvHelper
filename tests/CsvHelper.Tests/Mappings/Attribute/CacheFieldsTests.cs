@@ -10,8 +10,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooTrue)).CacheFields);
-			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooFalse)).CacheFields);
+			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).CacheFields);
+			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).CacheFields);
 		}
 
 		[CacheFields]

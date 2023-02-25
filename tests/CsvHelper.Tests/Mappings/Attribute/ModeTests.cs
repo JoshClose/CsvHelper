@@ -10,7 +10,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
+			var config = CsvConfiguration.FromType<Foo>(CultureInfo.InvariantCulture);
 			Assert.Equal(CsvMode.Escape, config.Mode);
 		}
 

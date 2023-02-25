@@ -10,8 +10,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooTrue)).DetectColumnCountChanges);
-			Assert.False(new CsvConfiguration(CultureInfo.InvariantCulture, typeof(FooFalse)).DetectColumnCountChanges);
+			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).DetectColumnCountChanges);
+			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).DetectColumnCountChanges);
 		}
 
 		[DetectColumnCountChanges]

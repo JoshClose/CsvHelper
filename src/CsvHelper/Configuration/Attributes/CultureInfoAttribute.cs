@@ -8,10 +8,12 @@ using System.Globalization;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// The <see cref="System.Globalization.CultureInfo"/> used when type converting the member.
-	/// This will be used instead of the <see cref="CsvConfiguration.CultureInfo"/> setting.
+	/// When applied to a member, specifies the <see cref="System.Globalization.CultureInfo"/>
+	/// used when type converting the member. When applied to a type, the value of
+	/// <see cref="CsvConfiguration.CultureInfo"/> in the <see cref="CsvConfiguration"/>
+	/// returned by <see cref="CsvConfiguration.FromType{T}()"/>
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class CultureInfoAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
