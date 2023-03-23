@@ -66,12 +66,12 @@ namespace CsvHelper.Tests.AutoMapping
 				Assert.NotNull(list);
 				Assert.Equal(2, list.Count);
 				var row = list[0];
-				Assert.Equal(1.1f, row.Single, 4f);
+				Assert.Equal(1.1d, row.Single, 4);
 				Assert.Equal(2.2d, row.Double, 4);
 				Assert.Equal(3.3m, row.Decimal);
 
 				row = list[1];
-				Assert.Equal(-0.1f, row.Single, 4f);
+				Assert.Equal(-0.1d, row.Single, 4);
 				Assert.Equal(-0.2d, row.Double, 4);
 				Assert.Equal(-0.3m, row.Decimal);
 			}
