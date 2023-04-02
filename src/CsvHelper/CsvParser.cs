@@ -61,12 +61,12 @@ namespace CsvHelper
 		private bool inQuotes;
 		private bool inEscape;
 		private Field[] fields;
-		private string[] processedFields;
+		private Memory<char>[] processedFields;
 		private int fieldsPosition;
 		private bool disposed;
 		private int quoteCount;
 		private char[] processFieldBuffer;
-		private int processFieldBufferSize;
+		private int processFieldBufferUsedLength;
 		private ParserState state;
 		private int delimiterPosition = 1;
 		private int newLinePosition = 1;
@@ -75,6 +75,11 @@ namespace CsvHelper
 		private bool isProcessingField;
 		private bool isRecordProcessed;
 		private string[] record;
+
+		/// <summary>
+		///  Gets a span representing the currently unused space in <see cref="processFieldBuffer"/>.
+		/// </summary>
+		private Span<char> AvailableProcessFieldBuffer => processFieldBuffer.AsSpan(processFieldBufferUsedLength);
 
 		/// <inheritdoc/>
 		public long CharCount => charCount;
@@ -118,6 +123,15 @@ namespace CsvHelper
 		public string RawRecord => new string(buffer, rowStartPosition, bufferPosition - rowStartPosition);
 
 		/// <inheritdoc/>
+		/// <remarks>
+		/// WARNING: This is an advanced API. The underlying memory of the returned span may
+		/// change upon subsequent calls to <see cref="Read"/>, resulting in undefined behavior.
+		/// If this is unclear or you want a consistent view of the raw record at this
+		/// point in time, use <see cref="RawRecord"/> instead.
+		/// </remarks>
+		public ReadOnlySpan<char> RawRecordSpan => buffer.AsSpan(rowStartPosition, bufferPosition - rowStartPosition);
+
+		/// <inheritdoc/>
 		public int Count => fieldsPosition;
 
 		/// <inheritdoc/>
@@ -133,27 +147,14 @@ namespace CsvHelper
 		public IParserConfiguration Configuration => configuration;
 
 		/// <inheritdoc/>
+		/// <exception cref="IndexOutOfRangeException"><paramref name="index"/> is negative or greater than or equal to <see cref="Count"/>.</exception>
 		public string this[int index]
 		{
 			get
 			{
-				if (isProcessingField)
-				{
-					var message =
-						$"You can't access {nameof(IParser)}[int] or {nameof(IParser)}.{nameof(IParser.Record)} inside of the {nameof(BadDataFound)} callback. " +
-						$"Use {nameof(BadDataFoundArgs)}.{nameof(BadDataFoundArgs.Field)} and {nameof(BadDataFoundArgs)}.{nameof(BadDataFoundArgs.RawRecord)} instead."
-					;
+				ReadOnlySpan<char> fieldSpan = GetFieldSpan(index);
 
-					throw new ParserException(Context, message);
-				}
-
-				isProcessingField = true;
-
-				var field = GetField(index);
-
-				isProcessingField = false;
-
-				return field;
+				return cacheFields ? fieldCache.GetField(fieldSpan) : fieldSpan.ToString();
 			}
 		}
 
@@ -200,15 +201,14 @@ namespace CsvHelper
 			newLine = configuration.NewLine;
 			newLineFirstChar = configuration.NewLine[0];
 			mode = configuration.Mode;
-			processFieldBufferSize = configuration.ProcessFieldBufferSize;
 			quote = configuration.Quote;
 			whiteSpaceChars = configuration.WhiteSpaceChars;
 			trimOptions = configuration.TrimOptions;
 
 			buffer = new char[bufferSize];
-			processFieldBuffer = new char[processFieldBufferSize];
+			processFieldBuffer = new char[configuration.ProcessFieldBufferSize];
 			fields = new Field[128];
-			processedFields = new string[128];
+			processedFields = new Memory<char>[128];
 		}
 
 		/// <inheritdoc/>
@@ -219,6 +219,7 @@ namespace CsvHelper
 			fieldStartPosition = rowStartPosition;
 			fieldsPosition = 0;
 			quoteCount = 0;
+			processFieldBufferUsedLength = 0;
 			row++;
 			rawRow++;
 			var c = '\0';
@@ -254,6 +255,7 @@ namespace CsvHelper
 			fieldStartPosition = rowStartPosition;
 			fieldsPosition = 0;
 			quoteCount = 0;
+			processFieldBufferUsedLength = 0;
 			row++;
 			rawRow++;
 			var c = '\0';
@@ -785,30 +787,55 @@ namespace CsvHelper
 			return true;
 		}
 
-		private string GetField(int index)
+		/// <inheritdoc/>
+		/// <remarks>
+		/// WARNING: This is an advanced API. The underlying memory of the returned span may
+		/// change upon subsequent calls to <see cref="Read"/>, resulting in undefined behavior.
+		/// If this is unclear or you want a consistent view of the field at this point
+		/// in time, use <see cref="this[int]"/> instead.
+		/// </remarks>
+		/// <exception cref="IndexOutOfRangeException"><paramref name="index"/> is negative or greater than or equal to <see cref="Count"/>.</exception>
+		public ReadOnlySpan<char> GetFieldSpan(int index)
 		{
-			if (index > fieldsPosition)
+			if (index >= fieldsPosition)
 			{
-				throw new IndexOutOfRangeException();
+				throw new IndexOutOfRangeException($"Index was out of range. Must be non-negative and less than {nameof(Count)}");
 			}
 
 			ref var field = ref fields[index];
 
 			if (field.Length == 0)
 			{
-				return string.Empty;
+				return ReadOnlySpan<char>.Empty;
 			}
 
 			if (field.IsProcessed)
 			{
-				return processedFields[index];
+				return processedFields[index].Span;
 			}
+
+			if (isProcessingField)
+			{
+				// This check is to guard against stack overflow in the case that
+				// someone tries to access a (bad and unprocessed) field from
+				// within BadDataFound, and that access calls BadDataFound,
+				// which then tries to access... (and so on until the process crashes).
+
+				var message =
+					$"You can't access {nameof(IParser)}[int], {nameof(IParser)}.{nameof(IParser.GetFieldSpan)} or " +
+					$"{nameof(IParser)}.{nameof(IParser.Record)} inside of the {nameof(BadDataFound)} callback. " +
+					$"Use {nameof(BadDataFoundArgs)}.{nameof(BadDataFoundArgs.Field)} and {nameof(BadDataFoundArgs)}.{nameof(BadDataFoundArgs.RawRecord)} instead.";
+
+				throw new ParserException(Context, message);
+			}
+
+			isProcessingField = true;
 
 			var start = field.Start + rowStartPosition;
 			var length = field.Length;
 			var quoteCount = field.QuoteCount;
 
-			ProcessedField processedField;
+			Memory<char> processedField;
 			switch (mode)
 			{
 				case CsvMode.RFC4180:
@@ -826,14 +853,12 @@ namespace CsvHelper
 					throw new InvalidOperationException($"ParseMode '{mode}' is not handled.");
 			}
 
-			var value = cacheFields
-				? fieldCache.GetField(processedField.Buffer, processedField.Start, processedField.Length)
-				: new string(processedField.Buffer, processedField.Start, processedField.Length);
-
-			processedFields[index] = value;
+			processedFields[index] = processedField;
 			field.IsProcessed = true;
 
-			return value;
+			isProcessingField = false;
+
+			return processedField.Span;
 		}
 
 		/// <summary>
@@ -843,7 +868,7 @@ namespace CsvHelper
 		/// <param name="length">The length of the field.</param>
 		/// <param name="quoteCount">The number of counted quotes.</param>
 		/// <returns>The processed field.</returns>
-		protected ProcessedField ProcessRFC4180Field(int start, int length, int quoteCount)
+		protected Memory<char> ProcessRFC4180Field(int start, int length, int quoteCount)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -857,8 +882,7 @@ namespace CsvHelper
 			{
 				// Not quoted.
 				// No processing needed.
-
-				return new ProcessedField(newStart, newLength, buffer);
+				return buffer.AsMemory(newStart, newLength);
 			}
 
 			if (buffer[newStart] != quote || buffer[newStart + newLength - 1] != quote || newLength == 1 && buffer[newStart] == quote)
@@ -891,19 +915,10 @@ namespace CsvHelper
 			{
 				// The only quotes are the ends of the field.
 				// No more processing is needed.
-				return new ProcessedField(newStart, newLength, buffer);
+				return buffer.AsMemory(newStart, newLength);
 			}
 
-			if (newLength > processFieldBuffer.Length)
-			{
-				// Make sure the field processing buffer is large engough.
-				while (newLength > processFieldBufferSize)
-				{
-					processFieldBufferSize *= 2;
-				}
-
-				processFieldBuffer = new char[processFieldBufferSize];
-			}
+			EnsureAvailableProcessFieldBuffer(newLength);
 
 			// Remove escapes.
 			var inEscape = false;
@@ -923,11 +938,14 @@ namespace CsvHelper
 					continue;
 				}
 
-				processFieldBuffer[position] = c;
+				AvailableProcessFieldBuffer[position] = c;
 				position++;
 			}
 
-			return new ProcessedField(0, position, processFieldBuffer);
+			int fieldStartIndex = processFieldBufferUsedLength;
+			processFieldBufferUsedLength += position;
+
+			return processFieldBuffer.AsMemory(fieldStartIndex, position);
 		}
 
 		/// <summary>
@@ -936,12 +954,10 @@ namespace CsvHelper
 		/// <param name="start">The start index of the field.</param>
 		/// <param name="length">The length of the field.</param>
 		/// <returns>The processed field.</returns>
-		protected ProcessedField ProcessRFC4180BadField(int start, int length)
+		protected Memory<char> ProcessRFC4180BadField(int start, int length)
 		{
 			// If field is already known to be bad, different rules can be applied.
-
-			var args = new BadDataFoundArgs(new string(buffer, start, length), RawRecord, Context);
-			badDataFound?.Invoke(args);
+			badDataFound?.Invoke(new BadDataFoundArgs(new string(buffer, start, length), RawRecord, Context));
 
 			var newStart = start;
 			var newLength = length;
@@ -954,19 +970,10 @@ namespace CsvHelper
 			if (buffer[newStart] != quote)
 			{
 				// If the field doesn't start with a quote, don't process it.
-				return new ProcessedField(newStart, newLength, buffer);
+				return buffer.AsMemory(newStart, newLength);
 			}
 
-			if (newLength > processFieldBuffer.Length)
-			{
-				// Make sure the field processing buffer is large engough.
-				while (newLength > processFieldBufferSize)
-				{
-					processFieldBufferSize *= 2;
-				}
-
-				processFieldBuffer = new char[processFieldBufferSize];
-			}
+			EnsureAvailableProcessFieldBuffer(newLength);
 
 			// Remove escapes until the last quote is found.
 			var inEscape = false;
@@ -1007,11 +1014,14 @@ namespace CsvHelper
 					continue;
 				}
 
-				processFieldBuffer[position] = c;
+				AvailableProcessFieldBuffer[position] = c;
 				position++;
 			}
 
-			return new ProcessedField(0, position, processFieldBuffer);
+			int fieldStartIndex = processFieldBufferUsedLength;
+			processFieldBufferUsedLength += position;
+
+			return processFieldBuffer.AsMemory(fieldStartIndex, position);
 		}
 
 		/// <summary>
@@ -1020,7 +1030,7 @@ namespace CsvHelper
 		/// <param name="start">The start index of the field.</param>
 		/// <param name="length">The length of the field.</param>
 		/// <returns>The processed field.</returns>
-		protected ProcessedField ProcessEscapeField(int start, int length)
+		protected Memory<char> ProcessEscapeField(int start, int length)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -1030,16 +1040,7 @@ namespace CsvHelper
 				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
 			}
 
-			if (newLength > processFieldBuffer.Length)
-			{
-				// Make sure the field processing buffer is large engough.
-				while (newLength > processFieldBufferSize)
-				{
-					processFieldBufferSize *= 2;
-				}
-
-				processFieldBuffer = new char[processFieldBufferSize];
-			}
+			EnsureAvailableProcessFieldBuffer(newLength);
 
 			// Remove escapes.
 			var inEscape = false;
@@ -1058,11 +1059,14 @@ namespace CsvHelper
 					continue;
 				}
 
-				processFieldBuffer[position] = c;
+				AvailableProcessFieldBuffer[position] = c;
 				position++;
 			}
 
-			return new ProcessedField(0, position, processFieldBuffer);
+			int fieldStartIndex = processFieldBufferUsedLength;
+			processFieldBufferUsedLength += position;
+
+			return processFieldBuffer.AsMemory(fieldStartIndex, position);
 		}
 
 		/// <inheritdoc/>
@@ -1072,7 +1076,7 @@ namespace CsvHelper
 		/// <param name="start">The start index of the field.</param>
 		/// <param name="length">The length of the field.</param>
 		/// <returns>The processed field.</returns>
-		protected ProcessedField ProcessNoEscapeField(int start, int length)
+		protected Memory<char> ProcessNoEscapeField(int start, int length)
 		{
 			var newStart = start;
 			var newLength = length;
@@ -1082,7 +1086,35 @@ namespace CsvHelper
 				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
 			}
 
-			return new ProcessedField(newStart, newLength, buffer);
+			return buffer.AsMemory(newStart, newLength);
+		}
+
+		private void EnsureAvailableProcessFieldBuffer(int length)
+		{
+			if (AvailableProcessFieldBuffer.Length < length)
+			{
+				// We iteratively double the buffer size (rather than sizing it exactly
+				// to "length") to reduce the number of resizes for subsequent fields.
+
+				int newProcessFieldBufferLength;
+				checked
+				{
+					int minimumSize = processFieldBufferUsedLength + length;
+
+					newProcessFieldBufferLength = 1 + processFieldBufferUsedLength * 2;
+
+					while (newProcessFieldBufferLength < minimumSize)
+					{
+						newProcessFieldBufferLength *= 2;
+					}
+				}
+
+				Debug.Assert(newProcessFieldBufferLength > processFieldBuffer.Length);
+
+				Array.Resize(ref processFieldBuffer, newProcessFieldBufferLength);
+
+				Debug.Assert(AvailableProcessFieldBuffer.Length >= length);
+			}
 		}
 
 		/// <inheritdoc/>
@@ -1118,42 +1150,6 @@ namespace CsvHelper
 			// Set large fields to null
 
 			disposed = true;
-		}
-
-		/// <summary>
-		/// Processes a raw field based on configuration.
-		/// This will remove quotes, remove escapes, and trim if configured to.
-		/// </summary>
-		[DebuggerDisplay("Start = {Start}, Length = {Length}, Buffer.Length = {Buffer.Length}")]
-		protected readonly struct ProcessedField
-		{
-			/// <summary>
-			/// The start of the field in the buffer.
-			/// </summary>
-			public readonly int Start;
-
-			/// <summary>
-			/// The length of the field in the buffer.
-			/// </summary>
-			public readonly int Length;
-
-			/// <summary>
-			/// The buffer that contains the field.
-			/// </summary>
-			public readonly char[] Buffer;
-
-			/// <summary>
-			/// Creates a new instance of ProcessedField.
-			/// </summary>
-			/// <param name="start">The start of the field in the buffer.</param>
-			/// <param name="length">The length of the field in the buffer.</param>
-			/// <param name="buffer">The buffer that contains the field.</param>
-			public ProcessedField(int start, int length, char[] buffer)
-			{
-				Start = start;
-				Length = length;
-				Buffer = buffer;
-			}
 		}
 
 		private enum ReadLineResult
