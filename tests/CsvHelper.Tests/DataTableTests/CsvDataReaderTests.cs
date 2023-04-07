@@ -160,7 +160,7 @@ namespace CsvHelper.Tests.DataTableTests
 
 				dataTable.Load(dataReader);
 
-				Assert.Equal(0, dataTable.Rows.Count);
+				Assert.Equal(2, dataTable.Rows.Count);
 			}
 		}
 

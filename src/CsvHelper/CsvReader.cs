@@ -88,7 +88,7 @@ namespace CsvHelper
 		/// <param name="parser">The <see cref="IParser" /> used to parse the CSV file.</param>
 		public CsvReader(IParser parser)
 		{
-			Configuration = parser.Configuration as IReaderConfiguration ?? throw new ConfigurationException($"The {nameof(IParser)} configuration must implement {nameof(IReaderConfiguration)} to be used in {nameof(CsvReader)}.");
+			Configuration = parser.Configuration as IReaderConfiguration ?? throw new CsvHelper.Configuration.ConfigurationException($"The {nameof(IParser)} configuration must implement {nameof(IReaderConfiguration)} to be used in {nameof(CsvReader)}.");
 
 			this.parser = parser ?? throw new ArgumentNullException(nameof(parser));
 			context = parser.Context ?? throw new InvalidOperationException($"For {nameof(IParser)} to be used in {nameof(CsvReader)}, {nameof(IParser.Context)} must also implement {nameof(CsvContext)}.");
