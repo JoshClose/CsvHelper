@@ -412,13 +412,35 @@ namespace CsvHelper
 
 						if (inQuotes)
 						{
-							if (c == '\r' || c == '\n' && cPrev != '\r')
+							// If we are in quotes we don't want to do any special
+							// processing (e.g. of delimiters) until we hit the ending
+							// quote. But the newline logic may vary.
+
+							if (!(c == '\r' || (c == '\n' && cPrev != '\r')))
 							{
-								rawRow++;
+								// We are not at (the beginning of) a newline,
+								// so just keep reading.
+								continue;
 							}
 
-							// We don't care about anything else if we're in quotes.
-							continue;
+							rawRow++;
+
+							if (lineBreakInQuotedFieldIsBadData)
+							{
+								// This newline is not valid within the field.
+								// We will consume the newline and then end the
+								// field (and the row).
+								// This avoids growing the field (and the buffer)
+								// until another quote is found.
+								fieldIsBadData = true;
+							}
+							else
+							{
+								// We are at a newline but it is considered valid
+								// within a (quoted) field. We keep reading until
+								// we find the closing quote.
+								continue;
+							}
 						}
 					}
 					else
@@ -865,17 +887,6 @@ namespace CsvHelper
 			{
 				// If the field doesn't have quotes on the ends, or the field is a single quote char, it's bad data.
 				return ProcessRFC4180BadField(start, length);
-			}
-
-			if (lineBreakInQuotedFieldIsBadData)
-			{
-				for (var i = newStart; i < newStart + newLength; i++)
-				{
-					if (buffer[i] == '\r' || buffer[i] == '\n')
-					{
-						return ProcessRFC4180BadField(start, length);
-					}
-				}
 			}
 
 			// Remove the quotes from the ends.
