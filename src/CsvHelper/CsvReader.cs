@@ -42,13 +42,16 @@ namespace CsvHelper
 		private CsvContext context;
 		private bool disposed;
 		private IParser parser;
+		/// <summary>
+		/// The number of columns in a valid record, as determined using <see cref="detectColumnCountChanges"/>.
+		/// </summary>
 		private int columnCount;
 		private int currentIndex = -1;
 		private bool hasBeenRead;
 		private string[]? headerRecord;
 
 		/// <inheritdoc/>
-		public virtual int ColumnCount => columnCount;
+		public virtual int ColumnCount => parser.Count;
 
 		/// <inheritdoc/>
 		public virtual int CurrentIndex => currentIndex;

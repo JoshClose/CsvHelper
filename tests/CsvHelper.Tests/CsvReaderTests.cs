@@ -51,6 +51,29 @@ namespace CsvHelper.Tests
 		}
 
 		[Fact]
+		public void ColumnCountTest()
+		{
+			string csvString = """
+				1
+				1,2
+				1,2,3
+				""";
+			var reader = new CsvReader(new StringReader(csvString), CultureInfo.InvariantCulture);
+
+			Assert.True(reader.Read());
+			Assert.Equal(1, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(2, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(3, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+		}
+
+		[Fact]
 		public void GetTypeTest()
 		{
 			var data = new[]
