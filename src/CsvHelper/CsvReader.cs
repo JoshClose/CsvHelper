@@ -42,10 +42,7 @@ namespace CsvHelper
 		private CsvContext context;
 		private bool disposed;
 		private IParser parser;
-		/// <summary>
-		/// The number of columns in a valid record, as determined using <see cref="detectColumnCountChanges"/>.
-		/// </summary>
-		private int columnCount;
+		private int prevColumnCount;
 		private int currentIndex = -1;
 		private bool hasBeenRead;
 		private string[]? headerRecord;
@@ -264,7 +261,7 @@ namespace CsvHelper
 
 			if (detectColumnCountChanges && hasMoreRecords)
 			{
-				if (columnCount > 0 && columnCount != parser.Count)
+				if (prevColumnCount > 0 && prevColumnCount != parser.Count)
 				{
 					var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
 
@@ -275,7 +272,7 @@ namespace CsvHelper
 					}
 				}
 
-				columnCount = parser.Count;
+				prevColumnCount = parser.Count;
 			}
 
 			return hasMoreRecords;
@@ -296,7 +293,7 @@ namespace CsvHelper
 
 			if (detectColumnCountChanges && hasMoreRecords)
 			{
-				if (columnCount > 0 && columnCount != parser.Count)
+				if (prevColumnCount > 0 && prevColumnCount != parser.Count)
 				{
 					var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
 
@@ -307,7 +304,7 @@ namespace CsvHelper
 					}
 				}
 
-				columnCount = parser.Count;
+				prevColumnCount = parser.Count;
 			}
 
 			return hasMoreRecords;
