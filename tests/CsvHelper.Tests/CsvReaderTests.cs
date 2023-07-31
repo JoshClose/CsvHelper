@@ -50,15 +50,25 @@ namespace CsvHelper.Tests
 			Assert.Equal(Convert.ToInt32("2"), reader.GetField<int>(1));
 		}
 
-		[Fact]
-		public void ColumnCountTest()
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void ColumnCountTest(bool detectColumnCountChanges)
 		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectColumnCountChanges = detectColumnCountChanges,
+				ReadingExceptionOccurred = _ => false
+			};
+
 			string csvString = """
 				1
 				1,2
 				1,2,3
+				1,2
+				1
 				""";
-			var reader = new CsvReader(new StringReader(csvString), CultureInfo.InvariantCulture);
+			var reader = new CsvReader(new StringReader(csvString), config);
 
 			Assert.True(reader.Read());
 			Assert.Equal(1, reader.ColumnCount);
@@ -70,6 +80,14 @@ namespace CsvHelper.Tests
 
 			Assert.True(reader.Read());
 			Assert.Equal(3, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(2, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(1, reader.ColumnCount);
 			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
 		}
 
