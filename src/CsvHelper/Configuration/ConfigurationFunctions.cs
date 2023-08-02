@@ -207,17 +207,20 @@ namespace CsvHelper.Configuration
 			{
 				// Since all escaped text has been removed, we can reliably read line by line.
 				var match = Regex.Match(text, newLine);
-				var line = match.Success ? text.Substring(0, match.Index + match.Length) : text;
+				var line = match.Success ? text.Substring(0, match.Index) : text;
 
-				var delimiterCounts = new Dictionary<string, int>();
-				foreach (var delimiter in config.DetectDelimiterValues)
+				if (line.Length > 0)
 				{
-					// Escape regex special chars to use as regex pattern.
-					var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
-					delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
-				}
+					var delimiterCounts = new Dictionary<string, int>();
+					foreach (var delimiter in config.DetectDelimiterValues)
+					{
+						// Escape regex special chars to use as regex pattern.
+						var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
+						delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
+					}
 
-				lineDelimiterCounts.Add(delimiterCounts);
+					lineDelimiterCounts.Add(delimiterCounts);
+				}
 
 				text = match.Success ? text.Substring(match.Index + match.Length) : string.Empty;
 			}
