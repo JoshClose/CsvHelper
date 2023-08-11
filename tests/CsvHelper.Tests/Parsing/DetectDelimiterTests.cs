@@ -282,5 +282,26 @@ namespace CsvHelper.Tests.Parsing
 				Assert.Equal("one", parser[1]);
 			}
 		}
+
+		[Fact]
+		public void GetDelimiter_TextHasEmptyLines_DetectsDelimiter()
+		{
+			// Issue #2170
+			var s = new StringBuilder();
+			s.AppendLine("A;B;C;D");
+			s.AppendLine("1;2;3;4");
+			s.AppendLine("");
+			s.AppendLine("1;2;3;4");
+			s.AppendLine("1;2;3;4");
+			s.AppendLine("");
+			s.AppendLine("");
+			s.AppendLine("");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectDelimiter = true,
+			};
+			var delimeter = ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config));
+			Assert.Equal(";", delimeter);
+		}
 	}
 }
