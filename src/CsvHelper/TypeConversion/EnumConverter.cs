@@ -86,7 +86,7 @@ namespace CsvHelper.TypeConversion
 				}
 			}
 
-#if NET45 || NET47 || NETSTANDARD2_0
+#if NET462 || NET47 || NETSTANDARD2_0
 			try
 			{
 				return Enum.Parse(type, text, ignoreCase);

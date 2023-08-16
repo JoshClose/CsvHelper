@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--<TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netcoreapp2.1;net47;net45</TargetFrameworks>-->
 		<TargetFrameworks>net6.0</TargetFrameworks>
 		<LangVersion>preview</LangVersion>
 		<SignAssembly>True</SignAssembly>
@@ -28,8 +27,8 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<!-- .NET 4.5 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+	<!-- .NET 4.6.2 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
 		<PackageReference Include="System.Buffers" Version="4.5.1" />
 		<PackageReference Include="System.Memory" Version="4.5.4" />

@@ -70,7 +70,7 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetConstructorCacheKey(Type type, Type[] args)
 		{
-#if !NET45
+#if !NET462
 			var hashCode = new HashCode();
 			hashCode.Add(type.GetHashCode());
 			for (var i = 0; i < args.Length; i++)

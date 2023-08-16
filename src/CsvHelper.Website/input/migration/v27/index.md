@@ -25,7 +25,7 @@ applied to it.
 ## IWriter
 
 - Added method `Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)`.
-This does not apply to projects that reference the `net45` version of CsvHelper.
+This does not apply to projects that reference the `net462` version of CsvHelper.
 
 Any class that implements `IWriter` will need these changes applied to it.
 

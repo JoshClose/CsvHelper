@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.Reading
 			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-#if !NET45
+#if !NET462
 		[Fact]
 		public async Task GetRecordsAsyncGeneric_Disposed_ThrowsObjectDisposedExceptionTest()
 		{

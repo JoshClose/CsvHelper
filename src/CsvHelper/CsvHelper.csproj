@@ -9,7 +9,6 @@
 		<!-- Build -->
 		<AssemblyName>CsvHelper</AssemblyName>
 		<TargetFrameworks>net6.0;netstandard2.1;netstandard2.0;net47;net462</TargetFrameworks>
-		<!--<TargetFrameworks>net60</TargetFrameworks>-->
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>CsvHelper</RootNamespace>
 		<DefaultLanguage>en-US</DefaultLanguage>
@@ -48,8 +47,8 @@
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<!-- .NET 4.5 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+	<!-- .NET 4.6.2 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
 		<PackageReference Include="System.Memory" Version="4.5.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.3.0" />
