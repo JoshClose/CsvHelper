@@ -62,6 +62,20 @@ namespace CsvHelper.Configuration
 		int ProcessFieldBufferSize { get; }
 
 		/// <summary>
+		/// Gets the maximum allowed size of the buffer which must not be increased above that value.
+		/// No limit if not defined.
+		/// </summary>
+		int? MaxBufferSize { get; }
+
+		/// <summary>
+		/// Gets the maximum allowed size of the process field buffer which must not be increased above that value.
+		/// If field is longer value is truncated what leads to data loss.
+		/// No limit if not defined.
+		/// WARNING: setting too low value can lead to field truncation if length bigger than this value
+		/// </summary>
+		int? MaxProcessFieldBufferSize { get; }
+
+		/// <summary>
 		/// Gets a value indicating whether the number of bytes should
 		/// be counted while parsing. Default is false. This will slow down parsing
 		/// because it needs to get the byte count of every char for the given encoding.
@@ -81,6 +95,11 @@ namespace CsvHelper.Configuration
 		/// instead of throwing an exception.
 		/// </summary>
 		BadDataFound BadDataFound { get; }
+
+		/// <summary>
+		/// If set bad data fields are not processed and empty array allocated for them
+		/// </summary>
+		bool ProcessBadDataFields { get; }
 
 		/// <summary>
 		/// Gets or sets the maximum size of a field.
