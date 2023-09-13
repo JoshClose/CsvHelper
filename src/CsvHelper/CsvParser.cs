@@ -73,6 +73,9 @@ namespace CsvHelper
 		private string[]? record;
 
 		/// <inheritdoc />
+		public bool TooLongRow { get; private set; }
+
+		/// <inheritdoc />
 		public long CharCount { get; private set; }
 
 		/// <inheritdoc />
@@ -223,6 +226,7 @@ namespace CsvHelper
 			rowStartPosition = bufferPosition;
 			fieldStartPosition = rowStartPosition;
 			Count = 0;
+			TooLongRow = false;
 			quoteCount = 0;
 			Row++;
 			RawRow++;
@@ -273,7 +277,12 @@ namespace CsvHelper
 			rowStartPosition = 0;
 			bufferPosition = charsLeft;
 
-			charsRead = reader.Read(buffer, charsLeft, buffer.Length - charsLeft);
+			var lengthToReadFromStream = buffer.Length - charsLeft;
+			var startIndexToPlaceInBuffer = charsLeft;
+
+			charsLeft = SetupParserIfTooLongRow(charsLeft, ref lengthToReadFromStream, ref startIndexToPlaceInBuffer);
+
+			charsRead = reader.Read(buffer, startIndexToPlaceInBuffer, lengthToReadFromStream);
 
 			if (charsRead == 0)
 			{
@@ -303,6 +312,27 @@ namespace CsvHelper
 			}
 		}
 
+		private int SetupParserIfTooLongRow(
+			int charsLeft,
+			ref int lengthToReadFromStream,
+			ref int startIndexToPlaceInBuffer
+		)
+		{
+			// Buffer was stuffed during last read and could not be resized because limit set thus whole row can not be loaded to buffer.
+			// Continue reading to seek to next row but current row could not be correctly parsed because too long to fit in the buffer.
+			if (maxBufferSize.HasValue && buffer.Length == charsLeft && buffer.Length == maxBufferSize)
+			{
+				lengthToReadFromStream = maxBufferSize.Value;
+				startIndexToPlaceInBuffer = 0;
+				charsLeft = 0;
+				bufferPosition = 0;
+				fieldStartPosition = 0;
+				TooLongRow = true;
+			}
+
+			return charsLeft;
+		}
+
 		/// <inheritdoc />
 		public async Task<bool> ReadAsync()
 		{
@@ -310,6 +340,7 @@ namespace CsvHelper
 			rowStartPosition = bufferPosition;
 			fieldStartPosition = rowStartPosition;
 			Count = 0;
+			TooLongRow = false;
 			quoteCount = 0;
 			Row++;
 			RawRow++;
@@ -360,7 +391,13 @@ namespace CsvHelper
 			rowStartPosition = 0;
 			bufferPosition = charsLeft;
 
-			charsRead = await reader.ReadAsync(buffer, charsLeft, buffer.Length - charsLeft).ConfigureAwait(false);
+			var lengthToReadFromStream = buffer.Length - charsLeft;
+			var startIndexToPlaceInBuffer = charsLeft;
+
+			charsLeft = SetupParserIfTooLongRow(charsLeft, ref lengthToReadFromStream, ref startIndexToPlaceInBuffer);
+
+			charsRead = await reader.ReadAsync(buffer, startIndexToPlaceInBuffer, lengthToReadFromStream)
+				.ConfigureAwait(false);
 
 			if (charsRead == 0)
 			{
@@ -913,7 +950,7 @@ namespace CsvHelper
 				// Not quoted.
 				// No processing needed.
 
-				return new ProcessedField(newStart, newLength, buffer);
+				return new ProcessedField(newStart, GetActualFieldLength(newLength), buffer);
 			}
 
 			if (buffer[newStart] != quote ||
@@ -948,7 +985,7 @@ namespace CsvHelper
 			{
 				// The only quotes are the ends of the field.
 				// No more processing is needed.
-				return new ProcessedField(newStart, newLength, buffer);
+				return new ProcessedField(newStart, GetActualFieldLength(newLength), buffer);
 			}
 
 			IncreaseProcessFieldBufferLengthIfNecessaryAndAble(newLength);
@@ -984,6 +1021,23 @@ namespace CsvHelper
 			}
 
 			return new ProcessedField(0, position, processFieldBuffer);
+		}
+
+		/// <summary>
+		/// If <see cref="maxProcessFieldBufferSize"/> set, this method takes care not to create longer field's string than field buffer.
+		/// </summary>
+		/// <param name="newLength"></param>
+		/// <returns></returns>
+		private int GetActualFieldLength(int newLength)
+		{
+			var fieldLength = newLength;
+
+			if (maxProcessFieldBufferSize.HasValue && newLength > maxProcessFieldBufferSize)
+			{
+				fieldLength = maxProcessFieldBufferSize.Value;
+			}
+
+			return fieldLength;
 		}
 
 		private void IncreaseProcessFieldBufferLengthIfNecessaryAndAble(int newLength)
@@ -1040,7 +1094,7 @@ namespace CsvHelper
 			if (buffer[newStart] != quote)
 			{
 				// If the field doesn't start with a quote, don't process it.
-				return new ProcessedField(newStart, newLength, buffer);
+				return new ProcessedField(newStart, GetActualFieldLength(newLength), buffer);
 			}
 
 			IncreaseProcessFieldBufferLengthIfNecessaryAndAble(newLength);
@@ -1157,7 +1211,7 @@ namespace CsvHelper
 				ArrayHelper.Trim(buffer, ref newStart, ref newLength, whiteSpaceChars);
 			}
 
-			return new ProcessedField(newStart, newLength, buffer);
+			return new ProcessedField(newStart, GetActualFieldLength(newLength), buffer);
 		}
 
 		/// <inheritdoc />
