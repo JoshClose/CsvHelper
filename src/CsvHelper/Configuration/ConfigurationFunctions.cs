@@ -106,7 +106,7 @@ namespace CsvHelper.Configuration
 			var shouldQuote = !string.IsNullOrEmpty(args.Field) &&
 			(
 				args.Field[0] == ' ' // Starts with a space
-				|| args.Field[args.Field.Length - 1] == ' ' // Ends with a space
+				|| args.Field[^1] == ' ' // Ends with a space
 				|| args.Field.Contains(config.Quote) // Contains quote
 				|| !config.IsNewLineSet && args.Field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
 				|| config.IsNewLineSet && args.Field.Contains(config.NewLine) // Contains newline
