@@ -28,6 +28,7 @@ namespace CsvHelper.Configuration
 		/// <inheritdoc/>
 		public virtual BadDataFound BadDataFound { get; set; } = ConfigurationFunctions.BadDataFound;
 
+		/// <inheritdoc/>
 		public virtual bool ProcessBadDataFields { get; set; } = true;
 
 		/// <inheritdoc/>
