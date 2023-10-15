@@ -439,7 +439,7 @@ public class FooMap : ClassMap&lt;Foo&gt;
     {
         Map(m =&gt; m.Id);
         Map(m =&gt; m.Name);
-        Map(m =&gt; m.Json).Convert(row =&gt; JsonConvert.DeserializeObject&lt;Json&gt;(row.GetField(&quot;Json&quot;)));
+        Map(m =&gt; m.Json).Convert(o =&gt; JsonConvert.DeserializeObject&lt;Json&gt;(o.Row.GetField(&quot;Json&quot;)));
     }
 }
 </code></pre>
