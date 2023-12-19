@@ -139,7 +139,7 @@ namespace CsvHelper.Tests.Parsing
 			var badstring = new StringReader("Fish,\"DDDD");
 
 			string[] record = new string[0];
-			var cfg = new CsvConfiguration(CultureInfo.CurrentCulture)
+			var cfg = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				BadDataFound = args => record = args.Context.Parser.Record
 			};
