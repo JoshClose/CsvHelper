@@ -229,7 +229,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(uint), new UInt32Converter());
 			AddConverter(typeof(ulong), new UInt64Converter());
 			AddConverter(typeof(Uri), new UriConverter());
-#if NET6_0
+#if NET6_0_OR_GREATER
 			AddConverter(typeof(DateOnly), new DateOnlyConverter());
 			AddConverter(typeof(TimeOnly), new TimeOnlyConverter());
 #endif
