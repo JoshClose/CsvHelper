@@ -1,22 +1,13 @@
 name: CI
 on: [push, pull_request]
 jobs:
-  build:
+  ci:
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with: 
           fetch-depth: 0
-      - name: Setup Git Semantic Version
-        id: gitversion
-        uses: PaulHatch/semantic-version@v5.3.0
-        with:
-          tag_prefix: ""
-      - name: Set Version Environment Variables
-        run: |
-          echo "ASSEMBLY_VERSION=${{ steps.gitversion.outputs.major }}.0.0.0" >> "$GITHUB_ENV"
-          echo "FILE_VERSION=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}" >> "$GITHUB_ENV"
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
       - name: Display .NET Version
@@ -24,6 +15,6 @@ jobs:
       - name: Restore
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore --configuration Release -p:AssemblyVersion=${{ env.ASSEMBLY_VERSION }} -p:FileVersion=${{ env.FILE_VERSION }}
+        run: dotnet build --no-restore --configuration Release
       - name: Test
         run: dotnet test --configuration Release --no-restore --verbosity normal
