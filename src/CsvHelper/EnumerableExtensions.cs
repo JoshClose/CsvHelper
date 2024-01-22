@@ -9,7 +9,7 @@ namespace CsvHelper
 {
 	internal static class EnumerableExtensions
 	{
-#if !NET45
+#if !NET462
 		public static async Task<T?> FirstOrDefaultAsync<T>(this IAsyncEnumerable<T> collection)
 		{
 			await foreach (var o in collection.ConfigureAwait(false))

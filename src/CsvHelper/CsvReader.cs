@@ -14,7 +14,6 @@ using CsvHelper.Expressions;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Configuration;
 
 namespace CsvHelper
 {
@@ -1020,7 +1019,7 @@ namespace CsvHelper
 			}
 		}
 
-#if !NET45
+#if !NET462
 		/// <inheritdoc/>
 		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default(CancellationToken))
 		{

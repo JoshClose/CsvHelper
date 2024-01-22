@@ -172,5 +172,31 @@ namespace CsvHelper.Tests.Parsing
 				Assert.False(parser.Read());
 			}
 		}
+
+		[Fact]
+		public void Foo()
+		{
+			var s = new StringBuilder();
+			s.Append("Id,Name\a\b");
+			s.Append("1,one\a\b");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Mode = CsvMode.RFC4180,
+				NewLine = "\a\b",
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				Assert.True(parser.Read());
+				Assert.Equal("Id", parser[0]);
+				Assert.Equal("Name", parser[1]);
+
+				Assert.True(parser.Read());
+				Assert.Equal("1", parser[0]);
+				Assert.Equal("one", parser[1]);
+
+				Assert.False(parser.Read());
+			}
+		}
 	}
 }
