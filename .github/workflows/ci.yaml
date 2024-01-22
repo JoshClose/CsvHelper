@@ -2,11 +2,7 @@ name: CI
 on: [push, pull_request]
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        dotnet-version: ['8.0.x', '4.8.x']
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,8 +19,6 @@ jobs:
           echo "FILE_VERSION=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}" >> "$GITHUB_ENV"
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ matrix.dotnet-version }}
       - name: Display .NET Version
         run: dotnet --version
       - name: Restore
