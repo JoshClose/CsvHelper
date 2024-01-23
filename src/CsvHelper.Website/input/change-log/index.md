@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 30.0.2
+
+#### Bug Fixes
+
+- Fixed issue with .NET 7/8 not having support for DateOnly and TimeOnly.
+
 ### 30.0.1
 
 #### Bug Fixes
