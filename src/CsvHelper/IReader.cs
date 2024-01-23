@@ -77,7 +77,7 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
 		IEnumerable<T> EnumerateRecords<T>(T record);
 
-#if !NET462
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method

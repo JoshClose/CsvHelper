@@ -9,7 +9,7 @@ namespace CsvHelper
 {
 	internal static class EnumerableExtensions
 	{
-#if !NET462
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		public static async Task<T?> FirstOrDefaultAsync<T>(this IAsyncEnumerable<T> collection)
 		{
 			await foreach (var o in collection.ConfigureAwait(false))

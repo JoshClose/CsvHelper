@@ -465,7 +465,7 @@ namespace CsvHelper
 			}
 		}
 
-#if !NET462
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <inheritdoc/>
 		public virtual async Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)
 		{
@@ -726,7 +726,7 @@ namespace CsvHelper
 			disposed = true;
 		}
 
-#if !NET462 && !NET47 && !NETSTANDARD2_0
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <inheritdoc/>
 		public async ValueTask DisposeAsync()
 		{
@@ -763,7 +763,7 @@ namespace CsvHelper
 		}
 #endif
 
-#if !NET462
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		private async Task<bool> WriteHeaderAsync<T>(IAsyncEnumerable<T> records)
 		{
 			if (!hasHeaderRecord || hasHeaderBeenWritten)

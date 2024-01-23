@@ -86,21 +86,21 @@ namespace CsvHelper.TypeConversion
 				}
 			}
 
-#if NET462 || NET47 || NETSTANDARD2_0
-			try
-			{
-				return Enum.Parse(type, text, ignoreCase);
-			}
-			catch
-			{
-				return base.ConvertFromString(text, row, memberMapData);
-			}
-#else
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 			if (Enum.TryParse(type, text, ignoreCase, out var value))
 			{
 				return value;
 			}
 			else
+			{
+				return base.ConvertFromString(text, row, memberMapData);
+			}
+#else
+			try
+			{
+				return Enum.Parse(type, text, ignoreCase);
+			}
+			catch
 			{
 				return base.ConvertFromString(text, row, memberMapData);
 			}

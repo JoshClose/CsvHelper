@@ -15,7 +15,7 @@ namespace CsvHelper
 	/// Defines methods used to write to a CSV file.
 	/// </summary>
 	public interface IWriter : IWriterRow, IDisposable
-#if !NET462 && !NET47 && !NETSTANDARD2_0
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		, IAsyncDisposable
 #endif
 	{
@@ -73,7 +73,7 @@ namespace CsvHelper
 		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default);
 
-#if !NET462
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>
