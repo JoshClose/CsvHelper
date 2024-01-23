@@ -5,6 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace CsvHelper.Expressions
@@ -28,7 +29,9 @@ namespace CsvHelper.Expressions
 		/// <param name="recordType">The record type.</param>
 		protected override Delegate CreateCreateRecordDelegate(Type recordType)
 		{
-			var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();
+			var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) })?.GetGetMethod();
+			Debug.Assert(method != null, $"Missing indexer on {nameof(IReaderRow)}");
+
 			Expression fieldExpression = Expression.Call(Expression.Constant(Reader), method, Expression.Constant(0, typeof(int)));
 
 			var memberMapData = new MemberMapData(null)
@@ -38,7 +41,7 @@ namespace CsvHelper.Expressions
 			};
 			memberMapData.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = Reader.Configuration.CultureInfo }, Reader.Context.TypeConverterOptionsCache.GetOptions(recordType));
 
-			fieldExpression = Expression.Call(Expression.Constant(memberMapData.TypeConverter), "ConvertFromString", null, fieldExpression, Expression.Constant(Reader), Expression.Constant(memberMapData));
+			fieldExpression = Expression.Call(Expression.Constant(memberMapData.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(Reader), Expression.Constant(memberMapData));
 			fieldExpression = Expression.Convert(fieldExpression, recordType);
 
 			var funcType = typeof(Func<>).MakeGenericType(recordType);

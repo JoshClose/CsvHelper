@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -70,7 +71,11 @@ namespace CsvHelper.Expressions
 		{
 			var type = typeof(T);
 			var typeKeyName = type.AssemblyQualifiedName;
-			if (type == typeof(object))
+
+			Debug.Assert(!type.IsGenericParameter && typeKeyName != null,
+				$"{nameof(Type.AssemblyQualifiedName)} should only be null if the type represents a generic parameter, which it should not here");
+
+			if (type == typeof(object) && record != null)
 			{
 				type = record.GetType();
 				typeKeyName += $"|{type.AssemblyQualifiedName}";
@@ -78,7 +83,7 @@ namespace CsvHelper.Expressions
 
 			int typeKey = typeKeyName.GetHashCode();
 
-			if (!typeActions.TryGetValue(typeKey, out Delegate action))
+			if (!typeActions.TryGetValue(typeKey, out Delegate? action))
 			{
 				typeActions[typeKey] = action = CreateWriteDelegate(record);
 			}
@@ -101,9 +106,9 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <param name="delegates">The delegates to combine.</param>
 		/// <returns>A multicast delegate combined from the given delegates.</returns>
-		protected virtual Action<T> CombineDelegates<T>(IEnumerable<Action<T>> delegates)
+		protected virtual Action<T>? CombineDelegates<T>(IEnumerable<Action<T>> delegates)
 		{
-			return (Action<T>)delegates.Aggregate<Delegate, Delegate>(null, Delegate.Combine);
+			return (Action<T>?)delegates.Aggregate<Delegate?, Delegate?>(null, Delegate.Combine);
 		}
 	}
 }

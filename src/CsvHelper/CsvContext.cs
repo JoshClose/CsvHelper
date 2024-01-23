@@ -35,17 +35,17 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the parser.
 		/// </summary>
-		public IParser Parser { get; private set; }
+		public IParser? Parser { get; private set; }
 
 		/// <summary>
 		/// Gets the reader.
 		/// </summary>
-		public IReader Reader { get; internal set; }
+		public IReader? Reader { get; internal set; }
 
 		/// <summary>
 		/// Gets the writer.
 		/// </summary>
-		public IWriter Writer { get; internal set; }
+		public IWriter? Writer { get; internal set; }
 
 		/// <summary>
 		/// Gets the configuration.

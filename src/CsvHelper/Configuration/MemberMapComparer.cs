@@ -57,7 +57,7 @@ namespace CsvHelper.Configuration
 		/// <param name="x">The first object to compare.
 		///                 </param><param name="y">The second object to compare.
 		///                 </param>
-		public virtual int Compare( MemberMap x, MemberMap y )
+		public virtual int Compare( MemberMap? x, MemberMap? y )
 		{
 			if( x == null )
 			{

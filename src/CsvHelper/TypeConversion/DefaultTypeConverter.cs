@@ -56,7 +56,7 @@ namespace CsvHelper.TypeConversion
                 return formattable.ToString(format, memberMapData.TypeConverterOptions.CultureInfo);
             }
 
-            return value?.ToString() ?? string.Empty;
+            return value.ToString() ?? string.Empty;
         }
     }
 }

@@ -45,12 +45,7 @@ namespace CsvHelper.TypeConversion
 		public NullableConverter(Type type, TypeConverterCache typeConverterFactory)
 		{
 			NullableType = type;
-			UnderlyingType = Nullable.GetUnderlyingType(type);
-			if (UnderlyingType == null)
-			{
-				throw new ArgumentException("type is not a nullable type.");
-			}
-
+			UnderlyingType = Nullable.GetUnderlyingType(type) ?? throw new ArgumentException("type is not a nullable type.", nameof(type));
 			UnderlyingTypeConverter = typeConverterFactory.GetConverter(UnderlyingType);
 		}
 

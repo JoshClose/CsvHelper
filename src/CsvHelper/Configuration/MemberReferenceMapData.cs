@@ -11,12 +11,12 @@ namespace CsvHelper.Configuration
 	/// </summary>
 	public class MemberReferenceMapData
 	{
-		private string prefix;
+		private string? prefix;
 
 		/// <summary>
 		/// Gets or sets the header prefix to use.
 		/// </summary>
-		public virtual string Prefix
+		public virtual string? Prefix
 		{
 			get { return prefix; }
 			set

@@ -55,7 +55,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the type converter.
 		/// </summary>
-		public virtual ITypeConverter TypeConverter { get; set; }
+		public virtual ITypeConverter? TypeConverter { get; set; }
 
 		/// <summary>
 		/// Gets or sets the type converter options.

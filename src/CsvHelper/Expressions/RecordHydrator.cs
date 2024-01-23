@@ -60,7 +60,7 @@ namespace CsvHelper.Expressions
 		{
 			var recordType = typeof(T);
 
-			if (!hydrateRecordActions.TryGetValue(recordType, out Delegate action))
+			if (!hydrateRecordActions.TryGetValue(recordType, out Delegate? action))
 			{
 				hydrateRecordActions[recordType] = action = CreateHydrateRecordAction<T>();
 			}
@@ -76,12 +76,12 @@ namespace CsvHelper.Expressions
 		{
 			var recordType = typeof(T);
 
-			if (reader.Context.Maps[recordType] == null)
-			{
-				reader.Context.Maps.Add(reader.Context.AutoMap(recordType));
-			}
-
 			var mapping = reader.Context.Maps[recordType];
+
+			if (mapping == null)
+			{
+				reader.Context.Maps.Add(mapping = reader.Context.AutoMap(recordType));
+			}
 
 			var recordTypeParameter = Expression.Parameter(recordType, "record");
 			var memberAssignments = new List<Expression>();

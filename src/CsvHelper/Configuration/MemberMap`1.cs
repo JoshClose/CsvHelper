@@ -18,11 +18,8 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Creates a new <see cref="MemberMap"/> instance using the specified member.
 		/// </summary>
-		public MemberMap(MemberInfo? member)
+		public MemberMap(MemberInfo? member) : base(new MemberMapData(member))
 		{
-			TypeConverterOption = new MemberMapTypeConverterOption(this);
-
-			Data = new MemberMapData(member);
 		}
 
 		/// <summary>
@@ -146,7 +143,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual MemberMap<TClass, TMember> Constant(TMember? constantValue)
+		public virtual MemberMap<TClass, TMember> Constant(TMember constantValue)
 		{
 			Data.Constant = constantValue;
 			Data.IsConstantSet = true;

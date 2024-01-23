@@ -6,6 +6,8 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -17,8 +19,8 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class ExpressionManager
 	{
-		private readonly CsvReader reader;
-		private readonly CsvWriter writer;
+		private readonly CsvReader? reader;
+		private readonly CsvWriter? writer;
 
 		/// <summary>
 		/// Initializes a new instance using the given reader.
@@ -45,6 +47,8 @@ namespace CsvHelper.Expressions
 		/// <param name="argumentExpressions">The arguments that will be added to the mapping.</param>
 		public virtual void CreateConstructorArgumentExpressionsForMapping(ClassMap map, List<Expression> argumentExpressions)
 		{
+			CheckHaveReader();
+
 			foreach (var parameterMap in map.ParameterMaps)
 			{
 				if (parameterMap.Data.IsConstantSet)
@@ -133,7 +137,9 @@ namespace CsvHelper.Expressions
 					}
 
 					// Get the field using the field index.
-					var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();
+					var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) })?.GetGetMethod();
+					Debug.Assert(method != null, $"Missing indexer on {nameof(IReaderRow)}");
+
 					Expression fieldExpression = Expression.Call(Expression.Constant(reader), method, Expression.Constant(index, typeof(int)));
 
 					if (parameterMap.Data.IsDefaultSet)
@@ -157,6 +163,8 @@ namespace CsvHelper.Expressions
 		/// <param name="assignments">The assignments that will be added to from the mapping.</param>
 		public virtual void CreateMemberAssignmentsForMapping(ClassMap mapping, List<MemberAssignment> assignments)
 		{
+			CheckHaveReader();
+
 			foreach (var memberMap in mapping.MemberMaps)
 			{
 				var fieldExpression = CreateGetFieldExpression(memberMap);
@@ -164,6 +172,8 @@ namespace CsvHelper.Expressions
 				{
 					continue;
 				}
+
+				Debug.Assert(memberMap.Data.Member != null, $"Expected not null if {nameof(fieldExpression)} is not null");
 
 				assignments.Add(Expression.Bind(memberMap.Data.Member, fieldExpression));
 			}
@@ -201,6 +211,8 @@ namespace CsvHelper.Expressions
 		/// <param name="memberMap">The mapping for the member.</param>
 		public virtual Expression? CreateGetFieldExpression(MemberMap memberMap)
 		{
+			CheckHaveReader();
+
 			if (memberMap.Data.ReadingConvertExpression != null)
 			{
 				// The user is providing the expression to do the conversion.
@@ -247,17 +259,26 @@ namespace CsvHelper.Expressions
 			}
 
 			// Get the field using the field index.
-			var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) }).GetGetMethod();
+			var method = typeof(IReaderRow).GetProperty("Item", typeof(string), new[] { typeof(int) })?.GetGetMethod();
+			Debug.Assert(method != null, $"Missing indexer on {nameof(IReaderRow)}");
+
 			Expression fieldExpression = Expression.Call(Expression.Constant(reader), method, Expression.Constant(index, typeof(int)));
 
 			// Validate the field.
 			if (memberMap.Data.ValidateExpression != null)
 			{
 				var constructor = typeof(ValidateArgs).GetConstructor(new Type[] { typeof(string), typeof(IReaderRow) });
+				Debug.Assert(constructor != null, $"Missing constructor on {nameof(ValidateArgs)}");
+
 				var args = Expression.New(constructor, fieldExpression, Expression.Constant(reader));
 				var validateExpression = Expression.IsFalse(Expression.Invoke(memberMap.Data.ValidateExpression, args));
 				var validationExceptionConstructor = typeof(FieldValidationException).GetConstructor(new Type[] { typeof(CsvContext), typeof(string), typeof(string) });
-				var messageExpression = Expression.Invoke(memberMap.Data.ValidateMessageExpression, args);
+				Debug.Assert(validationExceptionConstructor != null, $"Missing constructor on {nameof(FieldValidationException)}");
+
+				Expression messageExpression = memberMap.Data.ValidateMessageExpression != null
+					? Expression.Invoke(memberMap.Data.ValidateMessageExpression, args)
+					: Expression.Constant("");
+
 				var newValidationExceptionExpression = Expression.New(validationExceptionConstructor, Expression.Constant(reader.Context), fieldExpression, messageExpression);
 				var throwExpression = Expression.Throw(newValidationExceptionExpression);
 				fieldExpression = Expression.Block(
@@ -288,6 +309,8 @@ namespace CsvHelper.Expressions
 		/// <returns>An Expression to access the given member.</returns>
 		public virtual Expression? CreateGetMemberExpression(Expression recordExpression, ClassMap mapping, MemberMap memberMap)
 		{
+			CheckHaveWriter();
+
 			if (mapping.MemberMaps.Any(mm => mm == memberMap))
 			{
 				// The member is on this level.
@@ -354,6 +377,8 @@ namespace CsvHelper.Expressions
 		{
 			var expressions = new List<Expression>();
 			var createInstanceMethod = typeof(IObjectResolver).GetMethod(nameof(IObjectResolver.Resolve), new Type[] { typeof(Type), typeof(object[]) });
+			Debug.Assert(createInstanceMethod != null, $"Missing method {nameof(IObjectResolver.Resolve)} on {nameof(IObjectResolver)}");
+
 			var instanceExpression = Expression.Convert(Expression.Call(Expression.Constant(ObjectResolver.Current), createInstanceMethod, Expression.Constant(recordType), Expression.Constant(new object[0])), recordType);
 			var variableExpression = Expression.Variable(instanceExpression.Type, "instance");
 			expressions.Add(Expression.Assign(variableExpression, instanceExpression));
@@ -372,6 +397,8 @@ namespace CsvHelper.Expressions
 		/// <param name="fieldExpression">The field expression.</param>
 		public virtual Expression CreateTypeConverterExpression(MemberMap memberMap, Expression fieldExpression)
 		{
+			CheckHaveReader();
+
 			memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = reader.Configuration.CultureInfo }, reader.Context.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
 
 			Expression typeConverterFieldExpression = Expression.Call(Expression.Constant(memberMap.Data.TypeConverter), nameof(ITypeConverter.ConvertFromString), null, fieldExpression, Expression.Constant(reader), Expression.Constant(memberMap.Data));
@@ -387,6 +414,8 @@ namespace CsvHelper.Expressions
 		/// <param name="fieldExpression">The field expression.</param>
 		public virtual Expression CreateTypeConverterExpression(ParameterMap parameterMap, Expression fieldExpression)
 		{
+			CheckHaveReader();
+
 			parameterMap.Data.TypeConverterOptions = TypeConverterOptions.Merge
 			(
 				new TypeConverterOptions { CultureInfo = reader.Configuration.CultureInfo },
@@ -485,6 +514,38 @@ namespace CsvHelper.Expressions
 			fieldExpression = Expression.Condition(checkFieldEmptyExpression, defaultValueExpression, typeConverterExpression);
 
 			return fieldExpression;
+		}
+
+		[MemberNotNull(nameof(reader))]
+		private void CheckHaveReader()
+		{
+			if (reader == null)
+			{
+				ThrowNoReader();
+			}
+		}
+
+		[DoesNotReturn]
+		private static void ThrowNoReader()
+		{
+			throw new InvalidOperationException($"Do not have a {nameof(CsvReader)} instance. This is a read method intended " +
+					$"to be called by an {nameof(ExpressionManager)} initialized with a {nameof(CsvReader)}");
+		}
+
+		[MemberNotNull(nameof(writer))]
+		private void CheckHaveWriter()
+		{
+			if (writer == null)
+			{
+				ThrowNoWriter();
+			}
+		}
+
+		[DoesNotReturn]
+		private static void ThrowNoWriter()
+		{
+			throw new InvalidOperationException($"Do not have a {nameof(CsvWriter)} instance. This is a write method intended " +
+					$"to be called by an {nameof(ExpressionManager)} initialized with a {nameof(CsvWriter)}");
 		}
 	}
 }

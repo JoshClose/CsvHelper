@@ -23,24 +23,33 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 		{
-			Array array;
 			var type = memberMapData.Member.MemberType().GetElementType();
+
+			if (type == null)
+			{
+				throw new InvalidOperationException($"Member type {memberMapData.Member.MemberType()} is not an array type");
+			}
+
 			var converter = row.Context.TypeConverterCache.GetConverter(type);
+			Array array;
 
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{
 				// Use the name.
-				var list = new List<object>();
-				var nameIndex = 0;
-				while (true)
+				var list = new List<object?>();
+				foreach (string name in memberMapData.Names)
 				{
-					if (!row.TryGetField(type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field))
+					var nameIndex = 0;
+					while (true)
 					{
-						break;
-					}
+						if (!row.TryGetField(type, name, nameIndex, out var field))
+						{
+							break;
+						}
 
-					list.Add(field);
-					nameIndex++;
+						list.Add(field);
+						nameIndex++;
+					}
 				}
 
 				array = (Array)ObjectResolver.Current.Resolve(memberMapData.Member.MemberType(), list.Count);

@@ -5,6 +5,7 @@
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System;
+using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace CsvHelper.Expressions
@@ -37,6 +38,7 @@ namespace CsvHelper.Expressions
 			var typeConverter = Writer.Context.TypeConverterCache.GetConverter(type);
 			var typeConverterExpression = Expression.Constant(typeConverter);
 			var method = typeof(ITypeConverter).GetMethod(nameof(ITypeConverter.ConvertToString));
+			Debug.Assert(method != null, $"Missing method {nameof(ITypeConverter.ConvertToString)} on {nameof(ITypeConverter)}");
 
 			var memberMapData = new MemberMapData(null)
 			{

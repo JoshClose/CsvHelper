@@ -4,7 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using Microsoft.CSharp.RuntimeBinder;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,7 +17,7 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class DynamicRecordWriter : RecordWriter
 	{
-		private readonly Hashtable getters = new Hashtable();
+		private readonly Dictionary<string, CallSite<Func<CallSite, IDynamicMetaObjectProvider, object>>> getters = new Dictionary<string, CallSite<Func<CallSite, IDynamicMetaObjectProvider, object>>>();
 
 		/// <summary>
 		/// Initializes a new instance using the given writer.
@@ -37,8 +37,10 @@ namespace CsvHelper.Expressions
 
 			Action<T> action = r =>
 			{
-				var provider = (IDynamicMetaObjectProvider)r;
-				var type = provider.GetType();
+				if (!(record is IDynamicMetaObjectProvider provider))
+				{
+					throw new ArgumentException("Value is not a dynamic object", nameof(record));
+				}
 
 				var parameterExpression = Expression.Parameter(typeof(T), "record");
 				var metaObject = provider.GetMetaObject(parameterExpression);
@@ -62,8 +64,7 @@ namespace CsvHelper.Expressions
 		{
 			// https://stackoverflow.com/a/30757547/68499
 
-			var callSite = (CallSite<Func<CallSite, IDynamicMetaObjectProvider, object>>)getters[name];
-			if (callSite == null)
+			if (!getters.TryGetValue(name, out var callSite))
 			{
 				var getMemberBinder = Binder.GetMember(CSharpBinderFlags.None, name, typeof(DynamicRecordWriter), new CSharpArgumentInfo[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) });
 				getters[name] = callSite = CallSite<Func<CallSite, IDynamicMetaObjectProvider, object>>.Create(getMemberBinder);

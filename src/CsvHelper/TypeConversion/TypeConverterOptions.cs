@@ -21,7 +21,7 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Gets or sets the culture info.
 		/// </summary>
-		public CultureInfo CultureInfo { get; set; }
+		public CultureInfo? CultureInfo { get; set; }
 
 		/// <summary>
 		/// Gets or sets the date time style.
@@ -41,7 +41,7 @@ namespace CsvHelper.TypeConversion
 		/// <summary>
 		/// Gets or sets the string format.
 		/// </summary>
-		public string[] Formats { get; set; }
+		public string[]? Formats { get; set; }
 
 		/// <summary>
 		/// Gets or sets the <see cref="UriKind"/>.
@@ -71,21 +71,25 @@ namespace CsvHelper.TypeConversion
 		public List<string> NullValues { get; } = new List<string>(defaultNullValues);
 
 		/// <summary>
-		/// Merges TypeConverterOptions by applying the values of sources in order on to each other.
-		/// The first object is the source object.
+		/// Merges <see cref="TypeConverterOptions"/> by applying the values of <paramref name="sources"/>
+		/// in order on to <paramref name="options"/>.
 		/// </summary>
+		/// <param name="options">The <see cref="TypeConverterOptions"/> value to mutate</param>
 		/// <param name="sources">The sources that will be applied.</param>
-		/// <returns>The updated source object.</returns>
-		public static TypeConverterOptions? Merge(params TypeConverterOptions[] sources)
+		/// <returns>The mutated <paramref name="options"/> object.</returns>
+		public static TypeConverterOptions Merge(TypeConverterOptions options, params TypeConverterOptions[] sources)
 		{
-			if (sources == null || sources.Length == 0)
+			if (options is null)
 			{
-				return null;
+				throw new ArgumentNullException(nameof(options));
 			}
 
-			var options = sources[0];
+			if (sources is null)
+			{
+				throw new ArgumentNullException(nameof(sources));
+			}
 
-			for (var i = 1; i < sources.Length; i++)
+			for (var i = 0; i < sources.Length; i++)
 			{
 				var source = sources[i];
 

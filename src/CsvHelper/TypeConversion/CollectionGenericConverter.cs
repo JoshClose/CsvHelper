@@ -32,16 +32,19 @@ namespace CsvHelper.TypeConversion
 			if (memberMapData.IsNameSet || row.Configuration.HasHeaderRecord && !memberMapData.IsIndexSet)
 			{
 				// Use the name.
-				var nameIndex = 0;
-				while (true)
+				foreach (string name in memberMapData.Names)
 				{
-					if (!row.TryGetField(type, memberMapData.Names.FirstOrDefault(), nameIndex, out var field))
+					var nameIndex = 0;
+					while (true)
 					{
-						break;
-					}
+						if (!row.TryGetField(type, name, nameIndex, out var field))
+						{
+							break;
+						}
 
-					list.Add(field);
-					nameIndex++;
+						list.Add(field);
+						nameIndex++;
+					}
 				}
 			}
 			else

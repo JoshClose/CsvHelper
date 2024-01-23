@@ -127,7 +127,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets a callback that will return the prefix for a reference header.
 		/// </summary>
-		ReferenceHeaderPrefix ReferenceHeaderPrefix { get; }
+		ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; }
 
 		/// <summary>
 		/// Gets the member types that are used when auto mapping.
@@ -151,7 +151,7 @@ namespace CsvHelper.Configuration
 		/// which will preserve the order the object properties
 		/// were created with.
 		/// </summary>
-		IComparer<string> DynamicPropertySort { get; }
+		IComparer<string>? DynamicPropertySort { get; }
 
 		/// <summary>
 		/// A value indicating if exception messages contain raw CSV data.

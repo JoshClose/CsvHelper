@@ -44,7 +44,7 @@ namespace CsvHelper
 		private readonly char comment;
 		private readonly bool hasHeaderRecord;
 		private readonly bool includePrivateMembers;
-		private readonly IComparer<string> dynamicPropertySort;
+		private readonly IComparer<string>? dynamicPropertySort;
 		private readonly string delimiter;
 		private readonly bool leaveOpen;
 		private readonly string newLine;
@@ -65,10 +65,10 @@ namespace CsvHelper
 		private char[] buffer;
 		private int bufferSize;
 		private int bufferPosition;
-		private Type fieldType;
+		private Type? fieldType;
 
 		/// <inheritdoc/>
-		public virtual string[] HeaderRecord { get; private set; }
+		public virtual string[]? HeaderRecord { get; private set; }
 
 		/// <inheritdoc/>
 		public virtual int Row => row;
@@ -133,7 +133,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual void WriteConvertedField(string field, Type fieldType)
+		public virtual void WriteConvertedField(string? field, Type fieldType)
 		{
 			this.fieldType = fieldType;
 
@@ -146,7 +146,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual void WriteField(string field)
+		public virtual void WriteField(string? field)
 		{
 			if (field != null && (trimOptions & TrimOptions.Trim) == TrimOptions.Trim)
 			{
@@ -162,7 +162,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual void WriteField(string field, bool shouldQuote)
+		public virtual void WriteField(string? field, bool shouldQuote)
 		{
 			if (mode == CsvMode.RFC4180)
 			{
@@ -215,7 +215,7 @@ namespace CsvHelper
 		{
 			var type = field == null ? typeof(string) : field.GetType();
 			reusableMemberMapData.TypeConverter = converter;
-			if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
+			if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions? typeConverterOptions))
 			{
 				typeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = cultureInfo }, context.TypeConverterOptionsCache.GetOptions(type));
 				typeConverterOptionsCache.Add(type, typeConverterOptions);
@@ -261,13 +261,15 @@ namespace CsvHelper
 				return;
 			}
 
-			if (context.Maps[type] == null)
+			var map = context.Maps[type];
+
+			if (map == null)
 			{
-				context.Maps.Add(context.AutoMap(type));
+				context.Maps.Add(map = context.AutoMap(type));
 			}
 
 			var members = new MemberMapCollection();
-			members.AddMembers(context.Maps[type]);
+			members.AddMembers(map);
 
 			var headerRecord = new List<string>();
 
@@ -289,7 +291,7 @@ namespace CsvHelper
 					{
 						var header = member.Data.Names.FirstOrDefault();
 						WriteField(header);
-						headerRecord.Add(header);
+						headerRecord.Add(header ?? "");
 					}
 				}
 			}
@@ -583,7 +585,7 @@ namespace CsvHelper
 		public virtual Type GetTypeForRecord<T>(T record)
 		{
 			var type = typeof(T);
-			if (type == typeof(object))
+			if (type == typeof(object) && record != null)
 			{
 				type = record.GetType();
 			}
@@ -598,7 +600,7 @@ namespace CsvHelper
 		/// <returns>The sanitized field.</returns>
 		/// <exception cref="WriterException">Thrown when an injection character is found in the field.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual string SanitizeForInjection(string field)
+		protected virtual string? SanitizeForInjection(string? field)
 		{
 			if (string.IsNullOrEmpty(field))
 			{
@@ -663,7 +665,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="value">The value to write.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteToBuffer(string value)
+		protected void WriteToBuffer(string? value)
 		{
 			var length = value?.Length ?? 0;
 
@@ -721,7 +723,7 @@ namespace CsvHelper
 			// Free unmanaged resources (unmanaged objects) and override finalizer
 			// Set large fields to null
 
-			buffer = null;
+			buffer = null!;
 
 			disposed = true;
 		}
@@ -757,7 +759,7 @@ namespace CsvHelper
 			// Free unmanaged resources (unmanaged objects) and override finalizer
 			// Set large fields to null
 
-			buffer = null;
+			buffer = null!;
 
 			disposed = true;
 		}

@@ -92,7 +92,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets a callback that will return the prefix for a reference header.
 		/// </summary>
-		ReferenceHeaderPrefix ReferenceHeaderPrefix { get; }
+		ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; }
 
 		/// <summary>
 		/// Gets a value indicating whether changes in the column

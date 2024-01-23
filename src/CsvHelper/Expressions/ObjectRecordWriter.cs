@@ -6,6 +6,7 @@ using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -32,9 +33,11 @@ namespace CsvHelper.Expressions
 		{
 			var type = Writer.GetTypeForRecord(record);
 
-			if (Writer.Context.Maps[type] == null)
+			var mapping = Writer.Context.Maps[type];
+
+			if (mapping == null)
 			{
-				Writer.Context.Maps.Add(Writer.Context.AutoMap(type));
+				Writer.Context.Maps.Add(mapping = Writer.Context.AutoMap(type));
 			}
 
 			var recordParameter = Expression.Parameter(typeof(T), "record");
@@ -43,7 +46,7 @@ namespace CsvHelper.Expressions
 			// Get a list of all the members so they will
 			// be sorted properly.
 			var members = new MemberMapCollection();
-			members.AddMembers(Writer.Context.Maps[type]);
+			members.AddMembers(mapping);
 
 			if (members.Count == 0)
 			{
@@ -58,6 +61,8 @@ namespace CsvHelper.Expressions
 				{
 					// The user is providing the expression to do the conversion.
 					var constructor = typeof(ConvertToStringArgs<T>).GetConstructor(new Type[] { typeof(T) });
+					Debug.Assert(constructor != null, $"Missing constructor on {nameof(ConvertToStringArgs<T>)}");
+
 					var args = Expression.New(constructor, recordParameterConverted);
 					Expression exp = Expression.Invoke(memberMap.Data.WritingConvertExpression, args);
 					exp = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteField), null, exp);
@@ -83,6 +88,8 @@ namespace CsvHelper.Expressions
 						fieldExpression = Expression.Constant(memberMap.Data.Constant);
 						var typeConverterExpression = Expression.Constant(Writer.Context.TypeConverterCache.GetConverter(memberMap.Data.Constant.GetType()));
 						var method = typeof(ITypeConverter).GetMethod(nameof(ITypeConverter.ConvertToString));
+						Debug.Assert(method != null, $"Missing method {nameof(ITypeConverter.ConvertToString)} on {nameof(ITypeConverter)}");
+
 						fieldExpression = Expression.Convert(fieldExpression, typeof(object));
 						fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression, Expression.Constant(Writer), Expression.Constant(memberMap.Data));
 					}
@@ -95,12 +102,17 @@ namespace CsvHelper.Expressions
 						continue;
 					}
 
-					fieldExpression = ExpressionManager.CreateGetMemberExpression(recordParameterConverted, Writer.Context.Maps[type], memberMap);
+					var getMemberExpression = ExpressionManager.CreateGetMemberExpression(recordParameterConverted, mapping, memberMap);
+					Debug.Assert(getMemberExpression != null, $"{nameof(ExpressionManager.CreateGetMemberExpression)} returned null unexpectedly. Mapping issue?");
+
+					fieldExpression = getMemberExpression;
 
 					var typeConverterExpression = Expression.Constant(memberMap.Data.TypeConverter);
 					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = Writer.Configuration.CultureInfo }, Writer.Context.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member.MemberType()), memberMap.Data.TypeConverterOptions);
 
 					var method = typeof(ITypeConverter).GetMethod(nameof(ITypeConverter.ConvertToString));
+					Debug.Assert(method != null, $"Missing method {nameof(ITypeConverter.ConvertToString)} on {nameof(ITypeConverter)}");
+
 					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
 					fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression, Expression.Constant(Writer), Expression.Constant(memberMap.Data));
 

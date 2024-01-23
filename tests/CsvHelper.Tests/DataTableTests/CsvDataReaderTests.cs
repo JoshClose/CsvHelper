@@ -278,6 +278,27 @@ namespace CsvHelper.Tests.DataTableTests
 		}
 
 		[Fact]
+		public void GetOrdinalNoHeaderTest_ThrowsReaderException()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			var s = new StringBuilder();
+			s.AppendLine("1,one");
+			s.AppendLine("2,two");
+			using (var reader = new StringReader(s.ToString()))
+			using (var csv = new CsvReader(reader, config))
+			{
+				var dataReader = new CsvDataReader(csv);
+
+				dataReader.Read();
+
+				Assert.Throws<ReaderException>(() => dataReader.GetOrdinal("Id"));
+			}
+		}
+
+		[Fact]
 		public void DataTableLoadEmptyTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)

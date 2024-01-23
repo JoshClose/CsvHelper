@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
@@ -114,12 +115,14 @@ namespace CsvHelper.Configuration
 		/// <returns>The type that is CsvClassMap{}.</returns>
 		private Type GetGenericCsvClassMapType(Type type)
 		{
+			Debug.Assert(typeof(ClassMap).IsAssignableFrom(type));
+
 			if (type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(ClassMap<>))
 			{
 				return type;
 			}
 
-			return GetGenericCsvClassMapType(type.GetTypeInfo().BaseType);
+			return GetGenericCsvClassMapType(type.GetTypeInfo().BaseType!);
 		}
 
 		/// <summary>
@@ -150,6 +153,9 @@ namespace CsvHelper.Configuration
 
 					if (parameterMap.Data.Names.Count == 0)
 					{
+						Debug.Assert(parameterMap.Data.Parameter.Name != null, $"{nameof(ParameterInfo)}.{nameof(ParameterInfo.Name)} should not be null unless it has come from" +
+							$" {nameof(MethodInfo)}.{nameof(MethodInfo.ReturnParameter)}, which we are not expecting to have been used");
+
 						parameterMap.Data.Names.Add(parameterMap.Data.Parameter.Name);
 					}
 				}

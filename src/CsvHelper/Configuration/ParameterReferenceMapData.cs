@@ -13,12 +13,12 @@ namespace CsvHelper.Configuration
 	[DebuggerDisplay( "Prefix = {Prefix}, Parameter = {Parameter}" )]
 	public class ParameterReferenceMapData
 	{
-		private string prefix;
+		private string? prefix;
 
 		/// <summary>
 		/// Gets or sets the header prefix to use.
 		/// </summary>
-		public virtual string Prefix
+		public virtual string? Prefix
 		{
 			get { return prefix; }
 			set

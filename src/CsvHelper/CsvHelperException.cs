@@ -15,12 +15,12 @@ namespace CsvHelper
 	public class CsvHelperException : Exception
 	{
 		[NonSerialized]
-		private readonly CsvContext context;
+		private readonly CsvContext? context;
 
 		/// <summary>
 		/// Gets the context.
 		/// </summary>
-		public CsvContext Context => context;
+		public CsvContext? Context => context;
 
 		/// <summary>
 		/// Initializes a new instance of the CsvHelperException class.

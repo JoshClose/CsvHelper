@@ -145,6 +145,31 @@ namespace CsvHelper.Tests.TypeConversion
 		}
 
 		[Fact]
+		public void FullReadWithMultiNameHeaderListItemsScattered()
+		{
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				writer.WriteLine("Before,List1,A,List2,B,List2,After");
+				writer.WriteLine("1,2,3,4,5,6,7");
+				writer.Flush();
+				stream.Position = 0;
+
+				csv.Context.RegisterClassMap<TestMultipleNamedMap>();
+				var records = csv.GetRecords<Test>().ToList();
+
+				var list = Assert.Single(records).List.Cast<string>().ToList();
+
+				Assert.Equal(3, list.Count);
+				Assert.Equal("2", list[0]);
+				Assert.Equal("4", list[1]);
+				Assert.Equal("6", list[2]);
+			}
+		}
+
+		[Fact]
 		public void FullWriteNoHeaderTest()
 		{
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -244,6 +269,16 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 				Map(m => m.Before).Name("Before");
 				Map(m => m.List).Name("List");
+				Map(m => m.After).Name("After");
+			}
+		}
+
+		private sealed class TestMultipleNamedMap : ClassMap<Test>
+		{
+			public TestMultipleNamedMap()
+			{
+				Map(m => m.Before).Name("Before");
+				Map(m => m.List).Name("List1", "List2");
 				Map(m => m.After).Name("After");
 			}
 		}

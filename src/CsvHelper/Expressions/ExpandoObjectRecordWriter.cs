@@ -4,6 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 
 namespace CsvHelper.Expressions
@@ -29,6 +30,11 @@ namespace CsvHelper.Expressions
 		{
 			Action<T> action = r =>
 			{
+				if (!(r is ExpandoObject))
+				{
+					throw new ArgumentException($"Value is not an {nameof(ExpandoObject)}", nameof(record));
+				}
+
 				var dict = ((IDictionary<string, object>)r).AsEnumerable();
 
 				if (Writer.Configuration.DynamicPropertySort != null)

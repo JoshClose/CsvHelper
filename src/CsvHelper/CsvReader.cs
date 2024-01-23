@@ -147,12 +147,13 @@ namespace CsvHelper
 				throw new InvalidOperationException($"The header must be read before it can be validated.");
 			}
 
-			if (context.Maps[type] == null)
+			var map = context.Maps[type];
+
+			if (map == null)
 			{
-				context.Maps.Add(context.AutoMap(type));
+				context.Maps.Add(map = context.AutoMap(type));
 			}
 
-			var map = context.Maps[type];
 			var invalidHeaders = new List<InvalidHeader>();
 			ValidateHeader(map, invalidHeaders);
 
@@ -426,7 +427,7 @@ namespace CsvHelper
 
 			reusableMemberMapData.Index = index;
 			reusableMemberMapData.TypeConverter = converter;
-			if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions typeConverterOptions))
+			if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions? typeConverterOptions))
 			{
 				typeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = cultureInfo }, context.TypeConverterOptionsCache.GetOptions(type));
 				typeConverterOptionsCache.Add(type, typeConverterOptions);
@@ -497,7 +498,7 @@ namespace CsvHelper
 				return default;
 			}
 
-			return (T)GetField(typeof(T), index, converter);
+			return (T?)GetField(typeof(T), index, converter);
 		}
 
 		/// <inheritdoc/>
@@ -742,7 +743,7 @@ namespace CsvHelper
 				}
 			}
 
-			T record;
+			T? record;
 			try
 			{
 				record = recordManager.Value.Create<T>();
@@ -802,7 +803,7 @@ namespace CsvHelper
 				}
 			}
 
-			object record;
+			object? record;
 			try
 			{
 				record = recordManager.Value.Create(type);
@@ -1124,7 +1125,7 @@ namespace CsvHelper
 			while (await ReadAsync().ConfigureAwait(false))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
-				object record;
+				object? record;
 				try
 				{
 					record = recordManager.Value.Create(type);
@@ -1259,7 +1260,7 @@ namespace CsvHelper
 			}
 
 			// Check all possible names for this field.
-			string name = null;
+			string? name = null;
 			var i = 0;
 			foreach (var n in names)
 			{
@@ -1367,7 +1368,7 @@ namespace CsvHelper
 
 			// Free unmanaged resources (unmanaged objects) and override finalizer
 			// Set large fields to null
-			context = null;
+			context = null!;
 
 			disposed = true;
 		}

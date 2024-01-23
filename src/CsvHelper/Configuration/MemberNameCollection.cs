@@ -29,7 +29,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets the prefix to use for each name.
 		/// </summary>
-		public string Prefix { get; set; }
+		public string? Prefix { get; set; }
 
 		/// <summary>
 		/// Gets the raw list of names without
