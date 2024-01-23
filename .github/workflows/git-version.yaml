@@ -1,0 +1,16 @@
+name: Check Git Version
+on: 
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+      - name: Setup Git Semantic Version
+        id: gitversion
+        uses: PaulHatch/semantic-version@v5.3.0
+        with:
+          tag_prefix: ""
