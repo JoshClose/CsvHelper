@@ -129,7 +129,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
 		/// <param name="useOnConversionFailure">Use default on conversion failure.</param>
-		public virtual MemberMap Default(object? defaultValue, bool useOnConversionFailure = false)
+		public virtual MemberMap Default(object defaultValue, bool useOnConversionFailure = false)
 		{
 			if (defaultValue == null && Data.Member.MemberType().IsValueType)
 			{

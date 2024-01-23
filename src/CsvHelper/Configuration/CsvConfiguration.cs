@@ -59,7 +59,7 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <inheritdoc/>
-		public virtual IComparer<string>? DynamicPropertySort { get; set; }
+		public virtual IComparer<string> DynamicPropertySort { get; set; }
 
 		/// <inheritdoc/>
 		public virtual Encoding Encoding { get; set; } = Encoding.UTF8;
@@ -142,13 +142,13 @@ namespace CsvHelper.Configuration
 		public virtual ReadingExceptionOccurred ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 		/// <inheritdoc/>
-		public virtual ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; set; }
+		public virtual ReferenceHeaderPrefix ReferenceHeaderPrefix { get; set; }
 
 		/// <inheritdoc/>
 		public ShouldQuote ShouldQuote { get; set; } = ConfigurationFunctions.ShouldQuote;
 
 		/// <inheritdoc/>
-		public virtual ShouldSkipRecord? ShouldSkipRecord { get; set; }
+		public virtual ShouldSkipRecord ShouldSkipRecord { get; set; }
 
 		/// <inheritdoc/>
 		public virtual ShouldUseConstructorParameters ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;
@@ -171,7 +171,7 @@ namespace CsvHelper.Configuration
 		/// <param name="cultureInfo">The culture information.</param>
 		/// <param name="attributesType">The type that contains the configuration attributes.
 		/// This will call <see cref="ApplyAttributes(Type)"/> automatically.</param>
-		public CsvConfiguration(CultureInfo cultureInfo, Type? attributesType = null)
+		public CsvConfiguration(CultureInfo cultureInfo, Type attributesType = null)
 		{
 			CultureInfo = cultureInfo;
 			Delimiter = cultureInfo.TextInfo.ListSeparator;

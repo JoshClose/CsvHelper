@@ -42,7 +42,7 @@ namespace CsvHelper.Configuration
 		/// <param name="prefix">The prefix to be prepended to headers of each reference member.</param>
 		/// <param name="inherit">Inherit parent prefixes.</param>
 		/// <returns>The current <see cref="MemberReferenceMap" /></returns>
-		public MemberReferenceMap Prefix(string? prefix = null, bool inherit = false)
+		public MemberReferenceMap Prefix(string prefix = null, bool inherit = false)
 		{
 			if (string.IsNullOrEmpty(prefix))
 			{

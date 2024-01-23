@@ -14,7 +14,7 @@ namespace CsvHelper.TypeConversion
     public class DefaultTypeConverter : ITypeConverter
     {
 		/// <inheritdoc/>
-		public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public virtual object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member.MemberType() == memberMapData.Default?.GetType())
 			{
@@ -38,7 +38,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public virtual string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+		public virtual string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
         {
             if (value == null)
             {

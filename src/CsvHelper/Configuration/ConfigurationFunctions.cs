@@ -180,7 +180,7 @@ namespace CsvHelper.Configuration
 		/// Return the detected delimiter or null if one wasn't found.
 		/// </summary>
 		/// <param name="args">The args.</param>
-		public static string? GetDelimiter(GetDelimiterArgs args)
+		public static string GetDelimiter(GetDelimiterArgs args)
 		{
 			var text = args.Text;
 			var config = args.Configuration;
@@ -244,7 +244,7 @@ namespace CsvHelper.Configuration
 				}
 			).ToList();
 
-			string? newDelimiter = null;
+			string newDelimiter = null;
 			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
 			{
 				// The culture's separator is on every line. Assume this is the delimiter.

@@ -74,7 +74,7 @@ namespace CsvHelper
 		private bool fieldIsQuoted;
 		private bool isProcessingField;
 		private bool isRecordProcessed;
-		private string[]? record;
+		private string[] record;
 
 		/// <inheritdoc/>
 		public long CharCount => charCount;
@@ -86,7 +86,7 @@ namespace CsvHelper
 		public int Row => row;
 
 		/// <inheritdoc/>
-		public string[]? Record
+		public string[] Record
 		{
 			get
 			{

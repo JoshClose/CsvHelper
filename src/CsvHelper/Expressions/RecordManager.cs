@@ -50,7 +50,7 @@ namespace CsvHelper.Expressions
 		/// Creates a record of the given type using the current reader row.
 		/// </summary>
 		/// <param name="recordType">The type of record to create.</param>
-		public object? Create(Type recordType)
+		public object Create(Type recordType)
 		{
 			var recordCreator = recordCreatorFactory.MakeRecordCreator(recordType);
 			return recordCreator.Create(recordType);

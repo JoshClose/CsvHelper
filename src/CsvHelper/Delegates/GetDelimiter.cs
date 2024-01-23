@@ -17,7 +17,7 @@ namespace CsvHelper.Delegates
 	/// </summary>
 	/// <param name="args"></param>
 	/// <returns></returns>
-	public delegate string? GetDelimiter(GetDelimiterArgs args);
+	public delegate string GetDelimiter(GetDelimiterArgs args);
 
 	/// <summary>
 	/// GetDelimiter args.

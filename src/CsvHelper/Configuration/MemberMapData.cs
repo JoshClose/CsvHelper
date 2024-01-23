@@ -44,7 +44,7 @@ namespace CsvHelper.Configuration
 		/// Gets the <see cref="MemberInfo"/> that the data
 		/// is associated with.
 		/// </summary>
-		public virtual MemberInfo? Member { get; private set; }
+		public virtual MemberInfo Member { get; private set; }
 
 		/// <summary>
 		/// Gets the list of column names.
@@ -87,7 +87,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the type converter.
 		/// </summary>
-		public virtual ITypeConverter? TypeConverter { get; set; }
+		public virtual ITypeConverter TypeConverter { get; set; }
 
 		/// <summary>
 		/// Gets or sets the type converter options.
@@ -102,7 +102,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the default value used when a CSV field is empty.
 		/// </summary>
-		public virtual object? Default { get; set; }
+		public virtual object Default { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether this instance is default value set.
@@ -121,7 +121,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the constant value used for every record.
 		/// </summary>
-		public virtual object? Constant { get; set; }
+		public virtual object Constant { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if a constant was explicitly set.
@@ -159,7 +159,7 @@ namespace CsvHelper.Configuration
 		/// Initializes a new instance of the <see cref="MemberMapData"/> class.
 		/// </summary>
 		/// <param name="member">The member.</param>
-		public MemberMapData(MemberInfo? member)
+		public MemberMapData(MemberInfo member)
 		{
 			Member = member;
 		}

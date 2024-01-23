@@ -329,7 +329,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
-		public virtual void WriteRecord<T>(T? record)
+		public virtual void WriteRecord<T>(T record)
 		{
 			try
 			{
@@ -803,7 +803,7 @@ namespace CsvHelper
 
 		private bool WriteHeader(IEnumerable records)
 		{
-			object? record = null;
+			object record = null;
 			foreach (var r in records)
 			{
 				if (r != null)
@@ -815,7 +815,7 @@ namespace CsvHelper
 			return WriteHeader(record);
 		}
 
-		private bool WriteHeader(object? record)
+		private bool WriteHeader(object record)
 		{
 			if (record == null)
 			{

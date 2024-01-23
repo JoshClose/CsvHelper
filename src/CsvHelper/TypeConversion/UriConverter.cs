@@ -25,7 +25,7 @@ namespace CsvHelper.TypeConversion
 		/// <returns>
 		/// The <see cref="Uri"/> created from the string.
 		/// </returns>
-		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var uriKind = memberMapData.TypeConverterOptions.UriKind ?? default;
 

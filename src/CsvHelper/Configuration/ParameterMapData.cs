@@ -70,7 +70,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the default value used when a CSV field is empty.
 		/// </summary>
-		public virtual object? Default { get; set; }
+		public virtual object Default { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether this instance is default value set.
@@ -82,7 +82,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Gets or sets the constant value used for every record.
 		/// </summary>
-		public virtual object? Constant { get; set; }
+		public virtual object Constant { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating if a constant was explicitly set.

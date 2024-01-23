@@ -127,7 +127,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual ParameterMap Default(object? defaultValue)
+		public virtual ParameterMap Default(object defaultValue)
 		{
 			if (defaultValue == null && Data.Parameter.ParameterType.IsValueType)
 			{
@@ -151,7 +151,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual ParameterMap Constant(object? constantValue)
+		public virtual ParameterMap Constant(object constantValue)
 		{
 			if (constantValue == null && Data.Parameter.ParameterType.IsValueType)
 			{

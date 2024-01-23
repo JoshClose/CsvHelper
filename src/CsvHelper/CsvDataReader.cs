@@ -72,7 +72,7 @@ namespace CsvHelper
 		/// </summary>
 		/// <param name="csv">The CSV.</param>
 		/// <param name="schemaTable">The DataTable representing the file schema.</param>
-		public CsvDataReader(CsvReader csv, DataTable? schemaTable = null)
+		public CsvDataReader(CsvReader csv, DataTable schemaTable = null)
 		{
 			this.csv = csv;
 
@@ -116,7 +116,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc />
-		public long GetBytes(int i, long fieldOffset, byte[]? buffer, int bufferoffset, int length)
+		public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
 		{
 			var bytes = csv.GetField<byte[]>(i);
 
@@ -134,7 +134,7 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc />
-		public long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length)
+		public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
 		{
 			var chars = csv.GetField(i).ToCharArray();
 

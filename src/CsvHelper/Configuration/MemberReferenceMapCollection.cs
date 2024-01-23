@@ -136,7 +136,7 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="T">The <see cref="System.Type"/> the member is on.</typeparam>
 		/// <param name="expression">The member expression.</param>
 		/// <returns>The <see cref="MemberReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual MemberReferenceMap? Find<T>(Expression<Func<T, object>> expression)
+		public virtual MemberReferenceMap Find<T>(Expression<Func<T, object>> expression)
 		{
 			var member = ReflectionHelper.GetMember(expression);
 			return Find(member);
@@ -147,7 +147,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="member">The member.</param>
 		/// <returns>The <see cref="MemberReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual MemberReferenceMap? Find(MemberInfo member)
+		public virtual MemberReferenceMap Find(MemberInfo member)
 		{
 			var existingMap = list.SingleOrDefault(m =>
 				m.Data.Member == member ||

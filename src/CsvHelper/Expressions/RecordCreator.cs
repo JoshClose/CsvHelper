@@ -62,7 +62,7 @@ namespace CsvHelper.Expressions
 		/// Create a record of the given type using the current row.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		public object? Create(Type recordType)
+		public object Create(Type recordType)
 		{
 			try
 			{

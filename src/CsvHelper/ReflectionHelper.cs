@@ -185,9 +185,9 @@ namespace CsvHelper
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static MemberExpression? GetMemberExpression(Expression expression)
+		private static MemberExpression GetMemberExpression(Expression expression)
 		{
-			MemberExpression? memberExpression = null;
+			MemberExpression memberExpression = null;
 			if (expression.NodeType == ExpressionType.Convert)
 			{
 				var body = (UnaryExpression)expression;

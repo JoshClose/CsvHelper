@@ -71,7 +71,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase ?? false;
 
@@ -108,7 +108,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
 			if (value != null && attributeNamesByEnumValues.TryGetValue(value, out var name))
 			{
