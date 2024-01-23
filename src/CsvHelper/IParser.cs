@@ -31,6 +31,13 @@ namespace CsvHelper
 		int Count { get; }
 
 		/// <summary>
+		/// Tells whether row was too long to parse correctly and fields values could be truncated since row was too long to load in buffer.
+		/// Could be set only if max buffer size is defined.
+		/// Skipping such row relying on this flag before fields reading can save memory.
+		/// </summary>
+		bool TooLongRow { get; }
+
+		/// <summary>
 		/// Gets the field at the specified index for the current row.
 		/// </summary>
 		/// <param name="index">The index.</param>

@@ -29,6 +29,9 @@ namespace CsvHelper.Configuration
 		public virtual BadDataFound BadDataFound { get; set; } = ConfigurationFunctions.BadDataFound;
 
 		/// <inheritdoc/>
+		public virtual bool ProcessBadDataFields { get; set; } = true;
+
+		/// <inheritdoc/>
 		public virtual int BufferSize { get; set; } = 0x1000;
 
 		/// <inheritdoc/>
@@ -36,6 +39,9 @@ namespace CsvHelper.Configuration
 
 		/// <inheritdoc/>
 		public virtual char Comment { get; set; } = '#';
+
+		/// <inheritdoc/>
+		public virtual int? MaxProcessFieldBufferSize { get; set; }
 
 		/// <inheritdoc/>
 		public virtual bool CountBytes { get; set; }
@@ -134,6 +140,9 @@ namespace CsvHelper.Configuration
 
 		/// <inheritdoc/>
 		public virtual int ProcessFieldBufferSize { get; set; } = 1024;
+
+		/// <inheritdoc/>
+		public virtual int? MaxBufferSize { get; set; }
 
 		/// <inheritdoc/>
 		public virtual char Quote { get; set; } = '"';
