@@ -70,7 +70,6 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetConstructorCacheKey(Type type, Type[] args)
 		{
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 			var hashCode = new HashCode();
 			hashCode.Add(type.GetHashCode());
 			for (var i = 0; i < args.Length; i++)
@@ -79,19 +78,6 @@ namespace CsvHelper
 			}
 
 			return hashCode.ToHashCode();
-#else
-			unchecked
-			{
-				var hash = 17;
-				hash = hash * 31 + type.GetHashCode();
-				for (var i = 0; i < args.Length; i++)
-				{
-					hash = hash * 31 + (args[i].GetHashCode());
-				}
-
-				return hash;
-			}
-#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
