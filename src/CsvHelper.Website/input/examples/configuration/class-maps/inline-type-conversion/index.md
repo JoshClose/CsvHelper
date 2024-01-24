@@ -42,7 +42,7 @@ public class FooMap : ClassMap<Foo>
     {
         Map(m => m.Id);
         Map(m => m.Name);
-        Map(m => m.Json).Convert(row => JsonConvert.DeserializeObject<Json>(row.GetField("Json")));
+        Map(m => m.Json).Convert(args => JsonConvert.DeserializeObject<Json>(args.Row.GetField("Json")));
     }
 }
 ```
@@ -87,7 +87,7 @@ public class FooMap : ClassMap<Foo>
 	{
 		Map(m => m.Id);
 		Map(m => m.Name);
-		Map(m => m.Json).Convert(o => JsonConvert.SerializeObject(o));
+		Map(m => m.Json).Convert(args => JsonConvert.SerializeObject(args.Row));
 	}
 }
 ```
