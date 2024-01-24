@@ -35,10 +35,7 @@ namespace CsvHelper.Configuration
 
 			if (args.Context.Reader.HeaderRecord != null)
 			{
-				foreach (var header in args.Context.Reader.HeaderRecord)
-				{
-					errorMessage.AppendLine($"Headers: '{string.Join("', '", args.Context.Reader.HeaderRecord)}'");
-				}
+				errorMessage.AppendLine($"Headers: '{string.Join("', '", args.Context.Reader.HeaderRecord)}'");
 			}
 
 			var messagePostfix =
@@ -146,7 +143,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns the type's constructor with the most parameters. 
+		/// Returns the type's constructor with the most parameters.
 		/// If two constructors have the same number of parameters, then
 		/// there is no guarantee which one will be returned. If you have
 		/// that situation, you should probably implement this function yourself.
