@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
     /// <summary>
     /// The character used to quote fields.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class QuoteAttribute : Attribute, IClassMapper
     {
         /// <summary>
@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
         /// The character used to quote fields.
         /// </summary>
         /// <param name="quote">The quote character.</param>
-        public QuoteAttribute( char quote )
+        public QuoteAttribute(char quote)
         {
             Quote = quote;
         }

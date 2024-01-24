@@ -14,12 +14,20 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void AllowCommentsTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(AllowCommentsTestClass));
-			Assert.True(config.AllowComments);
+			Assert.True(CsvConfiguration.FromType<AllowCommentsTrueTestClass>(CultureInfo.InvariantCulture).AllowComments);
+			Assert.False(CsvConfiguration.FromType<AllowCommentsFalseTestClass>(CultureInfo.InvariantCulture).AllowComments);
 		}
 
-		[AllowComments(true)]
-		private class AllowCommentsTestClass
+		[AllowComments]
+		private class AllowCommentsTrueTestClass
+		{
+			public int Id { get; set; }
+
+			public string Name { get; set; }
+		}
+
+		[AllowComments(false)]
+		private class AllowCommentsFalseTestClass
 		{
 			public int Id { get; set; }
 

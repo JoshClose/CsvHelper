@@ -4,12 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CsvHelper.Tests.Mappings.Attribute
@@ -19,11 +14,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
-			Assert.False(config.ExceptionMessagesContainRawData);
+			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).ExceptionMessagesContainRawData);
+			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).ExceptionMessagesContainRawData);
 		}
 
+		[ExceptionMessagesContainRawData]
+		private class FooTrue { }
+
 		[ExceptionMessagesContainRawData(false)]
-		private class Foo { }
+		private class FooFalse { }
 	}
 }

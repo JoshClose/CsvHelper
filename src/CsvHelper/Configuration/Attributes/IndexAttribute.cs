@@ -12,7 +12,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// will be written in the order of the field
 	/// indexes.
 	/// </summary>
-	[AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true )]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
 	public class IndexAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
@@ -33,7 +33,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// </summary>
 		/// <param name="index">The index.</param>
 		/// <param name="indexEnd">The index end.</param>
-		public IndexAttribute( int index, int indexEnd = -1 )
+		public IndexAttribute(int index, int indexEnd = -1)
 		{
 			Index = index;
 			IndexEnd = indexEnd;

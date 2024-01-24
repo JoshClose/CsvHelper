@@ -16,7 +16,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void DelimiterReaderTest()
 		{
-			var configuration = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(DelimiterTestClass));
+			var configuration = CsvConfiguration.FromType<DelimiterTestClass>(CultureInfo.InvariantCulture);
 
 			Assert.Equal("§", configuration.Delimiter);
 		}

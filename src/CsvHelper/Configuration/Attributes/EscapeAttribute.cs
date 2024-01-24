@@ -9,7 +9,7 @@ namespace CsvHelper.Configuration.Attributes
     /// <summary>
     /// The escape character used to escape a quote inside a field.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class EscapeAttribute : Attribute, IClassMapper
     {
         /// <summary>
@@ -21,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
         /// The escape character used to escape a quote inside a field.
         /// </summary>
         /// <param name="escape">The escape character.</param>
-        public EscapeAttribute( char escape )
+        public EscapeAttribute(char escape)
         {
             Escape = escape;
         }

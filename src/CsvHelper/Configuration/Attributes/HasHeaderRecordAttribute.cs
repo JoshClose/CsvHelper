@@ -7,21 +7,21 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
     /// <summary>
-    /// A value indicating if the CSV file has a header record.
+    /// A value indicating whether the CSV file has a header record.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class HasHeaderRecordAttribute : Attribute, IClassMapper
     {
         /// <summary>
-        /// Gets a value indicating if the CSV file has a header record.
+        /// Gets a value indicating whether the CSV file has a header record.
         /// </summary>
         public bool HasHeaderRecord { get; private set; }
 
         /// <summary>
-        /// A value indicating if the CSV file has a header record.
+        /// A value indicating whether the CSV file has a header record.
         /// </summary>
-        /// <param name="hasHeaderRecord">A value indicating if the CSV file has a header record.</param>
-        public HasHeaderRecordAttribute( bool hasHeaderRecord )
+        /// <param name="hasHeaderRecord">A value indicating whether the CSV file has a header record.</param>
+        public HasHeaderRecordAttribute(bool hasHeaderRecord = true)
         {
             HasHeaderRecord = hasHeaderRecord;
         }

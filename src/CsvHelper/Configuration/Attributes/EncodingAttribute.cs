@@ -18,14 +18,23 @@ namespace CsvHelper.Configuration.Attributes
         /// </summary>
         public Encoding Encoding { get; private set; }
 
-        /// <summary>
-        /// The encoding used when counting bytes.
-        /// </summary>
-        /// <param name="encoding">The encoding.</param>
-        public EncodingAttribute(string encoding)
+		/// <summary>
+		/// The encoding used when counting bytes.
+		/// </summary>
+		/// <param name="name"><inheritdoc cref="Encoding.GetEncoding(string)"/></param>
+		public EncodingAttribute(string name)
         {
-            Encoding = Encoding.GetEncoding(encoding);
-        }
+            Encoding = Encoding.GetEncoding(name);
+		}
+
+		/// <summary>
+		/// The encoding used when counting bytes.
+		/// </summary>
+		/// <param name="codepage"><inheritdoc cref="Encoding.GetEncoding(int)"/></param>
+		public EncodingAttribute(int codepage)
+		{
+			Encoding = Encoding.GetEncoding(codepage);
+		}
 
 		/// <inheritdoc />
 		public void ApplyTo(CsvConfiguration configuration)

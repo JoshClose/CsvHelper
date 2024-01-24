@@ -8,11 +8,12 @@ using System.Globalization;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// The <see cref="CultureInfo"/> used when type converting.
-	/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
-	/// setting. Or set the same if the attribute is specified on class level.
+	/// When applied to a member, specifies the <see cref="System.Globalization.CultureInfo"/>
+	/// used when type converting the member. When applied to a type, the value of
+	/// <see cref="CsvConfiguration.CultureInfo"/> in the <see cref="CsvConfiguration"/>
+	/// returned by <see cref="CsvConfiguration.FromType{T}()"/>
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class CultureInfoAttribute : Attribute, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
@@ -20,15 +21,32 @@ namespace CsvHelper.Configuration.Attributes
 		/// </summary>
 		public CultureInfo CultureInfo { get; private set; }
 
-		/// <summary>
-		/// The <see cref="CultureInfo"/> used when type converting.
-		/// This will override the global <see cref="CsvConfiguration.CultureInfo"/>
-		/// setting. Or set the same if the attribute is specified on class level.
-		/// </summary>
-		/// <param name="culture">The culture.</param>
-		public CultureInfoAttribute(string culture)
+		/// <summary><inheritdoc cref="CultureInfoAttribute"/></summary>
+		/// <param name="name">
+		/// The name of a culture (case insensitive), or the literal values <c>"InvariantCulture"</c>,
+		/// <c>"CurrentCulture"</c>, <c>"CurrentUICulture"</c>, <c>"InstalledUICulture"</c> to use the
+		/// corresponding static properties on <see cref="System.Globalization.CultureInfo"/>.
+		/// </param>
+		public CultureInfoAttribute(string name)
 		{
-			CultureInfo = CultureInfo.GetCultureInfo(culture);
+			switch(name)
+			{
+				case nameof(CultureInfo.InvariantCulture):
+					CultureInfo = CultureInfo.InvariantCulture;
+					break;
+				case nameof(CultureInfo.CurrentCulture):
+					CultureInfo = CultureInfo.CurrentCulture;
+					break;
+				case nameof(CultureInfo.CurrentUICulture):
+					CultureInfo = CultureInfo.CurrentUICulture;
+					break;
+				case nameof(CultureInfo.InstalledUICulture):
+					CultureInfo = CultureInfo.InstalledUICulture;
+					break;
+				default:
+					CultureInfo = CultureInfo.GetCultureInfo(name);
+					break;
+			}
 		}
 
 		/// <inheritdoc />
