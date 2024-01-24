@@ -99,15 +99,16 @@ namespace CsvHelper.Configuration
 		public static bool ShouldQuote(ShouldQuoteArgs args)
 		{
 			var config = args.Row.Configuration;
+			var field = args.Field;
 
-			var shouldQuote = !string.IsNullOrEmpty(args.Field) &&
+			var shouldQuote = !string.IsNullOrEmpty(field) &&
 			(
-				args.Field[0] == ' ' // Starts with a space
-				|| args.Field[^1] == ' ' // Ends with a space
-				|| args.Field.Contains(config.Quote) // Contains quote
-				|| !config.IsNewLineSet && args.Field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
-				|| config.IsNewLineSet && args.Field.Contains(config.NewLine) // Contains newline
-				|| (config.Delimiter.Length > 0 && args.Field.Contains(config.Delimiter)) // Contains delimiter
+				field[0] == ' ' // Starts with a space
+				|| field[field.Length - 1] == ' ' // Ends with a space
+				|| field.Contains(config.Quote) // Contains quote
+				|| !config.IsNewLineSet && field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
+				|| config.IsNewLineSet && field.Contains(config.NewLine) // Contains newline
+				|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
 			);
 
 			return shouldQuote;
