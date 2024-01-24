@@ -2,18 +2,18 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
+using CsvHelper.Expressions;
+using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using CsvHelper.Expressions;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {

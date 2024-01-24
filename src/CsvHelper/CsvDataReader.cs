@@ -5,7 +5,6 @@
 using System;
 using System.Data;
 using System.Globalization;
-using System.Linq;
 
 namespace CsvHelper
 {
@@ -294,41 +293,38 @@ namespace CsvHelper
 			dt.Columns.Add("NumericScale", typeof(short));
 			dt.Columns.Add("ProviderType", typeof(int));
 
-			if (csv.Configuration.HasHeaderRecord)
+			for (var i = 0; i < csv.ColumnCount; i++)
 			{
-				var header = csv.HeaderRecord;
+				object columnName = csv.Configuration.HasHeaderRecord ? csv.HeaderRecord[i] : i;
 
-				for (var i = 0; i < header.Length; i++)
-				{
-					var row = dt.NewRow();
-					row["AllowDBNull"] = true;
-					row["AutoIncrementSeed"] = DBNull.Value;
-					row["AutoIncrementStep"] = DBNull.Value;
-					row["BaseCatalogName"] = null;
-					row["BaseColumnName"] = header[i];
-					row["BaseColumnNamespace"] = null;
-					row["BaseSchemaName"] = null;
-					row["BaseTableName"] = null;
-					row["BaseTableNamespace"] = null;
-					row["ColumnName"] = header[i];
-					row["ColumnMapping"] = MappingType.Element;
-					row["ColumnOrdinal"] = i;
-					row["ColumnSize"] = int.MaxValue;
-					row["DataType"] = typeof(string);
-					row["DefaultValue"] = null;
-					row["Expression"] = null;
-					row["IsAutoIncrement"] = false;
-					row["IsKey"] = false;
-					row["IsLong"] = false;
-					row["IsReadOnly"] = true;
-					row["IsRowVersion"] = false;
-					row["IsUnique"] = false;
-					row["NumericPrecision"] = DBNull.Value;
-					row["NumericScale"] = DBNull.Value;
-					row["ProviderType"] = DbType.String;
+				var row = dt.NewRow();
+				row["AllowDBNull"] = true;
+				row["AutoIncrementSeed"] = DBNull.Value;
+				row["AutoIncrementStep"] = DBNull.Value;
+				row["BaseCatalogName"] = null;
+				row["BaseColumnName"] = columnName;
+				row["BaseColumnNamespace"] = null;
+				row["BaseSchemaName"] = null;
+				row["BaseTableName"] = null;
+				row["BaseTableNamespace"] = null;
+				row["ColumnName"] = columnName;
+				row["ColumnMapping"] = MappingType.Element;
+				row["ColumnOrdinal"] = i;
+				row["ColumnSize"] = int.MaxValue;
+				row["DataType"] = typeof(string);
+				row["DefaultValue"] = null;
+				row["Expression"] = null;
+				row["IsAutoIncrement"] = false;
+				row["IsKey"] = false;
+				row["IsLong"] = false;
+				row["IsReadOnly"] = true;
+				row["IsRowVersion"] = false;
+				row["IsUnique"] = false;
+				row["NumericPrecision"] = DBNull.Value;
+				row["NumericScale"] = DBNull.Value;
+				row["ProviderType"] = DbType.String;
 
-					dt.Rows.Add(row);
-				}
+				dt.Rows.Add(row);
 			}
 
 			return dt;
