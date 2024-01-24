@@ -330,6 +330,39 @@ namespace CsvHelper
 					dt.Rows.Add(row);
 				}
 			}
+			else{
+				for (var i = 0; i < csv.Parser.Count; i++)
+				{
+					var row = dt.NewRow();
+					row["AllowDBNull"] = true;
+					row["AutoIncrementSeed"] = DBNull.Value;
+					row["AutoIncrementStep"] = DBNull.Value;
+					row["BaseCatalogName"] = null;
+					row["BaseColumnName"] = i;
+					row["BaseColumnNamespace"] = null;
+					row["BaseSchemaName"] = null;
+					row["BaseTableName"] = null;
+					row["BaseTableNamespace"] = null;
+					row["ColumnName"] = i;
+					row["ColumnMapping"] = MappingType.Element;
+					row["ColumnOrdinal"] = i;
+					row["ColumnSize"] = int.MaxValue;
+					row["DataType"] = typeof(string);
+					row["DefaultValue"] = null;
+					row["Expression"] = null;
+					row["IsAutoIncrement"] = false;
+					row["IsKey"] = false;
+					row["IsLong"] = false;
+					row["IsReadOnly"] = true;
+					row["IsRowVersion"] = false;
+					row["IsUnique"] = false;
+					row["NumericPrecision"] = DBNull.Value;
+					row["NumericScale"] = DBNull.Value;
+					row["ProviderType"] = DbType.String;
+
+					dt.Rows.Add(row);
+				}
+			}
 
 			return dt;
 		}
