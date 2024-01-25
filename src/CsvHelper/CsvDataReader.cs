@@ -77,7 +77,7 @@ namespace CsvHelper
 
 			csv.Read();
 
-			if (csv.Configuration.HasHeaderRecord)
+			if (csv.Configuration.HasHeaderRecord && csv.HeaderRecord == null)
 			{
 				csv.ReadHeader();
 			}
