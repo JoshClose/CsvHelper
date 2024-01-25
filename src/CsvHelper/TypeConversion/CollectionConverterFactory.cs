@@ -6,10 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.TypeConversion
 {
@@ -118,48 +115,51 @@ namespace CsvHelper.TypeConversion
 			}
 
 			var isGenericType = type.GetTypeInfo().IsGenericType;
-			var genericTypeDefinition = type.GetGenericTypeDefinition();
-
-			if (isGenericType && genericTypeDefinition == typeof(Dictionary<,>))
+			if (isGenericType)
 			{
-				typeConverter = new IDictionaryGenericConverter();
-				return true;
-			}
+				var genericTypeDefinition = type.GetGenericTypeDefinition();
 
-			if (isGenericType && genericTypeDefinition == typeof(IDictionary<,>))
-			{
-				typeConverter = new IDictionaryGenericConverter();
-				return true;
-			}
+				if (genericTypeDefinition == typeof(Dictionary<,>))
+				{
+					typeConverter = new IDictionaryGenericConverter();
+					return true;
+				}
 
-			if (isGenericType && genericTypeDefinition == typeof(List<>))
-			{
-				typeConverter = new CollectionGenericConverter();
-				return true;
-			}
+				if (genericTypeDefinition == typeof(IDictionary<,>))
+				{
+					typeConverter = new IDictionaryGenericConverter();
+					return true;
+				}
 
-			if (isGenericType && genericTypeDefinition == typeof(Collection<>))
-			{
-				typeConverter = new CollectionGenericConverter();
-				return true;
-			}
+				if (genericTypeDefinition == typeof(List<>))
+				{
+					typeConverter = new CollectionGenericConverter();
+					return true;
+				}
 
-			if (isGenericType && genericTypeDefinition == typeof(IList<>))
-			{
-				typeConverter = new IEnumerableGenericConverter();
-				return true;
-			}
+				if (genericTypeDefinition == typeof(Collection<>))
+				{
+					typeConverter = new CollectionGenericConverter();
+					return true;
+				}
 
-			if (isGenericType && genericTypeDefinition == typeof(ICollection<>))
-			{
-				typeConverter = new IEnumerableGenericConverter();
-				return true;
-			}
+				if (genericTypeDefinition == typeof(IList<>))
+				{
+					typeConverter = new IEnumerableGenericConverter();
+					return true;
+				}
 
-			if (isGenericType && genericTypeDefinition == typeof(IEnumerable<>))
-			{
-				typeConverter = new IEnumerableGenericConverter();
-				return true;
+				if (genericTypeDefinition == typeof(ICollection<>))
+				{
+					typeConverter = new IEnumerableGenericConverter();
+					return true;
+				}
+
+				if (genericTypeDefinition == typeof(IEnumerable<>))
+				{
+					typeConverter = new IEnumerableGenericConverter();
+					return true;
+				}
 			}
 
 			// A specific IEnumerable converter doesn't exist.
