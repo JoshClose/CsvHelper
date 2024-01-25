@@ -8,7 +8,6 @@ namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
 	/// Cache fields that are created when parsing.
-	/// Default is false.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class CacheFieldsAttribute : Attribute, IClassMapper
@@ -22,7 +21,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// Cache fields that are created when parsing.
 		/// </summary>
 		/// <param name="cacheFields"></param>
-		public CacheFieldsAttribute(bool cacheFields)
+		public CacheFieldsAttribute(bool cacheFields = true)
 		{
 			CacheFields = cacheFields;
 		}

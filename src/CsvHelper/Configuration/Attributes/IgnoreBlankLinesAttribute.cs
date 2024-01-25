@@ -7,21 +7,20 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
     /// <summary>
-    /// A value indicating if blank lines should be ignored when reading.
+    /// A value indicating whether blank lines should be ignored when reading.
     /// </summary>
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = false, Inherited = true )]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class IgnoreBlankLinesAttribute : Attribute, IClassMapper
     {
         /// <summary>
-        /// Gets a value indicating if blank lines should be ignored when reading.
+        /// Gets a value indicating whether blank lines should be ignored when reading.
         /// </summary>
         public bool IgnoreBlankLines { get; private set; }
 
         /// <summary>
-        /// A value indicating if blank lines should be ignored when reading.
+        /// A value indicating whether blank lines should be ignored when reading.
         /// </summary>
-        /// <param name="ignoreBlankLines">The Ignore Blank Lines Flag.</param>
-        public IgnoreBlankLinesAttribute( bool ignoreBlankLines )
+        public IgnoreBlankLinesAttribute(bool ignoreBlankLines = true)
         {
             IgnoreBlankLines = ignoreBlankLines;
         }

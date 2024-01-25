@@ -2,16 +2,14 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration.Attributes;
+using CsvHelper.Delegates;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using CsvHelper.Configuration.Attributes;
-using CsvHelper.Delegates;
-using CsvHelper.TypeConversion;
 
 namespace CsvHelper.Configuration
 {
@@ -41,7 +39,7 @@ namespace CsvHelper.Configuration
 		public virtual bool CountBytes { get; set; }
 
 		/// <inheritdoc/>
-		public virtual CultureInfo CultureInfo { get; protected set; }
+		public virtual CultureInfo CultureInfo { get; protected internal set; }
 
 		/// <inheritdoc/>
 		public virtual string Delimiter { get; set; }
@@ -53,7 +51,7 @@ namespace CsvHelper.Configuration
 		public virtual GetDelimiter GetDelimiter { get; set; } = ConfigurationFunctions.GetDelimiter;
 
 		/// <inheritdoc/>
-		public virtual string[] DetectDelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
+		public virtual string[] DetectDelimiterValues { get; set; } = [",", ";", "|", "\t"];
 
 		/// <inheritdoc/>
 		public virtual bool DetectColumnCountChanges { get; set; }
@@ -92,7 +90,7 @@ namespace CsvHelper.Configuration
 		public virtual bool IncludePrivateMembers { get; set; }
 
 		/// <inheritdoc/>
-		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-', '\t', '\r' };
+		public virtual char[] InjectionCharacters { get; set; } = ['=', '@', '+', '-', '\t', '\r'];
 
 		/// <inheritdoc/>
 		public virtual char InjectionEscapeCharacter { get; set; } = '\'';
@@ -160,26 +158,37 @@ namespace CsvHelper.Configuration
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
 		/// <inheritdoc/>
-		public virtual char[] WhiteSpaceChars { get; set; } = new char[] { ' ' };
+		public virtual char[] WhiteSpaceChars { get; set; } = [' '];
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfiguration"/> class
 		/// using the given <see cref="System.Globalization.CultureInfo"/>. Since <see cref="Delimiter"/>
-		/// uses <see cref="CultureInfo"/> for it's default, the given <see cref="System.Globalization.CultureInfo"/>
+		/// uses <see cref="CultureInfo"/> for its default, the given <see cref="System.Globalization.CultureInfo"/>
+		/// will be used instead.
+		/// </summary>
+		/// <param name="cultureInfo">The culture information.</param>
+		public CsvConfiguration(CultureInfo cultureInfo)
+		{
+			CultureInfo = cultureInfo;
+			Delimiter = cultureInfo.TextInfo.ListSeparator;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CsvConfiguration"/> class
+		/// using the given <see cref="System.Globalization.CultureInfo"/>. Since <see cref="Delimiter"/>
+		/// uses <see cref="CultureInfo"/> for its default, the given <see cref="System.Globalization.CultureInfo"/>
 		/// will be used instead.
 		/// </summary>
 		/// <param name="cultureInfo">The culture information.</param>
 		/// <param name="attributesType">The type that contains the configuration attributes.
 		/// This will call <see cref="ApplyAttributes(Type)"/> automatically.</param>
-		public CsvConfiguration(CultureInfo cultureInfo, Type attributesType = null)
+		[Obsolete("This constructor is deprecated and will be removed in the next major release. Use CsvConfiguration(CultureInfo) instead.", false)]
+		public CsvConfiguration(CultureInfo cultureInfo, Type attributesType)
 		{
 			CultureInfo = cultureInfo;
 			Delimiter = cultureInfo.TextInfo.ListSeparator;
 
-			if (attributesType != null)
-			{
-				ApplyAttributes(attributesType);
-			}
+			ApplyAttributes(attributesType);
 		}
 
 		/// <summary>
@@ -235,6 +244,91 @@ namespace CsvHelper.Configuration
 			}
 
 			return this;
+		}
+
+		/// <summary>
+		/// Creates a <see cref="CsvConfiguration"/> instance configured using CsvHelper attributes applied
+		/// to <typeparamref name="T"/> at the type-level. This method requires <typeparamref name="T"/> to
+		/// be annotated with <see cref="CultureInfoAttribute"/> (or to sub-class a type which is).
+		/// </summary>
+		/// <typeparam name="T">
+		/// The type whose attributes should be used to configure the <see cref="CsvConfiguration"/> instance.
+		/// This is normally the type you are intending to map for reading and writing.
+		/// </typeparam>
+		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with attributes applied to <typeparamref name="T"/>.</returns>
+		/// <remarks>
+		/// CsvHelper attributes applied to members and parameters do not influence the return value of this method.
+		/// Such attributes do not define values which are used in <see cref="CsvConfiguration"/> and instead influence
+		/// the maps which are built and used during reading and writing. See <see cref="MemberMap"/> and <see cref="ParameterMap"/>.
+		/// </remarks>
+		/// <exception cref="ConfigurationException">If <typeparamref name="T"/> is not annotated with <see cref="CultureInfoAttribute"/>.</exception>
+		/// <exception cref="ArgumentNullException">If the argument to the <see cref="CultureInfoAttribute"/> is <see langword="null"/>.</exception>
+		/// <exception cref="CultureNotFoundException">If the argument to the <see cref="CultureInfoAttribute"/> does not specify a supported culture.</exception>
+		public static CsvConfiguration FromType<T>()
+		{
+			return FromType(typeof(T));
+		}
+
+		/// <summary>
+		/// Creates a <see cref="CsvConfiguration"/> instance configured using <paramref name="cultureInfo"/>
+		/// and CsvHelper attributes applied to <typeparamref name="T"/> at the type-level.
+		/// This method ignores any <see cref="CultureInfoAttribute"/> applied to <typeparamref name="T"/>.
+		/// </summary>
+		/// <typeparam name="T"><inheritdoc cref="FromType{T}()"/></typeparam>
+		/// <param name="cultureInfo">The <see cref="CultureInfo"/> to configure the returned <see cref="CsvConfiguration"/> with.</param>
+		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with <paramref name="cultureInfo"/> and attributes applied to <typeparamref name="T"/>.</returns>
+		/// <remarks><inheritdoc cref="FromType{T}()"/></remarks>
+		public static CsvConfiguration FromType<T>(CultureInfo cultureInfo)
+		{
+			return FromType(typeof(T), cultureInfo);
+		}
+
+		/// <summary>
+		/// Creates a <see cref="CsvConfiguration"/> instance configured using CsvHelper attributes applied
+		/// to <paramref name="type"/> at the type-level. This method requires <paramref name="type"/> to
+		/// be annotated with <see cref="CultureInfoAttribute"/> (or to sub-class a type which is).
+		/// </summary>
+		/// <param name="type"><inheritdoc cref="FromType{T}()" path="/typeparam"/></param>
+		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with attributes applied to <paramref name="type"/>.</returns>
+		/// <remarks>
+		/// CsvHelper attributes applied to members and parameters do not influence the return value of this method.
+		/// Such attributes do not define values which are used in <see cref="CsvConfiguration"/> and instead influence
+		/// the maps which are built and used during reading and writing. See <see cref="MemberMap"/> and <see cref="ParameterMap"/>.
+		/// </remarks>
+		/// <exception cref="ConfigurationException">If <paramref name="type"/> is not annotated with <see cref="CultureInfoAttribute"/>.</exception>
+		/// <exception cref="ArgumentNullException">If the argument to the <see cref="CultureInfoAttribute"/> is <see langword="null"/>.</exception>
+		/// <exception cref="CultureNotFoundException">If the argument to the <see cref="CultureInfoAttribute"/> does not specify a supported culture.</exception>
+		public static CsvConfiguration FromType(Type type)
+		{
+			var cultureInfoAttribute = (CultureInfoAttribute)Attribute.GetCustomAttribute(type, typeof(CultureInfoAttribute));
+			if (cultureInfoAttribute == null)
+			{
+				throw new ConfigurationException($"A {nameof(CultureInfoAttribute)} is required on type '{type.Name}' to use this method.");
+			}
+
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			config.ApplyAttributes(type);
+
+			return config;
+		}
+
+		/// <summary>
+		/// Creates a <see cref="CsvConfiguration"/> instance configured using <paramref name="cultureInfo"/>
+		/// and CsvHelper attributes applied to <paramref name="type"/> at the type-level.
+		/// This method ignores any <see cref="CultureInfoAttribute"/> applied to <paramref name="type"/>.
+		/// </summary>
+		/// <param name="type"><inheritdoc cref="FromType{T}()" path="/typeparam"/></param>
+		/// <param name="cultureInfo"><inheritdoc cref="FromType{T}(CultureInfo)"/></param>
+		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with <paramref name="cultureInfo"/> and attributes applied to <paramref name="type"/></returns>
+		/// <remarks><inheritdoc cref="FromType{T}()"/></remarks>
+		public static CsvConfiguration FromType(Type type, CultureInfo cultureInfo)
+		{
+			var config = new CsvConfiguration(cultureInfo);
+			config.ApplyAttributes(type);
+			// Override the attribute.
+			config.CultureInfo = cultureInfo;
+
+			return config;
 		}
 	}
 }

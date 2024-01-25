@@ -7,25 +7,23 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// A value indicating if exception messages contain raw CSV data.
-	/// <c>true</c> if exception contain raw CSV data, otherwise <c>false</c>.
-	/// Default is <c>true</c>.
+	/// A value indicating whether exception messages contain raw CSV data.
+	/// <see langword="true"/> if exceptions contain raw CSV data, otherwise <see langword="false"/>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class ExceptionMessagesContainRawDataAttribute : Attribute, IClassMapper
 	{
 		/// <summary>
-		/// A value indicating if exception messages contain raw CSV data.
-		/// <c>true</c> if exception contain raw CSV data, otherwise <c>false</c>.
+		/// A value indicating whether exception messages contain raw CSV data.
+		/// <see langword="true"/> if exceptions contain raw CSV data, otherwise <see langword="false"/>.
 		/// </summary>
 		public bool ExceptionMessagesContainRawData { get; private set; }
 
 		/// <summary>
-		/// A value indicating if exception messages contain raw CSV data.
-		/// <c>true</c> if exception contain raw CSV data, otherwise <c>false</c>.
+		/// A value indicating whether exception messages contain raw CSV data.
+		/// <see langword="true"/> if exceptions contain raw CSV data, otherwise <see langword="false"/>.
 		/// </summary>
-		/// <param name="exceptionMessagesContainRawData"></param>
-		public ExceptionMessagesContainRawDataAttribute(bool exceptionMessagesContainRawData)
+		public ExceptionMessagesContainRawDataAttribute(bool exceptionMessagesContainRawData = true)
 		{
 			ExceptionMessagesContainRawData = exceptionMessagesContainRawData;
 		}

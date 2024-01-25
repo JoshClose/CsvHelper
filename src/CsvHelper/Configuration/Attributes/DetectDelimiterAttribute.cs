@@ -8,7 +8,6 @@ namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
 	/// Detect the delimiter instead of using the delimiter from configuration.
-	/// Default is <c>false</c>.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class DetectDelimiterAttribute : Attribute, IClassMapper
@@ -21,7 +20,7 @@ namespace CsvHelper.Configuration.Attributes
 		/// <summary>
 		/// Detect the delimiter instead of using the delimiter from configuration.
 		/// </summary>
-		public DetectDelimiterAttribute(bool detectDelimiter)
+		public DetectDelimiterAttribute(bool detectDelimiter = true)
 		{
 			DetectDelimiter = detectDelimiter;
 		}

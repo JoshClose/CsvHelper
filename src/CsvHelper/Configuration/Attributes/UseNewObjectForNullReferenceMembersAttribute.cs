@@ -7,33 +7,32 @@ using System;
 namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
-	/// Gets a value indicating that during writing if a new 
-	/// object should be created when a reference member is null.
-	/// True to create a new object and use it's defaults for the
-	/// fields, or false to leave the fields empty for all the
-	/// reference member's member.
+	/// Gets a value indicating that during writing whether a new 
+	/// object should be created when a reference member is <see langword="null"/>.
+	/// <see langword="true"/> to create a new object and use its defaults for the
+	/// fields, or <see langword="false"/> to leave the fields empty for all the
+	/// reference member's members.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class UseNewObjectForNullReferenceMembersAttribute : Attribute, IClassMapper
 	{
 		/// <summary>
-		/// Gets a value indicating that during writing if a new 
-		/// object should be created when a reference member is null.
-		/// True to create a new object and use it's defaults for the
-		/// fields, or false to leave the fields empty for all the
-		/// reference member's member.
+		/// Gets a value indicating that during writing whether a new 
+		/// object should be created when a reference member is <see langword="null"/>.
+		/// <see langword="true"/> to create a new object and use its defaults for the
+		/// fields, or <see langword="false"/> to leave the fields empty for all the
+		/// reference member's members.
 		/// </summary>
 		public bool UseNewObjectForNullReferenceMembers { get; private set; }
 
 		/// <summary>
-		/// Gets a value indicating that during writing if a new 
-		/// object should be created when a reference member is null.
-		/// True to create a new object and use it's defaults for the
-		/// fields, or false to leave the fields empty for all the
-		/// reference member's member.
+		/// Gets a value indicating that during writing whether a new 
+		/// object should be created when a reference member is <see langword="null"/>.
+		/// <see langword="true"/> to create a new object and use its defaults for the
+		/// fields, or <see langword="false"/> to leave the fields empty for all the
+		/// reference member's members.
 		/// </summary>
-		/// <param name="useNewObjectForNullReferenceMembers">The value.</param>
-		public UseNewObjectForNullReferenceMembersAttribute(bool useNewObjectForNullReferenceMembers)
+		public UseNewObjectForNullReferenceMembersAttribute(bool useNewObjectForNullReferenceMembers = true)
 		{
 			UseNewObjectForNullReferenceMembers = useNewObjectForNullReferenceMembers;
 		}

@@ -11,6 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// <summary>
 	/// Gets the characters that are used for injection attacks.
 	/// </summary>
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class InjectionCharactersAttribute : Attribute, IClassMapper
 	{
 		/// <summary>

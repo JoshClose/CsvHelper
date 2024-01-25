@@ -8,7 +8,7 @@ namespace CsvHelper.Configuration.Attributes
 {
 	/// <summary>
 	/// A value indicating whether changes in the column
-	/// count should be detected. If true, a <see cref="BadDataException"/>
+	/// count should be detected. If <see langword="true"/>, a <see cref="BadDataException"/>
 	/// will be thrown if a different column count is detected.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
@@ -16,17 +16,17 @@ namespace CsvHelper.Configuration.Attributes
 	{
 		/// <summary>
 		/// A value indicating whether changes in the column
-		/// count should be detected. If true, a <see cref="BadDataException"/>
+		/// count should be detected. If <see langword="true"/>, a <see cref="BadDataException"/>
 		/// will be thrown if a different column count is detected.
 		/// </summary>
 		public bool DetectColumnCountChanges { get; private set; }
 
 		/// <summary>
 		/// A value indicating whether changes in the column
-		/// count should be detected. If true, a <see cref="BadDataException"/>
+		/// count should be detected. If <see langword="true"/>, a <see cref="BadDataException"/>
 		/// will be thrown if a different column count is detected.
 		/// </summary>
-		public DetectColumnCountChangesAttribute(bool detectColumnCountChanges)
+		public DetectColumnCountChangesAttribute(bool detectColumnCountChanges = true)
 		{
 			DetectColumnCountChanges = detectColumnCountChanges;
 		}
