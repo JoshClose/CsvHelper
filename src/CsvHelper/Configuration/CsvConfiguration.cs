@@ -39,7 +39,7 @@ namespace CsvHelper.Configuration
 		public virtual bool CountBytes { get; set; }
 
 		/// <inheritdoc/>
-		public virtual CultureInfo CultureInfo { get; internal set; }
+		public virtual CultureInfo CultureInfo { get; protected internal set; }
 
 		/// <inheritdoc/>
 		public virtual string Delimiter { get; set; }
@@ -51,7 +51,7 @@ namespace CsvHelper.Configuration
 		public virtual GetDelimiter GetDelimiter { get; set; } = ConfigurationFunctions.GetDelimiter;
 
 		/// <inheritdoc/>
-		public virtual string[] DetectDelimiterValues { get; set; } = new[] { ",", ";", "|", "\t" };
+		public virtual string[] DetectDelimiterValues { get; set; } = [",", ";", "|", "\t"];
 
 		/// <inheritdoc/>
 		public virtual bool DetectColumnCountChanges { get; set; }
@@ -90,7 +90,7 @@ namespace CsvHelper.Configuration
 		public virtual bool IncludePrivateMembers { get; set; }
 
 		/// <inheritdoc/>
-		public virtual char[] InjectionCharacters { get; set; } = new[] { '=', '@', '+', '-', '\t', '\r' };
+		public virtual char[] InjectionCharacters { get; set; } = ['=', '@', '+', '-', '\t', '\r'];
 
 		/// <inheritdoc/>
 		public virtual char InjectionEscapeCharacter { get; set; } = '\'';
@@ -158,7 +158,7 @@ namespace CsvHelper.Configuration
 		public virtual bool UseNewObjectForNullReferenceMembers { get; set; } = true;
 
 		/// <inheritdoc/>
-		public virtual char[] WhiteSpaceChars { get; set; } = new char[] { ' ' };
+		public virtual char[] WhiteSpaceChars { get; set; } = [' '];
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CsvConfiguration"/> class
@@ -303,7 +303,7 @@ namespace CsvHelper.Configuration
 			var cultureInfoAttribute = (CultureInfoAttribute)Attribute.GetCustomAttribute(type, typeof(CultureInfoAttribute));
 			if (cultureInfoAttribute == null)
 			{
-				throw new ConfigurationException($"A CultureInfoAttribute is required on type '{type.Name}' to use this method.");
+				throw new ConfigurationException($"A {nameof(CultureInfoAttribute)} is required on type '{type.Name}' to use this method.");
 			}
 
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
