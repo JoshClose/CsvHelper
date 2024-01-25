@@ -14,7 +14,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// returned by <see cref="CsvConfiguration.FromType{T}()"/>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-	public class CultureInfoAttribute : Attribute, IMemberMapper, IParameterMapper
+	public class CultureInfoAttribute : Attribute, IClassMapper, IMemberMapper, IParameterMapper
 	{
 		/// <summary>
 		/// Gets the culture info.
@@ -47,6 +47,12 @@ namespace CsvHelper.Configuration.Attributes
 					CultureInfo = CultureInfo.GetCultureInfo(name);
 					break;
 			}
+		}
+
+		/// <inheritdoc />
+		public void ApplyTo(CsvConfiguration configuration)
+		{
+			configuration.CultureInfo = CultureInfo;
 		}
 
 		/// <inheritdoc />

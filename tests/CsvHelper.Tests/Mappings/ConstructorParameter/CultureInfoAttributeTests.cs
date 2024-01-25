@@ -5,22 +5,22 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using CsvHelper.Tests.Mocks;
-using Xunit;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System;
+using Xunit;
 
 namespace CsvHelper.Tests.Mappings.ConstructorParameter
 {
-	
-    public class CultureInfoAttributeTests
-    {
+
+	public class CultureInfoAttributeTests
+	{
 		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresParameterMaps()
-		{			
+		{
 			var config = CsvConfiguration.FromType<Foo>();
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo>();
@@ -43,7 +43,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			Assert.Null(map.MemberMaps[0].Data.TypeConverterOptions.CultureInfo);
 			Assert.Equal(new CultureInfo("fr-FR"), map.MemberMaps[1].Data.TypeConverterOptions.CultureInfo);
 			Assert.Equal(CultureInfo.InvariantCulture, map.MemberMaps[2].Data.TypeConverterOptions.CultureInfo);
-			Assert.Equal(new CultureInfo("ps-AF"), map.MemberMaps[3].Data.TypeConverterOptions.CultureInfo);
+			Assert.Equal(new CultureInfo("ar"), map.MemberMaps[3].Data.TypeConverterOptions.CultureInfo);
 			Assert.Equal(new CultureInfo("en-GB"), context.Configuration.CultureInfo);
 		}
 
@@ -102,13 +102,15 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			};
 
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, CultureInfo.GetCultureInfo("en-GB")))
+			using (var csv = new CsvWriter(writer, CsvConfiguration.FromType<Foo2>()))
 			{
 				csv.WriteRecords(records);
 
 				var expected = new StringBuilder();
 				expected.Append("Id,Amount1,Amount2,Amount3\r\n");
-				expected.Append("1,\"1,234\",1.234,1٫234\r\n");
+
+				var arThousands = (1.2).ToString(CultureInfo.GetCultureInfo("ar"))[1];
+				expected.Append($"1,\"1,234\",1.234,1{arThousands}234\r\n");
 
 				Assert.Equal(expected.ToString(), writer.ToString());
 			}
@@ -142,7 +144,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			[CultureInfo(nameof(CultureInfo.InvariantCulture))]
 			public decimal Amount2 { get; set; }
 
-			[CultureInfo("ps-AF")] // Pashto (Afghanistan) uses U+066B ARABIC DECIMAL SEPARATOR (٫ instead of ,)
+			[CultureInfo("ar")]
 			public decimal Amount3 { get; set; }
 		}
 
