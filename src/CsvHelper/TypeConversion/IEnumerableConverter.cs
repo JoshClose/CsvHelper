@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -21,7 +21,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row"></param>
 		/// <param name="memberMapData"></param>
 		/// <returns>The string representation of the object.</returns>
-		public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
 			var list = value as IEnumerable;
 			if (list == null)
@@ -44,7 +44,7 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var list = new List<string>();
 

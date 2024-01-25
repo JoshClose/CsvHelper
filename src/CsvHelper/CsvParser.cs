@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -74,7 +74,7 @@ namespace CsvHelper
 		private bool fieldIsQuoted;
 		private bool isProcessingField;
 		private bool isRecordProcessed;
-		private string[]? record;
+		private string[] record;
 
 		/// <inheritdoc/>
 		public long CharCount => charCount;
@@ -86,7 +86,7 @@ namespace CsvHelper
 		public int Row => row;
 
 		/// <inheritdoc/>
-		public string[]? Record
+		public string[] Record
 		{
 			get
 			{
@@ -836,7 +836,13 @@ namespace CsvHelper
 			return value;
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Processes a field that complies with RFC4180.
+		/// </summary>
+		/// <param name="start">The start index of the field.</param>
+		/// <param name="length">The length of the field.</param>
+		/// <param name="quoteCount">The number of counted quotes.</param>
+		/// <returns>The processed field.</returns>
 		protected ProcessedField ProcessRFC4180Field(int start, int length, int quoteCount)
 		{
 			var newStart = start;
@@ -924,7 +930,12 @@ namespace CsvHelper
 			return new ProcessedField(0, position, processFieldBuffer);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Processes a field that does not comply with RFC4180.
+		/// </summary>
+		/// <param name="start">The start index of the field.</param>
+		/// <param name="length">The length of the field.</param>
+		/// <returns>The processed field.</returns>
 		protected ProcessedField ProcessRFC4180BadField(int start, int length)
 		{
 			// If field is already known to be bad, different rules can be applied.
@@ -1003,7 +1014,12 @@ namespace CsvHelper
 			return new ProcessedField(0, position, processFieldBuffer);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Processes an escaped field.
+		/// </summary>
+		/// <param name="start">The start index of the field.</param>
+		/// <param name="length">The length of the field.</param>
+		/// <returns>The processed field.</returns>
 		protected ProcessedField ProcessEscapeField(int start, int length)
 		{
 			var newStart = start;
@@ -1050,6 +1066,12 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc/>
+		/// <summary>
+		/// Processes an non-escaped field.
+		/// </summary>
+		/// <param name="start">The start index of the field.</param>
+		/// <param name="length">The length of the field.</param>
+		/// <returns>The processed field.</returns>
 		protected ProcessedField ProcessNoEscapeField(int start, int length)
 		{
 			var newStart = start;
@@ -1071,7 +1093,10 @@ namespace CsvHelper
 			GC.SuppressFinalize(this);
 		}
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Disposes the object.
+		/// </summary>
+		/// <param name="disposing">Indicates if the object is being disposed.</param>
 		protected virtual void Dispose(bool disposing)
 		{
 			if (disposed)

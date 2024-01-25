@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -18,7 +18,7 @@ namespace CsvHelper.Configuration
 		/// <summary>
 		/// Creates a new <see cref="MemberMap"/> instance using the specified member.
 		/// </summary>
-		public MemberMap(MemberInfo? member)
+		public MemberMap(MemberInfo member)
 		{
 			TypeConverterOption = new MemberMapTypeConverterOption(this);
 
@@ -146,7 +146,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual MemberMap<TClass, TMember> Constant(TMember? constantValue)
+		public virtual MemberMap<TClass, TMember> Constant(TMember constantValue)
 		{
 			Data.Constant = constantValue;
 			Data.IsConstantSet = true;

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -70,7 +70,6 @@ namespace CsvHelper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int GetConstructorCacheKey(Type type, Type[] args)
 		{
-#if !NET45
 			var hashCode = new HashCode();
 			hashCode.Add(type.GetHashCode());
 			for (var i = 0; i < args.Length; i++)
@@ -79,19 +78,6 @@ namespace CsvHelper
 			}
 
 			return hashCode.ToHashCode();
-#else
-			unchecked
-			{
-				var hash = 17;
-				hash = hash * 31 + type.GetHashCode();
-				for (var i = 0; i < args.Length; i++)
-				{
-					hash = hash * 31 + (args[i].GetHashCode());
-				}
-
-				return hash;
-			}
-#endif
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

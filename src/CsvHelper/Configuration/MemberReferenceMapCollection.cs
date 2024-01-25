@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -136,7 +136,7 @@ namespace CsvHelper.Configuration
 		/// <typeparam name="T">The <see cref="System.Type"/> the member is on.</typeparam>
 		/// <param name="expression">The member expression.</param>
 		/// <returns>The <see cref="MemberReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual MemberReferenceMap? Find<T>(Expression<Func<T, object>> expression)
+		public virtual MemberReferenceMap Find<T>(Expression<Func<T, object>> expression)
 		{
 			var member = ReflectionHelper.GetMember(expression);
 			return Find(member);
@@ -147,7 +147,7 @@ namespace CsvHelper.Configuration
 		/// </summary>
 		/// <param name="member">The member.</param>
 		/// <returns>The <see cref="MemberReferenceMap"/> for the given expression, or null if not found.</returns>
-		public virtual MemberReferenceMap? Find(MemberInfo member)
+		public virtual MemberReferenceMap Find(MemberInfo member)
 		{
 			var existingMap = list.SingleOrDefault(m =>
 				m.Data.Member == member ||

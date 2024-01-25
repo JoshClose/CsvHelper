@@ -1,5 +1,77 @@
 ﻿# Change Log
 
+### 30.0.3
+
+#### Bug Fixes
+
+- Fixed issue with .NET 7/8 not having support for DateOnly and TimeOnly.
+
+### 30.0.1
+
+#### Bug Fixes
+
+- Fixed issue when writing with the escape char not being escaped if it was different than the quote char.
+- Fixed issue with `CsvWriter` not passing `leavOpen` parameter to other constructor call.
+- Fixed issue with TypeConverter being assigned to a member that has a Convert expression assigned to it.
+
+### 30.0.0
+
+#### Features
+
+- Added `Field` and `RawRecord` to `BadDataException`.
+- Pass `IWriterConfiguration` into `CsvWriter` constructor instead of `CsvConfiguration`.
+- Allow inherited header prefixes.
+- Allow mapping to dynamic properties.
+- Added `MemberName` to the type converter exception message.
+- Added `MaxFieldSize` configuration. If max size is set and the size is reached, `MaxFieldSizeException` is thrown.
+- Added class level attribute capability.  
+  New Attributes:
+  - `BufferSizeAttribute`
+  - `CacheFieldsAttribute`
+  - `CommentAttribute`
+  - `CountBytesAttribute`
+  - `DelimiterAttribute`
+  - `DetectColumnCountChangesAttribute`
+  - `DetectDelimiterAttribute`
+  - `DetectDelimiterValueAttribute`
+  - `EncodingAttribute`
+  - `EscapeAttribute`
+  - `ExceptionMessagesContainRawDataAttribute`
+  - `HasHeaderRecordAttribute`
+  - `IgnoreBlankLinesAttribute`
+  - `IgnoreReferencesAttribute`
+  - `IncludePrivateMembersAttribute`
+  - `InjectionCharactersAttribute`
+  - `InjectionEscapeCharacterAttribute`
+  - `InjectionOptionsAttribute`
+  - `LineBreakInQuotedFieldIsBadDataAttribute`
+  - `MaxFieldSizeAttribute`
+  - `ModeAttribute`
+  - `NewLineAttribute`
+  - `ProcessFieldAttribute`
+  - `QuoteAttribute`
+  - `TrimOptionsAttribute`
+  - `UseNewObjectForNullReferenceMembersAttribute`
+  - `WhiteSpaceCharsAttribute`
+- Added `params object[] constructorArgs` to `TypeConverterAttribute`.
+- Added validation message expression to `Validate` mapping.
+- Added `IReaderRow` to `ValidateArgs`.
+- Relax `Default` and `Constant` type constraints to `IsAssignableFrom`.
+
+#### Bug Fixes
+
+- Added `null` check in `WriteRecords`.
+- Fixed interpolation in exception message.
+- Fixed constructor mapping issue where parameter has a type converter but would still try and use constructor mapping. 
+
+#### Breaking Changes
+
+- Added `string field` and `string rawRecord` to `BadDataException` constructor.
+- Added `double MaxFieldSize { get; }` to `IParserConfiguration`.
+- Added `bool LeaveOpen { get; }` to `IWriterConfiguration`.
+- Added `bool LeaveOpen { get; }` to `IParserConfiguration`.
+- Added `IReaderRow row` to `ValidateArgs` constructor.
+
 ### 29.0.0
 
 #### Features

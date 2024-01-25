@@ -3,6 +3,8 @@
 [![Join the chat at https://gitter.im/CsvHelper/Lobby](https://badges.gitter.im/CsvHelper/Lobby.svg)](https://gitter.im/CsvHelper/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Backers on Open Collective](https://opencollective.com/csvhelper/backers/badge.svg)](#backers)
 [![Sponsors on Open Collective](https://opencollective.com/csvhelper/sponsors/badge.svg)](#sponsors) 
+<a href="https://www.nuget.org/packages/CsvHelper"><img src="https://img.shields.io/nuget/v/CsvHelper.svg" alt="NuGet Version" /></a> 
+<a href="https://www.nuget.org/packages/CsvHelper"><img src="https://img.shields.io/nuget/dt/CsvHelper.svg" alt="NuGet Download Count" /></a>
 
 A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.
 

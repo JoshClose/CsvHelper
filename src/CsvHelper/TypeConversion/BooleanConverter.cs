@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -14,7 +14,7 @@ namespace CsvHelper.TypeConversion
 	public class BooleanConverter : DefaultTypeConverter
 	{
 		/// <inheritdoc/>
-		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			if (bool.TryParse(text, out var b))
 			{
@@ -54,7 +54,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
 			var b = value as bool?;
 			if (b == true && memberMapData.TypeConverterOptions.BooleanTrueValues.Count > 0)

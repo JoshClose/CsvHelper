@@ -8,7 +8,7 @@
 
 		<!-- Build -->
 		<AssemblyName>CsvHelper</AssemblyName>
-		<TargetFrameworks>net6.0;net5.0;netstandard2.1;netstandard2.0;net47;net45</TargetFrameworks>
+		<TargetFrameworks>net8.0;net7.0;net6.0;netstandard2.1;netstandard2.0;net48;net47;net462</TargetFrameworks>
 		<!--<TargetFrameworks>net60</TargetFrameworks>-->
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>CsvHelper</RootNamespace>
@@ -48,15 +48,26 @@
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<!-- .NET 4.5 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+	<!-- .NET 4.6.2 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
 		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.ValueTuple" Version="4.3.0" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
 
 	<!-- .NET 4.7 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="System.Memory" Version="4.5.0" />
+		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
+	</ItemGroup>
+
+	<!-- .NET 4.8 -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
 		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />

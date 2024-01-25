@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -71,7 +71,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase ?? false;
 
@@ -86,16 +86,7 @@ namespace CsvHelper.TypeConversion
 				}
 			}
 
-#if NET45 || NET47 || NETSTANDARD2_0
-			try
-			{
-				return Enum.Parse(type, text, ignoreCase);
-			}
-			catch
-			{
-				return base.ConvertFromString(text, row, memberMapData);
-			}
-#else
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 			if (Enum.TryParse(type, text, ignoreCase, out var value))
 			{
 				return value;
@@ -104,11 +95,20 @@ namespace CsvHelper.TypeConversion
 			{
 				return base.ConvertFromString(text, row, memberMapData);
 			}
+#else
+			try
+			{
+				return Enum.Parse(type, text, ignoreCase);
+			}
+			catch
+			{
+				return base.ConvertFromString(text, row, memberMapData);
+			}
 #endif
 		}
 
 		/// <inheritdoc/>
-		public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
 		{
 			if (value != null && attributeNamesByEnumValues.TryGetValue(value, out var name))
 			{

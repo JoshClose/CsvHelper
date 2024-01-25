@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -281,6 +281,27 @@ namespace CsvHelper.Tests.Parsing
 				Assert.Equal("1", parser[0]);
 				Assert.Equal("one", parser[1]);
 			}
+		}
+
+		[Fact]
+		public void GetDelimiter_TextHasEmptyLines_DetectsDelimiter()
+		{
+			// Issue #2170
+			var s = new StringBuilder();
+			s.AppendLine("A;B;C;D");
+			s.AppendLine("1;2;3;4");
+			s.AppendLine("");
+			s.AppendLine("1;2;3;4");
+			s.AppendLine("1;2;3;4");
+			s.AppendLine("");
+			s.AppendLine("");
+			s.AppendLine("");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectDelimiter = true,
+			};
+			var delimeter = ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config));
+			Assert.Equal(";", delimeter);
 		}
 	}
 }

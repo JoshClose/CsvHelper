@@ -354,9 +354,29 @@
 
 		<li>
 	<span>
+			<a class="expander"></a>
 
 		<a href="/CsvHelper/examples/type-conversion">Type Conversion</a>
 	</span>
+
+		<ul class="is-hidden">
+		<li>
+	<span>
+
+		<a href="/CsvHelper/examples/type-conversion/type-converter-options">Type Converter Options</a>
+	</span>
+
+</li>
+
+		<li>
+	<span>
+
+		<a href="/CsvHelper/examples/type-conversion/custom-type-converter">Custom Type Converters</a>
+	</span>
+
+</li>
+
+</ul>
 
 </li>
 
@@ -419,7 +439,7 @@ public class FooMap : ClassMap&lt;Foo&gt;
     {
         Map(m =&gt; m.Id);
         Map(m =&gt; m.Name);
-        Map(m =&gt; m.Json).Convert(row =&gt; JsonConvert.DeserializeObject&lt;Json&gt;(row.GetField(&quot;Json&quot;)));
+        Map(m =&gt; m.Json).Convert(args =&gt; JsonConvert.DeserializeObject&lt;Json&gt;(args.Row.GetField(&quot;Json&quot;)));
     }
 }
 </code></pre>
@@ -460,7 +480,7 @@ public class FooMap : ClassMap&lt;Foo&gt;
 	{
 		Map(m =&gt; m.Id);
 		Map(m =&gt; m.Name);
-		Map(m =&gt; m.Json).Convert(o =&gt; JsonConvert.SerializeObject(o));
+		Map(m =&gt; m.Json).Convert(args =&gt; JsonConvert.SerializeObject(args.Row));
 	}
 }
 </code></pre>
@@ -477,7 +497,7 @@ public class FooMap : ClassMap&lt;Foo&gt;
 	<br /><br />
 
 	<footer id="footer" class="footer">
-	<div class="has-text-centered">&copy; 2009-2021 Josh Close</div>
+	<div class="has-text-centered">&copy; 2009-2022 Josh Close</div>
 </footer>
 
 

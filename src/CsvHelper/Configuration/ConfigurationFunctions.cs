@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -35,10 +35,7 @@ namespace CsvHelper.Configuration
 
 			if (args.Context.Reader.HeaderRecord != null)
 			{
-				foreach (var header in args.Context.Reader.HeaderRecord)
-				{
-					errorMessage.AppendLine($"Headers: '{string.Join("', '", args.Context.Reader.HeaderRecord)}'");
-				}
+				errorMessage.AppendLine($"Headers: '{string.Join("', '", args.Context.Reader.HeaderRecord)}'");
 			}
 
 			var messagePostfix =
@@ -102,15 +99,16 @@ namespace CsvHelper.Configuration
 		public static bool ShouldQuote(ShouldQuoteArgs args)
 		{
 			var config = args.Row.Configuration;
+			var field = args.Field;
 
-			var shouldQuote = !string.IsNullOrEmpty(args.Field) &&
+			var shouldQuote = !string.IsNullOrEmpty(field) &&
 			(
-				args.Field.Contains(config.Quote) // Contains quote
-				|| args.Field[0] == ' ' // Starts with a space
-				|| args.Field[args.Field.Length - 1] == ' ' // Ends with a space
-				|| (config.Delimiter.Length > 0 && args.Field.Contains(config.Delimiter)) // Contains delimiter
-				|| !config.IsNewLineSet && args.Field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
-				|| config.IsNewLineSet && args.Field.Contains(config.NewLine) // Contains newline
+				field[0] == ' ' // Starts with a space
+				|| field[field.Length - 1] == ' ' // Ends with a space
+				|| field.Contains(config.Quote) // Contains quote
+				|| !config.IsNewLineSet && field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
+				|| config.IsNewLineSet && field.Contains(config.NewLine) // Contains newline
+				|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
 			);
 
 			return shouldQuote;
@@ -146,7 +144,7 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Returns the type's constructor with the most parameters. 
+		/// Returns the type's constructor with the most parameters.
 		/// If two constructors have the same number of parameters, then
 		/// there is no guarantee which one will be returned. If you have
 		/// that situation, you should probably implement this function yourself.
@@ -180,7 +178,7 @@ namespace CsvHelper.Configuration
 		/// Return the detected delimiter or null if one wasn't found.
 		/// </summary>
 		/// <param name="args">The args.</param>
-		public static string? GetDelimiter(GetDelimiterArgs args)
+		public static string GetDelimiter(GetDelimiterArgs args)
 		{
 			var text = args.Text;
 			var config = args.Configuration;
@@ -207,17 +205,20 @@ namespace CsvHelper.Configuration
 			{
 				// Since all escaped text has been removed, we can reliably read line by line.
 				var match = Regex.Match(text, newLine);
-				var line = match.Success ? text.Substring(0, match.Index + match.Length) : text;
+				var line = match.Success ? text.Substring(0, match.Index) : text;
 
-				var delimiterCounts = new Dictionary<string, int>();
-				foreach (var delimiter in config.DetectDelimiterValues)
+				if (line.Length > 0)
 				{
-					// Escape regex special chars to use as regex pattern.
-					var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
-					delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
-				}
+					var delimiterCounts = new Dictionary<string, int>();
+					foreach (var delimiter in config.DetectDelimiterValues)
+					{
+						// Escape regex special chars to use as regex pattern.
+						var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
+						delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
+					}
 
-				lineDelimiterCounts.Add(delimiterCounts);
+					lineDelimiterCounts.Add(delimiterCounts);
+				}
 
 				text = match.Success ? text.Substring(match.Index + match.Length) : string.Empty;
 			}
@@ -244,7 +245,7 @@ namespace CsvHelper.Configuration
 				}
 			).ToList();
 
-			string? newDelimiter = null;
+			string newDelimiter = null;
 			if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
 			{
 				// The culture's separator is on every line. Assume this is the delimiter.

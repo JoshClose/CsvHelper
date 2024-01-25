@@ -354,9 +354,29 @@
 
 		<li>
 	<span>
+			<a class="expander"></a>
 
 		<a href="/CsvHelper/examples/type-conversion">Type Conversion</a>
 	</span>
+
+		<ul class="is-hidden">
+		<li>
+	<span>
+
+		<a href="/CsvHelper/examples/type-conversion/type-converter-options">Type Converter Options</a>
+	</span>
+
+</li>
+
+		<li>
+	<span>
+
+		<a href="/CsvHelper/examples/type-conversion/custom-type-converter">Custom Type Converters</a>
+	</span>
+
+</li>
+
+</ul>
 
 </li>
 
@@ -385,7 +405,7 @@
 					<div class="content">
 						<h1 id="type-conversion">Type Conversion</h1>
 <p>When reading and writing a custom class will get converted to and from
-a CSV row. Each CSV field can be converted to and from a class property.
+a CSV row. Each CSV field can be converted to and from a class property.<br />
 This conversion for class properties is done via type converters.</p>
 <p>There are many built in converters already available to you.</p>
 <table>
@@ -430,7 +450,7 @@ This conversion for class properties is done via type converters.</p>
 <tr>
 <td>CollectionGenericConverter</td>
 <td></td>
-<td>System.Collections.IList</td>
+<td>System.Collections.Generic.Collection&lt;T&gt;, System.Collections.Generic.List&lt;T&gt;</td>
 </tr>
 <tr>
 <td>DateOnlyConverter</td>
@@ -475,12 +495,17 @@ This conversion for class properties is done via type converters.</p>
 <tr>
 <td>IDictionaryGenericConverter</td>
 <td></td>
-<td>System.Collections.GenericDictionary&lt;TKey, TValue&gt;</td>
+<td>System.Collections.Generic.Dictionary&lt;TKey, TValue&gt;</td>
 </tr>
 <tr>
 <td>IEnumerableConverter</td>
 <td></td>
-<td>System.Collections.Generic.List&lt;string&gt;</td>
+<td>System.Collections.ICollection, System.Collections.IEnumerable, System.Collections.IList</td>
+</tr>
+<tr>
+<td>IEnumerableGenericConverter</td>
+<td></td>
+<td>System.Collections.Generic.ICollection&lt;T&gt;, System.Collections.Generic.IEnumerable&lt;T&gt;, System.Collections.Generic.IList&lt;T&gt;</td>
 </tr>
 <tr>
 <td>Int16Converter</td>
@@ -553,7 +578,7 @@ This conversion for class properties is done via type converters.</p>
 	<br /><br />
 
 	<footer id="footer" class="footer">
-	<div class="has-text-centered">&copy; 2009-2021 Josh Close</div>
+	<div class="has-text-centered">&copy; 2009-2022 Josh Close</div>
 </footer>
 
 

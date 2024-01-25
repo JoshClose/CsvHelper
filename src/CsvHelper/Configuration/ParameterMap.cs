@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -127,7 +127,7 @@ namespace CsvHelper.Configuration
 		/// the CSV field is empty.
 		/// </summary>
 		/// <param name="defaultValue">The default value.</param>
-		public virtual ParameterMap Default(object? defaultValue)
+		public virtual ParameterMap Default(object defaultValue)
 		{
 			if (defaultValue == null && Data.Parameter.ParameterType.IsValueType)
 			{
@@ -151,7 +151,7 @@ namespace CsvHelper.Configuration
 		/// what other mapping configurations are specified.
 		/// </summary>
 		/// <param name="constantValue">The constant value.</param>
-		public virtual ParameterMap Constant(object? constantValue)
+		public virtual ParameterMap Constant(object constantValue)
 		{
 			if (constantValue == null && Data.Parameter.ParameterType.IsValueType)
 			{

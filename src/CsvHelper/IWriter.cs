@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,7 +15,7 @@ namespace CsvHelper
 	/// Defines methods used to write to a CSV file.
 	/// </summary>
 	public interface IWriter : IWriterRow, IDisposable
-#if !NET45 && !NET47 && !NETSTANDARD2_0
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		, IAsyncDisposable
 #endif
 	{
@@ -73,7 +73,7 @@ namespace CsvHelper
 		/// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default);
 
-#if !NET45
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <summary>
 		/// Writes the list of records to the CSV file.
 		/// </summary>

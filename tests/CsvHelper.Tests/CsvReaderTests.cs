@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -48,6 +48,47 @@ namespace CsvHelper.Tests
 			Assert.Equal(Convert.ToInt32("2"), reader.GetField<int>("Two"));
 			Assert.Equal(Convert.ToInt32("1"), reader.GetField<int>(0));
 			Assert.Equal(Convert.ToInt32("2"), reader.GetField<int>(1));
+		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void ColumnCountTest(bool detectColumnCountChanges)
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectColumnCountChanges = detectColumnCountChanges,
+				ReadingExceptionOccurred = _ => false
+			};
+
+			string csvString = """
+				1
+				1,2
+				1,2,3
+				1,2
+				1
+				""";
+			var reader = new CsvReader(new StringReader(csvString), config);
+
+			Assert.True(reader.Read());
+			Assert.Equal(1, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(2, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(3, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(2, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(1, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
 		}
 
 		[Fact]

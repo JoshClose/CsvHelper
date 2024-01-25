@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -59,7 +59,7 @@ namespace CsvHelper.Configuration
 		public virtual bool DetectColumnCountChanges { get; set; }
 
 		/// <inheritdoc/>
-		public virtual IComparer<string>? DynamicPropertySort { get; set; }
+		public virtual IComparer<string> DynamicPropertySort { get; set; }
 
 		/// <inheritdoc/>
 		public virtual Encoding Encoding { get; set; } = Encoding.UTF8;
@@ -142,13 +142,13 @@ namespace CsvHelper.Configuration
 		public virtual ReadingExceptionOccurred ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 		/// <inheritdoc/>
-		public virtual ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; set; }
+		public virtual ReferenceHeaderPrefix ReferenceHeaderPrefix { get; set; }
 
 		/// <inheritdoc/>
 		public ShouldQuote ShouldQuote { get; set; } = ConfigurationFunctions.ShouldQuote;
 
 		/// <inheritdoc/>
-		public virtual ShouldSkipRecord? ShouldSkipRecord { get; set; }
+		public virtual ShouldSkipRecord ShouldSkipRecord { get; set; }
 
 		/// <inheritdoc/>
 		public virtual ShouldUseConstructorParameters ShouldUseConstructorParameters { get; set; } = ConfigurationFunctions.ShouldUseConstructorParameters;
@@ -171,7 +171,7 @@ namespace CsvHelper.Configuration
 		/// <param name="cultureInfo">The culture information.</param>
 		/// <param name="attributesType">The type that contains the configuration attributes.
 		/// This will call <see cref="ApplyAttributes(Type)"/> automatically.</param>
-		public CsvConfiguration(CultureInfo cultureInfo, Type? attributesType = null)
+		public CsvConfiguration(CultureInfo cultureInfo, Type attributesType = null)
 		{
 			CultureInfo = cultureInfo;
 			Delimiter = cultureInfo.TextInfo.ListSeparator;

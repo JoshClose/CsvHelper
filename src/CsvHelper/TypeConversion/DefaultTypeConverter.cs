@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -14,7 +14,7 @@ namespace CsvHelper.TypeConversion
     public class DefaultTypeConverter : ITypeConverter
     {
 		/// <inheritdoc/>
-		public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		public virtual object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
 			if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member.MemberType() == memberMapData.Default?.GetType())
 			{
@@ -38,7 +38,7 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <inheritdoc/>
-		public virtual string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+		public virtual string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
         {
             if (value == null)
             {

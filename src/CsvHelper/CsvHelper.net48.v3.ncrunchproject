@@ -1,5 +1,5 @@
 ﻿<ProjectConfiguration>
   <Settings>
-    <IgnoreThisComponentCompletely>True</IgnoreThisComponentCompletely>
+    <PreventSigningOfAssembly>True</PreventSigningOfAssembly>
   </Settings>
 </ProjectConfiguration>
