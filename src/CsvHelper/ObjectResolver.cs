@@ -58,14 +58,7 @@ namespace CsvHelper
 		static ObjectResolver()
 		{
 			var objectCreator = new ObjectCreator();
-			var locker = new object();
-			current = new ObjectResolver(type => true, (type, args) =>
-			{
-				lock (locker)
-				{
-					return objectCreator.CreateInstance(type, args);
-				}
-			});
+			current = new ObjectResolver(type => true, objectCreator.CreateInstance);
 		}
 
 		/// <summary>

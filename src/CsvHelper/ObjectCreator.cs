@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,7 +19,7 @@ namespace CsvHelper
 	/// </summary>
 	public class ObjectCreator
     {
-		private readonly Dictionary<int, Func<object[], object>> cache = new Dictionary<int, Func<object[], object>>();
+		private readonly ConcurrentDictionary<int, Func<object[], object>> cache = new ConcurrentDictionary<int, Func<object[], object>>();
 
 		/// <summary>
 		/// Creates an instance of type T using the given arguments.
@@ -47,10 +48,7 @@ namespace CsvHelper
 		{
 			var argTypes = GetArgTypes(args);
 			var key = GetConstructorCacheKey(type, argTypes);
-			if (!cache.TryGetValue(key, out var func))
-			{
-				cache[key] = func = CreateInstanceFunc(type, argTypes);
-			}
+			var func = cache.GetOrAdd(key, _ => CreateInstanceFunc(type, argTypes));
 
 			return func;
 		}
