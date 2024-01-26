@@ -803,16 +803,20 @@ namespace CsvHelper
 
 		private bool WriteHeader(IEnumerable records)
 		{
-			object record = null;
+			if (!hasHeaderRecord || hasHeaderBeenWritten)
+			{
+				return false;
+			}
+
 			foreach (var r in records)
 			{
 				if (r != null)
 				{
-					record = r;
+					return WriteHeader(r);
 				}
 			}
 
-			return WriteHeader(record);
+			return false;
 		}
 
 		private bool WriteHeader(object record)
