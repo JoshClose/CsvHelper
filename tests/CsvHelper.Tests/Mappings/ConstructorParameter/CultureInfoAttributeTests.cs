@@ -21,7 +21,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresParameterMaps()
 		{
-			var config = CsvConfiguration.FromType<Foo>();
+			var config = CsvConfiguration.FromAttributes<Foo>();
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo>();
 
@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		[Fact]
 		public void AutoMap_WithCultureInfoAttributes_ConfiguresMemberMaps()
 		{
-			var config = CsvConfiguration.FromType<Foo2>();
+			var config = CsvConfiguration.FromAttributes<Foo2>();
 			var context = new CsvContext(config);
 			var map = context.AutoMap<Foo2>();
 
@@ -102,7 +102,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			};
 
 			using (var writer = new StringWriter())
-			using (var csv = new CsvWriter(writer, CsvConfiguration.FromType<Foo2>()))
+			using (var csv = new CsvWriter(writer, CsvConfiguration.FromAttributes<Foo2>()))
 			{
 				csv.WriteRecords(records);
 
@@ -154,37 +154,37 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			// First just validate we have an attribute to ignore
 			Assert.Equal(new CultureInfo("en-GB"), ((CultureInfoAttribute)System.Attribute.GetCustomAttribute(typeof(Foo2), typeof(CultureInfoAttribute))).CultureInfo);
 
-			Assert.Equal(new CultureInfo("es-ES"), CsvConfiguration.FromType<Foo2>(CultureInfo.GetCultureInfo("es-ES")).CultureInfo);
+			Assert.Equal(new CultureInfo("es-ES"), CsvConfiguration.FromAttributes<Foo2>(CultureInfo.GetCultureInfo("es-ES")).CultureInfo);
 		}
 
 		[Fact]
 		public void CsvConfiguration_FromType_NoAttribute_ThrowsConfigurationException()
 		{
-			Assert.Throws<ConfigurationException>(CsvConfiguration.FromType<NoAttribute>);
+			Assert.Throws<ConfigurationException>(CsvConfiguration.FromAttributes<NoAttribute>);
 		}
 
 		[Fact]
 		public void CsvConfiguration_FromType_NullAttribute_ThrowsArgumentNullException()
 		{
-			Assert.Throws<ArgumentNullException>(CsvConfiguration.FromType<NullAttribute>);
+			Assert.Throws<ArgumentNullException>(CsvConfiguration.FromAttributes<NullAttribute>);
 		}
 
 		[Fact]
 		public void CsvConfiguration_FromType_InvalidAttribute_ThrowsCultureNotFoundException()
 		{
-			Assert.Throws<CultureNotFoundException>(CsvConfiguration.FromType<InvalidAttribute>);
+			Assert.Throws<CultureNotFoundException>(CsvConfiguration.FromAttributes<InvalidAttribute>);
 		}
 
 		[Fact]
 		public void CsvConfiguration_FromType_DerivedNoAttribute_TakesBaseClassValue()
 		{
-			Assert.Equal(new CultureInfo("en-GB"), CsvConfiguration.FromType<Foo2DerivedNoAttribute>().CultureInfo);
+			Assert.Equal(new CultureInfo("en-GB"), CsvConfiguration.FromAttributes<Foo2DerivedNoAttribute>().CultureInfo);
 		}
 
 		[Fact]
 		public void CsvConfiguration_FromType_DerivedWithAttribute_TakesDerviedClassValue()
 		{
-			Assert.Equal(CultureInfo.CurrentCulture, CsvConfiguration.FromType<Foo2DerivedWithAttribute>().CultureInfo);
+			Assert.Equal(CultureInfo.CurrentCulture, CsvConfiguration.FromAttributes<Foo2DerivedWithAttribute>().CultureInfo);
 		}
 
 		private class NoAttribute

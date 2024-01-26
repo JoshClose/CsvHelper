@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void IncludePrivateMembersTest()
 		{
-			Assert.True(CsvConfiguration.FromType<IncludePrivateMembersTrueTestClass>(CultureInfo.InvariantCulture).IncludePrivateMembers);
-			Assert.False(CsvConfiguration.FromType<IncludePrivateMembersFalseTestClass>(CultureInfo.InvariantCulture).IncludePrivateMembers);
+			Assert.True(CsvConfiguration.FromAttributes<IncludePrivateMembersTrueTestClass>(CultureInfo.InvariantCulture).IncludePrivateMembers);
+			Assert.False(CsvConfiguration.FromAttributes<IncludePrivateMembersFalseTestClass>(CultureInfo.InvariantCulture).IncludePrivateMembers);
 		}
 
 		[IncludePrivateMembers]

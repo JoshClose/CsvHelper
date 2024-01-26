@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void IgnoreBlankLinesTest()
 		{
-			Assert.True(CsvConfiguration.FromType<IgnoreBlankLinesTrueTestClass>(CultureInfo.InvariantCulture).IgnoreBlankLines);
-			Assert.False(CsvConfiguration.FromType<IgnoreBlankLinesFalseTestClass>(CultureInfo.InvariantCulture).IgnoreBlankLines);
+			Assert.True(CsvConfiguration.FromAttributes<IgnoreBlankLinesTrueTestClass>(CultureInfo.InvariantCulture).IgnoreBlankLines);
+			Assert.False(CsvConfiguration.FromAttributes<IgnoreBlankLinesFalseTestClass>(CultureInfo.InvariantCulture).IgnoreBlankLines);
 		}
 
 		[IgnoreBlankLines]

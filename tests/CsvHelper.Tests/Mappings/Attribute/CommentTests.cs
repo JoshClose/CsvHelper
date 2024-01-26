@@ -16,7 +16,7 @@ namespace CsvHelper.Tests.AttributeMapping
         [Fact]
         public void CommentTest()
         {
-			var config = CsvConfiguration.FromType<CommentTestClass>(CultureInfo.InvariantCulture);
+			var config = CsvConfiguration.FromAttributes<CommentTestClass>(CultureInfo.InvariantCulture);
             Assert.Equal('x', config.Comment);
         }
 

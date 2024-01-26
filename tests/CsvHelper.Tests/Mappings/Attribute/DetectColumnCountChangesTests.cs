@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).DetectColumnCountChanges);
-			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).DetectColumnCountChanges);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).DetectColumnCountChanges);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).DetectColumnCountChanges);
 		}
 
 		[DetectColumnCountChanges]

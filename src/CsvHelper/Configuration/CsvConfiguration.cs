@@ -264,9 +264,9 @@ namespace CsvHelper.Configuration
 		/// <exception cref="ConfigurationException">If <typeparamref name="T"/> is not annotated with <see cref="CultureInfoAttribute"/>.</exception>
 		/// <exception cref="ArgumentNullException">If the argument to the <see cref="CultureInfoAttribute"/> is <see langword="null"/>.</exception>
 		/// <exception cref="CultureNotFoundException">If the argument to the <see cref="CultureInfoAttribute"/> does not specify a supported culture.</exception>
-		public static CsvConfiguration FromType<T>()
+		public static CsvConfiguration FromAttributes<T>()
 		{
-			return FromType(typeof(T));
+			return FromAttributes(typeof(T));
 		}
 
 		/// <summary>
@@ -274,13 +274,13 @@ namespace CsvHelper.Configuration
 		/// and CsvHelper attributes applied to <typeparamref name="T"/> at the type-level.
 		/// This method ignores any <see cref="CultureInfoAttribute"/> applied to <typeparamref name="T"/>.
 		/// </summary>
-		/// <typeparam name="T"><inheritdoc cref="FromType{T}()"/></typeparam>
+		/// <typeparam name="T"><inheritdoc cref="FromAttributes{T}()"/></typeparam>
 		/// <param name="cultureInfo">The <see cref="CultureInfo"/> to configure the returned <see cref="CsvConfiguration"/> with.</param>
 		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with <paramref name="cultureInfo"/> and attributes applied to <typeparamref name="T"/>.</returns>
-		/// <remarks><inheritdoc cref="FromType{T}()"/></remarks>
-		public static CsvConfiguration FromType<T>(CultureInfo cultureInfo)
+		/// <remarks><inheritdoc cref="FromAttributes{T}()"/></remarks>
+		public static CsvConfiguration FromAttributes<T>(CultureInfo cultureInfo)
 		{
-			return FromType(typeof(T), cultureInfo);
+			return FromAttributes(typeof(T), cultureInfo);
 		}
 
 		/// <summary>
@@ -288,7 +288,7 @@ namespace CsvHelper.Configuration
 		/// to <paramref name="type"/> at the type-level. This method requires <paramref name="type"/> to
 		/// be annotated with <see cref="CultureInfoAttribute"/> (or to sub-class a type which is).
 		/// </summary>
-		/// <param name="type"><inheritdoc cref="FromType{T}()" path="/typeparam"/></param>
+		/// <param name="type"><inheritdoc cref="FromAttributes{T}()" path="/typeparam"/></param>
 		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with attributes applied to <paramref name="type"/>.</returns>
 		/// <remarks>
 		/// CsvHelper attributes applied to members and parameters do not influence the return value of this method.
@@ -298,7 +298,7 @@ namespace CsvHelper.Configuration
 		/// <exception cref="ConfigurationException">If <paramref name="type"/> is not annotated with <see cref="CultureInfoAttribute"/>.</exception>
 		/// <exception cref="ArgumentNullException">If the argument to the <see cref="CultureInfoAttribute"/> is <see langword="null"/>.</exception>
 		/// <exception cref="CultureNotFoundException">If the argument to the <see cref="CultureInfoAttribute"/> does not specify a supported culture.</exception>
-		public static CsvConfiguration FromType(Type type)
+		public static CsvConfiguration FromAttributes(Type type)
 		{
 			var cultureInfoAttribute = (CultureInfoAttribute)Attribute.GetCustomAttribute(type, typeof(CultureInfoAttribute));
 			if (cultureInfoAttribute == null)
@@ -317,11 +317,11 @@ namespace CsvHelper.Configuration
 		/// and CsvHelper attributes applied to <paramref name="type"/> at the type-level.
 		/// This method ignores any <see cref="CultureInfoAttribute"/> applied to <paramref name="type"/>.
 		/// </summary>
-		/// <param name="type"><inheritdoc cref="FromType{T}()" path="/typeparam"/></param>
-		/// <param name="cultureInfo"><inheritdoc cref="FromType{T}(CultureInfo)"/></param>
+		/// <param name="type"><inheritdoc cref="FromAttributes{T}()" path="/typeparam"/></param>
+		/// <param name="cultureInfo"><inheritdoc cref="FromAttributes{T}(CultureInfo)"/></param>
 		/// <returns>A new <see cref="CsvConfiguration"/> instance configured with <paramref name="cultureInfo"/> and attributes applied to <paramref name="type"/></returns>
-		/// <remarks><inheritdoc cref="FromType{T}()"/></remarks>
-		public static CsvConfiguration FromType(Type type, CultureInfo cultureInfo)
+		/// <remarks><inheritdoc cref="FromAttributes{T}()"/></remarks>
+		public static CsvConfiguration FromAttributes(Type type, CultureInfo cultureInfo)
 		{
 			var config = new CsvConfiguration(cultureInfo);
 			config.ApplyAttributes(type);

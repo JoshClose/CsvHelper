@@ -11,7 +11,7 @@ namespace CsvHelper.Configuration.Attributes
 	/// When applied to a member, specifies the <see cref="System.Globalization.CultureInfo"/>
 	/// used when type converting the member. When applied to a type, the value of
 	/// <see cref="CsvConfiguration.CultureInfo"/> in the <see cref="CsvConfiguration"/>
-	/// returned by <see cref="CsvConfiguration.FromType{T}()"/>
+	/// returned by <see cref="CsvConfiguration.FromAttributes{T}()"/>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public class CultureInfoAttribute : Attribute, IClassMapper, IMemberMapper, IParameterMapper

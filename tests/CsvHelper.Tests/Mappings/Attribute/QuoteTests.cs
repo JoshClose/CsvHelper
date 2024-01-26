@@ -14,7 +14,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void QuoteTest()
 		{
-			var config = CsvConfiguration.FromType<QuoteTestClass>(CultureInfo.InvariantCulture);
+			var config = CsvConfiguration.FromAttributes<QuoteTestClass>(CultureInfo.InvariantCulture);
 			Assert.Equal('x', config.Quote);
 		}
 

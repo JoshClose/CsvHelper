@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).ExceptionMessagesContainRawData);
-			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).ExceptionMessagesContainRawData);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).ExceptionMessagesContainRawData);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).ExceptionMessagesContainRawData);
 		}
 
 		[ExceptionMessagesContainRawData]

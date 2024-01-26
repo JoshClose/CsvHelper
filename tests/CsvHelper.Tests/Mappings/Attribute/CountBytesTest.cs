@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).CountBytes);
-			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).CountBytes);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).CountBytes);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).CountBytes);
 		}
 
 		[CountBytes]

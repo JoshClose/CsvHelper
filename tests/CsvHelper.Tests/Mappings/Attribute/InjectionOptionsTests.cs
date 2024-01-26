@@ -19,7 +19,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = CsvConfiguration.FromType<Foo>(CultureInfo.InvariantCulture);
+			var config = CsvConfiguration.FromAttributes<Foo>(CultureInfo.InvariantCulture);
 			Assert.Equal(InjectionOptions.Escape, config.InjectionOptions);
 		}
 

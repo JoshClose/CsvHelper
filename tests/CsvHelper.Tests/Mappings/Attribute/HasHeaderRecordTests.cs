@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void HasHeaderRecordTest()
 		{
-			Assert.True(CsvConfiguration.FromType<HasHeaderRecordTrueTestClass>(CultureInfo.InvariantCulture).HasHeaderRecord);
-			Assert.False(CsvConfiguration.FromType<HasHeaderRecordFalseTestClass>(CultureInfo.InvariantCulture).HasHeaderRecord);
+			Assert.True(CsvConfiguration.FromAttributes<HasHeaderRecordTrueTestClass>(CultureInfo.InvariantCulture).HasHeaderRecord);
+			Assert.False(CsvConfiguration.FromAttributes<HasHeaderRecordFalseTestClass>(CultureInfo.InvariantCulture).HasHeaderRecord);
 		}
 
 		[HasHeaderRecord]

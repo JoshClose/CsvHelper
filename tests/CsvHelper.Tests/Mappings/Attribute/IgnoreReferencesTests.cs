@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).IgnoreReferences);
-			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).IgnoreReferences);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).IgnoreReferences);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).IgnoreReferences);
 		}
 
 		[IgnoreReferences]

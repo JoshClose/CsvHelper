@@ -14,8 +14,8 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			Assert.True(CsvConfiguration.FromType<FooTrue>(CultureInfo.InvariantCulture).LineBreakInQuotedFieldIsBadData);
-			Assert.False(CsvConfiguration.FromType<FooFalse>(CultureInfo.InvariantCulture).LineBreakInQuotedFieldIsBadData);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).LineBreakInQuotedFieldIsBadData);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).LineBreakInQuotedFieldIsBadData);
 		}
 
 		[LineBreakInQuotedFieldIsBadData]

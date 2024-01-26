@@ -15,8 +15,8 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void EncodingTest()
 		{
-			Assert.Equal(Encoding.ASCII, CsvConfiguration.FromType<EncodingNameTestClass>(CultureInfo.InvariantCulture).Encoding);
-			Assert.Equal(Encoding.ASCII, CsvConfiguration.FromType<EncodingCodepageTestClass>(CultureInfo.InvariantCulture).Encoding);
+			Assert.Equal(Encoding.ASCII, CsvConfiguration.FromAttributes<EncodingNameTestClass>(CultureInfo.InvariantCulture).Encoding);
+			Assert.Equal(Encoding.ASCII, CsvConfiguration.FromAttributes<EncodingCodepageTestClass>(CultureInfo.InvariantCulture).Encoding);
 		}
 
 		[Encoding("ASCII")]
