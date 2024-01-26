@@ -2,22 +2,21 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
-using System.Dynamic;
-using Xunit;
-using System.Threading;
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Globalization;
+using System.IO;
+using System.Threading;
+using Xunit;
+using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 
 namespace CsvHelper.Tests
 {
-	
+
 	public class CsvWriterTests
 	{
 		public CsvWriterTests()

@@ -2,23 +2,22 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
+using CsvHelper.Expressions;
+using CsvHelper.TypeConversion;
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
+using System.Globalization;
 using System.IO;
-using System.Reflection;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Dynamic;
-using System.Threading.Tasks;
-using CsvHelper.Expressions;
-using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Buffers;
 using System.Threading;
+using System.Threading.Tasks;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -795,6 +794,7 @@ namespace CsvHelper
 			if (!isPrimitive && recordType != typeof(object))
 			{
 				WriteHeader(recordType);
+
 				return hasHeaderBeenWritten;
 			}
 
@@ -829,6 +829,7 @@ namespace CsvHelper
 			if (record is IDynamicMetaObjectProvider dynamicObject)
 			{
 				WriteDynamicHeader(dynamicObject);
+
 				return true;
 			}
 
@@ -837,6 +838,7 @@ namespace CsvHelper
 			if (!isPrimitive)
 			{
 				WriteHeader(recordType);
+
 				return true;
 			}
 
