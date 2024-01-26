@@ -406,42 +406,61 @@
 						<h1 id="attributes">Attributes</h1>
 <p>Most of the configuration done via class maps can also be done using attributes.</p>
 <h6 id="data">Data</h6>
-<pre><code>Identifier,name,IsBool,Constant
-1,one,yes,a
-2,two,no,b
+<pre><code>Identifier||Amount2|IsBool|Constant
+1|1,234|1,234|yes|a
+2|1.234|1.234|no|b
 </code></pre>
 <h6 id="example">Example</h6>
 <pre><code class="language-cs">void Main()
 {
+	CsvConfiguration config = CsvConfiguration.FromType&lt;Foo&gt;();
 	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
-	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+	using (var csv = new CsvReader(reader, config))
 	{
-		csv.GetRecords&lt;Foo&gt;().ToList().Dump();
+		List&lt;Foo&gt; records = csv.GetRecords&lt;Foo&gt;().ToList();
+
+		// These all print &quot;True&quot;
+
+		Console.WriteLine(records.Count == 2);
+		Console.WriteLine(records[0].Id == 1);
+		Console.WriteLine(records[0].Amount == 1.234m);
+		Console.WriteLine(records[0].Amount2 == 1234);
+		Console.WriteLine(records[0].IsBool == true);
+		Console.WriteLine(records[0].Constant == &quot;bar&quot;);
+		Console.WriteLine(records[0].Optional == null);
+		Console.WriteLine(records[0].Ignored == null);
+
+		Console.WriteLine(records[1].Amount == 1234);
+		Console.WriteLine(records[1].Amount2 == 1.234m);
+
 	}
 }
 
-[Delimiter(&quot;,&quot;)]
-[CultureInfo(&quot;&quot;)]  // Set CultureInfo to InvariantCulture
+[Delimiter(&quot;|&quot;)]
+[CultureInfo(&quot;de-DE&quot;)]
 public class Foo
 {
 	[Name(&quot;Identifier&quot;)]
 	public int Id { get; set; }
-	
+
 	[Index(1)]
-	public string Name { get; set; }
+	public decimal Amount { get; set; }
 	
+	[CultureInfo(&quot;InvariantCulture&quot;)]
+	public decimal Amount2 { get; set; }
+
 	[BooleanTrueValues(&quot;yes&quot;)]
 	[BooleanFalseValues(&quot;no&quot;)]
 	public bool IsBool { get; set; }
-	
+
 	[Constant(&quot;bar&quot;)]
 	public string Constant { get; set; }
-	
+
 	[Optional]
 	public string Optional { get; set; }
-	
+
 	[Ignore]
-	public string Ignored { get; set; }	
+	public string Ignored { get; set; }
 }
 
 </code></pre>

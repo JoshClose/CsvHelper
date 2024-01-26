@@ -1,5 +1,25 @@
 ﻿# Change Log
 
+### 30.1.0
+
+#### Features
+
+- Added `static CsvConfiguration.WithAttributes` method to create a new configuration with attributes applied.
+- Boolean attributes have empty overload that default to true.
+- `ShouldQuote` optimizations.
+
+#### Bug Fixes
+
+- Fixed issue with quotes at end of line getting ignore when `LineBreakInQuotedFieldIsBadData` is enabled.
+- Fixed issue where calling `Convert` on empty `Map()` would throw an exception.
+- Fixed issue where writing with `HasHeaderRecord` set to false was writing a header record.
+- Fixed issue where exception `This Operation is only valid on generic types` was being thrown.
+- Fixed issue where `CsvDataReader` couldn't be used if lines were read manually ahead of time.
+- Fixed issue where `CsvDataReader` wasn't working when `HasHeaderRecord` was false.
+- Fixed issue where `CsvReader.ColumnCount` did not match `CsvParser.Count`.
+- Fixed issue where `GetDlimiter` was not detecting the correct delimiter when there are blank lines.
+- Fixed issue where header validation was outputing error message for each field when it only needed to once.
+
 ### 30.0.3
 
 #### Bug Fixes
