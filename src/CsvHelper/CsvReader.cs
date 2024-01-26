@@ -1019,7 +1019,6 @@ namespace CsvHelper
 			}
 		}
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <inheritdoc/>
 		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default(CancellationToken))
 		{
@@ -1211,7 +1210,6 @@ namespace CsvHelper
 				yield return record;
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Gets the index of the field with the given name.

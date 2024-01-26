@@ -77,7 +77,6 @@ namespace CsvHelper
 		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
 		IEnumerable<T> EnumerateRecords<T>(T record);
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 		/// <summary>
 		/// Gets all the records in the CSV file and
 		/// converts each to <see cref="Type"/> T. The Read method
@@ -121,6 +120,5 @@ namespace CsvHelper
 		/// /// <param name="cancellationToken">The cancellation token to stop the writing.</param>
 		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
 		IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, CancellationToken cancellationToken = default(CancellationToken));
-#endif
 	}
 }

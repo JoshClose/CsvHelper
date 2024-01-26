@@ -48,6 +48,11 @@
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
+	<!-- All .NET Versions-->
+	<ItemGroup>
+		<PackageReference Include="System.Linq.Async" Version="4.0.0" />
+	</ItemGroup>
+
 	<!-- .NET 4.6.2 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
