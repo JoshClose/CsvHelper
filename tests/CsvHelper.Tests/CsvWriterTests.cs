@@ -2,21 +2,21 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Dynamic;
-using Xunit;
+using System.Globalization;
+using System.IO;
 using System.Threading;
+using Xunit;
+using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 
 namespace CsvHelper.Tests
 {
-	
+
 	public class CsvWriterTests
 	{
 		public CsvWriterTests()
@@ -832,6 +832,37 @@ namespace CsvHelper.Tests
 
 				var text = reader.ReadToEnd();
 				Assert.Equal("One\r\n", text);
+			}
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void WriteRecords_NonGeneric_HasHeaderRecord(bool hasHeaderRecord)
+		{
+			var confg = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = hasHeaderRecord
+			};
+
+			using var stringWriter = new StringWriter();
+			using var csvWriter = new CsvWriter(stringWriter, confg);
+
+			IEnumerable records = new object[] {
+				new TestSinglePropertyRecord { Name = "test" },
+				new TestRecord { IntColumn = 4 }
+			};
+
+			csvWriter.WriteRecords(records);
+			var csv = stringWriter.ToString();
+
+			if (hasHeaderRecord)
+			{
+				Assert.Equal("Name\r\ntest\r\n4,,,,\r\n", csv);
+			}
+			else
+			{
+				Assert.Equal("test\r\n4,,,,\r\n", csv);
 			}
 		}
 
