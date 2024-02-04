@@ -39,6 +39,9 @@ namespace CsvHelper
 		}
 
 		/// <inheritdoc />
+		public bool IsClosed => disposed;
+
+		/// <inheritdoc />
 		public int Depth
 		{
 			get
@@ -46,9 +49,6 @@ namespace CsvHelper
 				return 0;
 			}
 		}
-
-		/// <inheritdoc />
-		public bool IsClosed { get; private set; }
 
 		/// <inheritdoc />
 		public int RecordsAffected
