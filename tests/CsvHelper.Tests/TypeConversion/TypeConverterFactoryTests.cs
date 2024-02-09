@@ -45,7 +45,7 @@ namespace CsvHelper.Tests.TypeConversion
 				return true;
 			}
 
-			internal class OptionConverter<T> : TypeConverterGeneric<Option<T>>
+			internal class OptionConverter<T> : TypeConverter<Option<T>>
 			{
 				public override string ConvertToString(Option<T> value, IWriterRow row,
 					MemberMapData memberMapData)

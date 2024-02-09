@@ -17,7 +17,7 @@ namespace CsvHelper.TypeConversion
 	/// converter will need to be created to have a field convert to and
 	/// from <see cref="Type"/>.
 	/// </summary>
-	public class NotSupportedTypeConverter<T> : TypeConverterGeneric<T>
+	public class NotSupportedTypeConverter<T> : TypeConverter<T>
 	{
 		/// <summary>
 		/// Throws an exception.

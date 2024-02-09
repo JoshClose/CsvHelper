@@ -5,7 +5,7 @@ namespace CsvHelper.TypeConversion
 	/// <summary>
 	/// Converts values to and from strings.
 	/// </summary>
-	public abstract class TypeConverterGeneric<T> : ITypeConverter
+	public abstract class TypeConverter<T> : ITypeConverter
 	{
 		/// <summary>
 		/// Converts the string to a (T) value.
