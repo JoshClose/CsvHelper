@@ -19,6 +19,7 @@ namespace CsvHelper.TypeConversion
 	public class TypeConverterCache
 	{
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
+		private readonly List<ITypeConverterFactory> defaultTypeConverterFactories = new List<ITypeConverterFactory>();
 		private readonly List<ITypeConverterFactory> typeConverterFactories = new List<ITypeConverterFactory>();
 		private readonly Dictionary<Type, ITypeConverterFactory> typeConverterFactoryCache = new Dictionary<Type, ITypeConverterFactory>();
 
@@ -167,7 +168,7 @@ namespace CsvHelper.TypeConversion
 
 			if (!typeConverterFactoryCache.TryGetValue(type, out var factory))
 			{
-				factory = typeConverterFactories.FirstOrDefault(f => f.CanCreate(type));
+				factory = typeConverterFactories.Concat(defaultTypeConverterFactories).FirstOrDefault(f => f.CanCreate(type));
 				if (factory != null)
 				{
 					typeConverterFactoryCache[type] = factory;
@@ -243,9 +244,9 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(TimeOnly), new TimeOnlyConverter());
 #endif
 
-			AddConverterFactory(new EnumConverterFactory());
-			AddConverterFactory(new NullableConverterFactory());
-			AddConverterFactory(new CollectionConverterFactory());
+			defaultTypeConverterFactories.Add(new EnumConverterFactory());
+			defaultTypeConverterFactories.Add(new NullableConverterFactory());
+			defaultTypeConverterFactories.Add(new CollectionConverterFactory());
 		}
 	}
 }
