@@ -1,5 +1,16 @@
 ﻿# Change Log
 
+### 31.0.0
+
+#### Features
+
+- Created generic `TypeConverter` class to allow for easier creation of type converters.
+
+#### Breaking Changes
+
+- `TypeConverter` was renamed to `NotSupportedTypeConverter`.
+- `TypeConverter` is now a generic type converter base class.
+
 ### 30.1.0
 
 #### Features
