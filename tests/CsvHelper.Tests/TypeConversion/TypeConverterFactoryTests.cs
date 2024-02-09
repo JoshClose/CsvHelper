@@ -103,5 +103,39 @@ namespace CsvHelper.Tests.TypeConversion
 			});
 			Assert.Equal(expected, stringWriter.ToString());
 		}
+
+		[Fact]
+		void ReadTypeConverterFactory()
+		{
+			var input = """
+			            MaybeNumber
+			            23
+
+			            """;
+
+			using var cr = new CsvReader(new StringReader(input), CultureInfo.InvariantCulture);
+			cr.Context.TypeConverterCache.AddConverterFactory(new MyOptionTypeFactory());
+			var firstRow = cr.GetRecords<RecordWithGenerics>().First();
+			Assert.Equal(new Option<int>(23), firstRow.MaybeNumber);
+		}
+
+		[Fact]
+		void WriteTypeConverterFactory()
+		{
+			var expected = """
+			               MaybeNumber
+			               42
+
+			               """;
+
+			var stringWriter = new StringWriter();
+			using var cw = new CsvWriter(stringWriter, CultureInfo.InvariantCulture);
+			cw.Context.TypeConverterCache.AddConverterFactory(new MyOptionTypeFactory());
+			cw.WriteRecords(new[]
+			{
+				new RecordWithGenerics(new Option<int>(42))
+			});
+			Assert.Equal(expected, stringWriter.ToString());
+		}
 	}
 }
