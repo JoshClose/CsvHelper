@@ -4,9 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -19,6 +17,7 @@ namespace CsvHelper.TypeConversion
 	public class TypeConverterCache
 	{
 		private readonly Dictionary<Type, ITypeConverter> typeConverters = new Dictionary<Type, ITypeConverter>();
+		private readonly List<ITypeConverterFactory> defaultTypeConverterFactories = new List<ITypeConverterFactory>();
 		private readonly List<ITypeConverterFactory> typeConverterFactories = new List<ITypeConverterFactory>();
 		private readonly Dictionary<Type, ITypeConverterFactory> typeConverterFactoryCache = new Dictionary<Type, ITypeConverterFactory>();
 
@@ -74,6 +73,14 @@ namespace CsvHelper.TypeConversion
 
 			typeConverters[type] = typeConverter;
 		}
+
+		/// <summary>
+		/// Adds the <see cref="TypeConverter{T}"/> for the given <see cref="System.Type"/>.
+		/// </summary>
+		/// <typeparam name="T">The type the converter converts.</typeparam>
+		/// <param name="typeConverter">The type converter that converts the type.</param>
+		public void AddConverter<T>(TypeConverter<T> typeConverter) =>
+			AddConverter<T>(typeConverter as ITypeConverter);
 
 		/// <summary>
 		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
@@ -158,7 +165,7 @@ namespace CsvHelper.TypeConversion
 
 			if (!typeConverterFactoryCache.TryGetValue(type, out var factory))
 			{
-				factory = typeConverterFactories.FirstOrDefault(f => f.CanCreate(type));
+				factory = typeConverterFactories.Concat(defaultTypeConverterFactories).FirstOrDefault(f => f.CanCreate(type));
 				if (factory != null)
 				{
 					typeConverterFactoryCache[type] = factory;
@@ -224,7 +231,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(sbyte), new SByteConverter());
 			AddConverter(typeof(string), new StringConverter());
 			AddConverter(typeof(TimeSpan), new TimeSpanConverter());
-			AddConverter(typeof(Type), new TypeConverter());
+			AddConverter(new NotSupportedTypeConverter<Type>());
 			AddConverter(typeof(ushort), new UInt16Converter());
 			AddConverter(typeof(uint), new UInt32Converter());
 			AddConverter(typeof(ulong), new UInt64Converter());
@@ -234,9 +241,9 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(TimeOnly), new TimeOnlyConverter());
 #endif
 
-			AddConverterFactory(new EnumConverterFactory());
-			AddConverterFactory(new NullableConverterFactory());
-			AddConverterFactory(new CollectionConverterFactory());
+			defaultTypeConverterFactories.Add(new EnumConverterFactory());
+			defaultTypeConverterFactories.Add(new NullableConverterFactory());
+			defaultTypeConverterFactories.Add(new CollectionConverterFactory());
 		}
 	}
 }
