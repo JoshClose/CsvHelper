@@ -4,10 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsvHelper.TypeConversion
 {
@@ -28,9 +24,10 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override T ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var message = $"Converting " + typeof(T).FullName + " is not supported. " +
-						  "If you want to do this, create your own ITypeConverter and register " +
-						  "it in the TypeConverterFactory by calling AddConverter.";
+			var message =
+				$"Converting {typeof(T).FullName} is not supported. " +
+				"If you want to do this, create your own ITypeConverter and register " +
+				"it in the TypeConverterFactory by calling AddConverter.";
 			throw new TypeConverterException(this, memberMapData, text ?? string.Empty, row.Context, message);
 		}
 
@@ -43,9 +40,10 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The string representation of the object.</returns>
 		public override string ConvertToString(T value, IWriterRow row, MemberMapData memberMapData)
 		{
-			var message = "Converting " + typeof(T).FullName + " is not supported. " +
-						  "If you want to do this, create your own ITypeConverter and register " +
-						  "it in the TypeConverterFactory by calling AddConverter.";
+			var message =
+				$"Converting {typeof(T).FullName} is not supported. " +
+				"If you want to do this, create your own ITypeConverter and register " +
+				"it in the TypeConverterFactory by calling AddConverter.";
 			throw new TypeConverterException(this, memberMapData, value, row.Context, message);
 		}
 	}

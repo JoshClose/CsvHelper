@@ -4,9 +4,7 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration.Attributes;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
@@ -83,7 +81,6 @@ namespace CsvHelper.TypeConversion
 		/// <param name="typeConverter">The type converter that converts the type.</param>
 		public void AddConverter<T>(TypeConverter<T> typeConverter) =>
 			AddConverter<T>(typeConverter as ITypeConverter);
-
 
 		/// <summary>
 		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
