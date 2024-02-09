@@ -234,7 +234,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(sbyte), new SByteConverter());
 			AddConverter(typeof(string), new StringConverter());
 			AddConverter(typeof(TimeSpan), new TimeSpanConverter());
-			AddConverter(typeof(Type), new TypeConverter());
+			AddConverter(new NotSupportedTypeConverter<Type>());
 			AddConverter(typeof(ushort), new UInt16Converter());
 			AddConverter(typeof(uint), new UInt32Converter());
 			AddConverter(typeof(ulong), new UInt64Converter());

@@ -17,7 +17,7 @@ namespace CsvHelper.TypeConversion
 	/// converter will need to be created to have a field convert to and
 	/// from <see cref="Type"/>.
 	/// </summary>
-	public class TypeConverter : DefaultTypeConverter
+	public class NotSupportedTypeConverter<T> : TypeConverterGeneric<T>
 	{
 		/// <summary>
 		/// Throws an exception.
@@ -26,9 +26,9 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+		public override T ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			var message = "Converting System.Type is not supported. " +
+			var message = $"Converting " + typeof(T).FullName + " is not supported. " +
 						  "If you want to do this, create your own ITypeConverter and register " +
 						  "it in the TypeConverterFactory by calling AddConverter.";
 			throw new TypeConverterException(this, memberMapData, text ?? string.Empty, row.Context, message);
@@ -41,9 +41,9 @@ namespace CsvHelper.TypeConversion
 		/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 		/// <returns>The string representation of the object.</returns>
-		public override string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+		public override string ConvertToString(T value, IWriterRow row, MemberMapData memberMapData)
 		{
-			var message = "Converting System.Type is not supported. " +
+			var message = "Converting " + typeof(T).FullName + " is not supported. " +
 						  "If you want to do this, create your own ITypeConverter and register " +
 						  "it in the TypeConverterFactory by calling AddConverter.";
 			throw new TypeConverterException(this, memberMapData, value, row.Context, message);
