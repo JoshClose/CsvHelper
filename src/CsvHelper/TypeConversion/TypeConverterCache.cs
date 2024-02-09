@@ -76,6 +76,15 @@ namespace CsvHelper.TypeConversion
 		}
 
 		/// <summary>
+		/// Adds the <see cref="TypeConverterGeneric"/> for the given <see cref="System.Type"/>.
+		/// </summary>
+		/// <typeparam name="T">The type the converter converts.</typeparam>
+		/// <param name="typeConverter">The type converter that converts the type.</param>
+		public void AddConverter<T>(TypeConverterGeneric<T> typeConverter) =>
+			AddConverter<T>(typeConverter as ITypeConverter);
+
+
+		/// <summary>
 		/// Adds the <see cref="ITypeConverter"/> for the given <see cref="System.Type"/>.
 		/// </summary>
 		/// <typeparam name="T">The type the converter converts.</typeparam>
