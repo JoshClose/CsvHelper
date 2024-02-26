@@ -73,7 +73,7 @@ Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com
 
 A huge thanks to the [.NET on AWS Open Source Software Fund](https://github.com/aws/dotnet-foss) for sponsoring CsvHelper!
 
-<img src="https://raw.githubusercontent.com/JoshClose/CsvHelper/master/logo/aws.png" />
+<a href="https://github.com/aws/dotnet-foss"><img src="https://raw.githubusercontent.com/JoshClose/CsvHelper/master/logo/aws.png" /></a>
 
 Support this project by becoming a sponsor through [GitHub Sponsors](https://github.com/sponsors/JoshClose) or [Open Collective](https://opencollective.com/csvhelper#sponsor). Your logo will show up here with a link to your website.
 
