@@ -28,10 +28,7 @@ http://joshclose.github.io/CsvHelper/
 
 ### Building the Documentation
 
-1. Install [node.js](https://nodejs.org/en/download/).
-1. Go into the `CsvHelper/docs-src` folder.
-1. Run `npm start` to start a local test site. Make any changes needed.
-1. Run `npm run build` to build the documentation files that are output to `CsvHelper/docs`.
+Run the `build-docs.cmd` file.
 
 ## License
 
