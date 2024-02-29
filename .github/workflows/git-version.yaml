@@ -14,3 +14,20 @@ jobs:
         uses: PaulHatch/semantic-version@v5.3.0
         with:
           tag_prefix: ""
+      - name: Output Version Info
+        run: |
+          echo "major: ${{ steps.gitversion.outputs.major }}"
+          echo "minor: ${{ steps.gitversion.outputs.minor }}"
+          echo "patch: ${{ steps.gitversion.outputs.patch }}"
+          echo "increment: ${{ steps.gitversion.outputs.increment }}"
+          echo "version_type: ${{ steps.gitversion.outputs.version_type }}"
+          echo "version: ${{ steps.gitversion.outputs.version }}"
+          echo "version_tag: ${{ steps.gitversion.outputs.version_tag }}"
+          echo "changed: ${{ steps.gitversion.outputs.changed }}"
+          echo "is_tagged: ${{ steps.gitversion.outputs.is_tagged }}"
+          echo "authors: ${{ steps.gitversion.outputs.authors }}"
+          echo "current_commit: ${{ steps.gitversion.outputs.current_commit }}"
+          echo "previous_commit: ${{ steps.gitversion.outputs.previous_commit }}"
+          echo "previous_version: ${{ steps.gitversion.outputs.previous_version }}"
+          echo "debug_output: ${{ steps.gitversion.outputs.debug_output }}"
+
