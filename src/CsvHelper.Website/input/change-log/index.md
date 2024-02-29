@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 31.0.2
+
+#### Bug Fixes
+
+- Removed dependency on `System.Linq.Async`.
+
 ### 31.0.1
 
 #### Bug Fixes
