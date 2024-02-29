@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 31.0.1
+
+#### Bug Fixes
+
+- Added InformationalVersion to assembly info.
+
 ### 31.0.0
 
 #### Features
