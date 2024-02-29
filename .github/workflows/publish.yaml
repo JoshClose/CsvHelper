@@ -21,12 +21,12 @@ jobs:
       - name: Create NuGet Package
         run: >
           dotnet pack src/CsvHelper
-            --configuration Release
-            -o output
-            -p:AssemblyVersion=${{ steps.gitversion.outputs.major }}.0.0.0
-            -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
-            -p:InformationalVersion=${{ steps.gitversion.outputs.version }}
-            -p:PackageVersion=${{ steps.gitversion.outputs.version }}
+          --configuration Release
+          -o output
+          -p:AssemblyVersion=${{ steps.gitversion.outputs.major }}.0.0.0
+          -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
+          -p:InformationalVersion=${{ steps.gitversion.outputs.version }}
+          -p:PackageVersion=${{ steps.gitversion.outputs.version }}
       - name: Display Output
         run: dir output
       - name: Publish NuGet Package
