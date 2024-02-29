@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--<TargetFrameworks>net8.0;net7.0;net6.0;net48;net47;net462</TargetFrameworks>-->
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net7.0;net6.0;net48;net47;net462</TargetFrameworks>
+		<!--<TargetFrameworks>net8.0</TargetFrameworks>-->
 		<LangVersion>preview</LangVersion>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
@@ -16,7 +16,7 @@
 		<PackageReference Include="Castle.Core" Version="4.4.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Linq.Async" Version="5.0.0" />
+		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

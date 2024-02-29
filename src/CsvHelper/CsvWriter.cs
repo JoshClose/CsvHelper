@@ -6,7 +6,6 @@ using CsvHelper.Configuration;
 using CsvHelper.Expressions;
 using CsvHelper.TypeConversion;
 using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -773,7 +772,11 @@ namespace CsvHelper
 				return hasHeaderBeenWritten;
 			}
 
-			return WriteHeader(await records.FirstOrDefaultAsync());
+			var enumerator = records.GetAsyncEnumerator();
+			await enumerator.MoveNextAsync().ConfigureAwait(false);
+			var header = enumerator.Current;
+
+			return WriteHeader(header);
 		}
 
 		private bool WriteHeader<T>(IEnumerable<T> records)
