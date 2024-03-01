@@ -318,7 +318,7 @@ namespace CsvHelper.Tests
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				Delimiter = "|~|",
-				BufferSize = 16,
+				BufferSize = 16
 			};
 
 			using (var stream = new MemoryStream())
@@ -338,6 +338,83 @@ namespace CsvHelper.Tests
 
 				hasRecords = parser.Read();
 				Assert.False(hasRecords);
+			}
+		}
+		
+		
+		
+		
+		[Fact]
+		public void MultipleCharDelimiterConflictingNewLineWithBufferEndingInMiddleOfDelimiterTest()
+		{
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = "|~|",
+				BufferSize = 16,
+				NewLine = "|*|\r\n"
+			};
+
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var parser = new CsvParser(reader, config))
+			{
+				writer.WriteLine("12340000004321|~|2|*|");
+				writer.WriteLine("2|~|12340000004321124|*|");
+				writer.WriteLine("2|~|12340000004321124|~|12340000004321124|*|");
+				writer.Flush();
+				stream.Position = 0;
+
+				var hasRecords = parser.Read();
+				Assert.True(hasRecords);
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("12340000004321", parser[0]);
+				Assert.Equal("2", parser[1]);
+				hasRecords = parser.Read();
+				
+				Assert.True(hasRecords);
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("2", parser[0]);
+				Assert.Equal("12340000004321124", parser[1]);
+				hasRecords = parser.Read();
+				
+				
+				Assert.True(hasRecords);
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("2", parser[0]);
+				Assert.Equal("12340000004321124", parser[1]);
+				Assert.Equal("12340000004321124", parser[2]);
+				hasRecords = parser.Read();
+				Assert.False(hasRecords);
+			}
+		}
+		
+		[Fact]
+		public void HandleFirstNewLineCharacterUnquoted()
+		{
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Delimiter = ",",
+				BufferSize = 14,
+				NewLine = "|*|"
+			};
+
+			using (var stream = new MemoryStream())
+			using (var reader = new StreamReader(stream))
+			using (var writer = new StreamWriter(stream))
+			using (var parser = new CsvParser(reader, config))
+			{
+				writer.WriteLine("12345|,2|*|\r\n");
+				writer.Flush();
+				stream.Position = 0;
+
+				var hasRecords = parser.Read();
+				Assert.True(hasRecords);
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("12345|", parser[0]);
+				Assert.Equal("2", parser[1]);
+				hasRecords = parser.Read();
+
 			}
 		}
 	}

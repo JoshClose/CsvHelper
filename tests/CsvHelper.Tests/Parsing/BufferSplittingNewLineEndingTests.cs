@@ -98,5 +98,28 @@ namespace CsvHelper.Tests.Parsing
 				Assert.Equal("5,\"600\"\r\n", parser.RawRecord);
 			}
 		}
+		
+		[Fact]
+		public void BufferSplitsLongNewLineTest()
+		{
+			var s = new StringBuilder();
+			s.Append("1,200000|123456789012345678901234567890|\r\n");
+			s.Append("3,4000|123456789012345678901234567890|\r\n");
+			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				BufferSize = 16,
+				NewLine = "|123456789012345678901234567890|\r\n",
+			};
+			using (var reader = new StringReader(s.ToString()))
+			using (var parser = new CsvParser(reader, config))
+			{
+				parser.Read();
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("1,200000|123456789012345678901234567890|\r\n", parser.RawRecord);
+				parser.Read();
+				Assert.Equal(2, parser.Count);
+				Assert.Equal("3,4000|123456789012345678901234567890|\r\n", parser.RawRecord);
+			}
+		}
 	}
 }

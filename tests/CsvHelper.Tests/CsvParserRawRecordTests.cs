@@ -139,5 +139,75 @@ namespace CsvHelper.Tests
 				Assert.Equal(string.Empty, parser.RawRecord.ToString());
 			}
 		}
+
+		[Fact]
+		public void HandleMultipleCharacter()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				NewLine = "|##|\r\n",
+				Delimiter = "|*|"
+			};
+			
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+				
+			using (var parser = new CsvParser(reader, config))
+			{
+				writer.Write("1|*|2|##|\r\n");
+				writer.Write("3|*|4|##|\r\n");
+				writer.Write("|*5|*|6|##|\r\n");
+				writer.Write("7|##||*|6||##|\r\n");
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Equal("1|*|2|##|\r\n", parser.RawRecord);
+
+				parser.Read();
+				Assert.Equal("3|*|4|##|\r\n", parser.RawRecord);
+
+				parser.Read();
+				Assert.Equal("|*5|*|6|##|\r\n", parser.RawRecord);
+				
+				parser.Read();
+				Assert.Equal("7|##||*|6||##|\r\n", parser.RawRecord);
+				
+				parser.Read();
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
+			}
+		}
+		
+		[Fact]
+		public void HandleMultipleCharacterSmallBuffer()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				NewLine = "|##|\r\n",
+				Delimiter = "|*|",
+				BufferSize = 1,
+			};
+			
+			using (var stream = new MemoryStream())
+			using (var writer = new StreamWriter(stream))
+			using (var reader = new StreamReader(stream))
+			using (var parser = new CsvParser(reader, config))
+			{
+				writer.Write("1|*|2|##|\r\n");
+				writer.Write("3|*|4|##|\r\n");
+				writer.Flush();
+				stream.Position = 0;
+
+				parser.Read();
+				Assert.Equal("1|*|2|##|\r\n", parser.RawRecord.ToString());
+
+				parser.Read();
+				Assert.Equal("3|*|4|##|\r\n", parser.RawRecord.ToString());
+
+				parser.Read();
+				Assert.Equal(string.Empty, parser.RawRecord.ToString());
+			}
+		}
 	}
 }
