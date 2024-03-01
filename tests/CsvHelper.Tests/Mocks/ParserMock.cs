@@ -29,6 +29,8 @@ namespace CsvHelper.Tests.Mocks
 
 		public string RawRecord => string.Empty;
 
+		public ReadOnlySpan<char> RawRecordSpan => ReadOnlySpan<char>.Empty;
+
 		public int Row => row;
 
 		public int RawRow => row;
@@ -40,6 +42,8 @@ namespace CsvHelper.Tests.Mocks
 		public string Delimiter => Configuration.Delimiter;
 
 		public string this[int index] => record[index];
+
+		public ReadOnlySpan<char> GetFieldSpan(int index) => record[index].AsSpan();
 
 		public ParserMock() : this(new CsvConfiguration(CultureInfo.InvariantCulture)) { }
 
