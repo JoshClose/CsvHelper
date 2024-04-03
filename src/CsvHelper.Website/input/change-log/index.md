@@ -46,7 +46,7 @@
 - Fixed issue where `CsvDataReader` couldn't be used if lines were read manually ahead of time.
 - Fixed issue where `CsvDataReader` wasn't working when `HasHeaderRecord` was false.
 - Fixed issue where `CsvReader.ColumnCount` did not match `CsvParser.Count`.
-- Fixed issue where `GetDlimiter` was not detecting the correct delimiter when there are blank lines.
+- Fixed issue where `GetDelimiter` was not detecting the correct delimiter when there are blank lines.
 - Fixed issue where header validation was outputing error message for each field when it only needed to once.
 
 ### 30.0.3
