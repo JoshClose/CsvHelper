@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 31.0.3
+
+#### Bug Fixes
+
+- Fixed issue with `TypeConverter<T>` where `T` is `Nullable` did not work.
+
 ### 31.0.2
 
 #### Bug Fixes
