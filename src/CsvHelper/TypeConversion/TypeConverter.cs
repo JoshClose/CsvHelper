@@ -32,11 +32,6 @@ namespace CsvHelper.TypeConversion
 
 		object ITypeConverter.ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData) => ConvertFromString(text, row, memberMapData);
 
-		string ITypeConverter.ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
-		{
-			return value is T v
-				? ConvertToString(v, row, memberMapData)
-				: throw new InvalidCastException();
-		}
+		string ITypeConverter.ConvertToString(object value, IWriterRow row, MemberMapData memberMapData) => ConvertToString((T)value, row, memberMapData);
 	}
 }
