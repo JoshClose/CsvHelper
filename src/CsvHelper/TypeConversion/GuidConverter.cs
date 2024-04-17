@@ -21,12 +21,12 @@ namespace CsvHelper.TypeConversion
 		/// <returns>The object created from the string.</returns>
 		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
 		{
-			if (text == null)
+			if (Guid.TryParse(text, out var g))
 			{
-				return base.ConvertFromString(text, row, memberMapData);
+				return g;
 			}
 
-			return new Guid(text);
+			return base.ConvertFromString(text, row, memberMapData);
 		}
 	}
 }
