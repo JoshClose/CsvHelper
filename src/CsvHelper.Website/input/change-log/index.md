@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 31.0.4
+
+#### Bug Fixes
+
+- Changed `GuidConverter` to throw `TypeConverterException` instead of `FormatException` to be consistent with other converters.
+
 ### 31.0.3
 
 #### Bug Fixes
