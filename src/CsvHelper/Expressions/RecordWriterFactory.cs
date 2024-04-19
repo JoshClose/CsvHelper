@@ -2,8 +2,8 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+
 using System.Dynamic;
-using System.Reflection;
 
 namespace CsvHelper.Expressions
 {
@@ -34,27 +34,23 @@ namespace CsvHelper.Expressions
 		/// <summary>
 		/// Creates a new record writer for the given record.
 		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		/// <param name="record">The record.</param>
-		public virtual RecordWriter MakeRecordWriter<T>(T record)
+		/// <param name="typeInfo">The type of the record.</param>
+		public virtual RecordWriter MakeRecordWriter(RecordTypeInfo typeInfo)
 		{
-			var type = writer.GetTypeForRecord(record);
+			var type = typeInfo.RecordType;
 
-			if (record is ExpandoObject expandoObject)
-			{
-				return expandoObjectRecordWriter;
-			}
-
-			if (record is IDynamicMetaObjectProvider dynamicObject)
-			{
-				return dynamicRecordWriter;
-			}
-
-			if (type.GetTypeInfo().IsPrimitive)
+			if (type.IsPrimitive)
 			{
 				return primitiveRecordWriter;
 			}
-
+			if (typeof(ExpandoObject).IsAssignableFrom(type))
+			{
+				return expandoObjectRecordWriter;
+			}
+			if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type))
+			{
+				return dynamicRecordWriter;
+			}
 			return objectRecordWriter;
 		}
 	}

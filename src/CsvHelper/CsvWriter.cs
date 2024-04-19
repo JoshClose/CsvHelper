@@ -331,7 +331,7 @@ namespace CsvHelper
 		{
 			try
 			{
-				recordManager.Value.Write(record);
+				recordManager.Value.GetWriterAction<T>(GetTypeInfoForRecord(record))(record);
 			}
 			catch (TargetInvocationException ex)
 			{
@@ -362,6 +362,9 @@ namespace CsvHelper
 					NextRecord();
 				}
 
+				Action<object> writerAction = null;
+				RecordTypeInfo writerActionType = default;
+
 				foreach (var record in records)
 				{
 					if (record == null)
@@ -371,7 +374,13 @@ namespace CsvHelper
 						continue;
 					}
 
-					WriteRecord(record);
+					if (writerAction == null || writerActionType.RecordType != record.GetType())
+					{
+						writerActionType = GetTypeInfoForRecord(record);
+						writerAction = recordManager.Value.GetWriterAction<object>(writerActionType);
+					}
+
+					writerAction(record);
 					NextRecord();
 				}
 			}
@@ -393,9 +402,18 @@ namespace CsvHelper
 					NextRecord();
 				}
 
+				Action<T> writerAction = null;
+				RecordTypeInfo writerActionType = default;
+
 				foreach (var record in records)
 				{
-					WriteRecord(record);
+					if (writerAction == null || (record != null && writerActionType.RecordType != record.GetType()))
+					{
+						writerActionType = GetTypeInfoForRecord(record);
+						writerAction = recordManager.Value.GetWriterAction<T>(writerActionType);
+					}
+
+					writerAction(record);
 					NextRecord();
 				}
 			}
@@ -420,11 +438,20 @@ namespace CsvHelper
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 
+				Action<object> writerAction = null;
+				RecordTypeInfo writerActionType = default;
+
 				foreach (var record in records)
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
-					WriteRecord(record);
+					if (writerAction == null || (record != null && writerActionType.RecordType != record.GetType()))
+					{
+						writerActionType = GetTypeInfoForRecord(record);
+						writerAction = recordManager.Value.GetWriterAction<object>(writerActionType);
+					}
+
+					writerAction(record);
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 			}
@@ -449,11 +476,20 @@ namespace CsvHelper
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 
+				Action<T> writerAction = null;
+				RecordTypeInfo writerActionType = default;
+
 				foreach (var record in records)
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
-					WriteRecord(record);
+					if (writerAction == null || (record != null && writerActionType.RecordType != record.GetType()))
+					{
+						writerActionType = GetTypeInfoForRecord(record);
+						writerAction = recordManager.Value.GetWriterAction<T>(writerActionType);
+					}
+
+					writerAction(record);
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 			}
@@ -478,11 +514,20 @@ namespace CsvHelper
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 
+				Action<T> writerAction = null;
+				RecordTypeInfo writerActionType = default;
+
 				await foreach (var record in records.ConfigureAwait(false))
 				{
 					cancellationToken.ThrowIfCancellationRequested();
 
-					WriteRecord(record);
+					if (writerAction == null || (record != null && writerActionType.RecordType != record.GetType()))
+					{
+						writerActionType = GetTypeInfoForRecord(record);
+						writerAction = recordManager.Value.GetWriterAction<T>(writerActionType);
+					}
+
+					writerAction(record);
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 			}
@@ -576,15 +621,15 @@ namespace CsvHelper
 		/// <typeparam name="T">The type of the record.</typeparam>
 		/// <param name="record">The record to determine the type of.</param>
 		/// <returns>The System.Type for the record.</returns>
-		public virtual Type GetTypeForRecord<T>(T record)
+		public virtual RecordTypeInfo GetTypeInfoForRecord<T>(T record)
 		{
 			var type = typeof(T);
 			if (type == typeof(object))
 			{
-				type = record.GetType();
+				return new RecordTypeInfo(record.GetType(), true);
 			}
 
-			return type;
+			return new RecordTypeInfo(type, false);
 		}
 
 		/// <summary>

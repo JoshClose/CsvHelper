@@ -66,7 +66,7 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected Action<T> GetWriteDelegate<T>(T record)
+		protected internal Action<T> GetWriteDelegate<T>(T record)
 		{
 			var type = typeof(T);
 			var typeKeyName = type.AssemblyQualifiedName;
@@ -87,12 +87,43 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
+		/// Gets the delegate to write the given record. 
+		/// If the delegate doesn't exist, one will be created and cached.
+		/// </summary>
+		/// <typeparam name="T">The record type.</typeparam>
+		/// <param name="typeInfo">The type for the record.</param>
+		protected internal Action<T> GetWriteDelegate<T>(RecordTypeInfo typeInfo)
+		{
+			var typeKey = typeInfo.RecordType.GetHashCode();
+
+			if (typeInfo.IsItemType)
+				typeKey = HashCode.Combine(17180427, typeKey);
+
+			if (!typeActions.TryGetValue(typeKey, out Delegate action))
+			{
+				typeActions[typeKey] = action = CreateWriteDelegate<T>(typeInfo.RecordType);
+			}
+
+			return (Action<T>)action;
+		}
+
+		/// <summary>
 		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
 		/// that will write the given record using the current writer row.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected abstract Action<T> CreateWriteDelegate<T>(T record);
+		protected virtual Action<T> CreateWriteDelegate<T>(T record)
+		{
+			return CreateWriteDelegate<T>(Writer.GetTypeInfoForRecord(record).RecordType);
+		}
+
+		/// <summary>
+		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
+		/// that will write the given record using the current writer row.
+		/// </summary>
+		/// <param name="typeForRecord">The type for the record.</param>
+		protected abstract Action<T> CreateWriteDelegate<T>(Type typeForRecord);
 
 		/// <summary>
 		/// Combines the delegates into a single multicast delegate.

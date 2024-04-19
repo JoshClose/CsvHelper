@@ -67,14 +67,15 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Writes the given record to the current writer row.
+		/// Gets Writer Action to write multiple rows faster
 		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		/// <param name="record">The record.</param>
-		public void Write<T>(T record)
+		/// <param name="typeInfo"></param>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		internal Action<T> GetWriterAction<T>(RecordTypeInfo typeInfo)
 		{
-			var recordWriter = recordWriterFactory.MakeRecordWriter(record);
-			recordWriter.Write(record);
+			var recordWriter = recordWriterFactory.MakeRecordWriter(typeInfo);
+			return recordWriter.GetWriteDelegate<T>(typeInfo);
 		}
 	}
 }

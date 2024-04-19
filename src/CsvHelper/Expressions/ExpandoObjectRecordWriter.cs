@@ -24,8 +24,8 @@ namespace CsvHelper.Expressions
 		/// that will write the given record using the current writer row.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
-		/// <param name="record">The record.</param>
-		protected override Action<T> CreateWriteDelegate<T>(T record)
+		/// <param name="type">The type for the record.</param>
+		protected override Action<T> CreateWriteDelegate<T>(Type type)
 		{
 			Action<T> action = r =>
 			{
