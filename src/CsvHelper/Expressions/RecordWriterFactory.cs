@@ -2,8 +2,9 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
+
+using System;
 using System.Dynamic;
-using System.Reflection;
 
 namespace CsvHelper.Expressions
 {
@@ -12,8 +13,6 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class RecordWriterFactory
 	{
-		private readonly CsvWriter writer;
-		private readonly ExpandoObjectRecordWriter expandoObjectRecordWriter;
 		private readonly DynamicRecordWriter dynamicRecordWriter;
 		private readonly PrimitiveRecordWriter primitiveRecordWriter;
 		private readonly ObjectRecordWriter objectRecordWriter;
@@ -24,8 +23,6 @@ namespace CsvHelper.Expressions
 		/// <param name="writer">The writer.</param>
 		public RecordWriterFactory(CsvWriter writer)
 		{
-			this.writer = writer;
-			expandoObjectRecordWriter = new ExpandoObjectRecordWriter(writer);
 			dynamicRecordWriter = new DynamicRecordWriter(writer);
 			primitiveRecordWriter = new PrimitiveRecordWriter(writer);
 			objectRecordWriter = new ObjectRecordWriter(writer);
@@ -34,25 +31,17 @@ namespace CsvHelper.Expressions
 		/// <summary>
 		/// Creates a new record writer for the given record.
 		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		/// <param name="record">The record.</param>
-		public virtual RecordWriter MakeRecordWriter<T>(T record)
+		/// <param name="recordType">The type of the record.</param>
+		public virtual RecordWriter MakeRecordWriter(Type recordType)
 		{
-			var type = writer.GetTypeForRecord(record);
-
-			if (record is ExpandoObject expandoObject)
-			{
-				return expandoObjectRecordWriter;
-			}
-
-			if (record is IDynamicMetaObjectProvider dynamicObject)
-			{
-				return dynamicRecordWriter;
-			}
-
-			if (type.GetTypeInfo().IsPrimitive)
+			if (recordType.IsPrimitive)
 			{
 				return primitiveRecordWriter;
+			}
+
+			if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(recordType))
+			{
+				return dynamicRecordWriter;
 			}
 
 			return objectRecordWriter;

@@ -11,7 +11,6 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class RecordManager
 	{
-		private readonly CsvReader reader;
 		private readonly RecordCreatorFactory recordCreatorFactory;
 		private readonly RecordHydrator recordHydrator;
 		private readonly RecordWriterFactory recordWriterFactory;
@@ -22,7 +21,6 @@ namespace CsvHelper.Expressions
 		/// <param name="reader"></param>
 		public RecordManager(CsvReader reader)
 		{
-			this.reader = reader;
 			recordCreatorFactory = ObjectResolver.Current.Resolve<RecordCreatorFactory>(reader);
 			recordHydrator = ObjectResolver.Current.Resolve<RecordHydrator>(reader);
 		}
@@ -37,23 +35,14 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Creates a record of the given type using the current reader row.
+		/// Gets a cached reader delegate for the given type.
 		/// </summary>
-		/// <typeparam name="T">The type of record to create.</typeparam>
-		public T Create<T>()
-		{
-			var recordCreator = recordCreatorFactory.MakeRecordCreator(typeof(T));
-			return recordCreator.Create<T>();
-		}
-
-		/// <summary>
-		/// Creates a record of the given type using the current reader row.
-		/// </summary>
-		/// <param name="recordType">The type of record to create.</param>
-		public object Create(Type recordType)
+		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <param name="recordType">The type of the record.</param>
+		public Func<T> GetReadDelegate<T>(Type recordType)
 		{
 			var recordCreator = recordCreatorFactory.MakeRecordCreator(recordType);
-			return recordCreator.Create(recordType);
+			return recordCreator.GetCreateRecordDelegate<T>(recordType);
 		}
 
 		/// <summary>
@@ -67,14 +56,14 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Writes the given record to the current writer row.
+		/// Gets a cached writer delegate for the given type.
 		/// </summary>
-		/// <typeparam name="T">The type of the record.</typeparam>
-		/// <param name="record">The record.</param>
-		public void Write<T>(T record)
+		/// <param name="typeInfo">The record type information.</param>
+		/// <typeparam name="T">The type of record being written.</typeparam>
+		public Action<T> GetWriteDelegate<T>(RecordTypeInfo typeInfo)
 		{
-			var recordWriter = recordWriterFactory.MakeRecordWriter(record);
-			recordWriter.Write(record);
+			var recordWriter = recordWriterFactory.MakeRecordWriter(typeInfo.RecordType);
+			return recordWriter.GetWriteDelegate<T>(typeInfo);
 		}
 	}
 }

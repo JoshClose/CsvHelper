@@ -27,10 +27,12 @@ namespace CsvHelper.Tests
 				var recordsTyped = new List<A>
 				{
 					new A { Id = 1, Name = "one" },
+					new A { Id = 2, Name = "two" },
 				};
 				var recordsBoxed = new List<object>
 				{
-					new A { Id = 2, Name = "two" },
+					new A { Id = 3, Name = "three" },
+					new A { Id = 4, Name = "four" },
 				};
 
 				csv.Context.RegisterClassMap<AMap>();
@@ -41,6 +43,8 @@ namespace CsvHelper.Tests
 				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("1,one");
 				expected.AppendLine("2,two");
+				expected.AppendLine("3,three");
+				expected.AppendLine("4,four");
 
 				Assert.Equal(expected.ToString(), writer.ToString());
 			}

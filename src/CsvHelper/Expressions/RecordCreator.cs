@@ -36,64 +36,18 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Create a record of the given type using the current row.
-		/// </summary>
-		/// <typeparam name="T">The record type.</typeparam>
-		public T Create<T>()
-		{
-			try
-			{
-				return ((Func<T>)GetCreateRecordDelegate(typeof(T))).Invoke();
-			}
-			catch (TargetInvocationException ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw ex.InnerException;
-				}
-				else
-				{
-					throw;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Create a record of the given type using the current row.
-		/// </summary>
-		/// <param name="recordType">The record type.</param>
-		public object Create(Type recordType)
-		{
-			try
-			{
-				return GetCreateRecordDelegate(recordType).DynamicInvoke();
-			}
-			catch (TargetInvocationException ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw ex.InnerException;
-				}
-				else
-				{
-					throw;
-				}
-			}
-		}
-
-		/// <summary>
 		/// Gets the delegate to create a record for the given record type. 
 		/// If the delegate doesn't exist, one will be created and cached.
 		/// </summary>
 		/// <param name="recordType">The record type.</param>
-		protected virtual Delegate GetCreateRecordDelegate(Type recordType)
+		public virtual Func<T> GetCreateRecordDelegate<T>(Type recordType)
 		{
 			if (!createRecordFuncs.TryGetValue(recordType, out Delegate func))
 			{
 				createRecordFuncs[recordType] = func = CreateCreateRecordDelegate(recordType);
 			}
 
-			return func;
+			return (Func<T>)func;
 		}
 
 		/// <summary>

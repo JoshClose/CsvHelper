@@ -15,6 +15,7 @@ namespace CsvHelper.Expressions
 	public abstract class RecordWriter
 	{
 		private readonly Dictionary<int, Delegate> typeActions = new Dictionary<int, Delegate>();
+		private readonly int objectHashCode = typeof(object).GetHashCode();
 
 		/// <summary>
 		/// Gets the writer.
@@ -37,50 +38,23 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Writes the record to the current row.
-		/// </summary>
-		/// <typeparam name="T">Type of the record.</typeparam>
-		/// <param name="record">The record.</param>
-		public void Write<T>(T record)
-		{
-			try
-			{
-				GetWriteDelegate(record)(record);
-			}
-			catch (TargetInvocationException ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw ex.InnerException;
-				}
-				else
-				{
-					throw;
-				}
-			}
-		}
-
-		/// <summary>
 		/// Gets the delegate to write the given record. 
 		/// If the delegate doesn't exist, one will be created and cached.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
-		/// <param name="record">The record.</param>
-		protected Action<T> GetWriteDelegate<T>(T record)
+		/// <param name="typeInfo">The type for the record.</param>
+		public virtual Action<T> GetWriteDelegate<T>(RecordTypeInfo typeInfo)
 		{
-			var type = typeof(T);
-			var typeKeyName = type.AssemblyQualifiedName;
-			if (type == typeof(object))
-			{
-				type = record.GetType();
-				typeKeyName += $"|{type.AssemblyQualifiedName}";
-			}
+			var typeKey = typeInfo.HashCode;
 
-			int typeKey = typeKeyName.GetHashCode();
+			if (typeInfo.IsObject)
+			{
+				typeKey = HashCode.Combine(objectHashCode, typeKey);
+			}
 
 			if (!typeActions.TryGetValue(typeKey, out Delegate action))
 			{
-				typeActions[typeKey] = action = CreateWriteDelegate(record);
+				typeActions[typeKey] = action = CreateWriteDelegate<T>(typeInfo.RecordType);
 			}
 
 			return (Action<T>)action;
@@ -92,7 +66,17 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="record">The record.</param>
-		protected abstract Action<T> CreateWriteDelegate<T>(T record);
+		protected virtual Action<T> CreateWriteDelegate<T>(T record)
+		{
+			return CreateWriteDelegate<T>(Writer.GetTypeInfoForRecord(record).RecordType);
+		}
+
+		/// <summary>
+		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
+		/// that will write the given record using the current writer row.
+		/// </summary>
+		/// <param name="typeForRecord">The type for the record.</param>
+		protected abstract Action<T> CreateWriteDelegate<T>(Type typeForRecord);
 
 		/// <summary>
 		/// Combines the delegates into a single multicast delegate.

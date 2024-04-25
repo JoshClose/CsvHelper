@@ -12,7 +12,6 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class RecordCreatorFactory
 	{
-		private readonly CsvReader reader;
 		private readonly DynamicRecordCreator dynamicRecordCreator;
 		private readonly PrimitiveRecordCreator primitiveRecordCreator;
 		private readonly ObjectRecordCreator objectRecordCreator;
@@ -23,7 +22,6 @@ namespace CsvHelper.Expressions
 		/// <param name="reader">The reader.</param>
 		public RecordCreatorFactory(CsvReader reader)
 		{
-			this.reader = reader;
 			dynamicRecordCreator = new DynamicRecordCreator(reader);
 			primitiveRecordCreator = new PrimitiveRecordCreator(reader);
 			objectRecordCreator = new ObjectRecordCreator(reader);
@@ -35,14 +33,14 @@ namespace CsvHelper.Expressions
 		/// <param name="recordType">The record type.</param>
 		public virtual RecordCreator MakeRecordCreator(Type recordType)
 		{
-			if (recordType == typeof(object))
-			{
-				return dynamicRecordCreator;
-			}
-
 			if (recordType.GetTypeInfo().IsPrimitive)
 			{
 				return primitiveRecordCreator;
+			}
+
+			if (recordType == typeof(object))
+			{
+				return dynamicRecordCreator;
 			}
 
 			return objectRecordCreator;
