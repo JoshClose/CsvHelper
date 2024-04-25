@@ -1,5 +1,26 @@
 ﻿# Change Log
 
+### 32.0.0
+
+#### Features
+
+- Reading and writing performance optimizations when using multiple records.
+- Reading and writing performance optimizations when using `dynamic`.
+
+#### Breaking Changes
+
+- Changed `RecordWriter.CreateWriteDelegate<T>(T record)` to `RecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `DynamicRecordWriter.CreateWriteDelegate<T>(T record)` to `DynamicRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `ExpandoObjectRecordWriter.CreateWriteDelegate<T>(T record)` to `ExpandoObjectRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `ObjectRecordWriter.CreateWriteDelegate<T>(T record)` to `ObjectRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `PrimitiveRecordWriter.CreateWriteDelegate<T>(T record)` to `PrimitiveRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `RecordWriterFactory.MakeRecordWriter<T>(T record)` to `RecordWriterFactory.MakeRecordWriter<T>(RecordTypeInfo typeInfo)`.
+- Removed `RecordManager.Create` methods. Use `Func<T> RecordManager.GetReadDelegate<T>(Type recordType)` instead.
+- Removed `RecordManager.Write` methods. Use `Action<T> RecordManager.GetWriteDelegate<T>(RecordTypeInfo typeInfo)` instead.
+- Removed `RecordCreator.Create` methods. Use `Func<T> RecordCreator.GetCreateRecordDelegate<T>(Type recordType)` instead.
+- Removed `RecordWriter.Create` methods. Use `Action<T> RecordWriter.GetWriteDelegate<T>(RecordTypeInfo typeInfo)` instead.
+- Changed `RecordWriterFactory.MakeRecordWriter<T>(T record)` to `RecordWriterFactory.MakeRecordWriter(RecordTypeInfo typeInfo)`.
+
 ### 31.0.4
 
 #### Bug Fixes
