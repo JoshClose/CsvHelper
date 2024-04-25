@@ -15,6 +15,7 @@ namespace CsvHelper.Expressions
 	public abstract class RecordWriter
 	{
 		private readonly Dictionary<int, Delegate> typeActions = new Dictionary<int, Delegate>();
+		private readonly int objectHashCode = typeof(object).GetHashCode();
 
 		/// <summary>
 		/// Gets the writer.
@@ -37,67 +38,19 @@ namespace CsvHelper.Expressions
 		}
 
 		/// <summary>
-		/// Writes the record to the current row.
-		/// </summary>
-		/// <typeparam name="T">Type of the record.</typeparam>
-		/// <param name="record">The record.</param>
-		public void Write<T>(T record)
-		{
-			try
-			{
-				GetWriteDelegate(record)(record);
-			}
-			catch (TargetInvocationException ex)
-			{
-				if (ex.InnerException != null)
-				{
-					throw ex.InnerException;
-				}
-				else
-				{
-					throw;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Gets the delegate to write the given record. 
-		/// If the delegate doesn't exist, one will be created and cached.
-		/// </summary>
-		/// <typeparam name="T">The record type.</typeparam>
-		/// <param name="record">The record.</param>
-		protected internal Action<T> GetWriteDelegate<T>(T record)
-		{
-			var type = typeof(T);
-			var typeKeyName = type.AssemblyQualifiedName;
-			if (type == typeof(object))
-			{
-				type = record.GetType();
-				typeKeyName += $"|{type.AssemblyQualifiedName}";
-			}
-
-			int typeKey = typeKeyName.GetHashCode();
-
-			if (!typeActions.TryGetValue(typeKey, out Delegate action))
-			{
-				typeActions[typeKey] = action = CreateWriteDelegate(record);
-			}
-
-			return (Action<T>)action;
-		}
-
-		/// <summary>
 		/// Gets the delegate to write the given record. 
 		/// If the delegate doesn't exist, one will be created and cached.
 		/// </summary>
 		/// <typeparam name="T">The record type.</typeparam>
 		/// <param name="typeInfo">The type for the record.</param>
-		protected internal Action<T> GetWriteDelegate<T>(RecordTypeInfo typeInfo)
+		public virtual Action<T> GetWriteDelegate<T>(RecordTypeInfo typeInfo)
 		{
-			var typeKey = typeInfo.RecordType.GetHashCode();
+			var typeKey = typeInfo.HashCode;
 
-			if (typeInfo.IsItemType)
-				typeKey = HashCode.Combine(17180427, typeKey);
+			if (typeInfo.IsObject)
+			{
+				typeKey = HashCode.Combine(objectHashCode, typeKey);
+			}
 
 			if (!typeActions.TryGetValue(typeKey, out Delegate action))
 			{

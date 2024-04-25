@@ -3,29 +3,38 @@ using System;
 namespace CsvHelper
 {
 	/// <summary>
-	/// Container for type info about written records
+	/// Type information for a record.
 	/// </summary>
 	public struct RecordTypeInfo
 	{
 		/// <summary>
-		/// .ctor
-		/// </summary>
-		/// <param name="recordType"></param>
-		/// <param name="isItemType"></param>
-		public RecordTypeInfo(Type recordType, bool isItemType)
-		{
-			RecordType = recordType;
-			IsItemType = isItemType;
-		}
-
-		/// <summary>
-		/// Final type of the record
+		/// The type of the record.
 		/// </summary>
 		public Type RecordType { get; }
 
 		/// <summary>
-		/// Is this type from record item
+		/// A value indicating if the type was an object and GetType() was used over typeof.
+		/// true if the type is an object, otherwise false.
 		/// </summary>
-		public bool IsItemType { get; }
+		public bool IsObject { get; }
+
+		/// <summary>
+		/// The hash code for the type.
+		/// </summary>
+		public int HashCode { get; }
+
+		/// <summary>
+		/// Initializes a new instance using the given <paramref name="recordType"/> and <paramref name="isObject"/>.
+		/// </summary>
+		/// <param name="recordType">The type of the record.</param>
+		/// <param name="isObject">A value indicating if the type was an object and GetType() was used over typeof.
+		/// true if the type is an object, otherwise false.</param>
+		public RecordTypeInfo(Type recordType, bool isObject)
+		{
+			RecordType = recordType;
+			IsObject = isObject;
+
+			HashCode = recordType.GetHashCode();
+		}
 	}
 }

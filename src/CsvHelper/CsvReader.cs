@@ -745,7 +745,8 @@ namespace CsvHelper
 			T record;
 			try
 			{
-				record = recordManager.Value.Create<T>();
+				var read = recordManager.Value.GetReadDelegate<T>(typeof(T));
+				record = read();
 			}
 			catch (Exception ex)
 			{
@@ -805,7 +806,8 @@ namespace CsvHelper
 			object record;
 			try
 			{
-				record = recordManager.Value.Create(type);
+				var read = recordManager.Value.GetReadDelegate<object>(type);
+				record = read();
 			}
 			catch (Exception ex)
 			{
@@ -856,12 +858,19 @@ namespace CsvHelper
 				ValidateHeader<T>();
 			}
 
+			Func<T> read = null;
+
 			while (Read())
 			{
 				T record;
 				try
 				{
-					record = recordManager.Value.Create<T>();
+					if (read == null)
+					{
+						read = recordManager.Value.GetReadDelegate<T>(typeof(T));
+					}
+
+					record = read();
 				}
 				catch (Exception ex)
 				{
@@ -930,12 +939,19 @@ namespace CsvHelper
 				ValidateHeader(type);
 			}
 
+			Func<object> read = null;
+
 			while (Read())
 			{
 				object record;
 				try
 				{
-					record = recordManager.Value.Create(type);
+					if (read == null)
+					{
+						read = recordManager.Value.GetReadDelegate<object>(type);
+					}
+
+					record = read();
 				}
 				catch (Exception ex)
 				{
@@ -1045,13 +1061,20 @@ namespace CsvHelper
 				ValidateHeader<T>();
 			}
 
+			Func<T> read = null;
+
 			while (await ReadAsync().ConfigureAwait(false))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				T record;
 				try
 				{
-					record = recordManager.Value.Create<T>();
+					if (read == null)
+					{
+						read = recordManager.Value.GetReadDelegate<T>(typeof(T));
+					}
+
+					record = read();
 				}
 				catch (Exception ex)
 				{
@@ -1120,13 +1143,20 @@ namespace CsvHelper
 				ValidateHeader(type);
 			}
 
+			Func<object> read = null;
+
 			while (await ReadAsync().ConfigureAwait(false))
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 				object record;
 				try
 				{
-					record = recordManager.Value.Create(type);
+					if (read == null)
+					{
+						read = recordManager.Value.GetReadDelegate<object>(type);
+					}
+
+					record = read();
 				}
 				catch (Exception ex)
 				{

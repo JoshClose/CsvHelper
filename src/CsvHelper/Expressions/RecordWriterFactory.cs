@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 
+using System;
 using System.Dynamic;
 
 namespace CsvHelper.Expressions
@@ -12,8 +13,6 @@ namespace CsvHelper.Expressions
 	/// </summary>
 	public class RecordWriterFactory
 	{
-		private readonly CsvWriter writer;
-		private readonly ExpandoObjectRecordWriter expandoObjectRecordWriter;
 		private readonly DynamicRecordWriter dynamicRecordWriter;
 		private readonly PrimitiveRecordWriter primitiveRecordWriter;
 		private readonly ObjectRecordWriter objectRecordWriter;
@@ -24,8 +23,6 @@ namespace CsvHelper.Expressions
 		/// <param name="writer">The writer.</param>
 		public RecordWriterFactory(CsvWriter writer)
 		{
-			this.writer = writer;
-			expandoObjectRecordWriter = new ExpandoObjectRecordWriter(writer);
 			dynamicRecordWriter = new DynamicRecordWriter(writer);
 			primitiveRecordWriter = new PrimitiveRecordWriter(writer);
 			objectRecordWriter = new ObjectRecordWriter(writer);
@@ -34,23 +31,19 @@ namespace CsvHelper.Expressions
 		/// <summary>
 		/// Creates a new record writer for the given record.
 		/// </summary>
-		/// <param name="typeInfo">The type of the record.</param>
-		public virtual RecordWriter MakeRecordWriter(RecordTypeInfo typeInfo)
+		/// <param name="recordType">The type of the record.</param>
+		public virtual RecordWriter MakeRecordWriter(Type recordType)
 		{
-			var type = typeInfo.RecordType;
-
-			if (type.IsPrimitive)
+			if (recordType.IsPrimitive)
 			{
 				return primitiveRecordWriter;
 			}
-			if (typeof(ExpandoObject).IsAssignableFrom(type))
-			{
-				return expandoObjectRecordWriter;
-			}
-			if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type))
+
+			if (typeof(IDynamicMetaObjectProvider).IsAssignableFrom(recordType))
 			{
 				return dynamicRecordWriter;
 			}
+
 			return objectRecordWriter;
 		}
 	}
