@@ -4,7 +4,6 @@
 // https://github.com/JoshClose/CsvHelper
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
 
 namespace CsvHelper.Expressions
 {
@@ -32,7 +31,7 @@ namespace CsvHelper.Expressions
 		/// </summary>
 		protected virtual dynamic CreateDynamicRecord()
 		{
-			var obj = new ExpandoObject();
+			var obj = new FastDynamicObject();
 			var dict = obj as IDictionary<string, object>;
 			if (Reader.HeaderRecord != null)
 			{
@@ -41,7 +40,7 @@ namespace CsvHelper.Expressions
 					var args = new GetDynamicPropertyNameArgs(i, Reader.Context);
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(args);
 					Reader.TryGetField(i, out string field);
-					dict.Add(propertyName, field);
+					dict[propertyName] = field;
 				}
 			}
 			else
@@ -51,7 +50,7 @@ namespace CsvHelper.Expressions
 					var args = new GetDynamicPropertyNameArgs(i, Reader.Context);
 					var propertyName = Reader.Configuration.GetDynamicPropertyName(args);
 					var field = Reader.GetField(i);
-					dict.Add(propertyName, field);
+					dict[propertyName] = field;
 				}
 			}
 

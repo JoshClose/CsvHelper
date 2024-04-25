@@ -75,8 +75,8 @@ namespace CsvHelper.Expressions
 		/// Creates a <see cref="Delegate"/> of type <see cref="Action{T}"/>
 		/// that will write the given record using the current writer row.
 		/// </summary>
-		/// <param name="typeForRecord">The type for the record.</param>
-		protected abstract Action<T> CreateWriteDelegate<T>(Type typeForRecord);
+		/// <param name="recordType">The type of the record.</param>
+		protected abstract Action<T> CreateWriteDelegate<T>(Type recordType);
 
 		/// <summary>
 		/// Combines the delegates into a single multicast delegate.
