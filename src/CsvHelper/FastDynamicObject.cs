@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Dynamic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace CsvHelper;
 
-internal class FastDynamicObject : IDictionary<string, object>, IDynamicMetaObjectProvider
+internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<string, object>
 {
 	private readonly Dictionary<string, object> dict;
 
@@ -30,24 +32,24 @@ internal class FastDynamicObject : IDictionary<string, object>, IDynamicMetaObje
 
 		set
 		{
-			dict[key] = value;
+			SetValue(key, value);
 		}
 	}
 
-	object SetValue(string name, object value)
+	ICollection<string> IDictionary<string, object>.Keys => dict.Keys;
+
+	ICollection<object> IDictionary<string, object>.Values => dict.Values;
+
+	int ICollection<KeyValuePair<string, object>>.Count => dict.Count;
+
+	bool ICollection<KeyValuePair<string, object>>.IsReadOnly => false;
+
+	object SetValue(string key, object value)
 	{
-		dict[name] = value;
+		dict[key] = value;
 
 		return value;
 	}
-
-	ICollection<string> IDictionary<string, object>.Keys => throw new NotSupportedException();
-
-	ICollection<object> IDictionary<string, object>.Values => throw new NotSupportedException();
-
-	int ICollection<KeyValuePair<string, object>>.Count => throw new NotSupportedException();
-
-	bool ICollection<KeyValuePair<string, object>>.IsReadOnly => throw new NotSupportedException();
 
 	DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter)
 	{
@@ -56,57 +58,60 @@ internal class FastDynamicObject : IDictionary<string, object>, IDynamicMetaObje
 
 	void IDictionary<string, object>.Add(string key, object value)
 	{
-		throw new NotSupportedException();
+		SetValue(key, value);
 	}
 
 	void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item)
 	{
-		throw new NotSupportedException();
+		SetValue(item.Key, item.Value);
 	}
 
 	void ICollection<KeyValuePair<string, object>>.Clear()
 	{
-		throw new NotSupportedException();
+		dict.Clear();
 	}
 
 	bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item)
 	{
-		throw new NotSupportedException();
+		return dict.Contains(item);
 	}
 
 	bool IDictionary<string, object>.ContainsKey(string key)
 	{
-		throw new NotSupportedException();
+		return dict.ContainsKey(key);
 	}
 
 	void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
 	{
-		throw new NotSupportedException();
+		foreach (var item in array)
+		{
+			SetValue(item.Key, item.Value);
+		}
 	}
 
 	IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
 	{
-		throw new NotSupportedException();
+		return dict.GetEnumerator();
 	}
 
 	IEnumerator IEnumerable.GetEnumerator()
 	{
-		throw new NotSupportedException();
+		return dict.GetEnumerator();
 	}
 
 	bool IDictionary<string, object>.Remove(string key)
 	{
-		throw new NotSupportedException();
+		return dict.Remove(key);
 	}
 
 	bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item)
 	{
-		throw new NotSupportedException();
+		return dict.Remove(item.Key);
 	}
 
 	bool IDictionary<string, object>.TryGetValue(string key, out object value)
 	{
-		throw new NotSupportedException();
+		return dict.TryGetValue(key, out value);
 	}
 
 	private class FastDynamicMetaObject : DynamicMetaObject
