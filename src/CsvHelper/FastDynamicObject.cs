@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -83,9 +84,21 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 
 	void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
 	{
-		foreach (var item in array)
+		if (arrayIndex < 0 || arrayIndex >= array.Length)
 		{
-			SetValue(item.Key, item.Value);
+			throw new ArgumentOutOfRangeException($"{nameof(arrayIndex)} must be greater than or equal to 0 and less then {nameof(array)} length.");
+		}
+
+		if (dict.Count + arrayIndex > array.Length)
+		{
+			throw new ArgumentException($"The number of elements in {nameof(FastDynamicMetaObject)} is greater than the available space from {nameof(arrayIndex)} to the end of the destination {nameof(array)}.");
+		}
+
+		var i = arrayIndex;
+		foreach (var pair in dict)
+		{
+			array[i] = pair;
+			i++;
 		}
 	}
 
