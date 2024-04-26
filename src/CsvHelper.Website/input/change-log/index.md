@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 32.0.1
+
+#### Bug Fixes
+
+- Fully implemented `IDictionary<string, object>` on `FastDynamicObject`.
+
 ### 32.0.0
 
 #### Features
