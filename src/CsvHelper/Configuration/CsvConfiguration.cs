@@ -218,6 +218,23 @@ namespace CsvHelper.Configuration
 			if (lineEndings.Contains(Delimiter)) throw new ConfigurationException($"The delimiter '{Delimiter}' cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
 			if (whiteSpaceChars.Contains(Delimiter)) throw new ConfigurationException($"The delimiter '{Delimiter}' cannot be a WhiteSpaceChar.");
 
+			for (int i = 0; i < Delimiter.Length; i++)
+			{
+				char c = Delimiter[i];
+				if (char.IsSurrogate(c))
+				{
+					if (i + 1 >= Delimiter.Length)
+					{
+						throw new ConfigurationException($"The delimiter '{Delimiter}' has invalid surrogate characters.");
+					}
+
+					if (!char.IsSurrogatePair(c, Delimiter[i + 1]))
+					{
+						throw new ConfigurationException($"The delimiter '{Delimiter}' has invalid surrogate characters.");
+					}
+				}
+			}
+
 			// Detect Delimiter
 			if (DetectDelimiter && DetectDelimiterValues.Length == 0) throw new ConfigurationException($"At least one value is required for {nameof(DetectDelimiterValues)} when {nameof(DetectDelimiter)} is enabled.");
 		}
