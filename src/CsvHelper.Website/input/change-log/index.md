@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 32.0.2
+
+#### Bug Fixes
+
+- Fixed issue with writing where an IEnumerable was getting projected twice.
+
 ### 32.0.1
 
 #### Bug Fixes

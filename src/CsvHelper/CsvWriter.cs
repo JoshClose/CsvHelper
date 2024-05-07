@@ -359,7 +359,13 @@ namespace CsvHelper
 
 			try
 			{
-				if (WriteHeader(records))
+				var enumerator = records.GetEnumerator();
+				if (!enumerator.MoveNext())
+				{
+					return;
+				}
+
+				if (WriteHeaderFromRecord(enumerator.Current))
 				{
 					NextRecord();
 				}
@@ -367,8 +373,10 @@ namespace CsvHelper
 				Action<object> write = null;
 				RecordTypeInfo writeType = default;
 
-				foreach (var record in records)
+				do
 				{
+					var record = enumerator.Current;
+
 					if (record == null)
 					{
 						// Since every record could be a different type, just write a blank line.
@@ -385,6 +393,7 @@ namespace CsvHelper
 					write(record);
 					NextRecord();
 				}
+				while (enumerator.MoveNext());
 			}
 			catch (Exception ex) when (ex is not CsvHelperException)
 			{
@@ -399,7 +408,18 @@ namespace CsvHelper
 
 			try
 			{
-				if (WriteHeader(records))
+				if (WriteHeaderFromType<T>())
+				{
+					NextRecord();
+				}
+
+				var enumerator = records.GetEnumerator();
+				if (!enumerator.MoveNext())
+				{
+					return;
+				}
+
+				if (WriteHeaderFromRecord(enumerator.Current))
 				{
 					NextRecord();
 				}
@@ -407,8 +427,10 @@ namespace CsvHelper
 				Action<T> write = null;
 				RecordTypeInfo writeType = default;
 
-				foreach (var record in records)
+				do
 				{
+					var record = enumerator.Current;
+
 					if (write == null || (record != null && writeType.RecordType != typeof(T)))
 					{
 						writeType = GetTypeInfoForRecord(record);
@@ -418,6 +440,7 @@ namespace CsvHelper
 					write(record);
 					NextRecord();
 				}
+				while (enumerator.MoveNext());
 			}
 			catch (Exception ex) when (ex is not CsvHelperException)
 			{
@@ -435,7 +458,13 @@ namespace CsvHelper
 
 			try
 			{
-				if (WriteHeader(records))
+				var enumerator = records.GetEnumerator();
+				if (!enumerator.MoveNext())
+				{
+					return;
+				}
+
+				if (WriteHeaderFromRecord(enumerator.Current))
 				{
 					await NextRecordAsync().ConfigureAwait(false);
 				}
@@ -443,9 +472,11 @@ namespace CsvHelper
 				Action<object> write = null;
 				RecordTypeInfo writeType = default;
 
-				foreach (var record in records)
+				do
 				{
 					cancellationToken.ThrowIfCancellationRequested();
+
+					var record = enumerator.Current;
 
 					if (write == null || (record != null && writeType.RecordType != record.GetType()))
 					{
@@ -456,6 +487,7 @@ namespace CsvHelper
 					write(record);
 					await NextRecordAsync().ConfigureAwait(false);
 				}
+				while (enumerator.MoveNext());
 			}
 			catch (Exception ex) when (ex is not CsvHelperException)
 			{
@@ -473,7 +505,18 @@ namespace CsvHelper
 
 			try
 			{
-				if (WriteHeader(records))
+				if (WriteHeaderFromType<T>())
+				{
+					await NextRecordAsync().ConfigureAwait(false);
+				}
+
+				var enumerator = records.GetEnumerator();
+				if (!enumerator.MoveNext())
+				{
+					return;
+				}
+
+				if (WriteHeaderFromRecord(enumerator.Current))
 				{
 					await NextRecordAsync().ConfigureAwait(false);
 				}
@@ -481,9 +524,11 @@ namespace CsvHelper
 				Action<T> write = null;
 				RecordTypeInfo writeType = default;
 
-				foreach (var record in records)
+				do
 				{
 					cancellationToken.ThrowIfCancellationRequested();
+
+					var record = enumerator.Current;
 
 					if (write == null || (record != null && writeType.RecordType != typeof(T)))
 					{
@@ -494,6 +539,7 @@ namespace CsvHelper
 					write(record);
 					await NextRecordAsync().ConfigureAwait(false);
 				}
+				while (enumerator.MoveNext());
 			}
 			catch (Exception ex) when (ex is not CsvHelperException)
 			{
@@ -511,7 +557,18 @@ namespace CsvHelper
 
 			try
 			{
-				if (await WriteHeaderAsync(records))
+				if (WriteHeaderFromType<T>())
+				{
+					await NextRecordAsync().ConfigureAwait(false);
+				}
+
+				var enumerator = records.GetAsyncEnumerator();
+				if (!await enumerator.MoveNextAsync())
+				{
+					return;
+				}
+
+				if (WriteHeaderFromRecord(enumerator.Current))
 				{
 					await NextRecordAsync().ConfigureAwait(false);
 				}
@@ -519,9 +576,11 @@ namespace CsvHelper
 				Action<T> write = null;
 				RecordTypeInfo writeType = default;
 
-				await foreach (var record in records.ConfigureAwait(false))
+				do
 				{
 					cancellationToken.ThrowIfCancellationRequested();
+
+					var record = enumerator.Current;
 
 					if (write == null || (record != null && writeType.RecordType != typeof(T)))
 					{
@@ -532,6 +591,7 @@ namespace CsvHelper
 					write(record);
 					await NextRecordAsync().ConfigureAwait(false);
 				}
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false));
 			}
 			catch (Exception ex) when (ex is not CsvHelperException)
 			{
@@ -804,29 +864,7 @@ namespace CsvHelper
 			disposed = true;
 		}
 
-		private async Task<bool> WriteHeaderAsync<T>(IAsyncEnumerable<T> records)
-		{
-			if (!hasHeaderRecord || hasHeaderBeenWritten)
-			{
-				return false;
-			}
-
-			var recordType = typeof(T);
-			var isPrimitive = recordType.GetTypeInfo().IsPrimitive;
-			if (!isPrimitive && recordType != typeof(object))
-			{
-				WriteHeader(recordType);
-				return hasHeaderBeenWritten;
-			}
-
-			var enumerator = records.GetAsyncEnumerator();
-			await enumerator.MoveNextAsync().ConfigureAwait(false);
-			var header = enumerator.Current;
-
-			return WriteHeader(header);
-		}
-
-		private bool WriteHeader<T>(IEnumerable<T> records)
+		private bool WriteHeaderFromType<T>()
 		{
 			if (!hasHeaderRecord || hasHeaderBeenWritten)
 			{
@@ -840,31 +878,18 @@ namespace CsvHelper
 				WriteHeader(recordType);
 
 				return hasHeaderBeenWritten;
-			}
-
-			return WriteHeader(records.FirstOrDefault());
-		}
-
-		private bool WriteHeader(IEnumerable records)
-		{
-			if (!hasHeaderRecord || hasHeaderBeenWritten)
-			{
-				return false;
-			}
-
-			foreach (var r in records)
-			{
-				if (r != null)
-				{
-					return WriteHeader(r);
-				}
 			}
 
 			return false;
 		}
 
-		private bool WriteHeader(object record)
+		private bool WriteHeaderFromRecord(object record)
 		{
+			if (!hasHeaderRecord || hasHeaderBeenWritten)
+			{
+				return false;
+			}
+
 			if (record == null)
 			{
 				return false;
