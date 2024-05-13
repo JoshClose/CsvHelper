@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 32.0.3
+
+#### Bug Fixes
+
+- Dispose of IEnumerator in CsvWriter.
+
 ### 32.0.2
 
 #### Bug Fixes

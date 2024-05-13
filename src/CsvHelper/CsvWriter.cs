@@ -357,9 +357,10 @@ namespace CsvHelper
 		{
 			// Changes in this method require changes in method WriteRecords<T>(IEnumerable<T> records) also.
 
+			var enumerator = records.GetEnumerator();
+
 			try
 			{
-				var enumerator = records.GetEnumerator();
 				if (!enumerator.MoveNext())
 				{
 					return;
@@ -399,12 +400,21 @@ namespace CsvHelper
 			{
 				throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 			}
+			finally
+			{
+				if (enumerator is IDisposable en)
+				{
+					en.Dispose();
+				}
+			}
 		}
 
 		/// <inheritdoc/>
 		public virtual void WriteRecords<T>(IEnumerable<T> records)
 		{
 			// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
+
+			var enumerator = records.GetEnumerator();
 
 			try
 			{
@@ -413,7 +423,6 @@ namespace CsvHelper
 					NextRecord();
 				}
 
-				var enumerator = records.GetEnumerator();
 				if (!enumerator.MoveNext())
 				{
 					return;
@@ -446,6 +455,13 @@ namespace CsvHelper
 			{
 				throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 			}
+			finally
+			{
+				if (enumerator is IDisposable en)
+				{
+					en.Dispose();
+				}
+			}
 		}
 
 		/// <inheritdoc/>
@@ -456,9 +472,10 @@ namespace CsvHelper
 			// - WriteRecordsAsync<T>(IEnumerable<T> records)
 			// - WriteRecordsAsync<T>(IAsyncEnumerable<T> records)
 
+			var enumerator = records.GetEnumerator();
+
 			try
 			{
-				var enumerator = records.GetEnumerator();
 				if (!enumerator.MoveNext())
 				{
 					return;
@@ -493,6 +510,13 @@ namespace CsvHelper
 			{
 				throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 			}
+			finally
+			{
+				if (enumerator is IDisposable en)
+				{
+					en.Dispose();
+				}
+			}
 		}
 
 		/// <inheritdoc/>
@@ -503,6 +527,8 @@ namespace CsvHelper
 			// - WriteRecordsAsync<T>(IEnumerable<T> records)
 			// - WriteRecordsAsync<T>(IAsyncEnumerable<T> records)
 
+			var enumerator = records.GetEnumerator();
+
 			try
 			{
 				if (WriteHeaderFromType<T>())
@@ -510,7 +536,6 @@ namespace CsvHelper
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 
-				var enumerator = records.GetEnumerator();
 				if (!enumerator.MoveNext())
 				{
 					return;
@@ -545,6 +570,13 @@ namespace CsvHelper
 			{
 				throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 			}
+			finally
+			{
+				if (enumerator is IDisposable en)
+				{
+					en.Dispose();
+				}
+			}
 		}
 
 		/// <inheritdoc/>
@@ -555,6 +587,8 @@ namespace CsvHelper
 			// - WriteRecordsAsync<T>(IEnumerable<T> records)
 			// - WriteRecordsAsync<T>(IAsyncEnumerable<T> records)
 
+			var enumerator = records.GetAsyncEnumerator();
+
 			try
 			{
 				if (WriteHeaderFromType<T>())
@@ -562,7 +596,6 @@ namespace CsvHelper
 					await NextRecordAsync().ConfigureAwait(false);
 				}
 
-				var enumerator = records.GetAsyncEnumerator();
 				if (!await enumerator.MoveNextAsync())
 				{
 					return;
@@ -596,6 +629,13 @@ namespace CsvHelper
 			catch (Exception ex) when (ex is not CsvHelperException)
 			{
 				throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
+			}
+			finally
+			{
+				if (enumerator is IDisposable en)
+				{
+					en.Dispose();
+				}
 			}
 		}
 
