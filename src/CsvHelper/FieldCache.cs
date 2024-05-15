@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -34,26 +35,26 @@ namespace CsvHelper
 			entries = new Entry[size];
 		}
 
-		public string GetField(char[] buffer, int start, int length)
+		public string GetField(ReadOnlySpan<char> buffer)
 		{
-			if (length == 0)
+			if (buffer.IsEmpty)
 			{
 				return string.Empty;
 			}
 
-			if (length > maxFieldSize)
+			if (buffer.Length > maxFieldSize)
 			{
-				return new string(buffer, start, length);
+				return buffer.ToString();
 			}
 
-			var hashCode = GetHashCode(buffer, start, length);
+			var hashCode = GetHashCode(buffer);
 			ref var bucket = ref GetBucket(hashCode);
 			int i = bucket - 1;
 			while ((uint)i < (uint)entries.Length)
 			{
 				ref var entry = ref entries[i];
 
-				if (entry.HashCode == hashCode && entry.Value.AsSpan().SequenceEqual(new Span<char>(buffer, start, length)))
+				if (entry.HashCode == hashCode && entry.Value.AsSpan().SequenceEqual(buffer))
 				{
 					return entry.Value;
 				}
@@ -70,7 +71,7 @@ namespace CsvHelper
 			ref var reference = ref entries[count];
 			reference.HashCode = hashCode;
 			reference.Next = bucket - 1;
-			reference.Value = new string(buffer, start, length);
+			reference.Value = buffer.ToString();
 			bucket = count + 1;
 			count++;
 
@@ -78,17 +79,23 @@ namespace CsvHelper
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private uint GetHashCode(char[] buffer, int start, int length)
+		private static uint GetHashCode(ReadOnlySpan<char> buffer)
 		{
 			unchecked
 			{
+#if NET6_0_OR_GREATER
+				HashCode hash = new();
+				hash.AddBytes(MemoryMarshal.AsBytes(buffer));
+				return (uint)hash.ToHashCode();
+#else
 				uint hash = 17;
-				for (var i = start; i < start + length; i++)
+				foreach (char c in buffer)
 				{
-					hash = hash * 31 + buffer[i];
+					hash = hash * 31 + c;
 				}
 
 				return hash;
+#endif
 			}
 		}
 

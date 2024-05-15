@@ -33,9 +33,20 @@ namespace CsvHelper
 		/// <summary>
 		/// Gets the field at the specified index for the current row.
 		/// </summary>
-		/// <param name="index">The index.</param>
-		/// <returns>The field.</returns>
+		/// <param name="index">The index of the field in the current row.</param>
+		/// <returns>A <see cref="string"/> representing the field at the specified index in the current row.</returns>
 		string this[int index] { get; }
+
+		/// <summary>
+		/// Gets a span over the field at the specified index in the current row.
+		/// </summary>
+		/// <param name="index">The index of the field in the current row.</param>
+		/// <returns>A span representing the field at the specified index in the current row.</returns>
+		ReadOnlySpan<char> GetFieldSpan(int index)
+#if NET
+			=> this[index]
+#endif
+			;
 
 		/// <summary>
 		/// Gets the record for the current row. Note:
@@ -48,6 +59,16 @@ namespace CsvHelper
 		/// Gets the raw record for the current row.
 		/// </summary>
 		string RawRecord { get; }
+
+		/// <summary>
+		/// Gets a span over the raw record for the current row.
+		/// </summary>
+		ReadOnlySpan<char> RawRecordSpan
+#if NET
+			=> RawRecord;
+#else
+			{ get; }
+#endif
 
 		/// <summary>
 		/// Gets the CSV row the parser is currently on.
