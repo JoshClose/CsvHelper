@@ -11,6 +11,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace CsvHelper
 		private readonly char escape;
 		private readonly bool countBytes;
 		private readonly Encoding encoding;
+		private readonly Encoder encoder;
 		private readonly bool ignoreBlankLines;
 		private readonly char comment;
 		private readonly bool allowComments;
@@ -191,6 +193,8 @@ namespace CsvHelper
 			delimiterValues = configuration.DetectDelimiterValues;
 			detectDelimiter = configuration.DetectDelimiter;
 			encoding = configuration.Encoding;
+			// encoder only used when counting bytes, so avoid NRE when configuration.Encoding is null
+			encoder = countBytes ? encoding.GetEncoder() : null;
 			escape = configuration.Escape;
 			ignoreBlankLines = configuration.IgnoreBlankLines;
 			isNewLineSet = configuration.IsNewLineSet;
@@ -230,7 +234,14 @@ namespace CsvHelper
 				{
 					if (!FillBuffer())
 					{
-						return ReadEndOfFile();
+						bool haveMoreData = ReadEndOfFile();
+
+						if (countBytes && !haveMoreData)
+						{
+							byteCount += FlushEncoder();
+						}
+
+						return haveMoreData;
 					}
 
 					if (row == 1 && detectDelimiter)
@@ -265,7 +276,14 @@ namespace CsvHelper
 				{
 					if (!await FillBufferAsync().ConfigureAwait(false))
 					{
-						return ReadEndOfFile();
+						bool haveMoreData = ReadEndOfFile();
+
+						if (countBytes && !haveMoreData)
+						{
+							byteCount += FlushEncoder();
+						}
+
+						return haveMoreData;
 					}
 
 					if (row == 1 && detectDelimiter)
@@ -347,7 +365,7 @@ namespace CsvHelper
 
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new char[] { c });
+					byteCount += PushCharToEncoder(c);
 				}
 
 				if (maxFieldSize > 0 && bufferPosition - fieldStartPosition - 1 > maxFieldSize)
@@ -526,7 +544,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new char[] { c });
+					byteCount += PushCharToEncoder(c);
 				}
 			}
 
@@ -556,7 +574,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new char[] { c });
+					byteCount += PushCharToEncoder(c);
 				}
 			}
 
@@ -587,7 +605,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new[] { c });
+					byteCount += PushCharToEncoder(c);
 				}
 
 				if (bufferPosition >= charsRead)
@@ -625,7 +643,7 @@ namespace CsvHelper
 					charCount++;
 					if (countBytes)
 					{
-						byteCount += encoding.GetByteCount(new char[] { c });
+						byteCount += PushCharToEncoder(c);
 					}
 				}
 			}
@@ -664,7 +682,7 @@ namespace CsvHelper
 				charCount++;
 				if (countBytes)
 				{
-					byteCount += encoding.GetByteCount(new[] { c });
+					byteCount += PushCharToEncoder(c);
 				}
 
 				if (bufferPosition >= charsRead)
@@ -1094,6 +1112,31 @@ namespace CsvHelper
 			}
 
 			return new ProcessedField(newStart, newLength, buffer);
+		}
+
+		private int PushCharToEncoder(char c)
+		{
+			// We use GetBytes instead of GetByteCount because the former updates the internal state
+			// of the encoder and the latter doesn't. We use a throwaway buffer for the encoded bytes.
+#if NETSTANDARD2_1 || NET
+			Span<byte> bytesBuffer = encoding.GetMaxByteCount(1) <= 16 ? stackalloc byte[16] : new byte[encoding.GetMaxByteCount(1)];
+			return encoder.GetBytes(MemoryMarshal.CreateReadOnlySpan(ref c, 1), bytesBuffer, flush: false);
+#else
+			char[] chars = { c };
+			byte[] bytes = new byte[encoding.GetMaxByteCount(1)];
+			return encoder.GetBytes(chars, 0, 1, bytes, 0, flush: false);
+#endif
+		}
+
+		private int FlushEncoder()
+		{
+#if NETSTANDARD2_1 || NET
+			Span<byte> bytesBuffer = encoding.GetMaxByteCount(1) <= 16 ? stackalloc byte[16] : new byte[encoding.GetMaxByteCount(1)];
+			return encoder.GetBytes(Array.Empty<char>(), bytesBuffer, flush: true);
+#else
+			byte[] bytes = new byte[encoding.GetMaxByteCount(1)];
+			return encoder.GetBytes(new char[]{ }, 0, 0, bytes, 0, flush: true);
+#endif
 		}
 
 		/// <inheritdoc/>

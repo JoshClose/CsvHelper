@@ -133,5 +133,58 @@ namespace CsvHelper.Tests.Parsing
 			}
 		}
 
+		[Theory]
+		[MemberData(nameof(Utf8CharsData))]
+		public void UTF8_ByteCounts(char[] chars, long expectedByteCount)
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				Encoding = Encoding.UTF8,
+				CountBytes = true,
+			};
+			using (var reader = new CharsReader(chars))
+			using (var parser = new CsvParser(reader, config))
+			{
+				while (parser.Read()) { }
+
+				Assert.Equal(expectedByteCount, parser.ByteCount);
+			}
+		}
+
+		public static IEnumerable<object[]> Utf8CharsData =>
+		   new List<object[]>
+		   {
+				new object[] { "ABC✋😉👍".ToCharArray(), Encoding.UTF8.GetByteCount("ABC✋😉👍") },
+				new object[] { "𐓏𐓘𐓻𐓘𐓻𐓟 𐒻𐓟".ToCharArray(), Encoding.UTF8.GetByteCount("𐓏𐓘𐓻𐓘𐓻𐓟 𐒻𐓟") },
+				new object[] { new char[] { '\u0232' }, 2 }, // U+0232 (Ȳ - LATIN CAPITAL LETTER Y WITH MACRON)
+				new object[] { new char[] { '\u0985' }, 3 }, // U+0985 (অ - BENGALI LETTER A)
+				new object[] { new char[] { '\ud83d', '\ude17' }, 4 }, // U+1F617 (😗 - KISSING FACE)
+				// The next line tests the encoder is flushed correctly: if the supplied TextReader terminates
+				// on an unpaired (high) surrogate character then only upon flushing the encoder will the
+				// ByteCount be increased, in this case by 3 corresponding to the number of UTF8 bytes
+				// of the replacement character U+FFFD (the default fallback behaviour of the static Encoding.UTF8).
+				new object[] { new char[] { '\ud800' }, 3 },
+		   };
+
+		private class CharsReader : TextReader
+		{
+			private readonly char[] _chars;
+			private int idx = -1;
+
+			public CharsReader(char[] chars)
+			{
+				_chars = chars;
+			}
+
+			public override int Peek()
+			{
+				return idx + 1 >= _chars.Length ? -1 : _chars[idx + 1];
+			}
+
+			public override int Read()
+			{
+				return idx + 1 >= _chars.Length ? -1 : _chars[++idx];
+			}
+		}
 	}
 }
