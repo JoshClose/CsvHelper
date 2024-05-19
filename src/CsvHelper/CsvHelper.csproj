@@ -15,8 +15,9 @@
 		<DefaultLanguage>en-US</DefaultLanguage>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <!--<Nullable>enable</Nullable>
-        <WarningsAsErrors>nullable</WarningsAsErrors>-->
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
 
 		<!-- Sign -->
 		<SignAssembly>true</SignAssembly>

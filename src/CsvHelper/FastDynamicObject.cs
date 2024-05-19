@@ -1,10 +1,10 @@
-﻿using System;
+﻿// Copyright 2009-2024 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -124,7 +124,7 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 
 	bool IDictionary<string, object>.TryGetValue(string key, out object value)
 	{
-		return dict.TryGetValue(key, out value);
+		return dict.TryGetValue(key, out value!);
 	}
 
 	private class FastDynamicMetaObject : DynamicMetaObject
