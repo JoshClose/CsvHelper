@@ -19,7 +19,7 @@ public class DateTimeOffsetConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		if (text == null)
 		{
@@ -31,8 +31,20 @@ public class DateTimeOffsetConverter : DefaultTypeConverter
 
 		DateTimeOffset dateTimeOffset;
 		var success = memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
-			? DateTimeOffset.TryParse(text, formatProvider, dateTimeStyle, out dateTimeOffset)
-			: DateTimeOffset.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle, out dateTimeOffset);
+			? DateTimeOffset.TryParse(
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+				text,
+#else
+				text.ToString(),
+#endif
+				formatProvider, dateTimeStyle, out dateTimeOffset)
+			: DateTimeOffset.TryParseExact(
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+				text,
+#else
+				text.ToString(),
+#endif
+				memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle, out dateTimeOffset);
 
 		return success
 			? dateTimeOffset

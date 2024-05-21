@@ -67,7 +67,7 @@ public class EnumConverter : DefaultTypeConverter
 	}
 
 	/// <inheritdoc/>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase ?? false;
 
@@ -76,7 +76,7 @@ public class EnumConverter : DefaultTypeConverter
 			var dict = ignoreCase
 				? enumNamesByAttributeNamesIgnoreCase
 				: enumNamesByAttributeNames;
-			if (dict.TryGetValue(text, out var name))
+			if (dict.TryGetValue(text.ToString(), out var name))
 			{
 				return Enum.Parse(type, name);
 			}
@@ -94,7 +94,7 @@ public class EnumConverter : DefaultTypeConverter
 #else
 		try
 		{
-			return Enum.Parse(type, text, ignoreCase);
+			return Enum.Parse(type, text.ToString(), ignoreCase);
 		}
 		catch
 		{
@@ -104,11 +104,11 @@ public class EnumConverter : DefaultTypeConverter
 	}
 
 	/// <inheritdoc/>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value != null && attributeNamesByEnumValues.TryGetValue(value, out var name))
 		{
-			return name;
+			return name.AsSpan();
 		}
 
 		return base.ConvertToString(value, row, memberMapData);

@@ -37,13 +37,15 @@ public class ByteArrayConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 	/// <returns>The string representation of the object.</returns>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value is byte[] byteArray)
 		{
-			return (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
-				? Convert.ToBase64String(byteArray)
+			var text = (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
+				? Convert.ToBase64String(byteArray).AsSpan()
 				: ByteArrayToHexString(byteArray);
+
+			return text;
 		}
 
 		return base.ConvertToString(value, row, memberMapData);
@@ -56,20 +58,29 @@ public class ByteArrayConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		if (text != null)
 		{
 			return (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
-				? Convert.FromBase64String(text)
+				? Convert.FromBase64String(text.ToString())
 				: HexStringToByteArray(text);
 		}
 
 		return base.ConvertFromString(text, row, memberMapData);
 	}
 
-	private string ByteArrayToHexString(byte[] byteArray)
+	private ReadOnlySpan<char> ByteArrayToHexString(byte[] byteArray)
 	{
+#if NET6_0_OR_GREATER
+		ReadOnlySpan<char> hexString = Convert.ToHexString(byteArray);
+		if ((options & ByteArrayConverterOptions.HexInclude0x) == ByteArrayConverterOptions.HexInclude0x)
+		{
+			hexString = $"0x{hexString}";
+		}
+
+		return hexString;
+#else
 		var hexString = new StringBuilder();
 
 		if ((options & ByteArrayConverterOptions.HexInclude0x) == ByteArrayConverterOptions.HexInclude0x)
@@ -87,12 +98,22 @@ public class ByteArrayConverter : DefaultTypeConverter
 			hexString.Append(HexStringPrefix + byteArray[i].ToString("X2"));
 		}
 
-		return hexString.ToString();
+		return hexString.ToString().AsSpan();
+#endif
 	}
 
-	private byte[] HexStringToByteArray(string hex)
+	private byte[] HexStringToByteArray(ReadOnlySpan<char> hex)
 	{
-		var has0x = hex.StartsWith("0x");
+#if NET6_0_OR_GREATER
+		if (hex.StartsWith("0x"))
+		{
+			hex.Slice(2);
+		}
+
+		return Convert.FromHexString(hex);
+#else
+
+		var has0x = hex.StartsWith("0x".AsSpan());
 
 		var length = has0x
 			? (hex.Length - 1) / ByteLength
@@ -102,10 +123,11 @@ public class ByteArrayConverter : DefaultTypeConverter
 
 		for (var stringIndex = has0xOffset * 2; stringIndex < hex.Length; stringIndex += ByteLength)
 		{
-			byteArray[(stringIndex - has0xOffset) / ByteLength] = Convert.ToByte(hex.Substring(stringIndex, 2), 16);
+			byteArray[(stringIndex - has0xOffset) / ByteLength] = Convert.ToByte(hex.Slice(stringIndex, 2).ToString(), 16);
 		}
 
 		return byteArray;
+#endif
 	}
 
 	private void ValidateOptions()

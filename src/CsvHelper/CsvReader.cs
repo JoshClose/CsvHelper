@@ -64,7 +64,7 @@ public class CsvReader : IReader
 	/// <param name="reader">The reader.</param>
 	/// <param name="culture">The culture.</param>
 	/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextReader"/> open after the <see cref="CsvReader"/> object is disposed, otherwise <c>false</c>.</param>
-	public CsvReader(TextReader reader, CultureInfo culture, bool leaveOpen = false) : this(new CsvParser(reader, culture, leaveOpen)) { }
+	public CsvReader(TextReader reader, CultureInfo culture, bool leaveOpen = false) : this(new CsvParser(reader, leaveOpen)) { }
 
 	/// <summary>
 	/// Creates a new CSV reader using the given <see cref="TextReader" /> and

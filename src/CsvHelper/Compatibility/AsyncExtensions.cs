@@ -1,8 +1,8 @@
-﻿namespace CsvHelper;
+﻿#if !(NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER)
+namespace System.IO;
 
 internal static class AsyncExtensions
 {
-#if !(NETSTANDARD2_1_OR_GREATER || NET)
 	public static ValueTask DisposeAsync(this TextWriter textWriter)
 	{
 		if (textWriter != null)
@@ -12,5 +12,5 @@ internal static class AsyncExtensions
 
 		return default;
 	}
-#endif
 }
+#endif

@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
+using System.Buffers;
 
 namespace CsvHelper.TypeConversion;
 
@@ -12,7 +13,7 @@ namespace CsvHelper.TypeConversion;
 public class DefaultTypeConverter : ITypeConverter
 {
 	/// <inheritdoc/>
-	public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public virtual object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member!.MemberType() == memberMapData.Default?.GetType())
 		{
@@ -24,19 +25,17 @@ public class DefaultTypeConverter : ITypeConverter
 			text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
 		}
 
-		text ??= string.Empty;
-
 		var message =
 			$"The conversion cannot be performed.{Environment.NewLine}" +
 			$"    Text: '{text}'{Environment.NewLine}" +
 			$"    MemberName: {memberMapData.Member?.Name}{Environment.NewLine}" +
 			$"    MemberType: {memberMapData.Member?.MemberType().FullName}{Environment.NewLine}" +
 			$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
-		throw new TypeConverterException(this, memberMapData, text, row.Context, message);
+		throw new TypeConverterException(this, memberMapData, text.ToString(), row.Context, message);
 	}
 
 	/// <inheritdoc/>
-	public virtual string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public virtual ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value == null)
 		{
@@ -47,6 +46,18 @@ public class DefaultTypeConverter : ITypeConverter
 
 			return string.Empty;
 		}
+
+#if NET6_0_OR_GREATER
+		if (value is ISpanFormattable spanFormattable && value is not string)
+		{
+			Span<char> span = ArrayPool<char>.Shared.Rent(1000);
+			var format = (memberMapData.TypeConverterOptions.Formats?.FirstOrDefault() ?? string.Empty).AsSpan();
+			if (spanFormattable.TryFormat(span, out var length, format, memberMapData.TypeConverterOptions.CultureInfo))
+			{
+				return span.Slice(0, length);
+			}
+		}
+#endif
 
 		if (value is IFormattable formattable)
 		{

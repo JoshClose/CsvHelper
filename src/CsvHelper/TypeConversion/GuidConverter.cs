@@ -18,9 +18,15 @@ public class GuidConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
-		if (Guid.TryParse(text, out var g))
+		if (Guid.TryParse(
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
+			text,
+#else
+			text.ToString(),
+#endif
+			out var g))
 		{
 			return g;
 		}
