@@ -412,10 +412,13 @@
 <h6 id="example">Example</h6>
 <pre><code class="language-cs">void Main()
 {
+	using CsvHelper;
+	using CsvHelper.Configuration;
+	
 	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
 	using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 	{
-		csv.Context.RegisterClassMap&lt;FooMap&gt;();
+		csv.Configuration.RegisterClassMap&lt;FooMap&gt;();
 		var records = csv.GetRecords&lt;Foo&gt;();
 	}
 }
