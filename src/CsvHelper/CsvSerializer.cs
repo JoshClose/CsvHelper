@@ -2,6 +2,9 @@
 
 namespace CsvHelper;
 
+/// <summary>
+/// Serializes objects into CSV records.
+/// </summary>
 public class CsvSerializer : IDisposable
 {
 	private TextWriter writer;
@@ -9,10 +12,23 @@ public class CsvSerializer : IDisposable
 	private CsvSerializerState state;
 	private bool isDisposed;
 
+	/// <summary>
+	/// Current row number.
+	/// </summary>
 	public int Row => state.row;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CsvSerializer"/> class.
+	/// </summary>
+	/// <param name="writer">The writer.</param>
 	public CsvSerializer(TextWriter writer) : this(writer, options => options) { }
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CsvSerializer"/> class.
+	/// </summary>
+	/// <param name="writer">The writer.</param>
+	/// <param name="configureOptions">Configure options.</param>
+	/// <exception cref="NotSupportedException"></exception>
 	public CsvSerializer(TextWriter writer, Func<CsvSerializerOptions, CsvSerializerOptions> configureOptions)
 	{
 		this.writer = writer;
@@ -38,21 +54,32 @@ public class CsvSerializer : IDisposable
 		state = new CsvSerializerState(writer, options);
 	}
 
+	/// <summary>
+	/// Writes the given field.
+	/// </summary>
+	/// <param name="field">The field to write.</param>
 	public void Write(ReadOnlySpan<char> field)
 	{
 		state.Write(field);
 	}
 
+	/// <summary>
+	/// Moves to the next record.
+	/// </summary>
 	public void MoveNext()
 	{
 		state.MoveNext();
 	}
 
+	/// <summary>
+	/// Flushes the buffer to the writer.
+	/// </summary>
 	public void Flush()
 	{
 		state.Flush();
 	}
 
+	/// <inheritdoc />
 	public void Dispose()
 	{
 		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
@@ -60,6 +87,7 @@ public class CsvSerializer : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
+	/// <inheritdoc />
 	protected virtual void Dispose(bool isDisposing)
 	{
 		if (isDisposed)

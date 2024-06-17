@@ -180,10 +180,17 @@ public static class ConfigurationFunctions
 	/// Return the detected delimiter or null if one wasn't found.
 	/// </summary>
 	/// <param name="args">The args.</param>
-	public static string GetDelimiter(GetDelimiterArgs args)
+	public static char GetDelimiter(GetDelimiterArgs args)
 	{
-		var text = args.Text;
+		var text = args.Text.ToString();
 		var config = args.Configuration;
+
+		if (args.Configuration.CultureInfo.TextInfo.ListSeparator.Length > 1)
+		{
+			throw new ConfigurationException($"The CultureInfo.TextInfo.ListSeparator ");
+		}
+
+		var listSeparator = config.CultureInfo.TextInfo.ListSeparator[0];
 
 		if (config.Mode == CsvMode.RFC4180)
 		{
@@ -202,7 +209,7 @@ public static class ConfigurationFunctions
 			newLine = "\r\n|\r|\n";
 		}
 
-		var lineDelimiterCounts = new List<Dictionary<string, int>>();
+		var lineDelimiterCounts = new List<Dictionary<char, int>>();
 		while (text.Length > 0)
 		{
 			// Since all escaped text has been removed, we can reliably read line by line.
@@ -211,11 +218,11 @@ public static class ConfigurationFunctions
 
 			if (line.Length > 0)
 			{
-				var delimiterCounts = new Dictionary<string, int>();
+				var delimiterCounts = new Dictionary<char, int>();
 				foreach (var delimiter in config.DetectDelimiterValues)
 				{
 					// Escape regex special chars to use as regex pattern.
-					var pattern = Regex.Replace(delimiter, @"([.$^{\[(|)*+?\\])", "\\$1");
+					var pattern = Regex.Replace(delimiter.ToString(), @"([.$^{\[(|)*+?\\])", "\\$1");
 					delimiterCounts[delimiter] = Regex.Matches(line, pattern).Count;
 				}
 
@@ -247,11 +254,11 @@ public static class ConfigurationFunctions
 			}
 		).ToList();
 
-		string? newDelimiter = null;
-		if (delimiters.Any(x => x.Delimiter == config.CultureInfo.TextInfo.ListSeparator) && lineDelimiterCounts.Count > 1)
+		char? newDelimiter = null;
+		if (delimiters.Any(x => x.Delimiter == listSeparator) && lineDelimiterCounts.Count > 1)
 		{
 			// The culture's separator is on every line. Assume this is the delimiter.
-			newDelimiter = config.CultureInfo.TextInfo.ListSeparator;
+			newDelimiter = listSeparator;
 		}
 		else
 		{

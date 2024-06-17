@@ -122,7 +122,7 @@ public interface IParserConfiguration
 	/// The delimiter used to separate fields.
 	/// Default is <see cref="TextInfo.ListSeparator"/>.
 	/// </summary>
-	string Delimiter { get; }
+	char Delimiter { get; }
 
 	/// <summary>
 	/// Detect the delimiter instead of using the delimiter from configuration.
@@ -139,7 +139,7 @@ public interface IParserConfiguration
 	/// The possible delimiter values used when detecting the delimiter.
 	/// Default is [",", ";", "|", "\t"].
 	/// </summary>
-	string[] DetectDelimiterValues { get; }
+	char[] DetectDelimiterValues { get; }
 
 	/// <summary>
 	/// The character used to escape characters.

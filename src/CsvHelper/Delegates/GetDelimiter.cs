@@ -2,9 +2,8 @@
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
 
-namespace CsvHelper.Delegates;
+namespace CsvHelper.Configuration;
 
 /// <summary>
 /// Function that resolves the delimiter from the given text.
@@ -12,17 +11,17 @@ namespace CsvHelper.Delegates;
 /// </summary>
 /// <param name="args"></param>
 /// <returns></returns>
-public delegate string GetDelimiter(GetDelimiterArgs args);
+public delegate char GetDelimiter(GetDelimiterArgs args);
 
 /// <summary>
 /// GetDelimiter args.
 /// </summary>
-public readonly struct GetDelimiterArgs
+public readonly ref struct GetDelimiterArgs
 {
 	/// <summary>
 	/// The text to resolve the delimiter from.
 	/// </summary>
-	public readonly string Text;
+	public readonly ReadOnlySpan<char> Text;
 
 	/// <summary>
 	/// The configuration.
@@ -34,7 +33,7 @@ public readonly struct GetDelimiterArgs
 	/// </summary>
 	/// <param name="text">The text to resolve the delimiter from.</param>
 	/// <param name="configuration">The configuration.</param>
-	public GetDelimiterArgs(string text, IParserConfiguration configuration)
+	public GetDelimiterArgs(ReadOnlySpan<char> text, IParserConfiguration configuration)
 	{
 		Text = text;
 		Configuration = configuration;

@@ -19,7 +19,7 @@ public class IEnumerableConverter : DefaultTypeConverter
 	/// <param name="row"></param>
 	/// <param name="memberMapData"></param>
 	/// <returns>The string representation of the object.</returns>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		var list = value as IEnumerable;
 		if (list == null)

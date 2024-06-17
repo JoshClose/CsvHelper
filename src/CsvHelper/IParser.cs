@@ -5,7 +5,7 @@
 namespace CsvHelper;
 
 /// <summary>
-/// Defines functionality used the parse a CSV file.
+/// Defines functionality used the parse records.
 /// </summary>
 public interface IParser : IDisposable
 {

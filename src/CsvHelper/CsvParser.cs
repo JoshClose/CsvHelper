@@ -1,6 +1,7 @@
 ﻿using CsvHelper.Configuration;
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace CsvHelper;
 
@@ -14,6 +15,8 @@ public class CsvParser : IParser, IDisposable
 	private bool isDisposed;
 	private int rowNumber;
 	private bool leaveOpen;
+	private bool detectDelimiter;
+	private bool delimiterDetected;
 
 	private CsvParserState state;
 
@@ -54,6 +57,8 @@ public class CsvParser : IParser, IDisposable
 
 		options = configure(new CsvParserOptions());
 		options.Validate();
+
+		detectDelimiter = options.DetectDelimiter;
 
 		switch (options.Mode)
 		{
@@ -101,6 +106,16 @@ public class CsvParser : IParser, IDisposable
 			if (charsRead == 0)
 			{
 				return false;
+			}
+
+			if (!delimiterDetected)
+			{
+				if (detectDelimiter)
+				{
+					options.Delimiter = options.GetDelimiter(state.buffer);
+				}
+
+				delimiterDetected = true;
 			}
 
 			state.Parse();
@@ -223,5 +238,16 @@ public class CsvParser : IParser, IDisposable
 		// Free unmanaged resources (unmanaged objects) and override finalizer
 		// Set large fields to null
 		isDisposed = true;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private void DetectDelimiter()
+	{
+		if (delimiterDetected || )
+		{
+			return;
+		}
+
+
 	}
 }
