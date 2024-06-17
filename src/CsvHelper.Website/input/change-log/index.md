@@ -1,5 +1,16 @@
 ﻿# Change Log
 
+### 33.0.0
+
+#### Features
+
+- Nullable turned on.
+- Moved Microsoft.Bcl.AsyncInterfaces to 8.0.0.
+
+#### Breaking Changes
+
+- Nullable being turned on could cause a lot of code changes.
+
 ### 32.0.3
 
 #### Bug Fixes
