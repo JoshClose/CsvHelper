@@ -125,7 +125,7 @@ namespace CsvHelper.Tests
 
 			public decimal DecimalColumn { get; set; }
 
-			public string FirstColumn { get; set; }
+			public string? FirstColumn { get; set; }
 		}
 
 		private sealed class TestRecordMap : ClassMap<TestRecord>
@@ -141,24 +141,24 @@ namespace CsvHelper.Tests
 
 		private class Person
 		{
-			public string FirstName { get; set; }
+			public string? FirstName { get; set; }
 
-			public string LastName { get; set; }
+			public string? LastName { get; set; }
 
 			public DateTime Updated { get; set; }
 
-			public Address HomeAddress { get; set; }
+			public Address? HomeAddress { get; set; }
 
-			public Address WorkAddress { get; set; }
+			public Address? WorkAddress { get; set; }
 		}
 
 		private class Address
 		{
-			public string Street { get; set; }
+			public string? Street { get; set; }
 
-			public string City { get; set; }
+			public string? City { get; set; }
 
-			public string State { get; set; }
+			public string? State { get; set; }
 
 			public int Zip { get; set; }
 		}

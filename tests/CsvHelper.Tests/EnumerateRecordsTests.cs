@@ -137,12 +137,12 @@ namespace CsvHelper.Tests
 					if (count == 1)
 					{
 						Assert.Equal(1, r.Id);
-						Assert.Equal("one", r.Reference.Name);
+						Assert.Equal("one", r.Reference?.Name);
 					}
 					else if (count == 2)
 					{
 						Assert.Equal(2, r.Id);
-						Assert.Equal("two", r.Reference.Name);
+						Assert.Equal("two", r.Reference?.Name);
 					}
 
 					count++;
@@ -154,28 +154,28 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class UnUsedProperty
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 
-			public string UnUsed { get; set; }
+			public string? UnUsed { get; set; }
 		}
 
 		public class HasReferences
 		{
 			public int Id { get; set; }
 
-			public Reference Reference { get; set; }
+			public Reference? Reference { get; set; }
 		}
 
 		public class Reference
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

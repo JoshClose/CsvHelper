@@ -43,7 +43,7 @@ namespace CsvHelper.Tests.Writing
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
     }
 }

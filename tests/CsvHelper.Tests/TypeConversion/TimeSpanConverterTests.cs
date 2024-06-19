@@ -28,11 +28,11 @@ namespace CsvHelper.Tests.TypeConversion
 			var timeSpan = new TimeSpan(dateTime.Hour, dateTime.Minute, dateTime.Second, dateTime.Millisecond);
 
 			// Valid conversions.
-			Assert.Equal(timeSpan.ToString(), converter.ConvertToString(timeSpan, null, propertyMapData));
+			Assert.Equal(timeSpan.ToString(), converter.ConvertToString(timeSpan, null!, propertyMapData));
 
 			// Invalid conversions.
-			Assert.Equal("1", converter.ConvertToString(1, null, propertyMapData));
-			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null!, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null!, propertyMapData));
 		}
 
 		[Fact]
@@ -47,7 +47,6 @@ namespace CsvHelper.Tests.TypeConversion
 
 			Assert.Throws<FormatException>(() => cmConverter.ConvertFromString(""));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("", row, propertyMapData));
-			Assert.Throws<NotSupportedException>(() => cmConverter.ConvertFromString(null));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 		}
 	}

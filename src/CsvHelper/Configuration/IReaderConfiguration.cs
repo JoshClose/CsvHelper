@@ -21,14 +21,14 @@ public interface IReaderConfiguration : IParserConfiguration
 	/// will throw a <see cref="ValidationException"/> if there is no header for a given member mapping.
 	/// You can supply your own function to do other things like logging the issue instead of throwing an exception.
 	/// </summary>
-	HeaderValidated HeaderValidated { get; }
+	HeaderValidated? HeaderValidated { get; }
 
 	/// <summary>
 	/// Gets the function that is called when a missing field is found. The default function will
 	/// throw a <see cref="MissingFieldException"/>. You can supply your own function to do other things
 	/// like logging the issue instead of throwing an exception.
 	/// </summary>
-	MissingFieldFound MissingFieldFound { get; }
+	MissingFieldFound? MissingFieldFound { get; }
 
 	/// <summary>
 	/// Gets the function that is called when a reading exception occurs.
@@ -36,7 +36,7 @@ public interface IReaderConfiguration : IParserConfiguration
 	/// reading exceptions, you can supply your own function to do other things like
 	/// logging the issue.
 	/// </summary>
-	ReadingExceptionOccurred ReadingExceptionOccurred { get; }
+	ReadingExceptionOccurred? ReadingExceptionOccurred { get; }
 
 	/// <summary>
 	/// Prepares the header field for matching against a member name.

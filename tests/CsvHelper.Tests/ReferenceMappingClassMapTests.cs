@@ -104,24 +104,24 @@ namespace CsvHelper.Tests
 
 		private class Person
 		{
-			public string FirstName { get; set; }
+			public string? FirstName { get; set; }
 
-			public string LastName { get; set; }
+			public string? LastName { get; set; }
 
-			public Address HomeAddress { get; set; }
+			public Address HomeAddress { get; set; } = new Address();
 
-			public Address WorkAddress { get; set; }
+			public Address WorkAddress { get; set; } = new Address();
 		}
 
 		private class Address
 		{
-			public string Street { get; set; }
+			public string? Street { get; set; }
 
-			public string City { get; set; }
+			public string? City { get; set; }
 
-			public string State { get; set; }
+			public string? State { get; set; }
 
-			public string Zip { get; set; }
+			public string? Zip { get; set; }
 		}
 
 		private sealed class PersonMap : ClassMap<Person>

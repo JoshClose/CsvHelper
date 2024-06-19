@@ -10,7 +10,7 @@ namespace CsvHelper;
 /// <typeparam name="TMember">The type of the member.</typeparam>
 /// <param name="args">The args.</param>
 /// <returns>The class object.</returns>
-public delegate TMember ConvertFromString<TMember>(ConvertFromStringArgs args);
+public delegate TMember? ConvertFromString<TMember>(ConvertFromStringArgs args);
 
 /// <summary>
 /// <see cref="ConvertFromString{TMember}"/> args.

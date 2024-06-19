@@ -27,7 +27,7 @@ namespace CsvHelper.Tests.Mappings
 		private class Test
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class TestMap : ClassMap<Test>

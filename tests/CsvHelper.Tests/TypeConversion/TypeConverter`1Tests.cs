@@ -10,7 +10,7 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertToString_NullableBoolean_Converts()
 		{
 			ITypeConverter converter = new GenericBoolConverter();
-			var result = converter.ConvertToString(null, null, null);
+			var result = converter.ConvertToString(null, null!, null!);
 
 			Assert.Equal(string.Empty, result);
 		}
@@ -19,14 +19,14 @@ namespace CsvHelper.Tests.TypeConversion
 		public void ConvertFromString_NullableBoolean_Converts()
 		{
 			ITypeConverter converter = new GenericBoolConverter();
-			var result = (bool?)converter.ConvertFromString("true", null, null);
+			var result = (bool?)converter.ConvertFromString("true", null!, null!);
 
 			Assert.True(result);
 		}
 
 		private class GenericBoolConverter : TypeConverter<bool?>
 		{
-			public override bool? ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+			public override bool? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 			{
 				if (bool.TryParse(text, out var result))
 				{

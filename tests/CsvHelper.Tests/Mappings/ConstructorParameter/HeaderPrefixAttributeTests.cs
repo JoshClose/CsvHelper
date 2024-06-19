@@ -27,7 +27,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 			Assert.Equal(2, map.ParameterMaps.Count);
 			Assert.Null(map.ParameterMaps[0].ReferenceMap);
-			Assert.Equal("Bar_", map.ParameterMaps[1].ReferenceMap.Data.Prefix);
+			Assert.Equal("Bar_", map.ParameterMaps[1].ReferenceMap?.Data.Prefix);
 		}
 
 		[Fact]
@@ -105,7 +105,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 		private class Bar
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

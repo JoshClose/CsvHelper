@@ -98,7 +98,7 @@ namespace CsvHelper.Tests.Mappings
 
 		private abstract class Foo
 		{
-			public string Id { get; set; }
+			public string? Id { get; set; }
 		}
 
 		private class Bar : Foo

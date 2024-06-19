@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture },
 			};
 
-			Assert.Equal("https://test.com/", converter.ConvertToString(new Uri("https://test.com"), null, propertyMapData));
+			Assert.Equal("https://test.com/", converter.ConvertToString(new Uri("https://test.com"), null!, propertyMapData));
 		}
 
 		[Fact]
@@ -43,7 +43,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture },
 			};
 
-			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null, propertyMapData));
+			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null!, propertyMapData));
 		}
 
 		[Fact]
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture, UriKind = UriKind.Relative },
 			};
 
-			Assert.Equal(new Uri("/a/b/c", UriKind.Relative), converter.ConvertFromString("/a/b/c", null, propertyMapData));
+			Assert.Equal(new Uri("/a/b/c", UriKind.Relative), converter.ConvertFromString("/a/b/c", null!, propertyMapData));
 		}
 
 		[Fact]
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture, UriKind = UriKind.Absolute },
 			};
 
-			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null, propertyMapData));
+			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null!, propertyMapData));
 		}
 
 		[Fact]

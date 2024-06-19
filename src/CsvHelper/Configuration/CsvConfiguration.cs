@@ -21,7 +21,7 @@ public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	public virtual bool AllowComments { get; set; }
 
 	/// <inheritdoc/>
-	public virtual BadDataFound BadDataFound { get; set; } = ConfigurationFunctions.BadDataFound;
+	public virtual BadDataFound? BadDataFound { get; set; } = ConfigurationFunctions.BadDataFound;
 
 	/// <inheritdoc/>
 	public virtual int BufferSize { get; set; } = 0x1000;
@@ -75,7 +75,7 @@ public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	public virtual bool HasHeaderRecord { get; set; } = true;
 
 	/// <inheritdoc/>
-	public virtual HeaderValidated HeaderValidated { get; set; } = ConfigurationFunctions.HeaderValidated;
+	public virtual HeaderValidated? HeaderValidated { get; set; } = ConfigurationFunctions.HeaderValidated;
 
 	/// <inheritdoc/>
 	public virtual bool IgnoreBlankLines { get; set; } = true;
@@ -108,7 +108,7 @@ public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	public virtual MemberTypes MemberTypes { get; set; } = MemberTypes.Properties;
 
 	/// <inheritdoc/>
-	public virtual MissingFieldFound MissingFieldFound { get; set; } = ConfigurationFunctions.MissingFieldFound;
+	public virtual MissingFieldFound? MissingFieldFound { get; set; } = ConfigurationFunctions.MissingFieldFound;
 
 	/// <inheritdoc/>
 	public virtual CsvMode Mode { get; set; }
@@ -134,7 +134,7 @@ public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	public virtual char Quote { get; set; } = '"';
 
 	/// <inheritdoc/>
-	public virtual ReadingExceptionOccurred ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
+	public virtual ReadingExceptionOccurred? ReadingExceptionOccurred { get; set; } = ConfigurationFunctions.ReadingExceptionOccurred;
 
 	/// <inheritdoc/>
 	public virtual ReferenceHeaderPrefix? ReferenceHeaderPrefix { get; set; }

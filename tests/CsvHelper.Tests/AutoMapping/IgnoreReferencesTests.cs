@@ -51,12 +51,12 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			public int Id { get; set; }
 
-			public Bar Bar { get; set; }
+			public Bar Bar { get; set; } = new Bar();
 		}
 
 		private class Bar
 		{
-			public string Name { get; set; }
+			public string Name { get; set; } = string.Empty;
 		}
 	}
 }

@@ -14,20 +14,20 @@ namespace CsvHelper.Tests.Mappings
 		public void Test()
 		{
 			var map = new AMap( "A Field" );
-			var name = map.ReferenceMaps[0].Data.Mapping.MemberMaps.Find<B>( m => m.Name ).Data.Names[0];
+			var name = map.ReferenceMaps[0].Data.Mapping.MemberMaps.Find<B>( m => m.Name )?.Data.Names[0];
 			Assert.Equal( "B Field", name );
 		}
 
 		private class A
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 
-			public B B { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class AMap : ClassMap<A>

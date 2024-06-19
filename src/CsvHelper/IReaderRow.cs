@@ -407,7 +407,7 @@ public interface IReaderRow
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 	/// <returns>The record converted to <see cref="Type"/> T.</returns>
-	T? GetRecord<T>();
+	T GetRecord<T>();
 
 	/// <summary>
 	/// Get the record converted into <see cref="System.Type"/> T.
@@ -415,12 +415,12 @@ public interface IReaderRow
 	/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
 	/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the record.</param>
 	/// <returns>The record converted to <see cref="System.Type"/> T.</returns>
-	T? GetRecord<T>(T anonymousTypeDefinition);
+	T GetRecord<T>(T anonymousTypeDefinition);
 
 	/// <summary>
 	/// Gets the record.
 	/// </summary>
 	/// <param name="type">The <see cref="Type"/> of the record.</param>
 	/// <returns>The record.</returns>
-	object? GetRecord(Type type);
+	object GetRecord(Type type);
 }

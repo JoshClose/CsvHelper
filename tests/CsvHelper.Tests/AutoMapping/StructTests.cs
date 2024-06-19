@@ -62,9 +62,9 @@ namespace CsvHelper.Tests.AutoMapping
 
 		public class A
 		{
-			public B Simple1 { get; set; }
-			public string Title { get; set; }
-			public B Simple2 { get; set; }
+			public B Simple1 { get; set; } = new B();
+			public string Title { get; set; } = string.Empty;
+			public B Simple2 { get; set; } = new B();
 		}
 
 		public struct B

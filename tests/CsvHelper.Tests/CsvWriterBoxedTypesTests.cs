@@ -55,7 +55,7 @@ namespace CsvHelper.Tests
 	{
 		public int Id { get; set; }
 
-		public string Name { get; set; }
+		public string? Name { get; set; }
 	}
 
 	public sealed class AMap : ClassMap<A>

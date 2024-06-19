@@ -158,7 +158,7 @@ public abstract class MemberMap
 	/// what other mapping configurations are specified.
 	/// </summary>
 	/// <param name="constantValue">The constant value.</param>
-	public virtual MemberMap Constant(object constantValue)
+	public virtual MemberMap Constant(object? constantValue)
 	{
 		if (Data.Member == null)
 		{

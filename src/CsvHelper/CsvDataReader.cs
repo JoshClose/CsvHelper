@@ -255,7 +255,7 @@ public class CsvDataReader : IDataReader
 		var headerRecord = csv.HeaderRecord;
 		for (var i = 0; i < (headerRecord?.Length ?? 0); i++)
 		{
-			args = new PrepareHeaderForMatchArgs(headerRecord?[i], i);
+			args = new PrepareHeaderForMatchArgs(headerRecord?[i] ?? string.Empty, i);
 			var headerPrepared = csv.Configuration.PrepareHeaderForMatch(args);
 			if (csv.Configuration.CultureInfo.CompareInfo.Compare(namePrepared, headerPrepared, CompareOptions.IgnoreCase) == 0)
 			{

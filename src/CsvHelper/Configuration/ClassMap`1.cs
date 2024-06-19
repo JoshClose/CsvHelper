@@ -25,7 +25,7 @@ public abstract class ClassMap<TClass> : ClassMap
 	/// <param name="useExistingMap">If true, an existing map will be used if available.
 	/// If false, a new map is created for the same member.</param>
 	/// <returns>The member mapping.</returns>
-	public virtual MemberMap<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
+	public virtual MemberMap<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember?>> expression, bool useExistingMap = true)
 	{
 		var (classMap, member) = GetMemberMap(expression);
 		var memberMap = classMap.Map(typeof(TClass), member, useExistingMap); ;
@@ -40,7 +40,7 @@ public abstract class ClassMap<TClass> : ClassMap
 	/// <param name="useExistingMap">If true, an existing map will be used if available.
 	/// If false, a new map is created for the same member.</param>
 	/// <returns>The member mapping.</returns>
-	public virtual MemberMap Map<T>(Expression<Func<T, object>> expression, bool useExistingMap = true)
+	public virtual MemberMap Map<T>(Expression<Func<T, object?>> expression, bool useExistingMap = true)
 	{
 		var (classMap, member) = GetMemberMap(expression);
 		var memberMap = classMap.Map(typeof(TClass), member, useExistingMap);
@@ -58,13 +58,13 @@ public abstract class ClassMap<TClass> : ClassMap
 	/// <param name="expression">The expression.</param>
 	/// <param name="constructorArgs">Constructor arguments used to create the reference map.</param>
 	/// <returns>The reference mapping for the member.</returns>
-	public virtual MemberReferenceMap References<TClassMap>(Expression<Func<TClass, object>> expression, params object[] constructorArgs) where TClassMap : ClassMap
+	public virtual MemberReferenceMap References<TClassMap>(Expression<Func<TClass, object?>> expression, params object[] constructorArgs) where TClassMap : ClassMap
 	{
 		var member = ReflectionHelper.GetMember(expression);
 		return References(typeof(TClassMap), member, constructorArgs);
 	}
 
-	private (ClassMap, MemberInfo) GetMemberMap<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression)
+	private (ClassMap, MemberInfo) GetMemberMap<TModel, TProperty>(Expression<Func<TModel, TProperty?>> expression)
 	{
 		var stack = ReflectionHelper.GetMembers(expression);
 		if (stack.Count == 0)

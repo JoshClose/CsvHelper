@@ -78,17 +78,17 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[TypeConverter(typeof(StringTypeConverter))]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class StringTypeConverter : ITypeConverter
 		{
-			public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+			public object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 			{
 				return "two";
 			}
 
-			public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+			public string ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 			{
 				return "two";
 			}
@@ -98,7 +98,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		{
 			public int Id { get; set; }
 			[TypeConverter(typeof(StringTypeConverter))]
-			public BClass Name { get; set; }
+			public BClass? Name { get; set; }
 		}
 
 		private class BClass { }
@@ -107,7 +107,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		{
 			public int Id { get; set; }
 			[TypeConverter(typeof(StringTypeConverter))]
-			public BStruct Name { get; set; }
+			public BStruct? Name { get; set; }
 		}
 
 		private class BStruct { }

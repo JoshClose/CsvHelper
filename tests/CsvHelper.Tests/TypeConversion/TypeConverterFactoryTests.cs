@@ -117,20 +117,20 @@ namespace CsvHelper.Tests.TypeConversion
 
 			internal class OptionConverter<T> : TypeConverter<Option<T>>
 			{
-				public override string ConvertToString(Option<T> value, IWriterRow row, MemberMapData memberMapData)
+				public override string? ConvertToString(Option<T> value, IWriterRow row, MemberMapData memberMapData)
 				{
 					var wrappedTypeConverter = row.Context.TypeConverterCache.GetConverter<T>();
 
 					return value.IsPresent ? wrappedTypeConverter.ConvertToString(value.Single(), row, memberMapData) : "";
 				}
 
-				public override Option<T> ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+				public override Option<T> ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 				{
 					var wrappedTypeConverter = row.Context.TypeConverterCache.GetConverter<T>();
 
 					return text == ""
 						? new Option<T>()
-						: new Option<T>((T)wrappedTypeConverter.ConvertFromString(text, row, memberMapData));
+						: new Option<T>((T)wrappedTypeConverter.ConvertFromString(text, row, memberMapData)!);
 				}
 			}
 		}

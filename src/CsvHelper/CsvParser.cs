@@ -25,7 +25,7 @@ public class CsvParser : IParser, IDisposable
 	private readonly bool ignoreBlankLines;
 	private readonly char comment;
 	private readonly bool allowComments;
-	private readonly BadDataFound badDataFound;
+	private readonly BadDataFound? badDataFound;
 	private readonly bool lineBreakInQuotedFieldIsBadData;
 	private readonly TrimOptions trimOptions;
 	private readonly char[] whiteSpaceChars;

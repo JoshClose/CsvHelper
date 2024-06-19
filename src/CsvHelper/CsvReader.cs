@@ -23,12 +23,12 @@ public class CsvReader : IReader
 	private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
 	private readonly MemberMapData reusableMemberMapData = new MemberMapData(null);
 	private readonly bool hasHeaderRecord;
-	private readonly HeaderValidated headerValidated;
+	private readonly HeaderValidated? headerValidated;
 	private readonly ShouldSkipRecord? shouldSkipRecord;
-	private readonly ReadingExceptionOccurred readingExceptionOccurred;
+	private readonly ReadingExceptionOccurred? readingExceptionOccurred;
 	private readonly CultureInfo cultureInfo;
 	private readonly bool ignoreBlankLines;
-	private readonly MissingFieldFound missingFieldFound;
+	private readonly MissingFieldFound? missingFieldFound;
 	private readonly bool includePrivateMembers;
 	private readonly PrepareHeaderForMatch prepareHeaderForMatch;
 
@@ -721,7 +721,7 @@ public class CsvReader : IReader
 	}
 
 	/// <inheritdoc/>
-	public virtual T? GetRecord<T>()
+	public virtual T GetRecord<T>()
 	{
 		CheckHasBeenRead();
 
@@ -732,11 +732,11 @@ public class CsvReader : IReader
 
 			if (!Read())
 			{
-				return default;
+				throw new ReaderException(context, "There are no records.");
 			}
 		}
 
-		T? record;
+		T record;
 		try
 		{
 			var read = recordManager.Value.GetReadDelegate<T>(typeof(T));
@@ -759,14 +759,14 @@ public class CsvReader : IReader
 				}
 			}
 
-			record = default;
+			record = (T?)args.Record!; // If the user is ignoring exceptions, we'll let a possible null be returned to them.
 		}
 
 		return record;
 	}
 
 	/// <inheritdoc/>
-	public virtual T? GetRecord<T>(T anonymousTypeDefinition)
+	public virtual T GetRecord<T>(T anonymousTypeDefinition)
 	{
 		if (anonymousTypeDefinition == null)
 		{
@@ -782,7 +782,7 @@ public class CsvReader : IReader
 	}
 
 	/// <inheritdoc/>
-	public virtual object? GetRecord(Type type)
+	public virtual object GetRecord(Type type)
 	{
 		CheckHasBeenRead();
 
@@ -793,11 +793,11 @@ public class CsvReader : IReader
 
 			if (!Read())
 			{
-				return null;
+				throw new ReaderException(context, "There are no records.");
 			}
 		}
 
-		object? record;
+		object record;
 		try
 		{
 			var read = recordManager.Value.GetReadDelegate<object>(type);
@@ -820,7 +820,7 @@ public class CsvReader : IReader
 				}
 			}
 
-			record = default;
+			record = args.Record!; // If the user is ignoring exceptions, we'll let a possible null be returned to them.
 		}
 
 		return record;

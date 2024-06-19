@@ -141,7 +141,7 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
 		public void Test1()
 		{
-			var data = new List<(int row, int column, string field)>();
+			var data = new List<(int row, int column, string? field)>();
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				ShouldQuote = args =>

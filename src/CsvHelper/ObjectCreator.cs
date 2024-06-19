@@ -13,14 +13,14 @@ namespace CsvHelper;
 /// </summary>
 public class ObjectCreator
 {
-	private readonly Dictionary<int, Func<object[], object>> cache = new Dictionary<int, Func<object[], object>>();
+	private readonly Dictionary<int, Func<object?[], object>> cache = new Dictionary<int, Func<object?[], object>>();
 
 	/// <summary>
 	/// Creates an instance of type T using the given arguments.
 	/// </summary>
 	/// <typeparam name="T">The type to create an instance of.</typeparam>
 	/// <param name="args">The constrcutor arguments.</param>
-	public T CreateInstance<T>(params object[] args)
+	public T CreateInstance<T>(params object?[] args)
 	{
 		return (T)CreateInstance(typeof(T), args);
 	}
@@ -30,7 +30,7 @@ public class ObjectCreator
 	/// </summary>
 	/// <param name="type">The type to create an instance of.</param>
 	/// <param name="args">The constructor arguments.</param>
-	public object CreateInstance(Type type, params object[] args)
+	public object CreateInstance(Type type, params object?[] args)
 	{
 		var func = GetFunc(type, args);
 
@@ -38,7 +38,7 @@ public class ObjectCreator
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Func<object[], object> GetFunc(Type type, object[] args)
+	private Func<object?[], object> GetFunc(Type type, object?[] args)
 	{
 		var argTypes = GetArgTypes(args);
 		var key = GetConstructorCacheKey(type, argTypes);
@@ -51,7 +51,7 @@ public class ObjectCreator
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Type[] GetArgTypes(object[] args)
+	private static Type[] GetArgTypes(object?[] args)
 	{
 		var argTypes = new Type[args.Length];
 		for (var i = 0; i < args.Length; i++)
@@ -76,7 +76,7 @@ public class ObjectCreator
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Func<object[], object> CreateInstanceFunc(Type type, Type[] argTypes)
+	private static Func<object?[], object> CreateInstanceFunc(Type type, Type[] argTypes)
 	{
 		var parameterExpression = Expression.Parameter(typeof(object[]), "args");
 
@@ -114,7 +114,7 @@ public class ObjectCreator
 			body = Expression.New(constructor, arguments);
 		}
 
-		var lambda = Expression.Lambda<Func<object[], object>>(body, new[] { parameterExpression });
+		var lambda = Expression.Lambda<Func<object?[], object>>(body, new[] { parameterExpression });
 		var func = lambda.Compile();
 
 		return func;

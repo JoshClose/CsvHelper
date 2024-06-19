@@ -15,8 +15,14 @@ public delegate bool ReadingExceptionOccurred(ReadingExceptionOccurredArgs args)
 /// <summary>
 /// ReadingExceptionOccurred args.
 /// </summary>
-public readonly struct ReadingExceptionOccurredArgs
+public struct ReadingExceptionOccurredArgs
 {
+	/// <summary>
+	/// The record that will be returned from GetRecord. If this is null,
+	/// GetRecord will return a null, even though it is non-nullable.
+	/// </summary>
+	public object? Record { get; set; }
+
 	/// <summary>
 	/// The exception.
 	/// </summary>

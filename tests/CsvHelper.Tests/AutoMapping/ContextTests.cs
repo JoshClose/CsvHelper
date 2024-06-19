@@ -24,13 +24,13 @@ namespace CsvHelper.Tests.AutoMapping
 
 			var map = context.AutoMap<Foo>();
 
-			Assert.Contains("Bar", map.MemberMaps.Find<Foo>(x => x.Name).Data.TypeConverterOptions.NullValues);
+			Assert.Contains("Bar", map.MemberMaps.Find<Foo>(x => x.Name)?.Data.TypeConverterOptions.NullValues);
 		}
 
 		private class Foo
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
+			public string Name { get; set; } = string.Empty;
 		}
     }
 }

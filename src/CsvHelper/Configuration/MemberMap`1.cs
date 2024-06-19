@@ -136,7 +136,7 @@ public class MemberMap<TClass, TMember> : MemberMap
 	/// </summary>
 	/// <param name="defaultValue">The default value.</param>
 	/// <param name="useOnConversionFailure">Use default on conversion failure.</param>
-	public virtual MemberMap<TClass, TMember> Default(string defaultValue, bool useOnConversionFailure = false)
+	public virtual MemberMap<TClass, TMember> Default(string? defaultValue, bool useOnConversionFailure = false)
 	{
 		Data.Default = defaultValue;
 		Data.IsDefaultSet = true;
@@ -151,7 +151,7 @@ public class MemberMap<TClass, TMember> : MemberMap
 	/// what other mapping configurations are specified.
 	/// </summary>
 	/// <param name="constantValue">The constant value.</param>
-	public virtual MemberMap<TClass, TMember> Constant(TMember constantValue)
+	public virtual MemberMap<TClass, TMember> Constant(TMember? constantValue)
 	{
 		Data.Constant = constantValue;
 		Data.IsConstantSet = true;

@@ -78,7 +78,7 @@ public interface IParserConfiguration
 	/// You can supply your own function to do other things like logging the issue
 	/// instead of throwing an exception.
 	/// </summary>
-	BadDataFound BadDataFound { get; }
+	BadDataFound? BadDataFound { get; }
 
 	/// <summary>
 	/// Gets or sets the maximum size of a field.

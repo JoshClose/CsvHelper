@@ -27,11 +27,11 @@ namespace CsvHelper.Tests.TypeConversion
 			var value = Guid.NewGuid();
 
 			// Valid conversions.
-			Assert.Equal(value.ToString(), converter.ConvertToString(value, null, propertyMapData));
+			Assert.Equal(value.ToString(), converter.ConvertToString(value, null!, propertyMapData));
 
 			// Invalid conversions.
-			Assert.Equal("1", converter.ConvertToString(1, null, propertyMapData));
-			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null!, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null!, propertyMapData));
 		}
 
 		[Fact]
@@ -48,12 +48,12 @@ namespace CsvHelper.Tests.TypeConversion
 			var value = Guid.NewGuid();
 
 			// Valid conversions.
-			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString(), null, propertyMapData).ToString());
-			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("N"), null, propertyMapData).ToString());
-			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("D"), null, propertyMapData).ToString());
-			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("B"), null, propertyMapData).ToString());
-			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("P"), null, propertyMapData).ToString());
-			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("X"), null, propertyMapData).ToString());
+			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString(), null!, propertyMapData)?.ToString());
+			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("N"), null!, propertyMapData)?.ToString());
+			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("D"), null!, propertyMapData)?.ToString());
+			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("B"), null!, propertyMapData)?.ToString());
+			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("P"), null!, propertyMapData)?.ToString());
+			Assert.Equal(value.ToString(), converter.ConvertFromString(value.ToString("X"), null!, propertyMapData)?.ToString());
 
 			// Invalid conversions.
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));

@@ -78,7 +78,7 @@ namespace CsvHelper.Tests.Writing
 
 		private class B
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

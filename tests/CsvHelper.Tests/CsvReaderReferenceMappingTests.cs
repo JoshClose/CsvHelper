@@ -50,28 +50,28 @@ namespace CsvHelper.Tests
 
 		private class A
 		{
-			public string Id { get; set; }
+			public string Id { get; set; } = string.Empty;
 
-			public B B { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B
 		{
-			public string Id { get; set; }
+			public string Id { get; set; } = string.Empty;
 
-			public C C { get; set; }
+			public C C { get; set; } = new C();
 		}
 
 		private class C
 		{
-			public string Id { get; set; }
+			public string Id { get; set; } = string.Empty;
 
-			public D D { get; set; }
+			public D D { get; set; } = new D();
 		}
 
 		private class D
 		{
-			public string Id { get; set; }
+			public string Id { get; set; } = string.Empty;
 		}
 
 		private sealed class AMap : ClassMap<A>

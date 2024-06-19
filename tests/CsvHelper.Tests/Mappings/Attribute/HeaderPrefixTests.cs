@@ -82,9 +82,9 @@ namespace CsvHelper.Tests.Mappings.Attribute
 				var records = csv.GetRecords<ACustom>().ToList();
 
 				Assert.Single(records);
-				Assert.Equal("aid", records[0].AId);
-				Assert.Equal("bid", records[0].B.BId);
-				Assert.Equal("cid", records[0].B.C.CId);
+				Assert.Equal("aid", records?[0]?.AId);
+				Assert.Equal("bid", records?[0]?.B?.BId);
+				Assert.Equal("cid", records?[0]?.B?.C?.CId);
 			}
 		}
 
@@ -101,9 +101,9 @@ namespace CsvHelper.Tests.Mappings.Attribute
 				var records = csv.GetRecords<AInherit>().ToList();
 
 				Assert.Single(records);
-				Assert.Equal("aid", records[0].AId);
-				Assert.Equal("bid", records[0].B.BId);
-				Assert.Equal("cid", records[0].B.C.CId);
+				Assert.Equal("aid", records?[0].AId);
+				Assert.Equal("bid", records?[0].B?.BId);
+				Assert.Equal("cid", records?[0].B?.C?.CId);
 			}
 		}
 
@@ -120,9 +120,9 @@ namespace CsvHelper.Tests.Mappings.Attribute
 				var records = csv.GetRecords<ANoInherit>().ToList();
 
 				Assert.Single(records);
-				Assert.Equal("bid", records[0].B.BId);
-				Assert.Equal("aid", records[0].AId);
-				Assert.Equal("cid", records[0].B.C.CId);
+				Assert.Equal("bid", records?[0].B?.BId);
+				Assert.Equal("aid", records?[0].AId);
+				Assert.Equal("cid", records?[0].B?.C?.CId);
 			}
 		}
 
@@ -139,71 +139,71 @@ namespace CsvHelper.Tests.Mappings.Attribute
 				var records = csv.GetRecords<ADefaultInherit>().ToList();
 
 				Assert.Single(records);
-				Assert.Equal("aid", records[0].AId);
-				Assert.Equal("bid", records[0].B.BId);
-				Assert.Equal("cid", records[0].B.C.CId);
+				Assert.Equal("aid", records?[0].AId);
+				Assert.Equal("bid", records?[0].B?.BId);
+				Assert.Equal("cid", records?[0].B?.C?.CId);
 			}
 		}
 
 		private class ACustom
 		{
-			public string AId { get; set; }
+			public string? AId { get; set; }
 			[HeaderPrefix("b_")]
-			public BCustom B { get; set; }
+			public BCustom? B { get; set; }
 		}
 
 		private class BCustom
 		{
-			public string BId { get; set; }
+			public string? BId { get; set; }
 			[HeaderPrefix("c_")]
-			public C C { get; set; }
+			public C? C { get; set; }
 		}
 
 		private class AInherit
 		{
-			public string AId { get; set; }
+			public string? AId { get; set; }
 			[HeaderPrefix(true)]
-			public BInherit B { get; set; }
+			public BInherit? B { get; set; }
 		}
 
 		private class BInherit
 		{
-			public string BId { get; set; }
+			public string? BId { get; set; }
 			[HeaderPrefix(true)]
-			public C C { get; set; }
+			public C? C { get; set; }
 		}
 
 		private class ANoInherit
 		{
-			public string AId { get; set; }
+			public string? AId { get; set; }
 			[HeaderPrefix(false)]
-			public BInherit B { get; set; }
+			public BInherit? B { get; set; }
 		}
 
 		private class BNoInherit
 		{
-			public string BId { get; set; }
+			public string? BId { get; set; }
 			[HeaderPrefix(false)]
-			public C C { get; set; }
+			public C? C { get; set; }
 		}
 
 		private class ADefaultInherit
 		{
-			public string AId { get; set; }
+			public string? AId { get; set; }
 			[HeaderPrefix]
-			public BInherit B { get; set; }
+			public BInherit? B { get; set; }
 		}
 
 		private class BDefaultInherit
 		{
-			public string BId { get; set; }
+			public string? BId { get; set; }
 			[HeaderPrefix]
-			public C C { get; set; }
+			public C? C { get; set; }
 		}
 
 		private class C
 		{
-			public string CId { get; set; }
+			public string? CId { get; set; }
 		}
 	}
 }

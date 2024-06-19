@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 33.0.1
+
+#### Bug Fixes
+
+- Added more things that can be null.
+
 ### 33.0.0
 
 #### Features

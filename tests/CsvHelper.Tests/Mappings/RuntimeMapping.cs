@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.Mappings
 
 				var map = new DefaultClassMap<A>();
 				var type = typeof(A);
-				var member = type.GetProperty("AId");
+				var member = type.GetProperty("AId")!;
 				map.Map(type, member).Constant(4);
 
 				csv.Context.RegisterClassMap(map);
@@ -54,7 +54,7 @@ namespace CsvHelper.Tests.Mappings
 
 				var map = new DefaultClassMap<A>();
 				var type = typeof(A);
-				var member = type.GetProperty("AId");
+				var member = type.GetProperty("AId")!;
 				map.Map(type, member).Default(4);
 
 				csv.Context.RegisterClassMap(map);
@@ -79,7 +79,7 @@ namespace CsvHelper.Tests.Mappings
 
 				var map = new DefaultClassMap<A>();
 				var type = typeof(A);
-				var member = type.GetProperty("NullableNum");
+				var member = type.GetProperty("NullableNum")!;
 				map.Map(type, member).Constant(4);
 
 				csv.Context.RegisterClassMap(map);
@@ -104,7 +104,7 @@ namespace CsvHelper.Tests.Mappings
 
 				var map = new DefaultClassMap<A>();
 				var type = typeof(A);
-				var member = type.GetProperty("NullableNum");
+				var member = type.GetProperty("NullableNum")!;
 				map.Map(type, member).Default(4);
 
 				csv.Context.RegisterClassMap(map);
@@ -144,14 +144,14 @@ namespace CsvHelper.Tests.Mappings
 
 			public int? NullableNum { get; set; }
 
-			public B B { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B
 		{
 			public int BId { get; set; }
 
-			public C C { get; set; }
+			public C C { get; set; } = new C();
 		}
 
 		private class C
@@ -161,7 +161,7 @@ namespace CsvHelper.Tests.Mappings
 
 		private class ObjectProperty
 		{
-			public object O { get; set; }
+			public object? O { get; set; }
 		}
 
 		private class ConstantValueTypeNullMap : ClassMap<A>

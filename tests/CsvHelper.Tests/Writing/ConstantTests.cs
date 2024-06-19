@@ -93,7 +93,7 @@ namespace CsvHelper.Tests.Writing
 		private class Test
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class TestIntMap : ClassMap<Test>

@@ -200,7 +200,7 @@ public class MemberMapCollection : IList<MemberMap>
 	/// <typeparam name="T">The <see cref="System.Type"/> the member is on.</typeparam>
 	/// <param name="expression">The member expression.</param>
 	/// <returns>The <see cref="MemberMap"/> for the given expression, or null if not found.</returns>
-	public virtual MemberMap? Find<T>(Expression<Func<T, object>> expression)
+	public virtual MemberMap? Find<T>(Expression<Func<T, object?>> expression)
 	{
 		var member = ReflectionHelper.GetMember(expression);
 		return Find(member);

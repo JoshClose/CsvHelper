@@ -161,7 +161,7 @@ internal static class ReflectionHelper
 	/// <param name="expression">The member expression.</param>
 	/// <returns>The inheritance chain for the given member expression as a stack.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Stack<MemberInfo> GetMembers<TModel, TProperty>(Expression<Func<TModel, TProperty>> expression)
+	public static Stack<MemberInfo> GetMembers<TModel, TProperty>(Expression<Func<TModel, TProperty?>> expression)
 	{
 		var stack = new Stack<MemberInfo>();
 

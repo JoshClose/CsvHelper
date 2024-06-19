@@ -41,12 +41,12 @@ namespace CsvHelper.Tests.AutoMapping
 
 		private class Parent
 		{
-			public string ParentProp { get; set; }
+			public string ParentProp { get; set; } = string.Empty;
 		}
 
 		private class Child : Parent
 		{
-			public string ChildProp { get; set; }
+			public string ChildProp { get; set; } = string.Empty;
 		}
 	}
 }

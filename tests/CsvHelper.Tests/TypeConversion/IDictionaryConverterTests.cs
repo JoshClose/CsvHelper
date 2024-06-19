@@ -61,7 +61,7 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var dict = records[0].Dictionary;
+				var dict = records[0].Dictionary!;
 
 				Assert.Equal(3, dict.Count);
 				Assert.Equal("2", dict["Prop2"]);
@@ -120,7 +120,7 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var list = records[0].Dictionary;
+				var list = records[0].Dictionary!;
 
 				Assert.Equal(3, list.Count);
 				Assert.Equal("2", list["Dictionary1"]);
@@ -265,9 +265,9 @@ namespace CsvHelper.Tests.TypeConversion
 
 		private class Test
 		{
-			public string Before { get; set; }
-			public IDictionary Dictionary { get; set; }
-			public string After { get; set; }
+			public string? Before { get; set; }
+			public IDictionary? Dictionary { get; set; }
+			public string? After { get; set; }
 		}
 
 		private sealed class TestIndexMap : ClassMap<Test>

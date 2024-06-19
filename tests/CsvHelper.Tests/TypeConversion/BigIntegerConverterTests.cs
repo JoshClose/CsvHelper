@@ -21,8 +21,8 @@ namespace CsvHelper.Tests.TypeConversion
         public void RoundTripMaxValueTest()
         {
             var converter = new BigIntegerConverter();
-            var s = converter.ConvertToString((BigInteger)long.MaxValue + 1, null, new MemberMapData(null));
-            var bi = converter.ConvertFromString(s, null, new MemberMapData(null));
+            var s = converter.ConvertToString((BigInteger)long.MaxValue + 1, null!, new MemberMapData(null));
+            var bi = converter.ConvertFromString(s, null!, new MemberMapData(null));
 
             Assert.Equal((BigInteger)long.MaxValue + 1, bi);
         }
@@ -31,8 +31,8 @@ namespace CsvHelper.Tests.TypeConversion
         public void RoundTripMinValueTest()
         {
             var converter = new BigIntegerConverter();
-            var s = converter.ConvertToString((BigInteger)long.MinValue - 1, null, new MemberMapData(null));
-            var bi = converter.ConvertFromString(s, null, new MemberMapData(null));
+            var s = converter.ConvertToString((BigInteger)long.MinValue - 1, null!, new MemberMapData(null));
+            var bi = converter.ConvertFromString(s, null!, new MemberMapData(null));
 
             Assert.Equal((BigInteger)long.MinValue - 1, bi);
         }

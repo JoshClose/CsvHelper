@@ -60,21 +60,21 @@ namespace CsvHelper.Tests
 
 		private class A
 		{
-			public string Id { get; set; }
+			public string? Id { get; set; }
 
-			public B B { get; set; }
+			public B? B { get; set; }
 		}
 
 		private class B
 		{
-			public string Id { get; set; }
+			public string? Id { get; set; }
 
-			public C C { get; set; }
+			public C? C { get; set; }
 		}
 
 		private class C
 		{
-			public string Id { get; set; }
+			public string? Id { get; set; }
 		}
 
 		private sealed class AMap : ClassMap<A>

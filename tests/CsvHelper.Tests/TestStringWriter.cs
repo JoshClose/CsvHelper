@@ -19,7 +19,7 @@ namespace CsvHelper.Tests
 			this.newLine = newLine ?? throw new ArgumentNullException(nameof(newLine));
 		}
 
-		public override void WriteLine(string value)
+		public override void WriteLine(string? value)
 		{
 			base.Write(value);
 			base.Write(newLine);

@@ -44,7 +44,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[Constant("two")]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

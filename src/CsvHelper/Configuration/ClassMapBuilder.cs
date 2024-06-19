@@ -21,7 +21,7 @@ public interface IHasMap<TClass> : IBuildableClass<TClass>
 	/// <param name="useExistingMap">If true, an existing map will be used if available.
 	/// If false, a new map is created for the same member.</param>
 	/// <returns>The member mapping.</returns>
-	IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true);
+	IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember?>> expression, bool useExistingMap = true);
 }
 
 /// <summary>
@@ -303,7 +303,7 @@ internal class ClassMapBuilder<TClass> : IHasMap<TClass>
 		map = new BuilderClassMap<TClass>();
 	}
 
-	public IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
+	public IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember?>> expression, bool useExistingMap = true)
 	{
 		return new MemberMapBuilder<TClass, TMember>(map, map.Map(expression, useExistingMap));
 	}
@@ -345,7 +345,7 @@ internal class MemberMapBuilder<TClass, TMember> :
 	}
 
 #pragma warning disable CS0693 // Type parameter has the same name as the type parameter from outer type
-	public IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember>> expression, bool useExistingMap = true)
+	public IHasMapOptions<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember?>> expression, bool useExistingMap = true)
 	{
 		return new MemberMapBuilder<TClass, TMember>(classMap, classMap.Map(expression, useExistingMap));
 	}

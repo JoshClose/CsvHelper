@@ -20,7 +20,7 @@ public readonly struct PrepareHeaderForMatchArgs
 	/// <summary>
 	/// The header.
 	/// </summary>
-	public readonly string? Header;
+	public readonly string Header;
 
 	/// <summary>
 	/// The field index.
@@ -32,7 +32,7 @@ public readonly struct PrepareHeaderForMatchArgs
 	/// </summary>
 	/// <param name="header">The header.</param>
 	/// <param name="fieldIndex">The field index.</param>
-	public PrepareHeaderForMatchArgs(string? header, int fieldIndex)
+	public PrepareHeaderForMatchArgs(string header, int fieldIndex)
 	{
 		Header = header;
 		FieldIndex = fieldIndex;
