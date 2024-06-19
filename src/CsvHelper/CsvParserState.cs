@@ -14,7 +14,7 @@ internal class CsvParserState : IDisposable, IRow
 	internal StringCreator stringCreator;
 	internal bool isDisposed;
 
-	internal CsvParserOptions options;
+	internal CsvOptions options;
 	internal TextReader reader;
 
 	internal char[] buffer;
@@ -44,7 +44,7 @@ internal class CsvParserState : IDisposable, IRow
 
 	public ReadOnlySpan<char> Row => GetRow();
 
-	public CsvParserState(TextReader reader, CsvParserOptions options)
+	public CsvParserState(TextReader reader, CsvOptions options)
 	{
 		this.options = options;
 		this.reader = reader;

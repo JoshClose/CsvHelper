@@ -10,7 +10,7 @@ namespace CsvHelper;
 
 internal static class ParsingStrategyFactory
 {
-	public static ICsvParsingStrategy Create(CsvParserOptions options)
+	public static ICsvParsingStrategy Create(CsvOptions options)
 	{
 #if NET6_0_OR_GREATER
 		if (options.ParsingStrategy.HasValue)

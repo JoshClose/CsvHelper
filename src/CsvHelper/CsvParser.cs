@@ -11,7 +11,7 @@ namespace CsvHelper;
 public class CsvParser : IParser, IDisposable
 {
 	private TextReader reader;
-	private CsvParserOptions options;
+	private CsvOptions options;
 	private bool isDisposed;
 	private int rowNumber;
 	private bool leaveOpen;
@@ -41,53 +41,56 @@ public class CsvParser : IParser, IDisposable
 	/// Initializes a new instance of CsvParser.
 	/// </summary>
 	/// <param name="reader">The reader.</param>
+	/// <param name="options">Options for the parser.</param>
 	/// <param name="leaveOpen">If set to <c>true</c>, leave the reader open when CsvParser is disposed.</param>
-	public CsvParser(TextReader reader, bool leaveOpen = false) : this(reader, options => options, leaveOpen) { }
-
-	/// <summary>
-	/// Initializes a new instance of CsvParser.
-	/// </summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="configure">Function to configure the parser.</param>
-	/// <param name="leaveOpen">If set to <c>true</c>, leave the reader open when CsvParser is disposed.</param>
-	public CsvParser(TextReader reader, Func<CsvParserOptions, CsvParserOptions> configure, bool leaveOpen = false)
+	public CsvParser(TextReader reader, CsvOptions? options, bool leaveOpen = false)
 	{
 		this.reader = reader;
 		this.leaveOpen = leaveOpen;
+		this.options = options ?? new CsvOptions();
 
-		options = configure(new CsvParserOptions());
-		options.Validate();
+		this.options.Validate();
 
-		detectDelimiter = options.DetectDelimiter;
+		detectDelimiter = this.options.DetectDelimiter;
 
-		switch (options.Mode)
+		switch (this.options.Mode)
 		{
 			case CsvMode.RFC4180:
-				options.ModeParse = ModeRfc4180.Parse;
+				this.options.ModeParse = ModeRfc4180.Parse;
 				break;
 			case CsvMode.Escape:
-				options.ModeParse = ModeEscape.Parse;
+				this.options.ModeParse = ModeEscape.Parse;
 				break;
 			case CsvMode.NoEscape:
-				options.ModeParse = ModeNoEscape.Parse;
+				this.options.ModeParse = ModeNoEscape.Parse;
 				break;
 			default:
-				throw new ConfigurationException($"Mode {options.Mode} is not supported.");
+				throw new ConfigurationException($"Mode {this.options.Mode} is not supported.");
 		}
 
-		options.ParsingStrategyImplementation = ParsingStrategyFactory.Create(options);
+		this.options.ParsingStrategyImplementation = ParsingStrategyFactory.Create(this.options);
 
-		if (options.CacheFields)
+		if (this.options.CacheFields)
 		{
 			var stringCache = new StringCache();
-			options = options with
+			this.options = this.options with
 			{
 				StringCreator = (chars, _) => stringCache.GetString(chars)
 			};
 		}
 
-		state = new CsvParserState(reader, options);
+		state = new CsvParserState(reader, this.options);
 	}
+
+	/// <summary>
+	/// Initializes a new instance of CsvParser.
+	/// </summary>
+	/// <param name="reader">The reader.</param>
+	/// <param name="configure">Action to configure options for the parser.</param>
+	/// <param name="leaveOpen">If set to <c>true</c>, leave the reader open when CsvParser is disposed.</param>
+	public CsvParser(TextReader reader, Action<IParserOptions>? configure, bool leaveOpen = false) : this(reader, o => { configure?.Invoke(o); return o; }, leaveOpen) { }
+
+	private CsvParser(TextReader reader, Func<IParserOptions, IParserOptions>? configure, bool leaveOpen = false) : this(reader, (CsvOptions?)configure?.Invoke(new CsvOptions()), leaveOpen) { }
 
 	/// <summary>
 	/// Moves to the next record.
@@ -108,15 +111,7 @@ public class CsvParser : IParser, IDisposable
 				return false;
 			}
 
-			if (!delimiterDetected)
-			{
-				if (detectDelimiter)
-				{
-					options.Delimiter = options.GetDelimiter(state.buffer);
-				}
-
-				delimiterDetected = true;
-			}
+			DetectDelimiter();
 
 			state.Parse();
 			state.NextRow();
@@ -243,11 +238,19 @@ public class CsvParser : IParser, IDisposable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private void DetectDelimiter()
 	{
-		if (delimiterDetected || )
+		if (delimiterDetected)
 		{
 			return;
 		}
 
+		delimiterDetected = true;
 
+		if (!detectDelimiter)
+		{
+			return;
+		}
+
+		var args = new GetDelimiterArgs(state.buffer.AsSpan(), options);
+		options.Delimiter = options.GetDelimiter(args);
 	}
 }

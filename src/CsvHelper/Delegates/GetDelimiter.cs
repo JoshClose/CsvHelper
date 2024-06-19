@@ -26,14 +26,14 @@ public readonly ref struct GetDelimiterArgs
 	/// <summary>
 	/// The configuration.
 	/// </summary>
-	public readonly IParserConfiguration Configuration;
+	public readonly CsvParserOptions Configuration;
 
 	/// <summary>
 	/// Creates an instance of GetDelimiterArgs.
 	/// </summary>
 	/// <param name="text">The text to resolve the delimiter from.</param>
 	/// <param name="configuration">The configuration.</param>
-	public GetDelimiterArgs(ReadOnlySpan<char> text, IParserConfiguration configuration)
+	public GetDelimiterArgs(ReadOnlySpan<char> text, CsvParserOptions configuration)
 	{
 		Text = text;
 		Configuration = configuration;
