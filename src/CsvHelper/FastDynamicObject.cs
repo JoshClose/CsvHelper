@@ -3,23 +3,22 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace CsvHelper;
 
-internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<string, object>
+internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<string, object?>
 {
-	private readonly Dictionary<string, object> dict;
+	private readonly Dictionary<string, object?> dict;
 
 	public FastDynamicObject()
 	{
-		dict = new Dictionary<string, object>();
+		dict = new Dictionary<string, object?>();
 	}
 
-	object IDictionary<string, object>.this[string key]
+	object? IDictionary<string, object?>.this[string key]
 	{
 		get
 		{
@@ -37,15 +36,15 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 		}
 	}
 
-	ICollection<string> IDictionary<string, object>.Keys => dict.Keys;
+	ICollection<string> IDictionary<string, object?>.Keys => dict.Keys;
 
-	ICollection<object> IDictionary<string, object>.Values => dict.Values;
+	ICollection<object?> IDictionary<string, object?>.Values => dict.Values;
 
-	int ICollection<KeyValuePair<string, object>>.Count => dict.Count;
+	int ICollection<KeyValuePair<string, object?>>.Count => dict.Count;
 
-	bool ICollection<KeyValuePair<string, object>>.IsReadOnly => false;
+	bool ICollection<KeyValuePair<string, object?>>.IsReadOnly => false;
 
-	object SetValue(string key, object value)
+	object? SetValue(string key, object? value)
 	{
 		dict[key] = value;
 
@@ -57,32 +56,32 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 		return new FastDynamicMetaObject(parameter, BindingRestrictions.Empty, this);
 	}
 
-	void IDictionary<string, object>.Add(string key, object value)
+	void IDictionary<string, object?>.Add(string key, object? value)
 	{
 		SetValue(key, value);
 	}
 
-	void ICollection<KeyValuePair<string, object>>.Add(KeyValuePair<string, object> item)
+	void ICollection<KeyValuePair<string, object?>>.Add(KeyValuePair<string, object?> item)
 	{
 		SetValue(item.Key, item.Value);
 	}
 
-	void ICollection<KeyValuePair<string, object>>.Clear()
+	void ICollection<KeyValuePair<string, object?>>.Clear()
 	{
 		dict.Clear();
 	}
 
-	bool ICollection<KeyValuePair<string, object>>.Contains(KeyValuePair<string, object> item)
+	bool ICollection<KeyValuePair<string, object?>>.Contains(KeyValuePair<string, object?> item)
 	{
 		return dict.Contains(item);
 	}
 
-	bool IDictionary<string, object>.ContainsKey(string key)
+	bool IDictionary<string, object?>.ContainsKey(string key)
 	{
 		return dict.ContainsKey(key);
 	}
 
-	void ICollection<KeyValuePair<string, object>>.CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
+	void ICollection<KeyValuePair<string, object?>>.CopyTo(KeyValuePair<string, object?>[] array, int arrayIndex)
 	{
 		if (arrayIndex < 0 || arrayIndex >= array.Length)
 		{
@@ -102,7 +101,7 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 		}
 	}
 
-	IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator()
+	IEnumerator<KeyValuePair<string, object?>> IEnumerable<KeyValuePair<string, object?>>.GetEnumerator()
 	{
 		return dict.GetEnumerator();
 	}
@@ -112,24 +111,24 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 		return dict.GetEnumerator();
 	}
 
-	bool IDictionary<string, object>.Remove(string key)
+	bool IDictionary<string, object?>.Remove(string key)
 	{
 		return dict.Remove(key);
 	}
 
-	bool ICollection<KeyValuePair<string, object>>.Remove(KeyValuePair<string, object> item)
+	bool ICollection<KeyValuePair<string, object?>>.Remove(KeyValuePair<string, object?> item)
 	{
 		return dict.Remove(item.Key);
 	}
 
-	bool IDictionary<string, object>.TryGetValue(string key, out object value)
+	bool IDictionary<string, object?>.TryGetValue(string key, out object? value)
 	{
 		return dict.TryGetValue(key, out value!);
 	}
 
 	private class FastDynamicMetaObject : DynamicMetaObject
 	{
-		private static readonly MethodInfo getValueMethod = typeof(IDictionary<string, object>).GetProperty("Item")!.GetGetMethod()!;
+		private static readonly MethodInfo getValueMethod = typeof(IDictionary<string, object?>).GetProperty("Item")!.GetGetMethod()!;
 		private static readonly MethodInfo setValueMethod = typeof(FastDynamicObject).GetMethod("SetValue", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
 		public FastDynamicMetaObject(Expression expression, BindingRestrictions restrictions) : base(expression, restrictions) { }
@@ -165,7 +164,7 @@ internal class FastDynamicObject : IDynamicMetaObjectProvider, IDictionary<strin
 
 		public override IEnumerable<string> GetDynamicMemberNames()
 		{
-			if (HasValue && Value is IDictionary<string, object> lookup)
+			if (HasValue && Value is IDictionary<string, object?> lookup)
 			{
 				return lookup.Keys;
 			}
