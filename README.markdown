@@ -60,18 +60,14 @@ This project exists thanks to all the people who contribute. [[Contribute](CONTR
 
 <a href="https://github.com/JoshClose/CsvHelper/graphs/contributors"><img src="https://opencollective.com/csvhelper/contributors.svg?width=890&button=false" /></a>
 
-### Backers
-
-Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/csvhelper#backer)]
-
-<a href="https://opencollective.com/csvhelper#backers" target="_blank"><img src="https://opencollective.com/csvhelper/backers.svg?width=890"></a>
-
 ### Sponsors
+
+<iframe src="https://github.com/sponsors/JoshClose/card" title="Sponsor JoshClose" height="225" width="600" style="border: 0;"></iframe>
 
 A huge thanks to the [.NET on AWS Open Source Software Fund](https://github.com/aws/dotnet-foss) for sponsoring CsvHelper!
 
 <a href="https://github.com/aws/dotnet-foss"><img src="https://raw.githubusercontent.com/JoshClose/CsvHelper/master/logo/aws.png" /></a>
 
-Support this project by becoming a sponsor through [GitHub Sponsors](https://github.com/sponsors/JoshClose) or [Open Collective](https://opencollective.com/csvhelper#sponsor). Your logo will show up here with a link to your website.
+Thanks to [Microsoft](https://github.com/microsoft) for being a sponsor!
 
-<a href="https://opencollective.com/csvhelper/sponsor/0/website" target="_blank"><img src="https://opencollective.com/csvhelper/sponsor/0/avatar.svg"></a>
+<a href="https://github.com/microsoft"><img src="https://raw.githubusercontent.com/JoshClose/CsvHelper/master/logo/microsoft.png" /></a>
