@@ -62,7 +62,7 @@ This project exists thanks to all the people who contribute. [[Contribute](CONTR
 
 ### Sponsors
 
-<iframe src="https://github.com/sponsors/JoshClose/card" title="Sponsor JoshClose" height="225" width="600" style="border: 0;"></iframe>
+You can do one time or recurring donation through [GitHub Sponsors](https://github.com/sponsors/JoshClose)
 
 A huge thanks to the [.NET on AWS Open Source Software Fund](https://github.com/aws/dotnet-foss) for sponsoring CsvHelper!
 
