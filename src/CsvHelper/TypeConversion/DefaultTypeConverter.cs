@@ -14,10 +14,20 @@ public class DefaultTypeConverter : ITypeConverter
 	/// <inheritdoc/>
 	public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 	{
-		if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member!.MemberType() == memberMapData.Default?.GetType())
-		{
-			return memberMapData.Default;
-		}
+        if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet)
+        {
+            var memberType = memberMapData.Member!.MemberType();
+
+            if (memberMapData.Default == null && (!memberType.IsValueType || Nullable.GetUnderlyingType(memberType) != null))
+			{
+                return memberMapData.Default;
+			}
+
+            if (memberType == memberMapData.Default.GetType())
+			{
+                return memberMapData.Default;
+			}
+        }
 
 		if (!row.Configuration.ExceptionMessagesContainRawData)
 		{
