@@ -23,7 +23,7 @@ public class DefaultTypeConverter : ITypeConverter
                 return memberMapData.Default;
 			}
 
-            if (memberType == memberMapData.Default.GetType())
+            if (memberType == memberMapData.Default?.GetType())
 			{
                 return memberMapData.Default;
 			}
