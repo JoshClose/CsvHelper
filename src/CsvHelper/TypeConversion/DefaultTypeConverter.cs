@@ -14,25 +14,30 @@ public class DefaultTypeConverter : ITypeConverter
 	/// <inheritdoc/>
 	public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 	{
-		if (memberMapData.UseDefaultOnConversionFailure && memberMapData.IsDefaultSet && memberMapData.Member!.MemberType() == memberMapData.Default?.GetType())
+		// Conversion has failed
+		// Check if a default value should be returned
+		if (!memberMapData.UseDefaultOnConversionFailure || !memberMapData.IsDefaultSet)
+		{
+			throw CreateTypeConverterException(text, row, memberMapData);
+		}
+
+		// Try to get a valid default value from the memberMapData
+		var memberType = memberMapData.Member!.MemberType();
+
+		if (memberMapData.Default is null)
+		{
+			if (TypeAllowsNull(memberType))
+			{
+				return null;
+			}
+		}
+		else if (memberType.IsAssignableFrom(memberMapData.Default.GetType()))
 		{
 			return memberMapData.Default;
 		}
 
-		if (!row.Configuration.ExceptionMessagesContainRawData)
-		{
-			text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
-		}
-
-		text ??= string.Empty;
-
-		var message =
-			$"The conversion cannot be performed.{Environment.NewLine}" +
-			$"    Text: '{text}'{Environment.NewLine}" +
-			$"    MemberName: {memberMapData.Member?.Name}{Environment.NewLine}" +
-			$"    MemberType: {memberMapData.Member?.MemberType().FullName}{Environment.NewLine}" +
-			$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
-		throw new TypeConverterException(this, memberMapData, text, row.Context, message);
+		// No valid default value was configured, throw a TypeConverterException
+		throw CreateTypeConverterException(text, row, memberMapData);
 	}
 
 	/// <inheritdoc/>
@@ -55,5 +60,29 @@ public class DefaultTypeConverter : ITypeConverter
 		}
 
 		return value?.ToString() ?? string.Empty;
+	}
+
+	private TypeConverterException CreateTypeConverterException(string? text, IReaderRow row, MemberMapData memberMapData)
+	{
+		if (!row.Configuration.ExceptionMessagesContainRawData)
+		{
+			text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
+		}
+
+		text ??= string.Empty;
+
+		var message =
+			$"The conversion cannot be performed.{Environment.NewLine}" +
+			$"    Text: '{text}'{Environment.NewLine}" +
+			$"    MemberName: {memberMapData.Member?.Name}{Environment.NewLine}" +
+			$"    MemberType: {memberMapData.Member?.MemberType().FullName}{Environment.NewLine}" +
+			$"    TypeConverter: '{memberMapData.TypeConverter?.GetType().FullName}'";
+
+		return new TypeConverterException(this, memberMapData, text, row.Context, message);
+	}
+
+	private static bool TypeAllowsNull(Type type)
+	{
+		return !type.IsValueType || Nullable.GetUnderlyingType(type) is not null;
 	}
 }
