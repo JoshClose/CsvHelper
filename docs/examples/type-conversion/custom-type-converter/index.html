@@ -415,7 +415,7 @@ You only need to use one, but all are shown in the example.</p>
 <h6 id="example">Example</h6>
 <pre><code class="language-cs">void Main()
 {
-    using (var reader = new new StreamReader(&quot;path\\to\\file.csv&quot;))
+    using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
         // Register globally.
