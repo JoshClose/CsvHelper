@@ -1,5 +1,11 @@
 ﻿# Change Log
 
+### 33.0.2
+
+#### Bug Fixes
+
+- Dispose of IAsyncDisposable enumerators in CsvWriter
+
 ### 33.0.1
 
 #### Bug Fixes
