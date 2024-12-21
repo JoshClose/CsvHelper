@@ -50,7 +50,7 @@
 			<div class="navbar-start">
 				<a class="navbar-item" href="/CsvHelper/getting-started">Getting Started</a>
 				<a class="navbar-item" href="/CsvHelper/examples">Examples</a>
-				<a class="navbar-item" href="/CsvHelper/migration">Migration</a>
+				<a class="navbar-item" href="/CsvHelper/migration">Migration</aMapping Example>
 				<a class="navbar-item" href="/CsvHelper/change-log">Change Log</a>
 			</div>
 			<div class="navbar-end">
@@ -408,7 +408,7 @@
 Most type converters use <code>IFormattable.ToString</code> to write and <code>TryParse</code> to read.
 Any option for these methods should be available through configuration.</p>
 <h6 id="mapping-example">Mapping Example</h6>
-<pre><code class="language-cs">public sealed class FooMap : ClassMap\&lt;Foo\&gt;
+<pre><code class="language-cs">public sealed class FooMap : ClassMap&lt;Foo&gt;
 {
     public FooMap()
     {
