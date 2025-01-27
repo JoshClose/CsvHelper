@@ -13,12 +13,14 @@ namespace CsvHelper;
 /// <seealso cref="System.Data.IDataReader" />
 public class CsvDataReader : IDataReader
 {
-	private readonly CsvReader csv;
+    private readonly bool leaveOpen;
+    private readonly CsvReader csv;
 	private readonly DataTable schemaTable;
 	private bool skipNextRead;
+    private bool disposed;
 
-	/// <inheritdoc />
-	public object this[int i]
+    /// <inheritdoc />
+    public object this[int i]
 	{
 		get
 		{
@@ -45,7 +47,7 @@ public class CsvDataReader : IDataReader
 	}
 
 	/// <inheritdoc />
-	public bool IsClosed { get; private set; }
+	public bool IsClosed => disposed;
 
 	/// <inheritdoc />
 	public int RecordsAffected
@@ -65,16 +67,18 @@ public class CsvDataReader : IDataReader
 		}
 	}
 
-	/// <summary>
-	/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-	/// </summary>
-	/// <param name="csv">The CSV.</param>
-	/// <param name="schemaTable">The DataTable representing the file schema.</param>
-	public CsvDataReader(CsvReader csv, DataTable? schemaTable = null)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+    /// </summary>
+    /// <param name="csv">The CSV.</param>
+    /// <param name="schemaTable">The DataTable representing the file schema.</param>
+    /// <param name="leaveOpen"><c>true</c> to leave the <see cref="CsvReader"/> open after the <see cref="CsvDataReader"/> object is disposed, otherwise <c>false</c>.</param>
+    public CsvDataReader(CsvReader csv, DataTable? schemaTable = null, bool leaveOpen = false)
 	{
 		this.csv = csv;
+        this.leaveOpen = leaveOpen;
 
-		csv.Read();
+        csv.Read();
 
 		if (csv.Configuration.HasHeaderRecord && csv.HeaderRecord == null)
 		{
@@ -94,11 +98,33 @@ public class CsvDataReader : IDataReader
 		Dispose();
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public void Dispose()
 	{
-		csv.Dispose();
-		IsClosed = true;
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
+
+	/// <summary>
+	/// Disposes the object.
+	/// </summary>
+	/// <param name="disposing">Indicates if the object is being disposed.</param>
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposed)
+		{
+			return;
+		}
+
+		if (disposing)
+		{
+			if (!leaveOpen)
+			{
+				csv?.Dispose();
+			}
+		}
+
+		disposed = true;
 	}
 
 	/// <inheritdoc />
