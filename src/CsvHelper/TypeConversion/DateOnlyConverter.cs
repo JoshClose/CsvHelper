@@ -7,34 +7,33 @@ using CsvHelper.Configuration;
 using System;
 using System.Globalization;
 
-namespace CsvHelper.TypeConversion
+namespace CsvHelper.TypeConversion;
+
+/// <summary>
+/// Converts a <see cref="DateOnly"/> to and from a <see cref="string"/>.
+/// </summary>
+public class DateOnlyConverter : DefaultTypeConverter
 {
 	/// <summary>
-	/// Converts a <see cref="DateOnly"/> to and from a <see cref="string"/>.
+	/// Converts the string to an object.
 	/// </summary>
-    public class DateOnlyConverter : DefaultTypeConverter
-    {
-		/// <summary>
-		/// Converts the string to an object.
-		/// </summary>
-		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
-		/// <returns>The object created from the string.</returns>
-		public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+	/// <param name="text">The string to convert to an object.</param>
+	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
+	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
+	/// <returns>The object created from the string.</returns>
+	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	{
+		if (text == null)
 		{
-			if (text == null)
-			{
-				return base.ConvertFromString(null, row, memberMapData);
-			}
-
-			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo.GetFormat(typeof(DateTimeFormatInfo)) ?? memberMapData.TypeConverterOptions.CultureInfo;
-			var dateTimeStyle = memberMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
-
-			return memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
-				? DateOnly.Parse(text, formatProvider, dateTimeStyle)
-				: DateOnly.ParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle);
+			return base.ConvertFromString(null, row, memberMapData);
 		}
+
+		var formatProvider = (IFormatProvider?)memberMapData.TypeConverterOptions.CultureInfo?.GetFormat(typeof(DateTimeFormatInfo)) ?? memberMapData.TypeConverterOptions.CultureInfo;
+		var dateTimeStyle = memberMapData.TypeConverterOptions.DateTimeStyle ?? DateTimeStyles.None;
+
+		return memberMapData.TypeConverterOptions.Formats == null || memberMapData.TypeConverterOptions.Formats.Length == 0
+			? DateOnly.Parse(text, formatProvider, dateTimeStyle)
+			: DateOnly.ParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, dateTimeStyle);
 	}
 }
 #endif

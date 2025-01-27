@@ -160,9 +160,9 @@ namespace CsvHelper.Tests.TypeConversion
 
 		private class Test
 		{
-			public string Before { get; set; }
-			public Dictionary<string, int?> Dictionary { get; set; }
-			public string After { get; set; }
+			public string? Before { get; set; }
+			public Dictionary<string, int?> Dictionary { get; set; } = new Dictionary<string, int?>();
+			public string? After { get; set; }
 		}
 
 		private sealed class TestIndexMap : ClassMap<Test>

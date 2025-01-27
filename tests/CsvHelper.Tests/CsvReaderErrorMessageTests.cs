@@ -47,8 +47,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.Equal(1, ex.Context.Parser.Row);
-					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(1, ex.Context?.Parser?.Row);
+					Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 				}
 			}
 		}
@@ -79,8 +79,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.Equal(3, ex.Context.Parser.Row);
-					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(3, ex.Context?.Parser?.Row);
+					Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 				}
 			}
 		}
@@ -113,8 +113,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.Equal(4, ex.Context.Parser.Row);
-					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(4, ex.Context?.Parser?.Row);
+					Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 				}
 			}
 		}
@@ -142,8 +142,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.Equal(3, ex.Context.Parser.Row);
-					Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(3, ex.Context?.Parser?.Row);
+					Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 				}
 			}
 		}
@@ -170,8 +170,8 @@ namespace CsvHelper.Tests
 				}
 				catch (TypeConverterException ex)
 				{
-					Assert.Equal(2, ex.Context.Parser.Row);
-					Assert.Equal(1, ex.Context.Reader.CurrentIndex);
+					Assert.Equal(2, ex.Context?.Parser?.Row);
+					Assert.Equal(1, ex.Context?.Reader?.CurrentIndex);
 				}
 			}
 		}
@@ -208,7 +208,7 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 		}
 
 		private sealed class Test1Map : ClassMap<Test1>
@@ -222,7 +222,7 @@ namespace CsvHelper.Tests
 
 		private class Test2
 		{
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 
 			public int IntColumn { get; set; }
 		}
@@ -242,7 +242,7 @@ namespace CsvHelper.Tests
 
 			public DateTime CreationDate { get; set; }
 
-			public string Description { get; set; }
+			public string Description { get; set; } = string.Empty;
 		}
 
 		private sealed class Test3Map : ClassMap<Test3>

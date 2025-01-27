@@ -38,12 +38,12 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var list = records[0].List.ToList();
+				var list = records[0].List?.ToList();
 
-				Assert.Equal(3, list.Count);
-				Assert.Equal(2, list[0]);
-				Assert.Equal(3, list[1]);
-				Assert.Equal(4, list[2]);
+				Assert.Equal(3, list?.Count);
+				Assert.Equal(2, list?[0]);
+				Assert.Equal(3, list?[1]);
+				Assert.Equal(4, list?[2]);
 			}
 		}
 
@@ -63,12 +63,12 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestIndexMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var list = records[0].List.ToList();
+				var list = records[0].List?.ToList();
 
-				Assert.Equal(3, list.Count);
-				Assert.Equal(2, list[0]);
-				Assert.Equal(3, list[1]);
-				Assert.Equal(4, list[2]);
+				Assert.Equal(3, list?.Count);
+				Assert.Equal(2, list?[0]);
+				Assert.Equal(3, list?[1]);
+				Assert.Equal(4, list?[2]);
 			}
 		}
 
@@ -88,13 +88,13 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestDefaultMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var list = records[0].List.ToList();
+				var list = records[0].List?.ToList();
 
-				Assert.Equal(3, list.Count);
-				Assert.Equal(2, list[0]);
-				Assert.Equal(3, list[1]);
-				Assert.Equal(4, list[2]);
-			}
+				Assert.Equal(3, list?.Count);
+				Assert.Equal(2, list?[0]);
+				Assert.Equal(3, list?[1]);
+				Assert.Equal(4, list?[2]);
+			}						
 		}
 
 		[Fact]
@@ -113,12 +113,12 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestNamedMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var list = records[0].List.ToList();
+				var list = records[0].List?.ToList();
 
-				Assert.Equal(3, list.Count);
-				Assert.Equal(2, list[0]);
-				Assert.Equal(3, list[1]);
-				Assert.Equal(4, list[2]);
+				Assert.Equal(3, list?.Count);
+				Assert.Equal(2, list?[0]);
+				Assert.Equal(3, list?[1]);
+				Assert.Equal(4, list?[2]);
 			}
 		}
 
@@ -138,12 +138,12 @@ namespace CsvHelper.Tests.TypeConversion
 				csv.Context.RegisterClassMap<TestNamedMap>();
 				var records = csv.GetRecords<Test>().ToList();
 
-				var list = records[0].List.ToList();
+				var list = records[0].List?.ToList();
 
-				Assert.Equal(3, list.Count);
-				Assert.Equal(2, list[0]);
-				Assert.Equal(4, list[1]);
-				Assert.Equal(6, list[2]);
+				Assert.Equal(3, list?.Count);
+				Assert.Equal(2, list?[0]);
+				Assert.Equal(4, list?[1]);
+				Assert.Equal(6, list?[2]);
 			}
 		}
 
@@ -168,14 +168,14 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			[Index(0, 2)]
 			[NullValues("NULL")]
-			public int?[] List { get; set; }
+			public int?[]? List { get; set; }
 		}
 
 		private class Test
 		{
-			public string Before { get; set; }
-			public int?[] List { get; set; }
-			public string After { get; set; }
+			public string? Before { get; set; }
+			public int?[]? List { get; set; }
+			public string? After { get; set; }
 		}
 
 		private sealed class TestIndexMap : ClassMap<Test>

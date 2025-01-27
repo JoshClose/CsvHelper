@@ -130,7 +130,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class GenericValidateMap : ClassMap<Test>
@@ -149,7 +149,7 @@ namespace CsvHelper.Tests.Reading
 				AutoMap(System.Globalization.CultureInfo.InvariantCulture);
 				foreach (var memberMap in MemberMaps)
 				{
-					Map(typeof(Test), memberMap.Data.Member).Validate(args => !string.IsNullOrEmpty(args.Field));
+					Map(typeof(Test), memberMap.Data.Member!).Validate(args => !string.IsNullOrEmpty(args.Field));
 				}
 			}
 		}

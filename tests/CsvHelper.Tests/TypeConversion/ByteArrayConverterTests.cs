@@ -66,7 +66,7 @@ namespace CsvHelper.Tests.TypeConversion
 				var converter = new ByteArrayConverter( t.Options );
 				foreach( var f in t.FieldStrings.Zip( t.Expected, ( test, expected ) => new { test, expected } ) )
 				{
-					var actual = (byte[])converter.ConvertFromString( f.test, null, null );
+					var actual = (byte[]?)converter.ConvertFromString(f.test, null!, null!) ?? [];
 					foreach( var b in actual.Zip( f.expected, ( a, e ) => new { a, e } ) )
 					{
 						Assert.Equal( b.e, b.a );
@@ -129,7 +129,7 @@ namespace CsvHelper.Tests.TypeConversion
 				var converter = new ByteArrayConverter( t.Options );
 				foreach( var f in t.Expected.Zip( t.FieldBytes, ( expected, test ) => new { test, expected } ) )
 				{
-					var actual = converter.ConvertToString( f.test, null, null );
+					var actual = converter.ConvertToString( f.test, null!, null!);
 
 					Assert.Equal( actual, f.expected );
 				}

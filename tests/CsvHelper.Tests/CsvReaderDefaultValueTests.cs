@@ -78,7 +78,7 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string Name { get; set; } = string.Empty;
 
 			public int Order { get; set; }
 		}
@@ -87,8 +87,9 @@ namespace CsvHelper.Tests
 		{
 			public TestMap()
 			{
+				string? nullString = null;
 				Map(m => m.Id).Default(-1);
-				Map(m => m.Name).Default((string)null);
+				Map(m => m.Name).Default(nullString);
 				Map(m => m.Order).Default(-2);
 			}
 		}

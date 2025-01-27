@@ -45,7 +45,7 @@ namespace CsvHelper.Tests.Issues
 		private class Sample
 		{
 			public int A { get; private set; }
-			public string B { get; private set; }
+			public string? B { get; private set; }
 
 			private Sample() { }
 

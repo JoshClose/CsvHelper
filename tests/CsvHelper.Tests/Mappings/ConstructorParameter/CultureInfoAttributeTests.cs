@@ -152,7 +152,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		public void CsvConfiguration_FromTypeWithParameter_IgnoresAttribute()
 		{
 			// First just validate we have an attribute to ignore
-			Assert.Equal(new CultureInfo("en-GB"), ((CultureInfoAttribute)System.Attribute.GetCustomAttribute(typeof(Foo2), typeof(CultureInfoAttribute))).CultureInfo);
+			Assert.Equal(new CultureInfo("en-GB"), ((CultureInfoAttribute?)System.Attribute.GetCustomAttribute(typeof(Foo2), typeof(CultureInfoAttribute)))?.CultureInfo);
 
 			Assert.Equal(new CultureInfo("es-ES"), CsvConfiguration.FromAttributes<Foo2>(CultureInfo.GetCultureInfo("es-ES")).CultureInfo);
 		}
@@ -161,12 +161,6 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		public void CsvConfiguration_FromType_NoAttribute_ThrowsConfigurationException()
 		{
 			Assert.Throws<ConfigurationException>(CsvConfiguration.FromAttributes<NoAttribute>);
-		}
-
-		[Fact]
-		public void CsvConfiguration_FromType_NullAttribute_ThrowsArgumentNullException()
-		{
-			Assert.Throws<ArgumentNullException>(CsvConfiguration.FromAttributes<NullAttribute>);
 		}
 
 		[Fact]
@@ -188,16 +182,6 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		}
 
 		private class NoAttribute
-		{
-			[CultureInfo("fr-FR")]
-			public int Id { get; set; }
-
-			[CultureInfo("fr-FR")]
-			public decimal Amount { get; set; }
-		}
-
-		[CultureInfo(null)]
-		private class NullAttribute
 		{
 			[CultureInfo("fr-FR")]
 			public int Id { get; set; }

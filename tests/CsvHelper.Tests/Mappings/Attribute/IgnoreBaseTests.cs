@@ -50,7 +50,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[IgnoreBase]
 		private class ChildProperties : ParentProperties
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class ParentFields
@@ -64,7 +64,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		private class ChildFields: ParentFields
 		{
 #pragma warning disable CS0649
-			public string Name;
+			public string? Name;
 #pragma warning restore CS0649
 		}
 	}

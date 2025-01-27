@@ -169,7 +169,7 @@ namespace CsvHelper.Tests.Mappings
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class FooOptionalIntMap : ClassMap<Foo>

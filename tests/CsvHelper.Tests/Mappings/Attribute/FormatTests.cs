@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<FormatTestClass>().ToList();
-				var actual = csv.Context.Maps.Find<FormatTestClass>().MemberMaps[1].Data.TypeConverterOptions.Formats[0];
+				var actual = csv.Context.Maps.Find<FormatTestClass>()?.MemberMaps[1].Data.TypeConverterOptions.Formats?.First();
 
 				Assert.Equal("abc", actual);
 			}
@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[Format("abc")]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

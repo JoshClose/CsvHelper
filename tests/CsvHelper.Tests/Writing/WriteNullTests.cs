@@ -16,7 +16,7 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
 		public void WriteRecordsEnumerableGeneric_RecordIsNull_WritesEmptyRecord()
 		{
-			var records = new List<Foo>
+			var records = new List<Foo?>
 			{
 				new Foo { Id = 1, Name = "one"},
 				null,
@@ -42,7 +42,7 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
 		public void WriteRecordsEnumerable_RecordIsNull_WritesEmptyRecord()
 		{
-			IEnumerable records = new List<Foo>
+			IEnumerable records = new List<Foo?>
 			{
 				new Foo { Id = 1, Name = "one"},
 				null,
@@ -72,7 +72,8 @@ namespace CsvHelper.Tests.Writing
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
 			{
-				csv.WriteRecord((Foo)null);
+				Foo? record = null;
+				csv.WriteRecord(record);
 				csv.Flush();
 
 				Assert.Equal(",", writer.ToString());
@@ -82,7 +83,7 @@ namespace CsvHelper.Tests.Writing
 		private class Foo
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

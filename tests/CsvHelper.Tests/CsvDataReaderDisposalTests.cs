@@ -42,7 +42,7 @@ namespace CsvHelper.Tests
 
 		private class TestRecord()
 		{
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 		}
 	}
 }

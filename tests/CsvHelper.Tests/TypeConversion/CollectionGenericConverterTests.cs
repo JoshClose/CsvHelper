@@ -64,7 +64,7 @@ namespace CsvHelper.Tests.TypeConversion
 
 		private class Test
 		{
-			public List<int?> List { get; set; }
+			public List<int?> List { get; set; } = new List<int?>();
 		}
 
 		private sealed class TestIndexMap : ClassMap<Test>
@@ -95,7 +95,7 @@ namespace CsvHelper.Tests.TypeConversion
 		{
 			[Index(0, 2)]
 			[NullValues("NULL")]
-			public List<int?> List { get; set; }
+			public List<int?> List { get; set; } = new List<int?>();
 		}
 	}
 }

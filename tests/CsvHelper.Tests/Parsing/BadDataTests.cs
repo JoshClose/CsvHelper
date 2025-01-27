@@ -16,10 +16,10 @@ namespace CsvHelper.Tests.Parsing
 		[Fact]
 		public void CallbackTest()
 		{
-			string rawRecord = null;
+			string? rawRecord = null;
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				BadDataFound = args => rawRecord = args.Context.Parser.RawRecord.ToString(),
+				BadDataFound = args => rawRecord = args.Context.Parser?.RawRecord.ToString(),
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -141,7 +141,7 @@ namespace CsvHelper.Tests.Parsing
 			string[] record = new string[0];
 			var cfg = new CsvConfiguration(CultureInfo.CurrentCulture)
 			{
-				BadDataFound = args => record = args.Context.Parser.Record
+				BadDataFound = args => record = args.Context.Parser?.Record!
 			};
 			var parser = new CsvParser(badstring, cfg);
 

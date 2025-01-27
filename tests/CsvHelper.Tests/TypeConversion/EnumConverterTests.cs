@@ -38,11 +38,11 @@ namespace CsvHelper.Tests.TypeConversion
 			var converter = new EnumConverter(typeof(TestEnum));
 			var propertyMapData = new MemberMapData(null);
 
-			Assert.Equal("None", converter.ConvertToString((TestEnum)0, null, propertyMapData));
-			Assert.Equal("None", converter.ConvertToString(TestEnum.None, null, propertyMapData));
-			Assert.Equal("One", converter.ConvertToString((TestEnum)1, null, propertyMapData));
-			Assert.Equal("One", converter.ConvertToString(TestEnum.One, null, propertyMapData));
-			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("None", converter.ConvertToString((TestEnum)0, null!, propertyMapData));
+			Assert.Equal("None", converter.ConvertToString(TestEnum.None, null!, propertyMapData));
+			Assert.Equal("One", converter.ConvertToString((TestEnum)1, null!, propertyMapData));
+			Assert.Equal("One", converter.ConvertToString(TestEnum.One, null!, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null!, propertyMapData));
 		}
 
 		[Fact]
@@ -57,9 +57,9 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.Equal(TestEnum.One, converter.ConvertFromString("One", null, propertyMapData));
-			Assert.Equal(TestEnum.One, converter.ConvertFromString("one", null, propertyMapData));
-			Assert.Equal(TestEnum.One, converter.ConvertFromString("1", null, propertyMapData));
+			Assert.Equal(TestEnum.One, converter.ConvertFromString("One", null!, propertyMapData));
+			Assert.Equal(TestEnum.One, converter.ConvertFromString("one", null!, propertyMapData));
+			Assert.Equal(TestEnum.One, converter.ConvertFromString("1", null!, propertyMapData));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("", row, propertyMapData));
 			Assert.Throws<TypeConverterException>(() => Assert.Equal(TestEnum.One, converter.ConvertFromString(null, row, propertyMapData)));
 		}
@@ -74,7 +74,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			var value = converter.ConvertToString(NameAttributeEnum.Foo, null, propertyMapData);
+			var value = converter.ConvertToString(NameAttributeEnum.Foo, null!, propertyMapData);
 
 			Assert.Equal("Bar", value);
 		}
@@ -87,7 +87,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 			};
 
-			var value = converter.ConvertFromString("Bar", null, propertyMapData);
+			var value = converter.ConvertFromString("Bar", null!, propertyMapData);
 
 			Assert.Equal(NameAttributeEnum.Foo, value);
 		}
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			var value = converter.ConvertFromString("1", null, propertyMapData);
+			var value = converter.ConvertFromString("1", null!, propertyMapData);
 
 			Assert.Equal(Int16Enum.One, value);
 		}
@@ -119,7 +119,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			var value = converter.ConvertToString(Int16Enum.One, null, propertyMapData);
+			var value = converter.ConvertToString(Int16Enum.One, null!, propertyMapData);
 
 			Assert.Equal("One", value);
 		}
@@ -135,7 +135,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			var value = converter.ConvertFromString("Bar", null, propertyMapData);
+			var value = converter.ConvertFromString("Bar", null!, propertyMapData);
 
 			Assert.Equal(Int16Enum.Foo, value);
 		}
@@ -151,7 +151,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			var value = converter.ConvertToString(Int16Enum.Foo, null, propertyMapData);
+			var value = converter.ConvertToString(Int16Enum.Foo, null!, propertyMapData);
 
 			Assert.Equal("Bar", value);
 		}
@@ -166,7 +166,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { EnumIgnoreCase = true },
 			};
 
-			var value = converter.ConvertFromString("oNe", null, memberMapData);
+			var value = converter.ConvertFromString("oNe", null!, memberMapData);
 
 			Assert.Equal(DuplicateNames.one, value);
 		}
@@ -180,7 +180,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 			};
 
-			var value = converter.ConvertFromString("1", null, memberMapData);
+			var value = converter.ConvertFromString("1", null!, memberMapData);
 
 			Assert.Equal(DuplicateValues.One, value);
 		}
@@ -194,7 +194,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 			};
 
-			var value = converter.ConvertFromString("1", null, memberMapData);
+			var value = converter.ConvertFromString("1", null!, memberMapData);
 
 			Assert.Equal(DuplicateNamesAndValues.One, value);
 		}
@@ -209,7 +209,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { EnumIgnoreCase = true },
 			};
 
-			var value = converter.ConvertFromString("oNe", null, memberMapData);
+			var value = converter.ConvertFromString("oNe", null!, memberMapData);
 
 			Assert.Equal(DuplicateNamesAndValues.One, value);
 		}
@@ -224,7 +224,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { EnumIgnoreCase = true },
 			};
 
-			var value = converter.ConvertFromString("oNe", null, memberMapData);
+			var value = converter.ConvertFromString("oNe", null!, memberMapData);
 
 			Assert.Equal(DuplicateNamesAttributeEnum.One, value);
 		}
@@ -238,7 +238,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 			};
 
-			var value = converter.ConvertFromString("1", null, memberMapData);
+			var value = converter.ConvertFromString("1", null!, memberMapData);
 
 			Assert.Equal(DuplicateValuesAttributeEnum.One, value);
 		}
@@ -252,7 +252,7 @@ namespace CsvHelper.Tests.TypeConversion
 			{
 			};
 
-			var value = converter.ConvertFromString("1", null, memberMapData);
+			var value = converter.ConvertFromString("1", null!, memberMapData);
 
 			Assert.Equal(DuplicateNamesAndValuesAttributeEnum.One, value);
 		}
@@ -267,7 +267,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { EnumIgnoreCase = true },
 			};
 
-			var value = converter.ConvertFromString("oNe", null, memberMapData);
+			var value = converter.ConvertFromString("oNe", null!, memberMapData);
 
 			Assert.Equal(DuplicateNamesAndValuesAttributeEnum.One, value);
 		}
@@ -275,8 +275,8 @@ namespace CsvHelper.Tests.TypeConversion
 		private class TestClass
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
-			public TestEnum TestEnum { get; set; }
+			public string? Name { get; set; }
+			public TestEnum TestEnum { get; set; } = new TestEnum();
 		}
 
 		private class TestClassMap : ClassMap<TestClass>

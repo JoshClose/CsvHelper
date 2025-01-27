@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.Configuration
 
 			var map = new EnumerablePropertyClassMap();
 			collection.Add(map);
-			Assert.Null(map.MemberMaps.Find<EnumerablePropertyClass>(m => m.Enumerable).Data.TypeConverter);
+			Assert.Null(map.MemberMaps.Find<EnumerablePropertyClass>(m => m.Enumerable)?.Data.TypeConverter);
 		}
 
 		private class Parent { }
@@ -48,7 +48,7 @@ namespace CsvHelper.Tests.Configuration
 
 		private class EnumerablePropertyClass
 		{
-			public Enumerable Enumerable { get; set; }
+			public Enumerable Enumerable { get; set; } = new Enumerable();
 		}
 
 		private class EnumerablePropertyClassMap : ClassMap<EnumerablePropertyClass>

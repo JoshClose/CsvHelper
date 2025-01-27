@@ -51,16 +51,16 @@ namespace CsvHelper.Tests
 
 		private class ContainerClass
 		{
-			public ThirdClass Contents { get; set; }
+			public ThirdClass Contents { get; set; } = new ThirdClass();
 		}
 
 		private class ThirdClass
 		{
 			public int Third { get; set; }
 
-			public SecondClass Second { get; set; }
+			public SecondClass Second { get; set; } = new SecondClass();
 
-			public FirstClass First { get; set; }
+			public FirstClass First { get; set; } = new FirstClass();
 		}
 
 		private sealed class ContainerClassMap : ClassMap<ContainerClass>

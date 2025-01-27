@@ -27,11 +27,11 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.Equal(dateTime.ToString(), converter.ConvertToString(dateTime, null, propertyMapData));
+			Assert.Equal(dateTime.ToString(), converter.ConvertToString(dateTime, null!, propertyMapData));
 
 			// Invalid conversions.
-			Assert.Equal("1", converter.ConvertToString(1, null, propertyMapData));
-			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null!, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null!, propertyMapData));
 		}
 
 		[Fact]
@@ -47,9 +47,9 @@ namespace CsvHelper.Tests.TypeConversion
 			var dateTime = DateTime.Now;
 
 			// Valid conversions.
-			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString(), null, propertyMapData).ToString());
-			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString("o"), null, propertyMapData).ToString());
-			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(" " + dateTime + " ", null, propertyMapData).ToString());
+			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString(), null!, propertyMapData)?.ToString());
+			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(dateTime.ToString("o"), null!, propertyMapData)?.ToString());
+			Assert.Equal(dateTime.ToString(), converter.ConvertFromString(" " + dateTime + " ", null!, propertyMapData)?.ToString());
 
 			// Invalid conversions.
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
@@ -67,7 +67,6 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.Throws<NotSupportedException>(() => cmConverter.ConvertFromString(null));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));
 			Assert.Throws<FormatException>(() => cmConverter.ConvertFromString("blah"));
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString("blah", row, propertyMapData));

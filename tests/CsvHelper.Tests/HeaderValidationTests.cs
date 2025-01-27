@@ -222,19 +222,19 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class HasReference
 		{
-			public Test Reference { get; set; }
+			public Test? Reference { get; set; }
 		}
 
 		private class HasConstructor
 		{
 			public int Id { get; private set; }
 
-			public string Name { get; private set; }
+			public string? Name { get; private set; }
 
 			public HasConstructor(int Id, string Name)
 			{

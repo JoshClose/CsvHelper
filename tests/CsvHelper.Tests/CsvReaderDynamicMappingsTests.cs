@@ -39,10 +39,10 @@ namespace CsvHelper.Tests
 		private class DynamicMappingsType
 		{
 			public int IntCol { get; set; }
-			public string StringCol { get; set; }
+			public string StringCol { get; set; } = string.Empty;
 
-			public static IEnumerable<Expression<Func<DynamicMappingsType, dynamic>>> Mappings =>
-				new List<Expression<Func<DynamicMappingsType, dynamic>>>
+			public static IEnumerable<Expression<Func<DynamicMappingsType, dynamic?>>> Mappings =>
+				new List<Expression<Func<DynamicMappingsType, dynamic?>>>
 			{
 				i => i.IntCol,
 				i => i.StringCol

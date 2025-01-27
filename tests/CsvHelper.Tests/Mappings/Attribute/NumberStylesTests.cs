@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<NumberStylesTestClass>().ToList();
-				var actual = csv.Context.Maps.Find<NumberStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.NumberStyles;
+				var actual = csv.Context.Maps.Find<NumberStylesTestClass>()?.MemberMaps[1].Data.TypeConverterOptions.NumberStyles;
 
 				Assert.Equal(NumberStyles.AllowCurrencySymbol, actual);
 			}
@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[NumberStyles(NumberStyles.AllowCurrencySymbol)]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

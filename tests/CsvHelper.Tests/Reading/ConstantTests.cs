@@ -38,7 +38,7 @@ namespace CsvHelper.Tests.Reading
 		[Fact]
 		public void ConstantIsNullTest()
 		{
-			var rows = new Queue<string[]>();
+			var rows = new Queue<string[]?>();
 			rows.Enqueue(new[] { "Id", "Name" });
 			rows.Enqueue(new[] { "1", "one" });
 			rows.Enqueue(new[] { "2", "two" });
@@ -81,7 +81,7 @@ namespace CsvHelper.Tests.Reading
 		private class Test
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class TestStringMap : ClassMap<Test>

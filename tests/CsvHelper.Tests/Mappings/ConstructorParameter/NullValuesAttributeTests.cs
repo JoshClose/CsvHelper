@@ -95,9 +95,9 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		{
 			public int Id { get; private set; }
 
-			public string Name { get; private set; }
+			public string? Name { get; private set; }
 
-			public Foo(int id, [NullValues("NULL")] string name)
+			public Foo(int id, [NullValues("NULL")] string? name)
 			{
 				Id = id;
 				Name = name;

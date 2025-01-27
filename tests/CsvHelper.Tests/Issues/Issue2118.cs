@@ -31,15 +31,15 @@ namespace CsvHelper.Tests.Issues
 
 		private class Foo
 		{
-			public HashSet<string> Bar { get; set; }
+			public HashSet<string> Bar { get; set; } = new();
 		}
 
 		private sealed class FooMap : ClassMap<Foo>
 		{
 			public FooMap()
 			{
-				Map().Index(0).Name("Foo").Convert(x => (x.Value as Foo).Bar.Contains("foo") ? "True" : "False");
-				Map().Index(1).Name("Bar").Convert(x => (x.Value as Foo).Bar.Contains("bar") ? "True" : "False");
+				Map().Index(0).Name("Foo").Convert(x => ((Foo)x.Value).Bar.Contains("foo") ? "True" : "False");
+				Map().Index(1).Name("Bar").Convert(x => ((Foo)x.Value).Bar.Contains("bar") ? "True" : "False");
 			}
 		}
 	}

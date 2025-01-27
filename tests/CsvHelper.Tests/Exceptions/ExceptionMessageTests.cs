@@ -38,8 +38,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch (MissingFieldException ex)
 			{
-				Assert.Equal(2, ex.Context.Parser.Row);
-				Assert.Equal(2, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
+				Assert.Equal(2, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -63,8 +63,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch (MissingFieldException ex)
 			{
-				Assert.Equal(2, ex.Context.Parser.Row);
-				Assert.Equal(2, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
+				Assert.Equal(2, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -94,9 +94,9 @@ namespace CsvHelper.Tests.Exceptions
 				//        "Field Value: 'a'\r\n";
 				//Assert.Equal( expected, ex.Data["CsvHelper"] );
 
-				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
 				//Assert.Equal( typeof( Simple ), ex.Type );
-				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -119,8 +119,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch (TypeConverterException ex)
 			{
-				Assert.Equal(2, ex.Context.Parser.Row);
-				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
+				Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -142,8 +142,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch (TypeConverterException ex)
 			{
-				Assert.Equal(2, ex.Context.Parser.Row);
-				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
+				Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -165,9 +165,9 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch (TypeConverterException ex)
 			{
-				Assert.Equal(2, ex.Context.Parser.Row);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
 				//Assert.Equal( typeof( Simple ), ex.Type );
-				Assert.Equal(0, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(0, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -193,8 +193,8 @@ namespace CsvHelper.Tests.Exceptions
 			}
 			catch (MissingFieldException ex)
 			{
-				Assert.Equal(2, ex.Context.Parser.Row);
-				Assert.Equal(-1, ex.Context.Reader.CurrentIndex);
+				Assert.Equal(2, ex.Context?.Parser?.Row);
+				Assert.Equal(-1, ex.Context?.Reader?.CurrentIndex);
 			}
 		}
 
@@ -202,7 +202,7 @@ namespace CsvHelper.Tests.Exceptions
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

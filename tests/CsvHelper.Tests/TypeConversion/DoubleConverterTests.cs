@@ -20,8 +20,8 @@ namespace CsvHelper.Tests.TypeConversion
 		public void RoundTripMaxValueTest()
         {
             var converter = new DoubleConverter();
-            var s = converter.ConvertToString(double.MaxValue, null, new MemberMapData(null));
-            var d = converter.ConvertFromString(s, null, new MemberMapData(null));
+            var s = converter.ConvertToString(double.MaxValue, null!, new MemberMapData(null));
+            var d = converter.ConvertFromString(s, null!, new MemberMapData(null));
 
             Assert.Equal(double.MaxValue, d);
         }
@@ -30,8 +30,8 @@ namespace CsvHelper.Tests.TypeConversion
         public void RoundTripMinValueTest()
         {
             var converter = new DoubleConverter();
-            var s = converter.ConvertToString(double.MinValue, null, new MemberMapData(null));
-            var d = converter.ConvertFromString(s, null, new MemberMapData(null));
+            var s = converter.ConvertToString(double.MinValue, null!, new MemberMapData(null));
+            var d = converter.ConvertFromString(s, null!, new MemberMapData(null));
 
             Assert.Equal(double.MinValue, d);
         }

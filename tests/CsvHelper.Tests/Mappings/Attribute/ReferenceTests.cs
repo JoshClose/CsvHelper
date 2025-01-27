@@ -22,7 +22,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 				var records = csv.GetRecords<ReferenceTestClassA>().ToList();
 
 				Assert.Equal(1, records[0].Id);
-				Assert.Equal("one", records[0].B.Name);
+				Assert.Equal("one", records[0].B?.Name);
 			}
 		}
 
@@ -31,13 +31,13 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			[Name("id")]
 			public int Id { get; set; }
 
-			public ReferenceTestClassB B { get; set; }
+			public ReferenceTestClassB? B { get; set; }
 		}
 
 		private class ReferenceTestClassB
 		{
 			[Name("name")]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

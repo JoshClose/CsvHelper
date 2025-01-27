@@ -314,23 +314,23 @@ namespace CsvHelper.Tests.AutoMapping
 
 			Assert.Equal("Id", map.MemberMaps[0].Data.Names[0]);
 			Assert.Equal("id", map.ParameterMaps[0].Data.Names[0]);
-			Assert.Equal("name", map.ParameterMaps[1].ConstructorTypeMap.ParameterMaps[0].Data.Names[0]);
+			Assert.Equal("name", map.ParameterMaps[1].ConstructorTypeMap?.ParameterMaps[0].Data.Names[0]);
 			Assert.Equal("Name", map.ReferenceMaps[0].Data.Mapping.MemberMaps[0].Data.Names[0]);
 			Assert.Equal("name", map.ReferenceMaps[0].Data.Mapping.ParameterMaps[0].Data.Names[0]);
 		}
 
 		private class Nested
 		{
-			public Simple Simple1 { get; set; }
+			public Simple Simple1 { get; set; } = new Simple();
 
-			public Simple Simple2 { get; set; }
+			public Simple Simple2 { get; set; } = new Simple();
 		}
 
 		private class Simple
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; } = string.Empty;
 		}
 
 		private sealed class SimpleMap : ClassMap<Simple>
@@ -353,7 +353,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			public int AId { get; set; }
 
-			public B B { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B
@@ -365,7 +365,7 @@ namespace CsvHelper.Tests.AutoMapping
 		{
 			public int Id { get; set; }
 
-			public NoDefaultConstructor Ref { get; set; }
+			public NoDefaultConstructor Ref { get; set; } = new NoDefaultConstructor(string.Empty);
 		}
 
 		private class SimpleHasNoDefaultConstructorReferenceHasNoDefaultConstructor

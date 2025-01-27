@@ -413,7 +413,7 @@
 <h6 id="example">Example</h6>
 <pre><code class="language-cs">void Main()
 {
-	CsvConfiguration config = CsvConfiguration.FromType&lt;Foo&gt;();
+	var config = CsvConfiguration.FromAttributes&lt;Foo&gt;();
 	using (var reader = new StreamReader(&quot;path\\to\\file.csv&quot;))
 	using (var csv = new CsvReader(reader, config))
 	{
@@ -473,7 +473,7 @@ public class Foo
 	<br /><br />
 
 	<footer id="footer" class="footer">
-	<div class="has-text-centered">&copy; 2009-2022 Josh Close</div>
+	<div class="has-text-centered">&copy; 2009-2024 Josh Close</div>
 </footer>
 
 

@@ -682,26 +682,26 @@ namespace CsvHelper.Tests.Reading
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class ContainsReference
 		{
-			public Test Test { get; set; }
+			public Test Test { get; set; } = new Test();
 		}
 
 		private class Parent
 		{
 			public int ParentId { get; set; }
 
-			public string ParentName { get; set; }
+			public string? ParentName { get; set; }
 		}
 
 		private class Child : Parent
 		{
 			public int ChildId { get; set; }
 
-			public string ChildName { get; set; }
+			public string? ChildName { get; set; }
 		}
 	}
 }

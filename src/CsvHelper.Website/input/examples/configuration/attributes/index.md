@@ -15,7 +15,7 @@ Identifier||Amount2|IsBool|Constant
 ```cs
 void Main()
 {
-	CsvConfiguration config = CsvConfiguration.FromType<Foo>();
+	var config = CsvConfiguration.FromAttributes<Foo>();
 	using (var reader = new StreamReader("path\\to\\file.csv"))
 	using (var csv = new CsvReader(reader, config))
 	{
