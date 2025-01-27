@@ -67,12 +67,13 @@ public class CsvDataReader : IDataReader
 		}
 	}
 
-	/// <summary>
-	/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-	/// </summary>
-	/// <param name="csv">The CSV.</param>
-	/// <param name="schemaTable">The DataTable representing the file schema.</param>
-	public CsvDataReader(CsvReader csv, DataTable? schemaTable = null, bool leaveOpen = false)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CsvDataReader"/> class.
+    /// </summary>
+    /// <param name="csv">The CSV.</param>
+    /// <param name="schemaTable">The DataTable representing the file schema.</param>
+    /// <param name="leaveOpen"><c>true</c> to leave the <see cref="CsvReader"/> open after the <see cref="CsvDataReader"/> object is disposed, otherwise <c>false</c>.</param>
+    public CsvDataReader(CsvReader csv, DataTable? schemaTable = null, bool leaveOpen = false)
 	{
 		this.csv = csv;
         this.leaveOpen = leaveOpen;
@@ -97,34 +98,34 @@ public class CsvDataReader : IDataReader
 		Dispose();
 	}
 
-		/// <inheritdoc/>
-		public void Dispose()
+	/// <inheritdoc/>
+	public void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
+
+	/// <summary>
+	/// Disposes the object.
+	/// </summary>
+	/// <param name="disposing">Indicates if the object is being disposed.</param>
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposed)
 		{
-			Dispose(disposing: true);
-			GC.SuppressFinalize(this);
+			return;
 		}
 
-		/// <summary>
-		/// Disposes the object.
-		/// </summary>
-		/// <param name="disposing">Indicates if the object is being disposed.</param>
-		protected virtual void Dispose(bool disposing)
+		if (disposing)
 		{
-			if (disposed)
+			if (!leaveOpen)
 			{
-				return;
+				csv?.Dispose();
 			}
-
-			if (disposing)
-			{
-				if (!leaveOpen)
-				{
-					csv?.Dispose();
-				}
-			}
-
-			disposed = true;
 		}
+
+		disposed = true;
+	}
 
 	/// <inheritdoc />
 	public bool GetBoolean(int i)
