@@ -185,21 +185,22 @@ public class ObjectCreator
 
 	internal struct CacheKey : IEquatable<CacheKey>
 	{
+		private readonly Type _type;
+		private readonly Type[] _args;
+
 		public CacheKey(Type type, Type[] args)
 		{
-			Type = type;
-			Args = args;
+			_type = type;
+			_args = args;
 		}
-		public Type Type { get; set; }
-		public Type[] Args { get; set; }
 
 		public override int GetHashCode()
 		{
 			var hashCode = new HashCode();
-			hashCode.Add(Type.GetHashCode());
-			for (var i = 0; i < Args.Length; i++)
+			hashCode.Add(_type.GetHashCode());
+			for (var i = 0; i < _args.Length; i++)
 			{
-				hashCode.Add(Args[i].GetHashCode());
+				hashCode.Add(_args[i].GetHashCode());
 			}
 
 			return hashCode.ToHashCode();
@@ -219,11 +220,11 @@ public class ObjectCreator
 
 		public bool Equals(CacheKey other)
 		{
-			if (other.Args.Length != Args.Length) return false;
-			if (other.Type != Type) return false;
-			for (var i = 0; i < Args.Length; i++)
+			if (other._type != _type) return false;
+			if (other._args.Length != _args.Length) return false;
+			for (var i = 0; i < _args.Length; i++)
 			{
-				if (other.Args[i] != Args[i]) return false;
+				if (other._args[i] != _args[i]) return false;
 			}
 			return true;
 		}
