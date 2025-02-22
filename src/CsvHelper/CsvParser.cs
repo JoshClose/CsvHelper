@@ -115,12 +115,13 @@ public class CsvParser : IParser, IDisposable
 	/// <inheritdoc/>
 	public string RawRecord => new string(buffer, rowStartPosition, bufferPosition - rowStartPosition);
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Gets a span over the raw record for the current row.
+	/// </summary>
 	/// <remarks>
-	/// WARNING: This is an advanced API. The underlying memory of the returned span may
-	/// change upon subsequent calls to <see cref="Read"/>, resulting in undefined behavior.
-	/// If this is unclear or you want a consistent view of the raw record at this
-	/// point in time, use <see cref="RawRecord"/> instead.
+	/// The underlying memory of the returned span may change upon subsequent calls to
+	/// <see cref="Read"/>, resulting in undefined behavior. If you want a consistent
+	/// view of the raw record at this point in time, use <see cref="RawRecord"/> instead.
 	/// </remarks>
 	public ReadOnlySpan<char> RawRecordSpan => buffer.AsSpan(rowStartPosition, bufferPosition - rowStartPosition);
 
@@ -802,17 +803,20 @@ public class CsvParser : IParser, IDisposable
 		return true;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Gets a span over the field at the specified index in the current row.
+	/// </summary>
+	/// <param name="index">The index of the field in the current row.</param>
+	/// <returns>A span representing the field at the specified index in the current row.</returns>
 	/// <remarks>
-	/// WARNING: This is an advanced API. The underlying memory of the returned span may
-	/// change upon subsequent calls to <see cref="Read"/>, resulting in undefined behavior.
-	/// If this is unclear or you want a consistent view of the field at this point
-	/// in time, use <see cref="this[int]"/> instead.
+	/// The underlying memory of the returned span may change upon subsequent calls to
+	/// <see cref="Read"/>, resulting in undefined behavior. If you want a consistent
+	/// view of the raw record at this point in time, use <see cref="this[int]"/> instead.
 	/// </remarks>
 	/// <exception cref="IndexOutOfRangeException"><paramref name="index"/> is negative or greater than or equal to <see cref="Count"/>.</exception>
 	public ReadOnlySpan<char> GetFieldSpan(int index)
 	{
-		if (index >= fieldsPosition)
+		if ((uint)index >= Count)
 		{
 			throw new IndexOutOfRangeException($"Index was out of range. Must be non-negative and less than {nameof(Count)}");
 		}
@@ -837,8 +841,8 @@ public class CsvParser : IParser, IDisposable
 			// which then tries to access... (and so on until the process crashes).
 
 			var message =
-				$"You can't access {nameof(IParser)}[int], {nameof(IParser)}.{nameof(IParser.GetFieldSpan)} or " +
-				$"{nameof(IParser)}.{nameof(IParser.Record)} inside of the {nameof(BadDataFound)} callback. " +
+				$"You can't access {nameof(CsvParser)}[int], {nameof(CsvParser)}.{nameof(GetFieldSpan)} or " +
+				$"{nameof(CsvParser)}.{nameof(Record)} inside of the {nameof(BadDataFound)} callback. " +
 				$"Use {nameof(BadDataFoundArgs)}.{nameof(BadDataFoundArgs.Field)} and {nameof(BadDataFoundArgs)}.{nameof(BadDataFoundArgs.RawRecord)} instead.";
 
 			throw new ParserException(Context, message);

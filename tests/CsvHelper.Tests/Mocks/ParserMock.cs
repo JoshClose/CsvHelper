@@ -26,8 +26,6 @@ public class ParserMock : IParser, IEnumerable<string[]>
 
 	public string RawRecord => string.Empty;
 
-	public ReadOnlySpan<char> RawRecordSpan => ReadOnlySpan<char>.Empty;
-
 	public int Row => row;
 
 	public int RawRow => row;
@@ -39,8 +37,6 @@ public class ParserMock : IParser, IEnumerable<string[]>
 	public string Delimiter => Configuration.Delimiter;
 
 	public string this[int index] => record != null ? record[index] : string.Empty;
-
-	public ReadOnlySpan<char> GetFieldSpan(int index) => record != null ? record[index].AsSpan() : ReadOnlySpan<char>.Empty;
 
 	public ParserMock() : this(new CsvConfiguration(CultureInfo.InvariantCulture)) { }
 

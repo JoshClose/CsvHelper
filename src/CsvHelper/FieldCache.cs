@@ -83,13 +83,13 @@ internal class FieldCache
 			hash.AddBytes(MemoryMarshal.AsBytes(buffer));
 			return (uint)hash.ToHashCode();
 #else
-			uint hash = 17;
+			HashCode hash = new();
 			foreach (char c in buffer)
 			{
-				hash = hash * 31 + c;
+				hash.Add(c);
 			}
 
-			return hash;
+			return (uint)hash.ToHashCode();
 #endif
 		}
 	}
