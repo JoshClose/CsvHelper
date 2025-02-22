@@ -1095,30 +1095,31 @@ public class CsvParser : IParser, IDisposable
 
 	private void EnsureAvailableProcessFieldBuffer(int length)
 	{
-		if (AvailableProcessFieldBuffer.Length < length)
+		if (AvailableProcessFieldBuffer.Length >= length)
 		{
-			// We iteratively double the buffer size (rather than sizing it exactly
-			// to "length") to reduce the number of resizes for subsequent fields.
-
-			int newProcessFieldBufferLength;
-			checked
-			{
-				int minimumSize = processFieldBufferUsedLength + length;
-
-				newProcessFieldBufferLength = 1 + processFieldBufferUsedLength * 2;
-
-				while (newProcessFieldBufferLength < minimumSize)
-				{
-					newProcessFieldBufferLength *= 2;
-				}
-			}
-
-			Debug.Assert(newProcessFieldBufferLength > processFieldBuffer.Length);
-
-			Array.Resize(ref processFieldBuffer, newProcessFieldBufferLength);
-
-			Debug.Assert(AvailableProcessFieldBuffer.Length >= length);
+			return;
 		}
+
+		int minimumSize = processFieldBufferUsedLength + length;
+
+		int arrayMaxLength =
+#if NET
+			Array.MaxLength;
+#else
+			0x7FFFFFC7;
+#endif
+
+		if ((uint)minimumSize > arrayMaxLength)
+		{
+			throw new OutOfMemoryException();
+		}
+
+		// Double the existing buffer size (capped at Array.MaxLength).
+		int newSize = Math.Max(minimumSize, (int)Math.Min(arrayMaxLength, 2 * (uint)processFieldBuffer.Length));
+
+		Array.Resize(ref processFieldBuffer, newSize);
+
+		Debug.Assert(AvailableProcessFieldBuffer.Length >= length);
 	}
 
 	/// <inheritdoc/>
