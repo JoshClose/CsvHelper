@@ -242,11 +242,11 @@ namespace CsvHelper.Tests
 
 		private class SameNameMultipleTimesClass
 		{
-			public string Name1 { get; set; }
+			public string Name1 { get; set; } = string.Empty;
 
-			public string Name2 { get; set; }
+			public string Name2 { get; set; } = string.Empty;
 
-			public string Name3 { get; set; }
+			public string Name3 { get; set; } = string.Empty;
 		}
 
 		private sealed class SameNameMultipleTimesClassMap : ClassMap<SameNameMultipleTimesClass>
@@ -263,7 +263,7 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 		}
 
 		private sealed class MultipleNamesClassMap : ClassMap<MultipleNamesClass>
@@ -280,7 +280,7 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 
 			public ConstructorMappingClass(string stringColumn)
 			{

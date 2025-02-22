@@ -47,7 +47,7 @@ namespace CsvHelper.Tests.Reading
 		public sealed class CsvPrice
 		{
 			[Name("SKU")]
-			public string Sku { get; set; }
+			public string? Sku { get; set; }
 
 			[Name("Min quantity")]
 			public int MinQuantity { get; set; }

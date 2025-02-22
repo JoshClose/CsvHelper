@@ -172,7 +172,7 @@ namespace CsvHelper.Tests.Issues
 		{
 			[Name("field1")] public int Field1 { get; set; }
 			[Name("field2")] public int Field2 { get; set; }
-			[Name("field3")] public string Field3 { get; set; }
+			[Name("field3")] public string? Field3 { get; set; }
 		}
 	}
 }

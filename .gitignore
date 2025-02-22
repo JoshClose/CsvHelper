@@ -5,6 +5,7 @@ obj/
 artifacts/
 .tmp/
 cache/
+.idea/
 
 *.user
 *.psess

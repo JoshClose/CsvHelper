@@ -32,25 +32,25 @@ namespace CsvHelper.Tests.Reflection
 
 		private class A
 		{
-			public string P1 { get; set; }
-			public B B { get; set; }
+			public string? P1 { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B
 		{
-			public string P2 { get; set; }
-			public C C { get; set; }
+			public string? P2 { get; set; }
+			public C C { get; set; } = new C();
 		}
 
 		private class C
 		{
-			public string P3 { get; set; }
-			public D D { get; set; }
+			public string? P3 { get; set; }
+			public D D { get; set; } = new D();
 		}
 
 		private class D
 		{
-			public string P4 { get; set; }
+			public string? P4 { get; set; }
 		}
 	}
 }

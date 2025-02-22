@@ -5,8 +5,6 @@
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
 using Xunit;
 
@@ -17,17 +15,24 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void EncodingTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(EncodingTestClass));
-
-			Assert.Equal(Encoding.ASCII, config.Encoding);
+			Assert.Equal(Encoding.ASCII, CsvConfiguration.FromAttributes<EncodingNameTestClass>(CultureInfo.InvariantCulture).Encoding);
+			Assert.Equal(Encoding.ASCII, CsvConfiguration.FromAttributes<EncodingCodepageTestClass>(CultureInfo.InvariantCulture).Encoding);
 		}
 
 		[Encoding("ASCII")]
-		private class EncodingTestClass
+		private class EncodingNameTestClass
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
+		}
+
+		[Encoding(20127)]
+		private class EncodingCodepageTestClass
+		{
+			public int Id { get; set; }
+
+			public string? Name { get; set; }
 		}
 	}
 }

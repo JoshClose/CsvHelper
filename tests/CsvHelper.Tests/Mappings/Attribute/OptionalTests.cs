@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[Optional]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

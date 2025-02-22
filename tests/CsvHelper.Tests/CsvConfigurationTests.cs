@@ -38,7 +38,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap<TestClassMappings>();
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -48,7 +48,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap<TestClassMappings>();
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -58,7 +58,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap(typeof(TestClassMappings));
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -68,7 +68,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap(new TestClassMappings());
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -142,7 +142,7 @@ namespace CsvHelper.Tests
 
 		private class TestClass
 		{
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 			public int IntColumn { get; set; }
 		}
 

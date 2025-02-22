@@ -77,7 +77,7 @@ namespace CsvHelper.Tests
 
 			var parser = new CsvParser(reader, config);
 
-			var records = new List<string[]>();
+			var records = new List<string[]?>();
 			while (parser.Read())
 			{
 				records.Add(parser.Record);

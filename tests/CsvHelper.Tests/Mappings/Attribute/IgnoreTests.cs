@@ -64,10 +64,10 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 
 			[CsvHelper.Configuration.Attributes.Ignore]
-			public DateTime Date { get; set; }
+			public DateTime? Date { get; set; }
 		}
 
 		private class Parent
@@ -75,19 +75,19 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[CsvHelper.Configuration.Attributes.Ignore]
-			public Child Child { get; set; }
+			public Child? Child { get; set; }
 		}
 
 		private class Child
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 
-			public GrandChild GrandChild { get; set; }
+			public GrandChild? GrandChild { get; set; }
 		}
 
 		private class GrandChild
 		{
-			public DateTimeOffset Date { get; set; }
+			public DateTimeOffset? Date { get; set; }
 		}
 	}
 }

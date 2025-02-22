@@ -183,7 +183,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			public int Id { get; private set; }
 
-			public string Name { get; private set; }
+			public string? Name { get; private set; }
 
 			public MultipleConstructors(int id)
 			{
@@ -206,7 +206,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			public int Id { get; private set; }
 
-			public string Name { get; private set; }
+			public string? Name { get; private set; }
 
 			public MultipleConstructorsWithDefault() { }
 

@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
         public void WriteField_ShouldQuote_HasCorrectFieldType()
 		{
-			Type type = null;
+			Type? type = null;
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				ShouldQuote = args =>
@@ -81,7 +81,7 @@ namespace CsvHelper.Tests.Writing
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

@@ -16,7 +16,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void TrimOptionsTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(TrimOptionsTestClass));
+			var config = CsvConfiguration.FromAttributes<TrimOptionsTestClass>(CultureInfo.InvariantCulture);
 			Assert.Equal(TrimOptions.InsideQuotes, config.TrimOptions);
 		}
 
@@ -25,7 +25,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

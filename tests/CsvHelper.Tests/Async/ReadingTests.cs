@@ -4,100 +4,94 @@
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Tests.Mocks;
 using Xunit;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Threading;
-using System;
-using System.Linq;
 
-namespace CsvHelper.Tests.Async
+namespace CsvHelper.Tests.Async;
+
+
+public class ReadingTests
 {
-	
-	public class ReadingTests
+	[Fact]
+	public async Task ReadingTest()
 	{
-		[Fact]
-		public async Task ReadingTest()
+		var parser = new ParserMock
 		{
-			var parser = new ParserMock
+			{ "Id", "Name" },
+			{ "1", "one" },
+			{ "2", "two" },
+			null
+		};
+		using (var csv = new CsvReader(parser))
+		{
+			var records = new List<Simple>();
+			await csv.ReadAsync();
+			csv.ReadHeader();
+			while (await csv.ReadAsync())
 			{
-				{ "Id", "Name" },
-				{ "1", "one" },
-				{ "2", "two" },
-				null
-			};
-			using (var csv = new CsvReader(parser))
-			{
-				var records = new List<Simple>();
-				await csv.ReadAsync();
-				csv.ReadHeader();
-				while (await csv.ReadAsync())
-				{
-					records.Add(csv.GetRecord<Simple>());
-				}
-
-				Assert.Equal(2, records.Count);
-
-				var record = records[0];
-				Assert.Equal(1, record.Id);
-				Assert.Equal("one", record.Name);
-
-				record = records[1];
-				Assert.Equal(2, record.Id);
-				Assert.Equal("two", record.Name);
+				records.Add(csv.GetRecord<Simple>());
 			}
+
+			Assert.Equal(2, records.Count);
+
+			var record = records[0];
+			Assert.Equal(1, record.Id);
+			Assert.Equal("one", record.Name);
+
+			record = records[1];
+			Assert.Equal(2, record.Id);
+			Assert.Equal("two", record.Name);
 		}
+	}
 
 #if NETCOREAPP
-		[Fact]
-		public async Task GetRecordsTest()
+	[Fact]
+	public async Task GetRecordsTest()
+	{
+		var parser = new ParserMock
 		{
-			var parser = new ParserMock
-			{
-				{ "Id", "Name" },
-				{ "1", "one" },
-				{ "2", "two" },
-				null
-			};
-			using (var csv = new CsvReader(parser))
-			{
-				var records = csv.GetRecordsAsync<Simple>().GetAsyncEnumerator();
-				await records.MoveNextAsync();
-
-				Assert.Equal(1, records.Current.Id);
-				Assert.Equal("one", records.Current.Name);
-
-				await records.MoveNextAsync();
-
-				Assert.Equal(2, records.Current.Id);
-				Assert.Equal("two", records.Current.Name);
-			}
-		}
-
-		[Fact]
-		public async Task GetRecordsTestCanceled()
+			{ "Id", "Name" },
+			{ "1", "one" },
+			{ "2", "two" },
+			null
+		};
+		using (var csv = new CsvReader(parser))
 		{
-			var parser = new ParserMock
-			{
-				{ "Id", "Name" },
-				{ "1", "one" },
-				{ "2", "two" },
-				null
-			};
-			using (var source = new CancellationTokenSource())
-			using (var csv = new CsvReader(parser))
-			{
-				source.Cancel();
-				var records = csv.GetRecordsAsync<Simple>(source.Token).GetAsyncEnumerator();
-				await Assert.ThrowsAsync<OperationCanceledException>(async () => await records.MoveNextAsync());
-			}
+			var records = csv.GetRecordsAsync<Simple>().GetAsyncEnumerator();
+			await records.MoveNextAsync();
+
+			Assert.Equal(1, records.Current.Id);
+			Assert.Equal("one", records.Current.Name);
+
+			await records.MoveNextAsync();
+
+			Assert.Equal(2, records.Current.Id);
+			Assert.Equal("two", records.Current.Name);
 		}
+	}
+
+	[Fact]
+	public async Task GetRecordsTestCanceled()
+	{
+		var parser = new ParserMock
+		{
+			{ "Id", "Name" },
+			{ "1", "one" },
+			{ "2", "two" },
+			null
+		};
+		using (var source = new CancellationTokenSource())
+		using (var csv = new CsvReader(parser))
+		{
+			source.Cancel();
+			var records = csv.GetRecordsAsync<Simple>(source.Token).GetAsyncEnumerator();
+			await Assert.ThrowsAsync<OperationCanceledException>(async () => await records.MoveNextAsync());
+		}
+	}
 #endif
 
-		private class Simple
-		{
-			public int Id { get; set; }
+	private class Simple
+	{
+		public int Id { get; set; }
 
-			public string Name { get; set; }
-		}
+		public string Name { get; set; } = string.Empty;
 	}
 }

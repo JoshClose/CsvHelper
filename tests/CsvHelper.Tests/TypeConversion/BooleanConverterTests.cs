@@ -25,12 +25,12 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture }
 			};
 
-			Assert.Equal("True", converter.ConvertToString(true, null, memberMapData));
+			Assert.Equal("True", converter.ConvertToString(true, null!, memberMapData));
 
-			Assert.Equal("False", converter.ConvertToString(false, null, memberMapData));
+			Assert.Equal("False", converter.ConvertToString(false, null!, memberMapData));
 
-			Assert.Equal("", converter.ConvertToString(null, null, memberMapData));
-			Assert.Equal("1", converter.ConvertToString(1, null, memberMapData));
+			Assert.Equal("", converter.ConvertToString(null, null!, memberMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null!, memberMapData));
 		}
 
 		[Fact]
@@ -43,18 +43,18 @@ namespace CsvHelper.Tests.TypeConversion
 
 			var row = new CsvReader(new ParserMock());
 
-			Assert.True((bool)converter.ConvertFromString("true", null, memberMapData));
-			Assert.True((bool)converter.ConvertFromString("True", null, memberMapData));
-			Assert.True((bool)converter.ConvertFromString("TRUE", null, memberMapData));
-			Assert.True((bool)converter.ConvertFromString("1", null, memberMapData));
-			Assert.True((bool)converter.ConvertFromString(" true ", null, memberMapData));
+			Assert.True((bool?)converter.ConvertFromString("true", null!, memberMapData));
+			Assert.True((bool?)converter.ConvertFromString("True", null!, memberMapData));
+			Assert.True((bool?)converter.ConvertFromString("TRUE", null!, memberMapData));
+			Assert.True((bool?)converter.ConvertFromString("1", null!, memberMapData));
+			Assert.True((bool?)converter.ConvertFromString(" true ", null!, memberMapData));
 
-			Assert.False((bool)converter.ConvertFromString("false", null, memberMapData));
-			Assert.False((bool)converter.ConvertFromString("False", null, memberMapData));
-			Assert.False((bool)converter.ConvertFromString("FALSE", null, memberMapData));
-			Assert.False((bool)converter.ConvertFromString("0", null, memberMapData));
-			Assert.False((bool)converter.ConvertFromString(" false ", null, memberMapData));
-			Assert.False((bool)converter.ConvertFromString(" 0 ", null, memberMapData));
+			Assert.False((bool?)converter.ConvertFromString("false", null!, memberMapData));
+			Assert.False((bool?)converter.ConvertFromString("False", null!, memberMapData));
+			Assert.False((bool?)converter.ConvertFromString("FALSE", null!, memberMapData));
+			Assert.False((bool?)converter.ConvertFromString("0", null!, memberMapData));
+			Assert.False((bool?)converter.ConvertFromString(" false ", null!, memberMapData));
+			Assert.False((bool?)converter.ConvertFromString(" 0 ", null!, memberMapData));
 
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, memberMapData));
 		}
@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.TypeConversion
 				},
 			};
 
-			var value = converter.ConvertToString(true, null, memberMapData);
+			var value = converter.ConvertToString(true, null!, memberMapData);
 
 			Assert.Equal("Foo", value);
 		}
@@ -90,7 +90,7 @@ namespace CsvHelper.Tests.TypeConversion
 				},
 			};
 
-			var value = converter.ConvertToString(true, null, memberMapData);
+			var value = converter.ConvertToString(true, null!, memberMapData);
 
 			Assert.Equal("Foo", value);
 		}
@@ -108,7 +108,7 @@ namespace CsvHelper.Tests.TypeConversion
 				},
 			};
 
-			var value = converter.ConvertToString(false, null, memberMapData);
+			var value = converter.ConvertToString(false, null!, memberMapData);
 
 			Assert.Equal("Foo", value);
 		}
@@ -126,7 +126,7 @@ namespace CsvHelper.Tests.TypeConversion
 				},
 			};
 
-			var value = converter.ConvertToString(false, null, memberMapData);
+			var value = converter.ConvertToString(false, null!, memberMapData);
 
 			Assert.Equal("Foo", value);
 		}

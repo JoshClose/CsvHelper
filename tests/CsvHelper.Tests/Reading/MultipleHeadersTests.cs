@@ -84,12 +84,12 @@ namespace CsvHelper.Tests.Reading
 		private class Alpha
 		{
 			public int A { get; set; }
-			public string B { get; set; }
+			public string? B { get; set; }
 		}
 
 		private class Omega
 		{
-			public string Y { get; set; }
+			public string? Y { get; set; }
 			public int Z { get; set; }
 		}
 

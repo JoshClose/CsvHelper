@@ -95,9 +95,9 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 		{
 			public int Id { get; private set; }
 
-			public string Name { get; private set; }
+			public string? Name { get; private set; }
 
-			public Foo(int id, [TypeConverter(typeof(CustomConverter))] string name)
+			public Foo(int id, [TypeConverter(typeof(CustomConverter))] string? name)
 			{
 				Id = id;
 				Name = name;
@@ -106,7 +106,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 
 		private class CustomConverter : DefaultTypeConverter
 		{
-			public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+			public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 			{
 				return "Bar";
 			}

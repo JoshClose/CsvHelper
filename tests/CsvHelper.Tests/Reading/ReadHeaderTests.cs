@@ -29,8 +29,8 @@ namespace CsvHelper.Tests.Reading
 			csv.ReadHeader();
 
 			Assert.NotNull(csv.HeaderRecord);
-			Assert.Equal("Id", csv.HeaderRecord[0]);
-			Assert.Equal("Name", csv.HeaderRecord[1]);
+			Assert.Equal("Id", csv.HeaderRecord?[0]);
+			Assert.Equal("Name", csv.HeaderRecord?[1]);
 		}
 
 		[Fact]

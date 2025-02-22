@@ -130,9 +130,9 @@ namespace CsvHelper.Tests
 			var config = new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture);
 			var context = new CsvContext(config);
 			context.RegisterClassMap<AMap>();
-			context.Maps.Find<A>().Map(m => m.AId).Ignore();
+			context.Maps.Find<A>()?.Map(m => m.AId).Ignore();
 
-			Assert.True(context.Maps[typeof(A)].MemberMaps[0].Data.Ignore);
+			Assert.True(context.Maps[typeof(A)]?.MemberMaps[0].Data.Ignore);
 		}
 
 		private class A
@@ -163,10 +163,10 @@ namespace CsvHelper.Tests
 
 		private class TestClass
 		{
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 			public int IntColumn { get; set; }
 			public Guid GuidColumn { get; set; }
-			public string NotUsedColumn { get; set; }
+			public string? NotUsedColumn { get; set; }
 
 			public TestClass() { }
 

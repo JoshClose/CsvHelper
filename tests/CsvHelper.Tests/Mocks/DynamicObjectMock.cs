@@ -9,14 +9,14 @@ namespace CsvHelper.Tests.Mocks
 {
 	public class DynamicObjectMock : DynamicObject
 	{
-		private Dictionary<string, object> dictionary = new Dictionary<string, object>();
+		private Dictionary<string, object?> dictionary = new Dictionary<string, object?>();
 
-		public override bool TryGetMember(GetMemberBinder binder, out object result)
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
 		{
 			return dictionary.TryGetValue(binder.Name, out result);
 		}
 
-		public override bool TrySetMember(SetMemberBinder binder, object value)
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
 		{
 			dictionary[binder.Name] = value;
 

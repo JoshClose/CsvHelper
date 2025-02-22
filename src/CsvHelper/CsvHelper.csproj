@@ -3,7 +3,7 @@
 		<!-- Assembly -->
 		<AssemblyTitle>CsvHelper</AssemblyTitle>
 		<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-		<Copyright>Copyright © 2009-2022 Josh Close</Copyright>
+		<Copyright>Copyright © 2009-2024 Josh Close</Copyright>
 		<Authors>Josh Close</Authors>
 
 		<!-- Build -->
@@ -15,8 +15,9 @@
 		<DefaultLanguage>en-US</DefaultLanguage>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <!--<Nullable>enable</Nullable>
-        <WarningsAsErrors>nullable</WarningsAsErrors>-->
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
 
 		<!-- Sign -->
 		<SignAssembly>true</SignAssembly>
@@ -50,43 +51,39 @@
 
 	<!-- .NET 4.6.2 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
 
 	<!-- .NET 4.7 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
 
 	<!-- .NET 4.8 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
 
 	<!-- .NET Standard 2.0 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.0.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Memory" Version="4.5.0" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.2" />
 	</ItemGroup>
 
 	<!-- .NET Standard 2.1 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-		<PackageReference Include="Microsoft.CSharp" Version="4.3.0" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 
 	<ItemGroup>

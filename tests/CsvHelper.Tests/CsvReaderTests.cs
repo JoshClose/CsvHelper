@@ -686,7 +686,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Row.Parser.Record?.All(string.IsNullOrWhiteSpace) ?? false,
 			};
 
 			var parserMock = new ParserMock(config)
@@ -699,14 +699,16 @@ namespace CsvHelper.Tests
 			var reader = new CsvReader(parserMock);
 
 			reader.Read();
-			Assert.Equal("1", reader.Parser.Record[0]);
-			Assert.Equal("2", reader.Parser.Record[1]);
-			Assert.Equal("3", reader.Parser.Record[2]);
+			var record = reader.Parser.Record!;
+			Assert.Equal("1", record[0]);
+			Assert.Equal("2", record[1]);
+			Assert.Equal("3", record[2]);
 
 			reader.Read();
-			Assert.Equal("4", reader.Parser.Record[0]);
-			Assert.Equal("5", reader.Parser.Record[1]);
-			Assert.Equal("6", reader.Parser.Record[2]);
+			record = reader.Parser.Record!;
+			Assert.Equal("4", record[0]);
+			Assert.Equal("5", record[1]);
+			Assert.Equal("6", record[2]);
 
 			Assert.False(reader.Read());
 		}
@@ -730,14 +732,16 @@ namespace CsvHelper.Tests
 			var reader = new CsvReader(parserMock);
 
 			reader.Read();
-			Assert.Equal(" ", reader.Parser.Record[0]);
-			Assert.Equal("", reader.Parser.Record[1]);
-			Assert.Equal("", reader.Parser.Record[2]);
+			var record = reader.Parser.Record!;
+			Assert.Equal(" ", record[0]);
+			Assert.Equal("", record[1]);
+			Assert.Equal("", record[2]);
 
 			reader.Read();
-			Assert.Equal("4", reader.Parser.Record[0]);
-			Assert.Equal("5", reader.Parser.Record[1]);
-			Assert.Equal("6", reader.Parser.Record[2]);
+			record = reader.Parser.Record!;
+			Assert.Equal("4", record[0]);
+			Assert.Equal("5", record[1]);
+			Assert.Equal("6", record[2]);
 
 			Assert.False(reader.Read());
 		}
@@ -1049,16 +1053,16 @@ namespace CsvHelper.Tests
 		}
 		private class Nested
 		{
-			public Simple Simple1 { get; set; }
+			public Simple Simple1 { get; set; } = new Simple();
 
-			public Simple Simple2 { get; set; }
+			public Simple Simple2 { get; set; } = new Simple();
 		}
 
 		private class Simple
 		{
 			public int? Id { get; set; }
 
-			public string Name { get; set; }
+			public string Name { get; set; } = string.Empty;
 		}
 
 		private sealed class SimpleMap : ClassMap<Simple>
@@ -1101,7 +1105,7 @@ namespace CsvHelper.Tests
 
 		private class OnlyFields
 		{
-			public string Name;
+			public string? Name;
 		}
 
 		private sealed class OnlyFieldsMap : ClassMap<OnlyFields>
@@ -1118,22 +1122,23 @@ namespace CsvHelper.Tests
 
 			public bool BoolNullableColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 		}
 
 		private class TestDefaultValues
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 		}
 
 		private sealed class TestDefaultValuesMap : ClassMap<TestDefaultValues>
 		{
 			public TestDefaultValuesMap()
 			{
+				string? nullString = null;
 				Map(m => m.IntColumn).Default(-1);
-				Map(m => m.StringColumn).Default((string)null);
+				Map(m => m.StringColumn).Default(nullString);
 			}
 		}
 
@@ -1141,7 +1146,7 @@ namespace CsvHelper.Tests
 		{
 			public int? IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 
 			public Guid? GuidColumn { get; set; }
 		}
@@ -1151,11 +1156,11 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 
-			public string IgnoredColumn { get; set; }
+			public string? IgnoredColumn { get; set; }
 
-			public string TypeConvertedColumn { get; set; }
+			public string? TypeConvertedColumn { get; set; }
 
 			public int FirstColumn { get; set; }
 
@@ -1179,11 +1184,11 @@ namespace CsvHelper.Tests
 
 		private class TestRecordDuplicateHeaderNames
 		{
-			public string Column1 { get; set; }
+			public string? Column1 { get; set; }
 
-			public string Column2 { get; set; }
+			public string? Column2 { get; set; }
 
-			public string Column3 { get; set; }
+			public string? Column3 { get; set; }
 		}
 
 		private sealed class TestRecordDuplicateHeaderNamesMap : ClassMap<TestRecordDuplicateHeaderNames>
@@ -1198,7 +1203,7 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : DefaultTypeConverter
 		{
-			public override object ConvertFromString(string text, IReaderRow row, MemberMapData propertyMapData)
+			public override object ConvertFromString(string? text, IReaderRow row, MemberMapData propertyMapData)
 			{
 				return "test";
 			}

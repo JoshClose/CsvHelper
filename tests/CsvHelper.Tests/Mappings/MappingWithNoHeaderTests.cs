@@ -190,14 +190,14 @@ namespace CsvHelper.Tests.Mappings
 
 			[Index(1)]
 			[Name("New Name")]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class Foo
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class FooMap : ClassMap<Foo>

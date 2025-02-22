@@ -35,7 +35,7 @@ namespace CsvHelper.Tests.AutoMapping
 			public int Id { get; set; }
 
 			[CsvHelper.Configuration.Attributes.Ignore]
-			public Type ValueType { get; set; }
+			public Type? ValueType { get; set; }
 		}
 	}
 }

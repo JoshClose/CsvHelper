@@ -97,7 +97,7 @@ namespace CsvHelper.Tests.Defaults
 		{
 			public int AId { get; set; }
 
-			public B B { get; set; }
+			public B? B { get; set; }
 		}
 
 		private sealed class AMap : ClassMap<A>

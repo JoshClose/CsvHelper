@@ -62,7 +62,7 @@ namespace CsvHelper.Tests.Reading
 				null
 			};
 
-			Foo record = null;
+			var record = new Foo();
 			IEnumerable<Foo> records;
 			using (var csv = new CsvReader(parserMock))
 			{
@@ -121,7 +121,7 @@ namespace CsvHelper.Tests.Reading
 				null
 			};
 
-			Foo record = null;
+			var record = new Foo();
 			IAsyncEnumerable<Foo> records;
 			using (var csv = new CsvReader(parserMock))
 			{
@@ -136,7 +136,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
     }
 }

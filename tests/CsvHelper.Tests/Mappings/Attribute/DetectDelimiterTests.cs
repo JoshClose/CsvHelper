@@ -14,11 +14,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
-			Assert.True(config.DetectDelimiter);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).DetectDelimiter);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).DetectDelimiter);
 		}
 
-		[DetectDelimiter(true)]
-		private class Foo { }
+		[DetectDelimiter]
+		private class FooTrue { }
+
+		[DetectDelimiter(false)]
+		private class FooFalse { }
 	}
 }

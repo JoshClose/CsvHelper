@@ -27,11 +27,11 @@ namespace CsvHelper.Tests.TypeConversion
 			var date = DateOnly.FromDateTime(DateTime.Now);
 
 			// Valid conversions.
-			Assert.Equal(date.ToString(), converter.ConvertToString(date, null, propertyMapData));
+			Assert.Equal(date.ToString(), converter.ConvertToString(date, null!, propertyMapData));
 
 			// Invalid conversions.
-			Assert.Equal("1", converter.ConvertToString(1, null, propertyMapData));
-			Assert.Equal("", converter.ConvertToString(null, null, propertyMapData));
+			Assert.Equal("1", converter.ConvertToString(1, null!, propertyMapData));
+			Assert.Equal("", converter.ConvertToString(null, null!, propertyMapData));
 		}
 
 		[Fact]
@@ -47,9 +47,9 @@ namespace CsvHelper.Tests.TypeConversion
 			var date = DateOnly.FromDateTime(DateTime.Now);
 
 			// Valid conversions.
-			Assert.Equal(date.ToString(), converter.ConvertFromString(date.ToString(), null, propertyMapData).ToString());
-			Assert.Equal(date.ToString(), converter.ConvertFromString(date.ToString("o"), null, propertyMapData).ToString());
-			Assert.Equal(date.ToString(), converter.ConvertFromString(" " + date + " ", null, propertyMapData).ToString());
+			Assert.Equal(date.ToString(), converter.ConvertFromString(date.ToString(), null!, propertyMapData)?.ToString());
+			Assert.Equal(date.ToString(), converter.ConvertFromString(date.ToString("o"), null!, propertyMapData)?.ToString());
+			Assert.Equal(date.ToString(), converter.ConvertFromString(" " + date + " ", null!, propertyMapData)?.ToString());
 
 			// Invalid conversions.
 			Assert.Throws<TypeConverterException>(() => converter.ConvertFromString(null, row, propertyMapData));

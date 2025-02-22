@@ -16,7 +16,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void EscapeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(EscapeTestClass));
+			var config = CsvConfiguration.FromAttributes<EscapeTestClass>(CultureInfo.InvariantCulture);
 
 			Assert.Equal('x', config.Escape);
 		}
@@ -26,7 +26,7 @@ namespace CsvHelper.Tests.AttributeMapping
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

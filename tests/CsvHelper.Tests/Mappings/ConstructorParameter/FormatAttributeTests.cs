@@ -32,7 +32,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			Assert.Equal(2, map.ParameterMaps.Count);
 			Assert.Null(map.ParameterMaps[0].Data.TypeConverterOptions.Formats);
 			Assert.Single(map.ParameterMaps[1].Data.TypeConverterOptions.Formats);
-			Assert.Equal(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats[0]);
+			Assert.Equal(FORMAT, map.ParameterMaps[1].Data.TypeConverterOptions.Formats?[0]);
 		}
 
 		[Fact]

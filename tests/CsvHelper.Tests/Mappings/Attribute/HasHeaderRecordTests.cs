@@ -14,17 +14,24 @@ namespace CsvHelper.Tests.AttributeMapping
 		[Fact]
 		public void HasHeaderRecordTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(HasHeaderRecordTestClass));
-
-			Assert.False(config.HasHeaderRecord);
+			Assert.True(CsvConfiguration.FromAttributes<HasHeaderRecordTrueTestClass>(CultureInfo.InvariantCulture).HasHeaderRecord);
+			Assert.False(CsvConfiguration.FromAttributes<HasHeaderRecordFalseTestClass>(CultureInfo.InvariantCulture).HasHeaderRecord);
 		}
 
-		[HasHeaderRecord(false)]
-		private class HasHeaderRecordTestClass
+		[HasHeaderRecord]
+		private class HasHeaderRecordTrueTestClass
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
+		}
+
+		[HasHeaderRecord(false)]
+		private class HasHeaderRecordFalseTestClass
+		{
+			public int Id { get; set; }
+
+			public string? Name { get; set; }
 		}
 	}
 }

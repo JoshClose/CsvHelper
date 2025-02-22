@@ -41,7 +41,7 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public B B { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B

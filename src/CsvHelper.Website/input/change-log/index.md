@@ -1,5 +1,116 @@
 ﻿# Change Log
 
+### 33.0.1
+
+#### Bug Fixes
+
+- Added more things that can be null.
+
+### 33.0.0
+
+#### Features
+
+- Nullable turned on.
+- Moved Microsoft.Bcl.AsyncInterfaces to 8.0.0.
+
+#### Breaking Changes
+
+- Nullable being turned on could cause a lot of code changes.
+
+### 32.0.3
+
+#### Bug Fixes
+
+- Dispose of IEnumerator in CsvWriter.
+
+### 32.0.2
+
+#### Bug Fixes
+
+- Fixed issue with writing where an IEnumerable was getting projected twice.
+
+### 32.0.1
+
+#### Bug Fixes
+
+- Fully implemented `IDictionary<string, object>` on `FastDynamicObject`.
+
+### 32.0.0
+
+#### Features
+
+- Reading and writing performance optimizations when using multiple records.
+- Reading and writing performance optimizations when using `dynamic`.
+
+#### Breaking Changes
+
+- Changed `RecordWriter.CreateWriteDelegate<T>(T record)` to `RecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `DynamicRecordWriter.CreateWriteDelegate<T>(T record)` to `DynamicRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `ExpandoObjectRecordWriter.CreateWriteDelegate<T>(T record)` to `ExpandoObjectRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `ObjectRecordWriter.CreateWriteDelegate<T>(T record)` to `ObjectRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `PrimitiveRecordWriter.CreateWriteDelegate<T>(T record)` to `PrimitiveRecordWriter.CreateWriteDelegate<T>(Type type)`.
+- Changed `RecordWriterFactory.MakeRecordWriter<T>(T record)` to `RecordWriterFactory.MakeRecordWriter<T>(RecordTypeInfo typeInfo)`.
+- Removed `RecordManager.Create` methods. Use `Func<T> RecordManager.GetReadDelegate<T>(Type recordType)` instead.
+- Removed `RecordManager.Write` methods. Use `Action<T> RecordManager.GetWriteDelegate<T>(RecordTypeInfo typeInfo)` instead.
+- Removed `RecordCreator.Create` methods. Use `Func<T> RecordCreator.GetCreateRecordDelegate<T>(Type recordType)` instead.
+- Removed `RecordWriter.Create` methods. Use `Action<T> RecordWriter.GetWriteDelegate<T>(RecordTypeInfo typeInfo)` instead.
+- Changed `RecordWriterFactory.MakeRecordWriter<T>(T record)` to `RecordWriterFactory.MakeRecordWriter(RecordTypeInfo typeInfo)`.
+
+### 31.0.4
+
+#### Bug Fixes
+
+- Changed `GuidConverter` to throw `TypeConverterException` instead of `FormatException` to be consistent with other converters.
+
+### 31.0.3
+
+#### Bug Fixes
+
+- Fixed issue with `TypeConverter<T>` where `T` is `Nullable` did not work.
+
+### 31.0.2
+
+#### Bug Fixes
+
+- Removed dependency on `System.Linq.Async`.
+
+### 31.0.1
+
+#### Bug Fixes
+
+- Added InformationalVersion to assembly info.
+
+### 31.0.0
+
+#### Features
+
+- Created generic `TypeConverter` class to allow for easier creation of type converters.
+
+#### Breaking Changes
+
+- `TypeConverter` was renamed to `NotSupportedTypeConverter`.
+- `TypeConverter` is now a generic type converter base class.
+
+### 30.1.0
+
+#### Features
+
+- Added `static CsvConfiguration.WithAttributes` method to create a new configuration with attributes applied.
+- Boolean attributes have empty overload that default to true.
+- `ShouldQuote` optimizations.
+
+#### Bug Fixes
+
+- Fixed issue with quotes at end of line getting ignore when `LineBreakInQuotedFieldIsBadData` is enabled.
+- Fixed issue where calling `Convert` on empty `Map()` would throw an exception.
+- Fixed issue where writing with `HasHeaderRecord` set to false was writing a header record.
+- Fixed issue where exception `This Operation is only valid on generic types` was being thrown.
+- Fixed issue where `CsvDataReader` couldn't be used if lines were read manually ahead of time.
+- Fixed issue where `CsvDataReader` wasn't working when `HasHeaderRecord` was false.
+- Fixed issue where `CsvReader.ColumnCount` did not match `CsvParser.Count`.
+- Fixed issue where `GetDelimiter` was not detecting the correct delimiter when there are blank lines.
+- Fixed issue where header validation was outputing error message for each field when it only needed to once.
+
 ### 30.0.3
 
 #### Bug Fixes

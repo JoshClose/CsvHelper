@@ -12,18 +12,26 @@ namespace CsvHelper.Tests.AttributeMapping
 	public class IncludePrivateMembersTests
 	{
 		[Fact]
-		public void TrimOptionsTest()
+		public void IncludePrivateMembersTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(IncludePrivateMembersTestClass));
-			Assert.True(config.IncludePrivateMembers);
+			Assert.True(CsvConfiguration.FromAttributes<IncludePrivateMembersTrueTestClass>(CultureInfo.InvariantCulture).IncludePrivateMembers);
+			Assert.False(CsvConfiguration.FromAttributes<IncludePrivateMembersFalseTestClass>(CultureInfo.InvariantCulture).IncludePrivateMembers);
 		}
 
-		[IncludePrivateMembers(true)]
-		private class IncludePrivateMembersTestClass
+		[IncludePrivateMembers]
+		private class IncludePrivateMembersTrueTestClass
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
+		}
+
+		[IncludePrivateMembers(false)]
+		private class IncludePrivateMembersFalseTestClass
+		{
+			public int Id { get; set; }
+
+			public string? Name { get; set; }
 		}
 	}
 }

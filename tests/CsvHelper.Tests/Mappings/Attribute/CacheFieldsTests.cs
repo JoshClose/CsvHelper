@@ -14,11 +14,14 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		[Fact]
 		public void ConstructorAttributeTest()
 		{
-			var config = new CsvConfiguration(CultureInfo.InvariantCulture, typeof(Foo));
-			Assert.True(config.CacheFields);
+			Assert.True(CsvConfiguration.FromAttributes<FooTrue>(CultureInfo.InvariantCulture).CacheFields);
+			Assert.False(CsvConfiguration.FromAttributes<FooFalse>(CultureInfo.InvariantCulture).CacheFields);
 		}
 
-		[CacheFields(true)]
-		private class Foo { }
+		[CacheFields]
+		private class FooTrue { }
+
+		[CacheFields(false)]
+		private class FooFalse { }
 	}
 }

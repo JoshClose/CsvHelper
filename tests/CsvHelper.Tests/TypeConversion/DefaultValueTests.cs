@@ -30,7 +30,7 @@ namespace CsvHelper.Tests.TypeConversion
 			data.Default = (BigInteger)1;
 			data.UseDefaultOnConversionFailure = true;
 
-			var result = converter.ConvertFromString("foo", null, data);
+			var result = converter.ConvertFromString("foo", null!, data);
 
 			Assert.Equal(data.Default, result);
 		}

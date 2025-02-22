@@ -20,7 +20,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
 			{
 				var records = csv.GetRecords<DateTimeStylesTestClass>().ToList();
-				var actual = csv.Context.Maps.Find<DateTimeStylesTestClass>().MemberMaps[1].Data.TypeConverterOptions.DateTimeStyle;
+				var actual = csv.Context.Maps.Find<DateTimeStylesTestClass>()?.MemberMaps[1].Data.TypeConverterOptions.DateTimeStyle;
 
 				Assert.Equal(DateTimeStyles.AdjustToUniversal, actual);
 			}
@@ -31,7 +31,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[DateTimeStyles(DateTimeStyles.AdjustToUniversal)]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

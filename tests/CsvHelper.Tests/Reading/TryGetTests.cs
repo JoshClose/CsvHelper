@@ -160,7 +160,7 @@ namespace CsvHelper.Tests.Reading
 			var reader = new CsvReader(parserMock);
 			reader.Read();
 			reader.ReadHeader();
-			Assert.False(reader.TryGetField("test", out string field));
+			Assert.False(reader.TryGetField("test", out string? field));
 		}
 
 		[Fact]
@@ -199,7 +199,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			var got = reader.TryGetField(typeof(DateTime), "Name", out object field);
+			var got = reader.TryGetField(typeof(DateTime), "Name", out object? field);
 
 			Assert.False(got);
 			Assert.Equal(DateTime.MinValue, field);
@@ -219,7 +219,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			var got = reader.TryGetField(typeof(DateTimeOffset), "DateTime", out object field);
+			var got = reader.TryGetField(typeof(DateTimeOffset), "DateTime", out object? field);
 
 			Assert.False(got);
 			Assert.Equal(DateTimeOffset.MinValue, field);
