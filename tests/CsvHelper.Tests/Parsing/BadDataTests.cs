@@ -149,5 +149,35 @@ namespace CsvHelper.Tests.Parsing
 
 			Assert.Throws<ParserException>(() => parser[1]);
 		}
+
+		[Fact]
+		public void ConsecutiveBadDataTest()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				BadDataFound = null,
+				CacheFields = false,
+				ProcessFieldBufferSize = 4
+			};
+			// These 3 fields each use the processFieldBuffer.
+			// The test is to ensure consistency of the fields during a read,
+			// i.e. the memory that each field points to is not overwritten
+			// during the processing of the other fields in the same row.
+			string csv = "\"\"\"\",\"two\" \"2,\"three\" \"3\r\n"; // """","two" "2,"three" "3
+			using (var reader = new StringReader(csv)) 
+			using (var parser = new CsvParser(reader, config))
+			{
+				Assert.True(parser.Read());
+
+				Assert.Equal(3, parser.Count);
+				Assert.Equal("\"", parser.GetFieldSpan(0).ToString());
+				Assert.Equal("two \"2", parser.GetFieldSpan(1).ToString());
+				Assert.Equal("three \"3", parser.GetFieldSpan(2).ToString());
+				Assert.Equal("two \"2", parser.GetFieldSpan(1).ToString());
+				Assert.Equal("\"", parser.GetFieldSpan(0).ToString());
+
+				Assert.False(parser.Read());
+			}
+		}
 	}
 }
