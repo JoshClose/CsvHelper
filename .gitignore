@@ -1,10 +1,11 @@
 .vs/
 bin/
 obj/
-_NCrunch_*/
+*NCrunch*/
 artifacts/
 .tmp/
 cache/
+.idea/
 
 *.user
 *.psess

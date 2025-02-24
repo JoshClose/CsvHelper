@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -32,25 +32,25 @@ namespace CsvHelper.Tests.Reflection
 
 		private class A
 		{
-			public string P1 { get; set; }
-			public B B { get; set; }
+			public string? P1 { get; set; }
+			public B B { get; set; } = new B();
 		}
 
 		private class B
 		{
-			public string P2 { get; set; }
-			public C C { get; set; }
+			public string? P2 { get; set; }
+			public C C { get; set; } = new C();
 		}
 
 		private class C
 		{
-			public string P3 { get; set; }
-			public D D { get; set; }
+			public string? P3 { get; set; }
+			public D D { get; set; } = new D();
 		}
 
 		private class D
 		{
-			public string P4 { get; set; }
+			public string? P4 { get; set; }
 		}
 	}
 }

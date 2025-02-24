@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -245,11 +245,11 @@ namespace CsvHelper.Tests
 
 		private class SameNameMultipleTimesClass
 		{
-			public string Name1 { get; set; }
+			public string? Name1 { get; set; }
 
-			public string Name2 { get; set; }
+			public string? Name2 { get; set; }
 
-			public string Name3 { get; set; }
+			public string? Name3 { get; set; }
 		}
 
 		private sealed class SameNameMultipleTimesClassMap : ClassMap<SameNameMultipleTimesClass>
@@ -266,7 +266,7 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 		}
 
 		private sealed class MultipleNamesClassMap : ClassMap<MultipleNamesClass>
@@ -316,7 +316,8 @@ namespace CsvHelper.Tests
 		{
 			public ConvertUsingNullMap()
 			{
-				Map(m => m.IntColumn).Convert(m => (string)null);
+				string? nullString = null;
+				Map(m => m.IntColumn).Convert(m => nullString);
 				Map(m => m.StringColumn).Convert(args => args.Value.StringColumn);
 			}
 		}

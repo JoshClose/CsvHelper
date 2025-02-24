@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -84,9 +84,9 @@ namespace CsvHelper.Tests.Reading
 			{
 				GetDynamicPropertyName = args =>
 				{
-					var header = args.Context.Reader.HeaderRecord[args.FieldIndex];
+					var header = args.Context.Reader?.HeaderRecord?[args.FieldIndex] ?? string.Empty;
 					var prepareHeaderForMatchArgs = new PrepareHeaderForMatchArgs(header, args.FieldIndex);
-					header = args.Context.Reader.Configuration.PrepareHeaderForMatch(prepareHeaderForMatchArgs);
+					header = args.Context.Reader?.Configuration.PrepareHeaderForMatch(prepareHeaderForMatchArgs) ?? string.Empty;
 					var name = headerNameCounts[header] > 1 ? $"{header}{args.FieldIndex}" : header;
 
 					return name;
@@ -103,7 +103,7 @@ namespace CsvHelper.Tests.Reading
 				csv.Read();
 				csv.ReadHeader();
 				var counts =
-					(from header in csv.Context.Reader.HeaderRecord.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(h, i)))
+					(from header in csv.Context.Reader?.HeaderRecord?.Select((h, i) => csv.Configuration.PrepareHeaderForMatch(new PrepareHeaderForMatchArgs(h, i)))
 					 group header by header into g
 					 select new
 					 {

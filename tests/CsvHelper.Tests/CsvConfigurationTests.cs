@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -38,7 +38,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap<TestClassMappings>();
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -48,7 +48,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap<TestClassMappings>();
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -58,7 +58,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap(typeof(TestClassMappings));
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -68,7 +68,7 @@ namespace CsvHelper.Tests
 			var context = new CsvContext(config);
 			context.RegisterClassMap(new TestClassMappings());
 
-			Assert.Equal(2, context.Maps[typeof(TestClass)].MemberMaps.Count);
+			Assert.Equal(2, context.Maps[typeof(TestClass)]?.MemberMaps.Count);
 		}
 
 		[Fact]
@@ -142,7 +142,7 @@ namespace CsvHelper.Tests
 
 		private class TestClass
 		{
-			public string StringColumn { get; set; }
+			public string StringColumn { get; set; } = string.Empty;
 			public int IntColumn { get; set; }
 		}
 

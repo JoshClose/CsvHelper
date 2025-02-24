@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -16,10 +16,10 @@ namespace CsvHelper.Tests.Parsing
 		[Fact]
 		public void CallbackTest()
 		{
-			string rawRecord = null;
+			string? rawRecord = null;
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
-				BadDataFound = args => rawRecord = args.Context.Parser.RawRecord.ToString(),
+				BadDataFound = args => rawRecord = args.Context.Parser?.RawRecord.ToString(),
 			};
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
@@ -141,7 +141,7 @@ namespace CsvHelper.Tests.Parsing
 			string[] record = new string[0];
 			var cfg = new CsvConfiguration(CultureInfo.CurrentCulture)
 			{
-				BadDataFound = args => record = args.Context.Parser.Record
+				BadDataFound = args => record = args.Context.Parser?.Record!
 			};
 			var parser = new CsvParser(badstring, cfg);
 

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -37,7 +37,7 @@ namespace CsvHelper.Tests.Mappings
 
 				Assert.Single(records);
 				Assert.Equal(1, records[0].IdField);
-				Assert.Equal("one", records[0].BField.NameField);
+				Assert.Equal("one", records[0].BField?.NameField);
 			}
 		}
 
@@ -96,7 +96,7 @@ namespace CsvHelper.Tests.Mappings
 
 				Assert.Single(records);
 				Assert.Equal(1, records[0].IdField);
-				Assert.Equal("one", records[0].BField.NameField);
+				Assert.Equal("one", records[0].BField?.NameField);
 			}
 		}
 
@@ -156,7 +156,7 @@ namespace CsvHelper.Tests.Mappings
 
 				Assert.Single(records);
 				Assert.Equal(1, records[0].GetId());
-				Assert.Equal("one", records[0].GetB().GetName());
+				Assert.Equal("one", records[0].GetB()?.GetName());
 			}
 		}
 
@@ -210,7 +210,7 @@ namespace CsvHelper.Tests.Mappings
 
 				Assert.Single(records);
 				Assert.Equal(1, records[0].GetId());
-				Assert.Equal("one", records[0].GetB().GetName());
+				Assert.Equal("one", records[0].GetB()?.GetName());
 			}
 		}
 
@@ -262,7 +262,7 @@ namespace CsvHelper.Tests.Mappings
 
 				Assert.Single(records);
 				Assert.Equal(1, records[0].IdField);
-				Assert.Equal("one", records[0].BField.NameField);
+				Assert.Equal("one", records[0].BField?.NameField);
 			}
 		}
 
@@ -308,16 +308,16 @@ namespace CsvHelper.Tests.Mappings
 		private class APublic
 		{
 			public int IdField;
-			public BPublic BField;
+			public BPublic? BField;
 
 			public int IdProp { get; set; }
 		}
 
 		private class BPublic
 		{
-			public string NameField;
+			public string? NameField;
 
-			public string NameProp { get; set; }
+			public string? NameProp { get; set; }
 		}
 
 		private sealed class APublicMap : ClassMap<APublic>
@@ -340,17 +340,17 @@ namespace CsvHelper.Tests.Mappings
 		private class APrivate
 		{
 			private int idField;
-			private BPrivate bField;
+			private BPrivate? bField;
 
 			private int IdProp { get; set; }
-			private BPrivate BProp { get; set; }
+			private BPrivate? BProp { get; set; }
 
 			public int GetId()
 			{
 				return idField;
 			}
 
-			public BPrivate GetB()
+			public BPrivate? GetB()
 			{
 				return bField;
 			}
@@ -366,9 +366,9 @@ namespace CsvHelper.Tests.Mappings
 
 		private class BPrivate
 		{
-			private string nameField;
+			private string? nameField;
 
-			public string GetName()
+			public string? GetName()
 			{
 				return nameField;
 			}

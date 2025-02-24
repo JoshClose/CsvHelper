@@ -13,7 +13,7 @@ csharp_space_around_binary_operators = before_and_after
 csharp_using_directive_placement = outside_namespace:silent
 csharp_prefer_simple_using_statement = true:suggestion
 csharp_prefer_braces = true:silent
-csharp_style_namespace_declarations = block_scoped:silent
+csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_expression_bodied_methods = false:silent
 csharp_style_expression_bodied_constructors = false:silent
 csharp_style_expression_bodied_operators = false:silent
@@ -44,6 +44,7 @@ csharp_prefer_static_local_function = true:suggestion
 csharp_style_allow_embedded_statements_on_same_line_experimental = true:suggestion
 csharp_style_allow_blank_lines_between_consecutive_braces_experimental = true:silent
 csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
 
 [*.yml]
 indent_style = space

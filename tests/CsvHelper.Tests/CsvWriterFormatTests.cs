@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -125,7 +125,7 @@ namespace CsvHelper.Tests
 
 			public decimal DecimalColumn { get; set; }
 
-			public string FirstColumn { get; set; }
+			public string? FirstColumn { get; set; }
 		}
 
 		private sealed class TestRecordMap : ClassMap<TestRecord>
@@ -141,24 +141,24 @@ namespace CsvHelper.Tests
 
 		private class Person
 		{
-			public string FirstName { get; set; }
+			public string? FirstName { get; set; }
 
-			public string LastName { get; set; }
+			public string? LastName { get; set; }
 
 			public DateTime Updated { get; set; }
 
-			public Address HomeAddress { get; set; }
+			public Address? HomeAddress { get; set; }
 
-			public Address WorkAddress { get; set; }
+			public Address? WorkAddress { get; set; }
 		}
 
 		private class Address
 		{
-			public string Street { get; set; }
+			public string? Street { get; set; }
 
-			public string City { get; set; }
+			public string? City { get; set; }
 
-			public string State { get; set; }
+			public string? State { get; set; }
 
 			public int Zip { get; set; }
 		}

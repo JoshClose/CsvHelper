@@ -1,0 +1,33 @@
+name: Publish NuGet Package
+on: 
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+      - name: Setup Git Semantic Version
+        id: gitversion
+        uses: PaulHatch/semantic-version@v5.3.0 # https://github.com/marketplace/actions/git-semantic-version
+        with:
+          tag_prefix: ""
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+      - name: Display .NET Version
+        run: dotnet --version
+      - name: Create NuGet Package
+        run: >
+          dotnet pack src/CsvHelper
+          --configuration Release
+          -o output
+          -p:AssemblyVersion=${{ steps.gitversion.outputs.major }}.0.0.0
+          -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
+          -p:InformationalVersion=${{ steps.gitversion.outputs.version }}
+          -p:PackageVersion=${{ steps.gitversion.outputs.version }}
+      - name: Display Output
+        run: dir output
+      - name: Publish NuGet Package
+        run: dotnet nuget push output/CsvHelper.${{ steps.gitversion.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

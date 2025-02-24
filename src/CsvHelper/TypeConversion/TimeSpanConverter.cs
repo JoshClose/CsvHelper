@@ -1,41 +1,39 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.Globalization;
 using CsvHelper.Configuration;
+using System.Globalization;
 
-namespace CsvHelper.TypeConversion
+namespace CsvHelper.TypeConversion;
+
+/// <summary>
+/// Converts a <see cref="TimeSpan"/> to and from a <see cref="string"/>.
+/// </summary>
+public class TimeSpanConverter : DefaultTypeConverter
 {
 	/// <summary>
-	/// Converts a <see cref="TimeSpan"/> to and from a <see cref="string"/>.
+	/// Converts the string to an object.
 	/// </summary>
-	public class TimeSpanConverter : DefaultTypeConverter
+	/// <param name="text">The string to convert to an object.</param>
+	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
+	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
+	/// <returns>The object created from the string.</returns>
+	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 	{
-		/// <summary>
-		/// Converts the string to an object.
-		/// </summary>
-		/// <param name="text">The string to convert to an object.</param>
-		/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
-		/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
-		/// <returns>The object created from the string.</returns>
-		public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+		var formatProvider = (IFormatProvider?)memberMapData.TypeConverterOptions.CultureInfo ?? memberMapData.TypeConverterOptions.CultureInfo;
+
+		var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
+		if (memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span))
 		{
-			var formatProvider = (IFormatProvider)memberMapData.TypeConverterOptions.CultureInfo;
-
-			var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
-			if (memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span))
-			{
-				return span;
-			}
-
-			if (memberMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse(text, formatProvider, out span))
-			{
-				return span;
-			}
-
-			return base.ConvertFromString(text, row, memberMapData);
+			return span;
 		}
+
+		if (memberMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse(text, formatProvider, out span))
+		{
+			return span;
+		}
+
+		return base.ConvertFromString(text, row, memberMapData);
 	}
 }

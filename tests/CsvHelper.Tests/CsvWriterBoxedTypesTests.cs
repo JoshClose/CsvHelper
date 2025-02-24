@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -27,10 +27,12 @@ namespace CsvHelper.Tests
 				var recordsTyped = new List<A>
 				{
 					new A { Id = 1, Name = "one" },
+					new A { Id = 2, Name = "two" },
 				};
 				var recordsBoxed = new List<object>
 				{
-					new A { Id = 2, Name = "two" },
+					new A { Id = 3, Name = "three" },
+					new A { Id = 4, Name = "four" },
 				};
 
 				csv.Context.RegisterClassMap<AMap>();
@@ -41,6 +43,8 @@ namespace CsvHelper.Tests
 				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("1,one");
 				expected.AppendLine("2,two");
+				expected.AppendLine("3,three");
+				expected.AppendLine("4,four");
 
 				Assert.Equal(expected.ToString(), writer.ToString());
 			}
@@ -51,7 +55,7 @@ namespace CsvHelper.Tests
 	{
 		public int Id { get; set; }
 
-		public string Name { get; set; }
+		public string? Name { get; set; }
 	}
 
 	public sealed class AMap : ClassMap<A>

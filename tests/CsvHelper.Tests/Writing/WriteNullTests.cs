@@ -1,4 +1,8 @@
-﻿using CsvHelper.Configuration;
+﻿// Copyright 2009-2024 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,7 +16,7 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
 		public void WriteRecordsEnumerableGeneric_RecordIsNull_WritesEmptyRecord()
 		{
-			var records = new List<Foo>
+			var records = new List<Foo?>
 			{
 				new Foo { Id = 1, Name = "one"},
 				null,
@@ -38,7 +42,7 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
 		public void WriteRecordsEnumerable_RecordIsNull_WritesEmptyRecord()
 		{
-			IEnumerable records = new List<Foo>
+			IEnumerable records = new List<Foo?>
 			{
 				new Foo { Id = 1, Name = "one"},
 				null,
@@ -68,7 +72,8 @@ namespace CsvHelper.Tests.Writing
 			using (var writer = new StringWriter())
 			using (var csv = new CsvWriter(writer, config))
 			{
-				csv.WriteRecord((Foo)null);
+				Foo? record = null;
+				csv.WriteRecord(record);
 				csv.Flush();
 
 				Assert.Equal(",", writer.ToString());
@@ -78,7 +83,7 @@ namespace CsvHelper.Tests.Writing
 		private class Foo
 		{
 			public int Id { get; set; }
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

@@ -1,22 +1,22 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Text;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
-using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Dynamic;
-using Xunit;
+using System.Globalization;
+using System.IO;
 using System.Threading;
+using Xunit;
+using Int32Converter = CsvHelper.TypeConversion.Int32Converter;
 
 namespace CsvHelper.Tests
 {
-	
+
 	public class CsvWriterTests
 	{
 		public CsvWriterTests()
@@ -246,7 +246,8 @@ namespace CsvHelper.Tests
 
 			csv.WriteRecord(record);
 			csv.NextRecord();
-			csv.WriteRecord((TestRecord)null);
+			TestRecord? nullRecord = null;
+			csv.WriteRecord(nullRecord);
 			csv.NextRecord();
 			csv.WriteRecord(record);
 			csv.NextRecord();
@@ -835,6 +836,37 @@ namespace CsvHelper.Tests
 			}
 		}
 
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public void WriteRecords_NonGeneric_HasHeaderRecord(bool hasHeaderRecord)
+		{
+			var confg = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = hasHeaderRecord
+			};
+
+			using var stringWriter = new StringWriter();
+			using var csvWriter = new CsvWriter(stringWriter, confg);
+
+			IEnumerable records = new object[] {
+				new TestSinglePropertyRecord { Name = "test" },
+				new TestRecord { IntColumn = 4 }
+			};
+
+			csvWriter.WriteRecords(records);
+			var csv = stringWriter.ToString();
+
+			if (hasHeaderRecord)
+			{
+				Assert.Equal("Name\r\ntest\r\n4,,,,\r\n", csv);
+			}
+			else
+			{
+				Assert.Equal("test\r\n4,,,,\r\n", csv);
+			}
+		}
+
 		private class GetOnly
 		{
 			internal GetOnly(string someParam)
@@ -848,7 +880,7 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public static string Name { get; set; }
+			public static string? Name { get; set; }
 		}
 
 		private sealed class TestWithStaticMap : ClassMap<TestWithStatic>
@@ -892,25 +924,25 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public string Name { private get; set; }
+			public string? Name { private get; set; }
 		}
 
 		private class TestSinglePropertyRecord
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class TestRecord
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 
-			public string IgnoredColumn { get; set; }
+			public string? IgnoredColumn { get; set; }
 
-			public string FirstColumn { get; set; }
+			public string? FirstColumn { get; set; }
 
-			public string TypeConvertedColumn { get; set; }
+			public string? TypeConvertedColumn { get; set; }
 		}
 
 		private sealed class TestRecordMap : ClassMap<TestRecord>
@@ -928,13 +960,13 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 
-			public string IgnoredColumn { get; set; }
+			public string? IgnoredColumn { get; set; }
 
-			public string FirstColumn { get; set; }
+			public string? FirstColumn { get; set; }
 
-			public string TypeConvertedColumn { get; set; }
+			public string? TypeConvertedColumn { get; set; }
 		}
 
 		private sealed class TestRecordNoIndexesMap : ClassMap<TestRecordNoIndexes>
@@ -950,12 +982,12 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : ITypeConverter
 		{
-			public string ConvertToString(object value, IWriterRow row, MemberMapData propertyMapData)
+			public string ConvertToString(object? value, IWriterRow row, MemberMapData propertyMapData)
 			{
 				return "test";
 			}
 
-			public object ConvertFromString(string text, IReaderRow row, MemberMapData propertyMapData)
+			public object ConvertFromString(string? text, IReaderRow row, MemberMapData propertyMapData)
 			{
 				throw new NotImplementedException();
 			}
@@ -973,24 +1005,24 @@ namespace CsvHelper.Tests
 
 		private class Person
 		{
-			public string FirstName { get; set; }
+			public string? FirstName { get; set; }
 
-			public string LastName { get; set; }
+			public string? LastName { get; set; }
 
-			public Address HomeAddress { get; set; }
+			public Address? HomeAddress { get; set; }
 
-			public Address WorkAddress { get; set; }
+			public Address? WorkAddress { get; set; }
 		}
 
 		private class Address
 		{
-			public string Street { get; set; }
+			public string? Street { get; set; }
 
-			public string City { get; set; }
+			public string? City { get; set; }
 
-			public string State { get; set; }
+			public string? State { get; set; }
 
-			public string Zip { get; set; }
+			public string? Zip { get; set; }
 		}
 
 		private sealed class PersonMap : ClassMap<Person>

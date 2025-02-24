@@ -28,10 +28,7 @@ http://joshclose.github.io/CsvHelper/
 
 ### Building the Documentation
 
-1. Install [node.js](https://nodejs.org/en/download/).
-1. Go into the `CsvHelper/docs-src` folder.
-1. Run `npm start` to start a local test site. Make any changes needed.
-1. Run `npm run build` to build the documentation files that are output to `CsvHelper/docs`.
+Run the `build-docs.cmd` file.
 
 ## License
 
@@ -63,15 +60,14 @@ This project exists thanks to all the people who contribute. [[Contribute](CONTR
 
 <a href="https://github.com/JoshClose/CsvHelper/graphs/contributors"><img src="https://opencollective.com/csvhelper/contributors.svg?width=890&button=false" /></a>
 
-### Backers
-
-Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/csvhelper#backer)]
-
-<a href="https://opencollective.com/csvhelper#backers" target="_blank"><img src="https://opencollective.com/csvhelper/backers.svg?width=890"></a>
-
 ### Sponsors
 
-Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/csvhelper#sponsor)]
+You can do a one time or recurring donations through [GitHub Sponsors](https://github.com/sponsors/JoshClose)
 
-<a href="https://opencollective.com/csvhelper/sponsor/0/website" target="_blank"><img src="https://opencollective.com/csvhelper/sponsor/0/avatar.svg"></a>
+A huge thanks to the [.NET on AWS Open Source Software Fund](https://github.com/aws/dotnet-foss) for sponsoring CsvHelper!
 
+<a href="https://github.com/aws/dotnet-foss"><img src="https://raw.githubusercontent.com/JoshClose/CsvHelper/master/logo/aws.png" /></a>
+
+Thanks to [Microsoft](https://github.com/microsoft) for being a sponsor!
+
+<a href="https://github.com/microsoft"><img src="https://raw.githubusercontent.com/JoshClose/CsvHelper/master/logo/microsoft.png" /></a>

@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -48,6 +48,47 @@ namespace CsvHelper.Tests
 			Assert.Equal(Convert.ToInt32("2"), reader.GetField<int>("Two"));
 			Assert.Equal(Convert.ToInt32("1"), reader.GetField<int>(0));
 			Assert.Equal(Convert.ToInt32("2"), reader.GetField<int>(1));
+		}
+
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public void ColumnCountTest(bool detectColumnCountChanges)
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				DetectColumnCountChanges = detectColumnCountChanges,
+				ReadingExceptionOccurred = _ => false
+			};
+
+			string csvString = """
+				1
+				1,2
+				1,2,3
+				1,2
+				1
+				""";
+			var reader = new CsvReader(new StringReader(csvString), config);
+
+			Assert.True(reader.Read());
+			Assert.Equal(1, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(2, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(3, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(2, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
+
+			Assert.True(reader.Read());
+			Assert.Equal(1, reader.ColumnCount);
+			Assert.Equal(reader.Parser.Count, reader.ColumnCount);
 		}
 
 		[Fact]
@@ -645,7 +686,7 @@ namespace CsvHelper.Tests
 			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 			{
 				HasHeaderRecord = false,
-				ShouldSkipRecord = args => args.Row.Parser.Record.All(string.IsNullOrWhiteSpace),
+				ShouldSkipRecord = args => args.Row.Parser.Record?.All(string.IsNullOrWhiteSpace) ?? false,
 			};
 
 			var parserMock = new ParserMock(config)
@@ -658,14 +699,16 @@ namespace CsvHelper.Tests
 			var reader = new CsvReader(parserMock);
 
 			reader.Read();
-			Assert.Equal("1", reader.Parser.Record[0]);
-			Assert.Equal("2", reader.Parser.Record[1]);
-			Assert.Equal("3", reader.Parser.Record[2]);
+			var record = reader.Parser.Record!;
+			Assert.Equal("1", record[0]);
+			Assert.Equal("2", record[1]);
+			Assert.Equal("3", record[2]);
 
 			reader.Read();
-			Assert.Equal("4", reader.Parser.Record[0]);
-			Assert.Equal("5", reader.Parser.Record[1]);
-			Assert.Equal("6", reader.Parser.Record[2]);
+			record = reader.Parser.Record!;
+			Assert.Equal("4", record[0]);
+			Assert.Equal("5", record[1]);
+			Assert.Equal("6", record[2]);
 
 			Assert.False(reader.Read());
 		}
@@ -689,14 +732,16 @@ namespace CsvHelper.Tests
 			var reader = new CsvReader(parserMock);
 
 			reader.Read();
-			Assert.Equal(" ", reader.Parser.Record[0]);
-			Assert.Equal("", reader.Parser.Record[1]);
-			Assert.Equal("", reader.Parser.Record[2]);
+			var record = reader.Parser.Record!;
+			Assert.Equal(" ", record[0]);
+			Assert.Equal("", record[1]);
+			Assert.Equal("", record[2]);
 
 			reader.Read();
-			Assert.Equal("4", reader.Parser.Record[0]);
-			Assert.Equal("5", reader.Parser.Record[1]);
-			Assert.Equal("6", reader.Parser.Record[2]);
+			record = reader.Parser.Record!;
+			Assert.Equal("4", record[0]);
+			Assert.Equal("5", record[1]);
+			Assert.Equal("6", record[2]);
 
 			Assert.False(reader.Read());
 		}
@@ -1008,16 +1053,16 @@ namespace CsvHelper.Tests
 		}
 		private class Nested
 		{
-			public Simple Simple1 { get; set; }
+			public Simple Simple1 { get; set; } = new Simple();
 
-			public Simple Simple2 { get; set; }
+			public Simple Simple2 { get; set; } = new Simple();
 		}
 
 		private class Simple
 		{
 			public int? Id { get; set; }
 
-			public string Name { get; set; }
+			public string Name { get; set; } = string.Empty;
 		}
 
 		private sealed class SimpleMap : ClassMap<Simple>
@@ -1060,7 +1105,7 @@ namespace CsvHelper.Tests
 
 		private class OnlyFields
 		{
-			public string Name;
+			public string? Name;
 		}
 
 		private sealed class OnlyFieldsMap : ClassMap<OnlyFields>
@@ -1077,22 +1122,23 @@ namespace CsvHelper.Tests
 
 			public bool BoolNullableColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 		}
 
 		private class TestDefaultValues
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 		}
 
 		private sealed class TestDefaultValuesMap : ClassMap<TestDefaultValues>
 		{
 			public TestDefaultValuesMap()
 			{
+				string? nullString = null;
 				Map(m => m.IntColumn).Default(-1);
-				Map(m => m.StringColumn).Default((string)null);
+				Map(m => m.StringColumn).Default(nullString);
 			}
 		}
 
@@ -1100,7 +1146,7 @@ namespace CsvHelper.Tests
 		{
 			public int? IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 
 			public Guid? GuidColumn { get; set; }
 		}
@@ -1110,11 +1156,11 @@ namespace CsvHelper.Tests
 		{
 			public int IntColumn { get; set; }
 
-			public string StringColumn { get; set; }
+			public string? StringColumn { get; set; }
 
-			public string IgnoredColumn { get; set; }
+			public string? IgnoredColumn { get; set; }
 
-			public string TypeConvertedColumn { get; set; }
+			public string? TypeConvertedColumn { get; set; }
 
 			public int FirstColumn { get; set; }
 
@@ -1138,11 +1184,11 @@ namespace CsvHelper.Tests
 
 		private class TestRecordDuplicateHeaderNames
 		{
-			public string Column1 { get; set; }
+			public string? Column1 { get; set; }
 
-			public string Column2 { get; set; }
+			public string? Column2 { get; set; }
 
-			public string Column3 { get; set; }
+			public string? Column3 { get; set; }
 		}
 
 		private sealed class TestRecordDuplicateHeaderNamesMap : ClassMap<TestRecordDuplicateHeaderNames>
@@ -1157,7 +1203,7 @@ namespace CsvHelper.Tests
 
 		private class TestTypeConverter : DefaultTypeConverter
 		{
-			public override object ConvertFromString(string text, IReaderRow row, MemberMapData propertyMapData)
+			public override object ConvertFromString(string? text, IReaderRow row, MemberMapData propertyMapData)
 			{
 				return "test";
 			}

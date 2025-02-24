@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -130,7 +130,7 @@ namespace CsvHelper.Tests.Reading
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private sealed class GenericValidateMap : ClassMap<Test>
@@ -149,7 +149,7 @@ namespace CsvHelper.Tests.Reading
 				AutoMap(System.Globalization.CultureInfo.InvariantCulture);
 				foreach (var memberMap in MemberMaps)
 				{
-					Map(typeof(Test), memberMap.Data.Member).Validate(args => !string.IsNullOrEmpty(args.Field));
+					Map(typeof(Test), memberMap.Data.Member!).Validate(args => !string.IsNullOrEmpty(args.Field));
 				}
 			}
 		}

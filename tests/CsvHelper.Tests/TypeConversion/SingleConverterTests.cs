@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -20,8 +20,8 @@ namespace CsvHelper.Tests.TypeConversion
         public void RoundTripMaxValueTest()
         {
             var converter = new SingleConverter();
-            var s = converter.ConvertToString(float.MaxValue, null, new MemberMapData(null));
-            var f = converter.ConvertFromString(s, null, new MemberMapData(null));
+            var s = converter.ConvertToString(float.MaxValue, null!, new MemberMapData(null));
+            var f = converter.ConvertFromString(s, null!, new MemberMapData(null));
 
             Assert.Equal(float.MaxValue, f);
         }
@@ -30,8 +30,8 @@ namespace CsvHelper.Tests.TypeConversion
         public void RoundTripMinValueTest()
         {
             var converter = new SingleConverter();
-            var s = converter.ConvertToString(float.MinValue, null, new MemberMapData(null));
-            var f = converter.ConvertFromString(s, null, new MemberMapData(null));
+            var s = converter.ConvertToString(float.MinValue, null!, new MemberMapData(null));
+            var f = converter.ConvertFromString(s, null!, new MemberMapData(null));
 
             Assert.Equal(float.MinValue, f);
         }

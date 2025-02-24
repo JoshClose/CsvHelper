@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -160,7 +160,7 @@ namespace CsvHelper.Tests.Reading
 			var reader = new CsvReader(parserMock);
 			reader.Read();
 			reader.ReadHeader();
-			Assert.False(reader.TryGetField("test", out string field));
+			Assert.False(reader.TryGetField("test", out string? field));
 		}
 
 		[Fact]
@@ -199,7 +199,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			var got = reader.TryGetField(typeof(DateTime), "Name", out object field);
+			var got = reader.TryGetField(typeof(DateTime), "Name", out object? field);
 
 			Assert.False(got);
 			Assert.Equal(DateTime.MinValue, field);
@@ -219,7 +219,7 @@ namespace CsvHelper.Tests.Reading
 			reader.ReadHeader();
 			reader.Read();
 
-			var got = reader.TryGetField(typeof(DateTimeOffset), "DateTime", out object field);
+			var got = reader.TryGetField(typeof(DateTimeOffset), "DateTime", out object? field);
 
 			Assert.False(got);
 			Assert.Equal(DateTimeOffset.MinValue, field);

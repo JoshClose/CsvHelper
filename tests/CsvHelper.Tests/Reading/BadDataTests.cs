@@ -1,12 +1,12 @@
-﻿using CsvHelper.Configuration;
+﻿// Copyright 2009-2024 Josh Close
+// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
+// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
+// https://github.com/JoshClose/CsvHelper
+using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace CsvHelper.Tests.Reading
@@ -28,14 +28,12 @@ namespace CsvHelper.Tests.Reading
 			};
 			var csv = "SKU;Min quantity;List price;Sale price\r\nTestSku1;2;10.99;9.99\r\nTestSku2;2;10.99;9\r\nXXX;\"9;10.9;9";
 			var stream = new MemoryStream();
-			using (var writer = new StreamWriter(stream, leaveOpen: true))
-			{
+			using var writer = new StreamWriter(stream);
 				writer.Write(csv);
 				writer.Flush();
 				stream.Position = 0;
-			}
-			var textReader = new StreamReader(stream, leaveOpen: true);
 
+			using var textReader = new StreamReader(stream);
 			var csvReader = new CsvReader(textReader, csvConfiguration);
 
 			while (csvReader.Read())
@@ -49,7 +47,7 @@ namespace CsvHelper.Tests.Reading
 		public sealed class CsvPrice
 		{
 			[Name("SKU")]
-			public string Sku { get; set; }
+			public string? Sku { get; set; }
 
 			[Name("Min quantity")]
 			public int MinQuantity { get; set; }

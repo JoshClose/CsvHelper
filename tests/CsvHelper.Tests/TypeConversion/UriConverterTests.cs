@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -29,7 +29,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture },
 			};
 
-			Assert.Equal("https://test.com/", converter.ConvertToString(new Uri("https://test.com"), null, propertyMapData));
+			Assert.Equal("https://test.com/", converter.ConvertToString(new Uri("https://test.com"), null!, propertyMapData));
 		}
 
 		[Fact]
@@ -43,7 +43,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture },
 			};
 
-			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null, propertyMapData));
+			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null!, propertyMapData));
 		}
 
 		[Fact]
@@ -57,7 +57,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture, UriKind = UriKind.Relative },
 			};
 
-			Assert.Equal(new Uri("/a/b/c", UriKind.Relative), converter.ConvertFromString("/a/b/c", null, propertyMapData));
+			Assert.Equal(new Uri("/a/b/c", UriKind.Relative), converter.ConvertFromString("/a/b/c", null!, propertyMapData));
 		}
 
 		[Fact]
@@ -71,7 +71,7 @@ namespace CsvHelper.Tests.TypeConversion
 				TypeConverterOptions = { CultureInfo = CultureInfo.CurrentCulture, UriKind = UriKind.Absolute },
 			};
 
-			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null, propertyMapData));
+			Assert.Equal(new Uri("https://test.com"), converter.ConvertFromString("https://test.com", null!, propertyMapData));
 		}
 
 		[Fact]

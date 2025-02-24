@@ -1,0 +1,20 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  ci:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+      - name: Display .NET Version
+        run: dotnet --version
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --configuration Release --no-restore --no-build

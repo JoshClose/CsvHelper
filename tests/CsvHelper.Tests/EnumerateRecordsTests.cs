@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -137,12 +137,12 @@ namespace CsvHelper.Tests
 					if (count == 1)
 					{
 						Assert.Equal(1, r.Id);
-						Assert.Equal("one", r.Reference.Name);
+						Assert.Equal("one", r.Reference?.Name);
 					}
 					else if (count == 2)
 					{
 						Assert.Equal(2, r.Id);
-						Assert.Equal("two", r.Reference.Name);
+						Assert.Equal("two", r.Reference?.Name);
 					}
 
 					count++;
@@ -154,28 +154,28 @@ namespace CsvHelper.Tests
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class UnUsedProperty
 		{
 			public int Id { get; set; }
 
-			public string Name { get; set; }
+			public string? Name { get; set; }
 
-			public string UnUsed { get; set; }
+			public string? UnUsed { get; set; }
 		}
 
 		public class HasReferences
 		{
 			public int Id { get; set; }
 
-			public Reference Reference { get; set; }
+			public Reference? Reference { get; set; }
 		}
 
 		public class Reference
 		{
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 	}
 }

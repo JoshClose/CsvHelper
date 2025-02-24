@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -66,7 +66,7 @@ namespace CsvHelper.Tests.TypeConversion
 				var converter = new ByteArrayConverter( t.Options );
 				foreach( var f in t.FieldStrings.Zip( t.Expected, ( test, expected ) => new { test, expected } ) )
 				{
-					var actual = (byte[])converter.ConvertFromString( f.test, null, null );
+					var actual = (byte[]?)converter.ConvertFromString(f.test, null!, null!) ?? [];
 					foreach( var b in actual.Zip( f.expected, ( a, e ) => new { a, e } ) )
 					{
 						Assert.Equal( b.e, b.a );
@@ -129,7 +129,7 @@ namespace CsvHelper.Tests.TypeConversion
 				var converter = new ByteArrayConverter( t.Options );
 				foreach( var f in t.Expected.Zip( t.FieldBytes, ( expected, test ) => new { test, expected } ) )
 				{
-					var actual = converter.ConvertToString( f.test, null, null );
+					var actual = converter.ConvertToString( f.test, null!, null!);
 
 					Assert.Equal( actual, f.expected );
 				}

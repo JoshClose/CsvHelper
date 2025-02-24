@@ -1,22 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!--<TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netcoreapp2.1;net47;net45</TargetFrameworks>-->
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net7.0;net6.0;net48;net47;net462</TargetFrameworks>
+		<!--<TargetFrameworks>net8.0</TargetFrameworks>-->
 		<LangVersion>preview</LangVersion>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<WarningsAsErrors>nullable</WarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Remove="*.ncrunchproject" />
+		<None Remove="*.ncrunchproject" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Castle.Core" Version="4.4.1" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Linq.Async" Version="5.0.0" />
+		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 		<PackageReference Include="xunit" Version="2.4.1" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,36 +31,11 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<!-- .NET 4.5 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.Buffers" Version="4.5.1" />
-		<PackageReference Include="System.Memory" Version="4.5.4" />
-		<PackageReference Include="System.ValueTuple" Version="4.4.0" />
-        <PackageReference Remove="System.Linq.Async" Version="*" />
-    </ItemGroup>
-
-	<!-- .NET 4.7 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
-		<PackageReference Include="System.Buffers" Version="4.5.1" />
-		<PackageReference Include="System.Memory" Version="4.5.4" />
-		<PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-	</ItemGroup>
-
-    <!-- .NET Standard 2.0 -->
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
-        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    </ItemGroup>
-
-    <ItemGroup>
-		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
+	<ItemGroup>
+		<Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+	  <ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
 	</ItemGroup>
 </Project>

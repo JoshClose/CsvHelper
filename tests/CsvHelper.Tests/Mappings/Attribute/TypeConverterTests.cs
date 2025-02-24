@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -78,17 +78,17 @@ namespace CsvHelper.Tests.Mappings.Attribute
 			public int Id { get; set; }
 
 			[TypeConverter(typeof(StringTypeConverter))]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		private class StringTypeConverter : ITypeConverter
 		{
-			public object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+			public object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
 			{
 				return "two";
 			}
 
-			public string ConvertToString(object value, IWriterRow row, MemberMapData memberMapData)
+			public string ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 			{
 				return "two";
 			}
@@ -98,7 +98,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		{
 			public int Id { get; set; }
 			[TypeConverter(typeof(StringTypeConverter))]
-			public BClass Name { get; set; }
+			public BClass? Name { get; set; }
 		}
 
 		private class BClass { }
@@ -107,7 +107,7 @@ namespace CsvHelper.Tests.Mappings.Attribute
 		{
 			public int Id { get; set; }
 			[TypeConverter(typeof(StringTypeConverter))]
-			public BStruct Name { get; set; }
+			public BStruct? Name { get; set; }
 		}
 
 		private class BStruct { }

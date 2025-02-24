@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2022 Josh Close
+﻿// Copyright 2009-2024 Josh Close
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,7 +15,7 @@ namespace CsvHelper.Tests.Configuration
 	public class ClassMapBuilderTests
 	{
 		private static readonly Factory csvFactory = new Factory();
-		private static ConvertFromString<FakeInnerClass> ConvertExpression => args => new FakeInnerClass { E = args.Row.GetField(4) };
+		private static ConvertFromString<FakeInnerClass> ConvertExpression => args => new FakeInnerClass { E = args.Row.GetField(4) ?? string.Empty };
 		private static readonly ClassMap<FakeClass> map = csvFactory.CreateClassMapBuilder<FakeClass>()
 			/*
 			.Map( m => m.A ).Constant( "a" )
@@ -70,8 +70,8 @@ namespace CsvHelper.Tests.Configuration
 		[Fact]
 		public void ClassMapBuilderAddsTypeConvertersCorrectly()
 		{
-			Assert.Equal(typeof(DateTimeConverter), map.MemberMaps[2].Data.TypeConverter.GetType());//2
-			Assert.Equal(typeof(DoubleConverter), map.MemberMaps[3].Data.TypeConverter.GetType());//2
+			Assert.Equal(typeof(DateTimeConverter), map.MemberMaps[2].Data.TypeConverter?.GetType());//2
+			Assert.Equal(typeof(DoubleConverter), map.MemberMaps[3].Data.TypeConverter?.GetType());//2
 		}
 
 		[Fact]
@@ -98,7 +98,7 @@ namespace CsvHelper.Tests.Configuration
 		{
 			var fakeRow = new BuilderRowFake();
 			var args = new ConvertFromStringArgs(fakeRow);
-			Assert.Equal(ConvertExpression(args).E, (map.MemberMaps[4].Data.ReadingConvertExpression as Expression<ConvertFromString<FakeInnerClass>>).Compile()(args).E); //6
+			Assert.Equal(ConvertExpression(args)?.E, ((Expression<ConvertFromString<FakeInnerClass>>)map.MemberMaps[4].Data.ReadingConvertExpression!).Compile()(args)?.E); //6
 		}
 
 		[Fact]
@@ -110,9 +110,9 @@ namespace CsvHelper.Tests.Configuration
 
 		private class BuilderRowFake : IReaderRow
 		{
-			public IReaderConfiguration Configuration { get; }
-			public string[] FieldHeaders { get; }
-			public string[] CurrentRecord { get; }
+			public IReaderConfiguration Configuration { get; } = default!;
+			public string[] FieldHeaders { get; } = default!;
+			public string[] CurrentRecord { get; } = default!;
 			public int Row { get; }
 
 			public CsvContext Context => throw new NotImplementedException();
@@ -319,17 +319,17 @@ namespace CsvHelper.Tests.Configuration
 
 		private class FakeClass
 		{
-			public string A { get; set; }
+			public string A { get; set; } = string.Empty;
 			public int B { get; set; }
 			public DateTime C { get; set; }
 			public double D { get; set; }
-			public FakeInnerClass E { get; set; }
-			public string Optional { get; set; }
+			public FakeInnerClass E { get; set; } = new FakeInnerClass();
+			public string Optional { get; set; } = string.Empty;
 		}
 
 		private class FakeInnerClass
 		{
-			public string E { get; set; }
+			public string E { get; set; } = string.Empty;
 		}
 	}
 }
