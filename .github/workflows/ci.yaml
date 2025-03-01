@@ -17,4 +17,4 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
-        run: dotnet test --configuration Release --no-restore --no-build
+        run: dotnet test --configuration Release --no-restore --no-build --logger GitHubActions

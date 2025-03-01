@@ -9,7 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		build-docs.cmd = build-docs.cmd
 		CsvHelper.sln.licenseheader = CsvHelper.sln.licenseheader
-		.github\FUNDING.yml = .github\FUNDING.yml
 		GitVersion.yml = GitVersion.yml
 		README.markdown = README.markdown
 	EndProjectSection
@@ -19,6 +18,26 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Tests", "tests\CsvHelper.Tests\CsvHelper.Tests.csproj", "{6859ECD8-81AE-4E74-A926-5726AAD7EE81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Website", "src\CsvHelper.Website\CsvHelper.Website.csproj", "{3E59CA52-D248-4CBB-BB06-270FA942C4B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.github\FUNDING.yml = .github\FUNDING.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEMPLATE", "{8325036E-FE55-4531-B748-17EC9371421A}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\bug_report.md = .github\ISSUE_TEMPLATE\bug_report.md
+		.github\ISSUE_TEMPLATE\config.yml = .github\ISSUE_TEMPLATE\config.yml
+		.github\ISSUE_TEMPLATE\documentation.md = .github\ISSUE_TEMPLATE\documentation.md
+		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{EE4419D4-2BCB-4024-9AC6-74C4785C032B}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\ci.yaml = .github\workflows\ci.yaml
+		.github\workflows\git-version.yaml = .github\workflows\git-version.yaml
+		.github\workflows\publish.yaml = .github\workflows\publish.yaml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,6 +116,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {6445B2A3-9E05-4ABF-AE2E-C875773B277A}
+		{8325036E-FE55-4531-B748-17EC9371421A} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{EE4419D4-2BCB-4024-9AC6-74C4785C032B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7F48D3EE-214D-45F4-AC6A-3E95C3A25E9F}

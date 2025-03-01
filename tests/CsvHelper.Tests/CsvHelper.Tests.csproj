@@ -17,6 +17,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="Castle.Core" Version="4.4.1" />
+		<PackageReference Include="GitHubActionsTestLogger" Version="2.4.1">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
