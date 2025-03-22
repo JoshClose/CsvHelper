@@ -7,7 +7,7 @@
         <text>
             <h1 id="@(Model.Title.Replace(" ", ""))">@Model.Title</h1>
             <div class="table-responsive">
-                <table class="table table-api table-striped table-hover @(Model.HasSummary ? "two-cols" : string.Empty)">
+                <table class="table table-api @(Model.HasSummary ? "two-cols" : string.Empty)">
                     <thead>
                         <tr>
                             <th>@Model.Header</th>

@@ -1,3 +1,7 @@
+CsvHelper note: this directory powers the API pages. It is a clone of https://github.com/statiqdev/Docable/tree/205f0f6a5c636b0d05d0b031385fd6a620e30ba0 with some edits on top.
+
+---
+
 # Docable
 
 Documentation theme for Statiq Docs.

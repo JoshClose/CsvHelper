@@ -125,20 +125,20 @@ $font-family-serif: 'Roboto Slab', serif !default;
 }
 
 h1, h2, h3, .display-1, .display-2, .display-3, .display-4, .h-section {
-    font-family: $font-family-serif;
+    // font-family: $font-family-serif;
     &:not(:first-child) {
         margin-top: $spacer * 1.5;
     }
 }
 
 h1 {
-    font-weight: bold;
-    color: $primary;
-    background: -webkit-linear-gradient(darken($mixed, 5%), darken($primary, 5%));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    padding-bottom: $spacer * 0.15;
-    margin-bottom: $spacer * 0.5;
+    font-weight: bold !important;
+    color: $primary !important;
+    background: -webkit-linear-gradient(darken($mixed, 5%), darken($primary, 5%)) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    padding-bottom: $spacer * 0.15 !important;
+    margin-bottom: $spacer * 0.5 !important;
 }
 
 h1 * {
@@ -168,7 +168,7 @@ h3 {
 }
 
 .bg-nav {
-    background: $gray-200 linear-gradient(180deg, $gray-200, $white) repeat-x !important;
+    display: none;
 }
 
 .navbar {
@@ -199,14 +199,33 @@ pre code {
     padding: 0;
 }
 
-code, code[class*="language-"], pre[class*="language-"] {
+code,
+code[class*="language-"],
+pre[class*="language-"] {
     background-color: $gray-200;
     text-shadow: none;
-    font-family: $font-family-monospace;
+    // font-family: $font-family-monospace;
     font-size: $font-size-sm;
 
     & span {
         background: none !important;
+    }
+
+    & span.number {
+        // Override the styles set by bulma
+        font-size: $font-size-sm !important;
+
+        align-items: unset;
+        background-color: unset;
+        border-radius: unset;
+        display: unset;
+        height: unset;
+        justify-content: unset;
+        margin-right: unset;
+        min-width: unset;
+        padding: unset;
+        text-align: unset;
+        vertical-align: unset;
     }
 }
 
@@ -214,15 +233,17 @@ code, code[class*="language-"], pre[class*="language-"] {
 .table-api {
     & thead {
         & th {
-            border: none;
-            background: $gray-200 linear-gradient(0deg, $gray-200, $gray-100) repeat-x !important;
+            // border: none;
+            // background: $gray-200 linear-gradient(0deg, $gray-200, $gray-100) repeat-x !important;
             font-size: $font-size-sm;
         }
     }
+
     & tbody {
-        & tr:nth-of-type(even) {
-            background-color: rgba(0, 0, 0, 0.02);
-        }
+
+        // & tr:nth-of-type(even) {
+        //     background-color: rgba(0, 0, 0, 0.02);
+        // }
         & tr td:not(:first-child) {
             font-size: $font-size-sm;
         }
@@ -253,15 +274,11 @@ code, code[class*="language-"], pre[class*="language-"] {
     }
 }
 
-#footer {
-    background-color: $gray-900;
-}
-
 #titlebar {
-    background: $primary linear-gradient(180deg, $mixed, $primary) repeat-x !important;
+    background: $primary !important;
 
     .breadcrumbs {
-        color: lighten($mixed, 15%);
+        color: lighten($primary, 30%);
         font-size: $h6-font-size;
         display: block;
         visibility: visible;
@@ -281,18 +298,18 @@ code, code[class*="language-"], pre[class*="language-"] {
 
         & a {
             &, &:focus, &:active, &:hover {
-                color: lighten($mixed, 15%);
+                color: lighten($primary, 30%);
             }
 
             &:hover {
-                color: lighten($mixed, 10%);
+                color: $white;
             }
         }
     }
 
     .title {
         line-height: 1.5em;
-        font-family: $font-family-serif;
+        // font-family: $font-family-serif;
         font-size: $h1-font-size;
 
         small {
@@ -303,17 +320,7 @@ code, code[class*="language-"], pre[class*="language-"] {
 }
 
 #undertitle {
-    background: $primary linear-gradient(180deg, $primary 30%, darken($primary, 5%) 100%) repeat-x !important;
-
-    @include media-breakpoint-up(md) {
-        & > div {
-            min-height: $spacer * 1.5;
-
-            & > .row {
-                min-height: $spacer * 1.5;
-            }
-        }
-    }
+    display: none;
 }
 
 .sidebar {
