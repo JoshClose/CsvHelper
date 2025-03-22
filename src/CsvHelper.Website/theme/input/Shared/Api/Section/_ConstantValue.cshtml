@@ -1,0 +1,24 @@
+@using Microsoft.AspNetCore.Html
+
+@if(Document.GetBool(CodeAnalysisKeys.HasConstantValue))
+{
+	((List<(string, string)>)ViewData[Keys.Headings]).Add(("ConstantValue", "Constant Value"));
+	object constantValue = Document.Get(CodeAnalysisKeys.ConstantValue);
+	<h1 id="ConstantValue">Constant Value</h1>
+	<div class="table-responsive">
+		<table class="table table-api table-striped table-hover two-cols">
+			<thead>
+				<tr>
+					<th>Value</th>
+					<th>Type</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>@(new HtmlString(constantValue?.ToString() ?? "null"))</td>
+					<td>@(new HtmlString(constantValue?.GetType().Name ?? string.Empty))</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+}

@@ -1,0 +1,16 @@
+@foreach(IGrouping<string, IDocument> typeGroup
+    in Outputs.FromPipeline(nameof(Statiq.Docs.Pipelines.Api))
+        .Where(x => x.GetBool(CodeAnalysisKeys.IsResult)
+            && x.GetString(CodeAnalysisKeys.Kind) == "NamedType"
+            && Document.IdEquals(x.GetDocument(CodeAnalysisKeys.ContainingAssembly)))
+        .GroupBy(x => x.GetString(CodeAnalysisKeys.SpecificKind))
+        .OrderBy(x => x.Key))
+{
+    @await Html.PartialAsync("Api/Section/_DocumentTable", new DocumentTable
+    {
+        Documents = typeGroup.OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName)).ToList(),
+        Title = typeGroup.Key + " Types",
+        Header = typeGroup.Key,
+        HasSummary = true
+    });
+}

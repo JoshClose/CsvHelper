@@ -1,0 +1,41 @@
+@{
+    IReadOnlyList<IDocument> headings = Document
+        .GetDocumentList(Keys.Headings)
+        ?.Where(x => x.GetInt(Keys.Level) == 1)
+        .ToList();
+    string editLink = Document.ContainsKey(SiteKeys.EditLink)
+        ? Document.GetString(SiteKeys.EditLink)
+        : (Document.ContainsKey(SiteKeys.EditRoot)
+            ? Document.GetString(SiteKeys.EditRoot) + "/" + Document.Source.GetRelativeInputPath()
+            : null);
+    if (headings?.Count > 0)
+    {
+        <div class="@(editLink != null ? "border-bottom" : string.Empty) mb-3 sidebar-root">
+            <div class="sidebar-nav-item sidebar-header">On This Page</div>
+            <div class="sidebar-nav-children">
+                @foreach (IDocument heading in headings)
+                {
+                    <div class="sidebar-nav-item"><a href="#@(heading.GetString(Keys.HeadingId))">@(await heading.GetContentStringAsync())</a></div>
+
+                    IReadOnlyList<IDocument> childHeadings = heading
+                        .GetDocumentList(Keys.Children)
+                        ?.Where(x => x.GetInt(Keys.Level) == 2)
+                        .ToList();
+                    if (childHeadings?.Count > 0)
+                    {
+                        <div class="sidebar-nav-children">
+                            @foreach (IDocument childHeading in childHeadings)
+                            {
+                                <div class="sidebar-nav-item"><a href="#@(childHeading.GetString(Keys.HeadingId))">@(await childHeading.GetContentStringAsync())</a></div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+    if (editLink != null)
+    {
+        <p class="small font-weight-bold"><a href="@editLink" data-no-validate><i class="fad fa-pencil"></i> Edit This Page</a></p>
+    }
+}

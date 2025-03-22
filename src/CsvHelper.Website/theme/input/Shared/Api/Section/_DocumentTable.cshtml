@@ -1,0 +1,36 @@
+@inherits StatiqRazorPage<DocumentTable>
+
+@{
+    if(Model?.Documents?.Count > 0)
+    {
+        ((List<(string, string)>)ViewData[Keys.Headings]).Add((Model.Title.Replace(" ", ""), Model.Title));
+        <text>
+            <h1 id="@(Model.Title.Replace(" ", ""))">@Model.Title</h1>
+            <div class="table-responsive">
+                <table class="table table-api table-striped table-hover @(Model.HasSummary ? "two-cols" : string.Empty)">
+                    <thead>
+                        <tr>
+                            <th>@Model.Header</th>
+                            @if(Model.HasSummary)
+                            {
+                                <th>Summary</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(IDocument doc in Model.Documents)
+                        {
+                            <tr>
+                                <td>@Context.GetTypeLink(doc, Model.LinkTypeArguments)</td>
+                                @if(Model.HasSummary)
+                                {
+                                    <td>@Html.Raw(doc.GetString(CodeAnalysisKeys.Summary))</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </text>
+    }
+}

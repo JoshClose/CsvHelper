@@ -1,0 +1,15 @@
+@{
+    List<(string, string)> headings = (List<(string, string)>)ViewData[Keys.Headings];
+    if (headings?.Count > 0)
+    {
+        <div class="sidebar-root">
+            <div class="sidebar-nav-item sidebar-header">On This Page</div>
+            <div class="sidebar-nav-children">
+                @foreach ((string, string) heading in headings)
+                {
+                    <div class="sidebar-nav-item"><a href="#@heading.Item1">@heading.Item2</a></div>
+                }
+            </div>
+        </div>
+    }
+}

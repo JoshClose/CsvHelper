@@ -1,0 +1,45 @@
+@{
+    IReadOnlyList<IDocument> properties = Document.GetDocumentList(CodeAnalysisKeys.Members)
+        ?.Where(x => x.GetBool(CodeAnalysisKeys.IsResult) && x.GetString(CodeAnalysisKeys.Kind) == "Property")
+        .OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName))
+        .ToList();
+    if(properties?.Count > 0)
+    {
+        ((List<(string, string)>)ViewData[Keys.Headings]).Add(("Properties", "Properties"));
+        <h1 id="Properties">Properties</h1>
+        <div class="table-responsive">
+            <table class="table table-api table-striped table-hover three-cols">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Property Type</th>
+                        <th>Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(IDocument property in properties)
+                    {
+                        <tr>
+                            <td>@Context.GetTypeLink(property, false)</td>
+                            <td>@Context.GetTypeLink(property.GetDocument(CodeAnalysisKeys.Type))</td>
+                            <td>
+                                <div>@Html.Raw(property.GetString(CodeAnalysisKeys.Summary))</div>
+                                @{
+                                    IDocument containingType = property.GetDocument(CodeAnalysisKeys.ContainingType);
+                                    if(!Document.IdEquals(containingType))
+                                    {
+                                        <div><small><em>Inherited from @Context.GetTypeLink(containingType)</em></small></div>
+                                    }
+                                    if(property.GetBool(CodeAnalysisKeys.IsStatic))
+                                    {
+                                        <div><small><em>static</em></small></div>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

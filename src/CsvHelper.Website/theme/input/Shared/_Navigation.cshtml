@@ -1,0 +1,27 @@
+<nav class="navbar navbar-expand-md navbar-light align-items-start">
+    <a class="navbar-brand" href="@Context.GetLink("/")">
+        @{
+            string logo = Document.GetString(SiteKeys.Logo);
+            if (!logo.IsNullOrWhiteSpace())
+            {
+                <img id="logo" src="@logo" alt="@Document.GetString(SiteKeys.SiteTitle)">
+            }
+            else
+            {
+                <span class="text-primary">@Document.GetString(SiteKeys.SiteTitle)</span>
+            }
+        }
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapse-topnav" aria-controls="collapse-topnav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="collapse-topnav" class="collapse navbar-collapse flex-wrap">
+        <ul class="navbar-nav mr-auto">
+            @await Html.PartialAsync("_LeftNavigation")
+        </ul>
+        <ul class="navbar-nav">
+            @await Html.PartialAsync("_RightNavigation")
+            @await Html.PartialAsync("_ExtraNavigation")
+        </ul>
+    </div>
+</nav>
