@@ -61,7 +61,7 @@ internal static class ReflectionHelper
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static List<PropertyInfo> GetUniqueProperties(Type type, BindingFlags flags, bool overwrite = false)
 	{
-		var ignoreBase = type.GetCustomAttribute(typeof(IgnoreBaseAttribute)) != null;
+		var ignoreBase = Attribute.IsDefined(type, typeof(IgnoreBaseAttribute));
 
 		var properties = new Dictionary<string, PropertyInfo>();
 
@@ -99,7 +99,7 @@ internal static class ReflectionHelper
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static List<FieldInfo> GetUniqueFields(Type type, BindingFlags flags, bool overwrite = false)
 	{
-		var ignoreBase = type.GetCustomAttribute(typeof(IgnoreBaseAttribute)) != null;
+		var ignoreBase = Attribute.IsDefined(type, typeof(IgnoreBaseAttribute));
 
 		var fields = new Dictionary<string, FieldInfo>();
 
