@@ -2,6 +2,7 @@
   <Settings>
     <AllowParallelTestExecution>True</AllowParallelTestExecution>
     <InstrumentationMode>Optimised</InstrumentationMode>
+    <RdiConfigured>True</RdiConfigured>
     <SolutionConfigured>True</SolutionConfigured>
   </Settings>
 </SolutionConfiguration>
