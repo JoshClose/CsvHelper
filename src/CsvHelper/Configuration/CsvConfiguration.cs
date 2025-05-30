@@ -297,8 +297,8 @@ public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 	/// <exception cref="CultureNotFoundException">If the argument to the <see cref="CultureInfoAttribute"/> does not specify a supported culture.</exception>
 	public static CsvConfiguration FromAttributes(Type type)
 	{
-		var cultureInfoAttribute = (CultureInfoAttribute?)Attribute.GetCustomAttribute(type, typeof(CultureInfoAttribute));
-		if (cultureInfoAttribute == null)
+		var hasCultureInfoAttribute = Attribute.IsDefined(type, typeof(CultureInfoAttribute));
+		if (!hasCultureInfoAttribute)
 		{
 			throw new ConfigurationException($"A {nameof(CultureInfoAttribute)} is required on type '{type.Name}' to use this method.");
 		}
