@@ -1,5 +1,12 @@
 ﻿# Change Log
 
+### 33.1.0
+
+#### Features
+
+- Use `Attributes.IsDefined` instead of `Attributes.GetCustomAttributes` to check for attributes on a type. This is more performant.
+- Removed out of support frameworks `net6.0` and `net7.0` and added `net9.0`.
+
 ### 33.0.1
 
 #### Bug Fixes
