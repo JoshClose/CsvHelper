@@ -19,7 +19,7 @@ public class CsvReader : IReader
 	private readonly Lazy<RecordManager> recordManager;
 	private readonly bool detectColumnCountChanges;
 	private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
-	private readonly Dictionary<string, (string, int)> namedIndexCache = new Dictionary<string, (string, int)>();
+	private readonly Dictionary<string, NameIndex> namedIndexCache = new Dictionary<string, NameIndex>();
 	private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
 	private readonly MemberMapData reusableMemberMapData = new MemberMapData(null);
 	private readonly bool hasHeaderRecord;
@@ -1276,8 +1276,7 @@ public class CsvReader : IReader
 		var nameKey = string.Join("_", names) + index;
 		if (namedIndexCache.TryGetValue(nameKey, out var cache))
 		{
-			(var cachedName, var cachedIndex) = cache;
-			return namedIndexes[cachedName][cachedIndex];
+			return namedIndexes[cache.Name][cache.Index];
 		}
 
 		// Check all possible names for this field.
@@ -1310,7 +1309,7 @@ public class CsvReader : IReader
 			return -1;
 		}
 
-		namedIndexCache.Add(nameKey, (name, index));
+		namedIndexCache.Add(nameKey, new NameIndex(name, index));
 
 		return namedIndexes[name][index];
 	}
@@ -1433,6 +1432,33 @@ public class CsvReader : IReader
 			{
 				namedIndexes[name] = new List<int> { i };
 			}
+		}
+	}
+
+	private readonly struct NameIndex : IEquatable<NameIndex>
+	{
+		public string Name { get; }
+		public int Index { get; }
+
+		public NameIndex(string name, int index)
+		{
+			Name = name;
+			Index = index;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			return obj is NameIndex index && Equals(index);
+		}
+
+		public bool Equals(NameIndex other)
+		{
+			return Name == other.Name && Index == other.Index;
+		}
+
+		public override int GetHashCode()
+		{
+			return HashCode.Combine(Name, Index);
 		}
 	}
 }

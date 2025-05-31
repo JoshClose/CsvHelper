@@ -27,7 +27,7 @@ public abstract class ClassMap<TClass> : ClassMap
 	/// <returns>The member mapping.</returns>
 	public virtual MemberMap<TClass, TMember> Map<TMember>(Expression<Func<TClass, TMember?>> expression, bool useExistingMap = true)
 	{
-		var (classMap, member) = GetMemberMap(expression);
+		var classMap = GetMemberMap(expression, out var member);
 		var memberMap = classMap.Map(typeof(TClass), member, useExistingMap); ;
 
 		return (MemberMap<TClass, TMember>)memberMap;
@@ -42,7 +42,7 @@ public abstract class ClassMap<TClass> : ClassMap
 	/// <returns>The member mapping.</returns>
 	public virtual MemberMap Map<T>(Expression<Func<T, object?>> expression, bool useExistingMap = true)
 	{
-		var (classMap, member) = GetMemberMap(expression);
+		var classMap = GetMemberMap(expression, out var member);
 		var memberMap = classMap.Map(typeof(TClass), member, useExistingMap);
 
 		return memberMap;
@@ -64,7 +64,7 @@ public abstract class ClassMap<TClass> : ClassMap
 		return References(typeof(TClassMap), member, constructorArgs);
 	}
 
-	private (ClassMap, MemberInfo) GetMemberMap<TModel, TProperty>(Expression<Func<TModel, TProperty?>> expression)
+	private ClassMap GetMemberMap<TModel, TProperty>(Expression<Func<TModel, TProperty?>> expression, out MemberInfo member)
 	{
 		var stack = ReflectionHelper.GetMembers(expression);
 		if (stack.Count == 0)
@@ -73,7 +73,6 @@ public abstract class ClassMap<TClass> : ClassMap
 		}
 
 		ClassMap currentClassMap = this;
-		MemberInfo member;
 
 		if (stack.Count > 1)
 		{
@@ -105,6 +104,6 @@ public abstract class ClassMap<TClass> : ClassMap
 		// Add the member map to the last reference map.
 		member = stack.Pop();
 
-		return (currentClassMap, member);
+		return currentClassMap;
 	}
 }
