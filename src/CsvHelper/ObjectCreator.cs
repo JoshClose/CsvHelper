@@ -13,7 +13,7 @@ namespace CsvHelper;
 /// </summary>
 public class ObjectCreator
 {
-	private readonly Dictionary<int, Func<object?[], object>> cache = new Dictionary<int, Func<object?[], object>>();
+	private readonly Dictionary<CacheKey, Func<object?[], object>> cache = new Dictionary<CacheKey, Func<object?[], object>>();
 
 	/// <summary>
 	/// Creates an instance of type T using the given arguments.
@@ -41,7 +41,7 @@ public class ObjectCreator
 	private Func<object?[], object> GetFunc(Type type, object?[] args)
 	{
 		var argTypes = GetArgTypes(args);
-		var key = GetConstructorCacheKey(type, argTypes);
+		var key = new CacheKey(type, argTypes);
 		if (!cache.TryGetValue(key, out var func))
 		{
 			cache[key] = func = CreateInstanceFunc(type, argTypes);
@@ -60,19 +60,6 @@ public class ObjectCreator
 		}
 
 		return argTypes;
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static int GetConstructorCacheKey(Type type, Type[] args)
-	{
-		var hashCode = new HashCode();
-		hashCode.Add(type.GetHashCode());
-		for (var i = 0; i < args.Length; i++)
-		{
-			hashCode.Add(args[i].GetHashCode());
-		}
-
-		return hashCode.ToHashCode();
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,5 +181,52 @@ public class ObjectCreator
 		None = 0,
 		Exact = 1,
 		Fuzzy = 2
+	}
+
+	internal struct CacheKey : IEquatable<CacheKey>
+	{
+		private readonly Type _type;
+		private readonly Type[] _args;
+
+		public CacheKey(Type type, Type[] args)
+		{
+			_type = type;
+			_args = args;
+		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = new HashCode();
+			hashCode.Add(_type.GetHashCode());
+			for (var i = 0; i < _args.Length; i++)
+			{
+				hashCode.Add(_args[i].GetHashCode());
+			}
+
+			return hashCode.ToHashCode();
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj == null) return false;
+
+			if (obj is CacheKey key)
+			{
+				return Equals(key);
+			}
+
+			return false;
+		}
+
+		public bool Equals(CacheKey other)
+		{
+			if (other._type != _type) return false;
+			if (other._args.Length != _args.Length) return false;
+			for (var i = 0; i < _args.Length; i++)
+			{
+				if (other._args[i] != _args[i]) return false;
+			}
+			return true;
+		}
 	}
 }
