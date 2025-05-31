@@ -1,0 +1,30 @@
+@{
+	IReadOnlyList<IDocument> parameters = Document.GetDocumentList(CodeAnalysisKeys.Parameters);
+	IReadOnlyList<ReferenceComment> paramComments = Document.GetList<ReferenceComment>(CodeAnalysisKeys.Params);
+	if (parameters?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("Parameters", "Parameters"));
+		<h1 id="Parameters">Parameters</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover three-cols">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (IDocument parameter in parameters)
+					{
+						<tr>
+							<td>@parameter.GetString(CodeAnalysisKeys.Name)</td>
+							<td>@Context.GetTypeLink(parameter.GetDocument(CodeAnalysisKeys.Type))</td>
+							<td>@Html.Raw(paramComments?.Where(x => x.Name.Equals(parameter.GetString(CodeAnalysisKeys.Name))).Select(x => x.Html).FirstOrDefault())</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

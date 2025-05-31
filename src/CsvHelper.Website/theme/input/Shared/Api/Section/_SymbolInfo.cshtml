@@ -1,0 +1,117 @@
+@{
+    IDocument containingAssembly = Document.GetDocument(CodeAnalysisKeys.ContainingAssembly);
+    IDocument containingNamespace = Document.GetDocument(CodeAnalysisKeys.ContainingNamespace);
+	IDocument containingType = Document.GetDocument(CodeAnalysisKeys.ContainingType);
+	IDocument type = Document.GetDocument(CodeAnalysisKeys.Type);
+	IDocument overridden = Document.GetDocument(CodeAnalysisKeys.Overridden);
+    IReadOnlyList<IDocument> allInterfaces = Document.GetDocumentList(CodeAnalysisKeys.AllInterfaces);
+    IReadOnlyList<IDocument> baseTypes = Document.GetDocumentList(CodeAnalysisKeys.BaseTypes);
+    IReadOnlyList<IDocument> derivedTypes = Document.GetDocumentList(CodeAnalysisKeys.DerivedTypes);
+    IReadOnlyList<IDocument> implementingTypes = Document.GetDocumentList(CodeAnalysisKeys.ImplementingTypes);
+	IReadOnlyList<IDocument> implements = Document.GetDocumentList(CodeAnalysisKeys.Implements);
+    if (containingAssembly is object
+        || containingNamespace is object
+        || allInterfaces?.Count > 0
+        || baseTypes?.Count > 0
+        || derivedTypes?.Count > 0
+        || implementingTypes?.Count > 0)
+    {
+		<dl class="dl-horizontal">
+	        @if (containingAssembly != null)
+	        {
+    		    <dt>Assembly</dt>
+    		    <dd>@Context.GetTypeLink(containingAssembly)</dd>
+	        }
+
+	        @if (containingNamespace != null)
+	        {
+    		    <dt>Namespace</dt>
+    		    <dd>@Context.GetTypeLink(containingNamespace)</dd>
+	        }
+
+			@if(containingType != null)
+			{
+				<dt>Containing Type</dt>
+				<dd>@Context.GetTypeLink(containingType)</dd>
+			}
+
+			@if(overridden != null)
+			{
+				<dt>Overridden</dt>
+				<dd>@Context.GetTypeLink(overridden)</dd>
+			}
+
+	        @if (allInterfaces?.Count > 0)
+	        {
+    		    <dt>Interfaces</dt>
+    		    <dd>
+    			    <ul class="list-unstyled">
+    				    @foreach (IDocument interfaceDocument in allInterfaces)
+    				    {
+    					    <li>@Context.GetTypeLink(interfaceDocument)</li>
+    				    }
+    			    </ul>
+    		    </dd>
+	        }
+
+	        @if (baseTypes?.Count > 0)
+	        {
+    		    <dt>Base Types</dt>
+    		    <dd>
+    			    <ul class="list-unstyled">
+    				    @foreach (IDocument baseType in baseTypes.Reverse())
+    				    {
+    					    <li>@Context.GetTypeLink(baseType)</li>
+    				    }
+    			    </ul>
+    		    </dd>
+	        }
+
+	        @if (derivedTypes?.Count > 0)
+	        {
+    		    <dt>Derived Types</dt>
+    		    <dd>
+    			    <ul class="list-unstyled">
+    				    @foreach (IDocument derivedType in derivedTypes)
+    				    {
+    					    <li>@Context.GetTypeLink(derivedType)</li>
+    				    }
+    			    </ul>
+    		    </dd>
+	        }
+
+	        @if (implements?.Count > 0)
+	        {
+    		    <dt>Implements</dt>
+    		    <dd>
+    			    <ul class="list-unstyled">
+    				    @foreach (IDocument implementsDocument in implements)
+				        {
+					        IDocument implementsContainingTypeDocument = implementsDocument.GetDocument(CodeAnalysisKeys.ContainingType);
+    					    <li>@Context.GetTypeLink(implementsContainingTypeDocument).@Context.GetTypeLink(implementsDocument)</li>
+    				    }
+    			    </ul>
+    		    </dd>
+	        }
+
+	        @if (implementingTypes?.Count > 0)
+	        {
+    		    <dt>Implementing Types</dt>
+    		    <dd>
+    			    <ul class="list-unstyled">
+    				    @foreach (IDocument implementingType in implementingTypes)
+    				    {
+    					    <li>@Context.GetTypeLink(implementingType)</li>
+    				    }
+    			    </ul>
+    		    </dd>
+	        }
+
+			@if(type != null)
+			{
+				<dt>@Document.GetString(CodeAnalysisKeys.Kind) Type</dt>
+				<dd>@Context.GetTypeLink(type)</dd>
+			}
+	    </dl>
+    }
+}

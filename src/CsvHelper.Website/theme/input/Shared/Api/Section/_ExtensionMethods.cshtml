@@ -1,0 +1,45 @@
+@using Microsoft.CodeAnalysis;
+
+@{
+	ITypeSymbol modelSymbol = Document.Get<ITypeSymbol>(CodeAnalysisKeys.Symbol);
+	IReadOnlyList<IDocument> methods = Document.GetDocumentList(CodeAnalysisKeys.ExtensionMethods)
+		?.Where(x => x.GetBool(CodeAnalysisKeys.IsResult))
+		.OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName))
+		.ToList();
+	if(methods?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("ExtensionMethods", "Extension Methods"));
+		<h1 id="ExtensionMethods">Extension Methods</h1>
+		<div class="box-body no-padding table-responsive">
+			<table class="table table-api table-striped table-hover three-cols">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Value</th>
+						<th>Summary</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach(IDocument method in methods)
+					{
+						ISymbol reducedSymbol = method.Get<IMethodSymbol>(CodeAnalysisKeys.Symbol)?.ReduceExtensionMethod(modelSymbol);
+						string reducedName = reducedSymbol?.ToDisplayString(new SymbolDisplayFormat(
+							typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+							genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+							parameterOptions: SymbolDisplayParameterOptions.IncludeType,
+							memberOptions: SymbolDisplayMemberOptions.IncludeParameters,
+							miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+						<tr>
+							<td>@Context.GetTypeLink(method, reducedName, false)</td>
+							<td>@Context.GetTypeLink(method.GetDocument(CodeAnalysisKeys.ReturnType))</td>
+							<td>
+								<div>@Html.Raw(method.GetString(CodeAnalysisKeys.Summary))</div>
+								<div><small><em>From @Context.GetTypeLink(method.GetDocument(CodeAnalysisKeys.ContainingType))</em></small></div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

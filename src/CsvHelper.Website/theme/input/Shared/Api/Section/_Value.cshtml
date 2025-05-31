@@ -1,0 +1,25 @@
+@{
+	IDocument type = Document.GetDocument(CodeAnalysisKeys.Type);
+	string value = Document.GetString(CodeAnalysisKeys.Value);
+	if (type is object || !string.IsNullOrWhiteSpace(value))
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("Value", "Value"));
+		<h1 id="Value">Value</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover two-cols">
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>@Context.GetTypeLink(type)</td>
+						<td>@Html.Raw(value)</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	}
+}

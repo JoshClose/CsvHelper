@@ -1,0 +1,40 @@
+@{
+	IReadOnlyList<IDocument> operators = Document.GetDocumentList(CodeAnalysisKeys.Operators)
+		.OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName))
+		.ToList();
+	if(operators?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("Operators", "Operators"));
+		<h1 id="Operators">Operators</h1>
+		<div class="box-body no-padding table-responsive">
+			<table class="table table-api table-striped table-hover three-cols">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Value</th>
+						<th>Summary</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach(IDocument op in operators)
+					{
+						<tr>
+							<td>@Context.GetTypeLink(op, false)</td>
+							<td>@Context.GetTypeLink(op.GetDocument(CodeAnalysisKeys.ReturnType))</td>
+							<td>
+								<div>@Html.Raw(op.GetString(CodeAnalysisKeys.Summary))</div>
+								@{
+									IDocument containingType = op.GetDocument(CodeAnalysisKeys.ContainingType);
+									if(!Document.IdEquals(containingType))
+									{
+										<div><small><em>Inherited from @Context.GetTypeLink(containingType)</em></small></div>
+									}
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

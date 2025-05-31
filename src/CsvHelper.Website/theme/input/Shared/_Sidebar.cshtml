@@ -1,0 +1,59 @@
+@* The root page of this section is passed in as the model *@
+
+<div class="sidebar-root">
+    @{
+        // Show the root document of the section at the top of the sidebar
+        if (Model.GetBool(SiteKeys.ShowInSidebar, true)
+            && !Model.ContainsKey(Keys.RedirectTo))
+        {
+            @await Html.PartialAsync("_SidebarItem", (Model, false))
+        }
+
+        // Now descend up to 2 levels
+        foreach (IDocument document in OutputPages
+            .GetChildrenOf(Model)
+            .Where(x => !x.ContainsKey(Keys.RedirectTo)))
+        {
+            DocumentList<IDocument> children = OutputPages
+                .GetChildrenOf(document)
+                .Where(x => !x.ContainsKey(Keys.RedirectTo))
+                .ToDocumentList();
+                
+            if (document.GetBool(SiteKeys.ShowInSidebar, true))
+            {
+                @await Html.PartialAsync("_SidebarItem", (document, children.Count > 0))
+            }
+
+            @if (children.Count > 0)
+            {
+                <div class="sidebar-nav-children">
+                    @foreach (IDocument child in children)
+                    {
+                        DocumentList<IDocument> children2 = OutputPages
+                            .GetChildrenOf(child)
+                            .Where(x => !x.ContainsKey(Keys.RedirectTo))
+                            .ToDocumentList();
+                            
+                        if (child.GetBool(SiteKeys.ShowInSidebar, true))
+                        {
+                            @await Html.PartialAsync("_SidebarItem", (child, children2.Count > 0))
+                        }
+                        
+                        @if (children2.Count > 0)
+                        {
+                            <div class="sidebar-nav-children">
+                                @foreach (IDocument child2 in children2)
+                                {
+                                    if (child2.GetBool(SiteKeys.ShowInSidebar, true))
+                                    {
+                                        @await Html.PartialAsync("_SidebarItem", (child2, false))
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        }
+    }
+</div>

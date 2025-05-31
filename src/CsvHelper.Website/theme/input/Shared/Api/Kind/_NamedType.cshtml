@@ -1,0 +1,30 @@
+@await Html.PartialAsync("Api/Section/_Summary")
+@{
+    <div class="container-md">
+	    <div class="row">
+		    <div class="col-md-6 pt-0 pl-0 pb-0 pr-0 pr-md-4 mb-3 mb-md-0">
+			    <div class="p-3 bg-light page-box small" style="min-height: 100%">
+				    @await Html.PartialAsync("Api/Section/_SymbolInfo")
+			    </div>
+		    </div>
+		    <div class="col-md-6 p-0">
+			    <div class="bg-light page-box">
+				    @await Html.PartialAsync("Api/Section/_TypeDiagram")
+			    </div>
+		    </div>
+	    </div>
+    </div>
+}
+@await Html.PartialAsync("Api/Section/_Syntax")
+@await Html.PartialAsync("Api/Section/_Examples")
+@await Html.PartialAsync("Api/Section/_Remarks")
+@await Html.PartialAsync("Api/Section/_Attributes")
+@await Html.PartialAsync("Api/Section/_TypeParameters")
+@await Html.PartialAsync("Api/Section/_Constructors")
+@await Html.PartialAsync("Api/Section/_Events")
+@await Html.PartialAsync("Api/Section/_Fields")
+@await Html.PartialAsync("Api/Section/_Properties")
+@await Html.PartialAsync("Api/Section/_Methods")
+@await Html.PartialAsync("Api/Section/_Operators")
+@await Html.PartialAsync("Api/Section/_ExtensionMethods")
+@await Html.PartialAsync("Api/Section/_SeeAlso")

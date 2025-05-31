@@ -91,82 +91,82 @@ public interface IReaderRow
 	string? GetField(string name, int index);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Object"/> using
+	/// Gets the field converted to the specified <see cref="Type"/> using
 	/// the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The type of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="index">The index of the field.</param>
-	/// <returns>The field converted to <see cref="Object"/>.</returns>
+	/// <returns>The field converted to <paramref name="type"/>.</returns>
 	object? GetField(Type type, int index);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Object"/> using
+	/// Gets the field converted to the specified <see cref="Type"/> using
 	/// the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The type of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
-	/// <returns>The field converted to <see cref="Object"/>.</returns>
+	/// <returns>The field converted to <paramref name="type"/>.</returns>
 	object? GetField(Type type, string name);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Object"/> using
+	/// Gets the field converted to the specified <see cref="Type"/> using
 	/// the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The type of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <returns>The field converted to <see cref="Object"/>.</returns>
+	/// <returns>The field converted to <paramref name="type"/>.</returns>
 	object? GetField(Type type, string name, int index);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Object"/> using
+	/// Gets the field converted to the specified <see cref="Type"/> using
 	/// the specified <see cref="ITypeConverter"/>.
 	/// </summary>
 	/// <param name="type">The type of the field.</param>
 	/// <param name="index">The index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
-	/// <returns>The field converted to <see cref="Object"/>.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <paramref name="type"/>.</param>
+	/// <returns>The field converted to <paramref name="type"/>.</returns>
 	object? GetField(Type type, int index, ITypeConverter converter);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Object"/> using
+	/// Gets the field converted to the specified <see cref="Type"/> using
 	/// the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The type of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
-	/// <returns>The field converted to <see cref="Object"/>.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <paramref name="type"/>.</param>
+	/// <returns>The field converted to <paramref name="type"/>.</returns>
 	object? GetField(Type type, string name, ITypeConverter converter);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Object"/> using
+	/// Gets the field converted to the specified <see cref="Type"/> using
 	/// the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The type of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Object"/>.</param>
-	/// <returns>The field converted to <see cref="Object"/>.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <paramref name="type"/>.</param>
+	/// <returns>The field converted to <paramref name="type"/>.</returns>
 	object? GetField(Type type, string name, int index, ITypeConverter converter);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) index.
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) index.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T>(int index);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name.
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="name">The named index of the field.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T>(string name);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position 
+	/// Gets the field converted to <typeparamref name="T"/> at position 
 	/// (column) name and the index instance of that field. The index 
 	/// is used when there are multiple columns with the same header name.
 	/// </summary>
@@ -177,244 +177,244 @@ public interface IReaderRow
 	T? GetField<T>(string name, int index);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) index using
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) index using
 	/// the given <see cref="ITypeConverter" />.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</param>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T>(int index, ITypeConverter converter);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name using
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name using
 	/// the given <see cref="ITypeConverter" />.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</param>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T>(string name, ITypeConverter converter);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position 
+	/// Gets the field converted to <typeparamref name="T"/> at position 
 	/// (column) name and the index instance of that field. The index 
 	/// is used when there are multiple columns with the same header name.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</param>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T>(string name, int index, ITypeConverter converter);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) index using
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) index using
 	/// the given <see cref="ITypeConverter" />.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
-	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</typeparam>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T, TConverter>(int index) where TConverter : ITypeConverter;
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name using
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name using
 	/// the given <see cref="ITypeConverter" />.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
-	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</typeparam>
 	/// <param name="name">The named index of the field.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T, TConverter>(string name) where TConverter : ITypeConverter;
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position 
+	/// Gets the field converted to <typeparamref name="T"/> at position 
 	/// (column) name and the index instance of that field. The index 
 	/// is used when there are multiple columns with the same header name.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
-	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</typeparam>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <returns>The field converted to <see cref="Type"/> T.</returns>
+	/// <returns>The field converted to <typeparamref name="T"/>.</returns>
 	T? GetField<T, TConverter>(string name, int index) where TConverter : ITypeConverter;
 
 	/// <summary>
-	/// Gets the field converted to <see cref="System.Type"/> T at position (column) index.
+	/// Gets the field converted to the specified <see cref="Type"/> at position (column) index.
 	/// </summary>
-	/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <param name="field">The field converted to type T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <paramref name="type"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField(Type type, int index, out object? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="System.Type"/> T at position (column) name.
+	/// Gets the field converted to the specified <see cref="Type"/> at position (column) name.
 	/// </summary>
-	/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <paramref name="type"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField(Type type, string name, out object? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="System.Type"/> T at position 
+	/// Gets the field converted to the specified <see cref="Type"/> at position 
 	/// (column) name and the index instance of that field. The index 
 	/// is used when there are multiple columns with the same header name.
 	/// </summary>
-	/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <paramref name="type"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField(Type type, string name, int index, out object? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="System.Type"/> T at position (column) index
-	/// using the specified <see cref="ITypeConverter" />.
+	/// Gets the field converted to the specified <see cref="Type"/> at position (column) index
+	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
-	/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <paramref name="type"/>.</param>
+	/// <param name="field">The field converted to <paramref name="type"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField(Type type, int index, ITypeConverter converter, out object? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="System.Type"/> T at position (column) name
+	/// Gets the field converted to the specified <see cref="Type"/> at position (column) name
 	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
-	/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <paramref name="type"/>.</param>
+	/// <param name="field">The field converted to <paramref name="type"/>.</param>
 	/// <returns>A value indicating if the get was successful.</returns>
 	bool TryGetField(Type type, string name, ITypeConverter converter, out object? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="System.Type"/> T at position (column) name
+	/// Gets the field converted to the specified <see cref="Type"/> at position (column) name
 	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
-	/// <param name="type">The <see cref="System.Type"/> of the field.</param>
+	/// <param name="type">The <see cref="Type"/> of the field.</param>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="System.Type"/> T.</param>
-	/// <param name="field">The field converted to <see cref="System.Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <paramref name="type"/>.</param>
+	/// <param name="field">The field converted to <paramref name="type"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField(Type type, string name, int index, ITypeConverter converter, out object? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) index.
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) index.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <param name="field">The field converted to type T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T>(int index, out T? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name.
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T>(string name, out T? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position 
+	/// Gets the field converted to <typeparamref name="T"/> at position 
 	/// (column) name and the index instance of that field. The index 
 	/// is used when there are multiple columns with the same header name.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T>(string name, int index, out T? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) index
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) index
 	/// using the specified <see cref="ITypeConverter" />.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</param>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T>(int index, ITypeConverter converter, out T? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name
 	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</param>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T>(string name, ITypeConverter converter, out T? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name
 	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="converter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</param>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T>(string name, int index, ITypeConverter converter, out T? field);
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) index
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) index
 	/// using the specified <see cref="ITypeConverter" />.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
-	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</typeparam>
 	/// <param name="index">The zero based index of the field.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T, TConverter>(int index, out T? field) where TConverter : ITypeConverter;
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name
 	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
-	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</typeparam>
 	/// <param name="name">The named index of the field.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
 	/// <returns>A value indicating if the get was successful.</returns>
 	bool TryGetField<T, TConverter>(string name, out T? field) where TConverter : ITypeConverter;
 
 	/// <summary>
-	/// Gets the field converted to <see cref="Type"/> T at position (column) name
+	/// Gets the field converted to <typeparamref name="T"/> at position (column) name
 	/// using the specified <see cref="ITypeConverter"/>.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the field.</typeparam>
-	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <see cref="Type"/> T.</typeparam>
+	/// <typeparam name="TConverter">The <see cref="ITypeConverter"/> used to convert the field to <typeparamref name="T"/>.</typeparam>
 	/// <param name="name">The named index of the field.</param>
 	/// <param name="index">The zero based index of the instance of the field.</param>
-	/// <param name="field">The field converted to <see cref="Type"/> T.</param>
-	/// <returns>A value indicating if the get was successful.</returns>
+	/// <param name="field">The field converted to <typeparamref name="T"/>.</param>
+	/// <returns>A value indicating whether the get was successful.</returns>
 	bool TryGetField<T, TConverter>(string name, int index, out T? field) where TConverter : ITypeConverter;
 
 	/// <summary>
-	/// Gets the record converted into <see cref="Type"/> T.
+	/// Gets the record converted into <typeparamref name="T"/>.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
-	/// <returns>The record converted to <see cref="Type"/> T.</returns>
+	/// <returns>The record converted to <typeparamref name="T"/>.</returns>
 	T GetRecord<T>();
 
 	/// <summary>
-	/// Get the record converted into <see cref="System.Type"/> T.
+	/// Get the record converted into <typeparamref name="T"/>.
 	/// </summary>
-	/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
+	/// <typeparam name="T">The <see cref="Type"/> of the record.</typeparam>
 	/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the record.</param>
-	/// <returns>The record converted to <see cref="System.Type"/> T.</returns>
+	/// <returns>The record converted to <typeparamref name="T"/>.</returns>
 	T GetRecord<T>(T anonymousTypeDefinition);
 
 	/// <summary>

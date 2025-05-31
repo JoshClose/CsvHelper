@@ -1,0 +1,21 @@
+ArchivePipelines: Api
+ArchiveFilter: => GetString("Kind") == "Namespace"
+ArchiveOrderKey: DisplayName
+DestinationPath: => GetPath("ApiPath").Combine("index.html")
+NoSidebar: true
+Title: API
+Order: 100
+Xref: api
+---
+<h1>Namespaces</h1>
+@foreach (IDocument document in Model.GetChildren())
+{
+    <h3>@Context.GetTypeLink(document)</h3>
+    string summary = document.GetString(CodeAnalysisKeys.Summary);
+    if (!summary.IsNullOrWhiteSpace())
+    {
+        <div>
+            @Html.Raw(summary)
+        </div>
+    }
+}

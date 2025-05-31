@@ -1,0 +1,9 @@
+@* The root page of this section is passed in as the model *@
+
+@foreach (IDocument parent in OutputPages.GetAncestorsOf(Document, Document.IdEquals(Model)).Reverse().Skip(1))
+{
+    if (!parent.IdEquals(Document))
+    {
+        <span>@Html.DocumentLink(parent, parent.GetString(SiteKeys.BreadcrumbTitle, parent.GetTitle()))</span>
+    }
+}

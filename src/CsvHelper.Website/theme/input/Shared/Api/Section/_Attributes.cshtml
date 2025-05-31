@@ -1,0 +1,28 @@
+@{
+	IReadOnlyList<IDocument> attributes = Document.GetDocumentList(CodeAnalysisKeys.Attributes);
+	if (attributes?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("Attributes", "Attributes"));
+		<h1 id="Attributes">Attributes</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover two-cols">
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (IDocument attribute in attributes)
+					{
+						IDocument type = attribute.GetDocument(CodeAnalysisKeys.Type);
+						<tr>
+							<td>@Context.GetTypeLink(type)</td>
+							<td>@Html.Raw(type.GetString(CodeAnalysisKeys.Summary))</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

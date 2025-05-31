@@ -1,0 +1,31 @@
+@using Microsoft.AspNetCore.Html
+
+@{
+	IReadOnlyList<IDocument> typeParameters = Document.GetDocumentList(CodeAnalysisKeys.TypeParameters);
+	IReadOnlyList<ReferenceComment> typeParams = Document.GetList<ReferenceComment>(CodeAnalysisKeys.TypeParams);
+	if (typeParameters?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("TypeParameters", "Type Parameters"));
+		<h1 id="TypeParameters">Type Parameters</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover two-cols">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (IDocument typeParam in typeParameters)
+					{
+						IDocument declaringType = typeParam.GetDocument(CodeAnalysisKeys.DeclaringType);
+						<tr id="typeparam-@typeParam.GetString(CodeAnalysisKeys.Name)">
+							<td>@(declaringType != null && declaringType.GetString(CodeAnalysisKeys.SymbolId).Equals(Document.GetString(CodeAnalysisKeys.SymbolId)) ? new HtmlString(typeParam.GetString(CodeAnalysisKeys.Name)) : Context.GetTypeLink(typeParam, false))</td>
+							<td>@Html.Raw(typeParams?.Where(x => x.Name.Equals(typeParam.GetString(CodeAnalysisKeys.Name))).Select(x => x.Html).FirstOrDefault())</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

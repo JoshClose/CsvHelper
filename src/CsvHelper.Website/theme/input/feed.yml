@@ -1,0 +1,5 @@
+FeedRss: true
+FeedAtom: true
+FeedSources: "news/posts/{*,!index.*}"
+FeedOrderKey: Published
+FeedOrderDescending: true

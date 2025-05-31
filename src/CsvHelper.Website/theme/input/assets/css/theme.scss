@@ -1,0 +1,479 @@
+@import "../bootstrap/functions";
+@import "../bootstrap/variables";
+@import "../bootstrap/mixins";
+
+$mixed: mix($secondary, $primary, 50%);
+
+html, body {
+    width: 100%;
+}
+
+body {
+    // Only limit overflow on the body so sticky works
+    // See https://github.com/w3c/csswg-drafts/issues/865#issuecomment-379106819
+    // And https://stackoverflow.com/a/54116725
+    overflow-x: hidden;
+}
+
+@media screen {
+    @include media-breakpoint-up(md) {
+        body {
+            min-height: 100vh;
+        }
+
+        .icon-md-100 {
+            width: 100% !important;
+            height: auto !important;
+        }
+    }
+
+    @include media-breakpoint-down(md) {
+        body {
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    @include media-breakpoint-up(lg) {
+        .h-lg-100 {
+            height: 100%;
+        }
+    }
+
+    @include media-breakpoint-up(xl) {
+        .h-xl-100 {
+            height: 100%;
+        }
+    }
+}
+
+@each $size, $length in $sizes {
+    .max-vw-#{$size} {
+        max-width: #{$size}vw !important;
+    }
+
+    .min-vw-#{$size} {
+        min-width: #{$size}vw !important;
+    }
+
+    .max-vh-#{$size} {
+        max-height: #{$size}vh !important;
+    }
+
+    .min-vh-#{$size} {
+        min-height: #{$size}vh !important;
+    }
+}
+
+@each $color, $value in $colors {
+    @include text-emphasis-variant(".text-#{$color}", $value, true);
+
+    .bg-#{$color} {
+        background-color: $value;
+    }
+
+    .bg-gradient-#{$color} {
+        background: $value linear-gradient(180deg, $value, darken($value, 10%)) repeat-x !important;
+    }
+
+    .text-#{$color} {
+        color: $value;
+    }
+
+    .icon-#{$color} {
+        --fa-primary-color: #{$value};
+        --fa-secondary-color: #{lighten($value, 20%)};
+    }
+
+    .badge-#{$color} {
+        @include badge-variant($value);
+    }
+}
+
+.icon-theme {
+    --fa-primary-color: #{$primary};
+    --fa-secondary-color: #{$secondary};
+}
+
+.icon-100 {
+    width: 100% !important;
+    height: auto !important;
+}
+
+$font-family-serif: 'Roboto Slab', serif !default;
+
+.font-sans-serif {
+    font-family: $font-family-sans-serif !important;
+}
+
+.font-serif {
+    font-family: $font-family-serif !important;
+}
+
+.font-monospace {
+    font-family: $font-family-monospace !important;
+}
+
+.font-size-lg {
+    font-size: $font-size-lg;
+}
+
+.font-size-sm {
+    font-size: $font-size-sm;
+}
+.font-size-base {
+    font-size: $font-size-base;
+}
+
+h1, h2, h3, .display-1, .display-2, .display-3, .display-4, .h-section {
+    // font-family: $font-family-serif;
+    &:not(:first-child) {
+        margin-top: $spacer * 1.5;
+    }
+}
+
+h1 {
+    font-weight: bold !important;
+    color: $primary !important;
+    background: -webkit-linear-gradient(darken($mixed, 5%), darken($primary, 5%)) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    padding-bottom: $spacer * 0.15 !important;
+    margin-bottom: $spacer * 0.5 !important;
+}
+
+h1 * {
+    // Need to remove the text-fill from nested elements
+    background-image: none;
+    -webkit-background-clip: initial;
+    -webkit-text-fill-color: initial;
+}
+
+h2 {
+    color: darken(mix($gray-200, $primary, 70%), 20%);
+}
+
+h3 {
+    color: darken(mix($gray-200, $primary, 70%), 10%);
+}
+
+.border-muted {
+    border-color: $text-muted !important;
+}
+
+.h-section {
+    background: -webkit-linear-gradient(darken($mixed, 5%), darken($primary, 5%));
+    color: $white;
+    padding: $spacer * 0.5;
+    margin-bottom: $spacer * 1.5;
+}
+
+.bg-nav {
+    display: none;
+}
+
+.navbar {
+    & .navbar-collapse {
+        align-items: stretch;
+    }
+
+    & .navbar-nav {
+        align-items: stretch;
+    }
+
+    & .nav-item {
+        display: flex;
+        align-items: center;
+    }
+}
+
+#logo {
+    height: 2.5rem;
+}
+
+code {
+    padding: .25rem .5rem;
+    margin: 0;
+}
+
+pre code {
+    padding: 0;
+}
+
+code,
+code[class*="language-"],
+pre[class*="language-"] {
+    background-color: $gray-200;
+    text-shadow: none;
+    // font-family: $font-family-monospace;
+    font-size: $font-size-sm;
+
+    & span {
+        background: none !important;
+    }
+
+    & span.number {
+        // Override the styles set by bulma
+        font-size: $font-size-sm !important;
+
+        align-items: unset;
+        background-color: unset;
+        border-radius: unset;
+        display: unset;
+        height: unset;
+        justify-content: unset;
+        margin-right: unset;
+        min-width: unset;
+        padding: unset;
+        text-align: unset;
+        vertical-align: unset;
+    }
+}
+
+// Remove the border from headings of API tables and make the unstriped rows a little bit darker
+.table-api {
+    & thead {
+        & th {
+            // border: none;
+            // background: $gray-200 linear-gradient(0deg, $gray-200, $gray-100) repeat-x !important;
+            font-size: $font-size-sm;
+        }
+    }
+
+    & tbody {
+
+        // & tr:nth-of-type(even) {
+        //     background-color: rgba(0, 0, 0, 0.02);
+        // }
+        & tr td:not(:first-child) {
+            font-size: $font-size-sm;
+        }
+    }
+}
+
+.bg-body {
+    background-color: $body-bg;
+}
+
+#hero {
+    background: $primary linear-gradient(155deg, $primary, $secondary) repeat-x !important;
+}
+
+#content {
+    ul:not([class]), ul[class=""] {
+        li {
+            padding-top: $spacer * .25;
+            padding-bottom: $spacer * .25;
+        }
+    }
+
+    &.p-4 > pre[class*="language-"] {
+        margin-left: -$spacer * 1.5;
+        margin-right: -$spacer * 1.5;
+        padding-left: $spacer * 1.5;
+        padding-right: $spacer * 1.5;
+    }
+}
+
+#titlebar {
+    background: $primary !important;
+
+    .breadcrumbs {
+        color: lighten($primary, 30%);
+        font-size: $h6-font-size;
+        display: block;
+        visibility: visible;
+
+        span::after {
+            color: lighten($mixed, 10%);
+            content: "/";
+            font-weight: $font-weight-bold;
+            margin-left: $spacer * 0.5;
+            margin-right: $spacer * 0.5;
+            font-size: $font-size-lg;
+        }
+
+        span:last-child:after {
+            content: '';
+        }
+
+        & a {
+            &, &:focus, &:active, &:hover {
+                color: lighten($primary, 30%);
+            }
+
+            &:hover {
+                color: $white;
+            }
+        }
+    }
+
+    .title {
+        line-height: 1.5em;
+        // font-family: $font-family-serif;
+        font-size: $h1-font-size;
+
+        small {
+            font-size: $small-font-size * 0.8;
+            color: lighten($primary, 30%);
+        }
+    }
+}
+
+#undertitle {
+    display: none;
+}
+
+.sidebar {
+    @include media-breakpoint-up(md) {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+        overflow-y: auto;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        opacity: 0.6;
+        transition: opacity 0.5s;
+        display: block !important;
+        position: absolute;
+        max-height: 100vh;
+        z-index: 1020;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    padding-top: $spacer;
+}
+
+#right-sidebar {
+    @include media-breakpoint-down(md) {
+        display: none !important;
+    }
+}
+
+// sidebar-root elements can be nested to show root-level styling inside a sidebar
+
+.sidebar-root {
+    // Root-level items
+    & > .sidebar-nav-item {
+        font-weight: $font-weight-bold;
+        color: $gray-800;
+        margin-bottom: $spacer;
+
+        &.has-children {
+            margin-bottom: 0;
+        }
+
+        &.sidebar-header {
+            margin-bottom: $spacer * 0.25;
+            color: $gray-900;
+            font-size: $font-size-sm * 0.85;
+            text-transform: uppercase;
+        }
+    }
+
+    & > .sidebar-nav-children {
+        padding-top: $spacer * 0.5;
+        font-size: $font-size-sm;
+        border-top: 3px solid $gray-400;
+        margin-bottom: $spacer;
+
+        & > .sidebar-nav-children {
+            font-size: $font-size-sm * 0.875;
+            padding-left: $spacer * 0.5;
+
+            & > .sidebar-nav-item {
+                border-left: 4px solid $gray-200;
+
+                &.active {
+                    border-left: 4px solid darken($primary, 10%);
+                }
+            }
+        }
+    }
+
+
+    // All items
+    & .sidebar-nav-item {
+        padding: $spacer * 0.15 $spacer * 0.5;
+        color: $gray-600;
+
+        &.active {
+            font-weight: $font-weight-bold;
+            color: $white;
+            background-color: $primary;
+
+            & a {
+                &, &:focus, &:active {
+                    color: $white;
+                }
+
+                &:hover {
+                    color: $white;
+                }
+            }
+        }
+
+        & a {
+            &, &:focus, &:active {
+                color: $gray-600;
+            }
+
+            &:hover {
+                color: darken($primary, 20%);
+            }
+        }
+    }
+
+    .sidebar-nav-children {
+        padding-bottom: $spacer * 0.25;
+    }
+}
+
+.page-box {
+    border: 1px solid $gray-200;
+    @include box-shadow($btn-box-shadow);
+    @include border-radius($border-radius, 0);
+
+    *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Mermaid */
+.mermaid {
+    overflow: hidden !important;
+    visibility: hidden !important;
+    margin-bottom: $spacer;
+    margin-top: $spacer;
+
+    &[data-processed="true"] {
+      visibility: visible !important;
+    }
+    min-height: 200px;
+
+    svg {
+      min-height: 200px;
+    }
+  }
+  .node rect,
+  .node circle,
+  .node ellipse,
+  .node polygon {
+    fill: lighten($primary, 50%) !important;
+    stroke: #000 !important;
+  }
+  .type-node rect,
+  .type-node circle,
+  .type-node ellipse,
+  .type-node polygon {
+    fill: lighten($primary, 30%) !important;
+    stroke: #000 !important;
+  }
+  .cluster rect {
+    fill: $gray-100 !important;
+    stroke: $gray-300 !important;
+  }

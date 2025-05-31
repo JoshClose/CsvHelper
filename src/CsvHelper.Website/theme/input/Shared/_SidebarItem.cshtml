@@ -1,0 +1,7 @@
+@* Override in your own input directory to customize the appearance of items in the sidebar *@
+@* The document for the sidebar link and whether it has children is passed in as the model *@
+@inherits StatiqRazorPage<(IDocument, bool)>
+
+<div class="sidebar-nav-item @(Document.IdEquals(Model.Item1) ? "active" : null) @(Model.Item2 ? "has-children" : null)">
+    @Html.DocumentLink(Model.Item1)
+</div>

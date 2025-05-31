@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link href="@Context.GetLink("/assets/bootstrap/bootstrap.css")" rel="stylesheet" />
+        @{
+            string fontLink = Document.GetString(SiteKeys.FontLink);
+            if (!fontLink.IsNullOrWhiteSpace())
+            {
+                <link href="@Html.Raw(fontLink)" rel="stylesheet" data-no-mirror>
+            }
+        }
+        <link href="@Context.GetLink("/assets/css/theme.css")" rel="stylesheet" />
+        <link href="@Context.GetLink("/assets/css/styles.css")" rel="stylesheet" />
+
+        <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@8.4.8/dist/mermaid.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/quicklink@2.0.0/dist/quicklink.umd.js"></script>
+	    
+        <!-- Lunr search -->
+        @if (Context.GetBool(WebKeys.GenerateSearchIndex))
+        {
+            <script src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/pako@2.0.3/dist/pako_inflate.min.js"></script>
+            <script src="@(Context.GetLink(Context.GetPath(WebKeys.SearchScriptPath, "search.js")))"></script>
+        }
+
+        @await RenderSectionAsync(SectionNames.Head, false)
+
+        @await Html.PartialAsync("_Head")
+
+        @{
+            string title = @Document.ContainsKey(Keys.Title)
+                ? $"{Document.GetString(SiteKeys.SiteTitle)} - {Document.GetString(Keys.Title)}"
+                : Document.GetString(SiteKeys.SiteTitle);
+        }
+        <title>@title</title>
+    </head>
+    <body class="d-flex flex-column">
+        <div class="flex-grow-1 d-flex flex-column">
+            <div class="bg-nav">
+                <div class="container-xl py-3">
+                    <div class="row">
+                        <div class="offset-lg-2 col-12 col-lg-8 px-0">
+                            @await Html.PartialAsync("_Navigation")
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @if (IsSectionDefined(SectionNames.Splash))
+            {
+                @await RenderSectionAsync(SectionNames.Splash, false)
+            }
+            @await Html.PartialAsync("_Splash")
+            @{
+                string section = null;
+                if (Context.GetPath(DocsKeys.ApiPath).ContainsDescendant(Document.Destination))
+                {
+                    // Special case for the API since the ApiPath key might be nested
+                    section = Context.GetString(DocsKeys.ApiPath);
+                }
+                else if (Document.Destination.Segments.Length > 1)
+                {
+                    // If it's not in the ApiPath, but it does have segments, use the first segment
+                    section = Document.Destination.Segments[0].ToString();
+                }
+                IDocument root = OutputPages.Get(section + "/index.html");
+            }
+            <div class="flex-grow-1 d-flex flex-column">
+                @if (!Document.GetBool(SiteKeys.NoTitle))
+                {
+                    <!-- Titlebar -->
+                    <div id="titlebar" class="py-4">
+                        <div class="container-xl">
+                            <div class="row">
+                                <div class="offset-lg-2 col-12 col-lg-8 px-3 px-lg-0 w-100 d-flex flex-wrap align-items-end">
+                                    <div class="flex-grow-1">
+                                        <div class="breadcrumbs d-flex flex-column flex-md-row text-break">
+                                            @if (IsSectionDefined(SectionNames.Breadcrumbs))
+                                            {
+                                                @await RenderSectionAsync(SectionNames.Breadcrumbs, false)
+                                            }
+                                            else
+                                            {
+                                                await Html.RenderPartialAsync("_Breadcrumbs", root);
+                                            }
+                                        </div>
+                                        <div class="text-white m-0 text-break title">
+                                            @if (IsSectionDefined(SectionNames.Title))
+                                            {
+                                                @await RenderSectionAsync(SectionNames.Title, false)
+                                            }
+                                            else
+                                            {
+                                                await Html.RenderPartialAsync("_Title", root);
+                                            }
+                                        </div>
+                                        @if (IsSectionDefined(SectionNames.Subtitle))
+                                        {
+                                            @await RenderSectionAsync(SectionNames.Subtitle, false)
+                                        }
+                                    </div>
+                                    @if (!Document.GetBool(SiteKeys.NoSidebar))
+                                    {
+                                        <div class="navbar navbar-expand-md navbar-dark p-0">
+                                            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#left-sidebar" aria-controls="left-sidebar" aria-expanded="false" aria-label="Toggle navigation">
+                                                <span class="navbar-toggler-icon"></span>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Under title -->
+                    <div id="undertitle">
+                        <div class="container-xl">
+                            <div class="row">
+                                @if (Document.GetBool(SiteKeys.NoSidebar))
+                                {
+                                    <div class="offset-lg-2 col-12 col-lg-8 bg-white">
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="col-md-3 col-lg-2">
+                                    </div>
+                                    <div class="col-md-9 col-lg-8 bg-white">
+                                    </div>
+                                }
+                                <div class="col-lg-2 d-none d-lg-block">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Body -->
+                <div class="flex-grow-1 d-flex flex-column">
+                    @if (Document.GetBool(SiteKeys.NoContainer))
+                    {
+                        <div id="content" class="bg-white">
+@* Render the body without indenting in case it contains things like directives *@
+@RenderBody()
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="container-xl flex-grow-1 d-flex flex-column">
+                            <div class="row flex-grow-1 align-items-stretch">
+                                @{
+                                    if (root == null || Document.GetBool(SiteKeys.NoSidebar))
+                                    {
+                                        if (IsSectionDefined(SectionNames.Sidebar))
+                                        {
+                                            IgnoreSection(SectionNames.Sidebar);
+                                        }
+
+                                        <div id="content" class="offset-lg-2 col-12 col-lg-8 p-4 pt-md-0 bg-white">
+@* Render the body without indenting in case it contains things like directives *@
+@RenderBody()
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="col-md-3 col-lg-2 p-md-0 m-md-0 bg-body">
+                                            <div id="left-sidebar" class="sidebar collapse px-0 px-md-3 pt-3">
+                                                @if (IsSectionDefined(SectionNames.Sidebar))
+                                                {
+                                                    @await RenderSectionAsync(SectionNames.Sidebar, false)
+                                                }
+                                                else
+                                                {
+                                                    await Html.RenderPartialAsync("_Sidebar", root);
+                                                }
+                                            </div>
+                                        </div>
+                                        <div id="content" class="col-md-9 col-lg-8 p-4 pt-md-0 bg-white">
+@* Render the body without indenting in case it contains things like directives *@
+@RenderBody()
+
+                                            @if (IsSectionDefined(SectionNames.ChildPages))
+                                            {
+                                                @await RenderSectionAsync(SectionNames.ChildPages, false)
+                                            }
+                                            else
+                                            {
+                                                await Html.RenderPartialAsync("_ChildPages");
+                                            }
+                                        </div>
+                                    }
+                                }
+                                <div class="col-lg-2 p-md-0 m-md-0 bg-body">
+                                    <div id="right-sidebar" class="sidebar px-0 px-md-3 pt-3">
+                                        @if (IsSectionDefined(SectionNames.RightSidebar))
+                                        {
+                                            @await RenderSectionAsync(SectionNames.RightSidebar, false)
+                                        }
+                                        else
+                                        {
+                                            await Html.RenderPartialAsync("_RightSidebar");
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div id="footer" class="p-3">
+            <div class="container-xl">
+                @await Html.PartialAsync("_Footer")
+            </div>
+        </div>
+
+        <!-- Scripts -->
+        <script>
+            $(document).ready(function() {
+                quicklink.listen();
+
+                // Bootstrap tooltips
+                $('[data-toggle="tooltip"]').tooltip();
+
+				// Keeps the sidebars in view on wider viewports
+				let left = null;
+				let leftParent = null;
+				let right = null;
+				let rightParent = null;
+                function stickSidebars()
+				{
+				    if (left == null) {
+                        left = $('#left-sidebar');
+                        right = $('#right-sidebar');
+                    }
+                    if (left.length) {
+                        if (window.innerWidth >= 768) {
+                            if (leftParent == null) {
+                                leftParent = left.parent()[0];
+                            }
+                            if (leftParent) {
+                                let leftRect = leftParent.getBoundingClientRect();
+                                stickSidebar(left,  leftRect);
+                            }
+                        } else {
+                            left.css('position', 'relative');
+                            if (left.css('bottom') != 0) {
+                                left.css('bottom', '0');
+                            }
+                        }
+                    }
+                    if (right.length) {
+                        if (window.innerWidth >= 768) {
+                            if (rightParent == null) {
+                                rightParent = right.parent()[0];
+                            }
+                            if (rightParent) {
+                                let rightRect = rightParent.getBoundingClientRect();
+                                stickSidebar(right,  rightRect);
+                            }
+                        } else {
+                            right.css('position', 'relative');
+                            if (right.css('bottom') != 0) {
+                                right.css('bottom', '0');
+                            }
+                        }
+                    }
+				}
+				function stickSidebar(sidebar, rect) {
+                    // Bottom
+                    if (rect.bottom > window.innerHeight) {
+                        sidebar.css('bottom', rect.bottom - window.innerHeight + "px");
+                    } else {
+                        sidebar.css('bottom', 0);
+                    }
+                    // Top
+                    if (rect.top < 0) {
+                        sidebar.css('position', 'sticky');
+                    } else {
+                        sidebar.css('position', 'absolute');
+                    }
+				}
+				$(window).on("load", function() {
+				    stickSidebars();
+				});
+                $(window).scroll(function() {
+				    stickSidebars();
+				});
+				$(window).resize(function() {
+				    stickSidebars();
+				})
+
+                // Mermaid diagrams
+                mermaid.initialize(
+                {
+                    flowchart:
+                    {
+                        useMaxWidth: false
+                    },
+					startOnLoad: false,
+					cloneCssStyles: false
+                });
+                mermaid.init(undefined, ".mermaid");
+
+                // Remove the max-width setting that Mermaid sets
+                var mermaidSvg = $('.mermaid svg');
+                mermaidSvg.addClass('img-fluid');
+                mermaidSvg.css('max-width', '');
+
+                // Make it scrollable
+				var target = document.querySelector(".mermaid svg");
+				if(target !== null)
+				{
+					var panZoom = window.panZoom = svgPanZoom(target, {
+						zoomEnabled: true,
+						controlIconsEnabled: true,
+						fit: true,
+						center: true,
+                        maxZoom: 20,
+                        zoomScaleSensitivity: 0.6
+					});
+
+                    // Do the reset once right away to fit the diagram
+                    panZoom.resize();
+                    panZoom.fit();
+                    panZoom.center();
+
+                    $(window).resize(function(){
+                        panZoom.resize();
+                        panZoom.fit();
+                        panZoom.center();
+                    });
+				}
+            });
+        </script>
+
+        @await RenderSectionAsync(SectionNames.Scripts, false)
+
+        @await Html.PartialAsync("_Scripts")
+    </body>
+</html>

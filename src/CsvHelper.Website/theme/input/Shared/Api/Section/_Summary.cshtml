@@ -1,0 +1,7 @@
+@{
+    string summary = Document.GetString("Summary");
+    if (!summary.IsNullOrWhiteSpace())
+    {
+        <div class="lead mb-3">@Html.Raw(summary)</div>
+    }
+}

@@ -1,0 +1,14 @@
+@{
+	IReadOnlyList<string> seeAlso = Document.GetList<string>(CodeAnalysisKeys.SeeAlso);
+	if (seeAlso?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("SeeAlso", "See Also"));
+		<h1 id="SeeAlso">See Also</h1>
+		<ul class="list-unstyled">
+			@foreach (string seeAlsoComment in seeAlso)
+			{
+				<li>@Html.Raw(seeAlsoComment)</li>
+			}
+		</ul>
+	}
+}

@@ -1,0 +1,13 @@
+@await Html.PartialAsync("Api/Section/_Summary")
+@{
+    <div class="p-3 bg-light page-box container small">
+        @await Html.PartialAsync("Api/Section/_SymbolInfo")
+    </div>
+}
+@await Html.PartialAsync("Api/Section/_Syntax")
+@await Html.PartialAsync("Api/Section/_Examples")
+@await Html.PartialAsync("Api/Section/_Remarks")
+@await Html.PartialAsync("Api/Section/_Attributes")
+@await Html.PartialAsync("Api/Section/_Parameters")
+@await Html.PartialAsync("Api/Section/_Value")
+@await Html.PartialAsync("Api/Section/_SeeAlso")

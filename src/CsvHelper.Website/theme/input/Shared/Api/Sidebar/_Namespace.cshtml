@@ -1,0 +1,19 @@
+<div class="sidebar-nav-item sidebar-header">Namespaces</div>
+<div class="sidebar-nav-children">
+	@{
+		IList<Tuple<string, IDocument>> namespaces
+			= Outputs.FromPipeline(nameof(Statiq.Docs.Pipelines.Api))
+				.Where(x => x.GetString(CodeAnalysisKeys.Kind) == "Namespace")
+				.Select(x => Tuple.Create(x.GetString(CodeAnalysisKeys.DisplayName), x))
+				.OrderBy(x => x.Item1)
+				.ToList();
+		foreach(Tuple<string, IDocument> ns in namespaces)
+		{
+			string activeClass = Document.GetString(CodeAnalysisKeys.Kind) == "Namespace"
+				&& Document.GetString(CodeAnalysisKeys.DisplayName) == ns.Item1
+				? "active"
+				: null;
+			<div class="sidebar-nav-item @activeClass">@Context.GetTypeLink(ns.Item2, false)</div>
+		}
+	}
+</div>

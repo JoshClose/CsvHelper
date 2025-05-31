@@ -1,0 +1,11 @@
+@await Html.PartialAsync("Api/Section/_DocumentTable", new DocumentTable()
+{
+	Documents = Document.GetDocumentList(CodeAnalysisKeys.Constructors)
+		?.Where(x => x.GetBool(CodeAnalysisKeys.IsResult))
+		.OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName))
+		.ToList(),
+	Title = "Constructors",
+	Header = "Name",
+	HasSummary = true,
+	LinkTypeArguments = false
+})
