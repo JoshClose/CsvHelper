@@ -183,24 +183,24 @@ public class ObjectCreator
 		Fuzzy = 2
 	}
 
-	internal struct CacheKey : IEquatable<CacheKey>
+	private struct CacheKey : IEquatable<CacheKey>
 	{
-		private readonly Type _type;
-		private readonly Type[] _args;
+		private readonly Type type;
+		private readonly Type[] args;
 
 		public CacheKey(Type type, Type[] args)
 		{
-			_type = type;
-			_args = args;
+			this.type = type;
+			this.args = args;
 		}
 
 		public override int GetHashCode()
 		{
 			var hashCode = new HashCode();
-			hashCode.Add(_type.GetHashCode());
-			for (var i = 0; i < _args.Length; i++)
+			hashCode.Add(type.GetHashCode());
+			for (var i = 0; i < args.Length; i++)
 			{
-				hashCode.Add(_args[i].GetHashCode());
+				hashCode.Add(args[i].GetHashCode());
 			}
 
 			return hashCode.ToHashCode();
@@ -208,7 +208,10 @@ public class ObjectCreator
 
 		public override bool Equals(object? obj)
 		{
-			if (obj == null) return false;
+			if (obj == null)
+			{
+				return false;
+			}
 
 			if (obj is CacheKey key)
 			{
@@ -220,12 +223,21 @@ public class ObjectCreator
 
 		public bool Equals(CacheKey other)
 		{
-			if (other._type != _type) return false;
-			if (other._args.Length != _args.Length) return false;
-			for (var i = 0; i < _args.Length; i++)
+			if (other.type != type)
 			{
-				if (other._args[i] != _args[i]) return false;
+				return false;
 			}
+
+			if (other.args.Length != args.Length)
+			{
+				return false;
+			}
+
+			for (var i = 0; i < args.Length; i++)
+			{
+				if (other.args[i] != args[i]) return false;
+			}
+
 			return true;
 		}
 	}
