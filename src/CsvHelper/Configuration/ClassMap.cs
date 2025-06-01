@@ -346,7 +346,7 @@ public abstract class ClassMap
 					continue;
 				}
 
-				if (!field.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any())
+				if (!Attribute.IsDefined(field, typeof(CompilerGeneratedAttribute), false))
 				{
 					fields.Add(ReflectionHelper.GetDeclaringField(type, field, flags));
 				}
@@ -357,7 +357,7 @@ public abstract class ClassMap
 
 		foreach (var member in members)
 		{
-			if (member.GetCustomAttribute<IgnoreAttribute>() != null)
+			if (Attribute.IsDefined(member, typeof(IgnoreAttribute)))
 			{
 				// Ignore this member including its tree if it's a reference.
 				continue;
@@ -459,7 +459,7 @@ public abstract class ClassMap
 		{
 			var parameterMap = new ParameterMap(parameter);
 
-			if (parameter.GetCustomAttributes<IgnoreAttribute>(true).Any() || parameter.GetCustomAttributes<ConstantAttribute>(true).Any())
+			if (Attribute.IsDefined(parameter, typeof(IgnoreAttribute), true) || Attribute.IsDefined(parameter, typeof(ConstantAttribute), true))
 			{
 				// If there is an IgnoreAttribute or ConstantAttribute, we still need to add a map because a constructor requires
 				// all parameters to be present. A default value will be used later on.

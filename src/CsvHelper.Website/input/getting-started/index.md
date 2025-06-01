@@ -105,7 +105,7 @@ is done against the property name. Both the header and the property name are ran
 header, they will now match. You can use this function to do other things such as remove
 whitespace or other characters.
 
-Let's say out CSV file doesn't have a header at all.
+Let's say our CSV file doesn't have a header at all.
 
 ```
 1,one

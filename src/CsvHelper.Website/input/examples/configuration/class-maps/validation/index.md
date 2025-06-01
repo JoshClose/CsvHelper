@@ -34,7 +34,7 @@ public class FooMap : ClassMap<Foo>
     public FooMap()
     {
         Map(m => m.Id);
-        Map(m => m.Name).Validate(field => !field.Contains("-"));
+        Map(m => m.Name).Validate(args => !args.Field.Contains("-"));
     }
 }
 ```
