@@ -27,19 +27,28 @@ namespace CsvHelper.Tests.Mocks
 
 		public string[] HeaderRecord => throw new NotImplementedException();
 
-		public IParser Parser => throw new NotImplementedException();
+		public IParser Parser { get; }
 
-		public CsvContext Context => throw new NotImplementedException();
+		public CsvContext Context { get; }
 
 		public IReaderConfiguration Configuration { get; private set; }
 
 		public ReaderRowMock()
+			: this(new CsvConfiguration(CultureInfo.InvariantCulture))
 		{
-			Configuration = new CsvConfiguration(CultureInfo.InvariantCulture);
+		}
+
+		public ReaderRowMock(IParser parser)
+		{
+			Parser = parser;
+			Context = Parser.Context;
+			Configuration = Context.Configuration;
 		}
 
 		public ReaderRowMock(CsvConfiguration configuration)
 		{
+			Parser = new ParserMock(configuration);
+			Context = Parser.Context;
 			Configuration = configuration;
 		}
 
