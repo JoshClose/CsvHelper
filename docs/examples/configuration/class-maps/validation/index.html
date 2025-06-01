@@ -432,7 +432,7 @@ public class FooMap : ClassMap&lt;Foo&gt;
     public FooMap()
     {
         Map(m =&gt; m.Id);
-        Map(m =&gt; m.Name).Validate(field =&gt; !field.Contains(&quot;-&quot;));
+        Map(m =&gt; m.Name).Validate(item =&gt; !item.Field.Contains(&quot;-&quot;));
     }
 }
 </code></pre>
