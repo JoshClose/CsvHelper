@@ -626,10 +626,7 @@ public class CsvWriter : IWriter
 		}
 		finally
 		{
-			if (enumerator is IAsyncDisposable asyncDisposable)
-			{
-				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-			}
+			await enumerator.DisposeAsync().ConfigureAwait(false);
 		}
 	}
 
