@@ -506,11 +506,7 @@ public class CsvWriter : IWriter
 		}
 		finally
 		{
-			if (enumerator is IAsyncDisposable asyncDisposable)
-			{
-				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-			}
-			else if (enumerator is IDisposable disposable)
+			if (enumerator is IDisposable disposable)
 			{
 				disposable.Dispose();
 			}
@@ -570,15 +566,10 @@ public class CsvWriter : IWriter
 		}
 		finally
 		{
-			if (enumerator is IAsyncDisposable asyncDisposable)
-			{
-				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-			}
-			else if (enumerator is IDisposable disposable)
+			if (enumerator is IDisposable disposable)
 			{
 				disposable.Dispose();
 			}
-
 		}
 	}
 
@@ -638,10 +629,6 @@ public class CsvWriter : IWriter
 			if (enumerator is IAsyncDisposable asyncDisposable)
 			{
 				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-			}
-			else if (enumerator is IDisposable disposable)
-			{
-				disposable.Dispose();
 			}
 		}
 	}
