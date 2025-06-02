@@ -114,7 +114,8 @@ public interface IParserConfiguration
 
 	/// <summary>
 	/// Gets the character used to quote fields.
-	/// Default is '"'.
+	/// Default is '"' Normally if you change this
+	/// value, you need to change <see cref="Escape"/> too.
 	/// </summary>
 	char Quote { get; }
 
