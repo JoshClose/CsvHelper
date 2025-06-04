@@ -1366,5 +1366,18 @@ namespace CsvHelper.Tests
 				Assert.Equal(1, parser.RawRow);
 			}
 		}
+
+		[Theory]
+		[InlineData(-1)]
+		[InlineData(2)]
+		public void Parser_IndexOutOfRangeException(int index)
+		{
+			using (var reader = new StringReader("1,2\r\n"))
+			using (var parser = new CsvParser(reader, CultureInfo.InvariantCulture))
+			{
+				Assert.True(parser.Read());
+				Assert.Throws<IndexOutOfRangeException>(() => parser[index]);
+			}
+		}
 	}
 }

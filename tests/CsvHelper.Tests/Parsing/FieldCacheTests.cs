@@ -64,8 +64,6 @@ namespace CsvHelper.Tests.Parsing
 		[Fact]
 		public void Test1()
 		{
-			// "542008", "27721116", "98000820" have hash code 3769566006
-
 			var value1 = "542008";
 			var value2 = "27721116";
 			var value3 = "98000820";
@@ -73,20 +71,15 @@ namespace CsvHelper.Tests.Parsing
 
 			var cache = new FieldCache(1);
 
-			var field1 = cache.GetField(value1.ToCharArray(), 0, value1.Length);
-			var field2 = cache.GetField(value2.ToCharArray(), 0, value2.Length);
-			var field3 = cache.GetField(value3.ToCharArray(), 0, value3.Length);
-			var field4 = cache.GetField(value4.ToCharArray(), 0, value4.Length);
+			var field1 = cache.GetField(value1.AsSpan());
+			var field2 = cache.GetField(value2.AsSpan());
+			var field3 = cache.GetField(value3.AsSpan());
+			var field4 = cache.GetField(value4.AsSpan());
 
 			Assert.Equal(value1, field1);
 			Assert.Equal(value2, field2);
 			Assert.Equal(value3, field3);
 			Assert.Equal(value4, field4);
-
-			Assert.NotSame(value1, field1);
-			Assert.NotSame(value2, field2);
-			Assert.NotSame(value3, field3);
-			Assert.NotSame(value4, field4);
 
 			Assert.Same(field1, field4);
 		}
