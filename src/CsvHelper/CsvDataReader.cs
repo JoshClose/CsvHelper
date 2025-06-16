@@ -61,7 +61,7 @@ public class CsvDataReader : IDataReader
 	{
 		get
 		{
-			return csv?.Parser.Count ?? 0;
+			return csv?.Parser.Current.Count ?? 0;
 		}
 	}
 
@@ -359,7 +359,7 @@ public class CsvDataReader : IDataReader
 			values[i] = IsDBNull(i) ? DBNull.Value : (csv.GetField(i) ?? string.Empty);
 		}
 
-		return csv.Parser.Count;
+		return csv.Parser.Current.Count;
 	}
 
 	/// <inheritdoc />

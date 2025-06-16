@@ -1,86 +1,37 @@
-﻿// Copyright 2009-2024 Josh Close
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
-
-namespace CsvHelper;
+﻿namespace CsvHelper;
 
 /// <summary>
-/// Defines methods used the parse a CSV file.
+/// Requirements to implement a parser.
 /// </summary>
 public interface IParser : IDisposable
 {
 	/// <summary>
-	/// Gets the count of how many bytes have been read.
-	/// <see cref="IParserConfiguration.CountBytes"/> needs
-	/// to be enabled for this value to be populated.
-	/// </summary>
-	long ByteCount { get; }
-
-	/// <summary>
-	/// Gets the count of how many characters have been read.
-	/// </summary>
-	long CharCount { get; }
-
-	/// <summary>
-	/// Gets the number of fields for the current row.
-	/// </summary>
-	int Count { get; }
-
-	/// <summary>
-	/// Gets the field at the specified index for the current row.
-	/// </summary>
-	/// <param name="index">The index.</param>
-	/// <returns>The field.</returns>
-	string this[int index] { get; }
-
-	/// <summary>
-	/// Gets the record for the current row. Note:
-	/// It is much more efficient to only get the fields you need. If
-	/// you need all fields, then use this.
-	/// </summary>
-	string[]? Record { get; }
-
-	/// <summary>
-	/// Gets the raw record for the current row.
-	/// </summary>
-	string RawRecord { get; }
-
-	/// <summary>
-	/// Gets the CSV row the parser is currently on.
+	/// Gets the current row number.
 	/// </summary>
 	int Row { get; }
 
 	/// <summary>
-	/// Gets the raw row the parser is currently on.
+	/// Gets the current row.
 	/// </summary>
-	int RawRow { get; }
+	IParserRow Current { get; }
 
 	/// <summary>
-	/// The delimiter the parser is using.
+	/// Moves the parser to the next row in the file.
 	/// </summary>
-	string Delimiter { get; }
+	/// <returns><c>true</c> if there are more rows, otherwise <c>false</c>.</returns>
+	bool MoveNext();
 
 	/// <summary>
-	/// Gets the reading context.
+	/// Gets the enumerator for the parser.
 	/// </summary>
-	CsvContext Context { get; }
+	/// <returns>The enumerator.</returns>
+	IParser GetEnumerator();
 
 	/// <summary>
-	/// Gets the configuration.
+	/// Gets an enumerable that iterates the records asynchronously.
 	/// </summary>
-	IParserConfiguration Configuration { get; }
-
-	/// <summary>
-	/// Reads a record from the CSV file.
-	/// </summary>
-	/// <returns>True if there are more records to read, otherwise false.</returns>
-	bool Read();
-
-	/// <summary>
-	/// Reads a record from the CSV file asynchronously.
-	/// </summary>
-	/// <returns>True if there are more records to read, otherwise false.</returns>
-	Task<bool> ReadAsync();
+	/// <typeparam name="TRecord">The record type.</typeparam>
+	/// <param name="createRecord">The function to handle each record.</param>
+	/// <returns>An enumerable of records.</returns>
+	IEnumerable<TRecord> AsParallel<TRecord>(Func<IParserRow, TRecord> createRecord);
 }

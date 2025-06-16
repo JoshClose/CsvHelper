@@ -20,11 +20,20 @@ public class BigIntegerConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 	/// <returns>The string representation of the object.</returns>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value is BigInteger bi && memberMapData.TypeConverterOptions.Formats?.FirstOrDefault() == null)
 		{
-			return bi.ToString("R", memberMapData.TypeConverterOptions.CultureInfo);
+			var format = "R";
+
+#if NET8_0_OR_GREATER
+			if (bi.TryFormat(Buffer, out int charsWritten, format.AsSpan(), memberMapData.TypeConverterOptions.CultureInfo))
+			{
+				return Buffer.AsSpan(0, charsWritten);
+			}
+#endif
+
+			return bi.ToString(format, memberMapData.TypeConverterOptions.CultureInfo).AsSpan();
 		}
 
 		return base.ConvertToString(value, row, memberMapData);
@@ -37,11 +46,18 @@ public class BigIntegerConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var numberStyle = memberMapData.TypeConverterOptions.NumberStyles ?? NumberStyles.Integer;
 
+#if NET8_0_OR_GREATER
 		if (BigInteger.TryParse(text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var bi))
+		{
+			return bi;
+		}
+#endif
+
+		if (BigInteger.TryParse(text.ToString(), numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var bi))
 		{
 			return bi;
 		}

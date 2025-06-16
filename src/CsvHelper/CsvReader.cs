@@ -41,7 +41,7 @@ public class CsvReader : IReader
 	private string[]? headerRecord;
 
 	/// <inheritdoc/>
-	public virtual int ColumnCount => parser.Count;
+	public virtual int ColumnCount => parser.Current.Count;
 
 	/// <inheritdoc/>
 	public virtual int CurrentIndex => currentIndex;

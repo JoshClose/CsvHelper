@@ -1,13 +1,9 @@
-﻿// Copyright 2009-2024 Josh Close
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
+﻿using CsvHelper.Configuration;
 
 namespace CsvHelper;
 
 /// <summary>
-/// Mode to use when parsing and writing.
+/// The mode used for parsing and writing CSV data.
 /// </summary>
 public enum CsvMode
 {
@@ -16,6 +12,12 @@ public enum CsvMode
 	/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
 	/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.<br/>
 	/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
+	/// <br/>
+	/// <br/>
+	/// Invalid Field Rules:<br/>
+	/// 1. If a field contains an escape but doesn't start with one, it's invalid.<br/>
+	/// 2. The first escape that isn't preceded by an escape is the end of the field. If there's more chars, it's invalid.<br/>
+	/// 3. If invalid is detected, read as is and stop the field at the next delimiter or new line.
 	/// </summary>
 	RFC4180 = 0,
 

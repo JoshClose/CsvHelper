@@ -54,18 +54,25 @@ public class TypeConverterOptions
 	/// Gets the list of values that can be
 	/// used to represent a boolean of true.
 	/// </summary>
-	public List<string> BooleanTrueValues { get; } = new List<string>(defaultBooleanTrueValues);
+	public List<string> BooleanTrueValues { get; } = [.. defaultBooleanTrueValues];
 
 	/// <summary>
 	/// Gets the list of values that can be
 	/// used to represent a boolean of false.
 	/// </summary>
-	public List<string> BooleanFalseValues { get; } = new List<string>(defaultBooleanFalseValues);
+	public List<string> BooleanFalseValues { get; } = [.. defaultBooleanFalseValues];
 
 	/// <summary>
 	/// Gets the list of values that can be used to represent a null value.
 	/// </summary>
-	public List<string> NullValues { get; } = new List<string>(defaultNullValues);
+	public List<string> NullValues { get; } = [.. defaultNullValues];
+
+#if NET8_0_OR_GREATER
+	/// <summary>
+	/// The buffer size to use when calling <see cref="ISpanFormattable.TryFormat(Span{char}, out int, ReadOnlySpan{char}, IFormatProvider)"/>.
+	/// </summary>
+	public int ISpanFormattableTryFormatBufferSizes { get; set; } = 1000;
+#endif
 
 	/// <summary>
 	/// Merges TypeConverterOptions by applying the values of sources in order on to each other.

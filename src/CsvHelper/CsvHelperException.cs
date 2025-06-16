@@ -100,18 +100,18 @@ public class CsvHelperException : Exception
 		if (context.Parser != null)
 		{
 			details.AppendLine($"{nameof(IParser)} state:");
-			details.AppendLine($"{indent}{nameof(IParser.ByteCount)}: {context.Parser.ByteCount}");
-			details.AppendLine($"{indent}{nameof(IParser.CharCount)}: {context.Parser.CharCount}");
+			//details.AppendLine($"{indent}{nameof(IParser.ByteCount)}: {context.Parser.ByteCount}");
+			//details.AppendLine($"{indent}{nameof(IParser.CharCount)}: {context.Parser.CharCount}");
 			details.AppendLine($"{indent}{nameof(IParser.Row)}: {context.Parser.Row}");
-			details.AppendLine($"{indent}{nameof(IParser.RawRow)}: {context.Parser.RawRow}");
-			details.AppendLine($"{indent}{nameof(IParser.Count)}: {context.Parser.Count}");
+			details.AppendLine($"{indent}{nameof(IParser.Current.Row)}: {context.Parser.Current.Row.ToString()}");
+			details.AppendLine($"{indent}{nameof(IParser.Current.Count)}: {context.Parser.Current.Count}");
 
 			try
 			{
 				var rawRecord = context.Configuration.ExceptionMessagesContainRawData
-					? context.Parser.RawRecord
+					? context.Parser.Current.Row.ToString()
 					: $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
-				details.AppendLine($"{indent}{nameof(IParser.RawRecord)}:{Environment.NewLine}{rawRecord}");
+				details.AppendLine($"{indent}{nameof(IParser.Current.Row)}:{Environment.NewLine}{rawRecord}");
 			}
 			catch { }
 		}

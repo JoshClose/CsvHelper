@@ -50,7 +50,7 @@ public class ArrayConverter : IEnumerableConverter
 		{
 			// Use the index.
 			var indexEnd = memberMapData.IndexEnd < memberMapData.Index
-				? row.Parser.Count - 1
+				? row.Parser.Current.Count - 1
 				: memberMapData.IndexEnd;
 
 			var arraySize = indexEnd - memberMapData.Index + 1;
@@ -58,7 +58,7 @@ public class ArrayConverter : IEnumerableConverter
 			var arrayIndex = 0;
 			for (var i = memberMapData.Index; i <= indexEnd; i++)
 			{
-				var field = converter.ConvertFromString(row.GetField(i), row, memberMapData);
+				var field = converter.ConvertFromString(row.Parser.Current[i], row, memberMapData);
 				array.SetValue(field, arrayIndex);
 				arrayIndex++;
 			}

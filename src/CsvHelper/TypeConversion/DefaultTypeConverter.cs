@@ -3,16 +3,33 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
+using System.Buffers;
 
 namespace CsvHelper.TypeConversion;
 
 /// <summary>
 /// Converts an <see cref="object"/> to and from a <see cref="string"/>.
 /// </summary>
-public class DefaultTypeConverter : ITypeConverter
+public class DefaultTypeConverter : ITypeConverter, IDisposable
 {
+	private bool isDisposed;
+
+	/// <summary>
+	/// The buffer used for conversion.
+	/// </summary>
+	protected char[] Buffer { get; private set; }
+
+	/// <summary>
+	/// Initializes a new instance creating a buffer using given size.
+	/// </summary>
+	/// <param name="bufferSize"></param>
+	public DefaultTypeConverter(int bufferSize = 256)
+	{
+		Buffer = ArrayPool<char>.Shared.Rent(bufferSize);
+	}
+
 	/// <inheritdoc/>
-	public virtual object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public virtual object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		// Conversion has failed
 		// Check if a default value should be returned
@@ -41,29 +58,47 @@ public class DefaultTypeConverter : ITypeConverter
 	}
 
 	/// <inheritdoc/>
-	public virtual string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public virtual ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value == null)
 		{
 			if (memberMapData.TypeConverterOptions.NullValues.Count > 0)
 			{
-				return memberMapData.TypeConverterOptions.NullValues.First();
+				return memberMapData.TypeConverterOptions.NullValues.First().AsSpan();
 			}
 
-			return string.Empty;
+			return Span<char>.Empty;
 		}
+
+		if (value is string s)
+		{
+			return s.AsSpan();
+		}
+
+#if NET8_0_OR_GREATER
+		if (value is ISpanFormattable spanFormattable)
+		{
+			var format = memberMapData.TypeConverterOptions.Formats?.FirstOrDefault();
+			if (spanFormattable.TryFormat(Buffer, out int charsWritten, format.AsSpan(), memberMapData.TypeConverterOptions.CultureInfo))
+			{
+				return Buffer.AsSpan(0, charsWritten);
+			}
+		}
+#endif
 
 		if (value is IFormattable formattable)
 		{
 			var format = memberMapData.TypeConverterOptions.Formats?.FirstOrDefault();
-			return formattable.ToString(format, memberMapData.TypeConverterOptions.CultureInfo);
+			return formattable.ToString(format, memberMapData.TypeConverterOptions.CultureInfo).AsSpan();
 		}
 
-		return value?.ToString() ?? string.Empty;
+		return value != null ? value.ToString().AsSpan() : Span<char>.Empty;
 	}
 
-	private TypeConverterException CreateTypeConverterException(string? text, IReaderRow row, MemberMapData memberMapData)
+	private TypeConverterException CreateTypeConverterException(ReadOnlySpan<char> chars, IReaderRow row, MemberMapData memberMapData)
 	{
+		var text = chars.ToString();
+
 		if (!row.Configuration.ExceptionMessagesContainRawData)
 		{
 			text = $"Hidden because {nameof(IParserConfiguration.ExceptionMessagesContainRawData)} is false.";
@@ -84,5 +119,37 @@ public class DefaultTypeConverter : ITypeConverter
 	private static bool TypeAllowsNull(Type type)
 	{
 		return !type.IsValueType || Nullable.GetUnderlyingType(type) is not null;
+	}
+
+	/// <inheritdoc />
+	public void Dispose()
+	{
+		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
+
+	/// <summary>
+	/// Disposes the object.
+	/// </summary>
+	/// <param name="disposing">A value indicating if currently disposing.</param>
+	protected virtual void Dispose(bool disposing)
+	{
+		if (isDisposed)
+		{
+			return;
+		}
+
+		if (disposing)
+		{
+			// TODO: dispose managed state (managed objects)
+			ArrayPool<char>.Shared.Return(Buffer);
+		}
+
+		// TODO: free unmanaged resources (unmanaged objects) and override finalizer
+		// TODO: set large fields to null
+		Buffer = Array.Empty<char>();
+
+		isDisposed = true;
 	}
 }

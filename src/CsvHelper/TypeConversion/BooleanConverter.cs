@@ -13,14 +13,33 @@ namespace CsvHelper.TypeConversion;
 public class BooleanConverter : DefaultTypeConverter
 {
 	/// <inheritdoc/>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
+#if NET8_0_OR_GREATER
 		if (bool.TryParse(text, out var b))
 		{
 			return b;
 		}
 
 		if (short.TryParse(text, out var sh))
+		{
+			if (sh == 0)
+			{
+				return false;
+			}
+			if (sh == 1)
+			{
+				return true;
+			}
+		}
+#endif
+
+		if (bool.TryParse(text.ToString(), out var b))
+		{
+			return b;
+		}
+
+		if (short.TryParse(text.ToString(), out var sh))
 		{
 			if (sh == 0)
 			{
