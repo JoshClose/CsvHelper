@@ -944,8 +944,13 @@ public class CsvParser : IParser, IDisposable
 	{
 		// If field is already known to be bad, different rules can be applied.
 
-		var args = new BadDataFoundArgs(new string(buffer, start, length), RawRecord, Context);
-		badDataFound?.Invoke(args);
+		if (badDataFound is not null)
+		{
+			// Note on performance: accessing RawRecord allocates a new string with the entire row.
+			// It can be costly overall when lots of fields are invalid.
+			var args = new BadDataFoundArgs(new string(buffer, start, length), RawRecord, Context);
+			badDataFound.Invoke(args);
+		}
 
 		var newStart = start;
 		var newLength = length;
