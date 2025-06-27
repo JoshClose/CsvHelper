@@ -3,6 +3,7 @@
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
 using CsvHelper.Configuration;
+using System.Globalization;
 using System.Text;
 
 namespace CsvHelper.TypeConversion;
@@ -12,6 +13,7 @@ namespace CsvHelper.TypeConversion;
 /// </summary>
 public class ByteArrayConverter : DefaultTypeConverter
 {
+	private readonly char[] HexDigits = "0123456789ABCDEF".ToCharArray();
 	private readonly ByteArrayConverterOptions options;
 	private readonly string HexStringPrefix;
 	private readonly byte ByteLength;
@@ -37,13 +39,29 @@ public class ByteArrayConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 	/// <returns>The string representation of the object.</returns>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value is byte[] byteArray)
 		{
-			return (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
-				? Convert.ToBase64String(byteArray)
-				: ByteArrayToHexString(byteArray);
+			if ((options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64)
+			{
+#if NET8_0_OR_GREATER
+				var length = GetBase64Length(byteArray);
+				EnsureBufferSize(length);
+				if (Convert.TryToBase64Chars(byteArray.AsSpan(), Buffer.AsSpan(), out int charsWritten))
+				{
+					return Buffer.AsSpan(0, charsWritten);
+				}
+				else
+				{
+					throw new InvalidOperationException("Failed to convert byte array to Base64 string.");
+				}
+#else
+				return Convert.ToBase64String(byteArray).AsSpan();
+#endif
+			}
+
+			return BytesToHex(byteArray);
 		}
 
 		return base.ConvertToString(value, row, memberMapData);
@@ -56,56 +74,110 @@ public class ByteArrayConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
-		if (text != null)
+		if ((options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64)
 		{
-			return (options & ByteArrayConverterOptions.Base64) == ByteArrayConverterOptions.Base64
-				? Convert.FromBase64String(text)
-				: HexStringToByteArray(text);
+#if NET8_0_OR_GREATER
+			var length = (text.Length * 3) / 4;
+			var buffer = new byte[length];
+			var bufferSpan = new Span<byte>(buffer);
+			if (Convert.TryFromBase64Chars(text, bufferSpan, out int bytesWritten))
+			{
+				return bufferSpan.Slice(0, bytesWritten).ToArray();
+			}
+			else
+			{
+				throw new FormatException("Invalid Base64 string.");
+			}
+#else
+			return Convert.FromBase64String(text.ToString());
+#endif
 		}
 
-		return base.ConvertFromString(text, row, memberMapData);
+		return HexToBytes(text);
 	}
 
-	private string ByteArrayToHexString(byte[] byteArray)
+	private ReadOnlySpan<char> BytesToHex(byte[] bytes)
 	{
-		var hexString = new StringBuilder();
+		if (bytes.Length == 0)
+		{
+			return ReadOnlySpan<char>.Empty;
+		}
 
+		var length = bytes.Length * 2;
 		if ((options & ByteArrayConverterOptions.HexInclude0x) == ByteArrayConverterOptions.HexInclude0x)
 		{
-			hexString.Append("0x");
+			length += 2;
 		}
 
-		if (byteArray.Length >= 1)
+		var result = new char[length];
+		result[0] = '0';
+		result[1] = 'x';
+
+		for (int i = 0; i < bytes.Length; i++)
 		{
-			hexString.Append(byteArray[0].ToString("X2"));
+			byte b = bytes[i];
+			result[i * 2] = HexDigits[b >> 4];      // High nibble
+			result[i * 2 + 1] = HexDigits[b & 0xF]; // Low nibble
 		}
 
-		for (var i = 1; i < byteArray.Length; i++)
-		{
-			hexString.Append(HexStringPrefix + byteArray[i].ToString("X2"));
-		}
-
-		return hexString.ToString();
+		return result;
 	}
 
-	private byte[] HexStringToByteArray(string hex)
+	private byte[] HexToBytes(ReadOnlySpan<char> hex)
 	{
-		var has0x = hex.StartsWith("0x");
+		hex = hex.Trim();
 
-		var length = has0x
-			? (hex.Length - 1) / ByteLength
-			: hex.Length + 1 / ByteLength;
-		var byteArray = new byte[length];
-		var has0xOffset = has0x ? 1 : 0;
-
-		for (var stringIndex = has0xOffset * 2; stringIndex < hex.Length; stringIndex += ByteLength)
+		Span<char> prefix = ['0', 'x'];
+		if (hex.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
 		{
-			byteArray[(stringIndex - has0xOffset) / ByteLength] = Convert.ToByte(hex.Substring(stringIndex, 2), 16);
+			hex = hex.Slice(2);
 		}
 
-		return byteArray;
+		if (hex.IsEmpty)
+		{
+			return Array.Empty<byte>();
+		}
+
+		if (hex.Length % 2 != 0)
+		{
+			throw new ArgumentException("Hex string must have an even number of characters.", nameof(hex));
+		}
+
+		var result = new byte[hex.Length / 2];
+
+		for (int i = 0; i < hex.Length; i += 2)
+		{
+			var hexPair = hex.Slice(i, 2);
+
+			try
+			{
+				result[i / 2] = byte.Parse(
+#if NET8_0_OR_GREATER
+					hexPair
+#else
+					hexPair.ToString()
+#endif
+					, NumberStyles.HexNumber);
+			}
+			catch (FormatException)
+			{
+				throw new FormatException($"Invalid hex characters at position {i}: '{hexPair.ToString()}'.");
+			}
+		}
+
+		return result;
+	}
+
+	private int GetBase64Length(byte[] bytes)
+	{
+		if (bytes == null || bytes.Length == 0)
+		{
+			return 0;
+		}
+
+		return ((bytes.Length + 2) / 3) * 4;
 	}
 
 	private void ValidateOptions()
@@ -121,4 +193,6 @@ public class ByteArrayConverter : DefaultTypeConverter
 			}
 		}
 	}
+
+	private
 }

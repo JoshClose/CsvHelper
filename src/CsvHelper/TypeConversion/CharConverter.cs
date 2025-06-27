@@ -18,17 +18,24 @@ public class CharConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
-		if (text != null && text.Length > 1)
+		if (text.Length > 1)
 		{
 			text = text.Trim();
 		}
 
-		if (char.TryParse(text, out var c))
+#if NET8_0_OR_GREATER
+		if (text.Length == 1)
+		{
+			return text[0];
+		}
+#else
+		if (char.TryParse(text.ToString(), out var c))
 		{
 			return c;
 		}
+#endif
 
 		return base.ConvertFromString(text, row, memberMapData);
 	}

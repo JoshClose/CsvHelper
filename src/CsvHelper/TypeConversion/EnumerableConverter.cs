@@ -22,12 +22,12 @@ public class EnumerableConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var message = "Converting IEnumerable types is not supported for a single field. " +
 					  "If you want to do this, create your own ITypeConverter and register " +
 					  "it in the TypeConverterFactory by calling AddConverter.";
-		throw new TypeConverterException(this, memberMapData, text, row.Context, message);
+		throw new TypeConverterException(this, memberMapData, text.ToString(), row.Context, message);
 	}
 
 	/// <summary>
@@ -37,7 +37,7 @@ public class EnumerableConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 	/// <returns>The string representation of the object.</returns>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		var message = "Converting IEnumerable types is not supported for a single field. " +
 					  "If you want to do this, create your own ITypeConverter and register " +

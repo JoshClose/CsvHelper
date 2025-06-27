@@ -67,23 +67,31 @@ public class EnumConverter : DefaultTypeConverter
 	}
 
 	/// <inheritdoc/>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var ignoreCase = memberMapData.TypeConverterOptions.EnumIgnoreCase ?? false;
 
-		if (text != null)
+		text = text.Trim();
+
+		if (text.Length > 0)
 		{
 			var dict = ignoreCase
 				? enumNamesByAttributeNamesIgnoreCase
 				: enumNamesByAttributeNames;
-			if (dict.TryGetValue(text, out var name))
+			if (dict.TryGetValue(text.ToString(), out var name))
 			{
 				return Enum.Parse(type, name);
 			}
 		}
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-		if (Enum.TryParse(type, text, ignoreCase, out var value))
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
+		if (Enum.TryParse(type,
+#if NET8_0_OR_GREATER
+			text
+#else
+			text.ToString()
+#endif
+			, ignoreCase, out var value))
 		{
 			return value;
 		}
@@ -94,7 +102,7 @@ public class EnumConverter : DefaultTypeConverter
 #else
 		try
 		{
-			return Enum.Parse(type, text, ignoreCase);
+			return Enum.Parse(type, text.ToString(), ignoreCase);
 		}
 		catch
 		{
@@ -104,11 +112,11 @@ public class EnumConverter : DefaultTypeConverter
 	}
 
 	/// <inheritdoc/>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		if (value != null && attributeNamesByEnumValues.TryGetValue(value, out var name))
 		{
-			return name;
+			return name.AsSpan();
 		}
 
 		return base.ConvertToString(value, row, memberMapData);

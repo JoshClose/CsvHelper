@@ -72,7 +72,7 @@ namespace CsvHelper.Tests.Reading
 			Assert.Throws<ObjectDisposedException>(() => records.ToList());
 		}
 
-#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET8_0_OR_GREATER
 		[Fact]
 		public async Task GetRecordsAsyncGeneric_Disposed_ThrowsObjectDisposedExceptionTest()
 		{

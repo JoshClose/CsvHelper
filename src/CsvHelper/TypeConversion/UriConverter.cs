@@ -20,11 +20,11 @@ public class UriConverter : DefaultTypeConverter
 	/// <returns>
 	/// The <see cref="Uri"/> created from the string.
 	/// </returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var uriKind = memberMapData.TypeConverterOptions.UriKind ?? default;
 
-		if (Uri.TryCreate(text, uriKind, out var uri))
+		if (Uri.TryCreate(text.ToString(), uriKind, out var uri))
 		{
 			return uri;
 		}

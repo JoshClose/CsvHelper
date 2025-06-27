@@ -19,17 +19,29 @@ public class TimeSpanConverter : DefaultTypeConverter
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var formatProvider = (IFormatProvider?)memberMapData.TypeConverterOptions.CultureInfo ?? memberMapData.TypeConverterOptions.CultureInfo;
 
 		var timeSpanStyle = memberMapData.TypeConverterOptions.TimeSpanStyle ?? TimeSpanStyles.None;
-		if (memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact(text, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span))
+		if (memberMapData.TypeConverterOptions.Formats != null && TimeSpan.TryParseExact(
+#if NET8_0_OR_GREATER
+			text
+#else
+			text.ToString()
+#endif
+			, memberMapData.TypeConverterOptions.Formats, formatProvider, timeSpanStyle, out var span))
 		{
 			return span;
 		}
 
-		if (memberMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse(text, formatProvider, out span))
+		if (memberMapData.TypeConverterOptions.Formats == null && TimeSpan.TryParse(
+#if NET8_0_OR_GREATER
+			text
+#else
+			text.ToString()
+#endif
+			, formatProvider, out span))
 		{
 			return span;
 		}

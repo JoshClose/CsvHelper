@@ -95,6 +95,22 @@ public class DefaultTypeConverter : ITypeConverter, IDisposable
 		return value != null ? value.ToString().AsSpan() : Span<char>.Empty;
 	}
 
+	/// <summary>
+	/// Ensures that the buffer is at least the specified size.
+	/// </summary>
+	/// <param name="size">The size of the buffer.</param>
+	protected void EnsureBufferSize(int size)
+	{
+		if (size < Buffer.Length)
+		{
+			return;
+		}
+
+		ArrayPool<char>.Shared.Return(Buffer);
+
+		Buffer = ArrayPool<char>.Shared.Rent(size);
+	}
+
 	private TypeConverterException CreateTypeConverterException(ReadOnlySpan<char> chars, IReaderRow row, MemberMapData memberMapData)
 	{
 		var text = chars.ToString();

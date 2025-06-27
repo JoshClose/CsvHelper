@@ -15,31 +15,24 @@ public class BooleanConverter : DefaultTypeConverter
 	/// <inheritdoc/>
 	public override object? ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
-#if NET8_0_OR_GREATER
-		if (bool.TryParse(text, out var b))
-		{
-			return b;
-		}
-
-		if (short.TryParse(text, out var sh))
-		{
-			if (sh == 0)
-			{
-				return false;
-			}
-			if (sh == 1)
-			{
-				return true;
-			}
-		}
+		if (bool.TryParse(
+#if NET8_0
+			text
+#else
+			text.ToString()
 #endif
-
-		if (bool.TryParse(text.ToString(), out var b))
+			, out var b))
 		{
 			return b;
 		}
 
-		if (short.TryParse(text.ToString(), out var sh))
+		if (short.TryParse(
+#if NET8_0
+			text
+#else
+			text.ToString()
+#endif
+			, out var sh))
 		{
 			if (sh == 0)
 			{
@@ -51,10 +44,20 @@ public class BooleanConverter : DefaultTypeConverter
 			}
 		}
 
-		var t = (text ?? string.Empty).Trim();
+#if NET8_0_OR_GREATER
+		var t = text.Trim();
+#else
+		var t = text.ToString().Trim().ToString();
+#endif
 		foreach (var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues)
 		{
-			if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(trueValue, t, CompareOptions.IgnoreCase) == 0)
+			if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(
+#if NET8_0_OR_GREATER
+				trueValue.AsSpan(), t
+#else
+				trueValue, t.ToString()
+#endif
+				, CompareOptions.IgnoreCase) == 0)
 			{
 				return true;
 			}
@@ -62,7 +65,13 @@ public class BooleanConverter : DefaultTypeConverter
 
 		foreach (var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues)
 		{
-			if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(falseValue, t, CompareOptions.IgnoreCase) == 0)
+			if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(
+#if NET8_0_OR_GREATER
+				falseValue.AsSpan(), t
+#else
+				falseValue, t.ToString()
+#endif
+				, CompareOptions.IgnoreCase) == 0)
 			{
 				return false;
 			}
@@ -72,16 +81,16 @@ public class BooleanConverter : DefaultTypeConverter
 	}
 
 	/// <inheritdoc/>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		var b = value as bool?;
 		if (b == true && memberMapData.TypeConverterOptions.BooleanTrueValues.Count > 0)
 		{
-			return memberMapData.TypeConverterOptions.BooleanTrueValues.First();
+			return memberMapData.TypeConverterOptions.BooleanTrueValues.First().AsSpan();
 		}
 		else if (b == false && memberMapData.TypeConverterOptions.BooleanFalseValues.Count > 0)
 		{
-			return memberMapData.TypeConverterOptions.BooleanFalseValues.First();
+			return memberMapData.TypeConverterOptions.BooleanFalseValues.First().AsSpan();
 		}
 
 		return base.ConvertToString(value, row, memberMapData);

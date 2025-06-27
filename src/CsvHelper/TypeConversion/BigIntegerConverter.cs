@@ -24,16 +24,15 @@ public class BigIntegerConverter : DefaultTypeConverter
 	{
 		if (value is BigInteger bi && memberMapData.TypeConverterOptions.Formats?.FirstOrDefault() == null)
 		{
-			var format = "R";
-
 #if NET8_0_OR_GREATER
-			if (bi.TryFormat(Buffer, out int charsWritten, format.AsSpan(), memberMapData.TypeConverterOptions.CultureInfo))
+			Span<char> format = ['R'];
+			if (bi.TryFormat(Buffer, out int charsWritten, format, memberMapData.TypeConverterOptions.CultureInfo))
 			{
 				return Buffer.AsSpan(0, charsWritten);
 			}
+#else
+			return bi.ToString("R", memberMapData.TypeConverterOptions.CultureInfo).AsSpan();
 #endif
-
-			return bi.ToString(format, memberMapData.TypeConverterOptions.CultureInfo).AsSpan();
 		}
 
 		return base.ConvertToString(value, row, memberMapData);
@@ -50,14 +49,13 @@ public class BigIntegerConverter : DefaultTypeConverter
 	{
 		var numberStyle = memberMapData.TypeConverterOptions.NumberStyles ?? NumberStyles.Integer;
 
+		if (BigInteger.TryParse(
 #if NET8_0_OR_GREATER
-		if (BigInteger.TryParse(text, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var bi))
-		{
-			return bi;
-		}
+			text
+#else
+			text.ToString()
 #endif
-
-		if (BigInteger.TryParse(text.ToString(), numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var bi))
+			, numberStyle, memberMapData.TypeConverterOptions.CultureInfo, out var bi))
 		{
 			return bi;
 		}

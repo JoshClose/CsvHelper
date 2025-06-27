@@ -21,13 +21,13 @@ public class NotSupportedTypeConverter<T> : TypeConverter<T>
 	/// <param name="row">The <see cref="IReaderRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being created.</param>
 	/// <returns>The object created from the string.</returns>
-	public override T ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+	public override T ConvertFromString(ReadOnlySpan<char> text, IReaderRow row, MemberMapData memberMapData)
 	{
 		var message =
 			$"Converting {typeof(T).FullName} is not supported. " +
 			"If you want to do this, create your own ITypeConverter and register " +
 			"it in the TypeConverterFactory by calling AddConverter.";
-		throw new TypeConverterException(this, memberMapData, text ?? string.Empty, row.Context, message);
+		throw new TypeConverterException(this, memberMapData, text.ToString(), row.Context, message);
 	}
 
 	/// <summary>
@@ -37,7 +37,7 @@ public class NotSupportedTypeConverter<T> : TypeConverter<T>
 	/// <param name="row">The <see cref="IWriterRow"/> for the current record.</param>
 	/// <param name="memberMapData">The <see cref="MemberMapData"/> for the member being written.</param>
 	/// <returns>The string representation of the object.</returns>
-	public override string? ConvertToString(T? value, IWriterRow row, MemberMapData memberMapData)
+	public override ReadOnlySpan<char> ConvertToString(T? value, IWriterRow row, MemberMapData memberMapData)
 	{
 		var message =
 			$"Converting {typeof(T).FullName} is not supported. " +
