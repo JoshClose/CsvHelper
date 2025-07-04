@@ -1,0 +1,58 @@
+@{
+	IReadOnlyList<IDocument> allInterfaces = Document.GetDocumentList(CodeAnalysisKeys.AllInterfaces);
+	IReadOnlyList<IDocument> baseTypes = Document.GetDocumentList(CodeAnalysisKeys.BaseTypes);
+	IReadOnlyList<IDocument> derivedTypes = Document.GetDocumentList(CodeAnalysisKeys.DerivedTypes);
+	IReadOnlyList<IDocument> implementingTypes = Document.GetDocumentList(CodeAnalysisKeys.ImplementingTypes);
+
+	System.Text.StringBuilder hierarchy = new System.Text.StringBuilder();
+	hierarchy.AppendLine("graph BT");
+	if(baseTypes != null && baseTypes.Count > 0)
+	{
+		for(int b = 0 ; b < baseTypes.Count ; b++)
+		{
+			hierarchy.AppendLine($"\t{(b == 0 ? "Type" : "Base" + (b - 1))}-->Base{b}[\"{System.Net.WebUtility.HtmlEncode(baseTypes[b].GetString(CodeAnalysisKeys.DisplayName))}\"]");
+			if(!baseTypes[b].Destination.IsNullOrEmpty)
+			{
+				hierarchy.AppendLine($"\tclick Base{b} \"{(Context.GetLink(baseTypes[b].Destination.FullPath))}\"");
+			}
+		}
+	}
+	if(allInterfaces != null && allInterfaces.Count > 0)
+	{
+		for(int c = 0 ; c < allInterfaces.Count ; c++)
+		{
+			hierarchy.AppendLine($"\tType-.->Interface{c}[\"{System.Net.WebUtility.HtmlEncode(allInterfaces[c].GetString(CodeAnalysisKeys.DisplayName))}\"]");
+			if(!allInterfaces[c].Destination.IsNullOrEmpty)
+			{
+				hierarchy.AppendLine($"\tclick Interface{c} \"{(Context.GetLink(allInterfaces[c].Destination.FullPath))}\"");
+			}
+		}
+	}
+	hierarchy.AppendLine($"\tType[\"{System.Net.WebUtility.HtmlEncode(Model.GetString(CodeAnalysisKeys.DisplayName))}\"]");
+	hierarchy.AppendLine("class Type type-node");
+	if(derivedTypes != null && derivedTypes.Count > 0)
+	{
+		for(int c = 0 ; c < derivedTypes.Count ; c++)
+		{
+			hierarchy.AppendLine($"\tDerived{c}[\"{System.Net.WebUtility.HtmlEncode(derivedTypes[c].GetString(CodeAnalysisKeys.DisplayName))}\"]-->Type");
+			if(!derivedTypes[c].Destination.IsNullOrEmpty)
+			{
+				hierarchy.AppendLine($"\tclick Derived{c} \"{(Context.GetLink(derivedTypes[c].Destination.FullPath))}\"");
+			}
+		}
+	}
+	if(implementingTypes != null && implementingTypes.Count > 0)
+	{
+		for(int c = 0 ; c < implementingTypes.Count ; c++)
+		{
+			hierarchy.AppendLine($"\tImplementing{c}[\"{System.Net.WebUtility.HtmlEncode(implementingTypes[c].GetString(CodeAnalysisKeys.DisplayName))}\"]-.->Type");
+			if(!implementingTypes[c].Destination.IsNullOrEmpty)
+			{
+				hierarchy.AppendLine($"\tclick Implementing{c} \"{(Context.GetLink(implementingTypes[c].Destination.FullPath))}\"");
+			}
+		}
+	}
+}
+<div class="mermaid text-center">
+	@Html.Raw(hierarchy.ToString())
+</div>

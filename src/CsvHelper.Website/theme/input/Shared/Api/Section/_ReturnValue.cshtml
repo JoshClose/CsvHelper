@@ -1,0 +1,27 @@
+@using Microsoft.AspNetCore.Html;
+
+@{
+	IDocument returnType = Document.GetDocument(CodeAnalysisKeys.ReturnType);
+	string returns = Document.GetString(CodeAnalysisKeys.Returns);
+	if ((returnType is object && returnType.GetString(CodeAnalysisKeys.DisplayName) != "void") || !string.IsNullOrWhiteSpace(returns))
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("ReturnValue", "Return Value"));
+		<h1 id="ReturnValue">Return Value</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover two-cols">
+				<thead>
+					<tr>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>@(returnType is null ? new HtmlString("void") : Context.GetTypeLink(returnType))</td>
+						<td>@Html.Raw(returns)</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	}
+}

@@ -1,0 +1,49 @@
+@using Microsoft.AspNetCore.Html;
+
+@{
+	IReadOnlyList<IDocument> fields = Document.GetDocumentList(CodeAnalysisKeys.Members)
+		?.Where(x => x.GetBool(CodeAnalysisKeys.IsResult) && x.GetString(CodeAnalysisKeys.Kind) == "Field")
+		.OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName))
+		.ToList();
+	if(fields?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("Fields", "Fields"));
+		<h1 id="fields">Fields</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover three-cols">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Field Type</th>
+						<th>Constant Value</th>
+						<th>Summary</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach(IDocument field in fields)
+					{
+						<tr>
+							<td>@Context.GetTypeLink(field, false)</td>
+							<td>@Context.GetTypeLink(field.GetDocument(CodeAnalysisKeys.Type))</td>
+							<td>@(field.GetBool(CodeAnalysisKeys.HasConstantValue) ? new HtmlString(field.Get(CodeAnalysisKeys.ConstantValue)?.ToString() ?? "null") : new HtmlString(string.Empty))</td>
+							<td>
+								<div>@Html.Raw(field.GetString(CodeAnalysisKeys.Summary))</div>
+								@{
+									IDocument containingType = field.GetDocument(CodeAnalysisKeys.ContainingType);
+									if(!Document.IdEquals(containingType))
+									{
+										<div><small><em>Inherited from @Context.GetTypeLink(containingType)</em></small></div>
+									}
+									if(field.GetBool(CodeAnalysisKeys.IsStatic))
+									{
+										<div><small><em>static</em></small></div>
+									}
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

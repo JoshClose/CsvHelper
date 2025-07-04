@@ -1,0 +1,45 @@
+@{
+	IReadOnlyList<IDocument> events = Document.GetDocumentList(CodeAnalysisKeys.Members)
+		?.Where(x => x.GetBool(CodeAnalysisKeys.IsResult) && x.GetString(CodeAnalysisKeys.Kind) == "Event")
+		.OrderBy(x => x.GetString(CodeAnalysisKeys.DisplayName))
+		.ToList();
+	if(events?.Count > 0)
+	{
+		((List<(string, string)>)ViewData[Keys.Headings]).Add(("Events", "Events"));
+		<h1 id="Events">Events</h1>
+		<div class="table-responsive">
+			<table class="table table-api table-striped table-hover three-cols">
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Summary</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach(IDocument evt in events)
+					{
+						<tr>
+							<td>@Context.GetTypeLink(evt, false)</td>
+							<td>@Context.GetTypeLink(evt.GetDocument(CodeAnalysisKeys.Type))</td>
+							<td>
+								<div>@Html.Raw(evt.GetString(CodeAnalysisKeys.Summary))</div>
+								@{
+									IDocument containingType = evt.GetDocument(CodeAnalysisKeys.ContainingType);
+									if(!Document.IdEquals(containingType))
+									{
+										<div><small><em>Inherited from @Context.GetTypeLink(containingType)</em></small></div>
+									}
+									if(evt.GetBool(CodeAnalysisKeys.IsStatic))
+									{
+										<div><small><em>static</em></small></div>
+									}
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}
