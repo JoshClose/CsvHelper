@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Tests", "tests\Cs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CsvHelper.Website", "src\CsvHelper.Website\CsvHelper.Website.csproj", "{3E59CA52-D248-4CBB-BB06-270FA942C4B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvHelper.Benchmarks", "performance\CsvHelper.Benchmarks\CsvHelper.Benchmarks.csproj", "{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +96,26 @@ Global
 		{3E59CA52-D248-4CBB-BB06-270FA942C4B8}.Release|x64.Build.0 = Release|Any CPU
 		{3E59CA52-D248-4CBB-BB06-270FA942C4B8}.Release|x86.ActiveCfg = Release|Any CPU
 		{3E59CA52-D248-4CBB-BB06-270FA942C4B8}.Release|x86.Build.0 = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|ARM.Build.0 = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|x64.Build.0 = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Debug|x86.Build.0 = Debug|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|ARM.ActiveCfg = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|ARM.Build.0 = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|x64.ActiveCfg = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|x64.Build.0 = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|x86.ActiveCfg = Release|Any CPU
+		{4DAB88D4-56B0-C42A-25BB-3E5BBCBB5F1B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

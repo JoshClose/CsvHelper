@@ -13,7 +13,7 @@ namespace CsvHelper;
 /// </summary>
 public class ObjectCreator
 {
-	private readonly Dictionary<int, Func<object?[], object>> cache = new Dictionary<int, Func<object?[], object>>();
+	private readonly Dictionary<CacheKey, Func<object?[], object>> cache = new Dictionary<CacheKey, Func<object?[], object>>();
 
 	/// <summary>
 	/// Creates an instance of type T using the given arguments.
@@ -41,7 +41,7 @@ public class ObjectCreator
 	private Func<object?[], object> GetFunc(Type type, object?[] args)
 	{
 		var argTypes = GetArgTypes(args);
-		var key = GetConstructorCacheKey(type, argTypes);
+		var key = new CacheKey(type, argTypes);
 		if (!cache.TryGetValue(key, out var func))
 		{
 			cache[key] = func = CreateInstanceFunc(type, argTypes);
@@ -53,6 +53,11 @@ public class ObjectCreator
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Type[] GetArgTypes(object?[] args)
 	{
+		if (args.Length == 0)
+		{
+			return Array.Empty<Type>();
+		}
+
 		var argTypes = new Type[args.Length];
 		for (var i = 0; i < args.Length; i++)
 		{
@@ -60,19 +65,6 @@ public class ObjectCreator
 		}
 
 		return argTypes;
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static int GetConstructorCacheKey(Type type, Type[] args)
-	{
-		var hashCode = new HashCode();
-		hashCode.Add(type.GetHashCode());
-		for (var i = 0; i < args.Length; i++)
-		{
-			hashCode.Add(args[i].GetHashCode());
-		}
-
-		return hashCode.ToHashCode();
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -194,5 +186,64 @@ public class ObjectCreator
 		None = 0,
 		Exact = 1,
 		Fuzzy = 2
+	}
+
+	private struct CacheKey : IEquatable<CacheKey>
+	{
+		private readonly Type type;
+		private readonly Type[] args;
+
+		public CacheKey(Type type, Type[] args)
+		{
+			this.type = type;
+			this.args = args;
+		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = new HashCode();
+			hashCode.Add(type.GetHashCode());
+			for (var i = 0; i < args.Length; i++)
+			{
+				hashCode.Add(args[i].GetHashCode());
+			}
+
+			return hashCode.ToHashCode();
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj == null)
+			{
+				return false;
+			}
+
+			if (obj is CacheKey key)
+			{
+				return Equals(key);
+			}
+
+			return false;
+		}
+
+		public bool Equals(CacheKey other)
+		{
+			if (other.type != type)
+			{
+				return false;
+			}
+
+			if (other.args.Length != args.Length)
+			{
+				return false;
+			}
+
+			for (var i = 0; i < args.Length; i++)
+			{
+				if (other.args[i] != args[i]) return false;
+			}
+
+			return true;
+		}
 	}
 }

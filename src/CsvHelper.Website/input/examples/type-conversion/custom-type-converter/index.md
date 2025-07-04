@@ -18,7 +18,7 @@ Id,Name,Json
 ```cs
 void Main()
 {
-    using (var reader = new new StreamReader("path\\to\\file.csv"))
+    using (var reader = new StreamReader("path\\to\\file.csv"))
     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
     {
         // Register globally.

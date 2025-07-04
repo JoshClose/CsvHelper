@@ -12,23 +12,23 @@ namespace CsvHelper;
 public enum CsvMode
 {
 	/// <summary>
-	/// Uses RFC 4180 format (default).
+	/// Uses RFC 4180 format (default).<br/>
 	/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
-	/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.
+	/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.<br/>
 	/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
 	/// </summary>
 	RFC4180 = 0,
 
 	/// <summary>
-	/// Uses escapes.
+	/// Uses escapes.<br/>
 	/// If a field contains a <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.NewLine"/>,
-	/// or <see cref="CsvConfiguration.Escape"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
+	/// or <see cref="CsvConfiguration.Escape"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.<br/>
 	/// Newline defaults to \n.
 	/// </summary>
 	Escape,
 
 	/// <summary>
-	/// Doesn't use quotes or escapes.
+	/// Doesn't use quotes or escapes.<br/>
 	/// This will ignore quoting and escape characters. This means a field cannot contain a
 	/// <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.Quote"/>, or
 	/// <see cref="CsvConfiguration.NewLine"/>, as they cannot be escaped.

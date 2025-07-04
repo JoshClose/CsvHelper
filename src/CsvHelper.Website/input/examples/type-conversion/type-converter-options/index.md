@@ -7,7 +7,7 @@ Any option for these methods should be available through configuration.
 ###### Mapping Example
 
 ```cs
-public sealed class FooMap : ClassMap\<Foo\>
+public sealed class FooMap : ClassMap<Foo>
 {
     public FooMap()
     {

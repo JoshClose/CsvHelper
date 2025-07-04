@@ -1,5 +1,19 @@
 ﻿# Change Log
 
+### 33.1.0
+
+#### Features
+
+- Use `Attributes.IsDefined` instead of `Attributes.GetCustomAttributes` to check for attributes on a type. This is more performant.
+- Removed out of support frameworks `net6.0` and `net7.0` and added `net9.0`.
+- Use CacheKey struct for ObjectCreator cache key.
+- Early exit in ObjectCreator when there are no args. This reduces allocations.
+
+#### Bug Fixes
+
+- Add `Dispose` and `DisposeAsync` to writer write async methods.
+- Fixed issue with setting `UseDefaultOnConversionFailure` to `true` when the default value is `null`.
+
 ### 33.0.1
 
 #### Bug Fixes
