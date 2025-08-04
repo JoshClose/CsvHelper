@@ -432,6 +432,26 @@ public abstract class ClassMap
 				memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions(), context.TypeConverterOptionsCache.GetOptions(member.MemberType()), memberMap.Data.TypeConverterOptions);
 				memberMap.Data.Index = map.GetMaxIndex() + 1;
 
+				// Try to find a constructor parameter that matches the current member by name (case-sensitive).
+				var matchingParam = map.ParameterMaps
+					.FirstOrDefault(p => string.Equals(p.Data.Parameter.Name, member.Name, StringComparison.Ordinal));
+
+				// If this is a record type and a matching constructor parameter was found,
+				// attempt to apply mapping attributes from the constructor parameter to the member map.
+				if (matchingParam != null && ReflectionHelper.IsRecord(map.ClassType))
+				{
+					// Iterate over all attributes declared on the constructor parameter.
+					foreach (var attr in matchingParam.Data.Parameter.GetCustomAttributes(true))
+					{
+						// Only consider attributes that implement IMemberMapper, such as Name, Format, Default, etc.
+						if (attr is IMemberMapper memberMapperAttr)
+						{
+							// Apply the attribute to the current member map.
+							memberMapperAttr.ApplyTo(memberMap);
+						}
+					}
+				}
+
 				ApplyAttributes(memberMap);
 
 				map.MemberMaps.Add(memberMap);
