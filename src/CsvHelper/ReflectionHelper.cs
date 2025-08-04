@@ -197,4 +197,16 @@ internal static class ReflectionHelper
 
 		return memberExpression;
 	}
+
+	/// <summary>
+	/// Checks if the given type is a C# record.
+	/// This is determined by the presence of a compiler-generated &lt;Clone&gt;$ method.
+	/// </summary>
+	/// <param name="type">The type to check.</param>
+	/// <returns>True if the type is a record; otherwise, false.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsRecord(Type type)
+	{
+		return type.GetProperty("EqualityContract", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly) != null;
+	}
 }
