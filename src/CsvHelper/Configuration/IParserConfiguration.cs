@@ -14,7 +14,7 @@ namespace CsvHelper.Configuration;
 public interface IParserConfiguration
 {
 	/// <summary>
-	/// Gets the culture info used to read an write CSV files.
+	/// Gets the culture info used to read and write CSV files.
 	/// </summary>
 	CultureInfo CultureInfo { get; }
 
@@ -171,3 +171,4 @@ public interface IParserConfiguration
 	/// </summary>
 	void Validate();
 }
+
