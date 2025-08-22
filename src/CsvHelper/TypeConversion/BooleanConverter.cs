@@ -12,59 +12,62 @@ namespace CsvHelper.TypeConversion;
 /// </summary>
 public class BooleanConverter : DefaultTypeConverter
 {
-	/// <inheritdoc/>
-	public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
-	{
-		if (bool.TryParse(text, out var b))
-		{
-			return b;
-		}
+    private static readonly object BoxedTrue = true;
+    private static readonly object BoxedFalse = false;
 
-		if (short.TryParse(text, out var sh))
-		{
-			if (sh == 0)
-			{
-				return false;
-			}
-			if (sh == 1)
-			{
-				return true;
-			}
-		}
+    /// <inheritdoc/>
+    public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
+    {
+        if (bool.TryParse(text, out var b))
+        {
+            return b ? BoxedTrue : BoxedFalse;
+        }
 
-		var t = (text ?? string.Empty).Trim();
-		foreach (var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues)
-		{
-			if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(trueValue, t, CompareOptions.IgnoreCase) == 0)
-			{
-				return true;
-			}
-		}
+        if (short.TryParse(text, out var sh))
+        {
+            if (sh == 0)
+            {
+                return BoxedFalse;
+            }
+            if (sh == 1)
+            {
+                return BoxedTrue;
+            }
+        }
 
-		foreach (var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues)
-		{
-			if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(falseValue, t, CompareOptions.IgnoreCase) == 0)
-			{
-				return false;
-			}
-		}
+        var t = (text ?? string.Empty).Trim();
+        foreach (var trueValue in memberMapData.TypeConverterOptions.BooleanTrueValues)
+        {
+            if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(trueValue, t, CompareOptions.IgnoreCase) == 0)
+            {
+                return BoxedTrue;
+            }
+        }
 
-		return base.ConvertFromString(text, row, memberMapData);
-	}
+        foreach (var falseValue in memberMapData.TypeConverterOptions.BooleanFalseValues)
+        {
+            if (memberMapData.TypeConverterOptions.CultureInfo!.CompareInfo.Compare(falseValue, t, CompareOptions.IgnoreCase) == 0)
+            {
+                return BoxedFalse;
+            }
+        }
 
-	/// <inheritdoc/>
-	public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
-	{
+        return base.ConvertFromString(text, row, memberMapData);
+    }
+
+    /// <inheritdoc/>
+    public override string? ConvertToString(object? value, IWriterRow row, MemberMapData memberMapData)
+    {
 		var b = value as bool?;
 		if (b == true && memberMapData.TypeConverterOptions.BooleanTrueValues.Count > 0)
-		{
-			return memberMapData.TypeConverterOptions.BooleanTrueValues.First();
-		}
+        {
+            return memberMapData.TypeConverterOptions.BooleanTrueValues.First();
+        }
 		else if (b == false && memberMapData.TypeConverterOptions.BooleanFalseValues.Count > 0)
-		{
-			return memberMapData.TypeConverterOptions.BooleanFalseValues.First();
-		}
+        {
+            return memberMapData.TypeConverterOptions.BooleanFalseValues.First();
+        }
 
-		return base.ConvertToString(value, row, memberMapData);
-	}
+        return base.ConvertToString(value, row, memberMapData);
+    }
 }
