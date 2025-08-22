@@ -46,7 +46,7 @@ public class ObjectRecordWriter : RecordWriter
 			throw new WriterException(Writer.Context, $"No properties are mapped for type '{type.FullName}'.");
 		}
 
-		var delegates = new List<Action<T>>();
+		var expressions = new List<Expression>(members.Count);
 
 		foreach (var memberMap in members)
 		{
@@ -59,7 +59,7 @@ public class ObjectRecordWriter : RecordWriter
 				var args = Expression.New(constructor, recordParameterConverted);
 				Expression exp = Expression.Invoke(memberMap.Data.WritingConvertExpression, args);
 				exp = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteField), null, exp);
-				delegates.Add(Expression.Lambda<Action<T>>(exp, recordParameter).Compile());
+				expressions.Add(exp);
 				continue;
 			}
 
@@ -110,12 +110,16 @@ public class ObjectRecordWriter : RecordWriter
 			}
 
 			var writeFieldMethodCall = Expression.Call(Expression.Constant(Writer), nameof(Writer.WriteConvertedField), null, fieldExpression, Expression.Constant(memberMap.Data.Type));
-
-			delegates.Add(Expression.Lambda<Action<T>>(writeFieldMethodCall, recordParameter).Compile());
+			expressions.Add(writeFieldMethodCall);
 		}
 
-		var action = CombineDelegates(delegates) ?? new Action<T>((T parameter) => { });
+		if (expressions.Count == 0)
+		{
+			return new Action<T>((T parameter) => { });
+		}
 
-		return action;
+		// Combine all field writes into a single block
+		var block = Expression.Block(expressions);
+		return Expression.Lambda<Action<T>>(block, recordParameter).Compile();
 	}
 }
