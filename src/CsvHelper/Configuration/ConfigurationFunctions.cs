@@ -209,7 +209,7 @@ public static class ConfigurationFunctions
 			var match = Regex.Match(text, newLine);
 			var line = match.Success ? text.Substring(0, match.Index) : text;
 
-			if (line.Length > 0)
+			if (line.Length > 0 && !(config.AllowComments && line[0] == config.Comment))
 			{
 				var delimiterCounts = new Dictionary<string, int>();
 				foreach (var delimiter in config.DetectDelimiterValues)

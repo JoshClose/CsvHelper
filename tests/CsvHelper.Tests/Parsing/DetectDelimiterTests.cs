@@ -303,5 +303,21 @@ namespace CsvHelper.Tests.Parsing
 			var delimeter = ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config));
 			Assert.Equal(";", delimeter);
 		}
+
+		[Fact]
+		public void GetDelimiter_TextHasComments_DetectsDelimiter()
+		{
+			var s = new StringBuilder();
+			s.AppendLine("#comment,,,");
+			s.AppendLine("Id;Name");
+			s.AppendLine("1;2");
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				AllowComments = true,
+				Comment = '#',
+				DetectDelimiter = true,
+			};
+			Assert.Equal(";", ConfigurationFunctions.GetDelimiter(new Delegates.GetDelimiterArgs(s.ToString(), config)));
+		}
 	}
 }
