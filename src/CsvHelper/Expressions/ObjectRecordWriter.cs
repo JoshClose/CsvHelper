@@ -80,6 +80,11 @@ public class ObjectRecordWriter : RecordWriter
 				{
 					fieldExpression = Expression.Constant(memberMap.Data.Constant);
 					var typeConverterExpression = Expression.Constant(Writer.Context.TypeConverterCache.GetConverter(memberMap.Data.Constant.GetType()));
+
+					memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(
+						new TypeConverterOptions { CultureInfo = Writer.Configuration.CultureInfo },
+						memberMap.Data.TypeConverterOptions);
+
 					var method = typeof(ITypeConverter).GetMethod(nameof(ITypeConverter.ConvertToString))!;
 					fieldExpression = Expression.Convert(fieldExpression, typeof(object));
 					fieldExpression = Expression.Call(typeConverterExpression, method, fieldExpression, Expression.Constant(Writer), Expression.Constant(memberMap.Data));
@@ -96,7 +101,10 @@ public class ObjectRecordWriter : RecordWriter
 				fieldExpression = ExpressionManager.CreateGetMemberExpression(recordParameterConverted, Writer.Context.Maps[type]!, memberMap)!;
 
 				var typeConverterExpression = Expression.Constant(memberMap.Data.TypeConverter);
-				memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = Writer.Configuration.CultureInfo }, Writer.Context.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member!.MemberType()), memberMap.Data.TypeConverterOptions);
+				memberMap.Data.TypeConverterOptions = TypeConverterOptions.Merge(
+					new TypeConverterOptions { CultureInfo = Writer.Configuration.CultureInfo },
+					Writer.Context.TypeConverterOptionsCache.GetOptions(memberMap.Data.Member!.MemberType()),
+					memberMap.Data.TypeConverterOptions);
 
 				var method = typeof(ITypeConverter).GetMethod(nameof(ITypeConverter.ConvertToString))!;
 				fieldExpression = Expression.Convert(fieldExpression, typeof(object));

@@ -11,7 +11,7 @@ using Xunit;
 
 namespace CsvHelper.Tests.Writing
 {
-	
+
 	public class ConstantTests
 	{
 		[Fact]
@@ -90,6 +90,79 @@ namespace CsvHelper.Tests.Writing
 			}
 		}
 
+		[Fact]
+		public void DoubleConstantTest_CultureInvariant()
+		{
+			CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				var records = new List<Test>
+				{
+					new Test { Id = 1, Name = "one" },
+				};
+
+				csv.Context.RegisterClassMap<TestDoubleMap>();
+				csv.WriteRecords(records);
+				writer.Flush();
+
+				Assert.Equal("3.141592,3.1415\r\n", writer.ToString());
+			}
+		}
+
+		[Fact]
+		public void DoubleConstantTest_CultureDe()
+		{
+			CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+			var config = new CsvConfiguration(new CultureInfo("de-DE"))
+			{
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				var records = new List<Test>
+				{
+					new Test { Id = 1, Name = "one" },
+				};
+
+				csv.Context.RegisterClassMap<TestDoubleMap>();
+				csv.WriteRecords(records);
+				writer.Flush();
+
+				Assert.Equal("3,141592;3,1415\r\n", writer.ToString());
+			}
+		}
+
+		[Fact]
+		public void DoubleConstantTest_CultureDeOverrideInvariant()
+		{
+			CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+			var config = new CsvConfiguration(new CultureInfo("de-DE"))
+			{
+				HasHeaderRecord = false,
+			};
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				var records = new List<Test>
+				{
+					new Test { Id = 1, Name = "one" },
+				};
+
+				csv.Context.RegisterClassMap(new TestDoublCultureOverrideMap(CultureInfo.InvariantCulture));
+				csv.WriteRecords(records);
+				writer.Flush();
+
+				Assert.Equal("3,141592;3.1415\r\n", writer.ToString());
+			}
+		}
+
+
 		private class Test
 		{
 			public int Id { get; set; }
@@ -122,5 +195,28 @@ namespace CsvHelper.Tests.Writing
 				Map(m => m.Name).Constant("constant");
 			}
 		}
+
+		private sealed class TestDoubleMap : ClassMap<Test>
+		{
+			public TestDoubleMap()
+			{
+				Map(m => m.Id).Ignore();
+				Map(m => m.Name).Ignore();
+				Map().Constant(3.141592);
+				Map().Constant(3.1415m);
+			}
+		}
+
+		private sealed class TestDoublCultureOverrideMap : ClassMap<Test>
+		{
+			public TestDoublCultureOverrideMap(CultureInfo culture)
+			{
+				Map(m => m.Id).Ignore();
+				Map(m => m.Name).Ignore();
+				Map().Constant(3.141592);
+				Map().Constant(3.1415m).TypeConverterOption.CultureInfo(culture);
+			}
+		}
+
 	}
 }
