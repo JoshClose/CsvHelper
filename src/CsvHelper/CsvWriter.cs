@@ -296,7 +296,7 @@ public class CsvWriter : IWriter
 	/// </summary>
 	/// <param name="record">The header record to write.</param>
 	/// <exception cref="ArgumentNullException">Thrown when no record is passed.</exception>
-	public virtual void WriteDynamicHeader(IDynamicMetaObjectProvider? record)
+	public virtual void WriteDynamicHeader(IDynamicMetaObjectProvider record)
 	{
 		if (record == null)
 		{
@@ -941,3 +941,4 @@ public class CsvWriter : IWriter
 		return false;
 	}
 }
+
