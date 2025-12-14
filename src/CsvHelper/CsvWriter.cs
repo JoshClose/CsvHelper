@@ -341,10 +341,15 @@ public class CsvWriter : IWriter
 			}
 		}
 		catch (Exception ex) when (ex is not CsvHelperException)
-		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
-		}
-	}
+        {
+	       throw new WriterException(
+		       context,
+		       "An unexpected error occurred while writing records. " +
+		       "This may be caused by a missing dependency. See inner exception for details.",
+		       ex
+	        );
+        }
+
 
 	/// <inheritdoc/>
 	public virtual void WriteRecords(IEnumerable records)
@@ -391,17 +396,14 @@ public class CsvWriter : IWriter
 			while (enumerator.MoveNext());
 		}
 		catch (Exception ex) when (ex is not CsvHelperException)
-		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
-		}
-		finally
-		{
-			if (enumerator is IDisposable en)
-			{
-				en.Dispose();
-			}
-		}
-	}
+        {
+           throw new WriterException(
+              context,
+              "An unexpected error occurred while writing records. " +
+              "This may be caused by a missing dependency. See inner exception for details.",
+              ex
+            );
+        }
 
 	/// <inheritdoc/>
 	public virtual void WriteRecords<T>(IEnumerable<T> records)
@@ -444,19 +446,23 @@ public class CsvWriter : IWriter
 				NextRecord();
 			}
 			while (enumerator.MoveNext());
-		}
-		catch (Exception ex) when (ex is not CsvHelperException)
-		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
-		}
-		finally
-		{
-			if (enumerator is IDisposable en)
-			{
-				en.Dispose();
-			}
-		}
-	}
+            }
+            catch (Exception ex) when (ex is not CsvHelperException)
+            {
+	            throw new WriterException(
+		            context,
+		            "An unexpected error occurred while writing records. " +
+		            "This may be caused by a missing dependency. See inner exception for details.",
+		            ex
+	            );
+            }
+            finally
+            {
+	            if (enumerator is IDisposable en)
+	            {
+		            en.Dispose();
+	            }
+            }
 
 	/// <inheritdoc/>
 	public virtual async Task WriteRecordsAsync(IEnumerable records, CancellationToken cancellationToken = default)
@@ -502,7 +508,11 @@ public class CsvWriter : IWriter
 		}
 		catch (Exception ex) when (ex is not CsvHelperException)
 		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
+			throw new WriterException(
+				"An unexpected error occurred while writing records. " +
+		        "This may be caused by a missing dependency. See inner exception for details.",
+                ex 		
+			);
 		}
 		finally
 		{
@@ -562,7 +572,12 @@ public class CsvWriter : IWriter
 		}
 		catch (Exception ex) when (ex is not CsvHelperException)
 		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
+			throw new WriterException(
+				context, 
+				"An unexpected error occurred while writing records. " +
+                "This may be caused by a missing dependency. See inner exception for details.",		
+		        ex
+			);
 		}
 		finally
 		{
@@ -621,14 +636,19 @@ public class CsvWriter : IWriter
 			while (await enumerator.MoveNextAsync().ConfigureAwait(false));
 		}
 		catch (Exception ex) when (ex is not CsvHelperException)
-		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
-		}
-		finally
-		{
-			await enumerator.DisposeAsync().ConfigureAwait(false);
-		}
-	}
+        {
+	        throw new WriterException(
+		        context,
+		        "An unexpected error occurred while writing records. " +
+		        "This may be caused by a missing dependency. See inner exception for details.",
+		        ex
+	        );
+        }
+        finally
+        {
+	        await enumerator.DisposeAsync().ConfigureAwait(false);
+        }
+
 
 	/// <inheritdoc/>
 	public virtual void NextRecord()
