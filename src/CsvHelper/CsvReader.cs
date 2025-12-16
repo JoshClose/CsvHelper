@@ -237,6 +237,50 @@ public class CsvReader : IReader
 		}
 	}
 
+	/// <summary>
+	/// Advances the reader to the header record. Does not skip over records and should not be used to read records.
+	/// You need to call <see cref="Read"/> then <see cref="ReadHeader"/> 
+	/// for the headers to be read.
+	/// </summary>
+	/// <returns>True if there are more records, otherwise false.</returns>
+	public virtual bool PreHeaderRead()
+	{
+		// Don't forget about the async method below!
+
+		bool hasMoreData = parser.Read();
+		hasBeenRead = true;
+
+		currentIndex = -1;
+
+		if (detectColumnCountChanges && hasMoreData)
+		{
+			UpdateColumnCount();
+		}
+
+		return hasMoreData;
+	}
+
+	/// <summary>
+	/// Advances the reader to the header record. Does not skip over records and should not be used to read records.
+	/// You need to call <see cref="ReadAsync"/> then <see cref="ReadHeader"/> 
+	/// for the headers to be read.
+	/// </summary>
+	/// <returns>True if there are more records, otherwise false.</returns>
+	public virtual async Task<bool> PreHeaderReadAsync()
+	{
+		bool hasMoreData = await parser.ReadAsync().ConfigureAwait(false);
+		hasBeenRead = true;
+
+		currentIndex = -1;
+
+		if (detectColumnCountChanges && hasMoreData)
+		{
+			UpdateColumnCount();
+		}
+
+		return hasMoreData;
+	}
+
 	/// <inheritdoc/>
 	public virtual bool Read()
 	{
@@ -254,18 +298,7 @@ public class CsvReader : IReader
 
 		if (detectColumnCountChanges && hasMoreRecords)
 		{
-			if (prevColumnCount > 0 && prevColumnCount != parser.Count)
-			{
-				var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
-
-				var args = new ReadingExceptionOccurredArgs(csvException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					throw csvException;
-				}
-			}
-
-			prevColumnCount = parser.Count;
+			UpdateColumnCount();
 		}
 
 		return hasMoreRecords;
@@ -286,21 +319,26 @@ public class CsvReader : IReader
 
 		if (detectColumnCountChanges && hasMoreRecords)
 		{
-			if (prevColumnCount > 0 && prevColumnCount != parser.Count)
-			{
-				var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
-
-				var args = new ReadingExceptionOccurredArgs(csvException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					throw csvException;
-				}
-			}
-
-			prevColumnCount = parser.Count;
+			UpdateColumnCount();
 		}
 
 		return hasMoreRecords;
+	}
+
+	private void UpdateColumnCount()
+	{
+		if (prevColumnCount > 0 && prevColumnCount != parser.Count)
+		{
+			var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
+
+			var args = new ReadingExceptionOccurredArgs(csvException);
+			if (readingExceptionOccurred?.Invoke(args) ?? true)
+			{
+				throw csvException;
+			}
+		}
+
+		prevColumnCount = parser.Count;
 	}
 
 	/// <inheritdoc/>
@@ -843,7 +881,7 @@ public class CsvReader : IReader
 
 		if (hasHeaderRecord && headerRecord == null)
 		{
-			if (!Read())
+			if (!PreHeaderRead())
 			{
 				yield break;
 			}
@@ -924,7 +962,7 @@ public class CsvReader : IReader
 
 		if (hasHeaderRecord && headerRecord == null)
 		{
-			if (!Read())
+			if (!PreHeaderRead())
 			{
 				yield break;
 			}
@@ -989,7 +1027,7 @@ public class CsvReader : IReader
 
 		if (hasHeaderRecord && headerRecord == null)
 		{
-			if (!Read())
+			if (!PreHeaderRead())
 			{
 				yield break;
 			}
@@ -1046,7 +1084,7 @@ public class CsvReader : IReader
 
 		if (hasHeaderRecord && headerRecord == null)
 		{
-			if (!await ReadAsync().ConfigureAwait(false))
+			if (!await PreHeaderReadAsync().ConfigureAwait(false))
 			{
 				yield break;
 			}
@@ -1128,7 +1166,7 @@ public class CsvReader : IReader
 
 		if (hasHeaderRecord && headerRecord == null)
 		{
-			if (!await ReadAsync().ConfigureAwait(false))
+			if (!await PreHeaderReadAsync().ConfigureAwait(false))
 			{
 				yield break;
 			}
@@ -1194,7 +1232,7 @@ public class CsvReader : IReader
 
 		if (hasHeaderRecord && headerRecord == null)
 		{
-			if (!await ReadAsync().ConfigureAwait(false))
+			if (!await PreHeaderReadAsync().ConfigureAwait(false))
 			{
 				yield break;
 			}
