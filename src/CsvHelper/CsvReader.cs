@@ -892,6 +892,7 @@ public class CsvReader : IReader
 	}
 
 	/// <inheritdoc/>
+	/// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed.</exception>
 	public virtual IEnumerable<T> GetRecords<T>(T anonymousTypeDefinition)
 	{
 		if (anonymousTypeDefinition == null)
@@ -908,6 +909,7 @@ public class CsvReader : IReader
 	}
 
 	/// <inheritdoc/>
+	/// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed.</exception>
 	public virtual IEnumerable<object> GetRecords(Type type)
 	{
 		if (disposed)
