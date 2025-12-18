@@ -53,6 +53,25 @@ namespace CsvHelper.Tests.Reading
 		}
 
 		[Fact]
+		public void GetRecordsAnonymousType_Disposed_ThrowsObjectDisposedExceptionTest()
+		{
+			var parserMock = new ParserMock
+			{
+				new[] { "Id", "Name" },
+				new[] { "1", "one" },
+				null
+			};
+
+			IEnumerable<object> records;
+			using (var csv = new CsvReader(parserMock))
+			{
+				records = csv.GetRecords(new { Id = 0, Name = string.Empty }).Cast<object>();
+			}
+
+			Assert.Throws<ObjectDisposedException>(() => records.ToList());
+		}
+
+		[Fact]
 		public void EnumerateRecords_Disposed_ThrowsObjectDisposedExceptionTest()
 		{
 			var parserMock = new ParserMock
