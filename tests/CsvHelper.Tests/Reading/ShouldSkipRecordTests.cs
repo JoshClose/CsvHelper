@@ -83,5 +83,36 @@ namespace CsvHelper.Tests.Reading
 			Assert.Equal("1", csv.GetField(0));
 			Assert.Equal("2", csv.GetField(1));
 		}
+
+		[Fact]
+		public void ShouldSkipIgnoreHeader()
+		{
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+			{
+				ShouldSkipRecord = skipArgs => !skipArgs.Row[0]!.StartsWith("A")
+			};
+
+			var parser = new ParserMock(config)
+			{
+				{ "Name" },
+				{ "Arnold" },
+				{ "Andrew" },
+				{ "Betty" },
+				{ "Frank" }
+			};
+
+			var csv = new CsvReader(parser);
+			var csvReader = new CsvReader(parser);
+			var typeDef = new
+			{
+				Name = string.Empty
+			};
+
+			var records = csvReader.GetRecords(typeDef).ToList();
+
+			Assert.Equal(2, records.Count);
+			Assert.Equal("Arnold", records[0].Name);
+			Assert.Equal("Andrew", records[1].Name);
+		}
 	}
 }
