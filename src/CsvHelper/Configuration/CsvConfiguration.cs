@@ -211,8 +211,7 @@ public record CsvConfiguration : IReaderConfiguration, IWriterConfiguration
 		if (whiteSpaceChars.Contains(quote)) throw new ConfigurationException($"The quote character '{Quote}' cannot be a WhiteSpaceChar.");
 
 		// Delimiter
-		if (Delimiter == NewLine && IsNewLineSet) throw new ConfigurationException($"The delimiter '{Delimiter}' and new line '{NewLine}' cannot be the same.");
-		if (lineEndings.Contains(Delimiter)) throw new ConfigurationException($"The delimiter '{Delimiter}' cannot be a line ending. ('\\r', '\\n', '\\r\\n')");
+		if (Delimiter == NewLine) throw new ConfigurationException($"The delimiter '{Delimiter}' and new line '{NewLine}' cannot be the same.");
 		if (whiteSpaceChars.Contains(Delimiter)) throw new ConfigurationException($"The delimiter '{Delimiter}' cannot be a WhiteSpaceChar.");
 
 		// Detect Delimiter
