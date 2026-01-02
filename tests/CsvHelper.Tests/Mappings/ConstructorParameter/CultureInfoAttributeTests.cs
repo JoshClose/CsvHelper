@@ -190,7 +190,7 @@ namespace CsvHelper.Tests.Mappings.ConstructorParameter
 			public decimal Amount { get; set; }
 		}
 
-		[CultureInfo("invalid")]
+		[CultureInfo("invalid!")]
 		private class InvalidAttribute
 		{
 			[CultureInfo("fr-FR")]
