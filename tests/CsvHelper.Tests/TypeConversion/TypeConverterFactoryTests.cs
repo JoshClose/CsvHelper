@@ -34,14 +34,11 @@ namespace CsvHelper.Tests.TypeConversion
 		[Fact]
 		public void WriteTypeConverterGenericInt()
 		{
-			var expected = """
-			               MaybeNumber
-			               42
-
-			               """;
-
 			var stringWriter = new StringWriter();
 			using var cw = new CsvWriter(stringWriter, CultureInfo.InvariantCulture);
+			var expected = new TestStringBuilder(cw.Configuration.NewLine);
+			expected.AppendLine("MaybeNumber");
+			expected.AppendLine("42");
 			cw.Context.TypeConverterCache.AddConverter(new MyOptionTypeFactory.OptionConverter<int>());
 			cw.WriteRecords(new[]
 			{
@@ -68,14 +65,11 @@ namespace CsvHelper.Tests.TypeConversion
 		[Fact]
 		public void WriteTypeConverterFactory()
 		{
-			var expected = """
-			               MaybeNumber
-			               42
-
-			               """;
-
 			var stringWriter = new StringWriter();
 			using var cw = new CsvWriter(stringWriter, CultureInfo.InvariantCulture);
+			var expected = new TestStringBuilder(cw.Configuration.NewLine);
+			expected.AppendLine("MaybeNumber");
+			expected.AppendLine("42");
 			cw.Context.TypeConverterCache.AddConverterFactory(new MyOptionTypeFactory());
 			cw.WriteRecords(new[]
 			{

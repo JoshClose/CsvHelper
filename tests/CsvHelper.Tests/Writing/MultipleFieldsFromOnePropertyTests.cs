@@ -19,23 +19,26 @@ namespace CsvHelper.Tests.Writing
 		[Fact]
 		public void WriteMultipleFieldsFromSinglePropertyTest()
 		{
+			var culture = new CultureInfo("en-US");
+
 			using (var stream = new MemoryStream())
 			using (var reader = new StreamReader(stream))
 			using (var writer = new StreamWriter(stream))
-			using (var csv = new CsvWriter(writer, new CultureInfo("en-US")))
+			using (var csv = new CsvWriter(writer, culture))
 			{
 				var records = new List<Test>
 				{
-					new Test { Dob = DateTime.Parse("9/6/2017", new CultureInfo("en-US")) }
+					new Test { Dob = DateTime.Parse("9/6/2017", culture) }
 				};
 				csv.Context.RegisterClassMap<TestMap>();
 				csv.WriteRecords(records);
 				writer.Flush();
 				stream.Position = 0;
 
+				var dobText = records[0].Dob.ToString(culture);
 				var expected = new TestStringBuilder(csv.Configuration.NewLine);
 				expected.AppendLine("A,B,C");
-				expected.AppendLine("9/6/2017 12:00:00 AM,9/6/2017 12:00:00 AM,9/6/2017 12:00:00 AM");
+				expected.AppendLine($"{dobText},{dobText},{dobText}");
 
 				Assert.Equal(expected.ToString(), reader.ReadToEnd());
 			}
