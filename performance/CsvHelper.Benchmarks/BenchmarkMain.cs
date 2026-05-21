@@ -6,6 +6,6 @@ internal class BenchmarkMain
 {
 	static void Main(string[] args)
 	{
-		_ = BenchmarkRunner.Run<BenchmarkEnumerateRecords>();
+		_ = BenchmarkSwitcher.FromAssembly(typeof(BenchmarkMain).Assembly).Run(args);
 	}
 }

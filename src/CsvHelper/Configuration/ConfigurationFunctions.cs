@@ -103,14 +103,42 @@ public static class ConfigurationFunctions
 			return false;
 		}
 
+		var length = field.Length;
+
+		// Cheapest checks first: leading/trailing space.
+		if (field[0] == ' ' || field[length - 1] == ' ')
+		{
+			return true;
+		}
+
+		var quote = config.Quote;
+		var delimiter = config.Delimiter;
+		var isNewLineSet = config.IsNewLineSet;
+
+		// Fast path: common configuration (single-char delimiter, default newline handling).
+		// Scan the field once, comparing against quote, delimiter, '\r', and '\n'.
+		if (!isNewLineSet && delimiter.Length == 1)
+		{
+			var delimiterChar = delimiter[0];
+			for (int i = 0; i < length; i++)
+			{
+				var c = field[i];
+				if (c == quote || c == delimiterChar || c == '\r' || c == '\n')
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		// Slow path: multi-char delimiter or custom NewLine.
 		var shouldQuote =
 		(
-			field[0] == ' ' // Starts with a space
-			|| field[field.Length - 1] == ' ' // Ends with a space
-			|| field.Contains(config.Quote) // Contains quote
-			|| !config.IsNewLineSet && field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
-			|| config.IsNewLineSet && field.Contains(config.NewLine) // Contains newline
-			|| (config.Delimiter.Length > 0 && field.Contains(config.Delimiter)) // Contains delimiter
+			field.Contains(quote) // Contains quote
+			|| !isNewLineSet && field.IndexOfAny(lineEndingChars) > -1 // Contains line ending characters
+			|| isNewLineSet && field.Contains(config.NewLine) // Contains newline
+			|| (delimiter.Length > 0 && field.Contains(delimiter)) // Contains delimiter
 		);
 
 		return shouldQuote;
