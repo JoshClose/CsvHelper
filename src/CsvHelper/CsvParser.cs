@@ -322,6 +322,13 @@ public class CsvParser : IParser, IDisposable
 					result == ReadLineResult.Complete && (state == ParserState.LineEnding || state == ParserState.NewLine)
 				;
 
+				// A blank/comment line is fully consumed here, including its line ending.
+				// A new row starts, so loop back to re-evaluate `bufferPosition < charsRead`
+				// before reading the next character. Without this, a blank/comment line
+				// whose line ending falls exactly on the buffer boundary reads past the end
+				// of the buffer and throws IndexOutOfRangeException.
+				var shouldContinue = result == ReadLineResult.Complete && state == ParserState.BlankLine;
+
 				if (result == ReadLineResult.Complete)
 				{
 					state = ParserState.None;
@@ -330,6 +337,11 @@ public class CsvParser : IParser, IDisposable
 				if (shouldReturn)
 				{
 					return result;
+				}
+
+				if (shouldContinue)
+				{
+					continue;
 				}
 			}
 
