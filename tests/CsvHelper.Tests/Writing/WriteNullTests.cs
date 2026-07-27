@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace CsvHelper.Tests.Writing
@@ -77,6 +78,58 @@ namespace CsvHelper.Tests.Writing
 				csv.Flush();
 
 				Assert.Equal(",", writer.ToString());
+			}
+		}
+
+		[Fact]
+		public async Task WriteRecordsEnumerableGenericAsync_RecordIsNull_WritesEmptyRecord()
+		{
+			var records = new List<Foo?>
+			{
+				new Foo { Id = 1, Name = "one"},
+				null,
+				new Foo { Id = 2, Name = "two" },
+			};
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				await csv.WriteRecordsAsync(records);
+				await csv.FlushAsync();
+
+				var expected = new TestStringBuilder(config.NewLine);
+				expected.AppendLine("Id,Name");
+				expected.AppendLine("1,one");
+				expected.AppendLine(",");
+				expected.AppendLine("2,two");
+
+				Assert.Equal(expected, writer.ToString());
+			}
+		}
+
+		[Fact]
+		public async Task WriteRecordsEnumerableAsync_RecordIsNull_WritesEmptyRecord()
+		{
+			IEnumerable records = new List<Foo?>
+			{
+				new Foo { Id = 1, Name = "one"},
+				null,
+				new Foo { Id = 2, Name = "two" },
+			};
+			var config = new CsvConfiguration(CultureInfo.InvariantCulture);
+			using (var writer = new StringWriter())
+			using (var csv = new CsvWriter(writer, config))
+			{
+				await csv.WriteRecordsAsync(records);
+				await csv.FlushAsync();
+
+				var expected = new TestStringBuilder(config.NewLine);
+				expected.AppendLine("Id,Name");
+				expected.AppendLine("1,one");
+				expected.AppendLine("");
+				expected.AppendLine("2,two");
+
+				Assert.Equal(expected, writer.ToString());
 			}
 		}
 

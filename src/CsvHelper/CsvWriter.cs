@@ -489,7 +489,14 @@ public class CsvWriter : IWriter
 
 				var record = enumerator.Current;
 
-				if (write == null || (record != null && writeType.RecordType != record.GetType()))
+				if (record == null)
+				{
+					// Since every record could be a different type, just write a blank line.
+					await NextRecordAsync().ConfigureAwait(false);
+					continue;
+				}
+
+				if (write == null || writeType.RecordType != record.GetType())
 				{
 					writeType = GetTypeInfoForRecord(record);
 					write = recordManager.Value.GetWriteDelegate<object?>(writeType);
