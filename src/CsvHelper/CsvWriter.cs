@@ -20,7 +20,7 @@ namespace CsvHelper;
 /// <summary>
 /// Used to write CSV files.
 /// </summary>
-public class CsvWriter : IWriter
+public partial class CsvWriter : IWriter
 {
 	private readonly TextWriter writer;
 	private readonly CsvContext context;
@@ -346,119 +346,9 @@ public class CsvWriter : IWriter
 		}
 	}
 
-	/// <inheritdoc/>
-	public virtual void WriteRecords(IEnumerable records)
-	{
-		// Changes in this method require changes in method WriteRecords<T>(IEnumerable<T> records) also.
-
-		var enumerator = records.GetEnumerator();
-
-		try
-		{
-			if (!enumerator.MoveNext())
-			{
-				return;
-			}
-
-			if (WriteHeaderFromRecord(enumerator.Current))
-			{
-				NextRecord();
-			}
-
-			Action<object>? write = null;
-			RecordTypeInfo writeType = default;
-
-			do
-			{
-				var record = enumerator.Current;
-
-				if (record == null)
-				{
-					// Since every record could be a different type, just write a blank line.
-					NextRecord();
-					continue;
-				}
-
-				if (write == null || writeType.RecordType != record.GetType())
-				{
-					writeType = GetTypeInfoForRecord(record);
-					write = recordManager.Value.GetWriteDelegate<object>(writeType);
-				}
-
-				write(record);
-				NextRecord();
-			}
-			while (enumerator.MoveNext());
-		}
-		catch (Exception ex) when (ex is not CsvHelperException)
-		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
-		}
-		finally
-		{
-			if (enumerator is IDisposable en)
-			{
-				en.Dispose();
-			}
-		}
-	}
 
 	/// <inheritdoc/>
-	public virtual void WriteRecords<T>(IEnumerable<T> records)
-	{
-		// Changes in this method require changes in method WriteRecords(IEnumerable records) also.
-
-		var enumerator = records.GetEnumerator() ?? throw new InvalidOperationException("Enumerator is null.");
-
-		try
-		{
-			if (WriteHeaderFromType<T>())
-			{
-				NextRecord();
-			}
-
-			if (!enumerator.MoveNext())
-			{
-				return;
-			}
-
-			if (WriteHeaderFromRecord(enumerator.Current))
-			{
-				NextRecord();
-			}
-
-			Action<T>? write = null;
-			RecordTypeInfo writeType = default;
-
-			do
-			{
-				var record = enumerator.Current;
-
-				if (write == null || (record != null && writeType.RecordType != typeof(T)))
-				{
-					writeType = GetTypeInfoForRecord(record);
-					write = recordManager.Value.GetWriteDelegate<T>(writeType);
-				}
-
-				write(record);
-				NextRecord();
-			}
-			while (enumerator.MoveNext());
-		}
-		catch (Exception ex) when (ex is not CsvHelperException)
-		{
-			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
-		}
-		finally
-		{
-			if (enumerator is IDisposable en)
-			{
-				en.Dispose();
-			}
-		}
-	}
-
-	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
 	public virtual async Task WriteRecordsAsync(IEnumerable records, CancellationToken cancellationToken = default)
 	{
 		// These methods should all be the same;
@@ -521,6 +411,7 @@ public class CsvWriter : IWriter
 	}
 
 	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
 	public virtual async Task WriteRecordsAsync<T>(IEnumerable<T> records, CancellationToken cancellationToken = default)
 	{
 		// These methods should all be the same;
@@ -581,6 +472,8 @@ public class CsvWriter : IWriter
 	}
 
 	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
+	[Zomp.SyncMethodGenerator.SkipSyncVersion]
 	public virtual async Task WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)
 	{
 		// These methods should all be the same;
@@ -638,16 +531,7 @@ public class CsvWriter : IWriter
 	}
 
 	/// <inheritdoc/>
-	public virtual void NextRecord()
-	{
-		WriteToBuffer(newLine);
-		FlushBuffer();
-
-		index = 0;
-		row++;
-	}
-
-	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
 	public virtual async Task NextRecordAsync()
 	{
 		WriteToBuffer(newLine);
@@ -658,13 +542,7 @@ public class CsvWriter : IWriter
 	}
 
 	/// <inheritdoc/>
-	public virtual void Flush()
-	{
-		FlushBuffer();
-		writer.Flush();
-	}
-
-	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
 	public virtual async Task FlushAsync()
 	{
 		await FlushBufferAsync().ConfigureAwait(false);

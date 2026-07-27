@@ -49,6 +49,13 @@
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Zomp.SyncMethodGenerator" Version="2.0.33">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
 	<!-- .NET 4.6.2 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />

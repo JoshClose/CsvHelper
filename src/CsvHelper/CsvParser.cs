@@ -13,7 +13,7 @@ namespace CsvHelper;
 /// <summary>
 /// Parses a CSV file.
 /// </summary>
-public class CsvParser : IParser, IDisposable
+public partial class CsvParser : IParser, IDisposable
 {
 	private readonly IParserConfiguration configuration;
 	private readonly FieldCache fieldCache = new FieldCache();
@@ -204,42 +204,9 @@ public class CsvParser : IParser, IDisposable
 		processedFields = new string[128];
 	}
 
-	/// <inheritdoc/>
-	public bool Read()
-	{
-		isRecordProcessed = false;
-		rowStartPosition = bufferPosition;
-		fieldStartPosition = rowStartPosition;
-		fieldsPosition = 0;
-		quoteCount = 0;
-		row++;
-		rawRow++;
-		var c = '\0';
-		var cPrev = c;
-
-		while (true)
-		{
-			if (bufferPosition >= charsRead)
-			{
-				if (!FillBuffer())
-				{
-					return ReadEndOfFile();
-				}
-
-				if (row == 1 && detectDelimiter)
-				{
-					DetectDelimiter();
-				}
-			}
-
-			if (ReadLine(ref c, ref cPrev) == ReadLineResult.Complete)
-			{
-				return true;
-			}
-		}
-	}
 
 	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
 	public async Task<bool> ReadAsync()
 	{
 		isRecordProcessed = false;
