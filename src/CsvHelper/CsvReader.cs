@@ -14,7 +14,7 @@ namespace CsvHelper;
 /// <summary>
 /// Reads data that was parsed from <see cref="IParser" />.
 /// </summary>
-public class CsvReader : IReader
+public partial class CsvReader : IReader
 {
 	private readonly Lazy<RecordManager> recordManager;
 	private readonly bool detectColumnCountChanges;
@@ -237,41 +237,9 @@ public class CsvReader : IReader
 		}
 	}
 
-	/// <inheritdoc/>
-	public virtual bool Read()
-	{
-		// Don't forget about the async method below!
-
-		bool hasMoreRecords;
-		do
-		{
-			hasMoreRecords = parser.Read();
-			hasBeenRead = true;
-		}
-		while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(this)) ?? false));
-
-		currentIndex = -1;
-
-		if (detectColumnCountChanges && hasMoreRecords)
-		{
-			if (prevColumnCount > 0 && prevColumnCount != parser.Count)
-			{
-				var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
-
-				var args = new ReadingExceptionOccurredArgs(csvException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					throw csvException;
-				}
-			}
-
-			prevColumnCount = parser.Count;
-		}
-
-		return hasMoreRecords;
-	}
 
 	/// <inheritdoc/>
+	[Zomp.SyncMethodGenerator.CreateSyncVersion]
 	public virtual async Task<bool> ReadAsync()
 	{
 		bool hasMoreRecords;
