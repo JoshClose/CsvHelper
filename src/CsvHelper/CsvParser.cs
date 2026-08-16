@@ -57,6 +57,7 @@ public class CsvParser : IParser, IDisposable
 	private string[] processedFields;
 	private int fieldsPosition;
 	private bool disposed;
+	private bool bomChecked;
 	private int quoteCount;
 	private char[] processFieldBuffer;
 	private int processFieldBufferSize;
@@ -767,8 +768,43 @@ public class CsvParser : IParser, IDisposable
 
 		charsRead += charsLeft;
 
+		RemoveByteOrderMark(charsLeft);
+
 		return true;
 	}
+
+	/// <summary>
+	/// Removes a byte order mark from the very start of the input.
+	/// </summary>
+	/// <remarks>
+	/// A <see cref="StreamReader"/> consumes the BOM itself while detecting the
+	/// encoding, so this only matters when the text arrives already decoded --
+	/// a <see cref="StringReader"/> over an API response or a database column,
+	/// for instance. Left in place the BOM becomes part of the first field:
+	/// silently, when that field is unquoted, and as bad data when it is
+	/// quoted, since the field then starts with a character before its opening
+	/// quote. It is dropped from the buffer rather than skipped over so that
+	/// positions, counts and RawRecord all read as though it was never sent.
+	/// </remarks>
+	private void RemoveByteOrderMark(int charsLeft)
+	{
+		if (bomChecked)
+		{
+			return;
+		}
+
+		bomChecked = true;
+
+		// Only the true start of the input: nothing buffered, nothing consumed.
+		if (charsLeft != 0 || charCount != 0 || charsRead <= 0 || buffer[0] != '\uFEFF')
+		{
+			return;
+		}
+
+		Array.Copy(buffer, 1, buffer, 0, charsRead - 1);
+		charsRead--;
+	}
+
 
 	private async Task<bool> FillBufferAsync()
 	{
@@ -796,6 +832,8 @@ public class CsvParser : IParser, IDisposable
 		}
 
 		charsRead += charsLeft;
+
+		RemoveByteOrderMark(charsLeft);
 
 		return true;
 	}
