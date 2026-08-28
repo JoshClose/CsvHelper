@@ -93,19 +93,7 @@ namespace CsvHelper.Tests.Async
 				};
 				source.Cancel();
 
-				try
-				{
-					await csv.WriteRecordsAsync(records, source.Token);
-				}
-				catch (WriterException ex)
-				{
-					if (ex.InnerException is OperationCanceledException || ex.InnerException is TaskCanceledException)
-					{
-						return;
-					}
-				}
-
-				throw new XUnitException("Did not throw exception");
+				await Assert.ThrowsAsync<OperationCanceledException>(() => csv.WriteRecordsAsync(records, source.Token));
 			}
 		}
 

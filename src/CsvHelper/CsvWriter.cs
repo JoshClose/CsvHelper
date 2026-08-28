@@ -500,7 +500,7 @@ public class CsvWriter : IWriter
 			}
 			while (enumerator.MoveNext());
 		}
-		catch (Exception ex) when (ex is not CsvHelperException)
+		catch (Exception ex) when (ex is not CsvHelperException and not OperationCanceledException)
 		{
 			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 		}
@@ -560,7 +560,7 @@ public class CsvWriter : IWriter
 			}
 			while (enumerator.MoveNext());
 		}
-		catch (Exception ex) when (ex is not CsvHelperException)
+		catch (Exception ex) when (ex is not CsvHelperException and not OperationCanceledException)
 		{
 			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 		}
@@ -620,7 +620,7 @@ public class CsvWriter : IWriter
 			}
 			while (await enumerator.MoveNextAsync().ConfigureAwait(false));
 		}
-		catch (Exception ex) when (ex is not CsvHelperException)
+		catch (Exception ex) when (ex is not CsvHelperException and not OperationCanceledException)
 		{
 			throw new WriterException(context, "An unexpected error occurred. See inner exception for details.", ex);
 		}
