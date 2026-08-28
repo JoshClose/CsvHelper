@@ -62,6 +62,18 @@ namespace CsvHelper.Tests.TypeConversion
 			}
 		}
 
+		[Fact]
+		public void GetRecords_IndexAttributeWithHeader_ReadsRemainingFields()
+		{
+			using (var reader = new StringReader("Id,Description,Tag1,Tag2\r\nitem,example,1,2"))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+			{
+				var record = csv.GetRecords<IndexAttributeWithHeaderTest>().Single();
+
+				Assert.Equal(new int?[] { 1, 2 }, record.TagIds);
+			}
+		}
+
 		private class Test
 		{
 			public List<int?> List { get; set; } = new List<int?>();
@@ -96,6 +108,18 @@ namespace CsvHelper.Tests.TypeConversion
 			[Index(0, 2)]
 			[NullValues("NULL")]
 			public List<int?> List { get; set; } = new List<int?>();
+		}
+
+		private class IndexAttributeWithHeaderTest
+		{
+			[Index(0)]
+			public string? Id { get; set; }
+
+			[Index(1)]
+			public string? Description { get; set; }
+
+			[Index(2, -1)]
+			public List<int?>? TagIds { get; set; }
 		}
 	}
 }

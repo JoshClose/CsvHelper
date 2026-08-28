@@ -365,9 +365,10 @@ public abstract class ClassMap
 
 			var typeConverterType = context.TypeConverterCache.GetConverter(member).GetType();
 
-			if (context.Configuration.HasHeaderRecord && enumerableConverters.Contains(typeConverterType))
+			if (context.Configuration.HasHeaderRecord && enumerableConverters.Contains(typeConverterType) &&
+				!Attribute.IsDefined(member, typeof(IndexAttribute), true))
 			{
-				// Enumerable converters can't write the header properly, so skip it.
+				// Enumerable converters need an explicit index range to map header fields.
 				continue;
 			}
 
