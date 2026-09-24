@@ -96,7 +96,7 @@ public class ByteArrayConverter : DefaultTypeConverter
 
 		var length = has0x
 			? (hex.Length - 1) / ByteLength
-			: hex.Length + 1 / ByteLength;
+			: (hex.Length + 1) / ByteLength;
 		var byteArray = new byte[length];
 		var has0xOffset = has0x ? 1 : 0;
 

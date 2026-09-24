@@ -43,6 +43,22 @@ namespace CsvHelper.Tests.TypeConversion
 				},
 				new
 				{
+					// Regression test for https://github.com/JoshClose/CsvHelper/issues/2225:
+					// hex strings without the "0x" prefix and without dashes previously
+					// produced a byte array of the wrong length due to an operator
+					// precedence bug in HexStringToByteArray.
+					Options = ByteArrayConverterOptions.Hexadecimal,
+					FieldStrings = new[] { "DEAD", "B33FBEEF", "EA5EEA5EEA5E", "CA75CA75CA75CA75" },
+					Expected = new []
+					{
+						new byte[] { 0xDE, 0xAD },
+						new byte[] { 0xB3, 0x3F, 0xBE, 0xEF },
+						new byte[] { 0xEA, 0x5E, 0xEA, 0x5E, 0xEA, 0x5E },
+						new byte[] { 0xCA, 0x75, 0xCA, 0x75, 0xCA, 0x75, 0xCA, 0x75 }
+					}
+				},
+				new
+				{
 					Options = ByteArrayConverterOptions.Base64,
 					FieldStrings = new []
 					{
@@ -67,6 +83,7 @@ namespace CsvHelper.Tests.TypeConversion
 				foreach( var f in t.FieldStrings.Zip( t.Expected, ( test, expected ) => new { test, expected } ) )
 				{
 					var actual = (byte[]?)converter.ConvertFromString(f.test, null!, null!) ?? [];
+					Assert.Equal( f.expected.Length, actual.Length );
 					foreach( var b in actual.Zip( f.expected, ( a, e ) => new { a, e } ) )
 					{
 						Assert.Equal( b.e, b.a );
