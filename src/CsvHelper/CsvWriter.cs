@@ -9,8 +9,10 @@ using System.Collections;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 #pragma warning disable 649
 #pragma warning disable 169
@@ -128,13 +130,19 @@ public class CsvWriter : IWriter
 	public virtual void WriteConvertedField(string? field, Type fieldType)
 	{
 		this.fieldType = fieldType;
-
-		if (field == null)
+		try
 		{
-			return;
-		}
+			if (field == null)
+			{
+				return;
+			}
 
-		WriteField(field);
+			WriteField(field);
+		}
+		finally
+		{
+			this.fieldType = null;
+		}
 	}
 
 	/// <inheritdoc/>
@@ -773,6 +781,11 @@ public class CsvWriter : IWriter
 		}
 		else if (injectionOptions == InjectionOptions.Strip)
 		{
+			if (field[injectionCharIndex] == '-' && IsSafeNegativeNumber(field))
+			{
+				return field;
+			}
+
 			while (true)
 			{
 				field = field.Substring(1);
@@ -790,6 +803,52 @@ public class CsvWriter : IWriter
 		}
 
 		return field;
+	}
+
+	private bool IsSafeNegativeNumber(string field)
+	{
+		if (fieldType == null)
+		{
+			return false;
+		}
+
+		var type = Nullable.GetUnderlyingType(fieldType) ?? fieldType;
+		if (type.IsEnum)
+		{
+			return false;
+		}
+
+		switch (Type.GetTypeCode(type))
+		{
+			case TypeCode.Byte:
+			case TypeCode.SByte:
+			case TypeCode.Int16:
+			case TypeCode.UInt16:
+			case TypeCode.Int32:
+			case TypeCode.UInt32:
+			case TypeCode.Int64:
+			case TypeCode.UInt64:
+			case TypeCode.Single:
+			case TypeCode.Double:
+			case TypeCode.Decimal:
+				break;
+			default:
+				if (type != typeof(BigInteger))
+				{
+					return false;
+				}
+				break;
+		}
+
+		const string pattern = @"\A-(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?\z";
+		if (Regex.IsMatch(field, pattern))
+		{
+			return true;
+		}
+
+		return mode == CsvMode.RFC4180 && quote == '"' && escapeString == quoteString &&
+			field.Length > 2 && field[0] == quote && field[field.Length - 1] == quote &&
+			Regex.IsMatch(field.Substring(1, field.Length - 2), pattern);
 	}
 
 	/// <summary>
