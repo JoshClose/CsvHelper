@@ -351,7 +351,7 @@ public static class CsvRecordMapper
 		Factory<T>.Current = new Registration<T>((reader, prefix) => prefix.Length == 0
 			? factory(reader)
 			: throw new InvalidOperationException(
-				$"The mapper of {typeof(T)} does not support column prefixes, so it cannot read a nested record with the prefix '{prefix}'."), null);
+				$"The mapper of {typeof(T)} does not support column prefixes, so it cannot read a nested record with the prefix '{prefix}'."), null, null, null);
 	}
 
 	/// <summary>
@@ -372,15 +372,45 @@ public static class CsvRecordMapper
 	public static void Register<T>(Func<CsvReader, string, CsvRecordMapper<T>> factory, IReadOnlyList<int>? fieldWidths = null)
 	{
 		ArgumentNullException.ThrowIfNull(factory);
-		IReadOnlyList<int>? widths = null;
-		if (fieldWidths is not null)
-		{
-			var copy = new int[fieldWidths.Count];
-			for (var i = 0; i < copy.Length; i++) copy[i] = fieldWidths[i];
-			widths = new ReadOnlyCollection<int>(copy);
-		}
+		Factory<T>.Current = new Registration<T>(factory, Widths(fieldWidths), null, null);
+	}
 
-		Factory<T>.Current = new Registration<T>(factory, widths);
+	/// <summary>
+	/// Registers the mapper factory of <typeparamref name="T"/> and its fixed-width layout, with the description of the
+	/// members that its mappers read and the factory of its projections: mappers that read only some of the members, so
+	/// that the columns of the others are neither looked up nor parsed (CsvHelper.Linq reads only the members that a query
+	/// uses). Code generated for <see cref="CsvRecordAttribute"/> types calls this when their assembly is loaded, if the
+	/// assembly references CsvHelper.Linq or has <see cref="CsvRecordProjectionsAttribute"/>. A later registration for the
+	/// same type replaces an earlier one.
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="factory">
+	/// Creates a mapper for the header of the given reader, which puts the given text in front of the header names
+	/// it looks up (<see cref="CsvRecordMapper{T}.ColumnPrefix"/>).
+	/// </param>
+	/// <param name="fieldWidths">
+	/// The widths of the columns, which <see cref="GetFieldWidths{T}"/> returns, or <see langword="null"/> when the type
+	/// has no fixed-width layout.
+	/// </param>
+	/// <param name="members">
+	/// Describes the members that the mappers read, in the order of the flags that <paramref name="projection"/> takes. It
+	/// is called once, when the members are first needed.
+	/// </param>
+	/// <param name="projection">
+	/// Creates a mapper for the header of the given reader, with the given column prefix, that reads only the members
+	/// whose flag is set: one flag for each member that <paramref name="members"/> describes, in that order. The mapper
+	/// must not keep the array. The other members get their defaults, and their columns may be missing.
+	/// </param>
+	/// <exception cref="ArgumentNullException">
+	/// <paramref name="factory"/>, <paramref name="members"/> or <paramref name="projection"/> is <see langword="null"/>.
+	/// </exception>
+	public static void Register<T>(Func<CsvReader, string, CsvRecordMapper<T>> factory, IReadOnlyList<int>? fieldWidths,
+		Func<IReadOnlyList<CsvRecordMember>> members, Func<CsvReader, string, bool[], CsvRecordMapper<T>> projection)
+	{
+		ArgumentNullException.ThrowIfNull(factory);
+		ArgumentNullException.ThrowIfNull(members);
+		ArgumentNullException.ThrowIfNull(projection);
+		Factory<T>.Current = new Registration<T>(factory, Widths(fieldWidths), members, projection);
 	}
 
 	/// <summary>
@@ -423,6 +453,87 @@ public static class CsvRecordMapper
 		var registration = Factory<T>.Current ?? Load<T>();
 
 		return registration.Create(reader, columnPrefix);
+	}
+
+	/// <summary>
+	/// Gets the members of <typeparamref name="T"/> that its generated mapper reads, when projections are generated for
+	/// it (its assembly references CsvHelper.Linq or has <see cref="CsvRecordProjectionsAttribute"/>).
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="members">
+	/// The members, constructor parameters first, in the order the mapper reads them; empty when the method returns
+	/// <see langword="false"/>.
+	/// </param>
+	/// <returns>
+	/// <see langword="true"/> when the members are known, so that <see cref="CreateProjection{T}(CsvReader, IEnumerable{string})"/>
+	/// can select them; <see langword="false"/> when <typeparamref name="T"/> has no mapper, a hand-written mapper, no
+	/// projections, or is a dynamic record type.
+	/// </returns>
+	public static bool TryGetMembers<T>(out IReadOnlyList<CsvRecordMember> members)
+	{
+		if (Find<T>() is { Projection: not null } registration)
+		{
+			members = registration.Members;
+
+			return true;
+		}
+
+		members = [];
+
+		return false;
+	}
+
+	/// <summary>
+	/// Creates a mapper of <typeparamref name="T"/> for the header of <paramref name="reader"/> that reads only
+	/// <paramref name="members"/>, so the columns of the others are neither looked up nor parsed. The other members get
+	/// their defaults (constructor parameters their default values; members that are not set by the constructor or an
+	/// <see langword="init"/> accessor keep their own initial values), their columns may be missing from the header, and
+	/// their <see cref="CsvValidateAttribute"/> checks do not run. The header is read now if it has not been yet.
+	/// </summary>
+	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type with projections (see <see cref="TryGetMembers{T}"/>).</typeparam>
+	/// <param name="reader">The reader whose header names the columns.</param>
+	/// <param name="members">The names of the members to read (<see cref="CsvRecordMember.Name"/>), in any order.</param>
+	/// <returns>
+	/// A mapper that reads the selected members of records of <paramref name="reader"/>, and of any reader with the same
+	/// columns; the full mapper when every member is selected.
+	/// </returns>
+	/// <exception cref="ArgumentNullException"><paramref name="reader"/> or <paramref name="members"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="members"/> names a member that the mapper does not read.</exception>
+	/// <exception cref="InvalidOperationException"><typeparamref name="T"/> has no mapper.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> has no projections.</exception>
+	/// <exception cref="KeyNotFoundException">
+	/// The header lacks a column that a selected member requires, or the input has no header and a selected required
+	/// member has no column index.
+	/// </exception>
+	public static CsvRecordMapper<T> CreateProjection<T>(CsvReader reader, IEnumerable<string> members)
+	{
+		ArgumentNullException.ThrowIfNull(reader);
+		ArgumentNullException.ThrowIfNull(members);
+		var registration = Factory<T>.Current ?? Load<T>();
+		if (registration.Projection is not { } projection)
+		{
+			throw new NotSupportedException(
+				$"{typeof(T)} has no projections: its mapper is not generated, or its assembly neither references CsvHelper.Linq nor has " +
+				"[assembly: CsvRecordProjections].");
+		}
+
+		var selected = new bool[registration.Members.Count];
+		var count = 0;
+		foreach (var name in members)
+		{
+			if (name is null || !registration.TryGetOrdinal(name, out var ordinal))
+			{
+				throw new ArgumentException($"{typeof(T)} has no member '{name}' that its mapper reads.", nameof(members));
+			}
+
+			if (!selected[ordinal])
+			{
+				selected[ordinal] = true;
+				count++;
+			}
+		}
+
+		return count == selected.Length ? registration.Create(reader, "") : projection(reader, "", selected);
 	}
 
 	/// <summary>
@@ -475,20 +586,46 @@ public static class CsvRecordMapper
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	private static Registration<T> Load<T>()
+	private static Registration<T> Load<T>() =>
+		Find<T>() ?? throw new InvalidOperationException(
+			$"{typeof(T)} has no CSV mapper. Mark it [CsvRecord] and partial, and reference the CsvHelper source generator.");
+
+	/// <summary>The registration of <typeparamref name="T"/>, loading it first when needed; <see langword="null"/> when it has none.</summary>
+	private static Registration<T>? Find<T>()
 	{
+		if (Factory<T>.Current is { } current)
+		{
+			return current;
+		}
+
 		// GetRecords<dynamic>() and GetRecords<CsvDynamicRecord>() read CsvDynamicRecords.
 		if (typeof(T) == typeof(object) || typeof(T) == typeof(CsvDynamicRecord))
 		{
-			return Factory<T>.Current = new Registration<T>(DynamicMapper<T>, null);
+			return Factory<T>.Current = new Registration<T>(DynamicMapper<T>, null, null, null);
 		}
 
 		// The generated registration is a module initializer, which the runtime runs once code of that assembly
 		// runs: not yet when T comes from an assembly that has done nothing else so far.
 		RuntimeHelpers.RunModuleConstructor(typeof(T).Module.ModuleHandle);
 
-		return Factory<T>.Current ?? throw new InvalidOperationException(
-			$"{typeof(T)} has no CSV mapper. Mark it [CsvRecord] and partial, and reference the CsvHelper source generator.");
+		return Factory<T>.Current;
+	}
+
+	/// <summary>A read-only copy of a fixed-width layout, or <see langword="null"/> for none.</summary>
+	private static IReadOnlyList<int>? Widths(IReadOnlyList<int>? fieldWidths)
+	{
+		if (fieldWidths is null)
+		{
+			return null;
+		}
+
+		var copy = new int[fieldWidths.Count];
+		for (var i = 0; i < copy.Length; i++)
+		{
+			copy[i] = fieldWidths[i];
+		}
+
+		return new ReadOnlyCollection<int>(copy);
 	}
 
 	/// <summary>Creates the mapper of dynamic records, for <typeparamref name="T"/> <see cref="object"/> or <see cref="CsvDynamicRecord"/>.</summary>
@@ -589,19 +726,28 @@ public static class CsvRecordMapper
 	}
 
 	/// <summary>
-	/// A registered mapper factory and fixed-width layout, replaced as a whole so that a reader never sees the factory
-	/// of one registration with the layout of another.
+	/// A registered mapper factory, fixed-width layout and projections, replaced as a whole so that a reader never sees
+	/// the factory of one registration with the layout or members of another.
 	/// </summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	private sealed class Registration<T>
 	{
+		// Describes the members, called on first use; null without projections.
+		private readonly Func<IReadOnlyList<CsvRecordMember>>? describe;
+		private Described? described;
+
 		/// <summary>Creates a registration.</summary>
 		/// <param name="create">Creates a mapper for a reader and a column prefix.</param>
 		/// <param name="fieldWidths">The read-only fixed-width layout, or <see langword="null"/> for none.</param>
-		public Registration(Func<CsvReader, string, CsvRecordMapper<T>> create, IReadOnlyList<int>? fieldWidths)
+		/// <param name="describe">Describes the members, or <see langword="null"/> without projections.</param>
+		/// <param name="projection">Creates projections, or <see langword="null"/> for none.</param>
+		public Registration(Func<CsvReader, string, CsvRecordMapper<T>> create, IReadOnlyList<int>? fieldWidths,
+			Func<IReadOnlyList<CsvRecordMember>>? describe, Func<CsvReader, string, bool[], CsvRecordMapper<T>>? projection)
 		{
 			Create = create;
 			FieldWidths = fieldWidths;
+			this.describe = describe;
+			Projection = projection;
 		}
 
 		/// <summary>Creates a mapper for the header of the given reader, with the given column prefix.</summary>
@@ -609,5 +755,70 @@ public static class CsvRecordMapper
 
 		/// <summary>The widths of the columns that <see cref="GetFieldWidths{T}"/> returns, or <see langword="null"/> for none.</summary>
 		public IReadOnlyList<int>? FieldWidths { get; }
+
+		/// <summary>Creates a mapper that reads the members whose flag is set, or <see langword="null"/> without projections.</summary>
+		public Func<CsvReader, string, bool[], CsvRecordMapper<T>>? Projection { get; }
+
+		/// <summary>The members that the mappers read, in the order of the projection's flags; empty without projections.</summary>
+		public IReadOnlyList<CsvRecordMember> Members => Describe().Members;
+
+		/// <summary>Finds the index of a member among <see cref="Members"/> by its name.</summary>
+		/// <param name="name">The name of the member, matched exactly.</param>
+		/// <param name="ordinal">The index of the member, or -1.</param>
+		/// <returns>Whether the type has the member.</returns>
+		public bool TryGetOrdinal(string name, out int ordinal)
+		{
+			if (Describe().Ordinals.TryGetValue(name, out ordinal))
+			{
+				return true;
+			}
+
+			ordinal = -1;
+
+			return false;
+		}
+
+		/// <summary>The members and their indexes by name, described once; every thread gets the same instance.</summary>
+		private Described Describe()
+		{
+			if (Volatile.Read(ref described) is { } existing)
+			{
+				return existing;
+			}
+
+			var created = new Described(describe?.Invoke() ?? []);
+
+			return Interlocked.CompareExchange(ref described, created, null) ?? created;
+		}
+
+		/// <summary>A copy of the members that the registration describes, and their indexes by name.</summary>
+		private sealed class Described
+		{
+			/// <summary>Copies the members and indexes them by name; the first member with a name wins.</summary>
+			/// <param name="members">The members, as the registration describes them.</param>
+			/// <exception cref="InvalidOperationException">The description has a <see langword="null"/> member.</exception>
+			public Described(IReadOnlyList<CsvRecordMember> members)
+			{
+				var copy = new CsvRecordMember[members.Count];
+				var ordinals = new Dictionary<string, int>(copy.Length, StringComparer.Ordinal);
+				for (var i = 0; i < copy.Length; i++)
+				{
+					copy[i] = members[i] ?? throw new InvalidOperationException($"The description of the members of {typeof(T)} has a null member.");
+					if (!ordinals.ContainsKey(copy[i].Name))
+					{
+						ordinals.Add(copy[i].Name, i);
+					}
+				}
+
+				Members = new ReadOnlyCollection<CsvRecordMember>(copy);
+				Ordinals = ordinals;
+			}
+
+			/// <summary>The members, read-only.</summary>
+			public IReadOnlyList<CsvRecordMember> Members { get; }
+
+			/// <summary>The index of each member by its name.</summary>
+			public Dictionary<string, int> Ordinals { get; }
+		}
 	}
 }

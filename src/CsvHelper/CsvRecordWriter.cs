@@ -145,10 +145,14 @@ public static class CsvRecordWriter
 		return factory(columnPrefix);
 	}
 
-	/// <summary>Whether <typeparamref name="T"/> has a record writer, generated or registered.</summary>
+	/// <summary>
+	/// Whether <typeparamref name="T"/> has a record writer, generated or registered, so that <see cref="Create{T}()"/>
+	/// does not throw for want of one. (A generated writer may still throw when the type's records cannot be written,
+	/// with the reason.)
+	/// </summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	/// <returns><see langword="true"/> when a factory is registered for the type.</returns>
-	internal static bool IsRegistered<T>()
+	public static bool IsRegistered<T>()
 	{
 		if (Factory<T>.Current is not null)
 		{

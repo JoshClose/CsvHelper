@@ -21,7 +21,7 @@ through it concept by concept, with before and after code.
 <!-- if:released -->
 Add the package:
 
-```
+```shell
 dotnet add package CsvHelper
 ```
 
@@ -30,7 +30,7 @@ The package includes the source generator for `[CsvRecord]` types, so there is n
 <!-- if:unreleased -->
 CsvHelper is not on NuGet yet. Build it from source and reference the project:
 
-```
+```shell
 git clone https://github.com/JoshClose/CsvHelper.git
 cd CsvHelper
 dotnet build -c Release

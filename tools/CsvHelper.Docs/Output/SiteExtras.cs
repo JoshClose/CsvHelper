@@ -52,8 +52,7 @@ internal static class SiteExtras
 		Directory.CreateDirectory(vendor);
 		foreach (var file in new[] { "site.js", "search.js" }) File.Copy(Path.Combine(site.Repo, "docs", "assets", file), Path.Combine(assets, file), overwrite: true);
 		File.Copy(Path.Combine(nodeModules, "minisearch", "dist", "umd", "index.js"), Path.Combine(vendor, "minisearch.js"), overwrite: true);
-		File.Copy(Path.Combine(nodeModules, "@highlightjs", "cdn-assets", "highlight.min.js"), Path.Combine(vendor, "highlight.min.js"), overwrite: true);
-		File.Copy(Path.Combine(nodeModules, "@highlightjs", "cdn-assets", "languages", "powershell.min.js"), Path.Combine(vendor, "powershell.min.js"), overwrite: true);
+
 
 		// Images the pages show, such as the sponsors' logos on the home page (before the link check, which checks src).
 		var images = Path.Combine(assets, "images");

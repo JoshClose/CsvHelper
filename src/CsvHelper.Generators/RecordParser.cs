@@ -99,7 +99,14 @@ internal sealed class RecordParser
 	private readonly List<FormatArrayModel> formatArrays = [];
 	private readonly List<ValidatorModel> validators = [];
 	private readonly List<CollectionModel> collections = [];
+	private readonly List<MemberModel> members = [];
+	// The members that read each nested mapper, by its index in nested.
+	private readonly List<List<int>> nestedOwners = [];
 	private bool needsProvider;
+	// The index in members of the member being read: the owner of the columns, steps, collections and nested mappers added for it.
+	private int owner;
+	// How the member being read is read, set by MemberValue: Column, Collection, Nested or Constant.
+	private string memberKind = "Column";
 
 	private RecordParser(GeneratorAttributeSyntaxContext context, INamedTypeSymbol? mappedType, CancellationToken cancellationToken)
 	{
@@ -203,7 +210,8 @@ internal sealed class RecordParser
 			Display(host),
 			hint.ToString(),
 			EquatableArray<ColumnModel>.Empty,
-			EquatableArray<string>.Empty,
+			EquatableArray<MemberModel>.Empty,
+			EquatableArray<ArgumentModel>.Empty,
 			EquatableArray<AssignmentModel>.Empty,
 			EquatableArray<AssignmentModel>.Empty,
 			EquatableArray<StepModel>.Empty,
@@ -259,7 +267,7 @@ internal sealed class RecordParser
 			return model with { Diagnostics = diagnostics.ToEquatableArray() };
 		}
 
-		var arguments = new List<string>();
+		var arguments = new List<ArgumentModel>();
 		var parameterNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		foreach (var parameter in constructor.Parameters)
 		{
@@ -273,19 +281,21 @@ internal sealed class RecordParser
 			// The member that the parameter sets is what the record writer writes; a constant needs none.
 			var access = settings.Constant is null ? WriteAccess(property, display, parameter.Name) : null;
 			var optional = settings.Optional || parameter.HasExplicitDefaultValue;
+			owner = members.Count;
 			var value = MemberValue(parameter.Type, settings, display, location, access, 0, 0, optional, out var column);
 			if (value is null)
 			{
 				continue;
 			}
 
+			var fallback = parameter.HasExplicitDefaultValue ? Literal(parameter.ExplicitDefaultValue, parameter.Type) : Default(parameter.Type);
 			if (optional && column >= 0)
 			{
-				var fallback = parameter.HasExplicitDefaultValue ? Literal(parameter.ExplicitDefaultValue, parameter.Type) : Default(parameter.Type);
 				value = $"{Field(column)} >= 0 ? {Parenthesize(value)} : {fallback}";
 			}
 
-			arguments.Add(value);
+			arguments.Add(new ArgumentModel(value, ProjectionFallback(parameter, value, fallback), owner));
+			members.Add(MemberOf(property?.Name ?? parameter.Name, parameter.Type, settings, optional, true));
 		}
 
 		var initializers = new List<AssignmentModel>();
@@ -342,18 +352,21 @@ internal sealed class RecordParser
 			var target = Escape(member.Name);
 			// A constant is written as it is, whatever the member holds.
 			var access = settings.Constant is null ? WriteAccess(member, display, member.Name) : null;
+			owner = members.Count;
 			var value = MemberValue(memberType, settings, display, location, access, 1, Depth(member.ContainingType), settings.Optional, out var column);
 			if (value is null)
 			{
 				continue;
 			}
 
+			var mustInitialize = initOnly || required;
 			// Constants, nested records and collections have no column of their own to be missing.
-			if (!settings.Optional || column < 0) initializers.Add(new AssignmentModel(target, value, column));
+			if (!settings.Optional || column < 0) initializers.Add(new AssignmentModel(target, value, column, owner, mustInitialize));
 			// init and required members can only be set in the initializer: they get their default when missing.
-			else if (initOnly || required) initializers.Add(new AssignmentModel(target, $"{Field(column)} >= 0 ? {Parenthesize(value)} : {Default(memberType)}", column));
+			else if (mustInitialize) initializers.Add(new AssignmentModel(target, $"{Field(column)} >= 0 ? {Parenthesize(value)} : {Default(memberType)}", column, owner, true));
 			// Others keep the value of their own initializer when their column is missing.
-			else assignments.Add(new AssignmentModel(target, value, column));
+			else assignments.Add(new AssignmentModel(target, value, column, owner, false));
+			members.Add(MemberOf(member.Name, memberType, settings, settings.Optional, false));
 		}
 
 		if (mapped)
@@ -369,6 +382,7 @@ internal sealed class RecordParser
 		{
 			Containers = containers.ToEquatableArray(),
 			Columns = columns.ToEquatableArray(),
+			Members = members.ToEquatableArray(),
 			Arguments = arguments.ToEquatableArray(),
 			Initializers = initializers.ToEquatableArray(),
 			Assignments = assignments.ToEquatableArray(),
@@ -378,7 +392,7 @@ internal sealed class RecordParser
 			Booleans = booleans.ToEquatableArray(),
 			Converters = converters.ToEquatableArray(),
 			Cultures = cultures.ToEquatableArray(),
-			Nested = nested.ToEquatableArray(),
+			Nested = nested.Select((n, i) => n with { Owners = nestedOwners[i].ToEquatableArray() }).ToList().ToEquatableArray(),
 			FormatArrays = formatArrays.ToEquatableArray(),
 			Validators = validators.ToEquatableArray(),
 			Collections = collections.ToEquatableArray(),
@@ -389,6 +403,42 @@ internal sealed class RecordParser
 			Writer = writer,
 			Diagnostics = diagnostics.ToEquatableArray(),
 		};
+	}
+
+	/// <summary>
+	/// Describes the member just read for <see cref="RecordModel.Members"/>, with the kind that <see cref="MemberValue"/>
+	/// found.
+	/// </summary>
+	/// <param name="name">The name of the property or field, or of the constructor parameter when it sets none.</param>
+	/// <param name="memberType">The type of the member or parameter.</param>
+	/// <param name="settings">Its attributes.</param>
+	/// <param name="optional">Whether its columns may be missing.</param>
+	/// <param name="parameter">Whether a constructor parameter sets it.</param>
+	private MemberModel MemberOf(string name, ITypeSymbol memberType, MemberSettings settings, bool optional, bool parameter)
+	{
+		var reads = memberKind is "Column" || (memberKind is "Collection" && settings.Index < 0);
+		var names = reads ? new EquatableArray<string>([settings.Name, .. settings.AlternateNames]) : EquatableArray<string>.Empty;
+		var index = memberKind is "Column" or "Collection" ? settings.Index : -1;
+
+		return new MemberModel(name, Display(memberType), memberKind, names, index, optional, parameter);
+	}
+
+	/// <summary>
+	/// The argument that a projection which leaves a constructor parameter's member out passes: a constant's value, the
+	/// parameter's default value, <c>""</c> for a string that is not nullable (so that a constructor which checks it
+	/// does not fail), or the type's default.
+	/// </summary>
+	/// <param name="parameter">The constructor parameter.</param>
+	/// <param name="value">The expression that reads the argument.</param>
+	/// <param name="fallback">The parameter's default value, or the default of its type.</param>
+	private string ProjectionFallback(IParameterSymbol parameter, string value, string fallback)
+	{
+		if (memberKind == "Constant" || parameter.HasExplicitDefaultValue)
+		{
+			return memberKind == "Constant" ? value : fallback;
+		}
+
+		return parameter.Type.SpecialType == SpecialType.System_String && parameter.NullableAnnotation == NullableAnnotation.NotAnnotated ? "\"\"" : fallback;
 	}
 
 	/// <summary>
@@ -410,8 +460,10 @@ internal sealed class RecordParser
 		int group, int depth, bool optional, out int column)
 	{
 		column = -1;
+		memberKind = "Column";
 		if (settings.Constant is { } constant)
 		{
+			memberKind = "Constant";
 			var literal = DefaultLiteral(constant, memberType, display, location, "[CsvConstant]") ?? Default(memberType);
 			AddWrite(group, depth, $"(({DisplayNullable(memberType)})({literal}))", memberType, settings, display);
 
@@ -421,18 +473,20 @@ internal sealed class RecordParser
 		ApplyAssemblyConverter(settings, memberType);
 		if (NestedValue(memberType, settings, display, location, out var nestedField) is { } record)
 		{
+			memberKind = "Nested";
 			AddNestedWrite(group, depth, access, memberType, nestedField);
 			var checkedRecord = Validated(record, memberType, settings, display, location);
-			steps.Add(new StepModel(display, checkedRecord, -1, nestedField, null));
+			steps.Add(new StepModel(display, checkedRecord, -1, nestedField, null, owner));
 
 			return checkedRecord;
 		}
 
 		if (CollectionValue(memberType, settings, display, location, access, group, depth, out var finder) is { } collection)
 		{
+			memberKind = "Collection";
 			// The finder tries each field; the check of the whole collection, if any, is tried after it.
 			var checkedCollection = Validated(collection, memberType, settings, display, location);
-			steps.Add(new StepModel(display, checkedCollection == collection ? null : checkedCollection, -1, null, finder));
+			steps.Add(new StepModel(display, checkedCollection == collection ? null : checkedCollection, -1, null, finder, owner));
 
 			return checkedCollection;
 		}
@@ -448,7 +502,7 @@ internal sealed class RecordParser
 
 		AddWrite(group, depth, access, memberType, settings, display);
 		value = Validated(value, memberType, settings, display, location);
-		steps.Add(new StepModel(display, value, column, null, null));
+		steps.Add(new StepModel(display, value, column, null, null, owner));
 
 		return value;
 	}
@@ -595,7 +649,7 @@ internal sealed class RecordParser
 		var field = settings.Index < 0 ? "columns" + number : kind == "dictionary" ? "keys" + number : null;
 		var names = settings.Index < 0 ? new EquatableArray<string>([settings.Name, .. settings.AlternateNames]) : EquatableArray<string>.Empty;
 		collections.Add(new CollectionModel(method, DisplayNullable(memberType), DisplayNullable(element), kind, field, names, settings.Optional,
-			settings.Index, settings.EndIndex, value, display));
+			settings.Index, settings.EndIndex, value, display, owner));
 		finder = "Find" + method;
 		AddCollectionWrite(group, depth, access, kind, memberType, element, settings, elementSettings, display);
 
@@ -1101,7 +1155,7 @@ internal sealed class RecordParser
 
 	private int AddColumn(MemberSettings settings, bool optional, string member, Location? location)
 	{
-		columns.Add(new ColumnModel(settings.Name, settings.AlternateNames, settings.Index, optional, member, settings.NameIndex));
+		columns.Add(new ColumnModel(settings.Name, settings.AlternateNames, settings.Index, optional, member, settings.NameIndex, owner));
 		if (settings.Width != 0) widths.Add(new WidthInfo(settings.Index, settings.Width, member, AttributeLocation(settings.Column, location)));
 		if (settings.Prefix is not null)
 		{
@@ -1204,7 +1258,13 @@ internal sealed class RecordParser
 		var prefix = settings.Prefix ?? "";
 		var existing = nested.FirstOrDefault(n => n.Type == fullName && n.Prefix == prefix);
 		var field = existing?.Field ?? "record" + nested.Count.ToString(CultureInfo.InvariantCulture);
-		if (existing is null) nested.Add(new NestedModel(field, fullName, prefix));
+		if (existing is null)
+		{
+			nested.Add(new NestedModel(field, fullName, prefix, EquatableArray<int>.Empty));
+			nestedOwners.Add([]);
+		}
+
+		nestedOwners[existing is null ? nested.Count - 1 : nested.IndexOf(existing)].Add(owner);
 		nestedField = field;
 		// Its indexes are columns of the whole row, which its writer, writing at the member's place, cannot put there.
 		if (HasColumnIndexes(record))

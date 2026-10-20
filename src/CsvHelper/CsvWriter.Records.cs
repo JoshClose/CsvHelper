@@ -113,7 +113,34 @@ public sealed partial class CsvWriter
 			return;
 		}
 
-		var writer = RecordWriter<T>();
+		WriteRecordsWith(RecordWriter<T>(), records);
+	}
+
+	/// <summary>
+	/// Writes records with <paramref name="recordWriter"/>, as <see cref="WriteRecords{T}(IEnumerable{T})"/> writes them
+	/// with the generated one: the header first when nothing has been written yet and <see cref="CsvWriterOptions.HasHeader"/>
+	/// is set, then a record per element. For a record writer of your own, such as one for a type that has no generated
+	/// writer, without registering it for the type (<see cref="CsvRecordWriter.Register{T}"/>).
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="records">The records, enumerated once.</param>
+	/// <param name="recordWriter">Writes the header and the fields of each record.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="records"/> or <paramref name="recordWriter"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="records"/> contains <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// A record is not valid (see <see cref="EndRecord"/>). That record is discarded; the records before it are written.
+	/// </exception>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	public void WriteRecords<T>(IEnumerable<T> records, CsvRecordWriter<T> recordWriter)
+	{
+		ArgumentNullException.ThrowIfNull(records);
+		ArgumentNullException.ThrowIfNull(recordWriter);
+		ThrowIfDisposed();
+		WriteRecordsWith(recordWriter, records);
+	}
+
+	private void WriteRecordsWith<T>(CsvRecordWriter<T> writer, IEnumerable<T> records)
+	{
 		if (NeedsHeader())
 		{
 			WriteHeaderFields(writer);
@@ -233,6 +260,57 @@ public sealed partial class CsvWriter
 		}
 
 		return WriteRecordsAsync(RecordWriter<T>(), records, cancellationToken);
+	}
+
+	/// <summary>
+	/// Writes records with <paramref name="recordWriter"/>, as <see cref="WriteRecords{T}(IEnumerable{T}, CsvRecordWriter{T})"/>
+	/// does, flushing asynchronously whenever the buffer is mostly full, so it never blocks on I/O.
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="records">The records, enumerated once.</param>
+	/// <param name="recordWriter">Writes the header and the fields of each record.</param>
+	/// <param name="cancellationToken">Cancels writing to the destination.</param>
+	/// <returns>A task that completes when every record is in the buffer and the full buffers have been written out.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="records"/> or <paramref name="recordWriter"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="records"/> contains <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// A record is not valid (see <see cref="EndRecord"/>). That record is discarded; the records before it are written.
+	/// </exception>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public ValueTask WriteRecordsAsync<T>(IEnumerable<T> records, CsvRecordWriter<T> recordWriter, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(records);
+		ArgumentNullException.ThrowIfNull(recordWriter);
+		ThrowIfDisposed();
+
+		return WriteRecordsAsync(recordWriter, records, cancellationToken);
+	}
+
+	/// <summary>
+	/// Writes an asynchronous sequence of records with <paramref name="recordWriter"/>, as
+	/// <see cref="WriteRecords{T}(IEnumerable{T}, CsvRecordWriter{T})"/> does, flushing asynchronously whenever the buffer is
+	/// mostly full, so it never blocks on I/O.
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="records">The records, enumerated once.</param>
+	/// <param name="recordWriter">Writes the header and the fields of each record.</param>
+	/// <param name="cancellationToken">Cancels the enumeration of <paramref name="records"/> and writing to the destination.</param>
+	/// <returns>A task that completes when every record is in the buffer and the full buffers have been written out.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="records"/> or <paramref name="recordWriter"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="records"/> contains <see langword="null"/>.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// A record is not valid (see <see cref="EndRecord"/>). That record is discarded; the records before it are written.
+	/// </exception>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public ValueTask WriteRecordsAsync<T>(IAsyncEnumerable<T> records, CsvRecordWriter<T> recordWriter, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(records);
+		ArgumentNullException.ThrowIfNull(recordWriter);
+		ThrowIfDisposed();
+
+		return WriteRecordsAsync(recordWriter, records, cancellationToken);
 	}
 
 	private async ValueTask WriteRecordsAsync<T>(CsvRecordWriter<T> writer, IEnumerable<T> records, CancellationToken cancellationToken)

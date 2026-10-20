@@ -21,7 +21,8 @@ internal sealed class SourceLocator
 	public static SourceLocator Create(IReadOnlyList<BuildOutput> outputs, string repo)
 	{
 		var locator = new SourceLocator();
-		foreach (var output in outputs.GroupBy(o => string.Join(';', o.DefineConstants.Order())).Select(g => g.First()))
+		// Once per library and distinct set of symbols.
+		foreach (var output in outputs.GroupBy(o => Path.GetFileName(o.AssemblyPath) + "|" + string.Join(';', o.DefineConstants.Order())).Select(g => g.First()))
 		{
 			LanguageVersionFacts.TryParse(output.LangVersion, out var version);
 			var options = new CSharpParseOptions(version, DocumentationMode.Parse, SourceCodeKind.Regular, output.DefineConstants);

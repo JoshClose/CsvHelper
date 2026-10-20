@@ -17,6 +17,12 @@ internal sealed class SiteConfig
 	public string BaseUrl { get; init; } = "";
 	public string Project { get; init; } = "";
 	public string Package { get; init; } = "";
+
+	/// <summary>
+	/// Other projects whose public API the reference documents with that of <see cref="Project"/>, such as
+	/// CsvHelper.Linq; a release whose tag lacks one documents the others.
+	/// </summary>
+	public List<string> Projects { get; init; } = [];
 	public string Readme { get; init; } = "README.md";
 	public List<TargetFrameworkConfig> TargetFrameworks { get; init; } = [];
 	public List<GuideConfig> Guides { get; init; } = [];

@@ -40,7 +40,7 @@ writer.WriteRecords(orders);                                     // the header, 
 
 The examples on this page read this file, `orders.csv`, unless they say otherwise:
 
-```
+```csv
 Id,Unit Price,Quantity
 A-1,9.99,3
 A-2,24.50,
@@ -1135,6 +1135,34 @@ CsvRecordWriter.Register<Temperature>(columnPrefix => new TemperatureWriter(colu
 `WriteHeader` and `Write` write `FieldCount` fields and do not end the record. `WriteEmpty`, which writes
 `FieldCount` empty fields, is what a nested record that is `null` writes, and `NestedWriter<TNested>(prefix)` creates
 the writer of a nested record. Like a mapper, a record writer must not change after its constructor has run.
+`writer.WriteRecords(records, recordWriter)` writes records with a record writer that is not registered for the type.
+
+## Reading some members: projections
+
+A projection is a mapper that reads only some members of a record type, so the columns of the others are neither
+looked up nor parsed: the others keep their defaults (constructor parameters their default values), their columns may
+be missing from the header, and their `[CsvValidate]` checks do not run. [CsvHelper.Linq](linq.html) uses them to read
+only the members that a query uses. The source generator writes them for the record types of an assembly that
+references CsvHelper.Linq, or that asks for them:
+
+```csharp
+[assembly: CsvRecordProjections]
+
+using var reader = CsvReader.FromFile("orders.csv");
+CsvRecordMapper.TryGetMembers<Order>(out var members);                // Id (Column 'Id'), Price (Column 'Unit Price'), ...
+var mapper = CsvRecordMapper.CreateProjection<Order>(reader, ["Id", "Price"]);
+while (reader.Read())
+{
+    var order = reader.GetRecord(mapper);                             // Quantity is not read
+}
+```
+
+`TryGetMembers` describes the members that the generated mapper reads (`CsvRecordMember`: the name, type and kind of
+each, and the columns it reads), and returns `false` for hand-written mappers and types without projections.
+`CreateProjection` selects members by name. `reader.GetRecord(mapper)` and `reader.TryGetRecord(mapper, out record)`
+read a record with any mapper, with the error handling of `GetRecord<T>()` (and of `OnRecordError`, for
+`TryGetRecord`). Without the attribute, an assembly's generated code has no projections, which keeps it smaller for
+native AOT.
 
 ## Dynamic records
 

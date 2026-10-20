@@ -272,7 +272,14 @@ internal static class ReleaseCatalog
 			if (!File.Exists(project)) throw new InvalidOperationException($"{config.Project} does not exist in {release.Name}.");
 			var frameworks = ProjectBuilder.TargetFrameworks(project).Intersect(config.Monikers).ToList();
 			if (frameworks.Count == 0) throw new InvalidOperationException($"{release.Name} targets none of {string.Join(", ", config.Monikers)}.");
-			var outputs = ProjectBuilder.BuildAll(project, frameworks, lenient: true, TimeSpan.FromMinutes(10));
+			var outputs = ProjectBuilder.BuildAll(project, frameworks, lenient: true, TimeSpan.FromMinutes(10)).ToList();
+			// The other projects that the release has (CsvHelper.Linq came after the first releases).
+			foreach (var other in config.Projects.Select(p => Path.Combine(directory, p)).Where(File.Exists))
+			{
+				outputs.AddRange(ProjectBuilder.BuildAll(other, ProjectBuilder.TargetFrameworks(other).Intersect(frameworks).ToList(), lenient: true,
+					TimeSpan.FromMinutes(10)));
+			}
+
 			var snapshot = ApiExtractor.Snapshot(ApiExtractor.Extract(outputs, strict: false));
 			File.WriteAllText(path, JsonSerializer.Serialize(snapshot, JsonOptions));
 

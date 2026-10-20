@@ -19,7 +19,11 @@ namespace CsvHelper.Generators;
 /// </param>
 /// <param name="HintName">The name of the generated file.</param>
 /// <param name="Columns">The columns the mapper resolves; column <c>i</c> is stored in field <c>column{i}</c>.</param>
-/// <param name="Arguments">The constructor arguments, as expressions.</param>
+/// <param name="Members">
+/// The members that are read, constructor parameters first, in the order the mapper reads them; the owners of the other
+/// parts are indexes into it.
+/// </param>
+/// <param name="Arguments">The constructor arguments.</param>
 /// <param name="Initializers">Members set in the object initializer.</param>
 /// <param name="Assignments">Optional members set after construction when their column exists.</param>
 /// <param name="Steps">How each member is read again on its own, to find the one that made a record fail.</param>
@@ -50,7 +54,8 @@ internal sealed record RecordModel(
 	string HostFullName,
 	string HintName,
 	EquatableArray<ColumnModel> Columns,
-	EquatableArray<string> Arguments,
+	EquatableArray<MemberModel> Members,
+	EquatableArray<ArgumentModel> Arguments,
 	EquatableArray<AssignmentModel> Initializers,
 	EquatableArray<AssignmentModel> Assignments,
 	EquatableArray<StepModel> Steps,
@@ -89,7 +94,8 @@ internal sealed record RecordModel(
 /// <param name="Column">The index of the member's column in <see cref="RecordModel.Columns"/>, or -1.</param>
 /// <param name="Nested">The field of the nested record's mapper, or <see langword="null"/>.</param>
 /// <param name="Finder">The method that finds the failing field of a collection, or <see langword="null"/>.</param>
-internal sealed record StepModel(string Member, string? Value, int Column, string? Nested, string? Finder);
+/// <param name="Owner">The index of the member in <see cref="RecordModel.Members"/>.</param>
+internal sealed record StepModel(string Member, string? Value, int Column, string? Nested, string? Finder, int Owner);
 
 /// <summary>A static field <paramref name="Field"/> holding the formats of a [CsvFormat] with several of them.</summary>
 /// <param name="Field">The name of the mapper's field.</param>
@@ -119,9 +125,10 @@ internal sealed record ValidatorModel(string Method, string Type, string Check, 
 /// <param name="End">The last column of a range or dictionary, or -1 for the last field of the record (or header).</param>
 /// <param name="Value">The expression that reads one element from the field at index <c>i</c>.</param>
 /// <param name="Member">The member, as named in error messages (<c>Order.Values</c>).</param>
+/// <param name="Owner">The index of the member in <see cref="RecordModel.Members"/>.</param>
 internal sealed record CollectionModel(
 	string Method, string Type, string Element, string Kind, string? Field, EquatableArray<string> Names, bool Optional, int Start, int End,
-	string Value, string Member);
+	string Value, string Member, int Owner);
 
 /// <summary>The settings of a type's [CsvOptions], as object initializers of the reader and writer options.</summary>
 /// <param name="Reader">The assignments of the reader options, such as <c>Separator = ';'</c>.</param>
@@ -173,13 +180,37 @@ internal sealed record EnumFormatModel(string Method, string Type, EquatableArra
 /// <param name="Optional">Whether the column may be missing from the header.</param>
 /// <param name="Member">The member, as named in error messages (<c>Order.Price</c>).</param>
 /// <param name="NameIndex">Which of several header columns with the name the member reads; 0 for the first.</param>
-internal sealed record ColumnModel(string Name, EquatableArray<string> AlternateNames, int Index, bool Optional, string Member, int NameIndex);
+/// <param name="Owner">The index of the member in <see cref="RecordModel.Members"/>.</param>
+internal sealed record ColumnModel(string Name, EquatableArray<string> AlternateNames, int Index, bool Optional, string Member, int NameIndex, int Owner);
 
 /// <summary>An assignment <c>Member = Value</c>; <paramref name="Column"/> is the index into the columns.</summary>
 /// <param name="Member">The member to set, escaped.</param>
 /// <param name="Value">The expression that reads its value.</param>
 /// <param name="Column">The index of the member's column in <see cref="RecordModel.Columns"/>, or -1 for a nested record.</param>
-internal sealed record AssignmentModel(string Member, string Value, int Column);
+/// <param name="Owner">The index of the member in <see cref="RecordModel.Members"/>.</param>
+/// <param name="MustInitialize">
+/// Whether the member can only be set in the object initializer: it has an <c>init</c> accessor or is <c>required</c>.
+/// </param>
+internal sealed record AssignmentModel(string Member, string Value, int Column, int Owner, bool MustInitialize);
+
+/// <summary>A constructor argument, with the value that a projection which leaves its member out passes instead.</summary>
+/// <param name="Value">The expression that reads the argument.</param>
+/// <param name="Fallback">The expression passed when the member is not selected.</param>
+/// <param name="Owner">The index of the member in <see cref="RecordModel.Members"/>.</param>
+internal sealed record ArgumentModel(string Value, string Fallback, int Owner);
+
+/// <summary>
+/// A member that the mapper reads, as <c>CsvRecordMapper.TryGetMembers</c> describes it at run time; a projection
+/// selects members by their index in <see cref="RecordModel.Members"/>.
+/// </summary>
+/// <param name="Name">The name of the property or field (of the constructor parameter when it sets none), unescaped.</param>
+/// <param name="Type">The type of the member, fully qualified and without nullable reference annotations, for <c>typeof</c>.</param>
+/// <param name="Kind">The name of its <c>CsvRecordMemberKind</c>: <c>Column</c>, <c>Collection</c>, <c>Nested</c> or <c>Constant</c>.</param>
+/// <param name="ColumnNames">The header names it reads, unescaped: its column's name and alternate names, or a collection's names.</param>
+/// <param name="Index">The 0-based index of its (first) column, or -1 when it is found by name or has none.</param>
+/// <param name="Optional">Whether its columns may be missing.</param>
+/// <param name="Parameter">Whether a constructor parameter sets it.</param>
+internal sealed record MemberModel(string Name, string Type, string Kind, EquatableArray<string> ColumnNames, int Index, bool Optional, bool Parameter);
 
 /// <summary>An enum type whose names are matched by a generated method.</summary>
 /// <param name="Method">The name of the parse method.</param>
@@ -218,7 +249,8 @@ internal sealed record CultureModel(string Field, string Name);
 /// <param name="Field">The name of the mapper's field.</param>
 /// <param name="Type">The nested record type, fully qualified with <c>global::</c>.</param>
 /// <param name="Prefix">The [CsvColumn] prefix of the member, unescaped; <c>""</c> for none.</param>
-internal sealed record NestedModel(string Field, string Type, string Prefix);
+/// <param name="Owners">The indexes in <see cref="RecordModel.Members"/> of the members that read the nested record.</param>
+internal sealed record NestedModel(string Field, string Type, string Prefix, EquatableArray<int> Owners);
 
 /// <summary>
 /// A mapper the module initializer registers for <paramref name="FullName"/>: <paramref name="Factory"/> is the
@@ -236,7 +268,12 @@ internal sealed record NestedModel(string Field, string Type, string Prefix);
 /// The type whose <c>CreateCsvReaderOptions</c> and <c>CreateCsvWriterOptions</c> create the options of the record type's
 /// [CsvOptions], or <see langword="null"/> when it has none.
 /// </param>
-internal sealed record RegistrationModel(string FullName, string Factory, EquatableArray<int> FieldWidths, string? WriterFactory, string? OptionsHost = null);
+/// <param name="ProjectionHost">
+/// The type whose <c>GetCsvMembers</c> and <c>CreateCsvProjection</c> describe the members and create projections, or
+/// <see langword="null"/> when no projections are generated.
+/// </param>
+internal sealed record RegistrationModel(
+	string FullName, string Factory, EquatableArray<int> FieldWidths, string? WriterFactory, string? OptionsHost = null, string? ProjectionHost = null);
 
 /// <summary>A type with a [CsvConverter] that names its hand-written mapper: its registration, unless it has errors.</summary>
 /// <param name="Registration">The registration of the mapper, or <see langword="null"/> when it cannot be registered.</param>

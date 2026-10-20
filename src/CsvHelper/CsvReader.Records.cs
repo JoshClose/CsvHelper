@@ -56,6 +56,50 @@ public sealed partial class CsvReader
 		}
 	}
 
+	/// <summary>
+	/// Reads the current record with <paramref name="mapper"/>, such as a projection that reads only some members
+	/// (<see cref="CsvRecordMapper.CreateProjection{T}(CsvReader, IEnumerable{string})"/>) or a hand-written mapper. A
+	/// failure is reported as by <see cref="GetRecord{T}()"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="mapper">The mapper, created for this reader or for one with the same columns.</param>
+	/// <returns>The record that <paramref name="mapper"/> read.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="mapper"/> is <see langword="null"/>.</exception>
+	/// <exception cref="NotSupportedException">The mapper threw it.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The record cannot be read, such as a field that cannot be parsed as the type of its member. The exception names
+	/// the record, the field and the member, and the cause is its <see cref="Exception.InnerException"/>.
+	/// </exception>
+	public T GetRecord<T>(CsvRecordMapper<T> mapper)
+	{
+		ArgumentNullException.ThrowIfNull(mapper);
+
+		return Map(mapper);
+	}
+
+	/// <summary>
+	/// Reads the current record with <paramref name="mapper"/>, as <see cref="GetRecord{T}(CsvRecordMapper{T})"/> does,
+	/// unless it cannot be read and <see cref="CsvReaderOptions.OnRecordError"/> skips it, as
+	/// <see cref="GetRecords{T}"/> skips such records.
+	/// </summary>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="mapper">The mapper, created for this reader or for one with the same columns.</param>
+	/// <param name="record">The record, or the default of <typeparamref name="T"/> when it was skipped.</param>
+	/// <returns><see langword="true"/> when the record was read; <see langword="false"/> when the handler skipped it.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="mapper"/> is <see langword="null"/>.</exception>
+	/// <exception cref="NotSupportedException">The mapper threw it.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The record cannot be read and there is no <see cref="CsvReaderOptions.OnRecordError"/>, or it does not skip the
+	/// record. The exception names the record, the field and the member, and the cause is its
+	/// <see cref="Exception.InnerException"/>.
+	/// </exception>
+	public bool TryGetRecord<T>(CsvRecordMapper<T> mapper, out T record)
+	{
+		ArgumentNullException.ThrowIfNull(mapper);
+
+		return TryMap(mapper, out record);
+	}
+
 	private CsvRecordMapper<T> Mapper<T>()
 	{
 		if (recordMapper is not CsvRecordMapper<T> mapper)

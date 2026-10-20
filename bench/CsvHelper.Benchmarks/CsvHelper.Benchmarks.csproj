@@ -20,6 +20,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
+		<!-- For LinqBenchmarks; it also makes the generator write the projections of PackageAsset. -->
+		<ProjectReference Include="..\..\src\CsvHelper.Linq\CsvHelper.Linq.csproj" />
 		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 

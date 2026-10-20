@@ -19,6 +19,9 @@ A CSV reader and writer for .NET, built for speed. It targets .NET 10 and also r
   (`a\,b`), unescaped and fixed-width files ([Parsing modes](#parsing-modes)).
 - **Writer**: strict RFC 4180 output by default (CRLF, minimal quoting, doubled quotes, consistent field
   counts), formatting numbers straight into a UTF-8 buffer; also escaped, unescaped and fixed-width output.
+- **LINQ**: the CsvHelper.Linq package queries CSV with any LINQ operator, reading only the columns and rows a
+  query uses, joins with Entity Framework Core and other providers by sending them only the keys it needs, and
+  writes query results as CSV.
 
 Benchmarks against [Sep](https://github.com/nietras/Sep) and [Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan)
 are in [`bench/`](bench/CsvHelper.Benchmarks); results are in [Benchmarks](#benchmarks) below.
@@ -26,7 +29,7 @@ are in [`bench/`](bench/CsvHelper.Benchmarks); results are in [Benchmarks](#benc
 <!-- docs:exclude -->
 ## Install
 
-```
+```shell
 dotnet add package CsvHelper
 ```
 
@@ -351,6 +354,25 @@ In `Escape` and `NoEscape` mode a record whose only field is empty is an empty l
 Output is UTF-8 (optional BOM). I/O happens only when a record ends with the buffer mostly full, or on
 `Flush`/`FlushAsync`, so async writers never block.
 
+## LINQ
+
+The [CsvHelper.Linq](https://joshclose.github.io/CsvHelper/linq.html) package (`dotnet add package CsvHelper.Linq`)
+is a LINQ provider for CSV. The reader runs what it can of a query itself: it reads only the members of the records
+that the query uses, filters records before it reads the rest, skips rows without parsing them and stops early.
+
+```csharp
+using CsvHelper.Linq;
+
+var orders = CsvQueryable.FromFile<Order>("orders.csv");
+var big = orders.Where(o => o.Total > 100).Select(o => new { o.Id, o.Customer }).ToList();   // reads 3 columns
+
+// Entity Framework Core is asked only for the customers that orders.csv has.
+var report = orders.Join(db.Customers, o => o.CustomerId, c => c.Id, (o, c) => new { o.Id, c.Name }).ToList();
+
+report.WriteCsv("report.csv");                                     // anonymous types too
+orders.Delete(o => o.Status == Status.Cancelled);                  // the rest of the file is kept byte for byte
+```
+
 <!-- /docs:exclude -->
 
 ## Target frameworks
@@ -582,7 +604,7 @@ fields read), against 136 MB for the `ExpandoObject`s. Kept in a list, its 50,00
 
 Run them with:
 
-```
+```shell
 cd bench/CsvHelper.Benchmarks
 dotnet run -c Release -- --filter *PackageAssetsRead.* *PackageAssetsReadFromString.* *PackageAssetsReadFile.* *FloatsRead.* *QuotedRead.* *PackageAssetsWrite.* *FloatsWrite.* *QuotedWrite.*
 dotnet run -c Release -- --filter *.EscapeRead.* *.NoEscapeRead.* *.FixedWidthRead.* *.EscapeWrite.* *.NoEscapeWrite.* *.FixedWidthWrite.*
@@ -593,7 +615,7 @@ dotnet run -c Release -- quick QuotedRead      # quick Stopwatch runner for tuni
 
 ## Building and testing
 
-```
+```shell
 dotnet build -c Release
 dotnet test tests/CsvHelper.Tests -c Release              # .NET 10, .NET 8 and .NET Framework 4.8 (Windows)
 dotnet test tests/CsvHelper.Tests -c Release -f net10.0  # .NET 10 only

@@ -7,6 +7,7 @@
 	"baseUrl": "https://joshclose.github.io/CsvHelper/",
 	"project": "src/CsvHelper/CsvHelper.csproj",
 	"package": "CsvHelper",
+	"projects": [ "src/CsvHelper.Linq/CsvHelper.Linq.csproj" ],
 	"readme": "README.md",
 	"targetFrameworks": [
 		{ "moniker": "net10.0", "label": ".NET 10" },
@@ -34,6 +35,10 @@
 		{
 			"slug": "writing",
 			"file": "docs/pages/writing.md"
+		},
+		{
+			"slug": "linq",
+			"file": "docs/pages/linq.md"
 		},
 		{
 			"slug": "testing",
@@ -109,6 +114,12 @@
 				"title": "Source-generated records",
 				"text": "[CsvRecord] types are read and written by code generated at compile time: no reflection, safe for trimming and native AOT, as fast as hand-written code.",
 				"link": "records"
+			},
+			{
+				"icon": "magnifying-glass",
+				"title": "LINQ",
+				"text": "CsvHelper.Linq queries CSV with any LINQ operator, reads only the columns and rows a query uses, and joins with Entity Framework Core by sending it only the keys it needs.",
+				"link": "linq"
 			},
 			{
 				"icon": "sliders",

@@ -431,6 +431,21 @@ public sealed class CsvRecordMapAttribute : Attribute
 }
 
 /// <summary>
+/// Makes the source generator write projections for the <see cref="CsvRecordAttribute"/> types of the assembly: mappers
+/// that read only some members (<see cref="CsvRecordMapper.CreateProjection{T}(CsvReader, IEnumerable{string})"/>), so
+/// that the columns of the others are neither looked up nor parsed.
+/// </summary>
+/// <remarks>
+/// CsvHelper.Linq uses projections to read only the members that a query uses. Assemblies that reference CsvHelper.Linq
+/// get them without this attribute; it is for record types that another assembly queries, such as a library of models.
+/// Without projections, the generated code is smaller, which matters for native AOT.
+/// </remarks>
+[AttributeUsage(AttributeTargets.Assembly)]
+public sealed class CsvRecordProjectionsAttribute : Attribute
+{
+}
+
+/// <summary>
 /// Keeps the dialect of a <see cref="CsvRecordAttribute"/> type's files next to the type: the settings that
 /// <see cref="CsvReaderOptions.For{T}"/> and <see cref="CsvWriterOptions.For{T}"/> put in the options they return, such
 /// as <c>[CsvOptions(Separator = ';', HasHeader = false)]</c>.

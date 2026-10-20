@@ -63,8 +63,7 @@ internal sealed class Layout
 			<link rel="icon" href="{root}favicon.svg" type="image/svg+xml">
 			<script>{ThemeScript}</script>
 			<link rel="stylesheet" href="{root}assets/site.css">
-			<script src="{root}assets/vendor/highlight.min.js" defer></script>
-			<script src="{root}assets/vendor/powershell.min.js" defer></script>
+
 			<script src="{root}assets/site.js" defer></script>
 			<script src="{root}assets/search.js" defer></script>
 			</head>

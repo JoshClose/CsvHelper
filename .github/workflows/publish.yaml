@@ -51,6 +51,16 @@ jobs:
           -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
           -p:InformationalVersion=${{ steps.version.outputs.version }}
           -p:PackageVersion=${{ steps.version.outputs.version }}
+      - name: Create CsvHelper.Linq NuGet Package
+        # The same version as CsvHelper, which its package depends on (the version properties apply to the reference too).
+        run: >
+          dotnet pack src/CsvHelper.Linq
+          --configuration Release
+          -o output
+          -p:AssemblyVersion=${{ steps.gitversion.outputs.major }}.0.0.0
+          -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
+          -p:InformationalVersion=${{ steps.version.outputs.version }}
+          -p:PackageVersion=${{ steps.version.outputs.version }}
       - name: Display Output
         run: dir output
       - name: NuGet Login
@@ -63,3 +73,6 @@ jobs:
       - name: Publish NuGet Package
         # Also pushes the symbols package (CsvHelper.<version>.snupkg) next to it.
         run: dotnet nuget push output/CsvHelper.${{ steps.version.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+      - name: Publish CsvHelper.Linq NuGet Package
+        # After CsvHelper, which it depends on. The trusted publishing policy must cover the CsvHelper.Linq package too.
+        run: dotnet nuget push output/CsvHelper.Linq.${{ steps.version.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}

@@ -103,6 +103,14 @@ internal sealed class ApiPages
 			body.Append($"""<section><h2 id="remarks" class="section-title">Remarks</h2><div class="{Ui.Prose} prose-doc">{docs.Block(doc.Remarks, scope)}</div></section>""");
 		}
 
+		// A type with variants shows its examples in each variant.
+		if (type.Variants.Count == 1 && doc.Examples.Count > 0)
+		{
+			toc.Add(new TocEntry(2, "example", "Example"));
+			var examples = string.Concat(doc.Examples.Select(e => docs.Block(e, scope)));
+			body.Append($"""<section><h2 id="example" class="section-title">Example</h2><div class="{Ui.Prose} prose-doc">{examples}</div></section>""");
+		}
+
 		if (symbol.TypeKind == TypeKind.Enum)
 		{
 			toc.Add(new TocEntry(2, "values", "Values"));

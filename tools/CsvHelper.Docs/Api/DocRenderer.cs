@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using CsvHelper.Docs.Highlighting;
 using CsvHelper.Docs.Site;
 using Microsoft.CodeAnalysis;
 using static CsvHelper.Docs.Html.Html;
@@ -93,7 +94,7 @@ internal sealed partial class DocRenderer
 					break;
 				case "code":
 					Flush(html, paragraph);
-					html.Append($"""<pre><code class="language-{(string?)child.Attribute("language") ?? "csharp"}">{E(Dedent(child.Value))}</code></pre>""");
+					html.Append(Highlighter.Block(Dedent(child.Value), (string?)child.Attribute("language") ?? "csharp"));
 					break;
 				default:
 					paragraph.Append(InlineElement(child, scope));

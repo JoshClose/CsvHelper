@@ -11,6 +11,278 @@ public class RecordGeneratorTests
 {
 	private static readonly MetadataReference[] References = CreateReferences();
 
+	// Generated with C# 9 by AttributesGenerateCSharp9WithoutWarnings, and with projections by ProjectionsGenerateCSharp9WithoutWarnings.
+	private const string AttributesSource = """
+		using System;
+		using CsvHelper;
+
+		namespace Sample
+		{
+		    public enum State
+		    {
+		        Open,
+		        [CsvEnumName("on hold", "")]
+		        Held,
+		        Done,
+		    }
+
+		    public sealed class Hex : ICsvConverter<int>
+		    {
+		        public int Read(CsvReader reader, int index) => 0;
+
+		        public void Write(CsvWriter writer, int value) => writer.WriteField(value);
+		    }
+
+		    public struct Text : ICsvConverter<string?>
+		    {
+		        public string? Read(CsvReader reader, int index) => null;
+
+		        public void Write(CsvWriter writer, string? value) => writer.WriteField(value);
+		    }
+
+		    [CsvRecord]
+		    public partial class Fixed
+		    {
+		        [CsvColumn(Index = 0, Width = 4)]
+		        public int A { get; set; }
+		        [CsvColumn(Index = 1, Width = 6)]
+		        [CsvFormat("yyMMdd")]
+		        public DateTime B { get; set; }
+		        [CsvColumn(Index = 2, Width = 3)]
+		        [CsvBooleanValues("J", "N")]
+		        public bool C { get; set; }
+		    }
+
+		    [CsvRecord]
+		    public partial class Everything
+		    {
+		        [CsvColumn("A", "Alpha", "a")]
+		        public string? Name { get; set; }
+		        [CsvNullValues("NULL", "")]
+		        public string? Maybe { get; set; }
+		        [CsvNullValues("NULL")]
+		        public int? Count { get; set; }
+		        [CsvDefault(0)]
+		        public int Zero { get; set; }
+		        [CsvDefault(2.5f)]
+		        public float Ratio { get; set; }
+		        [CsvDefault(State.Done)]
+		        public State State { get; set; }
+		        [CsvDefault(null)]
+		        public string? Note { get; set; }
+		        [CsvDefault((short)3)]
+		        public short? Small { get; set; }
+		        [CsvDefault(1)]
+		        public decimal Amount { get; set; }
+		        [CsvCulture("de-DE")]
+		        public decimal Price { get; set; }
+		        [CsvCulture("de-DE")]
+		        [CsvFormat("d. MMMM yyyy")]
+		        public DateTimeOffset When { get; set; }
+		        [CsvCulture("")]
+		        public TimeSpan Span { get; set; }
+		        [CsvFormat("hh\\:mm")]
+		        public TimeSpan? Time { get; set; }
+		        [CsvConverter(typeof(Hex))]
+		        public int Code { get; set; }
+		        [CsvConverter(typeof(Hex))]
+		        [CsvNullValues("-")]
+		        public int? MaybeCode { get; set; }
+		        [CsvConverter(typeof(Text))]
+		        public string? Free { get; set; }
+		        [CsvBooleanValues(new[] { "y", "Y " }, new[] { "n" })]
+		        public bool? Flag { get; set; }
+		        public State? Previous { get; set; }
+		        [CsvColumn(Prefix = "Home ")]
+		        public Address Home { get; set; } = new Address();
+		        public Point Point { get; set; }
+		        public Point? MaybePoint { get; set; }
+		    }
+
+		    [CsvRecord]
+		    public partial class Address
+		    {
+		        public string Street { get; set; } = "";
+		    }
+
+		    [CsvRecord]
+		    public partial struct Point
+		    {
+		        public double X;
+		        public double Y;
+		    }
+
+		    [CsvConverter(typeof(TagMapper))]
+		    public sealed class Tag
+		    {
+		        public string Text { get; set; } = "";
+		    }
+
+		    internal sealed class TagMapper : CsvRecordMapper<Tag>
+		    {
+		        private readonly int text;
+
+		        public TagMapper(CsvReader reader, string columnPrefix) : base(columnPrefix)
+		        {
+		            text = Column(reader, "Text", -1, false, "Tag.Text");
+		            ThrowIfColumnsMissing(reader);
+		        }
+
+		        public override Tag Read(CsvReader reader) => new Tag { Text = reader.GetString(text) };
+		    }
+
+		    [CsvConverter(typeof(PlainMapper))]
+		    public struct Plain
+		    {
+		    }
+
+		    public sealed class PlainMapper : CsvRecordMapper<Plain>
+		    {
+		        public PlainMapper(CsvReader reader)
+		        {
+		        }
+
+		        public override Plain Read(CsvReader reader) => default;
+		    }
+
+		    [CsvRecord]
+		    public partial class Tagged
+		    {
+		        public Tag Tag { get; set; } = new Tag();
+		        [CsvColumn(Prefix = "Other ")]
+		        public Tag Other { get; set; } = new Tag();
+		        public Plain Plain { get; set; }
+		    }
+
+		    [CsvRecord]
+		    public partial class Positional
+		    {
+		        public Positional(string name, [CsvColumn(Prefix = "P ")] Point point, [CsvDefault(1)] int count = 2)
+		        {
+		        }
+		    }
+		}
+		""";
+
+	// Generated with C# 9 by MappingFeaturesGenerateCSharp9WithoutWarnings, and with projections by ProjectionsGenerateCSharp9WithoutWarnings.
+	private const string MappingFeaturesSource = """
+		using System;
+		using System.Collections.Generic;
+		using CsvHelper;
+
+		[assembly: CsvConverter(typeof(Sample.CentsConverter))]
+
+		namespace Sample
+		{
+		    public struct Cents { public long Value; }
+
+		    public sealed class CentsConverter : ICsvConverter<Cents>
+		    {
+		        public Cents Read(CsvReader reader, int index) => new Cents { Value = reader.GetInt64(index) };
+
+		        public void Write(CsvWriter writer, Cents value) => writer.WriteField(value.Value);
+		    }
+
+		    public class Entity { public int Id { get; set; } }
+
+		    [CsvRecord]
+		    [CsvIgnoreBase]
+		    [CsvOptions(Separator = ';', HasHeader = false, Culture = "de-DE", NullValues = new[] { "NULL", "-" }, NewLine = "\n")]
+		    public partial class Everything : Entity
+		    {
+		        [CsvColumn(Index = 0)]
+		        public Cents Total { get; set; }
+		        [CsvColumn(Index = 1)]
+		        public Cents? Discount { get; set; }
+		        [CsvColumn(Index = 2)]
+		        [CsvFormat("yyyy-MM-dd", "dd/MM/yyyy")]
+		        public DateTime Day { get; set; }
+		        [CsvColumn(Index = 3)]
+		        [CsvFormat("hh\\:mm", "hh\\:mm\\:ss")]
+		        public TimeSpan? Span { get; set; }
+		        [CsvColumn(Index = 4)]
+		        public Uri? Link { get; set; }
+		        [CsvColumn(Index = 5)]
+		        public Uri Home { get; set; } = new Uri("/", UriKind.Relative);
+		        [CsvColumn(Index = 6, EndIndex = 8)]
+		        public int[] Fixed { get; set; } = new int[0];
+		        [CsvColumn(Index = 9, EndIndex = 10)]
+		        [CsvNullValues("NA")]
+		        public IEnumerable<string?> Texts { get; set; } = new string?[0];
+		        [CsvColumn(Index = 11)]
+		        [CsvValidate(nameof(IsAge))]
+		        public int Age { get; set; }
+		        [CsvColumn(Index = 12)]
+		        [CsvValidate(nameof(IsSet), Message = "A note is needed.")]
+		        public string? Note { get; set; }
+		        [CsvConstant("v2")]
+		        public string Version { get; set; } = "";
+		        [CsvConstant(null)]
+		        public int? Nothing { get; set; }
+
+		        private static bool IsAge(int age) => age >= 0;
+
+		        private static bool IsSet(string? note) => note != null;
+		    }
+
+		    [CsvRecord]
+		    public partial class Collections
+		    {
+		        [CsvColumn("Value", "Val", Optional = true)]
+		        public List<double?> Values { get; set; } = new List<double?>();
+		        [CsvColumn(Index = 2)]
+		        public IReadOnlyList<long> Rest { get; set; } = new long[0];
+		        [CsvColumn(Index = 1)]
+		        public Dictionary<string, int?> Named { get; set; } = new Dictionary<string, int?>();
+		        [CsvColumn(Index = 3, EndIndex = 5)]
+		        [CsvValidate(nameof(Three))]
+		        public IList<Cents> Money { get; set; } = new List<Cents>();
+
+		        private static bool Three(IList<Cents> money) => money.Count == 3;
+		    }
+
+		    [CsvRecord]
+		    public partial class Constructed
+		    {
+		        public Constructed(string name, [CsvConstant(3)] int level, [CsvValidate(nameof(Positive))] decimal amount)
+		        {
+		            Name = name;
+		            Amount = amount;
+		        }
+
+		        public string Name { get; }
+		        public decimal Amount { get; }
+		        public Everything? Inner { get; set; }
+
+		        private static bool Positive(decimal amount) => amount > 0;
+		    }
+
+		    public sealed class Foreign
+		    {
+		        public Foreign(string code) => Code = code;
+		        public string Code { get; }
+		        public string Name { get; set; } = "";
+		        public decimal Rating { get; set; }
+		        public string? Secret { get; set; }
+		    }
+
+		    [CsvRecordMap(typeof(Foreign))]
+		    [CsvOptions(Separator = '|')]
+		    internal partial class ForeignMap
+		    {
+		        [CsvColumn("Supplier Code")]
+		        public string Code { get; set; } = "";
+		        [CsvColumn("Full Name")]
+		        [CsvValidate(nameof(NotEmpty))]
+		        public string Name { get; set; } = "";
+		        [CsvIgnore]
+		        public string? Secret { get; set; }
+
+		        private static bool NotEmpty(string name) => name.Length > 0;
+		    }
+		}
+		""";
+
 	private static MetadataReference[] CreateReferences()
 	{
 		var framework = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
@@ -20,10 +292,10 @@ public class RecordGeneratorTests
 	}
 
 	private static (ImmutableArray<Diagnostic> Generator, ImmutableArray<Diagnostic> Compilation, string Output) Run(
-		string source, LanguageVersion version = LanguageVersion.Latest)
+		string source, LanguageVersion version = LanguageVersion.Latest, params MetadataReference[] references)
 	{
 		var parseOptions = new CSharpParseOptions(version);
-		var compilation = CSharpCompilation.Create("Test", [CSharpSyntaxTree.ParseText(source, parseOptions)], References,
+		var compilation = CSharpCompilation.Create("Test", [CSharpSyntaxTree.ParseText(source, parseOptions)], [.. References, .. references],
 			new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
 		var driver = CSharpGeneratorDriver.Create([new CsvRecordGenerator().AsSourceGenerator()], parseOptions: parseOptions);
 		driver.RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diagnostics);
@@ -128,157 +400,7 @@ public class RecordGeneratorTests
 	[Fact]
 	public void AttributesGenerateCSharp9WithoutWarnings()
 	{
-		const string source = """
-			using System;
-			using CsvHelper;
-
-			namespace Sample
-			{
-			    public enum State
-			    {
-			        Open,
-			        [CsvEnumName("on hold", "")]
-			        Held,
-			        Done,
-			    }
-
-			    public sealed class Hex : ICsvConverter<int>
-			    {
-			        public int Read(CsvReader reader, int index) => 0;
-
-			        public void Write(CsvWriter writer, int value) => writer.WriteField(value);
-			    }
-
-			    public struct Text : ICsvConverter<string?>
-			    {
-			        public string? Read(CsvReader reader, int index) => null;
-
-			        public void Write(CsvWriter writer, string? value) => writer.WriteField(value);
-			    }
-
-			    [CsvRecord]
-			    public partial class Fixed
-			    {
-			        [CsvColumn(Index = 0, Width = 4)]
-			        public int A { get; set; }
-			        [CsvColumn(Index = 1, Width = 6)]
-			        [CsvFormat("yyMMdd")]
-			        public DateTime B { get; set; }
-			        [CsvColumn(Index = 2, Width = 3)]
-			        [CsvBooleanValues("J", "N")]
-			        public bool C { get; set; }
-			    }
-
-			    [CsvRecord]
-			    public partial class Everything
-			    {
-			        [CsvColumn("A", "Alpha", "a")]
-			        public string? Name { get; set; }
-			        [CsvNullValues("NULL", "")]
-			        public string? Maybe { get; set; }
-			        [CsvNullValues("NULL")]
-			        public int? Count { get; set; }
-			        [CsvDefault(0)]
-			        public int Zero { get; set; }
-			        [CsvDefault(2.5f)]
-			        public float Ratio { get; set; }
-			        [CsvDefault(State.Done)]
-			        public State State { get; set; }
-			        [CsvDefault(null)]
-			        public string? Note { get; set; }
-			        [CsvDefault((short)3)]
-			        public short? Small { get; set; }
-			        [CsvDefault(1)]
-			        public decimal Amount { get; set; }
-			        [CsvCulture("de-DE")]
-			        public decimal Price { get; set; }
-			        [CsvCulture("de-DE")]
-			        [CsvFormat("d. MMMM yyyy")]
-			        public DateTimeOffset When { get; set; }
-			        [CsvCulture("")]
-			        public TimeSpan Span { get; set; }
-			        [CsvFormat("hh\\:mm")]
-			        public TimeSpan? Time { get; set; }
-			        [CsvConverter(typeof(Hex))]
-			        public int Code { get; set; }
-			        [CsvConverter(typeof(Hex))]
-			        [CsvNullValues("-")]
-			        public int? MaybeCode { get; set; }
-			        [CsvConverter(typeof(Text))]
-			        public string? Free { get; set; }
-			        [CsvBooleanValues(new[] { "y", "Y " }, new[] { "n" })]
-			        public bool? Flag { get; set; }
-			        public State? Previous { get; set; }
-			        [CsvColumn(Prefix = "Home ")]
-			        public Address Home { get; set; } = new Address();
-			        public Point Point { get; set; }
-			        public Point? MaybePoint { get; set; }
-			    }
-
-			    [CsvRecord]
-			    public partial class Address
-			    {
-			        public string Street { get; set; } = "";
-			    }
-
-			    [CsvRecord]
-			    public partial struct Point
-			    {
-			        public double X;
-			        public double Y;
-			    }
-
-			    [CsvConverter(typeof(TagMapper))]
-			    public sealed class Tag
-			    {
-			        public string Text { get; set; } = "";
-			    }
-
-			    internal sealed class TagMapper : CsvRecordMapper<Tag>
-			    {
-			        private readonly int text;
-
-			        public TagMapper(CsvReader reader, string columnPrefix) : base(columnPrefix)
-			        {
-			            text = Column(reader, "Text", -1, false, "Tag.Text");
-			            ThrowIfColumnsMissing(reader);
-			        }
-
-			        public override Tag Read(CsvReader reader) => new Tag { Text = reader.GetString(text) };
-			    }
-
-			    [CsvConverter(typeof(PlainMapper))]
-			    public struct Plain
-			    {
-			    }
-
-			    public sealed class PlainMapper : CsvRecordMapper<Plain>
-			    {
-			        public PlainMapper(CsvReader reader)
-			        {
-			        }
-
-			        public override Plain Read(CsvReader reader) => default;
-			    }
-
-			    [CsvRecord]
-			    public partial class Tagged
-			    {
-			        public Tag Tag { get; set; } = new Tag();
-			        [CsvColumn(Prefix = "Other ")]
-			        public Tag Other { get; set; } = new Tag();
-			        public Plain Plain { get; set; }
-			    }
-
-			    [CsvRecord]
-			    public partial class Positional
-			    {
-			        public Positional(string name, [CsvColumn(Prefix = "P ")] Point point, [CsvDefault(1)] int count = 2)
-			        {
-			        }
-			    }
-			}
-			""";
+		var source = AttributesSource;
 		var (generator, compilation, output) = Run(source, LanguageVersion.CSharp9);
 
 		Assert.Empty(generator);
@@ -314,123 +436,7 @@ public class RecordGeneratorTests
 	[Fact]
 	public void MappingFeaturesGenerateCSharp9WithoutWarnings()
 	{
-		const string source = """
-			using System;
-			using System.Collections.Generic;
-			using CsvHelper;
-
-			[assembly: CsvConverter(typeof(Sample.CentsConverter))]
-
-			namespace Sample
-			{
-			    public struct Cents { public long Value; }
-
-			    public sealed class CentsConverter : ICsvConverter<Cents>
-			    {
-			        public Cents Read(CsvReader reader, int index) => new Cents { Value = reader.GetInt64(index) };
-
-			        public void Write(CsvWriter writer, Cents value) => writer.WriteField(value.Value);
-			    }
-
-			    public class Entity { public int Id { get; set; } }
-
-			    [CsvRecord]
-			    [CsvIgnoreBase]
-			    [CsvOptions(Separator = ';', HasHeader = false, Culture = "de-DE", NullValues = new[] { "NULL", "-" }, NewLine = "\n")]
-			    public partial class Everything : Entity
-			    {
-			        [CsvColumn(Index = 0)]
-			        public Cents Total { get; set; }
-			        [CsvColumn(Index = 1)]
-			        public Cents? Discount { get; set; }
-			        [CsvColumn(Index = 2)]
-			        [CsvFormat("yyyy-MM-dd", "dd/MM/yyyy")]
-			        public DateTime Day { get; set; }
-			        [CsvColumn(Index = 3)]
-			        [CsvFormat("hh\\:mm", "hh\\:mm\\:ss")]
-			        public TimeSpan? Span { get; set; }
-			        [CsvColumn(Index = 4)]
-			        public Uri? Link { get; set; }
-			        [CsvColumn(Index = 5)]
-			        public Uri Home { get; set; } = new Uri("/", UriKind.Relative);
-			        [CsvColumn(Index = 6, EndIndex = 8)]
-			        public int[] Fixed { get; set; } = new int[0];
-			        [CsvColumn(Index = 9, EndIndex = 10)]
-			        [CsvNullValues("NA")]
-			        public IEnumerable<string?> Texts { get; set; } = new string?[0];
-			        [CsvColumn(Index = 11)]
-			        [CsvValidate(nameof(IsAge))]
-			        public int Age { get; set; }
-			        [CsvColumn(Index = 12)]
-			        [CsvValidate(nameof(IsSet), Message = "A note is needed.")]
-			        public string? Note { get; set; }
-			        [CsvConstant("v2")]
-			        public string Version { get; set; } = "";
-			        [CsvConstant(null)]
-			        public int? Nothing { get; set; }
-
-			        private static bool IsAge(int age) => age >= 0;
-
-			        private static bool IsSet(string? note) => note != null;
-			    }
-
-			    [CsvRecord]
-			    public partial class Collections
-			    {
-			        [CsvColumn("Value", "Val", Optional = true)]
-			        public List<double?> Values { get; set; } = new List<double?>();
-			        [CsvColumn(Index = 2)]
-			        public IReadOnlyList<long> Rest { get; set; } = new long[0];
-			        [CsvColumn(Index = 1)]
-			        public Dictionary<string, int?> Named { get; set; } = new Dictionary<string, int?>();
-			        [CsvColumn(Index = 3, EndIndex = 5)]
-			        [CsvValidate(nameof(Three))]
-			        public IList<Cents> Money { get; set; } = new List<Cents>();
-
-			        private static bool Three(IList<Cents> money) => money.Count == 3;
-			    }
-
-			    [CsvRecord]
-			    public partial class Constructed
-			    {
-			        public Constructed(string name, [CsvConstant(3)] int level, [CsvValidate(nameof(Positive))] decimal amount)
-			        {
-			            Name = name;
-			            Amount = amount;
-			        }
-
-			        public string Name { get; }
-			        public decimal Amount { get; }
-			        public Everything? Inner { get; set; }
-
-			        private static bool Positive(decimal amount) => amount > 0;
-			    }
-
-			    public sealed class Foreign
-			    {
-			        public Foreign(string code) => Code = code;
-			        public string Code { get; }
-			        public string Name { get; set; } = "";
-			        public decimal Rating { get; set; }
-			        public string? Secret { get; set; }
-			    }
-
-			    [CsvRecordMap(typeof(Foreign))]
-			    [CsvOptions(Separator = '|')]
-			    internal partial class ForeignMap
-			    {
-			        [CsvColumn("Supplier Code")]
-			        public string Code { get; set; } = "";
-			        [CsvColumn("Full Name")]
-			        [CsvValidate(nameof(NotEmpty))]
-			        public string Name { get; set; } = "";
-			        [CsvIgnore]
-			        public string? Secret { get; set; }
-
-			        private static bool NotEmpty(string name) => name.Length > 0;
-			    }
-			}
-			""";
+		var source = MappingFeaturesSource;
 		var (generator, compilation, output) = Run(source, LanguageVersion.CSharp9);
 
 		Assert.Empty(generator);
@@ -457,6 +463,50 @@ public class RecordGeneratorTests
 		Assert.Contains("throw new global::CsvHelper.CsvValidationException(\"A note is needed.\");", output);
 		Assert.Contains("if (record.Home is { } value5) writer.WriteField(value5.OriginalString);", output);
 		Assert.Contains("Records of Collections cannot be written: 'Collections.Values' is a collection without a fixed number of columns", output);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ProjectionsGenerateCSharp9WithoutWarnings(bool mappingFeatures)
+	{
+		var source = (mappingFeatures ? MappingFeaturesSource : AttributesSource)
+			.Replace("\nnamespace Sample\n", "\n[assembly: CsvRecordProjections]\nnamespace Sample\n");
+		var (generator, compilation, output) = Run(source, LanguageVersion.CSharp9);
+
+		Assert.Contains("[assembly: CsvRecordProjections]", source);
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+		Assert.Contains("internal sealed class Projection : global::CsvHelper.CsvRecordMapper<", output);
+		if (mappingFeatures)
+		{
+			return;
+		}
+
+		Assert.Contains(
+			"Register<global::Sample.Fixed>(global::Sample.Fixed.CreateCsvMapper, new int[] { 4, 6, 3 }, global::Sample.Fixed.GetCsvMembers, global::Sample.Fixed.CreateCsvProjection);",
+			output);
+		Assert.Contains("Register<global::Sample.Everything>(global::Sample.Everything.CreateCsvMapper, null, global::Sample.Everything.GetCsvMembers,", output);
+		// Hand-written mappers have no projections.
+		Assert.Contains("Register<global::Sample.Tag>(static (reader, columnPrefix) => new global::Sample.TagMapper(reader, columnPrefix));", output);
+		Assert.Contains("column0 = select0 ? Column(reader, new string[] { \"A\", \"Alpha\", \"a\" }, -1, false, \"Everything.Name\") : -1;", output);
+	}
+
+	[Fact]
+	public void ReferencingCsvHelperLinqGeneratesProjections()
+	{
+		const string source = "[CsvHelper.CsvRecord] public partial record A(string Name, int Count = 3) { public required int X { get; init; } }";
+		var linq = CSharpCompilation.Create("CsvHelper.Linq", [], References, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+		var (generator, compilation, output) = Run(source, LanguageVersion.Latest, linq.ToMetadataReference());
+
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+		Assert.Contains("new global::CsvHelper.CsvRecordMember(\"Name\", typeof(string), global::CsvHelper.CsvRecordMemberKind.Column, new string[] { \"Name\" }, -1, false, true),", output);
+		Assert.Contains("new global::CsvHelper.CsvRecordMember(\"X\", typeof(int), global::CsvHelper.CsvRecordMemberKind.Column, new string[] { \"X\" }, -1, false, false),", output);
+		Assert.Contains("select0 ? (reader.GetString(column0)) : \"\",", output);
+		Assert.Contains("select1 ? (column1 >= 0 ? reader.GetInt32(column1) : 3) : 3)", output);
+		Assert.Contains("X = select2 ? (reader.GetInt32(column2)) : default!,", output);
+		Assert.Contains("Register<global::A>(global::A.CreateCsvMapper, null, global::A.GetCsvMembers, global::A.CreateCsvProjection);", output);
 	}
 
 	[Fact]
@@ -511,6 +561,9 @@ public class RecordGeneratorTests
 		// Nullable members read null for the reader's NullValues too, not only for empty fields.
 		Assert.Contains("Y = reader.IsNull(column1) ? default(int?) : reader.GetInt32(column1),", output);
 		Assert.Contains("global::CsvHelper.CsvRecordMapper.Register<global::A>(global::A.CreateCsvMapper);", output);
+		// Without CsvHelper.Linq or [assembly: CsvRecordProjections], no projections.
+		Assert.DoesNotContain("Projection", output);
+		Assert.DoesNotContain("GetCsvMembers", output);
 	}
 
 	[Fact]
@@ -727,12 +780,14 @@ public class RecordGeneratorTests
 		Assert.Empty(output);
 	}
 
-	[Fact]
-	public void ModelsAreCachedAcrossUnrelatedEdits()
+	[Theory]
+	[InlineData("")]
+	[InlineData("[assembly: CsvHelper.CsvRecordProjections] ")]
+	public void ModelsAreCachedAcrossUnrelatedEdits(string projections)
 	{
 		var parseOptions = new CSharpParseOptions(LanguageVersion.Latest);
 		var compilation = CSharpCompilation.Create("Test",
-			[CSharpSyntaxTree.ParseText("[CsvHelper.CsvRecord] public partial class A { public int X { get; set; } }", parseOptions)],
+			[CSharpSyntaxTree.ParseText(projections + "[CsvHelper.CsvRecord] public partial class A { public int X { get; set; } }", parseOptions)],
 			References, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 		GeneratorDriver driver = CSharpGeneratorDriver.Create([new CsvRecordGenerator().AsSourceGenerator()], parseOptions: parseOptions,
 			driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));

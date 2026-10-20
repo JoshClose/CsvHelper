@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using CsvHelper.Docs.Highlighting;
 using CsvHelper.Docs.Site;
 using Microsoft.CodeAnalysis;
 using static CsvHelper.Docs.Html.Html;
@@ -7,8 +8,8 @@ using static CsvHelper.Docs.Html.Html;
 namespace CsvHelper.Docs.Api;
 
 /// <summary>
-/// Renders declarations as HTML with the highlight.js classes (so one theme colors them and the code samples), and
-/// links type names to their API page or to Microsoft Learn.
+/// Renders declarations as HTML with the classes of <see cref="Highlighter"/> (so they are colored as the code samples
+/// are), and links type names to their API page or to Microsoft Learn.
 /// </summary>
 internal sealed class SignatureRenderer
 {
@@ -25,25 +26,25 @@ internal sealed class SignatureRenderer
 			switch (part.Kind)
 			{
 				case SigKind.Keyword:
-					html.Append($"""<span class="hljs-keyword">{text}</span>""");
+					html.Append(Span(TokenKind.Keyword, text));
 					break;
 				case SigKind.Type:
 					var url = TypeUrl(part.Symbol, page);
 					html.Append(url is null
-						? $"""<span class="hljs-type">{text}</span>"""
-						: $"""<a class="hljs-type" href="{E(url)}">{text}</a>""");
+						? Span(TokenKind.Type, text)
+						: $"""<a class="{Highlighter.Class(TokenKind.Type)}" href="{E(url)}">{text}</a>""");
 					break;
 				case SigKind.Member:
-					html.Append($"""<span class="hljs-title function_">{text}</span>""");
+					html.Append(Span(MemberKind(part.Symbol), text));
 					break;
 				case SigKind.Parameter:
-					html.Append($"""<span class="hljs-variable">{text}</span>""");
+					html.Append(Span(TokenKind.Variable, text));
 					break;
 				case SigKind.Number:
-					html.Append($"""<span class="hljs-number">{text}</span>""");
+					html.Append(Span(TokenKind.Number, text));
 					break;
 				case SigKind.String:
-					html.Append($"""<span class="hljs-string">{text}</span>""");
+					html.Append(Span(TokenKind.String, text));
 					break;
 				case SigKind.LineBreak:
 					html.Append('\n');
@@ -56,6 +57,22 @@ internal sealed class SignatureRenderer
 
 		return html.ToString();
 	}
+
+	/// <summary>A colored token.</summary>
+	/// <param name="kind">Its color.</param>
+	/// <param name="html">Its HTML.</param>
+	/// <returns>The span.</returns>
+	private static string Span(TokenKind kind, string html) => $"""<span class="{Highlighter.Class(kind)}">{html}</span>""";
+
+	/// <summary>The color of a member's name, as code colors it: methods, constants and enum members, and the others (properties, fields, events).</summary>
+	/// <param name="symbol">The member; null for the property of an attribute's named argument.</param>
+	/// <returns>The color.</returns>
+	private static TokenKind MemberKind(ISymbol? symbol) => symbol switch
+	{
+		IMethodSymbol => TokenKind.Method,
+		IFieldSymbol { IsConst: true } => TokenKind.Constant,
+		_ => TokenKind.Variable,
+	};
 
 	private string? TypeUrl(ISymbol? symbol, string page)
 	{

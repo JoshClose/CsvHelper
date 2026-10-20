@@ -36,7 +36,7 @@ internal sealed class GuideSet
 {
 	public required List<GuidePage> Pages { get; init; }
 	public required string IntroHtml { get; init; }
-	public required List<(SampleConfig Config, string Code, string Language)> Samples { get; init; }
+	public required List<(SampleConfig Config, string Code, string? Language)> Samples { get; init; }
 
 	/// <summary>Rewrites links and links code in other Markdown content (release notes) the way the guides get it.</summary>
 	public required ContentLinker Links { get; init; }
@@ -102,7 +102,7 @@ internal static partial class Guides
 
 		links.RewriteLinks(intro, "index.html", config.Readme);
 		links.LinkCode(intro, "index.html");
-		var samples = new List<(SampleConfig, string, string)>();
+		var samples = new List<(SampleConfig, string, string?)>();
 		foreach (var sample in config.Home.Samples)
 		{
 			var code = SampleBlocks(sample, readme, headings, pages).OfType<FencedCodeBlock>().ElementAtOrDefault(sample.Index);
@@ -112,7 +112,7 @@ internal static partial class Guides
 				throw new InvalidOperationException($"site.json: home sample '{sample.Title}' has no code block {sample.Index} under '{sample.Heading}' in {source}.");
 			}
 
-			samples.Add((sample, code.Lines.ToString(), string.IsNullOrEmpty(code.Info) ? "plaintext" : code.Info));
+			samples.Add((sample, code.Lines.ToString(), code.Info));
 		}
 
 		return new GuideSet { Pages = pages, IntroHtml = Markdown.Render(intro), Samples = samples, Links = links };

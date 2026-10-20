@@ -11,7 +11,7 @@ and a migration guide for the ones that have something to migrate. Without any f
 
 To add hand-written notes, create a folder named after the tag, with either or both of these Markdown files:
 
-```
+```text
 docs/releases/v1.2.0/changelog.md   shown at the top of the changelog (else the annotated tag's message is used)
 docs/releases/v1.2.0/migration.md   the migration guide, followed by every API change of the release
 ```
@@ -33,7 +33,7 @@ guide does not list API changes: it explains them.
 
 ### Structure
 
-```
+```markdown
 # Migrating from CsvHelper N-1 to N          (for GitHub; the site has its own title)
 
 Two to five sentences: what changed and why, who is affected, new requirements (target frameworks, C# version).
@@ -57,7 +57,7 @@ Two to five sentences: what changed and why, who is affected, new requirements (
 Two code blocks in a row, the first with `before` and the second with `after` after the language, show as the old and
 new code side by side, labeled with the two versions. On GitHub they are two code blocks.
 
-````
+````markdown
 ```csharp before
 var config = new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" };
 using var csv = new CsvReader(reader, config);

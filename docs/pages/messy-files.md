@@ -28,7 +28,7 @@ opens in a spreadsheet also opens here. The options on this page make it stricte
 
 For example, this file has a stray quote in its second record and text after a closing quote in its third:
 
-```
+```csv
 Name,Height
 Anna,5'10"
 "Ben"x,6'
@@ -127,7 +127,7 @@ catch (CsvFormatException e)
 A quoted field may contain line breaks, so a quote that is opened and never closed makes the rest of the file one
 field:
 
-```
+```csv
 Name,Note
 Anna,"forgot to close
 Ben,ok

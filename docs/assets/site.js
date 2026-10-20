@@ -1,4 +1,4 @@
-// CsvHelper documentation: theme toggle, navigation drawer, code highlighting, copy buttons, heading anchors, build
+// CsvHelper documentation: theme toggle, navigation drawer, copy buttons, heading anchors, build
 // and sample tabs, and the "On this page" scrollspy. A classic script (no modules), so the site also works from file://.
 (function () {
 	'use strict';
@@ -64,13 +64,6 @@
 		}
 	}
 
-	// Code highlighting (the API signatures are colored by the generator already).
-	if (window.hljs) {
-		window.hljs.configure({ ignoreUnescapedHTML: true });
-		document.querySelectorAll('pre code[class*="language-"]').forEach(function (block) {
-			if (!block.classList.contains('language-plaintext')) window.hljs.highlightElement(block);
-		});
-	}
 
 	// Copy buttons
 	function copy(text, button) {

@@ -7,6 +7,7 @@ using CsvHelper.Docs.Api;
 using CsvHelper.Docs.Build;
 using CsvHelper.Docs.Content;
 using CsvHelper.Docs.Git;
+using CsvHelper.Docs.Highlighting;
 using CsvHelper.Docs.Html;
 using CsvHelper.Docs.Output;
 using CsvHelper.Docs.Pages;
@@ -46,9 +47,15 @@ internal static class Program
 			var nodeModules = Path.Combine(options.Repo, "docs", "node_modules");
 
 			Log.Info("Building the library");
-			var outputs = ProjectBuilder.BuildAll(project, config.Monikers, lenient: false, TimeSpan.FromMinutes(15));
+			var outputs = ProjectBuilder.BuildAll(project, config.Monikers, lenient: false, TimeSpan.FromMinutes(15)).ToList();
+			foreach (var other in config.Projects)
+			{
+				outputs.AddRange(ProjectBuilder.BuildAll(Path.Combine(options.Repo, other), config.Monikers, lenient: false, TimeSpan.FromMinutes(15)));
+			}
+
 			Log.Info("Reading the API");
 			var api = ApiExtractor.Extract(outputs, options.Strict);
+			Highlighter.UseReferences(api.PrimaryCompilation.References, api.Types.Select(t => t.Namespace));
 			if (options.DumpApi)
 			{
 				Dump(api);

@@ -12,7 +12,8 @@ namespace CsvHelper.Docs.Api;
 
 /// <summary>
 /// Reads the public API from the built assemblies and their XML docs, one Roslyn compilation per target framework
-/// (with the exact references the library was compiled against), and merges the frameworks.
+/// (with the exact references the libraries were compiled against), and merges the frameworks. The libraries of one
+/// framework (CsvHelper, CsvHelper.Linq) share its compilation, so each one's references to the others resolve.
 /// </summary>
 internal static partial class ApiExtractor
 {
@@ -28,7 +29,7 @@ internal static partial class ApiExtractor
 
 	public static ApiSet Extract(IReadOnlyList<BuildOutput> outputs, bool strict)
 	{
-		var frameworks = outputs.Select(o => Load(o, strict)).ToList();
+		var frameworks = outputs.GroupBy(o => o.TargetFramework).Select(g => Load(g.ToList(), strict)).ToList();
 		var types = new List<ApiType>();
 		var typesById = new Dictionary<string, ApiType>();
 		var membersById = new Dictionary<string, ApiMember>();
@@ -91,7 +92,7 @@ internal static partial class ApiExtractor
 
 		return new ApiSet
 		{
-			Frameworks = outputs.Select(o => o.TargetFramework).ToList(),
+			Frameworks = frameworks.Select(f => f.Moniker).ToList(),
 			Types = types,
 			TypesById = typesById,
 			MembersById = membersById,
@@ -150,33 +151,48 @@ internal static partial class ApiExtractor
 	public static string Id(ISymbol symbol) =>
 		symbol.GetDocumentationCommentId() ?? throw new InvalidOperationException($"{symbol} has no documentation ID.");
 
-	private static FrameworkApi Load(BuildOutput output, bool strict)
+	/// <summary>Reads the API of the libraries built for one target framework, in one compilation.</summary>
+	/// <param name="outputs">The builds of the libraries for the framework.</param>
+	/// <param name="strict">Whether to warn about undocumented and unresolved members.</param>
+	private static FrameworkApi Load(IReadOnlyList<BuildOutput> outputs, bool strict)
 	{
-		if (!File.Exists(output.XmlPath)) throw new FileNotFoundException("The XML documentation file is missing. Is GenerateDocumentationFile on?", output.XmlPath);
-		var library = MetadataReference.CreateFromFile(output.AssemblyPath, documentation: XmlDocs.Load(output.XmlPath));
-		var references = output.References
-			.Where(r => !string.Equals(Path.GetFullPath(r), Path.GetFullPath(output.AssemblyPath), StringComparison.OrdinalIgnoreCase))
-			.Select(r => (MetadataReference)MetadataReference.CreateFromFile(r))
-			.Append(library);
-		var compilation = CSharpCompilation.Create($"ApiDocs.{output.TargetFramework}", references: references,
-			options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-		var assembly = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(library)!;
-		var api = new FrameworkApi { Moniker = output.TargetFramework, Compilation = compilation };
-		foreach (var type in AllTypes(assembly.GlobalNamespace).Where(IsVisible))
+		var moniker = outputs[0].TargetFramework;
+		var libraries = new List<(BuildOutput Output, MetadataReference Reference)>();
+		foreach (var output in outputs)
 		{
-			var id = Id(type);
-			var header = Signatures.Text(Signatures.TypeHeader(type));
-			var typeDoc = type.GetDocumentationCommentXml();
-			api.Types[id] = new Entry(type, header, typeDoc);
-			CheckDocumented(type, typeDoc, output.TargetFramework, strict);
-			if (strict) CheckResolved(type, header, output.TargetFramework);
-			foreach (var member in type.GetMembers().Where(IsShown))
+			if (!File.Exists(output.XmlPath)) throw new FileNotFoundException("The XML documentation file is missing. Is GenerateDocumentationFile on?", output.XmlPath);
+			libraries.Add((output, MetadataReference.CreateFromFile(output.AssemblyPath, documentation: XmlDocs.Load(output.XmlPath))));
+		}
+
+		// A library that references another one (CsvHelper.Linq, CsvHelper) gets the documented one, not its reference assembly.
+		var names = new HashSet<string>(outputs.Select(o => Path.GetFileName(o.AssemblyPath)), StringComparer.OrdinalIgnoreCase);
+		var references = outputs.SelectMany(o => o.References)
+			.Where(r => !names.Contains(Path.GetFileName(r)))
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.Select(r => (MetadataReference)MetadataReference.CreateFromFile(r))
+			.Concat(libraries.Select(l => l.Reference));
+		var compilation = CSharpCompilation.Create($"ApiDocs.{moniker}", references: references,
+			options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+		var api = new FrameworkApi { Moniker = moniker, Compilation = compilation };
+		foreach (var (_, library) in libraries)
+		{
+			var assembly = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(library)!;
+			foreach (var type in AllTypes(assembly.GlobalNamespace).Where(IsVisible))
 			{
-				var signature = Signatures.MemberText(member);
-				var doc = DocXml(member);
-				api.Members[Id(member)] = new Entry(member, signature, doc);
-				CheckDocumented(member, doc, output.TargetFramework, strict);
-				if (strict) CheckResolved(member, signature, output.TargetFramework);
+				var id = Id(type);
+				var header = Signatures.Text(Signatures.TypeHeader(type));
+				var typeDoc = type.GetDocumentationCommentXml();
+				api.Types[id] = new Entry(type, header, typeDoc);
+				CheckDocumented(type, typeDoc, moniker, strict);
+				if (strict) CheckResolved(type, header, moniker);
+				foreach (var member in type.GetMembers().Where(IsShown))
+				{
+					var signature = Signatures.MemberText(member);
+					var doc = DocXml(member);
+					api.Members[Id(member)] = new Entry(member, signature, doc);
+					CheckDocumented(member, doc, moniker, strict);
+					if (strict) CheckResolved(member, signature, moniker);
+				}
 			}
 		}
 

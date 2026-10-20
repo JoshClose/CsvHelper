@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using CsvHelper.Docs.Content;
+using CsvHelper.Docs.Highlighting;
 using CsvHelper.Docs.Site;
 using static CsvHelper.Docs.Html.Html;
 
@@ -36,7 +37,7 @@ internal sealed class HomePage
 		{
 			var key = Html.Slugs.Slug(sample.Title);
 			tabs.Append($"""<button type="button" role="tab" class="sample-tab" data-sample-tab="{key}">{ui.Icon(sample.Icon, "size-3.5")}{E(sample.Title)}</button>""");
-			panels.Append($"""<div class="sample-panel" role="tabpanel" data-sample="{key}"><pre><code class="language-{E(language)}">{E(code)}</code></pre></div>""");
+			panels.Append($"""<div class="sample-panel" role="tabpanel" data-sample="{key}">{Highlighter.Block(code, language)}</div>""");
 		}
 
 		var stats = string.Concat(config.Home.Stats.Select(s => $"""<div class="stat"><dt class="stat-label">{E(s.Label)}</dt><dd class="stat-value">{E(s.Value)}</dd></div>"""));

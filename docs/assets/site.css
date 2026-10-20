@@ -84,8 +84,8 @@
 	--tw-prose-quote-borders: var(--color-brand-500);
 	--tw-prose-captions: var(--color-ink-600);
 	--tw-prose-code: var(--color-ink-900);
-	--tw-prose-pre-code: var(--color-ink-800);
-	--tw-prose-pre-bg: var(--color-ink-50);
+	--tw-prose-pre-code: var(--code-fg);
+	--tw-prose-pre-bg: var(--code-bg);
 	--tw-prose-th-borders: var(--color-ink-300);
 	--tw-prose-td-borders: var(--color-ink-200);
 	--tw-prose-invert-body: var(--color-ink-200);
@@ -100,8 +100,8 @@
 	--tw-prose-invert-quote-borders: var(--color-brand-500);
 	--tw-prose-invert-captions: var(--color-ink-400);
 	--tw-prose-invert-code: var(--color-ink-100);
-	--tw-prose-invert-pre-code: var(--color-ink-200);
-	--tw-prose-invert-pre-bg: var(--color-ink-900);
+	--tw-prose-invert-pre-code: var(--code-fg);
+	--tw-prose-invert-pre-bg: var(--code-bg);
 	--tw-prose-invert-th-borders: var(--color-ink-700);
 	--tw-prose-invert-td-borders: var(--color-ink-800);
 }
@@ -180,63 +180,125 @@
 	@apply mt-0;
 }
 
+/*
+	Code colors: VS Code's Light+ theme, and its Dark+ theme in dark mode. The generator colors code blocks and API
+	signatures with the hl-* classes (tools/CsvHelper.Docs/Highlighting), so the colors switch with the site's theme.
+	color-scheme gives the scrollbars of wide code blocks the theme too.
+*/
+:root {
+	color-scheme: light;
+	--code-bg: #f8f8f8;
+	--code-fg: #000000;
+	--hl-keyword: #0000ff;
+	--hl-control: #af00db;
+	--hl-type: #267f99;
+	--hl-method: #795e26;
+	--hl-variable: #001080;
+	--hl-constant: #0070c1;
+	--hl-string: #a31515;
+	--hl-escape: #ee0000;
+	--hl-number: #098658;
+	--hl-comment: #008000;
+	--hl-punctuation: #800000;
+	--hl-tag: #800000;
+	--hl-attribute: #e50000;
+	--hl-value: #0000ff;
+	--hl-heading: #800000;
+	--hl-list: #0451a5;
+	--hl-muted: #767676;
+}
+
+:root.dark {
+	color-scheme: dark;
+	--code-bg: #1e1e1e;
+	--code-fg: #d4d4d4;
+	--hl-keyword: #569cd6;
+	--hl-control: #c586c0;
+	--hl-type: #4ec9b0;
+	--hl-method: #dcdcaa;
+	--hl-variable: #9cdcfe;
+	--hl-constant: #4fc1ff;
+	--hl-string: #ce9178;
+	--hl-escape: #d7ba7d;
+	--hl-number: #b5cea8;
+	--hl-comment: #6a9955;
+	--hl-punctuation: #808080;
+	--hl-tag: #569cd6;
+	--hl-attribute: #9cdcfe;
+	--hl-value: #ce9178;
+	--hl-heading: #569cd6;
+	--hl-list: #6796e6;
+	--hl-muted: #8b8b8b;
+}
+
 @layer base {
-	/* highlight.js, shared by the code samples and the generated signatures. */
-	.hljs {
-		color: var(--color-ink-800);
-		background: transparent;
+	.hl-keyword {
+		color: var(--hl-keyword);
 	}
 
-	.hljs-keyword,
-	.hljs-literal,
-	.hljs-built_in,
-	.hljs-meta .hljs-keyword {
-		@apply font-semibold text-brand-700 dark:text-brand-400;
+	.hl-control {
+		color: var(--hl-control);
 	}
 
-	.hljs-type,
-	.hljs-title.class_,
-	.hljs-title.class_.inherited__ {
-		@apply font-semibold text-ink-950 dark:text-white;
+	.hl-type {
+		color: var(--hl-type);
 	}
 
-	.hljs-title,
-	.hljs-title.function_ {
-		@apply text-ink-900 dark:text-ink-100;
+	.hl-method {
+		color: var(--hl-method);
 	}
 
-	.hljs-string,
-	.hljs-char,
-	.hljs-template-string,
-	.hljs-regexp {
-		@apply text-amber-800 dark:text-amber-300;
+	.hl-variable {
+		color: var(--hl-variable);
 	}
 
-	.hljs-number,
-	.hljs-symbol {
-		@apply text-purple-700 dark:text-purple-300;
+	.hl-constant {
+		color: var(--hl-constant);
 	}
 
-	.hljs-comment,
-	.hljs-quote {
-		@apply text-ink-600 italic dark:text-ink-400;
+	.hl-string {
+		color: var(--hl-string);
 	}
 
-	.hljs-variable,
-	.hljs-params,
-	.hljs-attr,
-	.hljs-property {
-		@apply text-ink-700 dark:text-ink-300;
+	.hl-escape {
+		color: var(--hl-escape);
 	}
 
-	.hljs-meta,
-	.hljs-tag,
-	.hljs-name {
-		@apply text-ink-700 dark:text-ink-300;
+	.hl-number {
+		color: var(--hl-number);
 	}
 
-	.hljs-attribute {
-		@apply text-brand-800 dark:text-brand-300;
+	.hl-comment {
+		color: var(--hl-comment);
+	}
+
+	.hl-punctuation {
+		color: var(--hl-punctuation);
+	}
+
+	.hl-tag {
+		color: var(--hl-tag);
+	}
+
+	.hl-attribute {
+		color: var(--hl-attribute);
+	}
+
+	.hl-value {
+		color: var(--hl-value);
+	}
+
+	.hl-heading {
+		color: var(--hl-heading);
+		font-weight: 700;
+	}
+
+	.hl-list {
+		color: var(--hl-list);
+	}
+
+	.hl-muted {
+		color: var(--hl-muted);
 	}
 }
 
@@ -582,7 +644,9 @@
 	}
 
 	.signature pre {
-		@apply overflow-x-auto rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 font-mono text-[0.85rem] leading-relaxed whitespace-pre-wrap text-ink-800 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-200;
+		@apply overflow-x-auto rounded-xl border border-ink-200 px-4 py-3 font-mono text-[0.85rem] leading-relaxed whitespace-pre-wrap dark:border-ink-800;
+		background-color: var(--code-bg);
+		color: var(--code-fg);
 		overflow-wrap: anywhere;
 	}
 
@@ -860,60 +924,28 @@
 		@apply mt-2 text-sm text-brand-100;
 	}
 
+	/* The code samples: an editor window with a tab per sample, in the code colors of the site's theme. */
 	.hero-samples {
-		@apply min-w-0 overflow-hidden rounded-2xl bg-ink-950 shadow-2xl shadow-brand-950/40 ring-1 ring-white/10;
+		@apply min-w-0 overflow-hidden rounded-2xl shadow-2xl shadow-brand-950/40 ring-1 ring-black/10 dark:ring-white/10;
+		background-color: var(--code-bg);
 	}
 
 	.sample-tabs {
-		@apply flex gap-1 border-b border-white/10 bg-ink-900/80 px-3 pt-3;
+		@apply flex gap-1 border-b border-ink-200 bg-ink-100 px-3 pt-3 dark:border-white/10 dark:bg-ink-900;
 	}
 
 	.sample-tab {
-		@apply inline-flex items-center gap-2 rounded-t-lg px-3 py-2 text-xs font-semibold text-ink-400 transition-colors hover:text-white;
+		@apply inline-flex items-center gap-2 rounded-t-lg px-3 py-2 text-xs font-semibold text-ink-600 transition-colors hover:text-ink-950 dark:text-ink-400 dark:hover:text-white;
 	}
 
 	.sample-tab[aria-selected="true"] {
-		@apply bg-ink-950 text-brand-300;
+		@apply text-brand-700 dark:text-brand-300;
+		background-color: var(--code-bg);
 	}
 
 	.sample-panel pre {
-		@apply m-0 overflow-x-auto p-5 font-mono text-[0.8rem] leading-relaxed text-ink-100;
-	}
-
-	.sample-panel .hljs {
-		@apply text-ink-100;
-	}
-
-	.sample-panel .hljs-keyword,
-	.sample-panel .hljs-literal,
-	.sample-panel .hljs-built_in {
-		@apply text-brand-300;
-	}
-
-	.sample-panel .hljs-type,
-	.sample-panel .hljs-title.class_ {
-		@apply text-white;
-	}
-
-	.sample-panel .hljs-title,
-	.sample-panel .hljs-title.function_ {
-		@apply text-ink-100;
-	}
-
-	.sample-panel .hljs-string {
-		@apply text-amber-300;
-	}
-
-	.sample-panel .hljs-number {
-		@apply text-purple-300;
-	}
-
-	.sample-panel .hljs-comment {
-		@apply text-ink-400;
-	}
-
-	.sample-panel .copy-button {
-		@apply border-white/10 bg-ink-800/90 text-ink-300;
+		@apply m-0 overflow-x-auto p-5 font-mono text-[0.8rem] leading-relaxed;
+		color: var(--code-fg);
 	}
 
 	.home-section {
@@ -1131,6 +1163,7 @@
 
 	.diff pre {
 		@apply m-0 overflow-x-auto px-4 pt-1 pb-3 font-mono text-[0.8rem] whitespace-pre-wrap;
+		color: var(--code-fg);
 	}
 
 	/* "Before · v33.1.0": the version keeps its case. */

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CsvHelper.Docs.Highlighting;
 using Markdig.Syntax;
 using static CsvHelper.Docs.Html.Html;
 
@@ -9,8 +10,8 @@ namespace CsvHelper.Docs.Content;
 /// <summary>One side of a before/after comparison: its label, its code and the code's language.</summary>
 /// <param name="Label">The label above the code: <c>Before · v33.1.0</c>.</param>
 /// <param name="Code">The code.</param>
-/// <param name="Language">The highlight.js language: csharp, xml, plaintext.</param>
-internal sealed record DiffSide(string Label, string Code, string Language = "csharp");
+/// <param name="Language">The language of the code (csharp, xml); null for plain text.</param>
+internal sealed record DiffSide(string Label, string Code, string? Language = "csharp");
 
 /// <summary>The labels of the two sides of before/after comparisons.</summary>
 /// <param name="Before">The label of the old code.</param>
@@ -55,7 +56,7 @@ internal static class BeforeAfter
 	/// <param name="label">The label above the code.</param>
 	/// <returns>The side.</returns>
 	public static DiffSide ToSide(FencedCodeBlock block, string label) =>
-		new(label, Code(block), string.IsNullOrEmpty(block.Info) ? "plaintext" : block.Info);
+		new(label, Code(block), block.Info);
 
 	/// <summary>The markup of a comparison (the styles are .diff, .diff-before and .diff-after in docs/assets/site.css).</summary>
 	/// <param name="before">The old side, or null when there is only a new one.</param>
@@ -121,6 +122,6 @@ internal static class BeforeAfter
 		var dot = side.Label.IndexOf(" · ", StringComparison.Ordinal);
 		var label = dot < 0 ? E(side.Label) : $"""{E(side.Label[..dot])} <span class="diff-version">· {E(side.Label[(dot + 3)..])}</span>""";
 
-		return $"""<div class="{classes}"><span class="diff-label">{label}</span><pre><code class="language-{E(side.Language)}">{E(side.Code)}</code></pre></div>""";
+		return $"""<div class="{classes}"><span class="diff-label">{label}</span>{Highlighter.Block(side.Code, side.Language)}</div>""";
 	}
 }

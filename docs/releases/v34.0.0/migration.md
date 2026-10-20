@@ -541,7 +541,8 @@ record with no fields. Remove those calls, or write the whole list with `csv.Wri
 
 - **Only record types:** `WriteRecords` and `WriteRecord` write `[CsvRecord]` types (and dynamic records, dictionaries
   and `ExpandoObject`). Anonymous types and other classes, which 33 wrote by reflection, throw
-  `InvalidOperationException`; make them `[CsvRecord] partial`.
+  `InvalidOperationException`; make them `[CsvRecord] partial`, or write them with the `WriteCsv` extension of
+  [CsvHelper.Linq](../../pages/linq.md#writing-query-results), which writes them by their public members.
 - **Only the columns that are read:** a record type writes the columns its mapper reads, so a property without a
   setter, such as a computed one, is no longer written, where 33 wrote every public property with a getter. Write such
   values from a `[CsvRecord]` type of their own whose members can be set, or field by field with `WriteField`.
@@ -723,5 +724,6 @@ These compile once the code is ported, but behave differently:
 - **`useOnConversionFailure` of a class map's `Default`:** values that don't parse fail the record; `OnRecordError`
   can skip it.
 - **The `ClassMap.Convert` lambdas:** write an `ICsvConverter<T>` or a hand-written mapper.
-- **Writing anonymous types and plain classes:** declare a `[CsvRecord]` type.
+- **Writing anonymous types and plain classes:** declare a `[CsvRecord]` type, or use `WriteCsv` of
+  [CsvHelper.Linq](../../pages/linq.md#writing-query-results).
 - **`GetRecords(Type)` and the other `Type`-based methods:** use the generic methods.

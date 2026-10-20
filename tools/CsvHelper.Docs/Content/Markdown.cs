@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using CsvHelper.Docs.Highlighting;
 using Markdig;
 using Markdig.Extensions.AutoIdentifiers;
 using Markdig.Renderers;
@@ -128,8 +129,7 @@ internal static partial class Markdown
 		labels ??= DiffLabels.Default;
 		var list = blocks as IReadOnlyList<Block> ?? blocks.ToList();
 		var writer = new StringWriter();
-		var renderer = new HtmlRenderer(writer);
-		Pipeline.Setup(renderer);
+		var renderer = CreateRenderer(writer);
 		for (var i = 0; i < list.Count; i++)
 		{
 			if (list[i] is FencedCodeBlock code && BeforeAfter.Side(code) is { } side)
@@ -159,19 +159,34 @@ internal static partial class Markdown
 	}
 
 	/// <summary>Renders a whole Markdown text (release notes).</summary>
-	public static string Render(string markdown) => PostProcess(Markdig.Markdown.ToHtml(markdown, Pipeline));
+	public static string Render(string markdown)
+	{
+		var writer = new StringWriter();
+		CreateRenderer(writer).Render(Parse(markdown));
+		writer.Flush();
 
-	/// <summary>
-	/// Wraps tables for horizontal scrolling, marks code blocks without a language as plain text (highlight.js would
-	/// guess), and gives rows of diagnostic tables (a first cell like CSVH001) an id.
-	/// </summary>
+		return PostProcess(writer.ToString());
+	}
+
+	/// <summary>Wraps tables for horizontal scrolling, and gives rows of diagnostic tables (a first cell like CSVH001) an id.</summary>
 	public static string PostProcess(string html)
 	{
-		html = html.Replace("<pre><code>", """<pre><code class="language-plaintext">""", StringComparison.Ordinal);
 		html = html.Replace("<table>", """<div class="table-wrap"><table>""", StringComparison.Ordinal)
 				   .Replace("</table>", "</table></div>", StringComparison.Ordinal);
 
 		return DiagnosticRow().Replace(html, m => $"""<tr id="{m.Groups[1].Value.ToLowerInvariant()}">{m.Groups[0].Value[4..]}""");
+	}
+
+	/// <summary>A renderer set up for the pipeline, whose code blocks are colored by <see cref="Highlighter"/>.</summary>
+	/// <param name="writer">The writer to render to.</param>
+	/// <returns>The renderer.</returns>
+	private static HtmlRenderer CreateRenderer(TextWriter writer)
+	{
+		var renderer = new HtmlRenderer(writer);
+		Pipeline.Setup(renderer);
+		renderer.ObjectRenderers.ReplaceOrAdd<CodeBlockRenderer>(new HighlightedCodeBlockRenderer());
+
+		return renderer;
 	}
 
 	private static string? Marker(HtmlBlock block)

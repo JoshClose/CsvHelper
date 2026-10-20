@@ -18,6 +18,8 @@ public sealed class CsvRecordGenerator : IIncrementalGenerator
 
 	private const string ModuleInitializer = "System.Runtime.CompilerServices.ModuleInitializerAttribute";
 
+	private const string ProjectionsAttribute = "CsvHelper.CsvRecordProjectionsAttribute";
+
 	/// <summary>
 	/// Registers the pipeline: one source file (or diagnostics) per [CsvRecord] type and per [CsvRecordMap] class,
 	/// diagnostics for the types with a [CsvConverter] and for the assembly's [CsvConverter] attributes, and one file that
@@ -36,8 +38,12 @@ public sealed class CsvRecordGenerator : IIncrementalGenerator
 			static (node, _) => node is TypeDeclarationSyntax,
 			static (context, cancellationToken) => RecordParser.ParseMap(context, cancellationToken));
 
-		context.RegisterSourceOutput(records, static (context, model) => Generate(context, model));
-		context.RegisterSourceOutput(maps, static (context, model) => Generate(context, model));
+		// Projections (the mappers that read only some members, for CsvHelper.Linq) are generated only when they can be used.
+		var projections = context.CompilationProvider.Select(static (c, _) => Projections(c));
+		var recordsWithProjections = records.Combine(projections);
+		var mapsWithProjections = maps.Combine(projections);
+		context.RegisterSourceOutput(recordsWithProjections, static (context, input) => Generate(context, input.Left, input.Right));
+		context.RegisterSourceOutput(mapsWithProjections, static (context, input) => Generate(context, input.Left, input.Right));
 
 		var mappers = context.SyntaxProvider.ForAttributeWithMetadataName(
 			"CsvHelper.CsvConverterAttribute",
@@ -55,8 +61,8 @@ public sealed class CsvRecordGenerator : IIncrementalGenerator
 			foreach (var diagnostic in diagnostics) context.ReportDiagnostic(diagnostic.ToDiagnostic());
 		});
 
-		var generated = records.Where(static m => !m.HasErrors).Select(static (m, _) => Registration(m)).Collect();
-		var mapped = maps.Where(static m => !m.HasErrors).Select(static (m, _) => Registration(m)).Collect();
+		var generated = recordsWithProjections.Where(static i => !i.Left.HasErrors).Select(static (i, _) => Registration(i.Left, i.Right)).Collect();
+		var mapped = mapsWithProjections.Where(static i => !i.Left.HasErrors).Select(static (i, _) => Registration(i.Left, i.Right)).Collect();
 		var handWritten = mappers.Where(static m => m.Registration is not null).Select(static (m, _) => m.Registration!).Collect();
 		var needsPolyfill = context.CompilationProvider.Select(static (c, _) => c.GetTypeByMetadataName(ModuleInitializer) is null);
 		context.RegisterSourceOutput(generated.Combine(mapped).Combine(handWritten).Combine(needsPolyfill), static (context, input) =>
@@ -69,14 +75,25 @@ public sealed class CsvRecordGenerator : IIncrementalGenerator
 	}
 
 	/// <summary>Reports the diagnostics of a record type or map, and adds its code when it has no errors.</summary>
-	private static void Generate(SourceProductionContext context, RecordModel model)
+	private static void Generate(SourceProductionContext context, RecordModel model, bool projections)
 	{
 		foreach (var diagnostic in model.Diagnostics) context.ReportDiagnostic(diagnostic.ToDiagnostic());
-		if (!model.HasErrors) context.AddSource(model.HintName, RecordEmitter.Emit(model));
+		if (!model.HasErrors) context.AddSource(model.HintName, RecordEmitter.Emit(model, projections));
 	}
 
-	/// <summary>The registration of the generated mapper, record writer and options of a record type, made in the type that holds them.</summary>
-	private static RegistrationModel Registration(RecordModel model) =>
+	/// <summary>
+	/// The registration of the generated mapper, record writer, options and projections of a record type, made in the
+	/// type that holds them.
+	/// </summary>
+	private static RegistrationModel Registration(RecordModel model, bool projections) =>
 		new(model.FullName, model.HostFullName + ".CreateCsvMapper", model.FieldWidths, model.HostFullName + ".CreateCsvWriter",
-			model.Options is null ? null : model.HostFullName);
+			model.Options is null ? null : model.HostFullName, projections ? model.HostFullName : null);
+
+	/// <summary>
+	/// Whether to generate projections: the assembly references CsvHelper.Linq, which reads only the members a query
+	/// uses, or asks for them with [assembly: CsvRecordProjections] (for record types that another assembly queries).
+	/// </summary>
+	private static bool Projections(Compilation compilation) =>
+		compilation.ReferencedAssemblyNames.Any(static a => a.Name == "CsvHelper.Linq") ||
+		compilation.Assembly.GetAttributes().Any(static a => a.AttributeClass?.ToDisplayString() == ProjectionsAttribute);
 }

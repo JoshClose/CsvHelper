@@ -79,7 +79,7 @@ writer.WriteRecord("A-2", "Gadget, large", "24.50", "1");
 writer.WriteRecord("A-3", "12\" ruler", null, "");     // null and "" are empty fields
 ```
 
-```
+```csv
 Id,Name,Price,Quantity
 A-1,Widget,9.99,3
 A-2,"Gadget, large",24.50,1
@@ -119,6 +119,7 @@ writer.WriteRecords(orders);                  // the header, then a record per o
 | `WriteRecordsAsync<T>(records, cancellationToken)` | The same for an `IEnumerable<T>` or an `IAsyncEnumerable<T>`, flushing asynchronously. |
 | `WriteHeader<T>()` | The header of `T`: the names of its columns. |
 | `WriteRecord<T>(record)`, `WriteRecordAsync<T>(record)` | One record, without a header. |
+| `WriteRecords<T>(records, recordWriter)` | The same as `WriteRecords<T>(records)` with a `CsvRecordWriter<T>` of your own, which is not registered for the type. |
 
 To write records without a header, set `HasHeader = false` in the options, or call `WriteRecord<T>` for each one.
 `WriteRecords` also writes [dynamic records](records.html#writing-dynamic-records), `ExpandoObject`s and dictionaries
@@ -127,6 +128,9 @@ keyed by column name, in the columns of the first record.
 [`[CsvOptions]`](records.html#options-on-the-record-type-csvoptions) gives. The generated code calls the `WriteField`
 overloads directly, so it is as fast as writing the members by hand, and like the mappers it uses no reflection.
 [Records](records.html#writing-records) describes how each member is written and which types cannot be written.
+
+Anonymous types, tuples and classes without `[CsvRecord]`, such as the entities of an ORM, can be written with the
+`WriteCsv` extension of [CsvHelper.Linq](linq.html#writing-query-results), which writes them by their public members.
 
 ## Writing values
 
@@ -238,7 +242,7 @@ LF, and quotes inside it are doubled. Nothing else is quoted, not even leading o
 writer.WriteRecord("plain", "a,b", "say \"hi\"", "two\nlines", " spaced ", "");
 ```
 
-```
+```csv
 plain,"a,b","say ""hi""","two
 lines", spaced ,
 ```
@@ -429,7 +433,7 @@ writer.WriteRecord("multi", "line\none");
 writer.WriteRecord("quotes", "say \"hi\"");
 ```
 
-```
+```text
 Path,Note
 C:\\Temp\\out,a\, b
 multi,line\
@@ -481,7 +485,7 @@ writer.WriteField(-3.75m);
 writer.EndRecord();
 ```
 
-```
+```text
 Id    Name        Balance
 1     Anna        1250.00
 2     Benedikt    -3.75
