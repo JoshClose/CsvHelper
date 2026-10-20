@@ -1,41 +1,60 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0;net8.0;net48;net47;net462</TargetFrameworks>
-		<!--<TargetFrameworks>net8.0</TargetFrameworks>-->
-		<LangVersion>preview</LangVersion>
-		<SignAssembly>True</SignAssembly>
-		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<!-- net8.0 runs the netstandard2.1 build of the library and net48 the net47 build (the same code as
+		     netstandard2.0). -->
+		<TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<WarningsAsErrors>nullable</WarningsAsErrors>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<None Remove="*.ncrunchproject" />
+	<PropertyGroup>
+		<!-- Signed with the library's key: its InternalsVisibleTo names this assembly by that public key. -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\src\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+		<!-- The package assemblies (System.Memory, System.Buffers, ...) reference older versions of each other; an
+		     application gets binding redirects for them, a test library has to ask. -->
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<None Remove="App.config" />
+	</ItemGroup>
+
+	<!-- The runtime binder of dynamic, which .NET has in its shared framework. -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<Reference Include="Microsoft.CSharp" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Castle.Core" Version="4.4.1" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.10.0" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
-		<PackageReference Include="xunit" Version="2.4.1" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-		<PackageReference Include="coverlet.collector" Version="3.0.3">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="6.0.4" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+		<Using Include="Xunit" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
+		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
 	</ItemGroup>
+
+	<!-- The [CsvRecord] generator runs on the test types for both targets; on .NET the tests also run it directly. -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+	</ItemGroup>
+
 </Project>

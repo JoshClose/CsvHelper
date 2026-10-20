@@ -1,0 +1,59 @@
+name: Docs
+# Builds the documentation site (docs/build.ps1) and deploys it to GitHub Pages. Pages must be set to deploy from
+# GitHub Actions (Settings > Pages > Source). The changelog comes from the release tags: push a new tag with master
+# (git push --follow-tags), or run this workflow after pushing it.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # All history and tags: the changelog is built from them.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+      - name: Restore API Snapshots
+        # The API of each release tag, built once and cached by commit (docs/.cache/api). A new key every run saves
+        # the snapshots of new tags; the restore key finds the last run's.
+        uses: actions/cache@v6
+        with:
+          path: docs/.cache
+          key: docs-api-${{ github.run_id }}
+          restore-keys: docs-api-
+      - name: Build Site
+        run: ./docs/build.ps1 -Strict
+      - name: Upload Site
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

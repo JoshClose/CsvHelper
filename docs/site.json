@@ -1,0 +1,262 @@
+{
+	"title": "CsvHelper",
+	"tagline": "A CSV reader and writer for .NET, built for speed.",
+	"description": "CsvHelper is a SIMD accelerated, allocation free CSV reader and strict RFC 4180 writer for .NET 10, .NET Standard 2.0 and 2.1 and .NET Framework 4.7.",
+	"repository": "https://github.com/JoshClose/CsvHelper",
+	"branch": "master",
+	"baseUrl": "https://joshclose.github.io/CsvHelper/",
+	"project": "src/CsvHelper/CsvHelper.csproj",
+	"package": "CsvHelper",
+	"readme": "README.md",
+	"targetFrameworks": [
+		{ "moniker": "net10.0", "label": ".NET 10" },
+		{ "moniker": "netstandard2.1", "label": ".NET Standard 2.1" },
+		{ "moniker": "netstandard2.0", "label": ".NET Standard 2.0" },
+		{ "moniker": "net47", "label": ".NET Framework 4.7" }
+	],
+	"guides": [
+		{
+			"slug": "getting-started",
+			"file": "docs/pages/getting-started.md"
+		},
+		{
+			"slug": "reading",
+			"file": "docs/pages/reading.md"
+		},
+		{
+			"slug": "records",
+			"file": "docs/pages/records.md"
+		},
+		{
+			"slug": "messy-files",
+			"file": "docs/pages/messy-files.md"
+		},
+		{
+			"slug": "writing",
+			"file": "docs/pages/writing.md"
+		},
+		{
+			"slug": "testing",
+			"file": "docs/pages/testing.md"
+		},
+		{
+			"slug": "target-frameworks",
+			"title": "Target frameworks",
+			"icon": "layer-group",
+			"description": "What differs between the .NET 10, .NET Standard and .NET Framework 4.7 builds.",
+			"headings": [ "## Target frameworks" ]
+		},
+		{
+			"slug": "performance",
+			"title": "Performance",
+			"icon": "gauge-high",
+			"description": "How the reader and writer are fast: UTF-8 throughout, 64-byte SIMD blocks, branch-free quotes and more.",
+			"headings": [ "## How it is fast" ]
+		},
+		{
+			"slug": "benchmarks",
+			"title": "Benchmarks",
+			"icon": "chart-simple",
+			"description": "CsvHelper against Sep and Sylvan.Data.Csv, measured with BenchmarkDotNet.",
+			"headings": [ "## Benchmarks" ]
+		},
+		{
+			"slug": "building",
+			"title": "Building and testing",
+			"icon": "hammer",
+			"description": "Build the library and run its tests.",
+			"headings": [ "## Building and testing" ]
+		}
+	],
+	"home": {
+		"samples": [
+			{ "title": "Read", "icon": "book-open", "page": "reading", "heading": "", "index": 0 },
+			{ "title": "Records", "icon": "cubes", "page": "records", "heading": "", "index": 0 },
+			{ "title": "Write", "icon": "pen", "page": "writing", "heading": "", "index": 0 }
+		],
+		"stats": [
+			{ "value": "8.0 GB/s", "label": "finding records" },
+			{ "value": "5.3 GB/s", "label": "reading every field" },
+			{ "value": "1.9 GB/s", "label": "writing text records" }
+		],
+		"features": [
+			{
+				"icon": "bolt",
+				"title": "SIMD parsing",
+				"text": "Parses UTF-8 directly with AVX-512, AVX2 or 128-bit vectors, finds quoted regions branch-free and exposes fields as zero-copy spans.",
+				"link": "performance"
+			},
+			{
+				"icon": "shield-halved",
+				"title": "Strict RFC 4180 output",
+				"text": "By default: CRLF, minimal quoting, doubled quotes and consistent field counts, with numbers formatted straight into a UTF-8 buffer.",
+				"link": "writing"
+			},
+			{
+				"icon": "table-columns",
+				"title": "More than RFC 4180",
+				"text": "Also reads and writes escaped files (the old Linux mode), unescaped files and fixed-width files.",
+				"link": "reading#parsing-modes"
+			},
+			{
+				"icon": "broom",
+				"title": "Adapts to messy files",
+				"text": "Detects the separator and encoding, recovers from stray quotes and has explicit options for malformed data.",
+				"link": "messy-files"
+			},
+			{
+				"icon": "wand-magic-sparkles",
+				"title": "Source-generated records",
+				"text": "[CsvRecord] types are read and written by code generated at compile time: no reflection, safe for trimming and native AOT, as fast as hand-written code.",
+				"link": "records"
+			},
+			{
+				"icon": "sliders",
+				"title": "Highly configurable",
+				"text": "Attributes and record maps fit columns to your types, even types you can't change, and the reader and writer options cover separators, quoting, headers, cultures and more.",
+				"link": "records"
+			},
+			{
+				"icon": "layer-group",
+				"title": "Every .NET",
+				"text": ".NET 10 with SIMD, plus .NET Standard 2.0 and 2.1 and .NET Framework 4.7, which read and write exactly the same CSV.",
+				"link": "target-frameworks"
+			},
+			{
+				"icon": "gauge-high",
+				"title": "Measured",
+				"text": "Benchmarked against Sep and Sylvan.Data.Csv with BenchmarkDotNet, with every library returning the same results.",
+				"link": "benchmarks"
+			},
+			{
+				"icon": "scale-balanced",
+				"title": "Open source",
+				"text": "Free for commercial use and dual licensed under MS-PL and Apache 2.0. Many contributors have helped make CsvHelper what it is.",
+				"link": "https://github.com/JoshClose/CsvHelper/blob/master/LICENSE.txt"
+			}
+		],
+		"help": [
+			{
+				"icon": "brands/stack-overflow",
+				"title": "Stack Overflow",
+				"text": "Ask questions with the csvhelper tag, where a large community can answer them.",
+				"link": "https://stackoverflow.com/questions/tagged/csvhelper"
+			},
+			{
+				"icon": "comments",
+				"title": "GitHub Discussions",
+				"text": "If Stack Overflow hasn't answered your question, ask in the Q&A discussions and link your Stack Overflow question.",
+				"link": "https://github.com/JoshClose/CsvHelper/discussions?discussions_q=category%3AQ%26A"
+			},
+			{
+				"icon": "bug",
+				"title": "Bugs and feature requests",
+				"text": "Found a bug or need a feature? Open an issue on GitHub. Questions go to Stack Overflow.",
+				"link": "https://github.com/JoshClose/CsvHelper/issues"
+			}
+		],
+		"sponsors": [
+			{
+				"icon": "heart",
+				"title": "GitHub Sponsors",
+				"text": "Support CsvHelper with one-time or recurring donations.",
+				"link": "https://github.com/sponsors/JoshClose"
+			},
+			{
+				"image": "aws.png",
+				"title": ".NET on AWS Open Source Software Fund",
+				"text": "A huge thanks for sponsoring CsvHelper!",
+				"link": "https://github.com/aws/dotnet-foss"
+			},
+			{
+				"image": "microsoft.png",
+				"title": "Microsoft",
+				"text": "Thanks for being a sponsor!",
+				"link": "https://github.com/microsoft"
+			}
+		],
+		"contributors": {
+			"intro": "Want to contribute? Great! Here are a few guidelines.",
+			"guidelines": [
+				"If you want to do a feature, post an issue about the feature first. Some features are intentionally left out, some features may already be in the works, or I may have some advice on how I think it should be done. I would feel bad if time was spent on some code that won't be used.",
+				"If you want to do a bug fix, it might not be a bad idea to post about it too. I've had the same bug fixed by multiple people at the same time before.",
+				"All code should have a unit test. If you make a feature, there should be significant tests around the feature. If you do a bug fix, there should be a test specific to that bug so it doesn't happen again.",
+				"Pull requests should have a single commit. If you have multiple commits, squash them into a single commit before requesting a pull.",
+				"When in Rome: Try and follow the code styling already in place. I use default Visual Studio Text Editor settings but change tabs to Keep tabs."
+			],
+			"image": "https://opencollective.com/csvhelper/contributors.svg?width=890&button=false",
+			"link": "https://github.com/JoshClose/CsvHelper/graphs/contributors"
+		}
+	},
+	"redirects": {
+		"getting-started": "getting-started.html",
+		"change-log": "changelog.html",
+		"migration": "changelog.html",
+		"migration/v2": "changelog.html",
+		"migration/v3": "migration/v3.0.0.html",
+		"migration/v4": "migration/v4.0.0.html",
+		"migration/v5": "migration/v5.0.0.html",
+		"migration/v6": "migration/v6.0.0.html",
+		"migration/v7": "migration/v7.0.0.html",
+		"migration/v8": "migration/v8.0.0.html",
+		"migration/v9": "migration/v9.0.0.html",
+		"migration/v10": "migration/v10.0.0.html",
+		"migration/v11": "migration/v11.0.0.html",
+		"migration/v12": "migration/v12.0.0.html",
+		"migration/v13": "migration/v13.0.0.html",
+		"migration/v14": "migration/v14.0.0.html",
+		"migration/v15": "migration/v15.0.0.html",
+		"migration/v16": "migration/v16.0.0.html",
+		"migration/v17": "migration/v17.0.0.html",
+		"migration/v18": "migration/v18.0.0.html",
+		"migration/v19": "migration/v19.0.0.html",
+		"migration/v20": "migration/v20.0.0.html",
+		"migration/v21": "migration/v21.0.0.html",
+		"migration/v22": "migration/v22.0.0.html",
+		"migration/v23": "migration/v23.0.0.html",
+		"migration/v24": "migration/v24.0.0.html",
+		"migration/v25": "migration/v25.0.0.html",
+		"migration/v26": "migration/v26.0.0.html",
+		"migration/v27": "migration/v27.0.0.html",
+		"migration/v28": "migration/v28.0.0.html",
+		"migration/v29": "migration/v29.0.0.html",
+		"migration/v30": "migration/v30.0.0.html",
+		"examples": "getting-started.html#next-steps",
+		"examples/prerequisites": "getting-started.html",
+		"examples/prerequisites/reading-and-writing-files": "reading.html#opening-a-reader",
+		"examples/prerequisites/streams": "reading.html#opening-a-reader",
+		"examples/prerequisites/using-and-dispose": "getting-started.html#read-a-file",
+		"examples/configuration": "records.html",
+		"examples/configuration/attributes": "records.html",
+		"examples/configuration/class-maps": "records.html#types-you-cannot-change-csvrecordmap",
+		"examples/configuration/class-maps/auto-mapping": "records.html#members-that-are-read",
+		"examples/configuration/class-maps/constant-value": "records.html#constant-values-csvconstant",
+		"examples/configuration/class-maps/ignoring-properties": "records.html#skipping-members-csvignore",
+		"examples/configuration/class-maps/inline-type-conversion": "records.html#converters-csvconverter",
+		"examples/configuration/class-maps/mapping-by-alternate-names": "records.html#by-name",
+		"examples/configuration/class-maps/mapping-by-index": "records.html#by-index",
+		"examples/configuration/class-maps/mapping-by-name": "records.html#by-name",
+		"examples/configuration/class-maps/mapping-duplicate-names": "records.html#by-name",
+		"examples/configuration/class-maps/mapping-properties": "records.html#choosing-columns-csvcolumn",
+		"examples/configuration/class-maps/optional-maps": "records.html#optional-columns",
+		"examples/configuration/class-maps/type-conversion": "records.html#converters-csvconverter",
+		"examples/configuration/class-maps/validation": "records.html#checking-values-csvvalidate",
+		"examples/csvdatareader": "reading.html#datatable-and-idatareader",
+		"examples/reading": "reading.html",
+		"examples/reading/enumerate-class-records": "records.html#reusing-one-instance",
+		"examples/reading/get-anonymous-type-records": "records.html#dynamic-records",
+		"examples/reading/get-class-records": "records.html#reading-records",
+		"examples/reading/get-dynamic-records": "records.html#dynamic-records",
+		"examples/reading/reading-by-hand": "reading.html#the-read-loop",
+		"examples/reading/reading-multiple-data-sets": "reading.html#several-data-sets-in-one-file",
+		"examples/reading/reading-multiple-record-types": "records.html#reading-records",
+		"examples/type-conversion": "records.html#supported-types",
+		"examples/type-conversion/custom-type-converter": "records.html#converters-csvconverter",
+		"examples/type-conversion/type-converter-options": "records.html#reading-values",
+		"examples/writing": "writing.html",
+		"examples/writing/appending-to-an-existing-file": "writing.html#creating-a-writer",
+		"examples/writing/write-anonymous-type-objects": "records.html#writing-dynamic-records",
+		"examples/writing/write-class-objects": "writing.html#writing-csvrecord-types",
+		"examples/writing/write-dynamic-objects": "records.html#writing-dynamic-records"
+	}
+}

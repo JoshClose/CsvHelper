@@ -1,1438 +1,980 @@
-// Copyright 2009-2024 Josh Close
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
-using CsvHelper.Expressions;
-using CsvHelper.TypeConversion;
-using System.Globalization;
-using System.Reflection;
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+#if NET
+using System.Runtime.Intrinsics;
+#endif
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CsvHelper;
 
 /// <summary>
-/// Reads data that was parsed from <see cref="IParser" />.
+/// A forward-only CSV reader. Input is parsed as UTF-8 bytes with SIMD instructions; fields are exposed as
+/// spans into the read buffer and are only materialized as strings or numbers when asked for.
 /// </summary>
-public class CsvReader : IReader
+/// <remarks>
+/// Spans returned for a record are valid until the next call to <see cref="Read"/> or <see cref="ReadAsync"/>.
+/// </remarks>
+public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 {
-	private readonly Lazy<RecordManager> recordManager;
-	private readonly bool detectColumnCountChanges;
-	private readonly Dictionary<string, List<int>> namedIndexes = new Dictionary<string, List<int>>();
-	private readonly Dictionary<string, (string, int)> namedIndexCache = new Dictionary<string, (string, int)>();
-	private readonly Dictionary<Type, TypeConverterOptions> typeConverterOptionsCache = new Dictionary<Type, TypeConverterOptions>();
-	private readonly MemberMapData reusableMemberMapData = new MemberMapData(null);
-	private readonly bool hasHeaderRecord;
-	private readonly HeaderValidated? headerValidated;
-	private readonly ShouldSkipRecord? shouldSkipRecord;
-	private readonly ReadingExceptionOccurred? readingExceptionOccurred;
-	private readonly CultureInfo cultureInfo;
-	private readonly bool ignoreBlankLines;
-	private readonly MissingFieldFound? missingFieldFound;
-	private readonly bool includePrivateMembers;
-	private readonly PrepareHeaderForMatch prepareHeaderForMatch;
+	private const int BlockSize = 64;
+	// The flatten loop may write up to 16 entries past the real count.
+	private const int EndsSlack = 64;
+	private const int MaxBlocksPerScan = 256;
+	private const int IndexCapacity = MaxBlocksPerScan * BlockSize;
 
-	private CsvContext context;
+	private static readonly int defaultVectorWidth =
+#if NET
+		Vector512.IsHardwareAccelerated ? 512 :
+		Vector256.IsHardwareAccelerated ? 256 : 128;
+#else
+		64;
+#endif
+
+	private readonly CsvReaderOptions options;
+	private readonly IFormatProvider provider;
+	private readonly CsvStringPool? pool;
+
+	// Dialect
+	private byte sepByte;
+	private bool separatorKnown;
+	private readonly byte quoteByte;
+	private readonly int quoteInt;          // -1 when quoting is disabled
+	private readonly byte commentByte;
+	private readonly int commentInt;        // -1 when comments are disabled
+	private readonly byte escapeByte;
+	private readonly int escapeInt;         // -1 outside Escape mode
+	private readonly bool quotes;           // Rfc4180 mode
+	private readonly bool escapes;          // Escape mode
+	private readonly bool fixedWidth;       // FixedWidth mode
+	private readonly bool quickUnquote;     // DecodeField may take its quoted-field fast path (Rfc4180 without trimming)
+	private readonly int[] fixedStarts = []; // FixedWidth: the character position of each column start, then the end of the last
+	private readonly int fixedTotal;        // FixedWidth: the width of a whole line
+	private readonly int indexReserve;      // the free index entries a scan of one block (or one fixed-width line) may need
+	private readonly bool strict;
+	private readonly bool comments;
+	private readonly bool lineBreaksInQuotes;
+	private readonly bool trim;
+	private readonly bool trimInsideQuotes;
+	private readonly bool[] whitespace;     // the bytes that trimming removes, by value (WhitespaceCharacters; space and tab by default)
+	private readonly bool customWhitespace; // WhitespaceCharacters is not space and tab
+	private readonly int maxRecordSize;     // 0 for no limit
+	private readonly bool trackLines;
+	private readonly bool hideValues;       // IncludeValuesInExceptions is off
+	private readonly Func<string, string>? normalizeHeader;
+	private readonly CsvShouldSkipRecord? shouldSkip;
+	private readonly Func<CsvRecordError, bool>? onRecordError;
+	private readonly byte[][]? nullValues;  // the UTF-8 of NullValues
+	private readonly CsvBooleanText? booleans; // TrueValues and FalseValues
+	private readonly bool skipEmpty;
+	private readonly CsvFieldCountHandling fieldCountMode;
+	private readonly CsvMalformedDataHandling malformedMode;
+	private readonly Action<CsvMalformedRecord>? onMalformed;
+	private readonly bool throwOnMissing;
+	internal int vectorWidth;       // 512, 256, 128 (SIMD, .NET only), 64 (64-bit integer masks) or 0 (scalar only, for testing)
+
+	// Buffer. Positions are absolute indexes into buffer.
+	private byte[] buffer;
+	private bool bufferRented;
+	private int dataStart;
+	private int dataEnd;
+	private int scanPos;
+	private bool eof;
+	private bool finished;
+	private bool initialized;
+	private bool encodingChecked;
+	private long discarded;
+
+	// Scanner state carried from one 64 byte block to the next.
+	private ScanCarry carry = ScanCarry.Initial;
+	private bool forceScalar;               // set while inside a comment line
+	// Set when a scalar block ends after a closing quote and whitespace, with trimming and malformed detection on: the
+	// SIMD carry cannot express that state, so the next block, where text would be malformed, is scanned exactly too.
+	private bool afterClosingQuote;
+	// Positions of malformed quoting found by the scanner (only when detection is on), in input order.
+	private int[] badPos = [];
+	private CsvMalformedReason[] badReason = [];
+	private int badCount;
+	private int badIndex;
+	private int nextBadPos = int.MaxValue;
+
+	// The index (see CsvReader.Scan.cs). ends[rowBase] is the start of the next record to return.
+	private int[] ends;
+	private int endsCount;
+	private int[] rowEnds;
+	private int rowCount;
+	private int rowIndex;
+	private int rowBase;
+	private readonly bool rowChecks;        // comments, malformed detection or field count checks need per-record work
+
+	// Current record
+	private int fieldBase;
+	private int fieldCount;
+	private long rowNumber;
+	private long recordNumber;
+	private long lineNumber;                // TrackLineNumbers: the line where the current record starts
+	private long nextLine = 1;              // and the line where the next one starts
+
+	// Header
+	private bool headerDone;
+	private string[] headers = [];
+	private string[] headerKeys = [];       // the header names as they are matched (NormalizeHeaderName)
+	private Dictionary<string, int>? headerIndex;
+	private Dictionary<string, int>? headerIndexLoose;
+	private int expectedFieldCount = -1;
+
+	// Scratch space for unescaped values of the current record
+	private byte[] scratch = [];
+	private int scratchPos;
+
 	private bool disposed;
-	private IParser parser;
-	private int prevColumnCount;
-	private int currentIndex = -1;
-	private bool hasBeenRead;
-	private string[]? headerRecord;
 
-	/// <inheritdoc/>
-	public virtual int ColumnCount => parser.Count;
+	private enum Step { Rows, NeedData, End }
 
-	/// <inheritdoc/>
-	public virtual int CurrentIndex => currentIndex;
+	/// <param name="options">The options.</param>
+	/// <param name="rentIndex">False for parallel workers, which use the index of the batches given to them.</param>
+	/// <param name="sharedPool">A string pool whose values this reader shares (parallel workers).</param>
+	// Not inlined: it runs once per reader, and inlined into the method that creates the reader it took registers from
+	// that method's read loop (a 13% slower loop over GetSingle, depending on the size of the constructor).
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private CsvReader(CsvReaderOptions? options, bool rentIndex = true, CsvStringPool? sharedPool = null)
+	{
+		options ??= CsvReaderOptions.Default;
+		options.Validate();
+		this.options = options;
+		provider = options.FormatProvider ?? System.Globalization.CultureInfo.InvariantCulture;
+		quotes = options.Mode == CsvMode.Rfc4180;
+		escapes = options.Mode == CsvMode.Escape;
+		fixedWidth = options.Mode == CsvMode.FixedWidth;
+		// The scanner's quote mask matches the escape character in Escape mode; elsewhere quoteByte is only used with quotes.
+		quoteByte = (byte)(escapes ? options.Escape : options.Quote);
+		quoteInt = quotes ? quoteByte : -1;
+		escapeByte = (byte)options.Escape;
+		escapeInt = escapes ? escapeByte : -1;
+		comments = options.CommentPrefix.HasValue;
+		commentByte = (byte)options.CommentPrefix.GetValueOrDefault();
+		commentInt = comments ? commentByte : -1;
+		malformedMode = options.MalformedData;
+		onMalformed = options.OnMalformedRecord;
+		// Detect malformed quoting only when someone needs to know about it.
+		strict = malformedMode != CsvMalformedDataHandling.Recover || onMalformed is not null;
+		lineBreaksInQuotes = options.AllowLineBreaksInQuotes;
+		trim = options.TrimWhitespace ?? fixedWidth;
+		trimInsideQuotes = quotes && options.TrimInsideQuotes;
+		quickUnquote = quotes && !trim && !trimInsideQuotes;
+		whitespace = new bool[256];
+		foreach (var w in options.WhitespaceCharacters)
+		{
+			whitespace[w] = true;
+		}
 
-	/// <inheritdoc/>
-	public virtual string[]? HeaderRecord => headerRecord;
+		customWhitespace = options.WhitespaceCharacters is not (" \t" or "\t ");
 
-	/// <inheritdoc/>
-	public virtual CsvContext Context => context;
+		maxRecordSize = options.MaxRecordSize ?? 0;
+		trackLines = options.TrackLineNumbers;
+		hideValues = !options.IncludeValuesInExceptions;
+		normalizeHeader = options.NormalizeHeaderName;
+		shouldSkip = options.ShouldSkipRecord;
+		onRecordError = options.OnRecordError;
+		if (options.NullValues is { } nulls)
+		{
+			nullValues = new byte[nulls.Count][];
+			for (var i = 0; i < nullValues.Length; i++)
+			{
+				nullValues[i] = Encoding.UTF8.GetBytes(nulls[i]);
+			}
+		}
 
-	/// <inheritdoc/>
-	public virtual IReaderConfiguration Configuration { get; private set; }
+		if (options.TrueValues is not null || options.FalseValues is not null)
+		{
+			booleans = new CsvBooleanText(options.TrueValues, options.FalseValues);
+		}
 
-	/// <inheritdoc/>
-	public virtual IParser Parser => parser;
+		skipEmpty = options.SkipEmptyLines;
+		fieldCountMode = options.FieldCountMismatch;
+		throwOnMissing = options.MissingField == CsvMissingFieldHandling.Throw;
+		// Trimming needs the slow path too: a line of only whitespace counts as empty. A fixed-width line has as many
+		// fields as columns, so an empty one is found there too. Line numbers and the skip predicate look at every record.
+		rowChecks = comments || strict || trim || fieldCountMode != CsvFieldCountHandling.Allow || fixedWidth ||
+					trackLines || shouldSkip is not null;
+		pool = options.PoolStrings ? sharedPool?.CreateShared() ?? new CsvStringPool() : null;
+		vectorWidth = defaultVectorWidth;
+		indexReserve = BlockSize + 1;
+		if (fixedWidth)
+		{
+			fixedTotal = FixedWidth.Validate(options.FieldWidths, nameof(options.FieldWidths));
+			fixedStarts = FixedWidth.Starts(options.FieldWidths!);
+			// A line writes a column entry for every column but the first, its terminator and, after CR, an LF entry.
+			indexReserve = Math.Max(BlockSize, fixedStarts.Length) + 1;
+			separatorKnown = true;
+		}
+		else if (options.Separator is char sep)
+		{
+			sepByte = (byte)sep;
+			separatorKnown = true;
+		}
+
+		buffer = [];
+		ends = rentIndex ? ArrayPool<int>.Shared.Rent(IndexCapacity + EndsSlack) : [];
+		rowEnds = rentIndex ? ArrayPool<int>.Shared.Rent(IndexCapacity) : [];
+		endsCount = 1;
+	}
+
+	/// <summary>The options this reader was created with.</summary>
+	public CsvReaderOptions Options => options;
 
 	/// <summary>
-	/// Creates a new CSV reader using the given <see cref="TextReader" />.
+	/// The separator in use. When it is detected from the input, getting it before the first <see cref="Read"/>
+	/// reads the header (or the start of the input) synchronously. <c>'\0'</c> in <see cref="CsvMode.FixedWidth"/>
+	/// mode, which has no separator.
 	/// </summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="culture">The culture.</param>
-	/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextReader"/> open after the <see cref="CsvReader"/> object is disposed, otherwise <c>false</c>.</param>
-	public CsvReader(TextReader reader, CultureInfo culture, bool leaveOpen = false) : this(new CsvParser(reader, culture, leaveOpen)) { }
-
-	/// <summary>
-	/// Creates a new CSV reader using the given <see cref="TextReader" /> and
-	/// <see cref="CsvHelper.Configuration.CsvConfiguration" /> and <see cref="CsvParser" /> as the default parser.
-	/// </summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="configuration">The configuration.</param>
-	/// <param name="leaveOpen"><c>true</c> to leave the <see cref="TextReader"/> open after the <see cref="CsvReader"/> object is disposed, otherwise <c>false</c>.</param>
-	public CsvReader(TextReader reader, IReaderConfiguration configuration, bool leaveOpen = false) : this(new CsvParser(reader, configuration, leaveOpen)) { }
-
-	/// <summary>
-	/// Creates a new CSV reader using the given <see cref="IParser" />.
-	/// </summary>
-	/// <param name="parser">The <see cref="IParser" /> used to parse the CSV file.</param>
-	public CsvReader(IParser parser)
-	{
-		Configuration = parser.Configuration as IReaderConfiguration ?? throw new ConfigurationException($"The {nameof(IParser)} configuration must implement {nameof(IReaderConfiguration)} to be used in {nameof(CsvReader)}.");
-
-		this.parser = parser ?? throw new ArgumentNullException(nameof(parser));
-		context = parser.Context ?? throw new InvalidOperationException($"For {nameof(IParser)} to be used in {nameof(CsvReader)}, {nameof(IParser.Context)} must also implement {nameof(CsvContext)}.");
-		context.Reader = this;
-		recordManager = new Lazy<RecordManager>(() => ObjectResolver.Current.Resolve<RecordManager>(this));
-
-		cultureInfo = Configuration.CultureInfo;
-		detectColumnCountChanges = Configuration.DetectColumnCountChanges;
-		hasHeaderRecord = Configuration.HasHeaderRecord;
-		headerValidated = Configuration.HeaderValidated;
-		ignoreBlankLines = Configuration.IgnoreBlankLines;
-		includePrivateMembers = Configuration.IncludePrivateMembers;
-		missingFieldFound = Configuration.MissingFieldFound;
-		prepareHeaderForMatch = Configuration.PrepareHeaderForMatch;
-		readingExceptionOccurred = Configuration.ReadingExceptionOccurred;
-		shouldSkipRecord = Configuration.ShouldSkipRecord;
-	}
-
-	/// <inheritdoc/>
-	public virtual bool ReadHeader()
-	{
-		if (!hasHeaderRecord)
-		{
-			throw new ReaderException(context, "Configuration.HasHeaderRecord is false.");
-		}
-
-		headerRecord = parser.Record;
-		ParseNamedIndexes();
-
-		return headerRecord != null;
-	}
-
-	/// <summary>
-	/// Validates the header to be of the given type.
-	/// </summary>
-	/// <typeparam name="T">The expected type of the header</typeparam>
-	public virtual void ValidateHeader<T>()
-	{
-		ValidateHeader(typeof(T));
-	}
-
-	/// <summary>
-	/// Validates the header to be of the given type.
-	/// </summary>
-	/// <param name="type">The expected type of the header.</param>
-	public virtual void ValidateHeader(Type type)
-	{
-		if (hasHeaderRecord == false)
-		{
-			throw new InvalidOperationException($"Validation can't be performed on a the header if no header exists. {nameof(Configuration.HasHeaderRecord)} can't be false.");
-		}
-
-		CheckHasBeenRead();
-
-		if (headerRecord == null)
-		{
-			throw new InvalidOperationException($"The header must be read before it can be validated.");
-		}
-
-		if (context.Maps[type] == null)
-		{
-			context.Maps.Add(context.AutoMap(type));
-		}
-
-		var map = context.Maps[type]!; // The map was added above if null.
-		var invalidHeaders = new List<InvalidHeader>();
-		ValidateHeader(map, invalidHeaders);
-
-		var args = new HeaderValidatedArgs(invalidHeaders.ToArray(), context);
-		headerValidated?.Invoke(args);
-	}
-
-	/// <summary>
-	/// Validates the header to be of the given type.
-	/// </summary>
-	/// <param name="map">The mapped classes.</param>
-	/// <param name="invalidHeaders">The invalid headers.</param>
-	protected virtual void ValidateHeader(ClassMap map, List<InvalidHeader> invalidHeaders)
-	{
-		foreach (var parameter in map.ParameterMaps)
-		{
-			if (parameter.Data.Ignore)
-			{
-				continue;
-			}
-
-			if (parameter.Data.IsConstantSet)
-			{
-				// If ConvertUsing and Constant don't require a header.
-				continue;
-			}
-
-			if (parameter.Data.IsIndexSet && !parameter.Data.IsNameSet)
-			{
-				// If there is only an index set, we don't want to validate the header name.
-				continue;
-			}
-
-			if (parameter.ConstructorTypeMap != null)
-			{
-				ValidateHeader(parameter.ConstructorTypeMap, invalidHeaders);
-			}
-			else if (parameter.ReferenceMap != null)
-			{
-				ValidateHeader(parameter.ReferenceMap.Data.Mapping, invalidHeaders);
-			}
-			else
-			{
-				var index = GetFieldIndex(parameter.Data.Names, parameter.Data.NameIndex, true);
-				var isValid = index != -1 || parameter.Data.IsOptional;
-				if (!isValid)
-				{
-					invalidHeaders.Add(new InvalidHeader { Index = parameter.Data.NameIndex, Names = parameter.Data.Names.ToList() });
-				}
-			}
-		}
-
-		foreach (var memberMap in map.MemberMaps)
-		{
-			if (memberMap.Data.Ignore || !CanRead(memberMap))
-			{
-				continue;
-			}
-
-			if (memberMap.Data.ReadingConvertExpression != null || memberMap.Data.IsConstantSet)
-			{
-				// If ConvertUsing and Constant don't require a header.
-				continue;
-			}
-
-			if (memberMap.Data.IsIndexSet && !memberMap.Data.IsNameSet)
-			{
-				// If there is only an index set, we don't want to validate the header name.
-				continue;
-			}
-
-			var index = GetFieldIndex(memberMap.Data.Names, memberMap.Data.NameIndex, true);
-			var isValid = index != -1 || memberMap.Data.IsOptional;
-			if (!isValid)
-			{
-				invalidHeaders.Add(new InvalidHeader { Index = memberMap.Data.NameIndex, Names = memberMap.Data.Names.ToList() });
-			}
-		}
-
-		foreach (var referenceMap in map.ReferenceMaps)
-		{
-			if (!CanRead(referenceMap))
-			{
-				continue;
-			}
-
-			ValidateHeader(referenceMap.Data.Mapping, invalidHeaders);
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual bool Read()
-	{
-		// Don't forget about the async method below!
-
-		bool hasMoreRecords;
-		do
-		{
-			hasMoreRecords = parser.Read();
-			hasBeenRead = true;
-		}
-		while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(this)) ?? false));
-
-		currentIndex = -1;
-
-		if (detectColumnCountChanges && hasMoreRecords)
-		{
-			if (prevColumnCount > 0 && prevColumnCount != parser.Count)
-			{
-				var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
-
-				var args = new ReadingExceptionOccurredArgs(csvException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					throw csvException;
-				}
-			}
-
-			prevColumnCount = parser.Count;
-		}
-
-		return hasMoreRecords;
-	}
-
-	/// <inheritdoc/>
-	public virtual async Task<bool> ReadAsync()
-	{
-		bool hasMoreRecords;
-		do
-		{
-			hasMoreRecords = await parser.ReadAsync().ConfigureAwait(false);
-			hasBeenRead = true;
-		}
-		while (hasMoreRecords && (shouldSkipRecord?.Invoke(new ShouldSkipRecordArgs(this)) ?? false));
-
-		currentIndex = -1;
-
-		if (detectColumnCountChanges && hasMoreRecords)
-		{
-			if (prevColumnCount > 0 && prevColumnCount != parser.Count)
-			{
-				var csvException = new BadDataException(string.Empty, parser.RawRecord, context, "An inconsistent number of columns has been detected.");
-
-				var args = new ReadingExceptionOccurredArgs(csvException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					throw csvException;
-				}
-			}
-
-			prevColumnCount = parser.Count;
-		}
-
-		return hasMoreRecords;
-	}
-
-	/// <inheritdoc/>
-	public virtual string? this[int index]
+	/// <exception cref="ObjectDisposedException">The separator had to be detected and the reader has been disposed.</exception>
+	/// <exception cref="CsvFormatException">The separator had to be detected and the header is malformed (see <see cref="Read"/>).</exception>
+	public char Separator
 	{
 		get
 		{
-			CheckHasBeenRead();
+			if (!separatorKnown) EnsureHeader();
 
-			return GetField(index);
+			return (char)sepByte;
 		}
 	}
 
-	/// <inheritdoc/>
-	public virtual string? this[string name]
+	/// <summary>The number of fields in the current record.</summary>
+	public int FieldCount => fieldCount;
+
+	/// <summary>The 1-based number of the current data record (the header is not counted).</summary>
+	public long RowNumber => rowNumber;
+
+	/// <summary>
+	/// The offset, in bytes of UTF-8 input, where the current record starts, counted from the start of the input (a byte
+	/// order mark included), for progress reports and error messages. UTF-16 input (strings, text readers and streams
+	/// with another encoding) is counted in the bytes of its UTF-8 form.
+	/// </summary>
+	public long ByteOffset => discarded + (ends.Length == 0 ? 0 : ends[fieldBase] & int.MaxValue);
+
+	/// <summary>
+	/// The 1-based line of the input where the current record starts, counting every line: those inside quoted fields,
+	/// empty lines, comments and the header too. Requires <see cref="CsvReaderOptions.TrackLineNumbers"/>.
+	/// </summary>
+	/// <exception cref="InvalidOperationException"><see cref="CsvReaderOptions.TrackLineNumbers"/> is off.</exception>
+	public long LineNumber => trackLines ? lineNumber : throw new InvalidOperationException("Set TrackLineNumbers in the reader options to count lines.");
+
+	/// <summary>
+	/// The header names. Empty when <see cref="CsvReaderOptions.HasHeader"/> is <see langword="false"/>.
+	/// Accessing this before the first <see cref="Read"/> reads the header synchronously; async callers
+	/// can use <see cref="ReadHeaderAsync"/> first.
+	/// </summary>
+	/// <exception cref="ObjectDisposedException">The header had to be read and the reader has been disposed.</exception>
+	/// <exception cref="CsvFormatException">The header had to be read and is malformed (see <see cref="Read"/>).</exception>
+	public IReadOnlyList<string> Headers
 	{
 		get
 		{
-			CheckHasBeenRead();
+			if (!headerDone) EnsureHeader();
 
-			return GetField(name);
+			return headers;
 		}
 	}
 
-	/// <inheritdoc/>
-	public virtual string? this[string name, int index]
+	/// <summary>
+	/// Advances to the next record, reading the header first if it has not been read. Empty lines, comments and the
+	/// records that the options say to skip are passed over.
+	/// </summary>
+	/// <returns><see langword="true"/> when the reader is positioned on a record; <see langword="false"/> at the end of the input.</returns>
+	/// <exception cref="CsvFormatException">
+	/// A record is malformed and <see cref="CsvReaderOptions.MalformedData"/> or
+	/// <see cref="CsvReaderOptions.FieldCountMismatch"/> is set to throw, or a record is too large to buffer.
+	/// </exception>
+	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// This reader is the one a <see cref="ParallelEnumerate{T}(Func{CsvReader, T}, int)"/> selector got.
+	/// </exception>
+	public bool Read()
 	{
-		get
+		// Nothing is parsed before the header has been read, so no header check is needed here.
+		if (TryNextRecord())
 		{
-			CheckHasBeenRead();
+			rowNumber++;
 
-			return GetField(name, index);
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual string? GetField(int index)
-	{
-		CheckHasBeenRead();
-
-		// Set the current index being used so we
-		// have more information if an error occurs
-		// when reading records.
-		currentIndex = index;
-
-		if (index >= parser.Count || index < 0)
-		{
-			var args = new MissingFieldFoundArgs(null, index, context);
-			missingFieldFound?.Invoke(args);
-			return default;
-		}
-
-		var field = parser[index];
-
-		return field;
-	}
-
-	/// <inheritdoc/>
-	public virtual string? GetField(string name)
-	{
-		CheckHasBeenRead();
-
-		var index = GetFieldIndex(name);
-		if (index < 0)
-		{
-			return null;
-		}
-
-		return GetField(index);
-	}
-
-	/// <inheritdoc/>
-	public virtual string? GetField(string name, int index)
-	{
-		CheckHasBeenRead();
-
-		var fieldIndex = GetFieldIndex(name, index);
-		if (fieldIndex < 0)
-		{
-			return null;
-		}
-
-		return GetField(fieldIndex);
-	}
-
-	/// <inheritdoc/>
-	public virtual object? GetField(Type type, int index)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter(type);
-		return GetField(type, index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual object? GetField(Type type, string name)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter(type);
-		return GetField(type, name, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual object? GetField(Type type, string name, int index)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter(type);
-		return GetField(type, name, index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual object? GetField(Type type, int index, ITypeConverter converter)
-	{
-		CheckHasBeenRead();
-
-		reusableMemberMapData.Index = index;
-		reusableMemberMapData.TypeConverter = converter;
-		if (!typeConverterOptionsCache.TryGetValue(type, out TypeConverterOptions? typeConverterOptions))
-		{
-			typeConverterOptions = TypeConverterOptions.Merge(new TypeConverterOptions { CultureInfo = cultureInfo }, context.TypeConverterOptionsCache.GetOptions(type));
-			typeConverterOptionsCache.Add(type, typeConverterOptions);
-		}
-
-		reusableMemberMapData.TypeConverterOptions = typeConverterOptions;
-
-		var field = GetField(index);
-		return converter.ConvertFromString(field, this, reusableMemberMapData);
-	}
-
-	/// <inheritdoc/>
-	public virtual object? GetField(Type type, string name, ITypeConverter converter)
-	{
-		CheckHasBeenRead();
-
-		var index = GetFieldIndex(name);
-		return GetField(type, index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual object? GetField(Type type, string name, int index, ITypeConverter converter)
-	{
-		CheckHasBeenRead();
-
-		var fieldIndex = GetFieldIndex(name, index);
-		return GetField(type, fieldIndex, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T>(int index)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter<T>();
-		return GetField<T>(index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T>(string name)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter<T>();
-		return GetField<T>(name, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T>(string name, int index)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter<T>();
-		return GetField<T>(name, index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T>(int index, ITypeConverter converter)
-	{
-		CheckHasBeenRead();
-
-		if (index >= parser.Count || index < 0)
-		{
-			currentIndex = index;
-			var args = new MissingFieldFoundArgs(null, index, context);
-			missingFieldFound?.Invoke(args);
-
-			return default;
-		}
-
-		return (T?)GetField(typeof(T), index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T>(string name, ITypeConverter converter)
-	{
-		CheckHasBeenRead();
-
-		var index = GetFieldIndex(name);
-		return GetField<T>(index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T>(string name, int index, ITypeConverter converter)
-	{
-		CheckHasBeenRead();
-
-		var fieldIndex = GetFieldIndex(name, index);
-		return GetField<T>(fieldIndex, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T, TConverter>(int index) where TConverter : ITypeConverter
-	{
-		CheckHasBeenRead();
-
-		var converter = ObjectResolver.Current.Resolve<TConverter>();
-		return GetField<T>(index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T, TConverter>(string name) where TConverter : ITypeConverter
-	{
-		CheckHasBeenRead();
-
-		var converter = ObjectResolver.Current.Resolve<TConverter>();
-		return GetField<T>(name, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual T? GetField<T, TConverter>(string name, int index) where TConverter : ITypeConverter
-	{
-		CheckHasBeenRead();
-
-		var converter = ObjectResolver.Current.Resolve<TConverter>();
-		return GetField<T>(name, index, converter);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField(Type type, int index, out object? field)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter(type);
-		return TryGetField(type, index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField(Type type, string name, out object? field)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter(type);
-		return TryGetField(type, name, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField(Type type, string name, int index, out object? field)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter(type);
-		return TryGetField(type, name, index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField(Type type, int index, ITypeConverter converter, out object? field)
-	{
-		CheckHasBeenRead();
-
-		// TypeConverter.IsValid() just wraps a
-		// ConvertFrom() call in a try/catch, so lets not
-		// do it twice and just do it ourselves.
-		try
-		{
-			field = GetField(type, index, converter);
 			return true;
 		}
-		catch
-		{
-			field = type.GetTypeInfo().IsValueType ? ObjectResolver.Current.Resolve(type) : null;
-			return false;
-		}
-	}
 
-	/// <inheritdoc/>
-	public virtual bool TryGetField(Type type, string name, ITypeConverter converter, out object? field)
-	{
-		CheckHasBeenRead();
-
-		var index = GetFieldIndex(name, isTryGet: true);
-		if (index == -1)
-		{
-			field = type.GetTypeInfo().IsValueType ? ObjectResolver.Current.Resolve(type) : null;
-			return false;
-		}
-
-		return TryGetField(type, index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField(Type type, string name, int index, ITypeConverter converter, out object? field)
-	{
-		CheckHasBeenRead();
-
-		var fieldIndex = GetFieldIndex(name, index, true);
-		if (fieldIndex == -1)
-		{
-			field = type.GetTypeInfo().IsValueType ? ObjectResolver.Current.Resolve(type) : null;
-			return false;
-		}
-
-		return TryGetField(type, fieldIndex, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T>(int index, out T? field)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter<T>();
-		return TryGetField(index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T>(string name, out T? field)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter<T>();
-		return TryGetField(name, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T>(string name, int index, out T? field)
-	{
-		CheckHasBeenRead();
-
-		var converter = context.TypeConverterCache.GetConverter<T>();
-		return TryGetField(name, index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T>(int index, ITypeConverter converter, out T? field)
-	{
-		CheckHasBeenRead();
-
-		// TypeConverter.IsValid() just wraps a
-		// ConvertFrom() call in a try/catch, so lets not
-		// do it twice and just do it ourselves.
-		try
-		{
-			field = GetField<T>(index, converter);
-			return true;
-		}
-		catch
-		{
-			field = default;
-			return false;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T>(string name, ITypeConverter converter, out T? field)
-	{
-		CheckHasBeenRead();
-
-		var index = GetFieldIndex(name, isTryGet: true);
-		if (index == -1)
-		{
-			field = default;
-			return false;
-		}
-
-		return TryGetField(index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T>(string name, int index, ITypeConverter converter, out T? field)
-	{
-		CheckHasBeenRead();
-
-		var fieldIndex = GetFieldIndex(name, index, true);
-		if (fieldIndex == -1)
-		{
-			field = default;
-			return false;
-		}
-
-		return TryGetField(fieldIndex, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T, TConverter>(int index, out T? field) where TConverter : ITypeConverter
-	{
-		CheckHasBeenRead();
-
-		var converter = ObjectResolver.Current.Resolve<TConverter>();
-		return TryGetField(index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T, TConverter>(string name, out T? field) where TConverter : ITypeConverter
-	{
-		CheckHasBeenRead();
-
-		var converter = ObjectResolver.Current.Resolve<TConverter>();
-		return TryGetField(name, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual bool TryGetField<T, TConverter>(string name, int index, out T? field) where TConverter : ITypeConverter
-	{
-		CheckHasBeenRead();
-
-		var converter = ObjectResolver.Current.Resolve<TConverter>();
-		return TryGetField(name, index, converter, out field);
-	}
-
-	/// <inheritdoc/>
-	public virtual T GetRecord<T>()
-	{
-		CheckHasBeenRead();
-
-		if (headerRecord == null && hasHeaderRecord)
-		{
-			ReadHeader();
-			ValidateHeader<T>();
-
-			if (!Read())
-			{
-				throw new ReaderException(context, "There are no records.");
-			}
-		}
-
-		T record;
-		try
-		{
-			var read = recordManager.Value.GetReadDelegate<T>(typeof(T));
-			record = read();
-		}
-		catch (Exception ex)
-		{
-			var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-			var args = new ReadingExceptionOccurredArgs(csvHelperException);
-			if (readingExceptionOccurred?.Invoke(args) ?? true)
-			{
-				if (ex is CsvHelperException)
-				{
-					throw;
-				}
-				else
-				{
-					throw csvHelperException;
-				}
-			}
-
-			record = (T?)args.Record!; // If the user is ignoring exceptions, we'll let a possible null be returned to them.
-		}
-
-		return record;
-	}
-
-	/// <inheritdoc/>
-	public virtual T GetRecord<T>(T anonymousTypeDefinition)
-	{
-		if (anonymousTypeDefinition == null)
-		{
-			throw new ArgumentNullException(nameof(anonymousTypeDefinition));
-		}
-
-		if (!anonymousTypeDefinition.GetType().IsAnonymous())
-		{
-			throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
-		}
-
-		return GetRecord<T>();
-	}
-
-	/// <inheritdoc/>
-	public virtual object GetRecord(Type type)
-	{
-		CheckHasBeenRead();
-
-		if (headerRecord == null && hasHeaderRecord)
-		{
-			ReadHeader();
-			ValidateHeader(type);
-
-			if (!Read())
-			{
-				throw new ReaderException(context, "There are no records.");
-			}
-		}
-
-		object record;
-		try
-		{
-			var read = recordManager.Value.GetReadDelegate<object>(type);
-			record = read();
-		}
-		catch (Exception ex)
-		{
-			var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-			var args = new ReadingExceptionOccurredArgs(csvHelperException);
-			if (readingExceptionOccurred?.Invoke(args) ?? true)
-			{
-				if (ex is CsvHelperException)
-				{
-					throw;
-				}
-				else
-				{
-					throw csvHelperException;
-				}
-			}
-
-			record = args.Record!; // If the user is ignoring exceptions, we'll let a possible null be returned to them.
-		}
-
-		return record;
-	}
-
-	/// <inheritdoc/>
-	public virtual IEnumerable<T> GetRecords<T>()
-	{
-		if (disposed)
-		{
-			throw new ObjectDisposedException(nameof(CsvReader),
-				"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
-				"you try and access the values. e.g. .ToList() Did you create CsvReader inside a using block and are now trying to access " +
-				"the records outside of that using block?"
-			);
-		}
-
-		// Don't need to check if it's been read
-		// since we're doing the reading ourselves.
-
-		if (hasHeaderRecord && headerRecord == null)
-		{
-			if (!Read())
-			{
-				yield break;
-			}
-
-			ReadHeader();
-			ValidateHeader<T>();
-		}
-
-		Func<T>? read = null;
-
-		while (Read())
-		{
-			T record;
-			try
-			{
-				if (read == null)
-				{
-					read = recordManager.Value.GetReadDelegate<T>(typeof(T));
-				}
-
-				record = read();
-			}
-			catch (Exception ex)
-			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-				var args = new ReadingExceptionOccurredArgs(csvHelperException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					if (ex is CsvHelperException)
-					{
-						throw;
-					}
-					else
-					{
-						throw csvHelperException;
-					}
-				}
-
-				// If the callback doesn't throw, keep going.
-				continue;
-			}
-
-			yield return record;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual IEnumerable<T> GetRecords<T>(T anonymousTypeDefinition)
-	{
-		if (anonymousTypeDefinition == null)
-		{
-			throw new ArgumentNullException(nameof(anonymousTypeDefinition));
-		}
-
-		if (!anonymousTypeDefinition.GetType().IsAnonymous())
-		{
-			throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
-		}
-
-		return GetRecords<T>();
-	}
-
-	/// <inheritdoc/>
-	public virtual IEnumerable<object> GetRecords(Type type)
-	{
-		if (disposed)
-		{
-			throw new ObjectDisposedException(nameof(CsvReader),
-				"GetRecords<object>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
-				"you try and access the values. e.g. .ToList() Did you create CsvReader inside a using block and are now trying to access " +
-				"the records outside of that using block?"
-			);
-		}
-
-		// Don't need to check if it's been read
-		// since we're doing the reading ourselves.
-
-		if (hasHeaderRecord && headerRecord == null)
-		{
-			if (!Read())
-			{
-				yield break;
-			}
-
-			ReadHeader();
-			ValidateHeader(type);
-		}
-
-		Func<object>? read = null;
-
-		while (Read())
-		{
-			object record;
-			try
-			{
-				if (read == null)
-				{
-					read = recordManager.Value.GetReadDelegate<object>(type);
-				}
-
-				record = read();
-			}
-			catch (Exception ex)
-			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-				var args = new ReadingExceptionOccurredArgs(csvHelperException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					if (ex is CsvHelperException)
-					{
-						throw;
-					}
-					else
-					{
-						throw csvHelperException;
-					}
-				}
-
-				// If the callback doesn't throw, keep going.
-				continue;
-			}
-
-			yield return record;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual IEnumerable<T> EnumerateRecords<T>(T record)
-	{
-		if (disposed)
-		{
-			throw new ObjectDisposedException(nameof(CsvReader),
-				"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
-				"you try and access the values. e.g. .ToList() Did you create CsvReader inside a using block and are now trying to access " +
-				"the records outside of that using block?"
-			);
-		}
-
-		// Don't need to check if it's been read
-		// since we're doing the reading ourselves.
-
-		if (hasHeaderRecord && headerRecord == null)
-		{
-			if (!Read())
-			{
-				yield break;
-			}
-
-			ReadHeader();
-			ValidateHeader<T>();
-		}
-
-		while (Read())
-		{
-			try
-			{
-				recordManager.Value.Hydrate(record);
-			}
-			catch (Exception ex)
-			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-				var args = new ReadingExceptionOccurredArgs(csvHelperException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					if (ex is CsvHelperException)
-					{
-						throw;
-					}
-					else
-					{
-						throw csvHelperException;
-					}
-				}
-
-				// If the callback doesn't throw, keep going.
-				continue;
-			}
-
-			yield return record;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>([EnumeratorCancellation] CancellationToken cancellationToken = default(CancellationToken))
-	{
-		if (disposed)
-		{
-			throw new ObjectDisposedException(nameof(CsvReader),
-				"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
-				"you try and access the values. Did you create CsvReader inside a using block and are now trying to access " +
-				"the records outside of that using block?"
-			);
-		}
-
-		// Don't need to check if it's been read
-		// since we're doing the reading ourselves.
-
-		if (hasHeaderRecord && headerRecord == null)
-		{
-			if (!await ReadAsync().ConfigureAwait(false))
-			{
-				yield break;
-			}
-
-			ReadHeader();
-			ValidateHeader<T>();
-		}
-
-		Func<T>? read = null;
-
-		while (await ReadAsync().ConfigureAwait(false))
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			T record;
-			try
-			{
-				if (read == null)
-				{
-					read = recordManager.Value.GetReadDelegate<T>(typeof(T));
-				}
-
-				record = read();
-			}
-			catch (Exception ex)
-			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-				var args = new ReadingExceptionOccurredArgs(csvHelperException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					if (ex is CsvHelperException)
-					{
-						throw;
-					}
-					else
-					{
-						throw csvHelperException;
-					}
-				}
-
-				// If the callback doesn't throw, keep going.
-				continue;
-			}
-
-			yield return record;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition, CancellationToken cancellationToken = default)
-	{
-		if (anonymousTypeDefinition == null)
-		{
-			throw new ArgumentNullException(nameof(anonymousTypeDefinition));
-		}
-
-		if (!anonymousTypeDefinition.GetType().IsAnonymous())
-		{
-			throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
-		}
-
-		return GetRecordsAsync<T>(cancellationToken);
-	}
-
-	/// <inheritdoc/>
-	public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-	{
-		if (disposed)
-		{
-			throw new ObjectDisposedException(nameof(CsvReader),
-				"GetRecords<object>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
-				"you try and access the values. Did you create CsvReader inside a using block and are now trying to access " +
-				"the records outside of that using block?"
-			);
-		}
-
-		// Don't need to check if it's been read
-		// since we're doing the reading ourselves.
-
-		if (hasHeaderRecord && headerRecord == null)
-		{
-			if (!await ReadAsync().ConfigureAwait(false))
-			{
-				yield break;
-			}
-
-			ReadHeader();
-			ValidateHeader(type);
-		}
-
-		Func<object>? read = null;
-
-		while (await ReadAsync().ConfigureAwait(false))
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			object record;
-			try
-			{
-				if (read == null)
-				{
-					read = recordManager.Value.GetReadDelegate<object>(type);
-				}
-
-				record = read();
-			}
-			catch (Exception ex)
-			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-				var args = new ReadingExceptionOccurredArgs(csvHelperException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					if (ex is CsvHelperException)
-					{
-						throw;
-					}
-					else
-					{
-						throw csvHelperException;
-					}
-				}
-
-				// If the callback doesn't throw, keep going.
-				continue;
-			}
-
-			yield return record;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record, [EnumeratorCancellation] CancellationToken cancellationToken = default)
-	{
-		if (disposed)
-		{
-			throw new ObjectDisposedException(nameof(CsvReader),
-				"GetRecords<T>() returns an IEnumerable<T> that yields records. This means that the method isn't actually called until " +
-				"you try and access the values. Did you create CsvReader inside a using block and are now trying to access " +
-				"the records outside of that using block?"
-			);
-		}
-
-		// Don't need to check if it's been read
-		// since we're doing the reading ourselves.
-
-		if (hasHeaderRecord && headerRecord == null)
-		{
-			if (!await ReadAsync().ConfigureAwait(false))
-			{
-				yield break;
-			}
-
-			ReadHeader();
-			ValidateHeader<T>();
-		}
-
-		while (await ReadAsync().ConfigureAwait(false))
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			try
-			{
-				recordManager.Value.Hydrate(record);
-			}
-			catch (Exception ex)
-			{
-				var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
-
-				var args = new ReadingExceptionOccurredArgs(csvHelperException);
-				if (readingExceptionOccurred?.Invoke(args) ?? true)
-				{
-					if (ex is CsvHelperException)
-					{
-						throw;
-					}
-					else
-					{
-						throw csvHelperException;
-					}
-				}
-
-				// If the callback doesn't throw, keep going.
-				continue;
-			}
-
-			yield return record;
-		}
+		return ReadSlow();
 	}
 
 	/// <summary>
-	/// Gets the index of the field with the given name.
+	/// Asynchronously advances to the next record, reading the header first if it has not been read. Completes
+	/// synchronously while records that have already been read from the source remain. See <see cref="Read"/>.
 	/// </summary>
-	/// <param name="name">The name of the field.</param>
-	/// <param name="index">The index of the field.</param>
-	/// <param name="isTryGet">Indicates if a TryGet is executed.</param>
-	/// <returns>The index of the field.</returns>
-	public virtual int GetFieldIndex(string name, int index = 0, bool isTryGet = false)
+	/// <param name="cancellationToken">Cancels reading from the source.</param>
+	/// <returns>
+	/// <see langword="true"/> when the reader is positioned on a record; <see langword="false"/> at the end of the input.
+	/// </returns>
+	/// <exception cref="CsvFormatException">
+	/// A record is malformed and <see cref="CsvReaderOptions.MalformedData"/> or
+	/// <see cref="CsvReaderOptions.FieldCountMismatch"/> is set to throw, or a record is too large to buffer.
+	/// </exception>
+	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// This reader is the one a <see cref="ParallelEnumerate{T}(Func{CsvReader, T}, int)"/> selector got.
+	/// </exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public ValueTask<bool> ReadAsync(CancellationToken cancellationToken = default)
 	{
-		return GetFieldIndex(new[] { name }, index, isTryGet);
+		if (TryNextRecord())
+		{
+			rowNumber++;
+
+			return new ValueTask<bool>(true);
+		}
+
+		return ReadAsyncSlow(cancellationToken);
 	}
 
 	/// <summary>
-	/// Gets the index of the field with the given name.
+	/// Reads the header row (if any) without advancing to the first data record. Without a header, it still reads the
+	/// start of the input, so that <see cref="Separator"/> is known. Once the header has been read, calling it while the
+	/// reader is on a record makes that record the new header, for files with several data sets one after the other:
+	/// <see cref="Headers"/>, the by-name lookups and the record mappers created afterwards use it, and the record does
+	/// not count as a data record. Otherwise it does nothing.
 	/// </summary>
-	/// <param name="names">The names of the field.</param>
-	/// <param name="index">The index of the field.</param>
-	/// <param name="isTryGet">Indicates if a TryGet is executed.</param>
-	/// <param name="isOptional">Indicates if the field is optional.</param>
-	/// <returns>The index of the field.</returns>
-	public virtual int GetFieldIndex(IEnumerable<string> names, int index = 0, bool isTryGet = false, bool isOptional = false)
+	/// <exception cref="CsvFormatException">The header is malformed and the options say to throw (see <see cref="Read"/>).</exception>
+	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// This reader is the one a <see cref="ParallelEnumerate{T}(Func{CsvReader, T}, int)"/> selector got.
+	/// </exception>
+	public void ReadHeader()
 	{
-		if (names == null)
+		if (!headerDone)
 		{
-			throw new ArgumentNullException(nameof(names));
+			EnsureHeader();
+
+			return;
 		}
 
-		if (!hasHeaderRecord)
-		{
-			throw new ReaderException(context, "There is no header record to determine the index by name.");
-		}
-
-		if (headerRecord == null)
-		{
-			throw new ReaderException(context, "The header has not been read. You must call ReadHeader() before any fields can be retrieved by name.");
-		}
-
-		// Caching the named index speeds up mappings that use ConvertUsing tremendously.
-		var nameKey = string.Join("_", names) + index;
-		if (namedIndexCache.TryGetValue(nameKey, out var cache))
-		{
-			(var cachedName, var cachedIndex) = cache;
-			return namedIndexes[cachedName][cachedIndex];
-		}
-
-		// Check all possible names for this field.
-		string? name = null;
-		var i = 0;
-		foreach (var n in names)
-		{
-			// Get the list of indexes for this name.
-			var args = new PrepareHeaderForMatchArgs(n, i);
-			var fieldName = prepareHeaderForMatch(args);
-			if (namedIndexes.ContainsKey(fieldName ?? string.Empty))
-			{
-				name = fieldName;
-				break;
-			}
-
-			i++;
-		}
-
-		// Check if the index position exists.
-		if (name == null || index >= namedIndexes[name].Count)
-		{
-			// It doesn't exist. The field is missing.
-			if (!isTryGet && !isOptional)
-			{
-				var args = new MissingFieldFoundArgs(names.ToArray(), index, context);
-				missingFieldFound?.Invoke(args);
-			}
-
-			return -1;
-		}
-
-		namedIndexCache.Add(nameKey, (name, index));
-
-		return namedIndexes[name][index];
+		ReplaceHeader();
 	}
 
 	/// <summary>
-	/// Indicates if values can be read.
+	/// Asynchronously reads the header row (if any) without advancing to the first data record, or makes the current
+	/// record the new header. See <see cref="ReadHeader"/>.
 	/// </summary>
-	/// <param name="memberMap">The member map.</param>
-	/// <returns>True if values can be read.</returns>
-	public virtual bool CanRead(MemberMap memberMap)
+	/// <param name="cancellationToken">Cancels reading from the source.</param>
+	/// <returns>A task that completes when the header has been read.</returns>
+	/// <exception cref="CsvFormatException">The header is malformed and the options say to throw (see <see cref="Read"/>).</exception>
+	/// <exception cref="ObjectDisposedException">The reader has been disposed.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// This reader is the one a <see cref="ParallelEnumerate{T}(Func{CsvReader, T}, int)"/> selector got.
+	/// </exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public async ValueTask ReadHeaderAsync(CancellationToken cancellationToken = default)
 	{
-		var cantRead =
-			// Ignored member;
-			memberMap.Data.Ignore;
-
-		var property = memberMap.Data.Member as PropertyInfo;
-		if (property != null)
+		if (!headerDone)
 		{
-			cantRead = cantRead ||
-				// Properties that don't have a public setter
-				// and we are honoring the accessor modifier.
-				property.GetSetMethod() == null && !includePrivateMembers ||
-				// Properties that don't have a setter at all.
-				property.GetSetMethod(true) == null;
+			await EnsureHeaderAsync(cancellationToken).ConfigureAwait(false);
+
+			return;
 		}
 
-		return !cantRead;
+		ReplaceHeader();
 	}
 
-	/// <summary>
-	/// Indicates if values can be read.
-	/// </summary>
-	/// <param name="memberReferenceMap">The member reference map.</param>
-	/// <returns>True if values can be read.</returns>
-	public virtual bool CanRead(MemberReferenceMap memberReferenceMap)
+	/// <summary>Makes the current record, if there is one, the header (a new data set in the same file).</summary>
+	private void ReplaceHeader()
 	{
-		var cantRead = false;
-
-		var property = memberReferenceMap.Data.Member as PropertyInfo;
-		if (property != null)
-		{
-			cantRead =
-				// Properties that don't have a public setter
-				// and we are honoring the accessor modifier.
-				property.GetSetMethod() == null && !includePrivateMembers ||
-				// Properties that don't have a setter at all.
-				property.GetSetMethod(true) == null;
-		}
-
-		return !cantRead;
-	}
-
-	/// <inheritdoc/>
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
-
-	/// <summary>
-	/// Disposes the object.
-	/// </summary>
-	/// <param name="disposing">Indicates if the object is being disposed.</param>
-	protected virtual void Dispose(bool disposing)
-	{
-		if (disposed)
+		ThrowIfDisposed();
+		ThrowIfParallelWorker();
+		if (fieldCount == 0)
 		{
 			return;
 		}
 
-		// Dispose managed state (managed objects)
-		if (disposing)
+		CaptureHeader();
+		// It was counted as a data record when it was read.
+		rowNumber--;
+		if (fieldCountMode != CsvFieldCountHandling.Allow)
 		{
-			parser.Dispose();
+			expectedFieldCount = headers.Length;
 		}
 
-		// Free unmanaged resources (unmanaged objects) and override finalizer
-		// Set large fields to null
+		recordMapper = null;
+	}
 
+	private bool ReadSlow()
+	{
+		ThrowIfDisposed();
+		ThrowIfParallelWorker();
+		if (!headerDone && !EnsureHeader()) return false;
+		while (true)
+		{
+			if (TryNextRecord())
+			{
+				rowNumber++;
+
+				return true;
+			}
+
+			if (!Fill())
+			{
+				fieldCount = 0;
+
+				return false;
+			}
+		}
+	}
+
+	private async ValueTask<bool> ReadAsyncSlow(CancellationToken cancellationToken)
+	{
+		ThrowIfDisposed();
+		ThrowIfParallelWorker();
+		if (!headerDone && !await EnsureHeaderAsync(cancellationToken).ConfigureAwait(false)) return false;
+		while (true)
+		{
+			if (TryNextRecord())
+			{
+				rowNumber++;
+
+				return true;
+			}
+
+			if (!await FillAsync(cancellationToken).ConfigureAwait(false))
+			{
+				fieldCount = 0;
+
+				return false;
+			}
+		}
+	}
+
+	private bool EnsureHeader()
+	{
+		ThrowIfDisposed();
+		if (options.HasHeader)
+		{
+			while (!TryNextRecord())
+			{
+				if (!Fill()) return FinishHeader(false);
+			}
+
+			CaptureHeader();
+		}
+		else
+		{
+			// No header: still run encoding and separator detection so Separator is meaningful.
+			while (!initialized && !TryInitialize()) Refill();
+		}
+
+		return FinishHeader(true);
+	}
+
+	private async ValueTask<bool> EnsureHeaderAsync(CancellationToken cancellationToken)
+	{
+		ThrowIfDisposed();
+		if (options.HasHeader)
+		{
+			while (!TryNextRecord())
+			{
+				if (!await FillAsync(cancellationToken).ConfigureAwait(false)) return FinishHeader(false);
+			}
+
+			CaptureHeader();
+		}
+		else
+		{
+			while (!initialized && !TryInitialize()) await RefillAsync(cancellationToken).ConfigureAwait(false);
+		}
+
+		return FinishHeader(true);
+	}
+
+	private bool FinishHeader(bool hasMore)
+	{
+		headerDone = true;
+		headerIndex ??= new Dictionary<string, int>(StringComparer.Ordinal);
+		headerIndexLoose ??= new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+		if (!hasMore) fieldCount = 0;
+
+		return hasMore;
+	}
+
+	private void CaptureHeader()
+	{
+		var count = fieldCount;
+		var names = new string[count];
+		var keys = normalizeHeader is null ? names : new string[count];
+		var exact = new Dictionary<string, int>(count, StringComparer.Ordinal);
+		var loose = new Dictionary<string, int>(count, StringComparer.OrdinalIgnoreCase);
+		for (var i = 0; i < count; i++)
+		{
+			var name = MakeString(GetSpan(i), -1);
+			names[i] = name;
+			var key = HeaderKey(name);
+			keys[i] = key;
+			exact.TryAdd(key, i);
+			loose.TryAdd(key.Trim(), i);
+		}
+
+		headers = names;
+		headerKeys = keys;
+		headerIndex = exact;
+		headerIndexLoose = loose;
+		fieldCount = 0;
+	}
+
+	/// <summary>A header name as it is matched: changed by <see cref="CsvReaderOptions.NormalizeHeaderName"/>, if set.</summary>
+	private string HeaderKey(string name) => normalizeHeader is null ? name : normalizeHeader(name) ?? "";
+
+	/// <summary>
+	/// Moves to the next parsed record, skipping empty lines and comments. Returns false when the
+	/// parsed index is exhausted and more input must be scanned.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private bool TryNextRecord()
+	{
+		while (rowIndex < rowCount)
+		{
+			var entry = Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(rowEnds), (nint)(uint)rowIndex);
+			rowIndex++;
+			var last = entry & int.MaxValue;
+			var b = rowBase;
+			rowBase = last;
+			// For CRLF the record's last field ends at the CR entry just before the LF entry.
+			var count = last - b - (int)((uint)entry >> 31);
+			if (rowChecks)
+			{
+				if (SkipRecord(b, last, count)) continue;
+			}
+			else if (count == 1 && skipEmpty)
+			{
+				// An empty line: the only field starts where it ends.
+				ref var e = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(ends), (nint)(uint)b);
+				if ((Unsafe.Add(ref e, 1) & int.MaxValue) - (e & int.MaxValue) == 1) continue;
+			}
+
+			fieldBase = b;
+			fieldCount = count;
+			recordNumber++;
+			scratchPos = 0;
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/// <summary>
+	/// Per-record checks for records that may be empty lines or comments, contain malformed quoting, or
+	/// have an unexpected field count, and the line count and skip predicate. Returns true when the record must be skipped.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private bool SkipRecord(int b, int last, int count)
+	{
+		var start = ends[b] & int.MaxValue;
+		var recordEnd = (ends[b + count] & int.MaxValue) - 1;
+		if (trackLines)
+		{
+			// Every record, skipped or not, is at least one line, and its quoted (or escaped) line breaks are more.
+			lineNumber = nextLine;
+			nextLine += 1 + LineBreaks(new ReadOnlySpan<byte>(buffer, start, Math.Max(recordEnd - start, 0)));
+		}
+
+		if (nextBadPos != int.MaxValue && (ends[last] & int.MaxValue) > nextBadPos)
+		{
+			// The record contains malformed quoting; consume every problem found inside it.
+			var limit = ends[last] & int.MaxValue;
+			var pos = badPos[badIndex];
+			var reason = badReason[badIndex];
+			while (badIndex < badCount && badPos[badIndex] < limit) badIndex++;
+			nextBadPos = badIndex < badCount ? badPos[badIndex] : int.MaxValue;
+			if (badIndex == badCount) badIndex = badCount = 0;
+			if (malformedMode == CsvMalformedDataHandling.Throw) ThrowMalformed(reason, pos);
+			var skip = malformedMode == CsvMalformedDataHandling.Skip;
+			onMalformed?.Invoke(new CsvMalformedRecord(recordNumber + 1, reason, skip, discarded + pos, Raw(start, recordEnd), LineOrZero));
+			if (skip) return true;
+		}
+
+		// A fixed-width record has a field per column, empty or not: look at the whole line.
+		var end = fixedWidth ? recordEnd : (ends[b + 1] & int.MaxValue) - 1;
+		if ((count == 1 || fixedWidth) && skipEmpty && IsBlank(start, end)) return true;
+		if (commentInt >= 0 && start < end && buffer[start] == commentInt) return true;
+		if (fieldCountMode != CsvFieldCountHandling.Allow)
+		{
+			if (expectedFieldCount < 0)
+			{
+				expectedFieldCount = count;
+			}
+			else if (count != expectedFieldCount)
+			{
+				if (fieldCountMode == CsvFieldCountHandling.Throw)
+				{
+					throw new CsvFormatException(
+						$"Record {recordNumber + 1}{AtLine} has {count} fields but {expectedFieldCount} were expected.",
+						recordNumber + 1, discarded + start) { LineNumber = LineOrZero };
+				}
+
+				onMalformed?.Invoke(new CsvMalformedRecord(recordNumber + 1, CsvMalformedReason.FieldCountMismatch, true,
+					discarded + start, Raw(start, recordEnd), LineOrZero));
+
+				return true;
+			}
+		}
+
+		return shouldSkip is not null && headerDone && SkipByPredicate(b, count);
+	}
+
+	/// <summary>Asks <see cref="CsvReaderOptions.ShouldSkipRecord"/> about the record, with the reader positioned on it.</summary>
+	private bool SkipByPredicate(int b, int count)
+	{
+		fieldBase = b;
+		fieldCount = count;
+		scratchPos = 0;
+		// The number the record gets when it is not skipped.
+		rowNumber++;
+		try
+		{
+			return shouldSkip!(new CsvRow(this));
+		}
+		finally
+		{
+			rowNumber--;
+		}
+	}
+
+	// The line of the record being checked, for errors: 0 without TrackLineNumbers.
+	private long LineOrZero => trackLines ? lineNumber : 0;
+
+	// " (line n)" in error messages, with TrackLineNumbers.
+	private string AtLine => trackLines ? $" (line {lineNumber})" : "";
+
+	/// <summary>The number of line breaks in <paramref name="s"/>: CR, LF and CR LF each count once.</summary>
+	private static int LineBreaks(ReadOnlySpan<byte> s)
+	{
+		var count = 0;
+		while (true)
+		{
+			var k = s.IndexOfAny((byte)'\r', (byte)'\n');
+			if (k < 0)
+			{
+				return count;
+			}
+
+			count++;
+			if (s[k] == (byte)'\r' && k + 1 < s.Length && s[k + 1] == (byte)'\n')
+			{
+				k++;
+			}
+
+			s = s.Slice(k + 1);
+		}
+	}
+
+	private string Raw(int start, int end) => Encoding.UTF8.GetString(buffer, start, end - start);
+
+	private bool IsBlank(int start, int end)
+	{
+		if (start == end) return true;
+		if (!trim) return false;
+		for (var i = start; i < end; i++)
+		{
+			if (!whitespace[buffer[i]]) return false;
+		}
+
+		return true;
+	}
+
+	/// <summary>Discards consumed records from the index so that the next scan starts with a compact index.</summary>
+	private void Recycle()
+	{
+		var keep = rowBase;
+		if (keep > 0)
+		{
+			var n = endsCount - keep;
+			ends.AsSpan(keep, n).CopyTo(ends);
+			endsCount = n;
+			rowBase = 0;
+			fieldBase = 0;
+		}
+
+		rowCount = 0;
+		rowIndex = 0;
+	}
+
+	private bool Fill()
+	{
+		Recycle();
+		while (true)
+		{
+			switch (ParseStep())
+			{
+				case Step.Rows: return true;
+				case Step.End: return false;
+				default: Refill(); break;
+			}
+		}
+	}
+
+	private async ValueTask<bool> FillAsync(CancellationToken cancellationToken)
+	{
+		Recycle();
+		while (true)
+		{
+			switch (ParseStep())
+			{
+				case Step.Rows: return true;
+				case Step.End: return false;
+				default: await RefillAsync(cancellationToken).ConfigureAwait(false); break;
+			}
+		}
+	}
+
+	private Step ParseStep()
+	{
+		if (!initialized && !TryInitialize()) return Step.NeedData;
+		while (true)
+		{
+			if (dataEnd - scanPos >= BlockSize)
+			{
+				ScanAvailable();
+				if (rowCount > 0) return Step.Rows;
+				continue;
+			}
+
+			if (!eof) return Step.NeedData;
+			if (!finished)
+			{
+				ScanFinalBlock();
+				if (rowCount > 0) return Step.Rows;
+			}
+
+			return Step.End;
+		}
+	}
+
+	/// <summary>Scans the partial block at the end of the input and terminates the last record.</summary>
+	private void ScanFinalBlock()
+	{
+		EnsureIndexCapacity();
+		if (fixedWidth)
+		{
+			// The scan stops when the index is full; nothing is consumed here, so grow it and go on.
+			while (scanPos < dataEnd)
+			{
+				scanPos = ScanFixed(scanPos, dataEnd);
+				EnsureIndexCapacity();
+			}
+		}
+		else if (scanPos < dataEnd)
+		{
+			ScalarBlock(scanPos, dataEnd - scanPos);
+			scanPos = dataEnd;
+		}
+
+		FinishInput();
+		finished = true;
+	}
+
+	private void EnsureIndexCapacity()
+	{
+		if (ends.Length - EndsSlack - endsCount < indexReserve)
+		{
+			var bigger = ArrayPool<int>.Shared.Rent(Math.Max(ends.Length * 2, endsCount + indexReserve + EndsSlack));
+			ends.AsSpan(0, endsCount).CopyTo(bigger);
+			ArrayPool<int>.Shared.Return(ends);
+			ends = bigger;
+		}
+
+		if (rowEnds.Length - rowCount < BlockSize + 1)
+		{
+			var bigger = ArrayPool<int>.Shared.Rent(rowEnds.Length * 2);
+			rowEnds.AsSpan(0, rowCount).CopyTo(bigger);
+			ArrayPool<int>.Shared.Return(rowEnds);
+			rowEnds = bigger;
+		}
+	}
+
+	private void ScanAvailable() => ScanAvailable(dataEnd);
+
+	/// <summary>Scans whole blocks up to <paramref name="end"/>, as many as the index has room for.</summary>
+	private void ScanAvailable(int end)
+	{
+		EnsureIndexCapacity();
+		var pos = scanPos;
+		if (fixedWidth)
+		{
+			// Whole lines, up to as many bytes as a block scan takes (a partial line waits for more input).
+			scanPos = ScanFixed(pos, (int)Math.Min(end, (long)pos + IndexCapacity));
+
+			return;
+		}
+
+		var blocks = (end - pos) >> 6;
+		var room = Math.Min((ends.Length - EndsSlack - endsCount) >> 6, (rowEnds.Length - rowCount) >> 6);
+		if (blocks > room) blocks = room;
+		if (blocks > MaxBlocksPerScan) blocks = MaxBlocksPerScan;
+		var limit = pos + (blocks << 6);
+		while (pos < limit)
+		{
+			if (!forceScalar && !afterClosingQuote)
+			{
+				pos = ScanSimd(pos, limit);
+				if (pos >= limit) break;
+			}
+
+			ScalarBlock(pos, BlockSize);
+			pos += BlockSize;
+		}
+
+		scanPos = pos;
+	}
+
+	/// <summary>Terminates the last record when the input does not end with a line break.</summary>
+	private void FinishInput()
+	{
+		if (strict && carry.InQuote != 0) RecordMalformed(dataEnd, CsvMalformedReason.UnterminatedQuote);
+		if (strict && carry.PrevEscape != 0) RecordMalformed(dataEnd - 1, CsvMalformedReason.TrailingEscape);
+		if (carry.PrevCr != 0)
+		{
+			// The input ends with a CR: it ended the last record.
+			rowEnds[rowCount++] = endsCount - 1;
+			carry.PrevCr = 0;
+		}
+
+		var lastTermIdx = rowCount > 0 ? rowEnds[rowCount - 1] & int.MaxValue : rowBase;
+		var start = ends[lastTermIdx] & int.MaxValue;
+		if (start < dataEnd)
+		{
+			// The last record has no line break: terminate it at the end of the input.
+			if (fixedWidth) WriteFixedColumns(start, dataEnd);
+			var flags = (carry.FieldQuoted != 0 || trim || fixedWidth) ? int.MinValue : 0;
+			ends[endsCount] = (dataEnd + 1) | flags;
+			rowEnds[rowCount++] = endsCount;
+			endsCount++;
+		}
+	}
+
+	private void RecordMalformed(int pos, CsvMalformedReason reason)
+	{
+		if (badCount == badPos.Length)
+		{
+			Array.Resize(ref badPos, Math.Max(16, badCount * 2));
+			Array.Resize(ref badReason, badPos.Length);
+		}
+
+		badPos[badCount] = pos;
+		badReason[badCount] = reason;
+		if (badCount++ == badIndex) nextBadPos = pos;
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void ThrowMalformed(CsvMalformedReason reason, int pos)
+	{
+		var what = reason switch
+		{
+			CsvMalformedReason.StrayQuote => "a quote inside an unquoted field",
+			CsvMalformedReason.TextAfterClosingQuote => "text after the closing quote of a quoted field",
+			CsvMalformedReason.UnterminatedQuote => "a quoted field that is never closed",
+			CsvMalformedReason.LineBreakInQuotes => "a line break inside a quoted field",
+			CsvMalformedReason.TrailingEscape => "an escape character at the end of the input",
+			_ => "malformed data",
+		};
+		var record = recordNumber + 1;
+		throw new CsvFormatException($"Malformed CSV in record {record}{AtLine}: {what} (byte offset {discarded + pos}).",
+			record, discarded + pos) { LineNumber = LineOrZero };
+	}
+
+	private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(disposed, this);
+
+	/// <summary>Returns an enumerator so records can be read with <c>foreach</c>.</summary>
+	/// <returns>An enumerator that calls <see cref="Read"/> to move to the next record.</returns>
+	public Enumerator GetEnumerator() => new(this);
+
+	/// <summary>Returns an async enumerator so records can be read with <c>await foreach</c>.</summary>
+	/// <param name="cancellationToken">Cancels reading from the source.</param>
+	/// <returns>An enumerator that calls <see cref="ReadAsync"/> to move to the next record.</returns>
+	public AsyncEnumerator GetAsyncEnumerator(CancellationToken cancellationToken = default) => new(this, cancellationToken);
+
+	/// <summary>Enumerates the records of a <see cref="CsvReader"/>.</summary>
+	public readonly struct Enumerator
+	{
+		private readonly CsvReader reader;
+		internal Enumerator(CsvReader reader) => this.reader = reader;
+
+		/// <summary>The current record. Valid until the next call to <see cref="MoveNext"/>.</summary>
+		public CsvRow Current => new(reader);
+
+		/// <summary>Advances to the next record. See <see cref="CsvReader.Read"/>.</summary>
+		/// <returns><see langword="true"/> when the reader is positioned on a record; <see langword="false"/> at the end of the input.</returns>
+		public bool MoveNext() => reader.Read();
+	}
+
+	/// <summary>Asynchronously enumerates the records of a <see cref="CsvReader"/>.</summary>
+	public readonly struct AsyncEnumerator
+	{
+		private readonly CsvReader reader;
+		private readonly CancellationToken cancellationToken;
+		internal AsyncEnumerator(CsvReader reader, CancellationToken cancellationToken)
+		{
+			this.reader = reader;
+			this.cancellationToken = cancellationToken;
+		}
+
+		/// <summary>The current record. Valid until the next call to <see cref="MoveNextAsync"/>.</summary>
+		public CsvRow Current => new(reader);
+
+		/// <summary>Asynchronously advances to the next record. See <see cref="CsvReader.ReadAsync"/>.</summary>
+		/// <returns>
+		/// <see langword="true"/> when the reader is positioned on a record; <see langword="false"/> at the end of the input.
+		/// </returns>
+		public ValueTask<bool> MoveNextAsync() => reader.ReadAsync(cancellationToken);
+
+		/// <summary>Does nothing: the reader stays open, and is disposed by its owner.</summary>
+		/// <returns>A completed task.</returns>
+		public ValueTask DisposeAsync() => default;
+	}
+
+	/// <summary>
+	/// Returns the buffers to their pools and disposes the stream or text reader being read, unless the reader was
+	/// created with <c>leaveOpen</c>. Calling it again does nothing.
+	/// </summary>
+	public void Dispose()
+	{
+		if (disposed) return;
 		disposed = true;
+		ReturnBuffers();
+		DisposeSource();
 	}
 
 	/// <summary>
-	/// Checks if the file has been read.
+	/// Returns the buffers to their pools and asynchronously disposes the stream or text reader being read, unless the
+	/// reader was created with <c>leaveOpen</c>. Calling it again does nothing.
 	/// </summary>
-	/// <exception cref="ReaderException">Thrown when the file has not yet been read.</exception>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	protected virtual void CheckHasBeenRead()
+	/// <returns>A task that completes when the source has been disposed.</returns>
+	public async ValueTask DisposeAsync()
 	{
-		if (!hasBeenRead)
-		{
-			throw new ReaderException(context, "You must call read on the reader before accessing its data.");
-		}
+		if (disposed) return;
+		disposed = true;
+		ReturnBuffers();
+		await DisposeSourceAsync().ConfigureAwait(false);
 	}
 
-	/// <summary>
-	/// Parses the named indexes.
-	/// </summary>
-	/// <exception cref="ReaderException">Thrown when no header record was found.</exception>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	protected virtual void ParseNamedIndexes()
+	private void ReturnBuffers()
 	{
-		if (headerRecord == null)
-		{
-			throw new ReaderException(context, "No header record was found.");
-		}
-
-		namedIndexes.Clear();
-		namedIndexCache.Clear();
-
-		for (var i = 0; i < headerRecord.Length; i++)
-		{
-			var args = new PrepareHeaderForMatchArgs(headerRecord[i], i);
-			var name = prepareHeaderForMatch(args);
-			if (namedIndexes.TryGetValue(name, out var index))
-			{
-				index.Add(i);
-			}
-			else
-			{
-				namedIndexes[name] = new List<int> { i };
-			}
-		}
+		if (bufferRented) ArrayPool<byte>.Shared.Return(buffer);
+		bufferRented = false;
+		buffer = [];
+		ArrayPool<int>.Shared.Return(ends);
+		ArrayPool<int>.Shared.Return(rowEnds);
+		ends = [];
+		rowEnds = [];
+		if (chars is not null) ArrayPool<char>.Shared.Return(chars);
+		chars = null;
+		rowCount = rowIndex = fieldCount = 0;
+		endsCount = 0;
 	}
 }

@@ -1,0 +1,1364 @@
+/*
+	CsvHelper documentation styles (Tailwind CSS v4). docs/build.ps1 compiles this to _site/assets/site.css after the
+	generator has written the pages. Automatic source detection skips gitignored folders, so _site is listed here.
+	Colors: the green and grays of the CsvHelper logo. #00A650 (brand-500) is 3.2:1 on white, so it is used for large
+	text, icons and accents; text links use brand-700 (5.5:1). Muted text is never lighter than ink-600 (5.1:1).
+*/
+@import "tailwindcss" source(none);
+@source "../_site";
+@source "./site.js";
+@source "./search.js";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--color-brand-50: #e8f8ef;
+	--color-brand-100: #c9efd9;
+	--color-brand-200: #96e0b6;
+	--color-brand-300: #5ccd8d;
+	--color-brand-400: #24b96a;
+	--color-brand-500: #00a650;
+	--color-brand-600: #008f45;
+	--color-brand-700: #007a3d;
+	--color-brand-800: #00612f;
+	--color-brand-900: #004d26;
+	--color-brand-950: #002b15;
+
+	--color-ink-50: #f7f7f8;
+	--color-ink-100: #eeeeef;
+	--color-ink-200: #d5d5d6;
+	--color-ink-300: #b9babb;
+	--color-ink-400: #98999a;
+	--color-ink-500: #828384;
+	--color-ink-600: #6d6e70;
+	--color-ink-700: #58595b;
+	--color-ink-800: #3e3f41;
+	--color-ink-900: #28292b;
+	--color-ink-950: #18191a;
+
+	--font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+
+@layer base {
+	html {
+		scroll-padding-top: 5.5rem;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		html {
+			scroll-behavior: smooth;
+		}
+	}
+
+	::selection {
+		background-color: color-mix(in oklab, var(--color-brand-500) 28%, transparent);
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-brand-600);
+		outline-offset: 2px;
+	}
+
+	.icon {
+		display: inline-block;
+		flex-shrink: 0;
+		vertical-align: -0.125em;
+	}
+
+	kbd {
+		@apply rounded border border-ink-200 bg-white px-1.5 py-0.5 font-sans text-[0.7rem] font-semibold text-ink-700 shadow-[0_1px_0_var(--color-ink-200)] dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:shadow-none;
+	}
+}
+
+/* Typography plugin colors from the brand palette. Unlayered, so it wins over the plugin's defaults. */
+.prose-ink {
+	--tw-prose-body: var(--color-ink-800);
+	--tw-prose-headings: var(--color-ink-950);
+	--tw-prose-lead: var(--color-ink-700);
+	--tw-prose-links: var(--color-brand-700);
+	--tw-prose-bold: var(--color-ink-950);
+	--tw-prose-counters: var(--color-ink-600);
+	--tw-prose-bullets: var(--color-brand-500);
+	--tw-prose-hr: var(--color-ink-200);
+	--tw-prose-quotes: var(--color-ink-900);
+	--tw-prose-quote-borders: var(--color-brand-500);
+	--tw-prose-captions: var(--color-ink-600);
+	--tw-prose-code: var(--color-ink-900);
+	--tw-prose-pre-code: var(--color-ink-800);
+	--tw-prose-pre-bg: var(--color-ink-50);
+	--tw-prose-th-borders: var(--color-ink-300);
+	--tw-prose-td-borders: var(--color-ink-200);
+	--tw-prose-invert-body: var(--color-ink-200);
+	--tw-prose-invert-headings: #fff;
+	--tw-prose-invert-lead: var(--color-ink-300);
+	--tw-prose-invert-links: var(--color-brand-400);
+	--tw-prose-invert-bold: #fff;
+	--tw-prose-invert-counters: var(--color-ink-400);
+	--tw-prose-invert-bullets: var(--color-brand-500);
+	--tw-prose-invert-hr: var(--color-ink-800);
+	--tw-prose-invert-quotes: var(--color-ink-100);
+	--tw-prose-invert-quote-borders: var(--color-brand-500);
+	--tw-prose-invert-captions: var(--color-ink-400);
+	--tw-prose-invert-code: var(--color-ink-100);
+	--tw-prose-invert-pre-code: var(--color-ink-200);
+	--tw-prose-invert-pre-bg: var(--color-ink-900);
+	--tw-prose-invert-th-borders: var(--color-ink-700);
+	--tw-prose-invert-td-borders: var(--color-ink-800);
+}
+
+/* prose-invert lives in a layer, so it cannot override the unlayered colors above: dark mode maps them here. */
+.dark .prose-ink {
+	--tw-prose-body: var(--tw-prose-invert-body);
+	--tw-prose-headings: var(--tw-prose-invert-headings);
+	--tw-prose-lead: var(--tw-prose-invert-lead);
+	--tw-prose-links: var(--tw-prose-invert-links);
+	--tw-prose-bold: var(--tw-prose-invert-bold);
+	--tw-prose-counters: var(--tw-prose-invert-counters);
+	--tw-prose-bullets: var(--tw-prose-invert-bullets);
+	--tw-prose-hr: var(--tw-prose-invert-hr);
+	--tw-prose-quotes: var(--tw-prose-invert-quotes);
+	--tw-prose-quote-borders: var(--tw-prose-invert-quote-borders);
+	--tw-prose-captions: var(--tw-prose-invert-captions);
+	--tw-prose-code: var(--tw-prose-invert-code);
+	--tw-prose-pre-code: var(--tw-prose-invert-pre-code);
+	--tw-prose-pre-bg: var(--tw-prose-invert-pre-bg);
+	--tw-prose-th-borders: var(--tw-prose-invert-th-borders);
+	--tw-prose-td-borders: var(--tw-prose-invert-td-borders);
+}
+
+.prose-ink :where(code):not(:where(pre *))::before,
+.prose-ink :where(code):not(:where(pre *))::after {
+	content: none;
+}
+
+.prose-ink :where(code):not(:where(pre *)) {
+	@apply rounded-md bg-ink-100 px-1.5 py-0.5 text-[0.85em] font-medium dark:bg-ink-800;
+}
+
+.prose-ink :where(a code) {
+	color: inherit;
+}
+
+.prose-ink :where(a) {
+	@apply font-medium underline decoration-brand-500/40 underline-offset-2 hover:decoration-brand-600 dark:decoration-brand-400/40;
+}
+
+.prose-ink :where(pre) {
+	@apply rounded-xl border border-ink-200 text-[0.85rem] leading-relaxed dark:border-ink-800;
+}
+
+.prose-ink :where(h2) {
+	@apply mt-12 border-t border-ink-200 pt-8 tracking-tight dark:border-ink-800;
+}
+
+.prose-ink :where(h2):first-child {
+	@apply mt-0 border-t-0 pt-0;
+}
+
+.prose-ink :where(table) {
+	@apply my-0 text-sm;
+}
+
+.prose-ink :where(thead th) {
+	@apply bg-ink-50 px-3 py-2 dark:bg-ink-900;
+}
+
+.prose-ink :where(tbody td) {
+	@apply px-3 py-2 align-top;
+}
+
+.prose-ink :where(tr[id]:target) {
+	@apply bg-brand-50 dark:bg-brand-500/10;
+}
+
+/* Doc comment text in the API reference: tighter than the guides. */
+.prose-doc :where(p) {
+	@apply my-2;
+}
+
+.prose-doc :where(p:first-child) {
+	@apply mt-0;
+}
+
+@layer base {
+	/* highlight.js, shared by the code samples and the generated signatures. */
+	.hljs {
+		color: var(--color-ink-800);
+		background: transparent;
+	}
+
+	.hljs-keyword,
+	.hljs-literal,
+	.hljs-built_in,
+	.hljs-meta .hljs-keyword {
+		@apply font-semibold text-brand-700 dark:text-brand-400;
+	}
+
+	.hljs-type,
+	.hljs-title.class_,
+	.hljs-title.class_.inherited__ {
+		@apply font-semibold text-ink-950 dark:text-white;
+	}
+
+	.hljs-title,
+	.hljs-title.function_ {
+		@apply text-ink-900 dark:text-ink-100;
+	}
+
+	.hljs-string,
+	.hljs-char,
+	.hljs-template-string,
+	.hljs-regexp {
+		@apply text-amber-800 dark:text-amber-300;
+	}
+
+	.hljs-number,
+	.hljs-symbol {
+		@apply text-purple-700 dark:text-purple-300;
+	}
+
+	.hljs-comment,
+	.hljs-quote {
+		@apply text-ink-600 italic dark:text-ink-400;
+	}
+
+	.hljs-variable,
+	.hljs-params,
+	.hljs-attr,
+	.hljs-property {
+		@apply text-ink-700 dark:text-ink-300;
+	}
+
+	.hljs-meta,
+	.hljs-tag,
+	.hljs-name {
+		@apply text-ink-700 dark:text-ink-300;
+	}
+
+	.hljs-attribute {
+		@apply text-brand-800 dark:text-brand-300;
+	}
+}
+
+@layer components {
+	.site-body {
+		@apply min-h-screen bg-white text-ink-800 antialiased dark:bg-ink-950 dark:text-ink-200;
+	}
+
+	.skip-link {
+		@apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-white;
+	}
+
+	/* Header */
+	.site-header {
+		@apply sticky top-0 z-40 border-b border-ink-200 bg-white/90 backdrop-blur-md dark:border-ink-800 dark:bg-ink-950/85;
+	}
+
+	.site-header-bar {
+		@apply h-1 bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700;
+	}
+
+	.site-header-inner {
+		@apply mx-auto flex h-16 max-w-[90rem] items-center gap-3 px-4 sm:px-6;
+	}
+
+	.wordmark {
+		@apply flex shrink-0 items-center text-ink-700 dark:text-ink-100;
+	}
+
+	/* The logo (docs/assets/logo.svg, inlined by Logos.cs). Its fill attributes are the print colors; these win over them.
+	   "helper" takes the text color: ink-700 is the logo's gray, and dark mode needs a light one. */
+	.logo-comma {
+		fill: var(--color-brand-500);
+	}
+
+	.logo-csv {
+		fill: #fff;
+	}
+
+	.logo-helper {
+		fill: currentColor;
+	}
+
+	.header-logo {
+		@apply h-7 w-auto;
+	}
+
+	.footer-logo {
+		@apply h-6 w-auto;
+	}
+
+	.header-nav {
+		@apply ml-4 hidden items-center gap-1 md:flex;
+	}
+
+	.header-link {
+		@apply rounded-lg px-3 py-2 text-sm font-semibold text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-white;
+	}
+
+	.header-link[aria-current] {
+		@apply text-brand-700 dark:text-brand-400;
+	}
+
+	.header-actions {
+		@apply ml-auto flex items-center gap-1.5;
+	}
+
+	.search-button {
+		@apply flex h-9 items-center gap-2 rounded-lg border border-ink-200 bg-ink-50 px-3 text-sm text-ink-600 transition-colors hover:border-brand-500 hover:text-ink-900 sm:w-64 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-400 dark:hover:border-brand-500 dark:hover:text-ink-100;
+	}
+
+	.search-button-text {
+		@apply hidden sm:inline;
+	}
+
+	.search-kbd {
+		@apply ml-auto hidden sm:inline;
+	}
+
+	.icon-button {
+		@apply inline-flex size-9 items-center justify-center rounded-lg text-ink-600 transition-colors hover:bg-ink-100 hover:text-ink-950 dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-white;
+	}
+
+	/* Three columns: navigation, content, "On this page" */
+	.layout {
+		@apply mx-auto max-w-[90rem] px-4 sm:px-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[16rem_minmax(0,1fr)_14rem];
+	}
+
+	.layout-main {
+		@apply min-w-0 max-w-4xl py-10 lg:py-12;
+	}
+
+	.layout-toc {
+		@apply hidden xl:block;
+	}
+
+	.sidebar {
+		@apply fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] -translate-x-full overflow-y-auto border-r border-ink-200 bg-white px-4 pb-10 shadow-2xl transition-transform duration-200 motion-reduce:transition-none lg:sticky lg:top-[4.3rem] lg:z-auto lg:h-[calc(100vh-4.3rem)] lg:w-auto lg:max-w-none lg:translate-x-0 lg:border-r-0 lg:bg-transparent lg:px-0 lg:pt-8 lg:shadow-none dark:border-ink-800 dark:bg-ink-950 lg:dark:bg-transparent;
+	}
+
+	.sidebar[data-open] {
+		@apply translate-x-0;
+	}
+
+	.sidebar-backdrop {
+		@apply fixed inset-0 z-40 bg-ink-950/50 backdrop-blur-sm lg:hidden;
+	}
+
+	.sidebar-top {
+		@apply sticky top-0 z-10 -mx-4 mb-4 flex items-center justify-between border-b border-ink-200 bg-white px-4 py-3 dark:border-ink-800 dark:bg-ink-950;
+	}
+
+	.sidebar-title {
+		@apply text-sm font-bold text-ink-900 dark:text-white;
+	}
+
+	.sidebar-nav {
+		@apply space-y-7 pr-2 text-sm;
+	}
+
+	.nav-heading {
+		@apply mb-2 flex items-center gap-2 px-3 text-xs font-bold tracking-wider text-ink-900 uppercase dark:text-ink-100;
+	}
+
+	.nav-heading .icon {
+		@apply text-brand-600 dark:text-brand-400;
+	}
+
+	.nav-list {
+		@apply space-y-0.5;
+	}
+
+	.nav-subheading {
+		@apply px-3 pt-4 pb-1 text-[0.7rem] font-semibold tracking-wider text-ink-600 uppercase dark:text-ink-400;
+	}
+
+	.nav-link {
+		@apply flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-ink-700 transition-colors hover:bg-ink-100 hover:text-ink-950 dark:text-ink-300 dark:hover:bg-ink-800/70 dark:hover:text-white;
+	}
+
+	.nav-link .nav-icon {
+		@apply text-ink-500 dark:text-ink-500;
+	}
+
+	.nav-link[aria-current] {
+		@apply bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-500/25 ring-inset dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-400/20;
+	}
+
+	.nav-link[aria-current] .nav-icon {
+		@apply text-brand-600 dark:text-brand-400;
+	}
+
+	/* On this page */
+	.toc {
+		@apply sticky top-[4.3rem] max-h-[calc(100vh-4.3rem)] overflow-y-auto py-12 text-sm;
+	}
+
+	.toc-heading {
+		@apply mb-3 text-xs font-bold tracking-wider text-ink-900 uppercase dark:text-ink-100;
+	}
+
+	.toc-list {
+		@apply space-y-1 border-l border-ink-200 dark:border-ink-800;
+	}
+
+	.toc-link {
+		@apply -ml-px block border-l-2 border-transparent py-1 pl-3 text-ink-600 transition-colors hover:border-ink-400 hover:text-ink-950 dark:text-ink-400 dark:hover:text-white;
+	}
+
+	.toc-link.toc-sub {
+		@apply pl-6 text-[0.8rem];
+	}
+
+	.toc-link[aria-current] {
+		@apply border-brand-500 font-medium text-brand-700 dark:text-brand-400;
+	}
+
+	.toc-top {
+		@apply mt-6 inline-flex items-center gap-1.5 text-xs font-medium text-ink-600 hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-400;
+	}
+
+	/* Page parts */
+	.page-header {
+		@apply mb-10;
+	}
+
+	.eyebrow {
+		@apply flex items-center gap-2 text-sm font-semibold text-brand-700 dark:text-brand-400;
+	}
+
+	.page-title {
+		@apply mt-2 text-3xl font-black tracking-tight text-ink-950 sm:text-4xl dark:text-white;
+		overflow-wrap: anywhere;
+	}
+
+	.lead {
+		@apply mt-4 max-w-3xl text-lg leading-relaxed text-ink-700 dark:text-ink-300;
+	}
+
+	.lead :where(a) {
+		@apply font-medium text-brand-700 underline decoration-brand-500/40 underline-offset-2 hover:decoration-brand-600 dark:text-brand-400;
+	}
+
+	.lead :where(code) {
+		@apply rounded-md bg-ink-100 px-1.5 py-0.5 text-[0.85em] dark:bg-ink-800;
+	}
+
+	.badges {
+		@apply inline-flex flex-wrap items-center gap-1.5;
+	}
+
+	.badge {
+		@apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold whitespace-nowrap ring-1 ring-inset;
+	}
+
+	.badge-brand {
+		@apply bg-brand-50 text-brand-800 ring-brand-600/25 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-400/25;
+	}
+
+	.badge-ink {
+		@apply bg-ink-100 text-ink-800 ring-ink-300/60 dark:bg-ink-800 dark:text-ink-200 dark:ring-ink-700;
+	}
+
+	.badge-muted {
+		@apply bg-transparent text-ink-600 line-through decoration-ink-400 ring-ink-200 dark:text-ink-400 dark:ring-ink-700;
+	}
+
+	.badge-warn {
+		@apply bg-amber-50 text-amber-900 ring-amber-600/25 dark:bg-amber-400/10 dark:text-amber-200 dark:ring-amber-400/25;
+	}
+
+	.badge-danger {
+		@apply bg-red-50 text-red-800 ring-red-600/25 dark:bg-red-400/10 dark:text-red-200 dark:ring-red-400/25;
+	}
+
+	.banner {
+		@apply mb-8 flex gap-3 rounded-xl border border-brand-500/30 bg-brand-50 px-4 py-3 text-sm text-brand-900 dark:border-brand-400/25 dark:bg-brand-500/10 dark:text-brand-100;
+	}
+
+	.banner a {
+		@apply font-semibold underline underline-offset-2;
+	}
+
+	.section-title {
+		@apply mt-14 mb-6 border-t border-ink-200 pt-8 text-2xl font-bold tracking-tight text-ink-950 dark:border-ink-800 dark:text-white;
+	}
+
+	.external-link {
+		@apply inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.table-wrap {
+		@apply my-6 overflow-x-auto rounded-xl border border-ink-200 dark:border-ink-800;
+	}
+
+	.table-wrap > table {
+		@apply w-full;
+	}
+
+	.empty-state {
+		@apply my-8 flex flex-col items-center rounded-2xl border border-dashed border-ink-300 px-6 py-12 text-center dark:border-ink-700;
+	}
+
+	.empty-icon {
+		@apply mb-4 flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400;
+	}
+
+	.empty-title {
+		@apply text-lg font-bold text-ink-950 dark:text-white;
+	}
+
+	.empty-text {
+		@apply mt-2 max-w-md text-sm text-ink-600 dark:text-ink-400;
+	}
+
+	.empty-text a,
+	.empty-text code {
+		@apply font-medium text-brand-700 dark:text-brand-400;
+	}
+
+	/* Code blocks (copy buttons are added by site.js) */
+	.code-block {
+		@apply relative;
+	}
+
+	.copy-button {
+		@apply absolute top-2 right-2 inline-flex size-8 items-center justify-center rounded-lg border border-ink-200 bg-white/90 text-ink-600 opacity-0 shadow-sm transition-opacity hover:text-brand-700 focus:opacity-100 dark:border-ink-700 dark:bg-ink-800/90 dark:text-ink-300 dark:hover:text-brand-400;
+	}
+
+	.code-block:hover .copy-button,
+	.copy-button[data-copied] {
+		@apply opacity-100;
+	}
+
+	.copy-button[data-copied] {
+		@apply text-brand-600 dark:text-brand-400;
+	}
+
+	.heading-anchor {
+		@apply ml-2 inline-flex align-middle text-ink-400 no-underline opacity-0 transition-opacity hover:text-brand-600 focus:opacity-100 dark:text-ink-500;
+	}
+
+	:where(h2, h3):hover > .heading-anchor {
+		@apply opacity-100;
+	}
+
+	/* API reference */
+	.api-group {
+		@apply mb-4;
+	}
+
+	.type-grid {
+		@apply grid gap-3 sm:grid-cols-2;
+	}
+
+	.type-card {
+		@apply flex gap-3 rounded-xl border border-ink-200 p-4 transition hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md motion-reduce:transform-none dark:border-ink-800 dark:hover:border-brand-500;
+	}
+
+	.type-card-icon {
+		@apply flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400;
+	}
+
+	.type-card-body {
+		@apply flex min-w-0 flex-col;
+	}
+
+	.type-card-name {
+		@apply font-mono text-sm font-bold text-ink-950 dark:text-white;
+		overflow-wrap: anywhere;
+	}
+
+	.type-card-kind {
+		@apply text-xs text-ink-600 dark:text-ink-400;
+	}
+
+	.type-card-summary {
+		@apply mt-1.5 text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	.signature {
+		@apply my-4;
+	}
+
+	.signature pre {
+		@apply overflow-x-auto rounded-xl border border-ink-200 bg-ink-50 px-4 py-3 font-mono text-[0.85rem] leading-relaxed whitespace-pre-wrap text-ink-800 dark:border-ink-800 dark:bg-ink-900 dark:text-ink-200;
+		overflow-wrap: anywhere;
+	}
+
+	.signature a {
+		@apply underline decoration-ink-300 decoration-dotted underline-offset-2 hover:decoration-brand-500 hover:decoration-solid dark:decoration-ink-600;
+	}
+
+	.facts {
+		@apply my-8 grid gap-x-6 gap-y-3 rounded-xl border border-ink-200 p-5 text-sm sm:grid-cols-[9rem_minmax(0,1fr)] dark:border-ink-800;
+	}
+
+	.fact {
+		@apply contents;
+	}
+
+	.fact dt {
+		@apply font-semibold text-ink-900 dark:text-ink-100;
+	}
+
+	.fact dd {
+		@apply -mt-2 text-ink-700 sm:mt-0 dark:text-ink-300;
+	}
+
+	.fact a {
+		@apply text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.fact code {
+		@apply font-mono text-[0.85em];
+	}
+
+	.member {
+		@apply border-b border-ink-200 py-8 last:border-b-0 dark:border-ink-800;
+	}
+
+	.member:target {
+		@apply -mx-4 rounded-xl border-transparent bg-brand-50/60 px-4 dark:bg-brand-500/5;
+	}
+
+	.member-head {
+		@apply flex flex-wrap items-center gap-x-3 gap-y-2;
+	}
+
+	.member-title {
+		@apply font-mono text-lg font-bold text-ink-950 dark:text-white;
+		overflow-wrap: anywhere;
+	}
+
+	.member-title a:hover {
+		@apply text-brand-700 dark:text-brand-400;
+	}
+
+	.member-source {
+		@apply mt-4 text-xs;
+	}
+
+	.doc-heading {
+		@apply mt-6 mb-2 text-xs font-bold tracking-wider text-ink-600 uppercase dark:text-ink-400;
+	}
+
+	.doc-list {
+		@apply divide-y divide-ink-200 rounded-xl border border-ink-200 text-sm dark:divide-ink-800 dark:border-ink-800;
+	}
+
+	.doc-item {
+		@apply grid gap-1 px-4 py-3 sm:grid-cols-[minmax(10rem,auto)_minmax(0,1fr)] sm:gap-4;
+	}
+
+	.doc-item dt {
+		@apply flex flex-col gap-0.5;
+	}
+
+	.doc-item dd,
+	.doc-text {
+		@apply text-ink-700 dark:text-ink-300;
+	}
+
+	.doc-item a,
+	.doc-text a,
+	.prose-doc a,
+	.see-also a {
+		@apply font-medium text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.doc-item dd code,
+	.doc-text code,
+	.prose-doc code,
+	.api-table code {
+		@apply rounded bg-ink-100 px-1 py-0.5 font-mono text-[0.85em] text-ink-900 dark:bg-ink-800 dark:text-ink-100;
+	}
+
+	code.param {
+		@apply font-mono font-semibold text-ink-950 dark:text-white;
+	}
+
+	.doc-item dt code.param {
+		@apply bg-transparent p-0;
+	}
+
+	.param-type {
+		@apply font-mono text-xs text-ink-600 dark:text-ink-400;
+	}
+
+	.param-type a {
+		@apply hover:underline;
+	}
+
+	.returns {
+		@apply flex flex-col gap-1 rounded-xl border border-ink-200 px-4 py-3 text-sm dark:border-ink-800;
+	}
+
+	.see-also {
+		@apply list-disc space-y-1 pl-5 text-sm;
+	}
+
+	.api-table {
+		@apply text-sm;
+	}
+
+	.api-table th {
+		@apply bg-ink-50 px-4 py-2 text-left font-semibold text-ink-900 dark:bg-ink-900 dark:text-ink-100;
+	}
+
+	.api-table td {
+		@apply border-t border-ink-200 px-4 py-2.5 align-top text-ink-700 dark:border-ink-800 dark:text-ink-300;
+	}
+
+	.api-table tr:target td {
+		@apply bg-brand-50 dark:bg-brand-500/10;
+	}
+
+	.api-table a {
+		@apply font-medium text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.variant-tabs {
+		@apply mt-4 inline-flex flex-wrap gap-1 rounded-xl bg-ink-100 p-1 text-xs font-semibold dark:bg-ink-900;
+	}
+
+	.variant-tab {
+		@apply rounded-lg px-3 py-1.5 text-ink-700 transition-colors hover:text-ink-950 dark:text-ink-300 dark:hover:text-white;
+	}
+
+	.variant-tab[aria-selected="true"] {
+		@apply bg-white text-brand-800 shadow-sm dark:bg-ink-700 dark:text-brand-300;
+	}
+
+	.variant-label {
+		@apply mt-4 flex items-center gap-1.5 text-xs font-semibold text-ink-600 dark:text-ink-400;
+	}
+
+	.variants[data-ready] .variant-label {
+		@apply hidden;
+	}
+
+	/* Guides */
+	.page-end {
+		@apply mt-16 border-t border-ink-200 pt-6 dark:border-ink-800;
+	}
+
+	.edit-link {
+		@apply inline-flex items-center gap-2 text-sm font-medium text-ink-600 hover:text-brand-700 dark:text-ink-400 dark:hover:text-brand-400;
+	}
+
+	.pager {
+		@apply mt-8 grid gap-4 sm:grid-cols-2;
+	}
+
+	.pager-link {
+		@apply flex flex-col gap-1 rounded-xl border border-ink-200 p-4 transition-colors hover:border-brand-500 dark:border-ink-800 dark:hover:border-brand-500;
+	}
+
+	.pager-next {
+		@apply sm:items-end sm:text-right;
+	}
+
+	.pager-label {
+		@apply inline-flex items-center gap-1.5 text-xs font-semibold text-ink-600 dark:text-ink-400;
+	}
+
+	.pager-title {
+		@apply font-bold text-ink-950 dark:text-white;
+	}
+
+	/* Home */
+	.hero {
+		@apply relative isolate overflow-hidden bg-gradient-to-br from-brand-700 via-brand-800 to-brand-950 text-white;
+	}
+
+	.hero-mark {
+		@apply pointer-events-none absolute -top-16 -right-24 -z-10 size-[34rem] rotate-12 text-white/[0.06];
+	}
+
+	.hero-inner {
+		@apply mx-auto grid max-w-[90rem] grid-cols-[minmax(0,1fr)] items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:py-24;
+	}
+
+	.hero-eyebrow {
+		@apply inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-brand-100 ring-1 ring-white/20;
+	}
+
+	/* "Upgrading from CsvHelper 33? Read the v34 migration guide" (HomePage.UpgradeCallout). */
+	.hero-callout {
+		@apply mb-4 flex w-fit items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-brand-800 shadow-sm hover:bg-brand-50;
+	}
+
+	.hero-title {
+		@apply mt-6;
+	}
+
+	.hero-logo {
+		@apply h-20 w-auto max-w-full sm:h-28 lg:h-32;
+	}
+
+	/* The reversed logo on the green hero: a white comma with "csv" in the green behind it, and "helper" in white. */
+	.hero .logo-comma {
+		fill: #fff;
+	}
+
+	.hero .logo-csv {
+		fill: var(--color-brand-700);
+	}
+
+	/* After .hero .logo-comma, which it overrides: the faint comma in the background. */
+	.hero-mark .logo-comma {
+		fill: currentColor;
+	}
+
+	.hero-tagline {
+		@apply mt-4 text-2xl font-bold text-white;
+	}
+
+	.hero-text {
+		@apply mt-4 max-w-xl text-lg leading-relaxed text-brand-50;
+	}
+
+	.hero-actions {
+		@apply mt-8 flex flex-wrap gap-3;
+	}
+
+	.button-primary {
+		@apply inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-brand-800 shadow-lg shadow-brand-950/20 transition hover:bg-brand-50 hover:shadow-xl;
+	}
+
+	.button-secondary {
+		@apply inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white ring-1 ring-white/40 transition ring-inset hover:bg-white/10;
+	}
+
+	main .button-primary {
+		@apply bg-brand-700 text-white hover:bg-brand-800;
+	}
+
+	.not-found-actions .button-secondary {
+		@apply text-ink-800 ring-ink-300 hover:bg-ink-100 dark:text-ink-100 dark:ring-ink-700 dark:hover:bg-ink-800;
+	}
+
+	.hero .button-primary {
+		@apply bg-white text-brand-800 hover:bg-brand-50;
+	}
+
+	.install {
+		@apply mt-8 max-w-xl;
+	}
+
+	.install-command {
+		@apply flex items-center gap-3 rounded-xl bg-brand-950/50 px-4 py-3 font-mono text-sm ring-1 ring-white/15;
+		overflow-wrap: anywhere;
+	}
+
+	.install-prompt {
+		@apply text-brand-300 select-none;
+	}
+
+	.install-note {
+		@apply mt-2 text-sm text-brand-100;
+	}
+
+	.hero-samples {
+		@apply min-w-0 overflow-hidden rounded-2xl bg-ink-950 shadow-2xl shadow-brand-950/40 ring-1 ring-white/10;
+	}
+
+	.sample-tabs {
+		@apply flex gap-1 border-b border-white/10 bg-ink-900/80 px-3 pt-3;
+	}
+
+	.sample-tab {
+		@apply inline-flex items-center gap-2 rounded-t-lg px-3 py-2 text-xs font-semibold text-ink-400 transition-colors hover:text-white;
+	}
+
+	.sample-tab[aria-selected="true"] {
+		@apply bg-ink-950 text-brand-300;
+	}
+
+	.sample-panel pre {
+		@apply m-0 overflow-x-auto p-5 font-mono text-[0.8rem] leading-relaxed text-ink-100;
+	}
+
+	.sample-panel .hljs {
+		@apply text-ink-100;
+	}
+
+	.sample-panel .hljs-keyword,
+	.sample-panel .hljs-literal,
+	.sample-panel .hljs-built_in {
+		@apply text-brand-300;
+	}
+
+	.sample-panel .hljs-type,
+	.sample-panel .hljs-title.class_ {
+		@apply text-white;
+	}
+
+	.sample-panel .hljs-title,
+	.sample-panel .hljs-title.function_ {
+		@apply text-ink-100;
+	}
+
+	.sample-panel .hljs-string {
+		@apply text-amber-300;
+	}
+
+	.sample-panel .hljs-number {
+		@apply text-purple-300;
+	}
+
+	.sample-panel .hljs-comment {
+		@apply text-ink-400;
+	}
+
+	.sample-panel .copy-button {
+		@apply border-white/10 bg-ink-800/90 text-ink-300;
+	}
+
+	.home-section {
+		@apply mx-auto max-w-[90rem] px-4 py-14 sm:px-6;
+	}
+
+	.home-heading {
+		@apply mb-8 text-3xl font-black tracking-tight text-ink-950 dark:text-white;
+	}
+
+	.stats {
+		@apply grid gap-4 sm:grid-cols-3;
+	}
+
+	.stat {
+		@apply flex flex-col-reverse rounded-2xl border border-ink-200 p-6 dark:border-ink-800;
+	}
+
+	.stat-value {
+		@apply text-4xl font-black tracking-tight text-brand-600 dark:text-brand-400;
+	}
+
+	.stat-label {
+		@apply mt-1 text-sm font-medium text-ink-700 dark:text-ink-300;
+	}
+
+	.feature-grid {
+		@apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+	}
+
+	.feature-card {
+		@apply flex flex-col gap-3 rounded-2xl border border-ink-200 p-6 transition hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-lg motion-reduce:transform-none dark:border-ink-800 dark:hover:border-brand-500;
+	}
+
+	.feature-icon {
+		@apply flex size-11 items-center justify-center rounded-xl bg-brand-500 text-white shadow-md shadow-brand-500/30;
+	}
+
+	.feature-title {
+		@apply text-lg font-bold text-ink-950 dark:text-white;
+	}
+
+	.feature-text {
+		@apply text-sm leading-relaxed text-ink-700 dark:text-ink-300;
+	}
+
+	/* A sponsor's logo in place of the icon, on white also in dark mode (aws.png is not transparent). */
+	.feature-image {
+		@apply size-14 rounded-xl bg-white object-contain p-1.5 ring-1 ring-ink-200 dark:ring-ink-700;
+	}
+
+	.feature-external {
+		@apply ml-1.5 align-baseline text-ink-500;
+	}
+
+	.contributors {
+		@apply grid max-w-4xl gap-8;
+	}
+
+	.contributors-avatars {
+		@apply block rounded-2xl border border-ink-200 p-4 transition-colors hover:border-brand-500 dark:border-ink-800 dark:hover:border-brand-500;
+	}
+
+	.next-grid {
+		@apply grid gap-4 sm:grid-cols-2 lg:grid-cols-4;
+	}
+
+	.next-card {
+		@apply flex gap-3 rounded-2xl border border-ink-200 p-5 transition-colors hover:border-brand-500 dark:border-ink-800 dark:hover:border-brand-500;
+	}
+
+	.next-icon {
+		@apply flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400;
+	}
+
+	.next-title {
+		@apply block font-bold text-ink-950 dark:text-white;
+	}
+
+	.next-text {
+		@apply mt-1 block text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	/* Releases */
+	.unreleased-card {
+		@apply mb-10 flex items-center gap-4 rounded-2xl border border-brand-500/40 bg-brand-50 p-5 transition-colors hover:border-brand-600 dark:border-brand-400/30 dark:bg-brand-500/10;
+	}
+
+	.unreleased-icon {
+		@apply flex size-10 items-center justify-center rounded-xl bg-brand-500 text-white;
+	}
+
+	.unreleased-title {
+		@apply block font-bold text-ink-950 dark:text-white;
+	}
+
+	.unreleased-text {
+		@apply block text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	.timeline {
+		@apply relative space-y-6 border-l-2 border-ink-200 pl-8 dark:border-ink-800;
+	}
+
+	.timeline-item {
+		@apply relative;
+	}
+
+	.timeline-dot {
+		@apply absolute top-5 -left-[2.4rem] size-3.5 rounded-full border-2 border-white bg-brand-500 ring-2 ring-brand-500/30 dark:border-ink-950;
+	}
+
+	.release-card {
+		@apply rounded-2xl border border-ink-200 p-5 dark:border-ink-800;
+	}
+
+	.release-head {
+		@apply flex flex-wrap items-center gap-3;
+	}
+
+	.release-name {
+		@apply font-mono text-xl font-bold text-ink-950 hover:text-brand-700 dark:text-white dark:hover:text-brand-400;
+	}
+
+	.release-date {
+		@apply ml-auto text-sm text-ink-600 dark:text-ink-400;
+	}
+
+	.release-summary {
+		@apply mt-2 text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	.release-links {
+		@apply mt-3 flex flex-wrap gap-4 text-sm font-semibold;
+	}
+
+	.release-links a {
+		@apply inline-flex items-center gap-1.5 text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.change-list {
+		@apply space-y-3;
+	}
+
+	.change {
+		@apply flex gap-3;
+	}
+
+	.change-icon {
+		@apply mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full;
+	}
+
+	.change-added {
+		@apply bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400;
+	}
+
+	.change-changed {
+		@apply bg-ink-100 text-ink-700 dark:bg-ink-800 dark:text-ink-300;
+	}
+
+	.change-deprecated {
+		@apply bg-amber-50 text-amber-700 dark:bg-amber-400/10 dark:text-amber-300;
+	}
+
+	.change-removed {
+		@apply bg-red-50 text-red-700 dark:bg-red-400/10 dark:text-red-300;
+	}
+
+	.change-title {
+		@apply flex flex-wrap items-center gap-2 text-sm;
+	}
+
+	.change-title code {
+		@apply font-mono font-semibold text-ink-950 dark:text-white;
+	}
+
+	.change-title a,
+	.change-title a code {
+		@apply text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.change-note {
+		@apply mt-1 text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	.migration-list {
+		@apply space-y-6;
+	}
+
+	.migration-item {
+		@apply rounded-2xl border border-ink-200 p-5 dark:border-ink-800;
+	}
+
+	/* Old code above new code: side by side, the content column is too narrow for code. */
+	.diff {
+		@apply mt-4 grid gap-2;
+	}
+
+	.diff-before,
+	.diff-after {
+		@apply min-w-0 overflow-hidden rounded-xl border;
+	}
+
+	.diff-before {
+		@apply border-red-200 bg-red-50/60 dark:border-red-400/20 dark:bg-red-400/5;
+	}
+
+	.diff-after {
+		@apply border-brand-200 bg-brand-50/60 dark:border-brand-400/20 dark:bg-brand-500/5;
+	}
+
+	.diff-label {
+		@apply block px-4 pt-3 text-xs font-bold tracking-wider text-ink-600 uppercase dark:text-ink-400;
+	}
+
+	.diff pre {
+		@apply m-0 overflow-x-auto px-4 pt-1 pb-3 font-mono text-[0.8rem] whitespace-pre-wrap;
+	}
+
+	/* "Before · v33.1.0": the version keeps its case. */
+	.diff-version {
+		@apply font-semibold tracking-normal normal-case;
+	}
+
+	/* Before/after comparisons in Markdown (```csharp before / ```csharp after). */
+	.prose-guide .diff {
+		@apply my-6;
+	}
+
+	/* "All API changes" of a migration guide, and the grouped lists of generated guides (ApiChangeGroups.cs). */
+	.api-lead {
+		@apply mb-6 text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	.api-lead a {
+		@apply font-medium text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.api-namespace-title {
+		@apply mt-10 mb-4 scroll-mt-24 font-mono text-base font-bold text-ink-950 dark:text-white;
+	}
+
+	.api-types {
+		@apply space-y-2;
+	}
+
+	.api-type {
+		@apply rounded-xl border border-ink-200 dark:border-ink-800;
+	}
+
+	.api-type > summary {
+		@apply flex cursor-pointer list-none flex-wrap items-center gap-2 rounded-xl px-4 py-2.5 text-sm hover:bg-ink-50 dark:hover:bg-ink-900;
+	}
+
+	.api-type > summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.api-type > summary code {
+		@apply font-mono font-semibold text-ink-950 dark:text-white;
+	}
+
+	.api-chevron {
+		@apply text-ink-400 transition-transform;
+	}
+
+	.api-type[open] .api-chevron {
+		@apply rotate-90;
+	}
+
+	.api-type-kind {
+		@apply text-xs text-ink-500 dark:text-ink-400;
+	}
+
+	.api-type-body {
+		@apply space-y-4 border-t border-ink-200 px-4 py-4 dark:border-ink-800;
+	}
+
+	.api-row .diff {
+		@apply mt-2;
+	}
+
+	.api-group {
+		@apply mt-6;
+	}
+
+	.api-type-body .api-group {
+		@apply mt-0;
+	}
+
+	.api-group-label {
+		@apply mb-2 text-xs font-bold tracking-wider text-ink-600 uppercase dark:text-ink-400;
+	}
+
+	.api-chips {
+		@apply mt-2 flex flex-wrap gap-1.5;
+	}
+
+	.api-chip {
+		@apply rounded-md bg-ink-100 px-1.5 py-0.5 font-mono text-xs text-ink-800 dark:bg-ink-800 dark:text-ink-200;
+	}
+
+	a.api-chip {
+		@apply text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.api-type-link {
+		@apply text-sm;
+	}
+
+	.api-type-link a {
+		@apply font-medium text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.commit-list {
+		@apply divide-y divide-ink-200 rounded-xl border border-ink-200 text-sm dark:divide-ink-800 dark:border-ink-800;
+	}
+
+	.commit {
+		@apply flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3;
+	}
+
+	.commit-sha {
+		@apply font-mono text-xs font-semibold text-brand-700 hover:underline dark:text-brand-400;
+	}
+
+	.commit-subject {
+		@apply min-w-0 flex-1 text-ink-900 dark:text-ink-100;
+	}
+
+	.commit-meta {
+		@apply text-xs text-ink-600 dark:text-ink-400;
+	}
+
+	.not-found-actions {
+		@apply flex flex-wrap gap-3;
+	}
+
+	/* Footer */
+	.site-footer {
+		@apply mt-16 border-t border-ink-200 bg-ink-50 dark:border-ink-800 dark:bg-ink-900/40;
+	}
+
+	.site-footer-inner {
+		@apply mx-auto flex max-w-[90rem] flex-col gap-6 px-4 py-10 text-sm text-ink-600 sm:flex-row sm:items-start sm:justify-between sm:px-6 dark:text-ink-400;
+	}
+
+	.footer-brand p {
+		@apply mt-2;
+	}
+
+	.footer-meta {
+		@apply space-y-1 sm:text-right;
+	}
+
+	.site-footer a:not(.wordmark) {
+		@apply font-medium text-ink-800 underline decoration-ink-300 underline-offset-2 hover:text-brand-700 dark:text-ink-200 dark:decoration-ink-600 dark:hover:text-brand-400;
+	}
+
+	/* Search */
+	.search-dialog {
+		@apply m-0 mx-auto mt-[8vh] w-[min(42rem,calc(100vw-2rem))] max-w-none overflow-visible bg-transparent p-0 backdrop:bg-ink-950/60 backdrop:backdrop-blur-sm;
+	}
+
+	.search-panel {
+		@apply overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-2xl dark:border-ink-700 dark:bg-ink-900;
+	}
+
+	.search-field {
+		@apply flex items-center gap-3 border-b border-ink-200 px-4 dark:border-ink-800;
+	}
+
+	.search-input {
+		@apply h-14 min-w-0 flex-1 appearance-none bg-transparent text-base text-ink-950 outline-none placeholder:text-ink-500 dark:text-white;
+	}
+
+	.search-input::-webkit-search-cancel-button {
+		@apply hidden;
+	}
+
+	.search-close {
+		@apply rounded-md;
+	}
+
+	.search-results {
+		@apply max-h-[min(60vh,32rem)] overflow-y-auto overscroll-contain p-2;
+	}
+
+	.search-group {
+		@apply px-3 pt-3 pb-1 text-[0.7rem] font-bold tracking-wider text-ink-600 uppercase dark:text-ink-400;
+	}
+
+	.search-result {
+		@apply flex items-start gap-3 rounded-xl px-3 py-2.5 text-ink-800 dark:text-ink-200;
+	}
+
+	.search-result[aria-selected="true"] {
+		@apply bg-brand-600 text-white;
+	}
+
+	.search-result-icon {
+		@apply mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-ink-100 text-brand-700 dark:bg-ink-800 dark:text-brand-400;
+	}
+
+	.search-result[aria-selected="true"] .search-result-icon {
+		@apply bg-white/15 text-white;
+	}
+
+	.search-result-body {
+		@apply flex min-w-0 flex-1 flex-col;
+	}
+
+	.search-result-title {
+		@apply truncate font-semibold;
+	}
+
+	.search-result-title mark {
+		@apply rounded-sm bg-brand-100 px-0.5 text-inherit dark:bg-brand-500/25;
+	}
+
+	.search-result[aria-selected="true"] .search-result-title mark {
+		@apply bg-white/25;
+	}
+
+	.search-result-parent {
+		@apply truncate text-xs text-ink-600 dark:text-ink-400;
+	}
+
+	.search-result-summary {
+		@apply mt-0.5 line-clamp-2 text-sm text-ink-700 dark:text-ink-300;
+	}
+
+	.search-result[aria-selected="true"] :is(.search-result-parent, .search-result-summary) {
+		@apply text-brand-50;
+	}
+
+	.search-empty {
+		@apply px-4 py-10 text-center text-sm text-ink-600 dark:text-ink-400;
+	}
+
+	.search-footer {
+		@apply hidden items-center gap-4 border-t border-ink-200 px-4 py-2.5 text-xs text-ink-600 sm:flex dark:border-ink-800 dark:text-ink-400;
+	}
+
+	.search-footer kbd {
+		@apply mr-1;
+	}
+}

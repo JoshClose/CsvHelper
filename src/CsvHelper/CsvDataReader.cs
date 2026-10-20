@@ -1,391 +1,356 @@
-﻿// Copyright 2009-2024 Josh Close
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// https://github.com/JoshClose/CsvHelper
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+#if NET
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Globalization;
 
 namespace CsvHelper;
 
 /// <summary>
-/// Provides a means of reading a CSV file forward-only by using CsvReader.
+/// An <see cref="IDataReader"/> over a <see cref="CsvReader"/>, for APIs that read data readers: <c>DataTable.Load</c>,
+/// <c>SqlBulkCopy.WriteToServer</c> and the like. Every column is a <see cref="string"/> column named after the header
+/// (<c>Column1</c>, <c>Column2</c> and so on without one); the typed getters (<see cref="GetInt32"/> and the others)
+/// parse fields as the reader's getters do.
 /// </summary>
-/// <seealso cref="System.Data.IDataReader" />
-public class CsvDataReader : IDataReader
+/// <remarks>
+/// A field is <see cref="DBNull"/> (<see cref="IsDBNull"/>) when it is one of the reader's
+/// <see cref="CsvReaderOptions.NullValues"/>; an empty field is an empty string unless <c>""</c> is one of them. The
+/// columns are those of the header, or, without a header, of the first record.
+/// </remarks>
+public sealed class CsvDataReader : DbDataReader
 {
-	private readonly CsvReader csv;
-	private readonly DataTable schemaTable;
-	private bool skipNextRead;
+	private readonly CsvReader reader;
+	private readonly bool leaveOpen;
+	private readonly string[] names;
+	private bool pending;   // without a header, the first record was read to count the columns and is not returned yet
+	private bool closed;
 
-	/// <inheritdoc />
-	public object this[int i]
+	/// <summary>Creates a data reader over <paramref name="reader"/>, which it reads from its current position.</summary>
+	/// <param name="reader">The CSV reader. Its header is read now, or, without one, its first record.</param>
+	/// <param name="leaveOpen">Whether <paramref name="reader"/> stays open when the data reader is closed.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="reader"/> is <see langword="null"/>.</exception>
+	/// <exception cref="CsvFormatException">The header is malformed and the options say to throw.</exception>
+	public CsvDataReader(CsvReader reader, bool leaveOpen = false)
 	{
-		get
+		ArgumentNullException.ThrowIfNull(reader);
+		this.reader = reader;
+		this.leaveOpen = leaveOpen;
+		var headers = reader.Headers;
+		if (headers.Count > 0)
 		{
-			return csv[i] ?? string.Empty;
+			names = [.. headers];
+
+			return;
+		}
+
+		pending = reader.Read();
+		names = new string[pending ? reader.FieldCount : 0];
+		for (var i = 0; i < names.Length; i++)
+		{
+			names[i] = "Column" + (i + 1).ToString(CultureInfo.InvariantCulture);
 		}
 	}
 
-	/// <inheritdoc />
-	public object this[string name]
+	/// <summary>Always 0: CSV is not nested.</summary>
+	public override int Depth => 0;
+
+	/// <summary>The number of columns: those of the header, or of the first record.</summary>
+	public override int FieldCount => names.Length;
+
+	/// <summary><see langword="true"/> while the data reader is open; whether records remain is only known by reading.</summary>
+	public override bool HasRows => !closed;
+
+	/// <summary>Whether <see cref="Close"/> has been called.</summary>
+	public override bool IsClosed => closed;
+
+	/// <summary>Always -1: reading changes no records.</summary>
+	public override int RecordsAffected => -1;
+
+	/// <summary>Gets the value of column <paramref name="ordinal"/>. See <see cref="GetValue"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	public override object this[int ordinal] => GetValue(ordinal);
+
+	/// <summary>Gets the value of the column called <paramref name="name"/>. See <see cref="GetValue"/>.</summary>
+	/// <param name="name">The name of the column.</param>
+	public override object this[string name] => GetValue(GetOrdinal(name));
+
+	/// <summary>Advances to the next record. See <see cref="CsvReader.Read"/>.</summary>
+	/// <returns>Whether the data reader is positioned on a record.</returns>
+	/// <exception cref="InvalidOperationException">The data reader is closed.</exception>
+	public override bool Read()
 	{
-		get
+		ThrowIfClosed();
+		if (pending)
 		{
-			return csv[name] ?? string.Empty;
-		}
-	}
+			pending = false;
 
-	/// <inheritdoc />
-	public int Depth
-	{
-		get
-		{
-			return 0;
-		}
-	}
-
-	/// <inheritdoc />
-	public bool IsClosed { get; private set; }
-
-	/// <inheritdoc />
-	public int RecordsAffected
-	{
-		get
-		{
-			return 0;
-		}
-	}
-
-	/// <inheritdoc />
-	public int FieldCount
-	{
-		get
-		{
-			return csv?.Parser.Count ?? 0;
-		}
-	}
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="CsvDataReader"/> class.
-	/// </summary>
-	/// <param name="csv">The CSV.</param>
-	/// <param name="schemaTable">The DataTable representing the file schema.</param>
-	public CsvDataReader(CsvReader csv, DataTable? schemaTable = null)
-	{
-		this.csv = csv;
-
-		csv.Read();
-
-		if (csv.Configuration.HasHeaderRecord && csv.HeaderRecord == null)
-		{
-			csv.ReadHeader();
-		}
-		else
-		{
-			skipNextRead = true;
+			return true;
 		}
 
-		this.schemaTable = schemaTable ?? GetSchemaTable();
+		return reader.Read();
 	}
 
-	/// <inheritdoc />
-	public void Close()
+	/// <summary>Always <see langword="false"/>: a CSV file has one result set.</summary>
+	/// <returns><see langword="false"/>.</returns>
+	public override bool NextResult() => false;
+
+	/// <summary>Gets the name of column <paramref name="ordinal"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The header name, or <c>Column</c> and the 1-based number without a header.</returns>
+	/// <exception cref="IndexOutOfRangeException"><paramref name="ordinal"/> is not a column.</exception>
+	public override string GetName(int ordinal) => names[ordinal];
+
+	/// <summary>Gets the index of the column called <paramref name="name"/>, matched as by <see cref="CsvReader.GetFieldIndex(string)"/>.</summary>
+	/// <param name="name">The name of the column.</param>
+	/// <returns>The 0-based index of the column.</returns>
+	/// <exception cref="IndexOutOfRangeException">No column has that name.</exception>
+	public override int GetOrdinal(string name)
 	{
-		Dispose();
-	}
-
-	/// <inheritdoc />
-	public void Dispose()
-	{
-		csv.Dispose();
-		IsClosed = true;
-	}
-
-	/// <inheritdoc />
-	public bool GetBoolean(int i)
-	{
-		return csv.GetField<bool>(i);
-	}
-
-	/// <inheritdoc />
-	public byte GetByte(int i)
-	{
-		return csv.GetField<byte>(i);
-	}
-
-	/// <inheritdoc />
-	public long GetBytes(int i, long fieldOffset, byte[]? buffer, int bufferoffset, int length)
-	{
-		var bytes = csv.GetField<byte[]>(i);
-
-		if (bytes == null)
-		{
-			return 0;
-		}
-
-		buffer ??= new byte[bytes.Length];
-
-		Array.Copy(bytes, fieldOffset, buffer, bufferoffset, length);
-
-		return bytes.Length;
-	}
-
-	/// <inheritdoc />
-	public char GetChar(int i)
-	{
-		return csv.GetField<char>(i);
-	}
-
-	/// <inheritdoc />
-	public long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length)
-	{
-		var chars = csv.GetField(i)?.ToCharArray();
-
-		if (chars == null)
-		{
-			return 0;
-		}
-
-		buffer ??= new char[chars.Length];
-
-		Array.Copy(chars, fieldoffset, buffer, bufferoffset, length);
-
-		return chars.Length;
-	}
-
-	/// <inheritdoc />
-	public IDataReader GetData(int i)
-	{
-		throw new NotSupportedException();
-	}
-
-	/// <inheritdoc />
-	public string GetDataTypeName(int i)
-	{
-		if (i >= schemaTable.Rows.Count)
-		{
-			throw new IndexOutOfRangeException($"SchemaTable does not contain a definition for field '{i}'.");
-		}
-
-		var row = schemaTable.Rows[i];
-		var field = row["DataType"] as Type;
-
-		if (field == null)
-		{
-			throw new InvalidOperationException($"SchemaTable does not contain a 'DataType' of type 'Type' for field '{i}'.");
-		}
-
-		return field.Name;
-	}
-
-	/// <inheritdoc />
-	public DateTime GetDateTime(int i)
-	{
-		return csv.GetField<DateTime>(i);
-	}
-
-	/// <inheritdoc />
-	public decimal GetDecimal(int i)
-	{
-		return csv.GetField<decimal>(i);
-	}
-
-	/// <inheritdoc />
-	public double GetDouble(int i)
-	{
-		return csv.GetField<double>(i);
-	}
-
-	/// <inheritdoc />
-	public Type GetFieldType(int i)
-	{
-		return typeof(string);
-	}
-
-	/// <inheritdoc />
-	public float GetFloat(int i)
-	{
-		return csv.GetField<float>(i);
-	}
-
-	/// <inheritdoc />
-	public Guid GetGuid(int i)
-	{
-		return csv.GetField<Guid>(i);
-	}
-
-	/// <inheritdoc />
-	public short GetInt16(int i)
-	{
-		return csv.GetField<short>(i);
-	}
-
-	/// <inheritdoc />
-	public int GetInt32(int i)
-	{
-		return csv.GetField<int>(i);
-	}
-
-	/// <inheritdoc />
-	public long GetInt64(int i)
-	{
-		return csv.GetField<long>(i);
-	}
-
-	/// <inheritdoc />
-	public string GetName(int i)
-	{
-		return csv.Configuration.HasHeaderRecord
-			? (csv.HeaderRecord?[i] ?? string.Empty)
-			: string.Empty;
-	}
-
-	/// <inheritdoc />
-	public int GetOrdinal(string name)
-	{
-		var index = csv.GetFieldIndex(name, isTryGet: true);
-		if (index >= 0)
+		ArgumentNullException.ThrowIfNull(name);
+		if (reader.Headers.Count > 0 && reader.TryGetFieldIndex(name, out var index))
 		{
 			return index;
 		}
 
-		var args = new PrepareHeaderForMatchArgs(name, 0);
-		var namePrepared = csv.Configuration.PrepareHeaderForMatch(args);
+		var position = Array.IndexOf(names, name);
 
-		var headerRecord = csv.HeaderRecord;
-		for (var i = 0; i < (headerRecord?.Length ?? 0); i++)
+		return position >= 0 ? position : throw new IndexOutOfRangeException($"No column is named '{name}'.");
+	}
+
+	/// <summary>Always <c>String</c>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns><c>String</c>.</returns>
+	public override string GetDataTypeName(int ordinal) => "String";
+
+	/// <summary>Always <see cref="string"/>: CSV fields are text.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The type <see cref="string"/>.</returns>
+#if NET
+	[return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)]
+#endif
+	public override Type GetFieldType(int ordinal) => typeof(string);
+
+	/// <summary>Gets the value of column <paramref name="ordinal"/>: its text, or <see cref="DBNull.Value"/> when <see cref="IsDBNull"/> says so.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>A <see cref="string"/>, or <see cref="DBNull.Value"/>.</returns>
+	public override object GetValue(int ordinal) => (object?)reader.GetStringOrNull(ordinal) ?? DBNull.Value;
+
+	/// <summary>Copies the values of the current record into <paramref name="values"/>. See <see cref="GetValue"/>.</summary>
+	/// <param name="values">Receives the values, up to its length.</param>
+	/// <returns>The number of values copied.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="values"/> is <see langword="null"/>.</exception>
+	public override int GetValues(object[] values)
+	{
+		ArgumentNullException.ThrowIfNull(values);
+		var count = Math.Min(values.Length, names.Length);
+		for (var i = 0; i < count; i++)
 		{
-			args = new PrepareHeaderForMatchArgs(headerRecord?[i] ?? string.Empty, i);
-			var headerPrepared = csv.Configuration.PrepareHeaderForMatch(args);
-			if (csv.Configuration.CultureInfo.CompareInfo.Compare(namePrepared, headerPrepared, CompareOptions.IgnoreCase) == 0)
-			{
-				return i;
-			}
+			values[i] = GetValue(i);
 		}
 
-		throw new IndexOutOfRangeException($"Field with name '{name}' and prepared name '{namePrepared}' was not found.");
+		return count;
 	}
 
-	/// <inheritdoc />
-	public DataTable GetSchemaTable()
+	/// <summary>Whether the field is one of the reader's <see cref="CsvReaderOptions.NullValues"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns><see langword="true"/> for a null value.</returns>
+	public override bool IsDBNull(int ordinal) => reader.GetStringOrNull(ordinal) is null;
+
+	/// <summary>Gets the field as a string. See <see cref="CsvReader.GetString(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The value of the field.</returns>
+	public override string GetString(int ordinal) => reader.GetString(ordinal);
+
+	/// <summary>Parses the field as a <see cref="bool"/>. See <see cref="CsvReader.GetBoolean(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a boolean.</exception>
+	public override bool GetBoolean(int ordinal) => reader.GetBoolean(ordinal);
+
+	/// <summary>Parses the field as a <see cref="byte"/>, in the reader's format provider.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	/// <exception cref="OverflowException">The field is outside the range of <see cref="byte"/>.</exception>
+	public override byte GetByte(int ordinal) => checked((byte)reader.GetInt32(ordinal));
+
+	/// <summary>Copies the UTF-8 bytes of the field into <paramref name="buffer"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <param name="dataOffset">The offset in the field to start copying from.</param>
+	/// <param name="buffer">Receives the bytes, or <see langword="null"/> to get the length of the field.</param>
+	/// <param name="bufferOffset">The offset in <paramref name="buffer"/> to copy to.</param>
+	/// <param name="length">The largest number of bytes to copy.</param>
+	/// <returns>The number of bytes copied, or the length of the field when <paramref name="buffer"/> is <see langword="null"/>.</returns>
+	public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
 	{
-		if (schemaTable != null)
+		var field = reader.GetSpan(ordinal);
+		if (buffer is null)
 		{
-			return schemaTable;
+			return field.Length;
 		}
 
-		// https://docs.microsoft.com/en-us/dotnet/api/system.data.datatablereader.getschematable?view=netframework-4.7.2
-		var dt = new DataTable("SchemaTable");
-		dt.Columns.Add("AllowDBNull", typeof(bool));
-		dt.Columns.Add("AutoIncrementSeed", typeof(long));
-		dt.Columns.Add("AutoIncrementStep", typeof(long));
-		dt.Columns.Add("BaseCatalogName");
-		dt.Columns.Add("BaseColumnName");
-		dt.Columns.Add("BaseColumnNamespace");
-		dt.Columns.Add("BaseSchemaName");
-		dt.Columns.Add("BaseTableName");
-		dt.Columns.Add("BaseTableNamespace");
-		dt.Columns.Add("ColumnName");
-		dt.Columns.Add("ColumnMapping", typeof(MappingType));
-		dt.Columns.Add("ColumnOrdinal", typeof(int));
-		dt.Columns.Add("ColumnSize", typeof(int));
-		dt.Columns.Add("DataType", typeof(Type));
-		dt.Columns.Add("DefaultValue", typeof(object));
-		dt.Columns.Add("Expression");
-		dt.Columns.Add("IsAutoIncrement", typeof(bool));
-		dt.Columns.Add("IsKey", typeof(bool));
-		dt.Columns.Add("IsLong", typeof(bool));
-		dt.Columns.Add("IsReadOnly", typeof(bool));
-		dt.Columns.Add("IsRowVersion", typeof(bool));
-		dt.Columns.Add("IsUnique", typeof(bool));
-		dt.Columns.Add("NumericPrecision", typeof(short));
-		dt.Columns.Add("NumericScale", typeof(short));
-		dt.Columns.Add("ProviderType", typeof(int));
+		var count = (int)Math.Max(0, Math.Min(length, field.Length - dataOffset));
+		field.Slice((int)dataOffset, count).CopyTo(buffer.AsSpan(bufferOffset));
 
-		for (var i = 0; i < csv.ColumnCount; i++)
+		return count;
+	}
+
+	/// <summary>Gets the first character of the field.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The first character.</returns>
+	/// <exception cref="InvalidCastException">The field is empty.</exception>
+	public override char GetChar(int ordinal)
+	{
+		var value = reader.GetString(ordinal);
+
+		return value.Length > 0 ? value[0] : throw new InvalidCastException("The field is empty.");
+	}
+
+	/// <summary>Copies the characters of the field into <paramref name="buffer"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <param name="dataOffset">The offset in the field to start copying from.</param>
+	/// <param name="buffer">Receives the characters, or <see langword="null"/> to get the length of the field.</param>
+	/// <param name="bufferOffset">The offset in <paramref name="buffer"/> to copy to.</param>
+	/// <param name="length">The largest number of characters to copy.</param>
+	/// <returns>The number of characters copied, or the length of the field when <paramref name="buffer"/> is <see langword="null"/>.</returns>
+	public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
+	{
+		var value = reader.GetString(ordinal);
+		if (buffer is null)
 		{
-			object? columnName = csv.Configuration.HasHeaderRecord ? csv.HeaderRecord?[i] : i;
-
-			var row = dt.NewRow();
-			row["AllowDBNull"] = true;
-			row["AutoIncrementSeed"] = DBNull.Value;
-			row["AutoIncrementStep"] = DBNull.Value;
-			row["BaseCatalogName"] = null;
-			row["BaseColumnName"] = columnName;
-			row["BaseColumnNamespace"] = null;
-			row["BaseSchemaName"] = null;
-			row["BaseTableName"] = null;
-			row["BaseTableNamespace"] = null;
-			row["ColumnName"] = columnName;
-			row["ColumnMapping"] = MappingType.Element;
-			row["ColumnOrdinal"] = i;
-			row["ColumnSize"] = int.MaxValue;
-			row["DataType"] = typeof(string);
-			row["DefaultValue"] = null;
-			row["Expression"] = null;
-			row["IsAutoIncrement"] = false;
-			row["IsKey"] = false;
-			row["IsLong"] = false;
-			row["IsReadOnly"] = true;
-			row["IsRowVersion"] = false;
-			row["IsUnique"] = false;
-			row["NumericPrecision"] = DBNull.Value;
-			row["NumericScale"] = DBNull.Value;
-			row["ProviderType"] = DbType.String;
-
-			dt.Rows.Add(row);
+			return value.Length;
 		}
 
-		return dt;
+		var count = (int)Math.Max(0, Math.Min(length, value.Length - dataOffset));
+		value.CopyTo((int)dataOffset, buffer, bufferOffset, count);
+
+		return count;
 	}
 
-	/// <inheritdoc />
-	public string GetString(int i)
-	{
-		return csv.GetField(i) ?? string.Empty;
-	}
+	/// <summary>Parses the field as a <see cref="DateTime"/>. See <see cref="CsvReader.GetDateTime(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a date and time.</exception>
+	public override DateTime GetDateTime(int ordinal) => reader.GetDateTime(ordinal);
 
-	/// <inheritdoc />
-	public object GetValue(int i)
-	{
-		return IsDBNull(i) ? DBNull.Value : (csv.GetField(i) ?? string.Empty);
-	}
+	/// <summary>Parses the field as a <see cref="decimal"/>. See <see cref="CsvReader.GetDecimal(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	public override decimal GetDecimal(int ordinal) => reader.GetDecimal(ordinal);
 
-	/// <inheritdoc />
-	public int GetValues(object[] values)
+	/// <summary>Parses the field as a <see cref="double"/>. See <see cref="CsvReader.GetDouble(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	public override double GetDouble(int ordinal) => reader.GetDouble(ordinal);
+
+	/// <summary>Parses the field as a <see cref="float"/>. See <see cref="CsvReader.GetSingle(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	public override float GetFloat(int ordinal) => reader.GetSingle(ordinal);
+
+	/// <summary>Parses the field as a <see cref="Guid"/>. See <see cref="CsvReader.GetGuid(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a GUID.</exception>
+	public override Guid GetGuid(int ordinal) => reader.GetGuid(ordinal);
+
+	/// <summary>Parses the field as a <see cref="short"/>, in the reader's format provider.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	/// <exception cref="OverflowException">The field is outside the range of <see cref="short"/>.</exception>
+	public override short GetInt16(int ordinal) => checked((short)reader.GetInt32(ordinal));
+
+	/// <summary>Parses the field as an <see cref="int"/>. See <see cref="CsvReader.GetInt32(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	public override int GetInt32(int ordinal) => reader.GetInt32(ordinal);
+
+	/// <summary>Parses the field as a <see cref="long"/>. See <see cref="CsvReader.GetInt64(int)"/>.</summary>
+	/// <param name="ordinal">The 0-based index of the column.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException">The field is not a number.</exception>
+	public override long GetInt64(int ordinal) => reader.GetInt64(ordinal);
+
+	/// <summary>Returns an enumerator of the records, as <see cref="IDataRecord"/>s.</summary>
+	/// <returns>An enumerator that calls <see cref="Read"/>.</returns>
+	public override IEnumerator GetEnumerator() => new DbEnumerator(this, closeReader: false);
+
+	/// <summary>
+	/// Describes the columns for <c>DataTable.Load</c> and other consumers: their names, ordinals and type
+	/// (<see cref="string"/>), all of them nullable.
+	/// </summary>
+	/// <returns>A table with a row per column.</returns>
+#if NET
+	// The DataType column holds typeof(string), which is always kept; DbDataReader implementations build the table so.
+	[UnconditionalSuppressMessage("Trimming", "IL2111", Justification = "The DataType column only holds typeof(string).")]
+#endif
+	public override DataTable GetSchemaTable()
 	{
-		for (var i = 0; i < values.Length; i++)
+		var table = new DataTable("SchemaTable") { Locale = CultureInfo.InvariantCulture };
+		table.Columns.Add(SchemaTableColumn.ColumnName, typeof(string));
+		table.Columns.Add(SchemaTableColumn.ColumnOrdinal, typeof(int));
+		table.Columns.Add(SchemaTableColumn.ColumnSize, typeof(int));
+		table.Columns.Add(SchemaTableColumn.NumericPrecision, typeof(short));
+		table.Columns.Add(SchemaTableColumn.NumericScale, typeof(short));
+		table.Columns.Add(SchemaTableColumn.DataType, typeof(Type));
+		table.Columns.Add(SchemaTableColumn.ProviderType, typeof(int));
+		table.Columns.Add(SchemaTableColumn.IsLong, typeof(bool));
+		table.Columns.Add(SchemaTableColumn.AllowDBNull, typeof(bool));
+		table.Columns.Add(SchemaTableOptionalColumn.IsReadOnly, typeof(bool));
+		table.Columns.Add(SchemaTableOptionalColumn.IsRowVersion, typeof(bool));
+		table.Columns.Add(SchemaTableColumn.IsUnique, typeof(bool));
+		table.Columns.Add(SchemaTableColumn.IsKey, typeof(bool));
+		table.Columns.Add(SchemaTableOptionalColumn.IsAutoIncrement, typeof(bool));
+		table.Columns.Add(SchemaTableColumn.BaseColumnName, typeof(string));
+		for (var i = 0; i < names.Length; i++)
 		{
-			values[i] = IsDBNull(i) ? DBNull.Value : (csv.GetField(i) ?? string.Empty);
+			table.Rows.Add(names[i], i, -1, (short)0, (short)0, typeof(string), (int)DbType.String, false, true, true, false, false, false, false, names[i]);
 		}
 
-		return csv.Parser.Count;
+		return table;
 	}
 
-	/// <inheritdoc />
-	public bool IsDBNull(int i)
+	/// <summary>Closes the data reader, and disposes the CSV reader unless it was created with <c>leaveOpen</c>.</summary>
+	public override void Close()
 	{
-		var field = csv.GetField(i);
-		var nullValues = csv.Context.TypeConverterOptionsCache.GetOptions<string>().NullValues;
-
-		return field == null || nullValues.Contains(field);
-	}
-
-	/// <inheritdoc />
-	public bool NextResult()
-	{
-		return false;
-	}
-
-	/// <inheritdoc />
-	public bool Read()
-	{
-		if (skipNextRead)
+		if (closed)
 		{
-			skipNextRead = false;
-			return true;
+			return;
 		}
 
-		return csv.Read();
+		closed = true;
+		if (!leaveOpen)
+		{
+			reader.Dispose();
+		}
+	}
+
+	/// <summary>Closes the data reader. See <see cref="Close"/>.</summary>
+	/// <param name="disposing">Whether the call comes from <see cref="IDisposable.Dispose"/>.</param>
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			Close();
+		}
+
+		base.Dispose(disposing);
+	}
+
+	private void ThrowIfClosed()
+	{
+		if (closed)
+		{
+			throw new InvalidOperationException("The data reader is closed.");
+		}
 	}
 }

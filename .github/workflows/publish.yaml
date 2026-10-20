@@ -1,21 +1,45 @@
 name: Publish NuGet Package
-on: 
+on:
   workflow_dispatch:
+    inputs:
+      prerelease:
+        description: "Prerelease label, such as beta.1 (34.0.0-beta.1). Empty for a release."
+        type: string
+        required: false
 jobs:
   publish:
     runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write # Trusted publishing: the GitHub OIDC token that NuGet/login exchanges for an API key.
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
+        uses: actions/checkout@v7
+        with:
           fetch-depth: 0
       - name: Setup Git Semantic Version
         id: gitversion
-        uses: PaulHatch/semantic-version@v5.3.0 # https://github.com/marketplace/actions/git-semantic-version
+        uses: PaulHatch/semantic-version@v6.0.2 # https://github.com/marketplace/actions/git-semantic-version
         with:
           tag_prefix: "v"
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v4
+          # v6 defaults to Conventional Commits; keep the (MAJOR) and (MINOR) commit markers of v5.
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
+      - name: Package Version
+        id: version
+        # The version from the tags, with the prerelease label of the run when there is one (34.0.0-beta.1).
+        env:
+          VERSION: ${{ steps.gitversion.outputs.version }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          if ($env:PRERELEASE -and $env:PRERELEASE -notmatch '^[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*$') { throw "Not a prerelease label: $env:PRERELEASE" }
+          $version = $env:PRERELEASE ? "$env:VERSION-$env:PRERELEASE" : $env:VERSION
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "Package version: $version"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
       - name: Display .NET Version
         run: dotnet --version
       - name: Create NuGet Package
@@ -25,9 +49,17 @@ jobs:
           -o output
           -p:AssemblyVersion=${{ steps.gitversion.outputs.major }}.0.0.0
           -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
-          -p:InformationalVersion=${{ steps.gitversion.outputs.version }}
-          -p:PackageVersion=${{ steps.gitversion.outputs.version }}
+          -p:InformationalVersion=${{ steps.version.outputs.version }}
+          -p:PackageVersion=${{ steps.version.outputs.version }}
       - name: Display Output
         run: dir output
+      - name: NuGet Login
+        # A temporary API key (valid for an hour) from the trusted publishing policy of nuget.org, so it comes right
+        # before the push.
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: joshclose # The nuget.org profile name, not the email address.
       - name: Publish NuGet Package
-        run: dotnet nuget push output/CsvHelper.${{ steps.gitversion.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+        # Also pushes the symbols package (CsvHelper.<version>.snupkg) next to it.
+        run: dotnet nuget push output/CsvHelper.${{ steps.version.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
