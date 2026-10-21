@@ -470,7 +470,9 @@ public class RecordGeneratorTests
 	[InlineData(true)]
 	public void ProjectionsGenerateCSharp9WithoutWarnings(bool mappingFeatures)
 	{
+		// The raw string literals have the line endings of the checkout, which are CRLF on the Windows CI runner.
 		var source = (mappingFeatures ? MappingFeaturesSource : AttributesSource)
+			.Replace("\r\n", "\n")
 			.Replace("\nnamespace Sample\n", "\n[assembly: CsvRecordProjections]\nnamespace Sample\n");
 		var (generator, compilation, output) = Run(source, LanguageVersion.CSharp9);
 
