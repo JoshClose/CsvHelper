@@ -459,8 +459,8 @@ public partial class Link
 ```
 
 - **Converters are created with their parameterless constructor**: the attribute takes no constructor arguments for
-  them, as `[TypeConverter(typeof(C), args)]` did. The threads of `ParallelEnumerate` share them, so keep them
-  stateless.
+  them, as `[TypeConverter(typeof(C), args)]` did. The threads of `ParallelEnumerate` and `ParallelWriteRecords` share
+  them, so keep them stateless.
 - **A converter for every member of a type:** 33 registered one with `Context.TypeConverterCache.AddConverter<T>`. Now
   it's an assembly attribute, `[assembly: CsvConverter(typeof(MoneyConverter))]`, read at compile time.
 - **Converter options per type** (`Context.TypeConverterOptionsCache`) are gone: use the reader options

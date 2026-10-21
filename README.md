@@ -320,7 +320,9 @@ foreach (var item in items)
 ```
 
 `writer.WriteRecords(orders)` writes the records of a [`[CsvRecord]`](#reading-records-into-objects) type with its
-header. By default the output follows RFC 4180:
+header, and `writer.ParallelWriteRecords(orders)` formats them on several threads, with the same output (see
+[Writing from several threads](https://joshclose.github.io/CsvHelper/writing.html#writing-from-several-threads)). By
+default the output follows RFC 4180:
 
 - records end with CRLF (`NewLine = "\n"` or `"\r"` changes that);
 - a field is enclosed in double quotes when it contains the separator, a quote, CR or LF, and inner quotes
@@ -602,6 +604,34 @@ fields read), against 136 MB for the `ExpandoObject`s. Kept in a list, its 50,00
 `ExpandoObject`s 137 MB. The `ExpandoObject` times vary more than CsvHelper's (a standard deviation of 9 ms in
 **Dynamic**).
 
+### Writing on several threads
+
+`ParallelWriteRecords` against `WriteRecords` on the same `[CsvRecord]` objects (see
+[Writing from several threads](https://joshclose.github.io/CsvHelper/writing.html#writing-from-several-threads)), with
+byte-identical output. Unlike the other benchmarks, these run on all 32 threads of the same machine (16 cores). The
+data are the PackageAssets records, the Floats records (objects with 25 `float` fields) and **Orders** (9.5 MB): 12
+fields of dates, a `decimal`, a `Guid`, numbers and text. 50,000 records each. The 4, 8 and 16 thread columns set
+`maxDegreeOfParallelism`; 32 threads is the default, one per processor.
+
+| Data | `WriteRecords` | 4 threads | 8 threads | 16 threads | **32 threads** |
+|---|---:|---:|---:|---:|---:|
+| PackageAssets | 8.23 ms | 2.84 ms (2.9x) | 1.71 ms (4.8x) | 1.84 ms (4.5x) | **1.32 ms (6.2x)** |
+| Floats | 23.6 ms | 7.16 ms (3.3x) | 3.97 ms (5.9x) | 2.31 ms (10.2x) | **1.62 ms (14.6x)** |
+| Orders | 6.50 ms | 2.29 ms (2.8x) | 1.29 ms (5.1x) | 0.90 ms (7.2x) | **0.85 ms (7.7x)** |
+
+To a file (`CsvWriter.ToFile`, on a WD Blue SN5000 NVMe drive), with 32 threads:
+
+| Data | `WriteRecords` | **`ParallelWriteRecords`** |
+|---|---:|---:|
+| PackageAssets | 12.0 ms | **5.59 ms (2.2x)** |
+| Floats | 28.2 ms | **5.13 ms (5.5x)** |
+| Orders | 8.78 ms | **3.54 ms (2.5x)** |
+
+To memory, the parallel writer reaches 12.1 GB/s on PackageAssets, 9.1 GB/s on Floats and 11.3 GB/s on Orders. To a
+file, all three end up at 2.7 to 2.9 GB/s: writing the file is then the limit, so the records that cost the most to
+format gain the most. A call allocates about 42 KB with 32 workers (their writers and output buffers), against 416
+bytes for `WriteRecords`.
+
 Run them with:
 
 ```shell
@@ -609,6 +639,7 @@ cd bench/CsvHelper.Benchmarks
 dotnet run -c Release -- --filter *PackageAssetsRead.* *PackageAssetsReadFromString.* *PackageAssetsReadFile.* *FloatsRead.* *QuotedRead.* *PackageAssetsWrite.* *FloatsWrite.* *QuotedWrite.*
 dotnet run -c Release -- --filter *.EscapeRead.* *.NoEscapeRead.* *.FixedWidthRead.* *.EscapeWrite.* *.NoEscapeWrite.* *.FixedWidthWrite.*
 dotnet run -c Release -- --filter *SeparatorPackageAssetsRead.* *SeparatorQuotedRead.* --anyCategories Rows Strings
+dotnet run -c Release -- --filter *ParallelWrite.*            # on every core
 dotnet run -c Release -- verify                # check that all libraries return the same results
 dotnet run -c Release -- quick QuotedRead      # quick Stopwatch runner for tuning (not for published numbers)
 ```

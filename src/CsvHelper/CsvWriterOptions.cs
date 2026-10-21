@@ -58,7 +58,8 @@ public enum CsvInjection
 /// <param name="fieldIndex">The 0-based index of the field in its record.</param>
 /// <param name="recordIndex">
 /// The 0-based index of the record (<see cref="CsvWriter.RecordCount"/> before it ends): 0 is the header when the output
-/// has one.
+/// has one. In a <see cref="CsvWriter.ParallelWrite{T}(IEnumerable{T}, Action{CsvWriter, T}, int)"/> callback, records
+/// are numbered as if every item wrote one.
 /// </param>
 /// <returns><see langword="true"/> to quote the field.</returns>
 public delegate bool CsvShouldQuote(ReadOnlySpan<char> field, Type fieldType, int fieldIndex, long recordIndex);
@@ -129,7 +130,8 @@ public sealed record CsvWriterOptions
 	/// Called for each field in <see cref="CsvMode.Rfc4180"/> mode to decide whether to quote a field that does not need
 	/// quotes, such as text fields but not numbers. A field that contains the separator, a quote, CR or LF is always
 	/// quoted, and with <see cref="CsvQuoting.Always"/> every field is. Defaults to <see langword="null"/>. Writing is
-	/// slower with a callback, which gets the text of every field.
+	/// slower with a callback, which gets the text of every field. The parallel writes of <see cref="CsvWriter"/> call it
+	/// on several threads at once.
 	/// </summary>
 	public CsvShouldQuote? ShouldQuote { get; init; }
 

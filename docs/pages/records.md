@@ -670,7 +670,8 @@ public partial class Link
 
 - The generated mapper creates one instance of each converter with `new` and calls it directly, so converters work
   with trimming and native AOT. A converter needs a public or internal parameterless constructor.
-- The threads of `ParallelEnumerate<T>` share a mapper, so a converter must be thread-safe (one without fields is).
+- The threads of `ParallelEnumerate<T>` share a mapper, and those of `ParallelWriteRecords` a record writer, so a
+  converter must be thread-safe (one without fields is).
 - For a `T?` member, an `ICsvConverter<T>` reads the fields that are not empty, and an empty field is `null`; an
   `ICsvConverter<T?>` gets every field.
 - `Write` writes one field, with any of the writer's `WriteField` methods, in a form that `Read` reads back. A `null`
@@ -1134,8 +1135,9 @@ CsvRecordWriter.Register<Temperature>(columnPrefix => new TemperatureWriter(colu
 
 `WriteHeader` and `Write` write `FieldCount` fields and do not end the record. `WriteEmpty`, which writes
 `FieldCount` empty fields, is what a nested record that is `null` writes, and `NestedWriter<TNested>(prefix)` creates
-the writer of a nested record. Like a mapper, a record writer must not change after its constructor has run.
-`writer.WriteRecords(records, recordWriter)` writes records with a record writer that is not registered for the type.
+the writer of a nested record. Like a mapper, a record writer must not change after its constructor has run: the
+threads of `ParallelWriteRecords` share one. `writer.WriteRecords(records, recordWriter)` writes records with a record
+writer that is not registered for the type, and so does `writer.ParallelWriteRecords(records, recordWriter)`.
 
 ## Reading some members: projections
 
@@ -1246,7 +1248,8 @@ using (var writer = CsvWriter.ToFile("totals.csv"))
 ```
 
 `WriteRecord(record)` writes one record in the order of its own names, without a header; `WriteHeader<dynamic>()`
-throws, because the columns are not known before the first record.
+throws, because the columns are not known before the first record. `ParallelWriteRecords` writes dynamic records on
+several threads, in the columns of the first record too.
 
 ## Errors
 
@@ -1337,6 +1340,7 @@ writer.WriteRecords(orders);
 |---|---|
 | `writer.WriteRecords<T>(records)` | The header of `T` if nothing has been written yet (comments aside), then a record per item. |
 | `writer.WriteRecordsAsync<T>(records, cancellationToken)` | The same for an `IEnumerable<T>` or an `IAsyncEnumerable<T>`, flushing asynchronously. |
+| `writer.ParallelWriteRecords<T>(records, maxDegreeOfParallelism)`, `writer.ParallelWriteRecordsAsync<T>(...)` | The same output, formatted on several threads (see [Writing from several threads](writing.html#writing-from-several-threads)). |
 | `writer.WriteHeader<T>()` | The header of `T`. |
 | `writer.WriteRecord<T>(record)`, `writer.WriteRecordAsync<T>(record)` | One record, without a header. |
 

@@ -32,6 +32,19 @@ public static class BenchConfig
 	}
 }
 
+/// <summary>
+/// Runs the job of <see cref="BenchConfig"/> on every core, for benchmarks that run on several threads. A mutator, as the
+/// default job's affinity would otherwise win over the affinity of a job of the class.
+/// </summary>
+public sealed class AllCoresConfig : ManualConfig
+{
+	public AllCoresConfig()
+	{
+		var allCores = Environment.ProcessorCount >= 64 ? -1L : (1L << Environment.ProcessorCount) - 1;
+		AddJob(Job.Default.WithAffinity((IntPtr)allCores).WithId("AllCores").AsMutator());
+	}
+}
+
 /// <summary>Shows input megabytes processed per second, based on the mean time.</summary>
 public sealed class ThroughputColumn : IColumn
 {

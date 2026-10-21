@@ -585,11 +585,79 @@ app.MapGet("/orders.csv", async (HttpContext context, OrderStore store) =>
 
 ## Writing from several threads
 
-A writer is not thread-safe: use it from one thread at a time, and finish each async call before starting the next.
-Nothing checks this; fields from two threads end up mixed in the output. To write records produced on several threads,
-send them to one thread that writes them (a `Channel<T>` suits this), or take a lock around each whole record, from its
-first `WriteField` to `EndRecord`. The [options](#options) and the [record writers](records.html#writing-records) do
-not change, so they can be shared between writers on any thread.
+`ParallelWriteRecords` writes records as `WriteRecords` does, but formats them on several threads: the output is the
+same, byte for byte, in the same order. It suits large outputs, and records with many numbers and dates, which take
+longer to format than to write:
+
+```csharp
+using var writer = CsvWriter.ToFile("orders.csv");
+writer.ParallelWriteRecords(orders);                              // the header, then a record per order
+
+// At most 4 threads (the default, -1, is one per processor):
+writer.ParallelWriteRecords(orders, maxDegreeOfParallelism: 4);
+
+// Asynchronously, from an IEnumerable<T> or an IAsyncEnumerable<T>:
+await writer.ParallelWriteRecordsAsync(db.Orders.AsAsyncEnumerable(), cancellationToken: cancellationToken);
+```
+
+It writes what `WriteRecords` writes: [`[CsvRecord]` types](#writing-csvrecord-types), records with a record writer of
+your own (`ParallelWriteRecords(records, recordWriter)`) and [dynamic records](records.html#writing-dynamic-records).
+`ParallelWrite` calls a function of yours for each item instead, which writes the records of the item: as many as it
+needs, or none.
+
+```csharp
+writer.WriteHeader("Id", "Customer", "Total");
+writer.ParallelWrite(orders, (w, order) =>
+{
+    w.WriteField(order.Id);                       // w is the worker's writer, not writer
+    w.WriteField(order.Customer);
+    w.WriteField(order.Price * order.Quantity);
+    w.EndRecord();
+    if (order.Lines.Count > 1)
+    {
+        w.WriteRecord("", "Subtotal", order.Subtotal.ToString(CultureInfo.InvariantCulture));
+    }
+});
+```
+
+Your thread enumerates the items and writes the output to the destination, while workers format batches of about
+128 KB, each with a writer of its own.
+
+- The items are enumerated on your thread, one at a time, so the sequence need not be thread-safe: an Entity Framework
+  query or a data reader is fine. The workers read an array or a `List<T>` in place, so don't change it until the call
+  returns.
+- Record writers, [converters](records.html#converters-csvconverter), `ShouldQuote` and the function of `ParallelWrite`
+  run on several threads at once, so anything shared that they change must be thread-safe. Generated record writers
+  are.
+- The function writes whole records on the writer it gets: a record that it leaves unfinished throws
+  `InvalidOperationException`. Don't flush or dispose that writer, or start a parallel write with it. Its
+  `RecordCount`, and the record index that `ShouldQuote` gets, count as if every item wrote one record.
+- The header, and the first record when it fixes the field count or the columns of dynamic records, are written on
+  your thread before the workers start, and so is a sequence that fits in one batch. `ParallelWrite` writes no header:
+  write it first.
+- An exception, from the sequence, a record or the function, is thrown after the records before it are written, and
+  none after it are: the output is what `WriteRecords` would have written.
+- What the writer has buffered is written to the destination before the first batch, and each batch as soon as the
+  ones before it are. The destination is not flushed.
+- Don't use the writer for anything else until the call returns.
+
+Writing the 50,000 records of the [benchmark](benchmarks.html#writing-on-several-threads) data sets on an AMD Ryzen 9
+9950X3D (16 cores, 32 threads), with one worker per processor:
+
+| Records | `WriteRecords` | `ParallelWriteRecords` | To a file: `WriteRecords` | `ParallelWriteRecords` |
+|---|---:|---:|---:|---:|
+| PackageAssets: 25 text fields, 16 MB | 8.23 ms | **1.32 ms** (6.2x) | 12.0 ms | **5.59 ms** (2.2x) |
+| Floats: 3 text and 25 `float` fields, 14.7 MB | 23.6 ms | **1.62 ms** (14.6x) | 28.2 ms | **5.13 ms** (5.5x) |
+| Orders: dates, a `decimal`, a `Guid`, numbers and text, 9.5 MB | 6.50 ms | **0.85 ms** (7.7x) | 8.78 ms | **3.54 ms** (2.5x) |
+
+Times are BenchmarkDotNet means. To a file, writing the file becomes the limit, at 2.7 to 2.9 GB/s, so records that are
+cheap to format gain least there; to memory, a network stream or a pipe, numbers and dates gain most.
+
+To write records that other threads produce one at a time, send them to one thread that writes them (a `Channel<T>`
+suits this), or take a lock around each whole record, from its first `WriteField` to `EndRecord`. Otherwise a writer
+is not thread-safe: use it from one thread at a time, and finish each async call before starting the next. Nothing
+checks this; fields from two threads end up mixed in the output. The [options](#options) and the
+[record writers](records.html#writing-records) do not change, so they can be shared between writers on any thread.
 
 ## Copying and transforming CSV
 

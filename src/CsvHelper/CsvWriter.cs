@@ -31,7 +31,10 @@ namespace CsvHelper;
 /// A writer is not thread-safe: use it from one thread at a time, and finish each async call before starting the next.
 /// Nothing checks this; fields from two threads end up mixed in the output. To write records produced on several
 /// threads, write them from one thread, or lock around each whole record, from its first field to
-/// <see cref="EndRecord"/>. The options and the record writers do not change, so they can be shared between threads.
+/// <see cref="EndRecord"/>. To format records on several threads, use
+/// <see cref="ParallelWriteRecords{T}(System.Collections.Generic.IEnumerable{T}, int)"/> or
+/// <see cref="ParallelWrite{T}(System.Collections.Generic.IEnumerable{T}, Action{CsvWriter, T}, int)"/>. The options and
+/// the record writers do not change, so they can be shared between threads.
 /// </para>
 /// </remarks>
 public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
@@ -71,7 +74,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	private readonly bool checkNumbers;
 	private readonly SearchValues<byte> special;
 	private readonly bool leaveOpen;
-	private readonly int flushThreshold;
+	private int flushThreshold;             // int.MaxValue on the workers of a parallel write, which never flush
 
 	private Stream? stream;
 	private TextWriter? textWriter;
@@ -1463,27 +1466,26 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 
 	private void FlushBuffer()
 	{
+		// A worker of a parallel write keeps its output, which the parallel write writes out.
+		if (parallelWorker)
+		{
+			return;
+		}
+
 		PrepareFlush();
 		var n = pos;
 		if (n == 0) return;
-		if (stream is not null)
-		{
-			stream.Write(buffer, 0, n);
-		}
-		else if (textWriter is not null)
-		{
-			// Flushes happen between fields, so the bytes never end inside a UTF-8 sequence.
-			this.chars ??= new char[Math.Max(buffer.Length, 1024)];
-			if (this.chars.Length < n) this.chars = new char[n];
-			var chars = Encoding.UTF8.GetChars(buffer, 0, n, this.chars, 0);
-			textWriter.Write(this.chars, 0, chars);
-		}
-
+		WriteToDestination(buffer, n);
 		ShiftAfterFlush(n);
 	}
 
 	private async ValueTask FlushBufferAsync(CancellationToken cancellationToken)
 	{
+		if (parallelWorker)
+		{
+			return;
+		}
+
 		PrepareFlush();
 		var n = pos;
 		if (n == 0) return;
@@ -1493,13 +1495,52 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		}
 		else if (textWriter is not null)
 		{
-			this.chars ??= new char[Math.Max(buffer.Length, 1024)];
-			if (this.chars.Length < n) this.chars = new char[n];
-			var chars = Encoding.UTF8.GetChars(buffer, 0, n, this.chars, 0);
-			await textWriter.WriteAsync(this.chars.AsMemory(0, chars), cancellationToken).ConfigureAwait(false);
+			var length = DecodeForTextWriter(buffer, n);
+			await textWriter.WriteAsync(chars.AsMemory(0, length), cancellationToken).ConfigureAwait(false);
 		}
 
 		ShiftAfterFlush(n);
+	}
+
+	/// <summary>Writes <paramref name="count"/> bytes of UTF-8 output, which end between fields, to the destination.</summary>
+	private void WriteToDestination(byte[] bytes, int count)
+	{
+		if (stream is not null)
+		{
+			stream.Write(bytes, 0, count);
+		}
+		else if (textWriter is not null)
+		{
+			var length = DecodeForTextWriter(bytes, count);
+			textWriter.Write(chars!, 0, length);
+		}
+	}
+
+	/// <summary>Writes <paramref name="count"/> bytes of UTF-8 output to the destination asynchronously.</summary>
+	private async ValueTask WriteToDestinationAsync(byte[] bytes, int count, CancellationToken cancellationToken)
+	{
+		if (stream is not null)
+		{
+			await stream.WriteAsync(bytes.AsMemory(0, count), cancellationToken).ConfigureAwait(false);
+		}
+		else if (textWriter is not null)
+		{
+			var length = DecodeForTextWriter(bytes, count);
+			await textWriter.WriteAsync(chars.AsMemory(0, length), cancellationToken).ConfigureAwait(false);
+		}
+	}
+
+	/// <summary>Decodes UTF-8 output into <c>chars</c> for a <see cref="TextWriter"/> destination; returns the number of chars.</summary>
+	private int DecodeForTextWriter(byte[] bytes, int count)
+	{
+		// Output is written between fields, so the bytes never end inside a UTF-8 sequence.
+		chars ??= new char[Math.Max(buffer.Length, 1024)];
+		if (chars.Length < count)
+		{
+			chars = new char[count];
+		}
+
+		return Encoding.UTF8.GetChars(bytes, 0, count, chars, 0);
 	}
 
 	private void PrepareFlush()
@@ -1527,7 +1568,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// </summary>
 	public void Dispose()
 	{
-		if (disposed) return;
+		// The writer of a parallel write callback belongs to the parallel write.
+		if (disposed || parallelWorker) return;
 		try
 		{
 			if (fieldCount > 0) TerminateOpenRecord();
@@ -1555,7 +1597,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// <returns>A task that completes when the destination has been flushed and, unless left open, disposed.</returns>
 	public async ValueTask DisposeAsync()
 	{
-		if (disposed) return;
+		if (disposed || parallelWorker) return;
 		try
 		{
 			if (fieldCount > 0) TerminateOpenRecord();

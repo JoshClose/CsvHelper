@@ -108,6 +108,7 @@ the same number of fields in every record.
 - [Records](records.html): the `[CsvRecord]`, `[CsvColumn]`, `[CsvIgnore]` and `[CsvConstructor]` attributes and
   everything the generator can map.
 - [Messy files](messy-files.html): what the reader recovers from, and how to report, skip or reject malformed records.
-- [Writing](writing.html): values and formats, quoting, the output modes, async writing and every writer option.
+- [Writing](writing.html): values and formats, quoting, the output modes, async and parallel writing and every writer
+  option.
 - [Unit testing](testing.html): test code that reads or writes CSV without mocks.
 - [API reference](api/index.html): every type and member.
