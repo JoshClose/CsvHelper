@@ -23,8 +23,16 @@ namespace CsvHelper;
 /// <see cref="WriteRecords{T}(System.Collections.Generic.IEnumerable{T})"/>.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Fields are written into an internal buffer; I/O only happens in <see cref="EndRecord"/> (when the buffer
 /// is mostly full), <see cref="Flush"/> and their async counterparts, so async callers never block.
+/// </para>
+/// <para>
+/// A writer is not thread-safe: use it from one thread at a time, and finish each async call before starting the next.
+/// Nothing checks this; fields from two threads end up mixed in the output. To write records produced on several
+/// threads, write them from one thread, or lock around each whole record, from its first field to
+/// <see cref="EndRecord"/>. The options and the record writers do not change, so they can be shared between threads.
+/// </para>
 /// </remarks>
 public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 {

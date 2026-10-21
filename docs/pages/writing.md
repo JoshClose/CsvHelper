@@ -583,6 +583,14 @@ app.MapGet("/orders.csv", async (HttpContext context, OrderStore store) =>
 });
 ```
 
+## Writing from several threads
+
+A writer is not thread-safe: use it from one thread at a time, and finish each async call before starting the next.
+Nothing checks this; fields from two threads end up mixed in the output. To write records produced on several threads,
+send them to one thread that writes them (a `Channel<T>` suits this), or take a lock around each whole record, from its
+first `WriteField` to `EndRecord`. The [options](#options) and the [record writers](records.html#writing-records) do
+not change, so they can be shared between writers on any thread.
+
 ## Copying and transforming CSV
 
 A reader's `GetSpan` and the writer's UTF-8 `WriteField` copy fields without creating strings, so converting between
@@ -621,7 +629,7 @@ while (reader.Read())
 ## Options
 
 The options are an immutable record, like the reader's: create one with an object initializer or `with`, and share it
-between writers.
+between writers, on any thread.
 
 | Option | Default | Explained in |
 |---|---|---|

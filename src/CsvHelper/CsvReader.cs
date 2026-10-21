@@ -18,7 +18,15 @@ namespace CsvHelper;
 /// spans into the read buffer and are only materialized as strings or numbers when asked for.
 /// </summary>
 /// <remarks>
+/// <para>
 /// Spans returned for a record are valid until the next call to <see cref="Read"/> or <see cref="ReadAsync"/>.
+/// </para>
+/// <para>
+/// A reader is not thread-safe: use it from one thread at a time, and finish each async call before starting the next.
+/// Nothing checks this; two threads reading one reader get wrong records, not an exception. To map records on several
+/// threads, use <see cref="ParallelEnumerate{T}(Func{CsvReader, T}, int)"/>. The options, the record mappers and the
+/// <see cref="CsvDynamicRecord"/>s a reader returns do not change, so they can be shared between threads.
+/// </para>
 /// </remarks>
 public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 {

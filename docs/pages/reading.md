@@ -464,6 +464,11 @@ synchronously, so async code calls `ReadHeaderAsync` first.
 
 ## Reading on several threads
 
+A reader is not thread-safe: use it from one thread at a time, and finish each async call before starting the next.
+Nothing checks this; two threads reading one reader get wrong records, not an exception. What a reader is given or
+returns for reuse does not change, so it can be shared between threads: the [options](#options), the
+[record mappers](records.html#reading-records) and [dynamic records](records.html#dynamic-records).
+
 `ParallelEnumerate` maps records to results on several threads and returns the results in input order. It suits large
 inputs where turning a record into an object (parsing, validation, lookups) costs more than reading it:
 
@@ -486,8 +491,11 @@ still in their cache. Rules for the selector:
 - It gets a reader of its own (per thread), positioned on one record. Use its field accessors and return a value. Do
   not call `Read` on it (that throws `InvalidOperationException`), and do not keep its spans after returning.
 - Calls run concurrently, so anything shared that the selector changes must be thread-safe.
-- The input is read and checked by one thread at a time, in order: skipped lines, `OnMalformedRecord` callbacks and
-  field count checks happen exactly as in a `Read` loop, never concurrently.
+- The input is read and checked by one thread at a time, in order: skipped lines, `ShouldSkipRecord`,
+  `OnMalformedRecord` callbacks and field count checks happen exactly as in a `Read` loop, never concurrently.
+- `ParallelEnumerate<T>` shares one mapper between the workers, so [converters](records.html#converters-csvconverter)
+  must be thread-safe. It also calls `OnRecordError` on the workers, so that callback can run on several threads at
+  once.
 - An exception, from the reader or the selector, is thrown by the enumeration after the results of the records before
   it.
 - With `PoolStrings`, the workers share one string pool.

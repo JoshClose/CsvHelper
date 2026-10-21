@@ -1307,6 +1307,9 @@ List<Order> orders = reader.GetRecords<Order>().ToList();
 // rejected[0]: RowNumber 2, RawRecord "A-2,abc,3", Exception: CsvFormatException for Order.Price
 ```
 
+With `ParallelEnumerate<T>`, the callback can run on several threads at once: collect into a
+`ConcurrentQueue<CsvRecordError>`, or lock around the list.
+
 Errors of the reader itself (malformed records that `MalformedData` says to throw for, missing columns) are not
 passed to it. A mapper called directly (`mapper.Read(reader)`) throws the exception of the field as it is.
 
