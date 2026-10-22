@@ -991,27 +991,18 @@ internal struct CompressCompactor : ICompactor<CompressCompactor>
 	public readonly CompressCompactor Create(byte replacement) => new()
 	{
 		replacement = Vector512.Create(replacement),
-		spreadIndex = SeparatorTables.SpreadIndex,
-		bitOfByte = SeparatorTables.BitOfByte,
+		spreadIndex = VectorMask.SpreadIndex,
+		bitOfByte = VectorMask.BitOfByte,
 	};
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public readonly int Compact(ref byte source, ref byte destination, ulong replace, ulong keep)
 	{
-		var v = Vector512.ConditionalSelect(ToMask(replace), replacement, Vector512.LoadUnsafe(ref source));
-		Avx512Vbmi2.Compress(Vector512<byte>.Zero, ToMask(keep), v).StoreUnsafe(ref destination);
+		var v = Vector512.ConditionalSelect(VectorMask.FromBits(replace, spreadIndex, bitOfByte), replacement, Vector512.LoadUnsafe(ref source));
+		Avx512Vbmi2.Compress(Vector512<byte>.Zero, VectorMask.FromBits(keep, spreadIndex, bitOfByte), v).StoreUnsafe(ref destination);
 
 		return BitOperations.PopCount(keep);
-	}
-
-	/// <summary>A vector mask with all bits set in the bytes whose bit is set in <paramref name="bits"/>.</summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private readonly Vector512<byte> ToMask(ulong bits)
-	{
-		var spread = Avx512Vbmi.PermuteVar64x8(Vector512.Create(bits).AsByte(), spreadIndex);
-
-		return Vector512.Equals(spread & bitOfByte, bitOfByte);
 	}
 }
 #endif
@@ -1035,20 +1026,6 @@ internal static class SeparatorTables
 	/// byte 8, the replacement.
 	/// </summary>
 	public static readonly ulong[] PairShuffle = BuildPairShuffle();
-
-	/// <summary>Byte i is i / 8: spreads byte j of a <see cref="ulong"/> over bytes 8j to 8j + 7.</summary>
-	public static readonly Vector512<byte> SpreadIndex = Vector512.Create(Bytes(i => (byte)(i / 8)));
-
-	/// <summary>Byte i is 1 &lt;&lt; (i % 8): the bit of byte i in its spread byte of the mask.</summary>
-	public static readonly Vector512<byte> BitOfByte = Vector512.Create(Bytes(i => (byte)(1 << (i % 8))));
-
-	private static byte[] Bytes(Func<int, byte> value)
-	{
-		var bytes = new byte[64];
-		for (var i = 0; i < bytes.Length; i++) bytes[i] = value(i);
-
-		return bytes;
-	}
 
 	private static ulong[] BuildPairShuffle()
 	{

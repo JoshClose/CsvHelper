@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 #if NET
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 #endif
 using System.Text;
 using System.Threading;
@@ -43,6 +44,16 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 #else
 		64;
 #endif
+
+	private static readonly bool defaultCompressIndex =
+#if NET
+		Avx512Vbmi2.IsSupported && Avx512Vbmi.IsSupported;
+#else
+		false;
+#endif
+
+	/// <summary>Whether this machine can set <see cref="compressIndex"/> (for the tests).</summary>
+	internal static bool CompressIndexSupported => defaultCompressIndex;
 
 	private readonly CsvReaderOptions options;
 	private readonly IFormatProvider provider;
@@ -85,6 +96,7 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	private readonly Action<CsvMalformedRecord>? onMalformed;
 	private readonly bool throwOnMissing;
 	internal int vectorWidth;       // 512, 256, 128 (SIMD, .NET only), 64 (64-bit integer masks) or 0 (scalar only, for testing)
+	internal bool compressIndex;    // whether the 512-bit scanner writes the index with AVX-512 VBMI2 compress (CompressFlattener)
 
 	// Buffer. Positions are absolute indexes into buffer.
 	private byte[] buffer;
@@ -212,6 +224,7 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 					trackLines || shouldSkip is not null;
 		pool = options.PoolStrings ? sharedPool?.CreateShared() ?? new CsvStringPool() : null;
 		vectorWidth = defaultVectorWidth;
+		compressIndex = defaultCompressIndex;
 		indexReserve = BlockSize + 1;
 		if (fixedWidth)
 		{

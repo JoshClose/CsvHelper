@@ -737,4 +737,74 @@ public class ReaderTests
 			TestUtil.AssertSame(expected, TestUtil.ReadAll(reader), $"width {width}");
 		}
 	}
+
+	[Fact]
+	public void DenseBlocks()
+	{
+		// Blocks of up to 64 terminators, with fields that need decoding among them, so that every group of 16 entries the
+		// compress flattener writes, and every decode flag, is checked against the reference.
+		var rng = new Random(4181);
+		ReferenceOptions[] options =
+		[
+			new(),
+			new() { Trim = true },
+			new() { Quote = null, Escape = '\\' },
+			new() { Quote = null },
+		];
+		foreach (var o in options)
+		{
+			for (var iter = 0; iter < 100; iter++)
+			{
+				var text = DenseText(rng, o);
+				var expected = ReferenceCsv.Parse(text, o);
+				foreach (var width in TestUtil.Widths)
+				{
+					foreach (var compress in new[] { false, true })
+					{
+						if (compress && (width != 512 || !CsvReader.CompressIndexSupported))
+						{
+							continue;
+						}
+
+						using var reader = CsvReader.Create(Encoding.UTF8.GetBytes(text), o.ToReaderOptions());
+						reader.vectorWidth = width;
+						reader.compressIndex = compress;
+						TestUtil.AssertSame(expected, TestUtil.ReadAll(reader), $"width {width}, compress {compress}, {o}, text {TestUtil.Escape(text)}");
+					}
+				}
+			}
+		}
+	}
+
+	private static string DenseText(Random rng, ReferenceOptions o)
+	{
+		var sb = new StringBuilder();
+		// A field is empty one time in this many: 1 gives blocks of nothing but separators.
+		var emptyOneIn = rng.Next(1, 8);
+		while (sb.Length < 1000)
+		{
+			if (rng.Next(emptyOneIn) != 0)
+			{
+				switch (rng.Next(4))
+				{
+					case 0 when o.Quote is char q:
+						sb.Append(q).Append('a', rng.Next(3)).Append(q);
+						break;
+					case 1 when o.Escape is char e:
+						sb.Append('b').Append(e).Append(',');
+						break;
+					case 2 when o.Trim:
+						sb.Append(" c ");
+						break;
+					default:
+						sb.Append('d', rng.Next(1, 4));
+						break;
+				}
+			}
+
+			sb.Append(rng.Next(16) switch { 0 => "\n", 1 => "\r\n", _ => "," });
+		}
+
+		return sb.ToString();
+	}
 }

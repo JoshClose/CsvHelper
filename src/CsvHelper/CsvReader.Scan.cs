@@ -26,6 +26,10 @@ namespace CsvHelper;
 // path also handles comments, strict validation failures and the final partial block, and it
 // produces exactly the same index as the SIMD path.
 //
+// The terminators of a block become entries of ends from their trailing zero counts (BitFlattener), or, on the 512-bit
+// scanner with AVX-512 VBMI2, from one compress of their positions per block (CompressFlattener), which is faster at any
+// field density.
+//
 // In Escape mode the quote mask holds the escape characters instead. The bytes they escape (the byte after
 // an odd run of escapes, and an LF after an escaped CR) are found branch-free and removed from the
 // terminators, and every field that contains an escape is flagged for decoding. FixedWidth mode has its own
@@ -93,11 +97,13 @@ public sealed partial class CsvReader
 		=> vectorWidth switch
 		{
 #if NET
-			256 => Scan<TQ, TS, TE, TC, TN, Masks256>(pos, limit),
-			512 => Scan<TQ, TS, TE, TC, TN, Masks512>(pos, limit),
-			128 => Scan<TQ, TS, TE, TC, TN, Masks128>(pos, limit),
+			256 => Scan<TQ, TS, TE, TC, TN, Masks256, BitFlattener>(pos, limit),
+			512 => compressIndex
+				? Scan<TQ, TS, TE, TC, TN, Masks512, CompressFlattener>(pos, limit)
+				: Scan<TQ, TS, TE, TC, TN, Masks512, BitFlattener>(pos, limit),
+			128 => Scan<TQ, TS, TE, TC, TN, Masks128, BitFlattener>(pos, limit),
 #endif
-			64 => Scan<TQ, TS, TE, TC, TN, Masks64>(pos, limit),
+			64 => Scan<TQ, TS, TE, TC, TN, Masks64, BitFlattener>(pos, limit),
 			_ => pos,
 		};
 
@@ -107,12 +113,13 @@ public sealed partial class CsvReader
 	/// <typeparam name="TC">Comments.</typeparam>
 	/// <typeparam name="TN">Line breaks allowed in quotes.</typeparam>
 	/// <typeparam name="TM">The vector width.</typeparam>
+	/// <typeparam name="TF">How the terminators of a block become entries of the index.</typeparam>
 #if NET
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	private int Scan<TQ, TS, TE, TC, TN, TM>(int pos, int limit)
+	private int Scan<TQ, TS, TE, TC, TN, TM, TF>(int pos, int limit)
 		where TQ : struct, IFlag where TS : struct, IFlag where TE : struct, IFlag where TC : struct, IFlag where TN : struct, IFlag
-		where TM : struct, IBlockMasks<TM>
+		where TM : struct, IBlockMasks<TM> where TF : struct, IFlattener<TF>
 	{
 		ref var buf = ref MemoryMarshal.GetArrayDataReference(buffer);
 		ref var ends = ref MemoryMarshal.GetArrayDataReference(this.ends);
@@ -130,6 +137,7 @@ public sealed partial class CsvReader
 		var flagAll = trim ? int.MinValue : 0;
 		// In Escape mode quoteByte is the escape character, so the quote mask holds the escape characters.
 		var masks = default(TM).Create(sepByte, quoteByte, commentByte);
+		var flattener = default(TF).Create();
 
 		for (; pos < limit; pos += BlockSize)
 		{
@@ -261,51 +269,8 @@ public sealed partial class CsvReader
 				rowCount = rc;
 			}
 
-			// Write positions in groups without per-bit branches; extra writes land in the slack.
 			var cnt = BitOperations.PopCount(termM);
-			ref var dst = ref Unsafe.Add(ref ends, (nint)(uint)ec);
-			var b = (pos + 1) | flagAll;
-			var m = termM;
-			dst = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 1) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 2) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 3) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 4) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 5) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 6) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			Unsafe.Add(ref dst, 7) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-			if (cnt > 8)
-			{
-				Unsafe.Add(ref dst, 8) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 9) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 10) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 11) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 12) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 13) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 14) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				Unsafe.Add(ref dst, 15) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
-				if (cnt > 16)
-				{
-					nint k = 16;
-					do
-					{
-						Unsafe.Add(ref dst, k) = b + BitOperations.TrailingZeroCount(m);
-						m &= m - 1;
-						k++;
-					} while (m != 0);
-				}
-			}
-
-			if (default(TQ).Value || default(TE).Value)
-			{
-				while (decodeM != 0)
-				{
-					var low = decodeM & (0 - decodeM);
-					Unsafe.Add(ref dst, BitOperations.PopCount(termM & (low - 1))) |= int.MinValue;
-					decodeM ^= low;
-				}
-			}
-
+			flattener.Write(ref Unsafe.Add(ref ends, (nint)(uint)ec), termM, decodeM, cnt, pos + 1, flagAll);
 			endsCount = ec + cnt;
 		}
 
@@ -762,5 +727,139 @@ internal struct Masks128 : IBlockMasks<Masks128>
 		| ((ulong)Vector128.Equals(b, v).ExtractMostSignificantBits() << 16)
 		| ((ulong)Vector128.Equals(c, v).ExtractMostSignificantBits() << 32)
 		| ((ulong)Vector128.Equals(d, v).ExtractMostSignificantBits() << 48);
+}
+#endif
+
+/// <summary>Writes the entries of the index for the terminators of one block.</summary>
+/// <typeparam name="TSelf">The implementing struct, so that calls through the constraint are not virtual.</typeparam>
+internal interface IFlattener<TSelf> where TSelf : struct, IFlattener<TSelf>
+{
+	/// <summary>Creates the flattener, with its constants loaded once per scan. Called on <c>default(TSelf)</c>.</summary>
+	/// <returns>The flattener, ready for <see cref="Write"/>.</returns>
+	public TSelf Create();
+
+	/// <summary>
+	/// Writes entry <c>k</c> for the <c>k</c>th set bit of <paramref name="termM"/>: <paramref name="start"/> plus the position
+	/// of the bit, with the high bit set when the field needs decoding. Extra writes may land in the slack after the entries.
+	/// </summary>
+	/// <param name="dst">The first entry.</param>
+	/// <param name="termM">The terminators of the block; not 0.</param>
+	/// <param name="decodeM">The terminators of the fields that need decoding, a subset of <paramref name="termM"/>.</param>
+	/// <param name="count">The number of set bits of <paramref name="termM"/>.</param>
+	/// <param name="start">The position after the first byte of the block.</param>
+	/// <param name="flagAll"><see cref="int.MinValue"/> when every field needs decoding (trimming), otherwise 0.</param>
+	public void Write(ref int dst, ulong termM, ulong decodeM, int count, int start, int flagAll);
+}
+
+/// <summary>Writes the entries from the trailing zero counts of the terminators, in groups without per-bit branches.</summary>
+internal struct BitFlattener : IFlattener<BitFlattener>
+{
+	/// <inheritdoc/>
+	public readonly BitFlattener Create() => default;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void Write(ref int dst, ulong termM, ulong decodeM, int count, int start, int flagAll)
+	{
+		var b = start | flagAll;
+		var m = termM;
+		dst = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 1) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 2) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 3) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 4) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 5) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 6) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		Unsafe.Add(ref dst, 7) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+		if (count > 8)
+		{
+			Unsafe.Add(ref dst, 8) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 9) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 10) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 11) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 12) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 13) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 14) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			Unsafe.Add(ref dst, 15) = b + BitOperations.TrailingZeroCount(m); m &= m - 1;
+			if (count > 16)
+			{
+				nint k = 16;
+				do
+				{
+					Unsafe.Add(ref dst, k) = b + BitOperations.TrailingZeroCount(m);
+					m &= m - 1;
+					k++;
+				} while (m != 0);
+			}
+		}
+
+		while (decodeM != 0)
+		{
+			var low = decodeM & (0 - decodeM);
+			Unsafe.Add(ref dst, BitOperations.PopCount(termM & (low - 1))) |= int.MinValue;
+			decodeM ^= low;
+		}
+	}
+}
+
+#if NET
+/// <summary>
+/// Writes the entries with AVX-512 VBMI2: one compress packs the positions of the terminators (0 to 63, with bit 7 set when
+/// the field needs decoding) into the low bytes, and each 16 of them are sign extended to entries.
+/// </summary>
+internal struct CompressFlattener : IFlattener<CompressFlattener>
+{
+	private Vector512<byte> positions, flagged, spreadIndex, bitOfByte;
+	private Vector512<int> keep;
+
+	/// <inheritdoc/>
+	public readonly CompressFlattener Create() => new()
+	{
+		positions = Vector512<byte>.Indices,
+		flagged = Vector512<byte>.Indices | Vector512.Create((byte)0x80),
+		spreadIndex = VectorMask.SpreadIndex,
+		bitOfByte = VectorMask.BitOfByte,
+		keep = Vector512.Create(unchecked((int)0x8000_007F)),
+	};
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void Write(ref int dst, ulong termM, ulong decodeM, int count, int start, int flagAll)
+	{
+		var p = positions;
+		if (flagAll != 0)
+		{
+			p = flagged;
+		}
+		else if (decodeM != 0)
+		{
+			p = Vector512.ConditionalSelect(VectorMask.FromBits(decodeM, spreadIndex, bitOfByte), flagged, positions);
+		}
+
+		var packed = Avx512Vbmi2.Compress(Vector512<byte>.Zero, VectorMask.FromBits(termM, spreadIndex, bitOfByte), p);
+		var s = Vector512.Create(start);
+		(Entries(packed.GetLower().GetLower()) + s).StoreUnsafe(ref dst);
+		if (count > 16)
+		{
+			(Entries(Avx512F.ExtractVector128(packed, 1)) + s).StoreUnsafe(ref dst, 16);
+			if (count > 32)
+			{
+				(Entries(Avx512F.ExtractVector128(packed, 2)) + s).StoreUnsafe(ref dst, 32);
+				if (count > 48)
+				{
+					(Entries(Avx512F.ExtractVector128(packed, 3)) + s).StoreUnsafe(ref dst, 48);
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Sign extends 16 packed positions to entries without the start: a flagged one, <c>0x80 | i</c>, becomes
+	/// <c>0xFFFF_FF80 | i</c>, which the mask turns into <c>int.MinValue | i</c>.
+	/// </summary>
+	/// <param name="packed">The 16 positions.</param>
+	/// <returns>The 16 entries, relative to the start of the block.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private readonly Vector512<int> Entries(Vector128<byte> packed) => Avx512F.ConvertToVector512Int32(packed.AsSByte()) & keep;
 }
 #endif
