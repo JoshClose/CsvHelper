@@ -176,6 +176,21 @@ public class OperatorTests
 	}
 
 	[Fact]
+	public void Comparers()
+	{
+		Same(q => q.Select(o => o.Customer.ToUpperInvariant()).Distinct(StringComparer.OrdinalIgnoreCase));
+		Same(q => q.OrderBy(o => o.Customer, StringComparer.Ordinal).ThenByDescending(o => o.Id, Comparer<int>.Default).Select(o => o.Id));
+		Same(q => q.Select(o => o.Customer).Contains("ada", StringComparer.OrdinalIgnoreCase));
+		Same(q => q.GroupBy(o => o.Customer.ToLowerInvariant(), StringComparer.OrdinalIgnoreCase).Select(g => new { g.Key, Count = g.Count() }));
+		Same(q => q.Select(o => o.Id).SequenceEqual(Enumerable.Range(1, 60), EqualityComparer<int>.Default));
+		Same((o, c, l) => o.Join(c, x => x.Customer.ToUpperInvariant(), y => y.Name, (x, y) => new { x.Id, y.Country }, StringComparer.OrdinalIgnoreCase));
+#if NET
+		Same(q => q.MinBy(o => o.Customer, StringComparer.Ordinal));
+		Same(q => q.DistinctBy(o => o.Customer.ToUpperInvariant(), StringComparer.OrdinalIgnoreCase).Select(o => o.Id));
+#endif
+	}
+
+	[Fact]
 	public void Zipping()
 	{
 		Same(q => q.Zip(q.Skip(1), (a, b) => b.Total - a.Total));
@@ -201,6 +216,8 @@ public class OperatorTests
 		Same(q => q.SkipLast(55).Select(o => o.Id));
 		Same(q => q.TakeLast(2).Select(o => o.Id));
 		Same(q => q.Where(o => o.Id > 1000).FirstOrDefault(new Order { Id = -1 }));
+		Same(q => q.ElementAt(^1));
+		Same(q => q.ElementAtOrDefault(^100));
 	}
 #endif
 
@@ -240,6 +257,54 @@ public class OperatorTests
 		// The reader is past the first record already.
 		Assert.Equal(Enumerable.Range(2, 59), query.ToList());
 		Assert.Throws<InvalidOperationException>(() => query.ToList());
+	}
+
+	[Fact]
+	public async Task QueriesOfAReaderCanUseItInSeveralPlaces()
+	{
+		var orders = Data.Orders;
+		Assert.Equal(orders.Zip(orders.Skip(1), (a, b) => b.Total - a.Total), OverReader(o => o.Zip(o.Skip(1), (a, b) => b.Total - a.Total)));
+		Assert.Equal(orders.Join(orders, x => x.Id, y => y.Id - 1, (x, y) => new { x.Id, Next = y.Total }),
+			OverReader(o => o.Join(o, x => x.Id, y => y.Id - 1, (x, y) => new { x.Id, Next = y.Total })));
+		Assert.Equal(orders.Where(x => x.Total > orders.Average(y => y.Total)).Select(x => x.Id),
+			OverReader(o => o.Where(x => x.Total > o.Average(y => y.Total)).Select(x => x.Id)));
+		Assert.Equal(orders.Where(x => x.Total > 100).Select(x => x.Id).Concat(orders.Skip(50).Select(x => x.Id)),
+			OverReader(o => o.Where(x => x.Total > 100).Select(x => x.Id).Concat(o.Skip(50).Select(x => x.Id))));
+
+		using (var reader = CsvReader.FromText(Data.OrdersCsv))
+		{
+			var query = reader.Query<Order>();
+			var joined = query.Join(query, x => x.Id, y => y.Id - 1, (x, y) => y.Total - x.Total);
+			var source = Assert.Single(CsvQueryable.Explain(joined).Sources);
+			Assert.Contains("2 places", Assert.Single(source.Notes));
+			Assert.Equal(orders.Join(orders, x => x.Id, y => y.Id - 1, (x, y) => y.Total - x.Total), await joined.AsCsvAsync().ToListAsync());
+		}
+
+		using (var reader = CsvReader.FromText(Data.OrdersCsv))
+		{
+			var rows = reader.Query();
+			var next = rows.Join(rows, x => x.GetInt32("Id"), y => y.GetInt32("Id") - 1, (x, y) => y["Customer"]).ToList();
+			Assert.Equal(orders.Skip(1).Select(o => o.Customer), next);
+		}
+	}
+
+	[Fact]
+	public void MethodsThatTakeQueries()
+	{
+		var customers = Customers();
+		var list = Data.CustomerList;
+		Assert.Equal(Data.Orders.Select(o => list.Count(c => c.Name == o.Customer)), Orders().Select(o => CountOf(customers, o.Customer)).ToList());
+		Assert.Equal(Data.Orders.Select(o => list.Where(c => c.Rank > 1).Count(c => c.Name == o.Customer)),
+			Orders().Select(o => CountOf(customers.Where(c => c.Rank > 1), o.Customer)).ToList());
+		Assert.Equal(Data.Orders.Select(o => list.OrderByDescending(c => c.Rank).First(c => c.Name != o.Customer).Name),
+			Orders().Select(o => FirstOther(customers.OrderByDescending(c => c.Rank), o.Customer)).ToList());
+	}
+
+	[Fact]
+	public void MarkersOfOtherProvidersThrowAsInMemory()
+	{
+		// An operator that only adds itself to the query, for a provider that knows it, has nothing to run in memory.
+		Same(q => q.Where(o => o.Total > 100).Tagged("orders").Select(o => o.Id));
 	}
 
 	[Fact]
@@ -299,4 +364,26 @@ public class OperatorTests
 		Assert.Throws<ArgumentException>(() => query.Provider.CreateQuery<string>(query.Expression));
 		Assert.Throws<ArgumentException>(() => query.Provider.CreateQuery(Expression.Constant(3)));
 	}
+
+	/// <summary>Runs a query of the orders of a reader, and asserts that it cannot run again.</summary>
+	private static List<TResult> OverReader<TResult>(Func<IQueryable<Order>, IQueryable<TResult>> query)
+	{
+		using var reader = CsvReader.FromText(Data.OrdersCsv);
+		var built = query(reader.Query<Order>());
+		var results = built.ToList();
+		Assert.Throws<InvalidOperationException>(() => built.ToList());
+
+		return results;
+	}
+
+	private static int CountOf(IQueryable<Customer> customers, string name) => customers.Count(c => c.Name == name);
+
+	private static string FirstOther(IOrderedQueryable<Customer> customers, string name) => customers.First(c => c.Name != name).Name;
+}
+
+/// <summary>An operator that only adds itself to a query, as the operators of providers such as Entity Framework Core do.</summary>
+public static class Markers
+{
+	public static IQueryable<T> Tagged<T>(this IQueryable<T> source, string tag) =>
+		source.Provider.CreateQuery<T>(Expression.Call(null, new Func<IQueryable<T>, string, IQueryable<T>>(Tagged).Method, source.Expression, Expression.Constant(tag)));
 }

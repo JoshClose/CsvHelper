@@ -19,16 +19,23 @@ internal sealed class QueryRewriter : ExpressionVisitor
 {
 	private readonly IReadOnlyDictionary<Expression, Shape> shapes;
 	private readonly CsvQueryOptions options;
+	private readonly IReadOnlyDictionary<object, int> shared;
 	private readonly Dictionary<IForeignQuery, int> foreignIndexes = new(IdentityComparer.Instance);
+	private readonly Dictionary<object, Expression> sharedStreams = new(IdentityComparer.Instance);
 	private Chain? chain;
 
 	/// <summary>Creates the rewriter.</summary>
 	/// <param name="shapes">The shapes of the query's nodes.</param>
 	/// <param name="options">The options of the query: how it joins with other providers.</param>
-	public QueryRewriter(IReadOnlyDictionary<Expression, Shape> shapes, CsvQueryOptions options)
+	/// <param name="shared">
+	/// The sources that can be read once and are used in more than one place, with the number of places, by source: the
+	/// places share one stream, which reads the records into memory.
+	/// </param>
+	public QueryRewriter(IReadOnlyDictionary<Expression, Shape> shapes, CsvQueryOptions options, IReadOnlyDictionary<object, int> shared)
 	{
 		this.shapes = shapes;
 		this.options = options;
+		this.shared = shared;
 	}
 
 	/// <summary>The plans of the CSV sources, in the order they were replaced.</summary>
@@ -152,7 +159,8 @@ internal sealed class QueryRewriter : ExpressionVisitor
 			current = call.Arguments[0];
 		}
 
-		if (current is not ConstantExpression { Value: ICsvRoot { IsRoot: true } root })
+		// The operators on a shared source differ from place to place, so LINQ to Objects runs them on its records.
+		if (current is not ConstantExpression { Value: ICsvRoot { IsRoot: true } root } || shared.ContainsKey(root))
 		{
 			return null;
 		}
@@ -183,7 +191,7 @@ internal sealed class QueryRewriter : ExpressionVisitor
 	private (ICsvRoot Root, List<MethodCallExpression> Operators)? SourceOf(Expression sequence) => sequence switch
 	{
 		MethodCallExpression call => Fused(call),
-		ConstantExpression { Value: ICsvRoot { IsRoot: true } root } => (root, []),
+		ConstantExpression { Value: ICsvRoot { IsRoot: true } root } when !shared.ContainsKey(root) => (root, []),
 		_ => null,
 	};
 
@@ -212,6 +220,11 @@ internal sealed class QueryRewriter : ExpressionVisitor
 	/// <summary>Plans the reader of a source and replaces it, and the operators it runs, by the stream of its records.</summary>
 	private Expression Replace(ICsvRoot root, List<MethodCallExpression> operators)
 	{
+		if (shared.TryGetValue(root, out var places))
+		{
+			return ReplaceShared(root, places);
+		}
+
 		var dynamicNotes = new List<string>();
 		if (IsDynamic(root) && TryReplaceDynamic(root, operators, null, dynamicNotes) is { } dynamic)
 		{
@@ -275,12 +288,39 @@ internal sealed class QueryRewriter : ExpressionVisitor
 	}
 
 	/// <summary>
+	/// Replaces a place of a source that can be read once (a caller's reader) and is used in several places, such as both
+	/// sides of a self-join, by the stream that all of them share: it reads the records whole into memory the first time it
+	/// is enumerated, and LINQ to Objects runs the operators of each place on them.
+	/// </summary>
+	/// <param name="root">The source.</param>
+	/// <param name="places">The number of places that use it.</param>
+	/// <returns>The stream.</returns>
+	private Expression ReplaceShared(ICsvRoot root, int places)
+	{
+		if (sharedStreams.TryGetValue(root, out var stream))
+		{
+			return stream;
+		}
+
+		Sources.Add(new CsvSourcePlan(root.Source.Description, root.ElementType, 0, [], [], null,
+			[$"the query uses the reader in {places} places, so its records are read once into memory"]));
+		stream = Register((IAsyncRecordStream)root.CreateStream(new RecordStreamSpec()), root.ElementType, true);
+		sharedStreams.Add(root, stream);
+
+		return stream;
+	}
+
+	/// <summary>
 	/// Puts a stream in the query: as the <see cref="EnumerableQuery{T}"/> that LINQ to Objects runs the rest of the query on.
 	/// A stream inside a lambda is read once and kept, so it is not read again for each element of what the lambda runs on.
 	/// </summary>
-	private Expression Register(IAsyncRecordStream stream, Type elementType)
+	/// <param name="stream">The stream.</param>
+	/// <param name="elementType">The type of its elements.</param>
+	/// <param name="materialize">Whether the stream is read once and kept wherever it is, as one that several places share.</param>
+	/// <returns>The constant that stands for the stream in the query.</returns>
+	private Expression Register(IAsyncRecordStream stream, Type elementType, bool materialize = false)
 	{
-		stream.Materialize = InLambda(chain!);
+		stream.Materialize = materialize || InLambda(chain!);
 		var queryable = ((IEnumerable)stream).AsQueryable();
 		Streams.Add(queryable, stream);
 

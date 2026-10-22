@@ -127,7 +127,8 @@ public static class CsvQueryable
 
 	/// <summary>
 	/// Queries the remaining records of a reader, from where it is. The query can run once, and leaves the reader open; its
-	/// options are the reader's (<see cref="CsvQueryOptions.ReaderOptions"/> is not used).
+	/// options are the reader's (<see cref="CsvQueryOptions.ReaderOptions"/> is not used). A query that uses it in more
+	/// than one place, such as both sides of a self-join, reads its records once, into memory.
 	/// </summary>
 	/// <typeparam name="T">The <see cref="CsvRecordAttribute"/> type of the records.</typeparam>
 	/// <param name="reader">The reader.</param>
@@ -141,7 +142,10 @@ public static class CsvQueryable
 		return new CsvQuery<T>(new CsvSource.Reader(reader), (options ?? CsvQueryOptions.Default) with { ReaderOptions = reader.Options });
 	}
 
-	/// <summary>Queries the remaining rows of a reader as dynamic records, from where it is. The query can run once.</summary>
+	/// <summary>
+	/// Queries the remaining rows of a reader as dynamic records, from where it is. The query can run once; one that uses
+	/// it in more than one place reads its rows once, into memory.
+	/// </summary>
 	/// <param name="reader">The reader.</param>
 	/// <param name="options">How much the query pushes into the reader, or <see langword="null"/> for the defaults.</param>
 	/// <returns>The query of the remaining rows.</returns>

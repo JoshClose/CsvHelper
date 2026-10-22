@@ -46,9 +46,10 @@ internal static class QueryPlanner
 	public static PlannedQuery Plan(Expression query)
 	{
 		// A source used twice, such as both sides of a self-join, is one node in two places, which are planned apart.
-		var prepared = new Separator().Visit(new Inliner().Visit(query))!;
+		var separator = new Separator();
+		var prepared = separator.Visit(new Inliner().Visit(query))!;
 		var options = OptionsOf(prepared);
-		var rewriter = new QueryRewriter(ShapeAnalyzer.Analyze(prepared), options);
+		var rewriter = new QueryRewriter(ShapeAnalyzer.Analyze(prepared), options, separator.Shared());
 		var rewritten = rewriter.Visit(prepared)!;
 		var inMemory = new List<string>();
 		new OperatorCollector(inMemory).Visit(rewritten);
@@ -69,14 +70,47 @@ internal static class QueryPlanner
 		return node is ConstantExpression { Value: ICsvRoot { IsRoot: true } root } ? root.Options : CsvQueryOptions.Default;
 	}
 
-	/// <summary>Gives each place where a CSV source is used its own node, so the planner can tell the places apart.</summary>
+	/// <summary>
+	/// Gives each place where a CSV source is used its own node, so the planner can tell the places apart, and counts the
+	/// places of each source.
+	/// </summary>
 	private sealed class Separator : ExpressionVisitor
 	{
-		/// <summary>Copies the constant of a CSV source.</summary>
+		private readonly Dictionary<object, int> places = new(IdentityComparer.Instance);
+
+		/// <summary>
+		/// The sources that can be read once (a caller's reader) and are used in more than one place, with the number of
+		/// places: they are read once, into memory, for all of them.
+		/// </summary>
+		/// <returns>The number of places of each, by source.</returns>
+		public Dictionary<object, int> Shared()
+		{
+			var shared = new Dictionary<object, int>(IdentityComparer.Instance);
+			foreach (var place in places)
+			{
+				if (place.Value > 1 && !((ICsvRoot)place.Key).Source.CanReopen)
+				{
+					shared.Add(place.Key, place.Value);
+				}
+			}
+
+			return shared;
+		}
+
+		/// <summary>Copies the constant of a CSV source, and counts the place.</summary>
 		/// <param name="node">The constant.</param>
 		/// <returns>A new constant of the source, or the node.</returns>
-		protected override Expression VisitConstant(ConstantExpression node) =>
-			node.Value is ICsvRoot { IsRoot: true } ? Expression.Constant(node.Value, node.Type) : node;
+		protected override Expression VisitConstant(ConstantExpression node)
+		{
+			if (node.Value is not ICsvRoot { IsRoot: true } root)
+			{
+				return node;
+			}
+
+			places[root] = places.TryGetValue(root, out var count) ? count + 1 : 1;
+
+			return Expression.Constant(node.Value, node.Type);
+		}
 	}
 
 	/// <summary>Collects the names of the <see cref="Queryable"/> operators left in a planned query, which LINQ to Objects runs.</summary>
