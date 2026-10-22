@@ -91,7 +91,10 @@ public abstract class CsvRecordWriter<T>
 	/// <param name="prefix">The text in front of the nested record's column names (<see cref="CsvColumnAttribute.Prefix"/>); <c>""</c> for none.</param>
 	/// <returns>The record writer of <typeparamref name="TNested"/>.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="prefix"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException"><typeparamref name="TNested"/> has no record writer, or its records cannot be written.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// <typeparamref name="TNested"/> has no record writer, or its records cannot be written, or the nested record writers
+	/// lead back to their own type without end.
+	/// </exception>
 	protected CsvRecordWriter<TNested> NestedWriter<TNested>(string prefix)
 	{
 		ArgumentNullException.ThrowIfNull(prefix);
@@ -124,7 +127,8 @@ public static class CsvRecordWriter
 	/// <returns>A record writer, which can be used with any <see cref="CsvWriter"/>.</returns>
 	/// <exception cref="InvalidOperationException">
 	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type and has no registered record writer, or
-	/// its records cannot be written (the message says why).
+	/// its records cannot be written (the message says why), or its nested record writers lead back to their own type
+	/// without end (records nest at most 64 deep).
 	/// </exception>
 	public static CsvRecordWriter<T> Create<T>() => Create<T>("");
 
@@ -135,14 +139,23 @@ public static class CsvRecordWriter
 	/// <exception cref="ArgumentNullException"><paramref name="columnPrefix"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">
 	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type and has no registered record writer, or
-	/// its records cannot be written (the message says why).
+	/// its records cannot be written (the message says why), or its nested record writers lead back to their own type
+	/// without end (records nest at most 64 deep).
 	/// </exception>
 	public static CsvRecordWriter<T> Create<T>(string columnPrefix)
 	{
 		ArgumentNullException.ThrowIfNull(columnPrefix);
 		var factory = Factory<T>.Current ?? Load<T>();
-
-		return factory(columnPrefix);
+		// A hand-written record writer can create a nested one that leads back to its own type, which the generator cannot see.
+		RecordNesting.Enter(typeof(T), "record writer");
+		try
+		{
+			return factory(columnPrefix);
+		}
+		finally
+		{
+			RecordNesting.Exit();
+		}
 	}
 
 	/// <summary>

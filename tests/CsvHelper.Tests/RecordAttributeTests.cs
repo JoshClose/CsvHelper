@@ -279,6 +279,84 @@ public partial class Visit
 	public Coordinates Location { get; set; }
 }
 
+/// <summary>A record whose nested <see cref="Track"/> has a hand-written mapper that leads back to it, which the generator cannot see.</summary>
+[CsvRecord]
+public partial class Station
+{
+	public string Name { get; set; } = "";
+
+	[CsvColumn(Prefix = "Next ")]
+	public Track Next { get; set; } = new();
+}
+
+/// <summary>A type whose hand-written mapper and record writer nest a <see cref="Station"/>, which nests this type again.</summary>
+[CsvConverter(typeof(TrackMapper))]
+public sealed class Track
+{
+	public Station? To { get; set; }
+}
+
+public sealed class TrackMapper : CsvRecordMapper<Track>
+{
+	private readonly CsvRecordMapper<Station> to;
+
+	public TrackMapper(CsvReader reader, string columnPrefix)
+		: base(columnPrefix)
+	{
+		to = NestedMapper<Station>(reader, "");
+		ThrowIfColumnsMissing(reader);
+	}
+
+	public override Track Read(CsvReader reader) => new() { To = to.Read(reader) };
+}
+
+public sealed class TrackWriter : CsvRecordWriter<Track>
+{
+	private readonly CsvRecordWriter<Station> to;
+
+	public TrackWriter(string columnPrefix)
+		: base(columnPrefix)
+	{
+		to = NestedWriter<Station>("");
+	}
+
+	public override int FieldCount => to.FieldCount;
+
+	public override void WriteHeader(CsvWriter writer) => to.WriteHeader(writer);
+
+	public override void Write(CsvWriter writer, Track record) => to.Write(writer, record.To!);
+}
+
+/// <summary>A type whose hand-written mapper nests its own type once, for the manager.</summary>
+[CsvConverter(typeof(EmployeeMapper))]
+public sealed class Employee
+{
+	public string Name { get; set; } = "";
+
+	public Employee? Manager { get; set; }
+}
+
+public sealed class EmployeeMapper : CsvRecordMapper<Employee>
+{
+	private readonly int name;
+	private readonly CsvRecordMapper<Employee>? manager;
+
+	public EmployeeMapper(CsvReader reader, string columnPrefix)
+		: base(columnPrefix)
+	{
+		name = Column(reader, "Name", -1, false, "Employee.Name");
+		// The manager's own manager is not read: the prefix ends the nesting.
+		if (columnPrefix.Length == 0)
+		{
+			manager = NestedMapper<Employee>(reader, "Manager ");
+		}
+
+		ThrowIfColumnsMissing(reader);
+	}
+
+	public override Employee Read(CsvReader reader) => new() { Name = reader.GetString(name), Manager = manager?.Read(reader) };
+}
+
 public class RecordAttributeTests
 {
 	[Fact]
@@ -606,6 +684,41 @@ public class RecordAttributeTests
 
 		Assert.Contains("At ", e.Message);
 		Assert.Throws<InvalidOperationException>(() => CsvRecordMapper.Create<Coordinates>(reader, "x"));
+	}
+
+	[Fact]
+	public void NestingCyclesThroughHandWrittenMappersThrow()
+	{
+		using (var reader = CsvReader.FromText("Name\nOslo\n"))
+		{
+			var e = Assert.Throws<InvalidOperationException>(() => reader.GetRecords<Station>());
+			Assert.Equal(
+				"Creating the mapper of CsvHelper.Tests.Station nests records more than 64 deep: Station -> Track -> Station repeats without end. " +
+				"A hand-written mapper creates a nested mapper that leads back to its own type.", e.Message);
+		}
+
+		CsvRecordWriter.Register<Track>(prefix => new TrackWriter(prefix));
+		var w = Assert.Throws<InvalidOperationException>(() => CsvRecordWriter.Create<Station>());
+		Assert.Equal(
+			"Creating the record writer of CsvHelper.Tests.Station nests records more than 64 deep: Station -> Track -> Station repeats without end. " +
+			"A hand-written record writer creates a nested record writer that leads back to its own type.", w.Message);
+
+		// The types being created were let go on the way out, so other mappers on this thread still nest.
+		using (var reader = CsvReader.FromText("Name,Home Street,Home City,Lat,Lon\nAnna,Main St 1,Springfield,1.5,-2\n"))
+		{
+			Assert.Equal("Springfield", Assert.Single(reader.GetRecords<Customer>()).Home.City);
+		}
+	}
+
+	[Fact]
+	public void HandWrittenMappersCanNestTheirOwnType()
+	{
+		using var reader = CsvReader.FromText("Name,Manager Name\nAnna,Bob\n");
+		var employee = Assert.Single(reader.GetRecords<Employee>());
+
+		Assert.Equal("Anna", employee.Name);
+		Assert.Equal("Bob", employee.Manager?.Name);
+		Assert.Null(employee.Manager?.Manager);
 	}
 
 	[Fact]

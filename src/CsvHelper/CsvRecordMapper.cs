@@ -285,7 +285,7 @@ public abstract class CsvRecordMapper<T>
 	/// <exception cref="ArgumentNullException"><paramref name="prefix"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">
 	/// <typeparamref name="TNested"/> has no mapper, or its mapper does not support column prefixes and the prefix is
-	/// not empty.
+	/// not empty, or the nested mappers lead back to their own type without end.
 	/// </exception>
 	protected CsvRecordMapper<TNested> NestedMapper<TNested>(CsvReader reader, string prefix)
 	{
@@ -421,7 +421,10 @@ public static class CsvRecordMapper
 	/// <param name="reader">The reader whose header names the columns.</param>
 	/// <returns>A mapper that reads records of <paramref name="reader"/>, and of any reader with the same columns.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="reader"/> is <see langword="null"/>.</exception>
-	/// <exception cref="InvalidOperationException"><typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type, or its nested mappers lead back to their
+	/// own type without end (records nest at most 64 deep).
+	/// </exception>
 	/// <exception cref="KeyNotFoundException">
 	/// The header lacks a column that <typeparamref name="T"/> requires, or the input has no header and a required
 	/// member has no column index.
@@ -440,7 +443,8 @@ public static class CsvRecordMapper
 	/// <exception cref="ArgumentNullException"><paramref name="reader"/> or <paramref name="columnPrefix"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">
 	/// <typeparamref name="T"/> has no mapper, or its mapper does not support column prefixes and
-	/// <paramref name="columnPrefix"/> is not empty.
+	/// <paramref name="columnPrefix"/> is not empty, or its nested mappers lead back to their own type without end
+	/// (records nest at most 64 deep).
 	/// </exception>
 	/// <exception cref="KeyNotFoundException">
 	/// The header lacks a column that <typeparamref name="T"/> requires, or the input has no header and a required
@@ -451,8 +455,16 @@ public static class CsvRecordMapper
 		ArgumentNullException.ThrowIfNull(reader);
 		ArgumentNullException.ThrowIfNull(columnPrefix);
 		var registration = Factory<T>.Current ?? Load<T>();
-
-		return registration.Create(reader, columnPrefix);
+		// A hand-written mapper can create a nested mapper that leads back to its own type, which the generator cannot see.
+		RecordNesting.Enter(typeof(T), "mapper");
+		try
+		{
+			return registration.Create(reader, columnPrefix);
+		}
+		finally
+		{
+			RecordNesting.Exit();
+		}
 	}
 
 	/// <summary>
@@ -499,7 +511,10 @@ public static class CsvRecordMapper
 	/// </returns>
 	/// <exception cref="ArgumentNullException"><paramref name="reader"/> or <paramref name="members"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException"><paramref name="members"/> names a member that the mapper does not read.</exception>
-	/// <exception cref="InvalidOperationException"><typeparamref name="T"/> has no mapper.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// <typeparamref name="T"/> has no mapper, or its nested mappers lead back to their own type without end (records
+	/// nest at most 64 deep).
+	/// </exception>
 	/// <exception cref="NotSupportedException"><typeparamref name="T"/> has no projections.</exception>
 	/// <exception cref="KeyNotFoundException">
 	/// The header lacks a column that a selected member requires, or the input has no header and a selected required
@@ -533,7 +548,15 @@ public static class CsvRecordMapper
 			}
 		}
 
-		return count == selected.Length ? registration.Create(reader, "") : projection(reader, "", selected);
+		RecordNesting.Enter(typeof(T), "mapper");
+		try
+		{
+			return count == selected.Length ? registration.Create(reader, "") : projection(reader, "", selected);
+		}
+		finally
+		{
+			RecordNesting.Exit();
+		}
 	}
 
 	/// <summary>

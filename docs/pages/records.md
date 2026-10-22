@@ -939,6 +939,8 @@ public partial class Shipment
   [Reading values](#reading-values) don't apply to it ([CSVH010](#compile-time-diagnostics)). It is always set: a
   nested record cannot be optional yet.
 - A type cannot contain itself, directly or through other nested records ([CSVH004](#compile-time-diagnostics)).
+  The generator cannot see what a [hand-written mapper](#hand-written-mappers) creates, so a cycle through one throws
+  `InvalidOperationException` when the mapper is created instead: records nest at most 64 deep.
 - With a `[CsvConverter]`, the member reads its own column with the converter instead.
 
 ## Collections
@@ -1086,7 +1088,9 @@ public sealed class TemperatureMapper : CsvRecordMapper<Temperature>
 - The constructor runs once per reader and finds the columns. `Column` takes an index (used when it is not negative)
   and one or more names, which get the column prefix in front. It returns -1 for a missing column, and
   `ThrowIfColumnsMissing` then throws one `KeyNotFoundException` that names every missing required column.
-  `NestedMapper<TNested>(reader, prefix)` creates the mapper of a nested record.
+  `NestedMapper<TNested>(reader, prefix)` creates the mapper of a nested record. It can be the mapper's own type, as
+  long as something ends the nesting (such as creating it only when `ColumnPrefix` is empty); mappers that lead back
+  to their own type without end throw `InvalidOperationException` once records nest 64 deep.
 - `Read` runs for every record. Read the fields with the reader's getters and the indexes the constructor found.
 - A mapper must not change after its constructor has run: the threads of `ParallelEnumerate<T>` share one.
 - When `Read` throws, the reader asks `FindFailingMember(reader, out fieldIndex)` which member failed, for the
@@ -1257,7 +1261,7 @@ several threads, in the columns of the first record too.
 |---|---|
 | `KeyNotFoundException` | The header lacks a required column (all of them are named), or the input has no header and a member has no `Index`. Thrown by `GetRecords<T>`, `ParallelEnumerate<T>`, the first `GetRecord<T>`, or the start of a `GetRecordsAsync<T>` enumeration. |
 | `CsvFormatException` | A record cannot be read: a field does not parse as the type of its member, a value fails its [check](#checking-values-csvvalidate), or a converter, constructor or setter throws. Thrown while enumerating, for that record; the cause is its `InnerException`. Also a malformed record, as for any [read](reading.html#errors). |
-| `InvalidOperationException` | The type has no mapper: it is not `[CsvRecord]`, or the project does not run the source generator. Or a nested record with a `Prefix` has a hand-written mapper that does not take one, or a dictionary member has no header for its keys. When writing: the type has no record writer, or its records [cannot be written](#types-that-cannot-be-written). |
+| `InvalidOperationException` | The type has no mapper: it is not `[CsvRecord]`, or the project does not run the source generator. Or a nested record with a `Prefix` has a hand-written mapper that does not take one, or a dictionary member has no header for its keys, or hand-written mappers nest records that lead back to their own type without end. When writing: the type has no record writer, or its records [cannot be written](#types-that-cannot-be-written), or its nested record writers lead back to their own type without end. |
 | `CultureNotFoundException` | A `[CsvCulture]` names a culture that does not exist, or the app runs in globalization invariant mode. Thrown where `KeyNotFoundException` is. |
 
 ```csharp
