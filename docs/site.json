@@ -92,6 +92,36 @@
 				"link": "performance"
 			},
 			{
+				"icon": "feather",
+				"title": "Allocation free",
+				"text": "Fields are spans into the reader's buffer and strings are created only when you ask for one, so reading a file field by field allocates a few kilobytes however large it is. The writer allocates a few hundred bytes.",
+				"link": "reading#spans-and-raw-text"
+			},
+			{
+				"icon": "arrows-split-up-and-left",
+				"title": "Every core",
+				"text": "ParallelEnumerate maps records on several threads and returns them in input order. ParallelWriteRecords formats records on every core and writes exactly what WriteRecords would.",
+				"link": "writing#writing-from-several-threads"
+			},
+			{
+				"icon": "wand-magic-sparkles",
+				"title": "Source-generated records",
+				"text": "A source generator in the package writes the code that reads and writes [CsvRecord] types at compile time: no reflection, as fast as hand-written code, and mapping mistakes are compile errors.",
+				"link": "records"
+			},
+			{
+				"icon": "microchip",
+				"title": "Native AOT and trimming",
+				"text": "On .NET 10 both packages are marked AOT compatible and trimmable, and the analyzers check them on every build. Only C#'s dynamic and LINQ queries need code generated at run time.",
+				"link": "target-frameworks#trimming-and-native-aot"
+			},
+			{
+				"icon": "hourglass-half",
+				"title": "Async throughout",
+				"text": "ReadAsync, await foreach, GetRecordsAsync, and WriteRecordsAsync for IAsyncEnumerable. Reads wait only when the buffer needs refilling and otherwise complete without allocating.",
+				"link": "reading#reading-asynchronously"
+			},
+			{
 				"icon": "shield-halved",
 				"title": "Strict RFC 4180 output",
 				"text": "By default: CRLF, minimal quoting, doubled quotes and consistent field counts, with numbers formatted straight into a UTF-8 buffer.",
@@ -110,16 +140,16 @@
 				"link": "messy-files"
 			},
 			{
-				"icon": "wand-magic-sparkles",
-				"title": "Source-generated records",
-				"text": "[CsvRecord] types are read and written by code generated at compile time: no reflection, safe for trimming and native AOT, as fast as hand-written code.",
-				"link": "records"
-			},
-			{
 				"icon": "magnifying-glass",
 				"title": "LINQ",
 				"text": "CsvHelper.Linq queries CSV with any LINQ operator, reads only the columns and rows a query uses, and joins with Entity Framework Core by sending it only the keys it needs.",
 				"link": "linq"
+			},
+			{
+				"icon": "shapes",
+				"title": "Fast dynamic records",
+				"text": "No record type? Dynamic records hold their fields' bytes rather than a dictionary of strings, and bind each member to its column once: 16 to 22x faster than ExpandoObject.",
+				"link": "records#dynamic-records"
 			},
 			{
 				"icon": "sliders",
@@ -128,10 +158,28 @@
 				"link": "records"
 			},
 			{
+				"icon": "calculator",
+				"title": "Fast, exact numbers",
+				"text": "Floats parse with a port of fast_float and format with a port of Dragonbox: bit-identical to .NET's own results, checked on all 2^32 floats, and 3 to 4.5x faster.",
+				"link": "performance"
+			},
+			{
+				"icon": "user-shield",
+				"title": "Safe with untrusted files",
+				"text": "Escapes spreadsheet formulas such as =1+2, caps record size so an unclosed quote cannot fill memory, and can keep field values out of exception messages.",
+				"link": "writing#spreadsheet-formulas"
+			},
+			{
 				"icon": "layer-group",
 				"title": "Every .NET",
 				"text": ".NET 10 with SIMD, plus .NET Standard 2.0 and 2.1 and .NET Framework 4.7, which read and write exactly the same CSV.",
 				"link": "target-frameworks"
+			},
+			{
+				"icon": "bug-slash",
+				"title": "Fuzz tested",
+				"text": "The reader is fuzzed against an independent reference parser at every vector width, from every input source and with tiny buffers. Tests run on .NET 10, .NET 8 and .NET Framework 4.8.",
+				"link": "performance"
 			},
 			{
 				"icon": "gauge-high",

@@ -412,6 +412,18 @@ build reads and writes exactly the same CSV: the tests run on .NET 10, on .NET 8
   Framework 4.8 x64 (23 ms on .NET 10). Scanning alone ran at 1.5 GB/s (7.2 GB/s on .NET 10), `ParallelEnumerate` at
   1.2 GB/s.
 
+### Trimming and native AOT
+
+The `net10.0` builds of CsvHelper and CsvHelper.Linq are marked `IsAotCompatible` and `IsTrimmable`, so the trimming
+and AOT analyzers check them on every build. Reading, writing and `[CsvRecord]` types work in trimmed and native AOT
+applications: the generated mappers are registered by a module initializer, not found with reflection. Two things need
+code generated at run time:
+
+- C#'s `dynamic`, which needs the runtime binder (`Microsoft.CSharp`); `GetRecords<CsvDynamicRecord>()` reads the same
+  records without it ([Dynamic records](https://joshclose.github.io/CsvHelper/records.html#dynamic-records)).
+- The queries of CsvHelper.Linq (`CsvQueryable`, `CsvQuery<T>`, `CsvTable<T>`), which carry `[RequiresDynamicCode]` and
+  `[RequiresUnreferencedCode]` so applications get warnings where they use them. `WriteCsv` and `AppendCsv` are safe.
+
 ## How it is fast
 
 1. **UTF-8 throughout.** Files are UTF-8, so the reader scans bytes, not chars: no transcoding pass, half the
