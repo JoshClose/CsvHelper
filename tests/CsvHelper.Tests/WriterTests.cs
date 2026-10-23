@@ -351,6 +351,58 @@ public class WriterTests
 		Assert.Equal("id,name\r\n1,\"Zoë, \"\"the\"\" first\"\r\n", sw.ToString());
 	}
 
+	/// <summary>
+	/// A <see cref="TextWriter"/> gets the text a stream gets when the output decoded for it grows from flush to flush:
+	/// a few bytes first, then multibyte text and a field larger than the buffer.
+	/// </summary>
+	/// <returns>A task that completes when the test has run.</returns>
+	[Fact]
+	public async Task TextWriterTargetGrowingFlushes()
+	{
+		var big = new string('é', 100_000);
+		var records = new List<string[]>();
+		for (var i = 0; i < 5_000; i++)
+		{
+			records.Add([i.ToString(CultureInfo.InvariantCulture), i % 1000 == 0 ? big : "日本" + i]);
+		}
+
+		var options = new CsvWriterOptions { BufferSize = 1024 };
+		var expected = Write(w =>
+		{
+			w.WriteRecord("first", "x");
+			w.Flush();
+			foreach (var record in records)
+			{
+				w.WriteRecord(record);
+			}
+		}, options);
+
+		var sw = new StringWriter();
+		using (var writer = CsvWriter.Create(sw, options, leaveOpen: true))
+		{
+			writer.WriteRecord("first", "x");
+			writer.Flush();
+			foreach (var record in records)
+			{
+				writer.WriteRecord(record);
+			}
+		}
+
+		var asyncSw = new StringWriter();
+		await using (var writer = CsvWriter.Create(asyncSw, options, leaveOpen: true))
+		{
+			await writer.WriteRecordAsync(["first", "x"]);
+			await writer.FlushAsync();
+			foreach (var record in records)
+			{
+				await writer.WriteRecordAsync(record);
+			}
+		}
+
+		Assert.Equal(expected, sw.ToString());
+		Assert.Equal(expected, asyncSw.ToString());
+	}
+
 	[Fact]
 	public void ByteOrderMark()
 	{

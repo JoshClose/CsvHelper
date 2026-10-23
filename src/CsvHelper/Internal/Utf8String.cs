@@ -1,4 +1,7 @@
 using System;
+#if NET
+using System.Buffers;
+#endif
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 #if NET
@@ -141,6 +144,70 @@ internal static class Utf8String
 		}
 
 		return seen.ExtractMostSignificantBits() == 0 ? s : Encoding.UTF8.GetString(utf8);
+	}
+
+	/// <summary>
+	/// Decodes <paramref name="utf8"/> into <paramref name="destination"/>. ASCII of 4 to 32 bytes is widened with two
+	/// overlapping loads and stores, other ASCII by <see cref="Ascii.ToUtf16"/>; a value with any non-ASCII byte goes to
+	/// <see cref="Encoding.UTF8"/>, which replaces invalid sequences with U+FFFD.
+	/// </summary>
+	/// <param name="utf8">The UTF-8 bytes.</param>
+	/// <param name="destination">
+	/// The chars, with room for at least one per byte (UTF-8 never decodes to more chars than it has bytes).
+	/// </param>
+	/// <returns>The number of chars written.</returns>
+	public static int GetChars(ReadOnlySpan<byte> utf8, Span<char> destination)
+	{
+		var len = utf8.Length;
+		if ((uint)(len - 4) <= 28u && destination.Length >= len)
+		{
+			ref var src = ref MemoryMarshal.GetReference(utf8);
+			ref var dst = ref Unsafe.As<char, ushort>(ref MemoryMarshal.GetReference(destination));
+			if (len >= 16)
+			{
+				var a = Vector128.LoadUnsafe(ref src);
+				var b = Vector128.LoadUnsafe(ref src, (nuint)(len - 16));
+				if ((a | b).ExtractMostSignificantBits() == 0)
+				{
+					(var a0, var a1) = Vector128.Widen(a);
+					(var b0, var b1) = Vector128.Widen(b);
+					a0.StoreUnsafe(ref dst);
+					a1.StoreUnsafe(ref dst, 8);
+					b0.StoreUnsafe(ref dst, (nuint)(len - 16));
+					b1.StoreUnsafe(ref dst, (nuint)(len - 8));
+
+					return len;
+				}
+			}
+			else if (len >= 8)
+			{
+				var a = Unsafe.ReadUnaligned<ulong>(ref src);
+				var b = Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref src, len - 8));
+				if (((a | b) & HighBits) == 0)
+				{
+					Vector128.WidenLower(Vector128.CreateScalarUnsafe(a).AsByte()).StoreUnsafe(ref dst);
+					Vector128.WidenLower(Vector128.CreateScalarUnsafe(b).AsByte()).StoreUnsafe(ref dst, (nuint)(len - 8));
+
+					return len;
+				}
+			}
+			else
+			{
+				var a = Unsafe.ReadUnaligned<uint>(ref src);
+				var b = Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref src, len - 4));
+				if (((a | b) & 0x8080_8080u) == 0)
+				{
+					Unsafe.WriteUnaligned(ref Unsafe.As<ushort, byte>(ref dst), Widen4(a));
+					Unsafe.WriteUnaligned(ref Unsafe.As<ushort, byte>(ref Unsafe.Add(ref dst, len - 4)), Widen4(b));
+
+					return len;
+				}
+			}
+		}
+
+		return Ascii.ToUtf16(utf8, destination, out var written) == OperationStatus.Done
+			? written
+			: Encoding.UTF8.GetChars(utf8, destination);
 	}
 #else
 	/// <summary>8 bytes or more without SIMD: checks the first 8 bytes before allocating, then widens 8 at a time.</summary>

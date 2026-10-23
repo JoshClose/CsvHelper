@@ -319,6 +319,112 @@ public class ReaderTests
 		Assert.Throws<ArgumentNullException>(() => reader.Parse<int>(0, (Func<string, IFormatProvider, int>)null!));
 	}
 
+	/// <summary>
+	/// The default boolean texts: true/false, yes/no, y/n, t/f and 1/0 in any ASCII case, with spaces and tabs around
+	/// them ignored. Anything else, including near misses of "true" and "false", is not a boolean.
+	/// </summary>
+	/// <param name="text">The field.</param>
+	/// <param name="expected">The value, or <see langword="null"/> when the field is not a boolean.</param>
+	[Theory]
+	[InlineData("true", true)]
+	[InlineData("TRUE", true)]
+	[InlineData("tRuE", true)]
+	[InlineData(" true\t", true)]
+	[InlineData("yes", true)]
+	[InlineData("Y", true)]
+	[InlineData("t", true)]
+	[InlineData("1", true)]
+	[InlineData("false", false)]
+	[InlineData("FALSE", false)]
+	[InlineData("fAlSe", false)]
+	[InlineData(" false ", false)]
+	[InlineData("No", false)]
+	[InlineData("n", false)]
+	[InlineData("F", false)]
+	[InlineData("0", false)]
+	[InlineData("tru", null)]
+	[InlineData("truee", null)]
+	[InlineData("tr e", null)]
+	[InlineData("fals", null)]
+	[InlineData("fal5e", null)]
+	[InlineData("falsee", null)]
+	[InlineData("trué", null)]
+	[InlineData("on", null)]
+	[InlineData("", null)]
+	public void DefaultBooleanTexts(string text, bool? expected)
+	{
+		using var reader = CsvReader.FromText("a," + text + "\n", NoHeader);
+		Assert.True(reader.Read());
+		if (expected is { } value)
+		{
+			Assert.Equal(value, reader.GetBoolean(1));
+		}
+		else
+		{
+			Assert.Throws<FormatException>(() => reader.GetBoolean(1));
+		}
+	}
+
+#if NET10_0_OR_GREATER
+	[Fact]
+	public void ParsersOfCharsGetTheWholeField()
+	{
+		// Lengths around the sizes of the reader's char buffer and past its limit (1024 bytes), in an order that grows
+		// it, reuses it for shorter fields and bypasses it; ASCII and not, valid UTF-8 and not.
+		var lengths = Enumerable.Range(1, 40).Concat([63, 64, 65, 7, 127, 128, 129, 1023, 1024, 1025, 3000, 5, 1000, 2]);
+		var fields = new List<byte[]>();
+		foreach (var len in lengths)
+		{
+			var ascii = Encoding.ASCII.GetBytes(string.Concat(Enumerable.Range(0, len).Select(i => (char)('a' + i % 26))));
+			fields.Add(ascii);
+			fields.Add([.. "é"u8, .. ascii.AsSpan(1)]);
+			fields.Add([.. ascii.AsSpan(0, len - 1), 0xFF]);
+		}
+
+		var csv = new List<byte>();
+		foreach (var field in fields)
+		{
+			csv.AddRange("x,"u8.ToArray());
+			csv.AddRange(field);
+			csv.Add((byte)'\n');
+		}
+
+		using var reader = CsvReader.Create(csv.ToArray(), NoHeader);
+		foreach (var field in fields)
+		{
+			Assert.True(reader.Read());
+			var expected = Encoding.UTF8.GetString(field);
+			Assert.Equal(expected, reader.Parse<Echo>(1).Text);
+			Assert.True(reader.TryParse<Echo>(1, out var echo));
+			Assert.Equal(expected, echo.Text);
+		}
+
+		Assert.False(reader.Read());
+	}
+
+	/// <summary>A type parsed from chars that keeps them, to show the chars its parser is given.</summary>
+	private readonly record struct Echo(string Text) : ISpanParsable<Echo>
+	{
+		public static Echo Parse(string s, IFormatProvider? provider) => new(s);
+
+		public static Echo Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => new(s.ToString());
+
+		public static bool TryParse(string? s, IFormatProvider? provider, out Echo result)
+		{
+			result = new Echo(s ?? "");
+
+			return s is not null;
+		}
+
+		public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Echo result)
+		{
+			result = new Echo(s.ToString());
+
+			return true;
+		}
+	}
+
+#endif
 	[Fact]
 	public void CultureAwareNumbers()
 	{

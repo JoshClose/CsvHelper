@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.Buffers.Text;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -13,10 +14,38 @@ internal static class CsvParse
 {
 	private const NumberStyles IntegerStyle = NumberStyles.Integer;
 	private const NumberStyles FloatStyle = NumberStyles.Float | NumberStyles.AllowThousands;
+	private const NumberStyles DecimalStyle = NumberStyles.Number | NumberStyles.AllowExponent;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool IsInvariantDecimal(IFormatProvider provider) =>
 		ReferenceEquals(provider, CultureInfo.InvariantCulture) || NumberFormatInfo.GetInstance(provider).NumberDecimalSeparator == ".";
+
+	/// <summary>
+	/// The decimal separator of <paramref name="provider"/> as the byte <see cref="TryDecimalFast"/> takes, or 0 when
+	/// <c>decimal.Parse</c> might not read the provider's <c>[-]digits[separator digits]</c> that way: a separator other
+	/// than <c>.</c> or <c>,</c> (a space or a sign would be taken for one at the start), a negative sign other than
+	/// <c>-</c>, or a positive sign that starts with the separator (<c>.5</c> would be that sign and 5).
+	/// </summary>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The separator byte, or 0 for none.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static byte DecimalPoint(IFormatProvider provider)
+	{
+		if (ReferenceEquals(provider, CultureInfo.InvariantCulture))
+		{
+			return (byte)'.';
+		}
+
+		var info = NumberFormatInfo.GetInstance(provider);
+		var separator = info.NumberDecimalSeparator;
+		var positive = info.PositiveSign;
+		if (separator is not ("." or ",") || info.NegativeSign != "-" || (positive.Length != 0 && positive[0] == separator[0]))
+		{
+			return 0;
+		}
+
+		return (byte)separator[0];
+	}
 
 	/// <summary>
 	/// The exception for a field that is not a valid <paramref name="type"/>, like <paramref name="e"/> but without the
@@ -204,7 +233,9 @@ internal static class CsvParse
 
 	/// <summary>
 	/// Parses <paramref name="s"/> as a <see cref="decimal"/> in <see cref="NumberStyles.Number"/> style with exponents
-	/// allowed, with the BCL's <c>decimal.Parse</c>, which parses the UTF-8 bytes.
+	/// allowed. Up to 19 ASCII digits with an optional leading <c>-</c> and the provider's decimal separator are parsed
+	/// directly (see <see cref="TryDecimalFast"/>); anything else (more digits, whitespace, signs other than a leading
+	/// <c>-</c>, thousands separators, exponents) goes to the BCL's <c>decimal.Parse</c>, which parses the UTF-8 bytes.
 	/// </summary>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="provider">The format provider.</param>
@@ -213,9 +244,20 @@ internal static class CsvParse
 	/// <exception cref="FormatException"><paramref name="s"/> is not a number.</exception>
 	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <see cref="decimal"/>.</exception>
 	public static decimal Decimal(ReadOnlySpan<byte> s, IFormatProvider provider, bool hide) =>
-		hide
-			? Hide(s, provider, static (x, p) => decimal.Parse(x, NumberStyles.Number | NumberStyles.AllowExponent, p), "Decimal")
-			: decimal.Parse(s, NumberStyles.Number | NumberStyles.AllowExponent, provider);
+		TryDecimalFast(s, DecimalPoint(provider), out var v) ? v : DecimalSlow(s, provider, hide);
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static decimal DecimalSlow(ReadOnlySpan<byte> s, IFormatProvider provider, bool hide)
+	{
+		try
+		{
+			return decimal.Parse(s, DecimalStyle, provider);
+		}
+		catch (Exception e) when (hide && e is FormatException or OverflowException)
+		{
+			throw Hidden(e, "Decimal");
+		}
+	}
 
 	/// <summary>
 	/// Tries to parse <paramref name="s"/> as a <see cref="decimal"/>, as <see cref="Decimal(ReadOnlySpan{byte}, IFormatProvider, bool)"/>
@@ -226,7 +268,7 @@ internal static class CsvParse
 	/// <param name="value">The parsed value, or 0 when <paramref name="s"/> is not a valid <see cref="decimal"/>.</param>
 	/// <returns>Whether <paramref name="s"/> could be parsed.</returns>
 	public static bool TryDecimal(ReadOnlySpan<byte> s, IFormatProvider provider, out decimal value) =>
-		decimal.TryParse(s, NumberStyles.Number | NumberStyles.AllowExponent, provider, out value);
+		TryDecimalFast(s, DecimalPoint(provider), out value) || decimal.TryParse(s, DecimalStyle, provider, out value);
 #else
 	/// <summary>
 	/// Parses <paramref name="s"/> as an <see cref="int"/> in <see cref="NumberStyles.Integer"/> style. Up to 9 ASCII
@@ -386,7 +428,9 @@ internal static class CsvParse
 
 	/// <summary>
 	/// Parses <paramref name="s"/> as a <see cref="decimal"/> in <see cref="NumberStyles.Number"/> style with exponents
-	/// allowed: decoded to a string for the BCL's <c>decimal.Parse</c>.
+	/// allowed. Up to 19 ASCII digits with an optional leading <c>-</c> and the provider's decimal separator are parsed
+	/// directly (see <see cref="TryDecimalFast"/>); anything else (more digits, whitespace, signs other than a leading
+	/// <c>-</c>, thousands separators, exponents) is decoded to a string for the BCL's <c>decimal.Parse</c>.
 	/// </summary>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="provider">The format provider.</param>
@@ -395,9 +439,20 @@ internal static class CsvParse
 	/// <exception cref="FormatException"><paramref name="s"/> is not a number.</exception>
 	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <see cref="decimal"/>.</exception>
 	public static decimal Decimal(ReadOnlySpan<byte> s, IFormatProvider provider, bool hide) =>
-		hide
-			? Hide(s, provider, static (x, p) => decimal.Parse(Text(x), NumberStyles.Number | NumberStyles.AllowExponent, p), "Decimal")
-			: decimal.Parse(Text(s), NumberStyles.Number | NumberStyles.AllowExponent, provider);
+		TryDecimalFast(s, DecimalPoint(provider), out var v) ? v : DecimalSlow(s, provider, hide);
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static decimal DecimalSlow(ReadOnlySpan<byte> s, IFormatProvider provider, bool hide)
+	{
+		try
+		{
+			return decimal.Parse(Text(s), DecimalStyle, provider);
+		}
+		catch (Exception e) when (hide && e is FormatException or OverflowException)
+		{
+			throw Hidden(e, "Decimal");
+		}
+	}
 
 	/// <summary>
 	/// Tries to parse <paramref name="s"/> as a <see cref="decimal"/>, as <see cref="Decimal(ReadOnlySpan{byte}, IFormatProvider, bool)"/>
@@ -408,7 +463,7 @@ internal static class CsvParse
 	/// <param name="value">The parsed value, or 0 when <paramref name="s"/> is not a valid <see cref="decimal"/>.</param>
 	/// <returns>Whether <paramref name="s"/> could be parsed.</returns>
 	public static bool TryDecimal(ReadOnlySpan<byte> s, IFormatProvider provider, out decimal value) =>
-		decimal.TryParse(Text(s), NumberStyles.Number | NumberStyles.AllowExponent, provider, out value);
+		TryDecimalFast(s, DecimalPoint(provider), out value) || decimal.TryParse(Text(s), DecimalStyle, provider, out value);
 #endif
 
 	/// <summary>
@@ -439,6 +494,22 @@ internal static class CsvParse
 	/// <returns>Whether <paramref name="s"/> is one of the accepted values.</returns>
 	public static bool TryBoolean(ReadOnlySpan<byte> s, out bool value)
 	{
+		// "true" and "false" in any case, before the trimming and comparisons of the other values. Setting bit 5 of a byte
+		// lowercases an ASCII letter, and every byte of the two words is a letter: only the words, in any case, match.
+		if (s.Length == 4 && (BinaryPrimitives.ReadUInt32LittleEndian(s) | 0x2020_2020u) == 0x6575_7274u)
+		{
+			value = true;
+
+			return true;
+		}
+
+		if (s.Length == 5 && (BinaryPrimitives.ReadUInt32LittleEndian(s) | 0x2020_2020u) == 0x736C_6166u && (s[4] | 0x20) == 'e')
+		{
+			value = false;
+
+			return true;
+		}
+
 		s = s.Trim(" \t"u8);
 		switch (s.Length)
 		{
@@ -842,6 +913,76 @@ internal static class CsvParse
 			value = negative ? -(long)v : (long)v;
 
 			return true;
+		}
+
+	Fail:
+		value = 0;
+
+		return false;
+	}
+
+	/// <summary>
+	/// Parses a plain decimal number directly, with the result <c>decimal.Parse</c> gives it: an optional leading
+	/// <c>-</c>, then 1 to 19 ASCII digits with at most one <paramref name="point"/> among or after them. Every digit
+	/// goes into the 64-bit integer part and the digits after the point are the scale, so trailing zeros are kept
+	/// (<c>12.50</c> has scale 2), and so is the sign of a zero (<c>-0</c> is negative). Anything else is left to the BCL.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="point">The decimal separator, from <see cref="DecimalPoint"/>; 0 parses nothing.</param>
+	/// <param name="value">The parsed value, or 0 when <paramref name="s"/> is not a plain decimal number.</param>
+	/// <returns>Whether <paramref name="s"/> was parsed.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool TryDecimalFast(ReadOnlySpan<byte> s, byte point, out decimal value)
+	{
+		var len = s.Length;
+		ref var p = ref MemoryMarshal.GetReference(s);
+		var i = 0;
+		var negative = false;
+		if (len != 0 && p == (byte)'-')
+		{
+			negative = true;
+			i = 1;
+		}
+
+		// 19 digits always fit in 64 bits; the point makes 20 bytes.
+		if (point != 0 && (uint)(len - i - 1) < 20u)
+		{
+			var digits = len - i;
+			var scale = 0;
+			var v = 0UL;
+			for (; i < len; i++)
+			{
+				var d = (uint)(Unsafe.Add(ref p, i) - '0');
+				if (d > 9) break;
+				v = v * 10 + d;
+			}
+
+			if (i < len)
+			{
+				// The point, then only digits.
+				if (Unsafe.Add(ref p, i) != point) goto Fail;
+				digits--;
+				scale = len - i - 1;
+				for (i++; i < len; i++)
+				{
+					var d = (uint)(Unsafe.Add(ref p, i) - '0');
+					if (d > 9) goto Fail;
+					v = v * 10 + d;
+				}
+			}
+
+			// Not a point alone, nor 20 digits without a point, which may not fit.
+			if ((uint)(digits - 1) < 19u)
+			{
+#if !NET
+				// .NET Framework gives a zero scale 0 and .NET the scale of its digits ("0.00" has scale 2), and this build
+				// runs on both: zeros are left to the BCL that runs.
+				if (v == 0) goto Fail;
+#endif
+				value = new decimal((int)v, (int)(v >> 32), 0, negative, (byte)scale);
+
+				return true;
+			}
 		}
 
 	Fail:

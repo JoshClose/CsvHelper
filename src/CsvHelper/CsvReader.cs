@@ -55,6 +55,9 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	/// <summary>Whether this machine can set <see cref="compressIndex"/> (for the tests).</summary>
 	internal static bool CompressIndexSupported => defaultCompressIndex;
 
+	// The whitespace table of space and tab, the default WhitespaceCharacters. Readers only read it, so they share it.
+	private static readonly bool[] defaultWhitespace = WhitespaceTable(" \t");
+
 	private readonly CsvReaderOptions options;
 	private readonly IFormatProvider provider;
 	private readonly CsvStringPool? pool;
@@ -152,6 +155,13 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	private byte[] scratch = [];
 	private int scratchPos;
 
+#if NET
+	// The decoded chars of the field being parsed by a parser of chars (FieldChars), for fields of up to
+	// MaxFieldChars bytes
+	private const int MaxFieldChars = 1024;
+	private char[] fieldChars = [];
+#endif
+
 	private bool disposed;
 
 	private enum Step { Rows, NeedData, End }
@@ -187,13 +197,8 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		trim = options.TrimWhitespace ?? fixedWidth;
 		trimInsideQuotes = quotes && options.TrimInsideQuotes;
 		quickUnquote = quotes && !trim && !trimInsideQuotes;
-		whitespace = new bool[256];
-		foreach (var w in options.WhitespaceCharacters)
-		{
-			whitespace[w] = true;
-		}
-
 		customWhitespace = options.WhitespaceCharacters is not (" \t" or "\t ");
+		whitespace = customWhitespace ? WhitespaceTable(options.WhitespaceCharacters) : defaultWhitespace;
 
 		maxRecordSize = options.MaxRecordSize ?? 0;
 		trackLines = options.TrackLineNumbers;
@@ -244,6 +249,20 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		ends = rentIndex ? ArrayPool<int>.Shared.Rent(IndexCapacity + EndsSlack) : [];
 		rowEnds = rentIndex ? ArrayPool<int>.Shared.Rent(IndexCapacity) : [];
 		endsCount = 1;
+	}
+
+	/// <summary>Creates the table of the bytes that trimming removes, indexed by byte value.</summary>
+	/// <param name="characters">The whitespace characters, as <see cref="CsvReaderOptions.WhitespaceCharacters"/> lists them.</param>
+	/// <returns>A table with <see langword="true"/> at each of <paramref name="characters"/>.</returns>
+	private static bool[] WhitespaceTable(string characters)
+	{
+		var table = new bool[256];
+		foreach (var w in characters)
+		{
+			table[w] = true;
+		}
+
+		return table;
 	}
 
 	/// <summary>The options this reader was created with.</summary>
@@ -518,7 +537,6 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	{
 		headerDone = true;
 		headerIndex ??= new Dictionary<string, int>(StringComparer.Ordinal);
-		headerIndexLoose ??= new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 		if (!hasMore) fieldCount = 0;
 
 		return hasMore;
@@ -530,7 +548,6 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		var names = new string[count];
 		var keys = normalizeHeader is null ? names : new string[count];
 		var exact = new Dictionary<string, int>(count, StringComparer.Ordinal);
-		var loose = new Dictionary<string, int>(count, StringComparer.OrdinalIgnoreCase);
 		for (var i = 0; i < count; i++)
 		{
 			var name = MakeString(GetSpan(i), -1);
@@ -538,14 +555,30 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 			var key = HeaderKey(name);
 			keys[i] = key;
 			exact.TryAdd(key, i);
-			loose.TryAdd(key.Trim(), i);
 		}
 
 		headers = names;
 		headerKeys = keys;
 		headerIndex = exact;
-		headerIndexLoose = loose;
+		headerIndexLoose = null;
 		fieldCount = 0;
+	}
+
+	/// <summary>
+	/// The index of the header names trimmed and without case, which a name that has no exact match is looked up in.
+	/// Created on the first such lookup: names usually match exactly, and a reader of a few records would spend more
+	/// on creating it than on reading them.
+	/// </summary>
+	/// <returns>The header names, trimmed, mapped to the first column of each without case.</returns>
+	private Dictionary<string, int> LooseHeaderIndex()
+	{
+		var loose = new Dictionary<string, int>(headerKeys.Length, StringComparer.OrdinalIgnoreCase);
+		for (var i = 0; i < headerKeys.Length; i++)
+		{
+			loose.TryAdd(headerKeys[i].Trim(), i);
+		}
+
+		return headerIndexLoose = loose;
 	}
 
 	/// <summary>A header name as it is matched: changed by <see cref="CsvReaderOptions.NormalizeHeaderName"/>, if set.</summary>

@@ -34,6 +34,46 @@ public class FastPathTests
 		}
 	}
 
+#if NET10_0_OR_GREATER
+	[Fact]
+	public void Utf8GetCharsAllLengths()
+	{
+		for (var len = 0; len <= 70; len++)
+		{
+			var ascii = Encoding.ASCII.GetBytes(new string(Enumerable.Range(0, len).Select(i => (char)('a' + i % 26)).ToArray()));
+			Check(ascii);
+			for (var pos = 0; pos < len; pos++)
+			{
+				// A non-ASCII byte at every position, including the overlapping tail: a 2-byte character, and bytes
+				// that are not valid UTF-8 (a lone lead byte and a byte that never appears).
+				foreach (var b in new byte[] { 0xC3, 0xFF, 0x80 })
+				{
+					var bytes = (byte[])ascii.Clone();
+					bytes[pos] = b;
+					Check(bytes);
+				}
+
+				var wide = Encoding.UTF8.GetBytes(Encoding.ASCII.GetString(ascii, 0, pos) + "é" + Encoding.ASCII.GetString(ascii, pos, len - pos));
+				Check(wide);
+			}
+		}
+
+		static void Check(byte[] utf8)
+		{
+			// Embed in larger buffers so that reads or writes past the spans show up as wrong results.
+			var padded = new byte[utf8.Length + 40];
+			padded.AsSpan().Fill((byte)'Z');
+			utf8.CopyTo(padded, 20);
+			var chars = new char[utf8.Length + 40];
+			chars.AsSpan().Fill('#');
+			var n = Utf8String.GetChars(padded.AsSpan(20, utf8.Length), chars.AsSpan(20, utf8.Length));
+			Assert.Equal(Encoding.UTF8.GetString(utf8), new string(chars, 20, n));
+			Assert.True(chars.AsSpan(0, 20).IndexOfAnyExcept('#') < 0);
+			Assert.True(chars.AsSpan(20 + n).IndexOfAnyExcept('#') < 0);
+		}
+	}
+
+#endif
 	[Fact]
 	public void StringPoolDistinguishesValuesThatDifferInOneByte()
 	{

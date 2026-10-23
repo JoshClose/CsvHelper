@@ -1533,11 +1533,17 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// <summary>Decodes UTF-8 output into <c>chars</c> for a <see cref="TextWriter"/> destination; returns the number of chars.</summary>
 	private int DecodeForTextWriter(byte[] bytes, int count)
 	{
-		// Output is written between fields, so the bytes never end inside a UTF-8 sequence.
-		chars ??= new char[Math.Max(buffer.Length, 1024)];
-		if (chars.Length < count)
+		// Output is written between fields, so the bytes never end inside a UTF-8 sequence, and UTF-8 never has more
+		// chars than bytes. Rented for the output at hand, not the whole buffer: a char[] of the buffer's size is a large
+		// object (64K chars), which a writer of a few records would allocate and clear just to write them.
+		if (chars is null || chars.Length < count)
 		{
-			chars = new char[count];
+			if (chars is not null)
+			{
+				ArrayPool<char>.Shared.Return(chars);
+			}
+
+			chars = ArrayPool<char>.Shared.Rent(count);
 		}
 
 		return Encoding.UTF8.GetChars(bytes, 0, count, chars, 0);
@@ -1648,5 +1654,10 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		if (buffer.Length > 0) ArrayPool<byte>.Shared.Return(buffer);
 		buffer = [];
 		pos = 0;
+		if (chars is not null)
+		{
+			ArrayPool<char>.Shared.Return(chars);
+			chars = null;
+		}
 	}
 }

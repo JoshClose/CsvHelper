@@ -932,7 +932,7 @@ public sealed partial class CsvReader
 		var key = HeaderKey(name);
 		if (headerIndex!.TryGetValue(key, out index)) return true;
 
-		return headerIndexLoose!.TryGetValue(key.Trim(), out index);
+		return (headerIndexLoose ?? LooseHeaderIndex()).TryGetValue(key.Trim(), out index);
 	}
 
 	/// <summary>
@@ -1391,8 +1391,10 @@ public sealed partial class CsvReader
 		if (typeof(T) == typeof(DateTime)) { var v = CsvParse.DateTime(s, provider, hideValues); return Unsafe.As<DateTime, T>(ref v); }
 		if (typeof(T) == typeof(string)) { var v = MakeString(s, column); return Unsafe.As<string, T>(ref v); }
 
+		var chars = FieldChars(s);
+
 		// The BCL parsers put the value in their messages: without values, their exceptions are replaced.
-		return hideValues ? CsvParse.Hide(s, provider, static (x, p) => ParseViaChars<T>(x, p), typeof(T).Name) : ParseViaChars<T>(s, provider);
+		return hideValues ? ParseCharsHidden<T>(chars, provider) : T.Parse(chars, provider);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1407,20 +1409,40 @@ public sealed partial class CsvReader
 		return Unsafe.As<ulong, T>(ref u);
 	}
 
-	private static T ParseViaChars<T>(ReadOnlySpan<byte> s, IFormatProvider provider) where T : ISpanParsable<T>
+	/// <summary>
+	/// Parses <paramref name="chars"/> with <typeparamref name="T"/>'s parser, and replaces its
+	/// <see cref="FormatException"/> or <see cref="OverflowException"/> with one whose message leaves the value out.
+	/// </summary>
+	/// <typeparam name="T">The type parsed.</typeparam>
+	/// <param name="chars">The decoded field.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static T ParseCharsHidden<T>(ReadOnlySpan<char> chars, IFormatProvider provider) where T : ISpanParsable<T>
 	{
-		char[]? rented = null;
-		var chars = s.Length <= 256 ? stackalloc char[256] : (rented = ArrayPool<char>.Shared.Rent(s.Length));
 		try
 		{
-			var n = Encoding.UTF8.GetChars(s, chars);
-
-			return T.Parse(chars.Slice(0, n), provider);
+			return T.Parse(chars, provider);
 		}
-		finally
+		catch (Exception e) when (e is FormatException or OverflowException)
 		{
-			if (rented is not null) ArrayPool<char>.Shared.Return(rented);
+			throw CsvParse.Hidden(e, typeof(T).Name);
 		}
+	}
+
+	/// <summary>
+	/// Decodes a field for a parser of chars. A field of up to <see cref="MaxFieldChars"/> bytes goes into this reader's
+	/// char buffer, valid until the next call (the parser runs before any other field is decoded); a longer one, which
+	/// is rare, into a new string rather than a buffer kept for as long as the reader.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <returns>The chars of the field.</returns>
+	private ReadOnlySpan<char> FieldChars(ReadOnlySpan<byte> s)
+	{
+		if (s.Length > MaxFieldChars) return Utf8ToString(s).AsSpan();
+		if (fieldChars.Length < s.Length) fieldChars = new char[BitOperations.RoundUpToPowerOf2((uint)Math.Max(s.Length, 64))];
+
+		return fieldChars.AsSpan(0, Utf8String.GetChars(s, fieldChars));
 	}
 
 	internal bool TryParseSpan<T>(ReadOnlySpan<byte> s, int column, out T value) where T : ISpanParsable<T>
@@ -1432,18 +1454,8 @@ public sealed partial class CsvReader
 		if (typeof(T) == typeof(decimal)) { var ok = CsvParse.TryDecimal(s, provider, out var v); value = Unsafe.As<decimal, T>(ref v); return ok; }
 		if (typeof(T) == typeof(bool)) { var ok = TryParseBoolean(s, out var v); value = Unsafe.As<bool, T>(ref v); return ok; }
 		if (typeof(T) == typeof(string)) { var v = MakeString(s, column); value = Unsafe.As<string, T>(ref v); return true; }
-		char[]? rented = null;
-		var chars = s.Length <= 256 ? stackalloc char[256] : (rented = ArrayPool<char>.Shared.Rent(s.Length));
-		try
-		{
-			var n = Encoding.UTF8.GetChars(s, chars);
 
-			return T.TryParse(chars.Slice(0, n), provider, out value!);
-		}
-		finally
-		{
-			if (rented is not null) ArrayPool<char>.Shared.Return(rented);
-		}
+		return T.TryParse(FieldChars(s), provider, out value!);
 	}
 #endif
 }
