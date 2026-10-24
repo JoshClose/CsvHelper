@@ -182,7 +182,7 @@ public sealed class TemperatureMapper : CsvRecordMapper<Temperature>
 		ThrowIfColumnsMissing(reader);
 	}
 
-	public override Temperature Read(CsvReader reader) => new(reader.GetString(city), (reader.GetDouble(fahrenheit) - 32) * 5 / 9);
+	public override Temperature Read(CsvReader reader) => new(reader.GetString(city), (reader.Parse<double>(fahrenheit) - 32) * 5 / 9);
 }
 
 /// <summary>A type whose hand-written mapper the generator registers, and which takes a column prefix.</summary>
@@ -237,7 +237,7 @@ internal sealed class CoordinatesMapper : CsvRecordMapper<Coordinates>
 		ThrowIfColumnsMissing(reader);
 	}
 
-	public override Coordinates Read(CsvReader reader) => new(reader.GetDouble(lat), reader.GetDouble(lon));
+	public override Coordinates Read(CsvReader reader) => new(reader.Parse<double>(lat), reader.Parse<double>(lon));
 }
 
 [CsvRecord]

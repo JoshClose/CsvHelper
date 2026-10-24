@@ -6,8 +6,8 @@ description: Add CsvHelper to a project, then read and write your first CSV file
 
 # Getting started
 
-CsvHelper runs on .NET 10 with SIMD, and on .NET Framework 4.7+ and .NET Standard 2.0 and 2.1 (.NET 5 to 9, older
-.NET Core, Mono, Unity) with a portable scanner. Every build reads and writes the same CSV; see
+CsvHelper runs on .NET 8 and later with SIMD, and on .NET Framework 4.7+ and .NET Standard 2.0 and 2.1 (.NET 5 to 7,
+older .NET Core, Mono, Unity) with a portable scanner. Every build reads and writes the same CSV; see
 [Target frameworks](target-frameworks.html) for what differs.
 
 ## Upgrading from CsvHelper 33
@@ -60,7 +60,7 @@ var price = reader.GetFieldIndex("Price");
 while (reader.Read())
 {
     string id = reader.GetString(0);
-    decimal value = reader.GetDecimal(price);
+    decimal value = reader.Parse<decimal>(price);
 }
 ```
 

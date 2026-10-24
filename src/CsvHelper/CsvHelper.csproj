@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- net10.0 is the SIMD build. netstandard2.1, netstandard2.0 and net47 (same code, see Polyfills/) use the
-		     portable 64-bit integer scanner. netstandard2.1 has spans and async streams built in, so it needs no System.Memory
-		     package: .NET 8/9 and Mono use it, and Unity 2021.2+, where that package clashes with the built-in types.
-		     net47 avoids the facade problems of .NET Standard libraries on .NET Framework 4.7/4.7.1. -->
-		<TargetFrameworks>net10.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
+		<!-- net10.0 and net8.0 are the SIMD builds (net8.0 for .NET 8/9: generic math for Parse<T>, and SIMD without the
+		     AVX-512 VBMI2 compress, which needs .NET 10). netstandard2.1, netstandard2.0 and net47 (same code, see
+		     Polyfills/) use the portable 64-bit integer scanner. netstandard2.1 has spans and async streams built in, so it
+		     needs no System.Memory package: .NET Core 3.0 to 7 and Mono use it, and Unity 2021.2+, where that package clashes
+		     with the built-in types. net47 avoids the facade problems of .NET Standard libraries on .NET Framework 4.7/4.7.1. -->
+		<TargetFrameworks>net10.0;net8.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>

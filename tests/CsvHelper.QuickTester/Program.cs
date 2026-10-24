@@ -11,7 +11,7 @@ sb.Append("Id,Name").Append(getNewLine());
 sb.Append("1,one").Append(getNewLine());
 
 using var writer = CsvWriter.Create(new MemoryStream(), new CsvWriterOptions
-{    
+{
 });
 
 using var reader = CsvReader.FromText(sb.ToString(), new CsvReaderOptions 

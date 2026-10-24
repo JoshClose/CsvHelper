@@ -14,8 +14,8 @@ internal static class Diagnostics
 		Category, DiagnosticSeverity.Error, isEnabledByDefault: true);
 
 	/// <summary>
-	/// CSVH002: a member's type cannot be read from a field (no typed getter, enum, <c>Parse</c> method, converter or
-	/// record type). Arguments: the member and its type.
+	/// CSVH002: a member's type cannot be read from a field (not a built-in type of <c>CsvReader.Parse&lt;T&gt;</c>, nor an
+	/// enum, or a type with a <c>Parse</c> method, converter or record type). Arguments: the member and its type.
 	/// </summary>
 	public static readonly DiagnosticDescriptor UnsupportedMemberType = new(
 		"CSVH002", "Unsupported CSV member type",

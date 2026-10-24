@@ -27,8 +27,8 @@ namespace CsvHelper;
 // produces exactly the same index as the SIMD path.
 //
 // The terminators of a block become entries of ends from their trailing zero counts (BitFlattener), or, on the 512-bit
-// scanner with AVX-512 VBMI2, from one compress of their positions per block (CompressFlattener), which is faster at any
-// field density.
+// scanner with AVX-512 VBMI2 (on .NET 10), from one compress of their positions per block (CompressFlattener), which is
+// faster at any field density.
 //
 // In Escape mode the quote mask holds the escape characters instead. The bytes they escape (the byte after
 // an odd run of escapes, and an LF after an escaped CR) are found branch-free and removed from the
@@ -98,9 +98,13 @@ public sealed partial class CsvReader
 		{
 #if NET
 			256 => Scan<TQ, TS, TE, TC, TN, Masks256, BitFlattener>(pos, limit),
+#if NET10_0_OR_GREATER
 			512 => compressIndex
 				? Scan<TQ, TS, TE, TC, TN, Masks512, CompressFlattener>(pos, limit)
 				: Scan<TQ, TS, TE, TC, TN, Masks512, BitFlattener>(pos, limit),
+#else
+			512 => Scan<TQ, TS, TE, TC, TN, Masks512, BitFlattener>(pos, limit),
+#endif
 			128 => Scan<TQ, TS, TE, TC, TN, Masks128, BitFlattener>(pos, limit),
 #endif
 			64 => Scan<TQ, TS, TE, TC, TN, Masks64, BitFlattener>(pos, limit),
@@ -802,7 +806,7 @@ internal struct BitFlattener : IFlattener<BitFlattener>
 	}
 }
 
-#if NET
+#if NET10_0_OR_GREATER
 /// <summary>
 /// Writes the entries with AVX-512 VBMI2: one compress packs the positions of the terminators (0 to 63, with bit 7 set when
 /// the field needs decoding) into the low bytes, and each 16 of them are sign extended to entries.

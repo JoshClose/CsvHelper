@@ -8,9 +8,9 @@ description: Read and write your own classes, structs and records with the [CsvR
 
 Mark a `partial` class, struct or record `[CsvRecord]` and the CsvHelper source generator, which ships in the
 package, writes its mapping code at compile time. The columns are looked up once per reader, then each record is read
-with the same typed getter calls you would write by hand. The same code [writes records](#writing-records), with one
-`WriteField` call per member. There is no reflection, so it works with trimming and native AOT, and it runs as fast as
-hand-written code.
+with the same `GetString` and `Parse<T>` calls you would write by hand. The same code
+[writes records](#writing-records), with one `WriteField` call per member. There is no reflection, so it works with
+trimming and native AOT, and it runs as fast as hand-written code.
 
 ```csharp
 using CsvHelper;
@@ -397,11 +397,11 @@ constructor with `ref` or `out` parameters; the generator reports [CSVH003](#com
 | Type | Read with |
 |---|---|
 | `string` | `GetString`. An empty field is `""`. |
-| `int`, `long`, `double`, `float`, `decimal`, `bool`, `DateTime`, `DateTimeOffset`, `Guid` | The [typed getters](reading.html#typed-getters). |
+| `int`, `long`, `short`, `byte`, `sbyte`, `ushort`, `uint`, `ulong`, `double`, `float`, `decimal`, `bool`, `char`, `DateTime`, `DateTimeOffset`, `TimeSpan`, `Guid`, `BigInteger` | [`Parse<T>`](reading.html#parse-and-tryparse). |
 | Enums | Names matched in UTF-8 ignoring ASCII case; numbers and flag lists (`"Read, Write"`) go through `Enum.TryParse`. |
 | `Uri` | `new Uri(text, UriKind.RelativeOrAbsolute)`, so relative URIs such as `docs/readme.md` read too. A `Uri?` member is `null` for an empty field. |
 | `Nullable<T>` of any of these | An empty field is `null`. |
-| Types with a static `Parse` | `ISpanParsable<T>` on .NET 10 (`DateOnly`, `TimeSpan`, ...); `Parse(string, IFormatProvider)` or `Parse(string)` on the other targets and for your own types. |
+| Types with a static `Parse` | `ISpanParsable<T>` on .NET 8 and later (`DateOnly`, `TimeOnly`, ...); `Parse(string, IFormatProvider)` or `Parse(string)` on the other targets and for your own types. |
 | Any type | A [converter](#converters-csvconverter), on the member or [for the whole assembly](#converters-for-every-member-of-a-type). |
 | Arrays, lists and dictionaries of these | Several columns, as [collections](#collections). |
 | Record types | Their own columns of the same row, as [nested records](#nested-records). |
@@ -436,8 +436,9 @@ public partial class Account
 A value that is neither a name nor a number throws `FormatException` (`'pending' is not a value of Status.`, with the
 full name of the type).
 
-`[CsvEnumName]` gives an enum member other names, such as names with spaces, which are matched like its own name. The
-own name still matches. The other names match whole fields only, not the parts of a list of flags:
+`[CsvEnumName]` gives an enum member other names, such as names with spaces, which are matched like its own name, by
+`[CsvRecord]` members and by [`reader.Parse<T>`](reading.html#enums) alike. The own name still matches. The other
+names match whole fields only, not the parts of a list of flags:
 
 ```csharp
 public enum Stage
@@ -454,7 +455,7 @@ public enum Stage
 ### Your own types
 
 A type with a static `Parse(string, IFormatProvider)` (or `Parse(string)`) method that returns it can be a member. On
-.NET 10, implementing `ISpanParsable<T>` works too.
+.NET 8 and later, implementing `ISpanParsable<T>` works too.
 
 ```csharp
 public readonly record struct Money(decimal Amount, string Currency)
@@ -473,7 +474,7 @@ public partial class Invoice
     public string Number { get; set; } = "";
     public Money Total { get; set; }                 // "12.50 EUR"
     public TimeSpan Duration { get; set; }           // "01:30:00"
-    public DateOnly Due { get; set; }                // "2024-04-01": ISpanParsable<DateOnly> on .NET 10
+    public DateOnly Due { get; set; }                // "2024-04-01": ISpanParsable<DateOnly> on .NET 8+
     [CsvIgnore]
     public Color Color { get; set; }     // a type without Parse: without [CsvIgnore], error CSVH002
 }
@@ -507,10 +508,9 @@ public partial class Shift
 }
 ```
 
-`DateTime` and `DateTimeOffset` members are read with `GetDateTime(index, format)` and
-`GetDateTimeOffset(index, format)`, which parse without creating a string. Other types need a static
-`ParseExact(string, string, IFormatProvider)` method, as `DateOnly`, `TimeOnly` and `TimeSpan` have. A field in
-another format throws `FormatException`.
+`DateTime` and `DateTimeOffset` members are read with `ParseExact<T>(index, format)`, which parses without creating a
+string. Other types need a static `ParseExact(string, string, IFormatProvider)` method, as `DateOnly`, `TimeOnly` and
+`TimeSpan` have. A field in another format throws `FormatException`.
 
 For files that mix formats, such as data merged from several sources, give several: a field may have any of them,
 tried in order, and the record writer writes the first.
@@ -527,8 +527,8 @@ public partial class Entry
 }
 ```
 
-They are read with `GetDateTime(index, formats)` and `GetDateTimeOffset(index, formats)`, or a static
-`ParseExact(string, string[], IFormatProvider)` method for other types.
+They are read with `ParseExact<T>(index, formats)`, or a static `ParseExact(string, string[], IFormatProvider)` method
+for other types.
 
 ### Cultures: [CsvCulture]
 
@@ -694,7 +694,7 @@ whole assembly instead of a `[CsvConverter]` on every member:
 
 public sealed class MoneyConverter : ICsvConverter<Money>
 {
-    public Money Read(CsvReader reader, int index) => Money.FromCents(reader.GetInt64(index));
+    public Money Read(CsvReader reader, int index) => Money.FromCents(reader.Parse<long>(index));
 
     public void Write(CsvWriter writer, Money value) => writer.WriteField(value.Cents);
 }
@@ -1081,7 +1081,7 @@ public sealed class TemperatureMapper : CsvRecordMapper<Temperature>
     }
 
     public override Temperature Read(CsvReader reader) =>
-        new(reader.GetString(city), (reader.GetDouble(fahrenheit) - 32) * 5 / 9);
+        new(reader.GetString(city), (reader.Parse<double>(fahrenheit) - 32) * 5 / 9);
 }
 ```
 
@@ -1182,7 +1182,7 @@ using var reader = CsvReader.FromFile("people.csv");
 foreach (var person in reader.GetRecords<dynamic>())
 {
     string name = person.Name;                    // "Ann"
-    int age = person.GetInt32("Age");             // 31: values are strings, and the typed getters parse them
+    int age = person.Parse<int>("Age");           // 31: values are strings, and Parse<T> parses them
     string price = person["Unit Price"];          // "9.50": an indexer for names that are not identifiers
 }
 ```
@@ -1193,8 +1193,8 @@ foreach (var person in reader.GetRecords<dynamic>())
   same name, such as `FieldCount`.
 - Values are strings, as in CsvHelper 33 and earlier: `""` for an empty field and for a field the record lacks (unless `MissingField`
   is `Throw`), `null` for one of the reader's `NullValues`. `int age = person.Age;` fails at run time;
-  `GetInt32`, `GetInt64`, `GetDouble`, `GetDecimal`, `GetBoolean` and `GetDateTime` parse a column by name with the
-  reader's `FormatProvider`, `TrueValues` and `FalseValues`.
+  `Parse<T>("Age")` parses a column by name, as the reader's `Parse<T>` does, with the reader's `FormatProvider`,
+  `TrueValues` and `FalseValues`.
 - Without `dynamic`, `GetRecords<CsvDynamicRecord>()` returns the same records. A record is an
   `IReadOnlyDictionary<string, string?>` (each name once, with its first column), with `record[index]`,
   `GetSpan(index)` for the UTF-8 bytes, and `ToDictionary()` for a copy you can change. `reader.Current.ToDictionary()`
@@ -1461,7 +1461,6 @@ generator itself:
                   OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 ```
 
-Members of `ISpanParsable<T>` types other than those in the table above are parsed through `Parse<T>` on .NET 10.
-.NET 8 and 9 projects use the `netstandard2.1` build of CsvHelper, so there such members need a static
-`Parse(string, IFormatProvider)` or `Parse(string)`, as on .NET Framework (see
-[Target frameworks](target-frameworks.html)).
+Members of `ISpanParsable<T>` types other than those in the table above are parsed through `Parse<T>` on .NET 8 and
+later. On .NET Framework and .NET Standard such members need a static `Parse(string, IFormatProvider)` or
+`Parse(string)` (see [Target frameworks](target-frameworks.html)).

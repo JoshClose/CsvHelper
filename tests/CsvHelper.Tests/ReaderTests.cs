@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Net;
+using System.Numerics;
 using System.Text;
 
 namespace CsvHelper.Tests;
@@ -119,9 +121,7 @@ public class ReaderTests
 		Assert.True(reader.Read());
 		Assert.Equal(1, reader.RowNumber);
 		Assert.Equal("Bob", reader.GetString("Name"));
-#if NET10_0_OR_GREATER
 		Assert.Equal(30, reader.Parse<int>("Age"));
-#endif
 		Assert.Equal(30, reader.Parse("Age", int.Parse));
 		Assert.Equal("Paris", reader["city"].ToString());
 		Assert.True(reader.Read());
@@ -286,25 +286,22 @@ public class ReaderTests
 					  "42,-9000000000,1.5e-3,0.25,12.50,yes,2024-03-01T10:20:30.0000000Z,0f8fad5b-d9cb-469f-a165-70867728950e,-17\n";
 		using var reader = CsvReader.Create(Encoding.UTF8.GetBytes(text));
 		Assert.True(reader.Read());
-		Assert.Equal(42, reader.GetInt32(0));
-		Assert.Equal(-9000000000L, reader.GetInt64(1));
-		Assert.Equal(1.5e-3, reader.GetDouble(2));
-		Assert.Equal(0.25f, reader.GetSingle(3));
-		Assert.Equal(12.50m, reader.GetDecimal(4));
-		Assert.True(reader.GetBoolean(5));
-		Assert.Equal(new DateTime(2024, 3, 1, 10, 20, 30, DateTimeKind.Utc), reader.GetDateTime(6).ToUniversalTime());
-		Assert.Equal(Guid.Parse("0f8fad5b-d9cb-469f-a165-70867728950e"), reader.GetGuid(7));
-#if NET10_0_OR_GREATER
+		Assert.Equal(42, reader.Parse<int>(0));
+		Assert.Equal(-9000000000L, reader.Parse<long>(1));
+		Assert.Equal(1.5e-3, reader.Parse<double>(2));
+		Assert.Equal(0.25f, reader.Parse<float>(3));
+		Assert.Equal(12.50m, reader.Parse<decimal>(4));
+		Assert.True(reader.Parse<bool>(5));
+		Assert.Equal(new DateTime(2024, 3, 1, 10, 20, 30, DateTimeKind.Utc), reader.Parse<DateTime>(6).ToUniversalTime());
+		Assert.Equal(Guid.Parse("0f8fad5b-d9cb-469f-a165-70867728950e"), reader.Parse<Guid>(7));
 		Assert.Equal(-17, reader.Parse<int>(8));
 		Assert.Equal(-17L, reader.Parse<long>(8));
 		Assert.Equal((short)-17, reader.Parse<short>(8));
 		Assert.Equal(-17.0, reader.Parse<double>(8));
-		Assert.Equal(TimeSpan.FromHours(1), TimeSpan.Parse("01:00:00"));
 		Assert.True(reader.TryParse<int>(0, out var i) && i == 42);
 		Assert.False(reader.TryParse<int>(2, out _));
 		Assert.Equal(42, reader[0].Parse<int>());
 		Assert.Null(reader[5].ParseOrNull<int>());
-#endif
 		// The parser overloads work on every target.
 		Assert.Equal(-17, reader.Parse(8, int.Parse));
 		Assert.Equal(-17.0, reader.Parse(8, double.Parse));
@@ -357,15 +354,15 @@ public class ReaderTests
 		Assert.True(reader.Read());
 		if (expected is { } value)
 		{
-			Assert.Equal(value, reader.GetBoolean(1));
+			Assert.Equal(value, reader.Parse<bool>(1));
 		}
 		else
 		{
-			Assert.Throws<FormatException>(() => reader.GetBoolean(1));
+			Assert.Throws<FormatException>(() => reader.Parse<bool>(1));
 		}
 	}
 
-#if NET10_0_OR_GREATER
+#if NET
 	[Fact]
 	public void ParsersOfCharsGetTheWholeField()
 	{
@@ -431,8 +428,8 @@ public class ReaderTests
 		var options = new CsvReaderOptions { Separator = ';', FormatProvider = CultureInfo.GetCultureInfo("de-DE"), HasHeader = false };
 		using var reader = CsvReader.Create("1,5;1.234,5\n"u8.ToArray(), options);
 		Assert.True(reader.Read());
-		Assert.Equal(1.5, reader.GetDouble(0));
-		Assert.Equal(1234.5, reader.GetDouble(1));
+		Assert.Equal(1.5, reader.Parse<double>(0));
+		Assert.Equal(1234.5, reader.Parse<double>(1));
 	}
 
 	[Fact]
@@ -495,10 +492,8 @@ public class ReaderTests
 		Assert.Equal("Ann, B", row[" NAME"].ToString());
 		Assert.Equal("7,\"Ann, B\",2.5", Encoding.UTF8.GetString(row.RawRecord.ToArray()));
 		Assert.Equal(["7", "Ann, B", "2.5"], row.ToArray());
-#if NET10_0_OR_GREATER
 		Assert.Equal(2.5, row.Parse<double>(2));
 		Assert.Equal(7, row.Parse<int>(0));
-#endif
 		Assert.Throws<KeyNotFoundException>(() => reader.Current["missing"].ToString());
 
 		Assert.True(reader.Read());
@@ -519,7 +514,6 @@ public class ReaderTests
 		Assert.Equal(0, reader[1].Length);
 		Assert.True(reader[1].IsEmpty);
 		Assert.Equal(2, reader["c"].Length);
-#if NET10_0_OR_GREATER
 		Assert.True(reader[3].TryParse<int>(out var number));
 		Assert.Equal(42, number);
 		Assert.False(reader[2].TryParse<int>(out var bad));
@@ -529,7 +523,6 @@ public class ReaderTests
 		Assert.Equal("Zoë", text);
 		Assert.True(reader[4].TryParse<TimeSpan>(out var span));
 		Assert.Equal(new TimeSpan(1, 30, 0), span);
-#endif
 	}
 
 	[Fact]
@@ -539,21 +532,16 @@ public class ReaderTests
 		using var reader = CsvReader.Create("-17;-9000000000;1.234,5;0,25;12,50;01.03.2024 10:20;01.03.2024 10:20 +02:00\n"u8.ToArray(),
 			new CsvReaderOptions { Separator = ';', HasHeader = false });
 		Assert.True(reader.Read());
-		Assert.Equal(-17, reader.GetInt32(0, german));
-		Assert.Equal(-9000000000L, reader.GetInt64(1, german));
-		Assert.Throws<FormatException>(() => reader.GetDouble(2));
-		Assert.Equal(1234.5, reader.GetDouble(2, german));
-		Assert.Equal(0.25f, reader.GetSingle(3, german));
-		Assert.Equal(12.50m, reader.GetDecimal(4, german));
-		Assert.Equal(new DateTime(2024, 3, 1, 10, 20, 0), reader.GetDateTime(5, german));
-		Assert.Equal(new DateTimeOffset(2024, 3, 1, 10, 20, 0, TimeSpan.FromHours(2)), reader.GetDateTimeOffset(6, german));
-#if NET10_0_OR_GREATER
+		Assert.Equal(-17, reader.Parse<int>(0, german));
+		Assert.Equal(-9000000000L, reader.Parse<long>(1, german));
+		Assert.Throws<FormatException>(() => reader.Parse<double>(2));
 		Assert.Equal(1234.5, reader.Parse<double>(2, german));
+		Assert.Equal(0.25f, reader.Parse<float>(3, german));
 		Assert.Equal(12.50m, reader.Parse<decimal>(4, german));
+		Assert.Equal(new DateTime(2024, 3, 1, 10, 20, 0), reader.Parse<DateTime>(5, german));
+		Assert.Equal(new DateTimeOffset(2024, 3, 1, 10, 20, 0, TimeSpan.FromHours(2)), reader.Parse<DateTimeOffset>(6, german));
 		Assert.Throws<ArgumentNullException>(() => reader.Parse<int>(0, (IFormatProvider)null!));
-#endif
-		Assert.Throws<ArgumentNullException>(() => reader.GetInt32(0, null!));
-		Assert.Throws<ArgumentNullException>(() => reader.GetDecimal(4, null!));
+		Assert.Throws<ArgumentNullException>(() => reader.Parse<decimal>(4, (IFormatProvider)null!));
 	}
 
 	[Fact]
@@ -562,14 +550,190 @@ public class ReaderTests
 		using var reader = CsvReader.Create("20240301;202403011020+0200;2024-03-01;März 2024\n"u8.ToArray(),
 			new CsvReaderOptions { Separator = ';', HasHeader = false });
 		Assert.True(reader.Read());
-		Assert.Equal(new DateTime(2024, 3, 1), reader.GetDateTime(0, "yyyyMMdd"));
-		Assert.Equal(new DateTimeOffset(2024, 3, 1, 10, 20, 0, TimeSpan.FromHours(2)), reader.GetDateTimeOffset(1, "yyyyMMddHHmmzzz"));
-		Assert.Throws<FormatException>(() => reader.GetDateTime(2, "yyyyMMdd"));
-		Assert.Equal(new DateTime(2024, 3, 1), reader.GetDateTime(3, "MMMM yyyy", CultureInfo.GetCultureInfo("de-DE")));
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, "yyyyMMdd"));
+		Assert.Equal(new DateTimeOffset(2024, 3, 1, 10, 20, 0, TimeSpan.FromHours(2)), reader.ParseExact<DateTimeOffset>(1, "yyyyMMddHHmmzzz"));
+		Assert.Throws<FormatException>(() => reader.ParseExact<DateTime>(2, "yyyyMMdd"));
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(3, "MMMM yyyy", CultureInfo.GetCultureInfo("de-DE")));
 		// Without an offset in the field, the local time zone's applies.
-		Assert.Equal(new DateTime(2024, 3, 1), reader.GetDateTimeOffset(0, "yyyyMMdd", CultureInfo.InvariantCulture).DateTime);
-		Assert.Throws<ArgumentNullException>(() => reader.GetDateTime(0, (string)null!));
-		Assert.Throws<ArgumentNullException>(() => reader.GetDateTime(0, "yyyyMMdd", null!));
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTimeOffset>(0, "yyyyMMdd", CultureInfo.InvariantCulture).DateTime);
+		Assert.Throws<ArgumentNullException>(() => reader.ParseExact<DateTime>(0, (string)null!));
+		Assert.Throws<ArgumentNullException>(() => reader.ParseExact<DateTime>(0, "yyyyMMdd", null!));
+	}
+
+	[Fact]
+	public void ParseExactParsesOnlyDates()
+	{
+		using var reader = CsvReader.FromText("20240301,01:30\n", NoHeader);
+		Assert.True(reader.Read());
+
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, ["dd/MM/yyyy", "yyyyMMdd"]));
+		Assert.Throws<NotSupportedException>(() => reader.ParseExact<TimeSpan>(1, "hh\\:mm"));
+		Assert.Throws<NotSupportedException>(() => reader.ParseExact<int>(0, ["yyyyMMdd"]));
+	}
+
+	[Fact]
+	public void ParseCoversTheBuiltInTypesOnEveryTarget()
+	{
+		const string guid = "0f8fad5b-d9cb-469f-a165-70867728950e";
+		using var reader = CsvReader.FromText(
+			$"200,4000000000,18000000000000000000,-3,2024-03-01T10:20:30+02:00,{guid},x,{{{guid}}},2024-03-01T10:20:30.0000000Z,é,192.168.0.1,::1\n", NoHeader);
+		Assert.True(reader.Read());
+
+		Assert.Equal((sbyte)-3, reader.Parse<sbyte>(3));
+		Assert.Equal((ushort)200, reader.Parse<ushort>(0));
+		Assert.Throws<OverflowException>(() => reader.Parse<sbyte>(0));
+		Assert.Throws<OverflowException>(() => reader.Parse<ushort>(3));
+		Assert.True(reader.TryParse<sbyte>(3, out var signed) && signed == -3);
+		Assert.False(reader.TryParse<ushort>(1, out _));
+		Assert.Equal('x', reader.Parse<char>(6));
+		Assert.Equal('é', reader.Parse<char>(9));
+		Assert.Throws<FormatException>(() => reader.Parse<char>(0));
+		Assert.True(reader.TryParse<char>(9, out var accent) && accent == 'é');
+		Assert.False(reader.TryParse<char>(0, out _));
+		Assert.Equal(IPAddress.Parse("192.168.0.1"), reader.Parse<IPAddress>(10));
+		Assert.Equal(IPAddress.IPv6Loopback, reader.Parse<IPAddress>(11));
+		Assert.Throws<FormatException>(() => reader.Parse<IPAddress>(6));
+		Assert.True(reader.TryParse<IPAddress>(11, out var address) && address.Equals(IPAddress.IPv6Loopback));
+		Assert.False(reader.TryParse<IPAddress>(6, out _));
+
+		Assert.Equal((byte)200, reader.Parse<byte>(0));
+		Assert.Equal(4000000000u, reader.Parse<uint>(1));
+		Assert.Equal(18000000000000000000ul, reader.Parse<ulong>(2));
+		Assert.Equal((short)-3, reader.Parse<short>(3));
+		Assert.Throws<OverflowException>(() => reader.Parse<byte>(1));
+		Assert.Equal(new DateTimeOffset(2024, 3, 1, 10, 20, 30, TimeSpan.FromHours(2)), reader.Parse<DateTimeOffset>(4));
+		Assert.Equal("x", reader.Parse<string>(6));
+		Assert.Equal(Guid.Parse(guid), reader.Parse<Guid>(7));
+
+		// TryParse parses as Parse does, and fails rather than throws.
+		Assert.True(reader.TryParse<byte>(0, out var small) && small == 200);
+		Assert.False(reader.TryParse<byte>(1, out _));
+		Assert.True(reader.TryParse<ulong>(2, out var large) && large == 18000000000000000000ul);
+		Assert.True(reader.TryParse<short>(3, out var negative) && negative == -3);
+		Assert.True(reader.TryParse<DateTimeOffset>(4, out var offset) && offset == reader.Parse<DateTimeOffset>(4));
+		Assert.True(reader.TryParse<DateTime>(4, out var local) && local == reader.Parse<DateTime>(4));
+		Assert.True(reader.TryParse<DateTime>(8, out var utc) && utc == reader.Parse<DateTime>(8) && utc.Kind == DateTimeKind.Utc);
+		Assert.True(reader.TryParse<Guid>(5, out var plain) && plain == Guid.Parse(guid));
+		Assert.True(reader.TryParse<Guid>(7, out var braced) && braced == Guid.Parse(guid));
+		Assert.False(reader.TryParse<Guid>(6, out _));
+		Assert.False(reader.TryParse<DateTime>(6, out _));
+		Assert.False(reader.TryParse<DateTimeOffset>(6, out _));
+		Assert.True(reader.TryParse<string>(6, out var text) && text == "x");
+	}
+
+	[Fact]
+	public void ParseOfOtherTypes()
+	{
+		using var reader = CsvReader.FromText("01:30,-123456789012345678901234567890,2024-03-01,-5,docs/readme.md\n", NoHeader);
+		Assert.True(reader.Read());
+
+		// TimeSpan and BigInteger on every target: with their own parsers on .NET, the BCL's parsers of strings elsewhere.
+		var span = new TimeSpan(1, 30, 0);
+		var big = BigInteger.Parse("-123456789012345678901234567890", CultureInfo.InvariantCulture);
+		Assert.Equal(span, reader.Parse<TimeSpan>(0));
+		Assert.Equal(span, reader[0].Parse<TimeSpan>());
+		Assert.True(reader.TryParse<TimeSpan>(0, out var parsedSpan) && parsedSpan == span);
+		Assert.False(reader.TryParse<TimeSpan>(2, out _));
+		Assert.Throws<FormatException>(() => reader.Parse<TimeSpan>(2));
+		Assert.Equal(big, reader.Parse<BigInteger>(1));
+		Assert.Equal(big, reader[1].Parse<BigInteger>());
+		Assert.True(reader.TryParse<BigInteger>(1, out var parsedBig) && parsedBig == big);
+		Assert.False(reader.TryParse<BigInteger>(0, out _));
+		Assert.Throws<FormatException>(() => reader.Parse<BigInteger>(0));
+
+#if NET
+		// .NET 8 and later parse any ISpanParsable<T> with its own parser.
+		Assert.Equal(new DateOnly(2024, 3, 1), reader.Parse<DateOnly>(2));
+		Assert.Equal(Half.Parse("-5", CultureInfo.InvariantCulture), reader.Parse<Half>(3));
+#else
+		// The other builds parse only the built-in types; the others take a parser of strings.
+		Assert.Throws<NotSupportedException>(() => reader.Parse<Uri>(4));
+		Assert.Throws<NotSupportedException>(() => reader.TryParse<Uri>(4, out _));
+		Assert.Throws<NotSupportedException>(() => reader[4].Parse<Uri>());
+		var message = Assert.Throws<NotSupportedException>(() => reader.Parse<Version>(4)).Message;
+		Assert.Contains("Parse<Version> is not supported", message);
+#endif
+		Assert.Equal("docs/readme.md", reader.Parse(4, (s, p) => new Uri(s, UriKind.Relative)).ToString());
+	}
+
+	/// <summary>An enum with other names, one of them not ASCII.</summary>
+	public enum Status
+	{
+		Active,
+		[CsvEnumName("on hold", "über")]
+		OnHold,
+		Closed,
+	}
+
+	/// <summary>Flags, read from lists and numbers.</summary>
+	[Flags]
+	public enum Access
+	{
+		None = 0,
+		Read = 1,
+		Write = 2,
+	}
+
+	/// <summary>Two names that differ only in case, so that names are matched with case.</summary>
+	public enum Cased
+	{
+		Low,
+		LOW,
+	}
+
+	[Fact]
+	public void ParseEnums()
+	{
+		// The same calls on every target: extension methods on .NET 8 and later, the reader's own Parse<T> elsewhere.
+		using var reader = CsvReader.FromText(
+			"OnHold,onhold,ON HOLD,über,ÜBER,2,\"Read, Write\",3, Closed ,nope,,LOW,Low\n", NoHeader with { NullValues = ["NULL"] });
+		Assert.True(reader.Read());
+
+		// Names and other names, ignoring ASCII case; a non-ASCII letter must match exactly.
+		Assert.Equal(Status.OnHold, reader.Parse<Status>(0));
+		Assert.Equal(Status.OnHold, reader.Parse<Status>(1));
+		Assert.Equal(Status.OnHold, reader.Parse<Status>(2));
+		Assert.Equal(Status.OnHold, reader.Parse<Status>(3));
+		Assert.False(reader.TryParse<Status>(4, out _));
+
+		// Numbers, lists of flags and surrounding whitespace, as Enum.TryParse reads them.
+		Assert.Equal(Status.Closed, reader.Parse<Status>(5));
+		Assert.Equal(Access.Read | Access.Write, reader.Parse<Access>(6));
+		Assert.Equal(Access.Read | Access.Write, reader.Parse<Access>(7));
+		Assert.Equal(Status.Closed, reader.Parse<Status>(8));
+
+		// Names that differ only in case match with case.
+		Assert.Equal(Cased.LOW, reader.Parse<Cased>(11));
+		Assert.Equal(Cased.Low, reader.Parse<Cased>(12));
+
+		// Fields that are not values.
+		Assert.Equal("'nope' is not a value of CsvHelper.Tests.ReaderTests.Status.", Assert.Throws<FormatException>(() => reader.Parse<Status>(9)).Message);
+		Assert.Throws<FormatException>(() => reader.Parse<Status>(10));
+		Assert.False(reader.TryParse(9, out Status none));
+		Assert.Equal(Status.Active, none);
+		Assert.True(reader.TryParse(0, out Status status) && status == Status.OnHold);
+
+		// Fields and rows.
+		Assert.Equal(Status.OnHold, reader[1].Parse<Status>());
+		Assert.True(reader[2].TryParse<Status>(out var field) && field == Status.OnHold);
+		Assert.False(reader[9].TryParse<Status>(out _));
+		Assert.Equal(Status.Closed, reader[5].ParseOrNull<Status>());
+		Assert.Null(reader[9].ParseOrNull<Status>());
+		Assert.Null(reader[10].ParseOrNull<Status>());
+		using var rows = CsvReader.FromText("x,Closed\n", NoHeader);
+		foreach (var row in rows)
+		{
+			Assert.Equal(Status.Closed, row.Parse<Status>(1));
+		}
+
+		// By header name, and with values hidden.
+		using var named = CsvReader.FromText("Id,Status\n1,on hold\n2,secret\n", new CsvReaderOptions { IncludeValuesInExceptions = false });
+		Assert.True(named.Read());
+		Assert.Equal(Status.OnHold, named.Parse<Status>("Status"));
+		Assert.True(named.Read());
+		var hidden = Assert.Throws<FormatException>(() => named.Parse<Status>("Status")).Message;
+		Assert.Contains("IncludeValuesInExceptions", hidden);
+		Assert.DoesNotContain("secret", hidden);
 	}
 
 	[Fact]
@@ -594,8 +758,8 @@ public class ReaderTests
 		{
 			Assert.True(reader.Read());
 			Assert.Equal(100_000, reader.FieldCount);
-			Assert.Equal(99_999, reader.GetInt32(99_999));
-			Assert.Equal(12_345, reader.GetInt32(12_345));
+			Assert.Equal(99_999, reader.Parse<int>(99_999));
+			Assert.Equal(12_345, reader.Parse<int>(12_345));
 		}
 
 		Assert.False(reader.Read());
@@ -611,7 +775,7 @@ public class ReaderTests
 		var count = 0;
 		while (reader.Read())
 		{
-			sum += reader.GetInt32(0);
+			sum += reader.Parse<int>(0);
 			count++;
 		}
 
@@ -665,11 +829,7 @@ public class ReaderTests
 			var n = 0;
 			await foreach (var row in reader)
 			{
-#if NET10_0_OR_GREATER
 				Assert.Equal(n, row[0].Parse<int>());
-#else
-				Assert.Equal(n, row[0].Parse(int.Parse));
-#endif
 				Assert.Equal("name " + n, row[1].ToString());
 				n++;
 			}

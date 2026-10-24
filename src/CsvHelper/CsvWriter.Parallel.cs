@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
-#if !NET
+#if !NET9_0_OR_GREATER
 using Lock = System.Object;
 #endif
 

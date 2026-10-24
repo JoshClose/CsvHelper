@@ -283,7 +283,7 @@ public class OperatorTests
 		using (var reader = CsvReader.FromText(Data.OrdersCsv))
 		{
 			var rows = reader.Query();
-			var next = rows.Join(rows, x => x.GetInt32("Id"), y => y.GetInt32("Id") - 1, (x, y) => y["Customer"]).ToList();
+			var next = rows.Join(rows, x => x.Parse<int>("Id"), y => y.Parse<int>("Id") - 1, (x, y) => y["Customer"]).ToList();
 			Assert.Equal(orders.Skip(1).Select(o => o.Customer), next);
 		}
 	}

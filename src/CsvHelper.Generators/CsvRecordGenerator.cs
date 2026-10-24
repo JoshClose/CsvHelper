@@ -5,9 +5,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace CsvHelper.Generators;
 
 /// <summary>
-/// Generates the mapper of every [CsvRecord] type (column indexes resolved once per reader, then direct typed
-/// getter calls per record) and its record writer (direct <c>WriteField</c> calls per record), and a module
-/// initializer that registers them and the hand-written mappers that types name with [CsvConverter], so
+/// Generates the mapper of every [CsvRecord] type (column indexes resolved once per reader, then direct
+/// <c>GetString</c> and <c>Parse&lt;T&gt;</c> calls per record) and its record writer (direct <c>WriteField</c> calls
+/// per record), and a module initializer that registers them and the hand-written mappers that types name with [CsvConverter], so
 /// <c>CsvReader.GetRecords&lt;T&gt;()</c> and <c>CsvWriter.WriteRecords&lt;T&gt;()</c> find them without reflection.
 /// </summary>
 [Generator(LanguageNames.CSharp)]

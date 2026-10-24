@@ -14,7 +14,7 @@ namespace CsvHelper;
 /// An <see cref="IDataReader"/> over a <see cref="CsvReader"/>, for APIs that read data readers: <c>DataTable.Load</c>,
 /// <c>SqlBulkCopy.WriteToServer</c> and the like. Every column is a <see cref="string"/> column named after the header
 /// (<c>Column1</c>, <c>Column2</c> and so on without one); the typed getters (<see cref="GetInt32"/> and the others)
-/// parse fields as the reader's getters do.
+/// parse fields as the reader's <see cref="CsvReader.Parse{T}(int)"/> does.
 /// </summary>
 /// <remarks>
 /// A field is <see cref="DBNull"/> (<see cref="IsDBNull"/>) when it is one of the reader's
@@ -165,18 +165,18 @@ public sealed class CsvDataReader : DbDataReader
 	/// <returns>The value of the field.</returns>
 	public override string GetString(int ordinal) => reader.GetString(ordinal);
 
-	/// <summary>Parses the field as a <see cref="bool"/>. See <see cref="CsvReader.GetBoolean(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="bool"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a boolean.</exception>
-	public override bool GetBoolean(int ordinal) => reader.GetBoolean(ordinal);
+	public override bool GetBoolean(int ordinal) => reader.Parse<bool>(ordinal);
 
 	/// <summary>Parses the field as a <see cref="byte"/>, in the reader's format provider.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
 	/// <exception cref="OverflowException">The field is outside the range of <see cref="byte"/>.</exception>
-	public override byte GetByte(int ordinal) => checked((byte)reader.GetInt32(ordinal));
+	public override byte GetByte(int ordinal) => checked((byte)reader.Parse<int>(ordinal));
 
 	/// <summary>Copies the UTF-8 bytes of the field into <paramref name="buffer"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
@@ -231,54 +231,54 @@ public sealed class CsvDataReader : DbDataReader
 		return count;
 	}
 
-	/// <summary>Parses the field as a <see cref="DateTime"/>. See <see cref="CsvReader.GetDateTime(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="DateTime"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a date and time.</exception>
-	public override DateTime GetDateTime(int ordinal) => reader.GetDateTime(ordinal);
+	public override DateTime GetDateTime(int ordinal) => reader.Parse<DateTime>(ordinal);
 
-	/// <summary>Parses the field as a <see cref="decimal"/>. See <see cref="CsvReader.GetDecimal(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="decimal"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
-	public override decimal GetDecimal(int ordinal) => reader.GetDecimal(ordinal);
+	public override decimal GetDecimal(int ordinal) => reader.Parse<decimal>(ordinal);
 
-	/// <summary>Parses the field as a <see cref="double"/>. See <see cref="CsvReader.GetDouble(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="double"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
-	public override double GetDouble(int ordinal) => reader.GetDouble(ordinal);
+	public override double GetDouble(int ordinal) => reader.Parse<double>(ordinal);
 
-	/// <summary>Parses the field as a <see cref="float"/>. See <see cref="CsvReader.GetSingle(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="float"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
-	public override float GetFloat(int ordinal) => reader.GetSingle(ordinal);
+	public override float GetFloat(int ordinal) => reader.Parse<float>(ordinal);
 
-	/// <summary>Parses the field as a <see cref="Guid"/>. See <see cref="CsvReader.GetGuid(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="Guid"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a GUID.</exception>
-	public override Guid GetGuid(int ordinal) => reader.GetGuid(ordinal);
+	public override Guid GetGuid(int ordinal) => reader.Parse<Guid>(ordinal);
 
 	/// <summary>Parses the field as a <see cref="short"/>, in the reader's format provider.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
 	/// <exception cref="OverflowException">The field is outside the range of <see cref="short"/>.</exception>
-	public override short GetInt16(int ordinal) => checked((short)reader.GetInt32(ordinal));
+	public override short GetInt16(int ordinal) => checked((short)reader.Parse<int>(ordinal));
 
-	/// <summary>Parses the field as an <see cref="int"/>. See <see cref="CsvReader.GetInt32(int)"/>.</summary>
+	/// <summary>Parses the field as an <see cref="int"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
-	public override int GetInt32(int ordinal) => reader.GetInt32(ordinal);
+	public override int GetInt32(int ordinal) => reader.Parse<int>(ordinal);
 
-	/// <summary>Parses the field as a <see cref="long"/>. See <see cref="CsvReader.GetInt64(int)"/>.</summary>
+	/// <summary>Parses the field as a <see cref="long"/>. See <see cref="CsvReader.Parse{T}(int)"/>.</summary>
 	/// <param name="ordinal">The 0-based index of the column.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a number.</exception>
-	public override long GetInt64(int ordinal) => reader.GetInt64(ordinal);
+	public override long GetInt64(int ordinal) => reader.Parse<long>(ordinal);
 
 	/// <summary>Returns an enumerator of the records, as <see cref="IDataRecord"/>s.</summary>
 	/// <returns>An enumerator that calls <see cref="Read"/>.</returns>

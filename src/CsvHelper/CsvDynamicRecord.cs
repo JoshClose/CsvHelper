@@ -11,14 +11,14 @@ namespace CsvHelper;
 /// <summary>
 /// A record read without a record type, by <c>GetRecords&lt;dynamic&gt;()</c>: its fields are members named after the
 /// header (<c>record.Name</c>), or <c>Field1</c>, <c>Field2</c> and so on without a header. It is also a read-only
-/// dictionary of the values by name, and has typed getters.
+/// dictionary of the values by name, and parses them with <see cref="Parse{T}(string)"/>.
 /// </summary>
 /// <remarks>
 /// <para>
 /// A record holds the bytes of its fields, not strings: a value becomes a string when it is read, each time it is read,
 /// so the fields you never read cost nothing more. The values are strings (<see langword="null"/> for one of the
-/// reader's <see cref="CsvReaderOptions.NullValues"/>); the typed getters, such as <see cref="GetInt32(string)"/>,
-/// parse them as the reader's getters do.
+/// reader's <see cref="CsvReaderOptions.NullValues"/>); <see cref="Parse{T}(string)"/>, such as
+/// <c>record.Parse&lt;int&gt;("Count")</c>, parses them as the reader's <see cref="CsvReader.Parse{T}(int)"/> does.
 /// </para>
 /// <para>
 /// The records of a reader share its schema, so <c>record.Name</c> is bound once to the column's index, and later reads
@@ -171,59 +171,40 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 		return true;
 	}
 
-	/// <summary>Parses the field of the column called <paramref name="name"/> as an <see cref="int"/>, as <see cref="CsvReader.GetInt32(int)"/> does.</summary>
-	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
-	/// <exception cref="FormatException">The field is not an integer.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="int"/>.</exception>
-	public int GetInt32(string name) => CsvParse.Int32(GetSpan(IndexOrThrow(name)), schema.Provider, schema.HideValues);
-
-	/// <summary>Parses the field of the column called <paramref name="name"/> as a <see cref="long"/>, as <see cref="CsvReader.GetInt64(int)"/> does.</summary>
-	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
-	/// <exception cref="FormatException">The field is not an integer.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="long"/>.</exception>
-	public long GetInt64(string name) => CsvParse.Int64(GetSpan(IndexOrThrow(name)), schema.Provider, schema.HideValues);
-
-	/// <summary>Parses the field of the column called <paramref name="name"/> as a <see cref="double"/>, as <see cref="CsvReader.GetDouble(int)"/> does.</summary>
-	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	public double GetDouble(string name) => CsvParse.Double(GetSpan(IndexOrThrow(name)), schema.Provider, schema.HideValues);
-
-	/// <summary>Parses the field of the column called <paramref name="name"/> as a <see cref="decimal"/>, as <see cref="CsvReader.GetDecimal(int)"/> does.</summary>
-	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="decimal"/>.</exception>
-	public decimal GetDecimal(string name) => CsvParse.Decimal(GetSpan(IndexOrThrow(name)), schema.Provider, schema.HideValues);
-
 	/// <summary>
-	/// Parses the field of the column called <paramref name="name"/> as a <see cref="bool"/>, with the reader's
-	/// <see cref="CsvReaderOptions.TrueValues"/> and <see cref="CsvReaderOptions.FalseValues"/>, as <see cref="CsvReader.GetBoolean(int)"/> does.
+	/// Parses the field of the column called <paramref name="name"/> as <typeparamref name="T"/>, with the reader's format
+	/// provider and its <see cref="CsvReaderOptions.TrueValues"/> and <see cref="CsvReaderOptions.FalseValues"/>, as
+	/// <see cref="CsvReader.Parse{T}(int)"/> does.
 	/// </summary>
+	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
 	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
-	/// <exception cref="FormatException">The field is none of the true and false values.</exception>
-	public bool GetBoolean(string name) => schema.Boolean(GetSpan(IndexOrThrow(name)));
+	/// <exception cref="FormatException">The field is not a valid <typeparamref name="T"/>.</exception>
+	/// <exception cref="OverflowException">The field is outside the range of <typeparamref name="T"/>.</exception>
+	/// <exception cref="NotSupportedException">
+	/// On .NET Framework and .NET Standard, <typeparamref name="T"/> is not one of the built-in types of
+	/// <see cref="CsvReader.Parse{T}(int)"/>.
+	/// </exception>
+	/// <exception cref="IndexOutOfRangeException">The record has no field in that column and missing fields throw.</exception>
+	public T Parse<T>(string name)
+#if NET
+		where T : ISpanParsable<T>
+#endif
+	{
+		var field = GetSpan(IndexOrThrow(name));
+		if (CsvValue.IsBuiltIn<T>())
+		{
+			return CsvValue.Parse<T>(field, schema.Provider, schema.HideValues, schema.Booleans);
+		}
 
-	/// <summary>Parses the field of the column called <paramref name="name"/> as a <see cref="DateTime"/>, as <see cref="CsvReader.GetDateTime(int)"/> does.</summary>
-	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
-	/// <exception cref="FormatException">The field is not a date and time.</exception>
-	public DateTime GetDateTime(string name) => CsvParse.DateTime(GetSpan(IndexOrThrow(name)), schema.Provider, schema.HideValues);
+#if NET
+		return CsvValue.ParseDecoded<T>(field, schema.Provider, schema.HideValues);
+#else
+		throw CsvValue.NotSupported(typeof(T));
+#endif
+	}
 
 	/// <summary>Copies the values into a new dictionary, which you can change, keyed by column name.</summary>
 	/// <returns>The values by name, in column order.</returns>
@@ -318,6 +299,16 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 
 		return index >= 0;
 	}
+
+	/// <summary>Gets the field of the column called <paramref name="name"/> as UTF-8 bytes, for <c>Parse</c> of enums.</summary>
+	/// <param name="name">The name of the column.</param>
+	/// <returns>The value of the field as UTF-8 bytes.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
+	internal ReadOnlySpan<byte> FieldSpan(string name) => GetSpan(IndexOrThrow(name));
+
+	/// <summary>Whether the messages of parsing exceptions leave the value out (<see cref="CsvReaderOptions.IncludeValuesInExceptions"/> is off).</summary>
+	internal bool HideValues => schema.HideValues;
 
 	/// <summary>The value that <c>record.Name</c> gets, for the rules of the binder.</summary>
 	private object? GetMemberValue(int index) => this[index];

@@ -257,6 +257,9 @@ public sealed partial class CsvReader
 	/// <summary>Whether a field value is null for <c>ParseOrNull</c>: empty, or one of <see cref="CsvReaderOptions.NullValues"/>.</summary>
 	internal bool IsNullSpan(ReadOnlySpan<byte> s) => s.IsEmpty || (nullValues is not null && IsNullValue(s));
 
+	/// <summary>Whether the messages of parsing exceptions leave the value out (<see cref="CsvReaderOptions.IncludeValuesInExceptions"/> is off).</summary>
+	internal bool HideValues => hideValues;
+
 	/// <summary>Whether a field value is one of <see cref="CsvReaderOptions.NullValues"/> (exactly).</summary>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private bool IsNullValue(ReadOnlySpan<byte> s)
@@ -272,24 +275,71 @@ public sealed partial class CsvReader
 		return false;
 	}
 
-#if NET
-	/// <summary>
-	/// Parses field <paramref name="index"/> as <typeparamref name="T"/> using the configured format provider. Common
-	/// types (<see cref="int"/>, <see cref="long"/>, <see cref="double"/>, <see cref="float"/>, <see cref="decimal"/>,
-	/// <see cref="bool"/>, <see cref="Guid"/>, <see cref="DateTime"/> and <see cref="string"/>) are parsed as by the
-	/// typed getters such as <see cref="GetInt32(int)"/>.
-	/// </summary>
+	/// <summary>Parses field <paramref name="index"/> as <typeparamref name="T"/> with the configured format provider.</summary>
+	/// <remarks>
+	/// <para>The built-in types are parsed from the UTF-8 bytes of the field:</para>
+	/// <list type="bullet">
+	/// <item><description>
+	/// <see cref="int"/>, <see cref="long"/>, <see cref="short"/>, <see cref="byte"/>, <see cref="sbyte"/>,
+	/// <see cref="ushort"/>, <see cref="uint"/> and <see cref="ulong"/> in <see cref="NumberStyles.Integer"/> style.
+	/// </description></item>
+	/// <item><description>
+	/// <see cref="double"/> and <see cref="float"/> exactly rounded, in <see cref="NumberStyles.Float"/> style with
+	/// thousands separators allowed. A value beyond the range of the type is an infinity, except on .NET Framework when
+	/// the .NET Framework parser parses it (with a format provider whose decimal separator is not ".", for example),
+	/// which throws <see cref="OverflowException"/>.
+	/// </description></item>
+	/// <item><description><see cref="decimal"/> in <see cref="NumberStyles.Number"/> style with exponents allowed.</description></item>
+	/// <item><description>
+	/// <see cref="bool"/>: true/false, yes/no, y/n, t/f or 1/0 (or <see cref="CsvReaderOptions.TrueValues"/> and
+	/// <see cref="CsvReaderOptions.FalseValues"/>), in any case, with surrounding spaces and tabs ignored.
+	/// </description></item>
+	/// <item><description>
+	/// <see cref="DateTime"/>: ISO 8601 or the format provider's formats. A time zone offset or <c>Z</c> in the field
+	/// gives a <see cref="DateTimeKind.Local"/> or <see cref="DateTimeKind.Utc"/> value as
+	/// <see cref="DateTimeStyles.RoundtripKind"/> describes. <see cref="ParseExact{T}(int, string)"/> parses an exact
+	/// format.
+	/// </description></item>
+	/// <item><description>
+	/// <see cref="DateTimeOffset"/>: ISO 8601 or the format provider's formats. A field without an offset gets the local
+	/// time zone's.
+	/// </description></item>
+	/// <item><description><see cref="Guid"/>: any of the formats that <see cref="Guid.Parse(string)"/> accepts.</description></item>
+	/// <item><description><see cref="string"/>: the field as <see cref="GetString(int)"/> gets it.</description></item>
+	/// <item><description>
+	/// Enums: the names of the members and their <see cref="CsvEnumNameAttribute"/> names, ignoring ASCII case unless two
+	/// names of different members differ only in case, then numbers and lists of flags (<c>Read, Write</c>) as
+	/// <c>Enum.TryParse</c> reads them, ignoring case. Enums are not <c>ISpanParsable&lt;T&gt;</c>, so on .NET 8 and later
+	/// <c>Parse&lt;MyEnum&gt;</c> calls the overload of <c>CsvEnumExtensions</c>, an extension method.
+	/// </description></item>
+	/// </list>
+	/// <para>
+	/// On .NET 8 and later, any other type (<c>DateOnly</c>, <see cref="TimeSpan"/>, <see cref="System.Numerics.BigInteger"/>,
+	/// your own types) is parsed with its own <c>ISpanParsable&lt;T&gt;</c> parser, from the field decoded to chars. On .NET
+	/// Framework and .NET Standard, <see cref="TimeSpan"/>, <see cref="System.Numerics.BigInteger"/> (in
+	/// <see cref="NumberStyles.Integer"/> style), <see cref="char"/> and <see cref="System.Net.IPAddress"/> are parsed from
+	/// the field decoded to a string, as .NET parses them, and other types are not supported: parse them with
+	/// <see cref="Parse{T}(int, Func{string, IFormatProvider, T})"/>.
+	/// </para>
+	/// </remarks>
 	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException">The field is not a valid <typeparamref name="T"/>.</exception>
 	/// <exception cref="OverflowException">The field is outside the range of <typeparamref name="T"/>.</exception>
+	/// <exception cref="NotSupportedException">
+	/// On .NET Framework and .NET Standard, <typeparamref name="T"/> is not one of the built-in types.
+	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
 	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
 	/// </exception>
-	public T Parse<T>(int index) where T : ISpanParsable<T> => ParseSpan<T>(GetSpan(index), index);
+	public T Parse<T>(int index)
+#if NET
+		where T : ISpanParsable<T>
+#endif
+		=> ParseSpan<T>(GetSpan(index), index);
 
 	/// <summary>Parses the field with the given header name as <typeparamref name="T"/>. See <see cref="Parse{T}(int)"/>.</summary>
 	/// <typeparam name="T">The type to parse the field as.</typeparam>
@@ -299,11 +349,18 @@ public sealed partial class CsvReader
 	/// <exception cref="KeyNotFoundException">No column has that name.</exception>
 	/// <exception cref="FormatException">The field is not a valid <typeparamref name="T"/>.</exception>
 	/// <exception cref="OverflowException">The field is outside the range of <typeparamref name="T"/>.</exception>
+	/// <exception cref="NotSupportedException">
+	/// On .NET Framework and .NET Standard, <typeparamref name="T"/> is not one of the built-in types.
+	/// </exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// The record has no field in that column and <see cref="CsvReaderOptions.MissingField"/> is
 	/// <see cref="CsvMissingFieldHandling.Throw"/>.
 	/// </exception>
-	public T Parse<T>(string name) where T : ISpanParsable<T> => Parse<T>(GetFieldIndex(name));
+	public T Parse<T>(string name)
+#if NET
+		where T : ISpanParsable<T>
+#endif
+		=> Parse<T>(GetFieldIndex(name));
 
 	/// <summary>
 	/// Parses field <paramref name="index"/> as <typeparamref name="T"/> with <paramref name="provider"/> instead of
@@ -316,12 +373,18 @@ public sealed partial class CsvReader
 	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
 	/// <exception cref="FormatException">The field is not a valid <typeparamref name="T"/>.</exception>
 	/// <exception cref="OverflowException">The field is outside the range of <typeparamref name="T"/>.</exception>
+	/// <exception cref="NotSupportedException">
+	/// On .NET Framework and .NET Standard, <typeparamref name="T"/> is not one of the built-in types.
+	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
 	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
 	/// </exception>
-	public T Parse<T>(int index, IFormatProvider provider) where T : ISpanParsable<T>
+	public T Parse<T>(int index, IFormatProvider provider)
+#if NET
+		where T : ISpanParsable<T>
+#endif
 	{
 		ArgumentNullException.ThrowIfNull(provider);
 
@@ -333,13 +396,119 @@ public sealed partial class CsvReader
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="value">The parsed value, or the default of <typeparamref name="T"/> when parsing fails.</param>
 	/// <returns>Whether the field could be parsed.</returns>
+	/// <exception cref="NotSupportedException">
+	/// On .NET Framework and .NET Standard, <typeparamref name="T"/> is not one of the built-in types.
+	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
 	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
 	/// </exception>
-	public bool TryParse<T>(int index, out T value) where T : ISpanParsable<T> => TryParseSpan(GetSpan(index), index, out value);
+	public bool TryParse<T>(int index, out T value)
+#if NET
+		where T : ISpanParsable<T>
 #endif
+		=> TryParseSpan(GetSpan(index), index, out value);
+
+	/// <summary>
+	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly the
+	/// given format, such as <c>"yyyyMMdd"</c>, with the configured format provider. A time zone offset or <c>Z</c> in the
+	/// field gives a <see cref="DateTimeKind.Local"/> or <see cref="DateTimeKind.Utc"/> <see cref="DateTime"/> as
+	/// <see cref="DateTimeStyles.RoundtripKind"/> describes; a <see cref="DateTimeOffset"/> field without an offset gets
+	/// the local time zone's.
+	/// </summary>
+	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="format">The format of the field, as <see cref="DateTime.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
+	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
+	/// <exception cref="IndexOutOfRangeException">
+	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
+	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// </exception>
+	public T ParseExact<T>(int index, string format)
+	{
+		ArgumentNullException.ThrowIfNull(format);
+
+		return CsvValue.ParseExact<T>(GetSpan(index), format, provider, hideValues);
+	}
+
+	/// <summary>
+	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly the
+	/// given format with <paramref name="provider"/>. See <see cref="ParseExact{T}(int, string)"/>.
+	/// </summary>
+	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="format">The format of the field, as <see cref="DateTime.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
+	/// <param name="provider">The format provider to parse with.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
+	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
+	/// <exception cref="IndexOutOfRangeException">
+	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
+	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// </exception>
+	public T ParseExact<T>(int index, string format, IFormatProvider provider)
+	{
+		ArgumentNullException.ThrowIfNull(format);
+		ArgumentNullException.ThrowIfNull(provider);
+
+		return CsvValue.ParseExact<T>(GetSpan(index), format, provider, hideValues);
+	}
+
+	/// <summary>
+	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly one of
+	/// the given formats, tried in order, such as <c>"yyyy-MM-dd"</c> and <c>"dd/MM/yyyy"</c> for a file that mixes
+	/// them, with the configured format provider. See <see cref="ParseExact{T}(int, string)"/>.
+	/// </summary>
+	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="formats">The formats the field may have, as <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="formats"/> is <see langword="null"/>.</exception>
+	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
+	/// <exception cref="IndexOutOfRangeException">
+	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
+	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// </exception>
+	public T ParseExact<T>(int index, string[] formats)
+	{
+		ArgumentNullException.ThrowIfNull(formats);
+
+		return CsvValue.ParseExact<T>(GetSpan(index), formats, provider, hideValues);
+	}
+
+	/// <summary>
+	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly one of
+	/// the given formats, tried in order, with <paramref name="provider"/>. See <see cref="ParseExact{T}(int, string[])"/>.
+	/// </summary>
+	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="formats">The formats the field may have, as <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
+	/// <param name="provider">The format provider to parse with.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="formats"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
+	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
+	/// <exception cref="IndexOutOfRangeException">
+	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
+	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// </exception>
+	public T ParseExact<T>(int index, string[] formats, IFormatProvider provider)
+	{
+		ArgumentNullException.ThrowIfNull(formats);
+		ArgumentNullException.ThrowIfNull(provider);
+
+		return CsvValue.ParseExact<T>(GetSpan(index), formats, provider, hideValues);
+	}
 
 	/// <summary>
 	/// Parses field <paramref name="index"/> with <paramref name="parser"/>, which gets the field as a string and the
@@ -413,491 +582,6 @@ public sealed partial class CsvReader
 
 		return parser(MakeString(s, column), provider, out value);
 	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as an <see cref="int"/>, in <see cref="System.Globalization.NumberStyles.Integer"/>
-	/// style with the configured format provider.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is not an integer.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="int"/>.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public int GetInt32(int index) => CsvParse.Int32(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as an <see cref="int"/> with <paramref name="provider"/> instead of the
-	/// configured format provider. See <see cref="GetInt32(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not an integer.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="int"/>.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public int GetInt32(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.Int32(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="long"/>, in <see cref="System.Globalization.NumberStyles.Integer"/>
-	/// style with the configured format provider.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is not an integer.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="long"/>.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public long GetInt64(int index) => CsvParse.Int64(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="long"/> with <paramref name="provider"/> instead of the
-	/// configured format provider. See <see cref="GetInt64(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not an integer.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="long"/>.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public long GetInt64(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.Int64(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="double"/> (exactly rounded), in
-	/// <see cref="System.Globalization.NumberStyles.Float"/> style with thousands separators allowed, with the
-	/// configured format provider.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value; a value beyond the range of <see cref="double"/> is an infinity.</returns>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">
-	/// On .NET Framework only, the field is beyond the range of <see cref="double"/> and is parsed by the .NET
-	/// Framework parser (with a format provider whose decimal separator is not ".", for example).
-	/// </exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public double GetDouble(int index) => CsvParse.Double(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="double"/> with <paramref name="provider"/> instead of the
-	/// configured format provider. See <see cref="GetDouble(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value; a value beyond the range of <see cref="double"/> is an infinity.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">
-	/// On .NET Framework only, the field is beyond the range of <see cref="double"/> and is parsed by the .NET
-	/// Framework parser (with a format provider whose decimal separator is not ".", for example).
-	/// </exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public double GetDouble(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.Double(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="float"/> (exactly rounded), in
-	/// <see cref="System.Globalization.NumberStyles.Float"/> style with thousands separators allowed, with the
-	/// configured format provider.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value; a value beyond the range of <see cref="float"/> is an infinity.</returns>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">
-	/// On .NET Framework only, the field is beyond the range of <see cref="float"/> and is parsed by the .NET
-	/// Framework parser (with a format provider whose decimal separator is not ".", for example).
-	/// </exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public float GetSingle(int index) => CsvParse.Single(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="float"/> with <paramref name="provider"/> instead of the
-	/// configured format provider. See <see cref="GetSingle(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value; a value beyond the range of <see cref="float"/> is an infinity.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">
-	/// On .NET Framework only, the field is beyond the range of <see cref="float"/> and is parsed by the .NET
-	/// Framework parser (with a format provider whose decimal separator is not ".", for example).
-	/// </exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public float GetSingle(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.Single(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="decimal"/>, in <see cref="System.Globalization.NumberStyles.Number"/>
-	/// style with exponents allowed, with the configured format provider.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="decimal"/>.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public decimal GetDecimal(int index) => CsvParse.Decimal(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="decimal"/> with <paramref name="provider"/> instead of the
-	/// configured format provider. See <see cref="GetDecimal(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not a number.</exception>
-	/// <exception cref="OverflowException">The field is outside the range of <see cref="decimal"/>.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public decimal GetDecimal(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.Decimal(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="bool"/>: true/false, yes/no, y/n, t/f or 1/0 (or
-	/// <see cref="CsvReaderOptions.TrueValues"/> and <see cref="CsvReaderOptions.FalseValues"/>), in any case, with
-	/// surrounding spaces and tabs ignored.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is none of the accepted values.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public bool GetBoolean(int index) => ParseBoolean(GetSpan(index));
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private bool ParseBoolean(ReadOnlySpan<byte> s) => booleans is null ? CsvParse.Boolean(s, hideValues) : booleans.Parse(s, hideValues);
-
-	private bool TryParseBoolean(ReadOnlySpan<byte> s, out bool value) =>
-		booleans is null ? CsvParse.TryBoolean(s, out value) : booleans.TryParse(s, out value);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> (ISO 8601 or the format provider's formats).
-	/// A time zone offset or <c>Z</c> in the field gives a <see cref="DateTimeKind.Local"/> or
-	/// <see cref="DateTimeKind.Utc"/> value as <see cref="System.Globalization.DateTimeStyles.RoundtripKind"/> describes.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is not a date and time.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTime GetDateTime(int index) => CsvParse.DateTime(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> with <paramref name="provider"/> instead of
-	/// the configured format provider. See <see cref="GetDateTime(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not a date and time.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTime GetDateTime(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.DateTime(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> in exactly the given format, such as
-	/// <c>"yyyyMMdd"</c>, with the configured format provider. A time zone offset or <c>Z</c> in the field gives a
-	/// <see cref="DateTimeKind.Local"/> or <see cref="DateTimeKind.Utc"/> value as
-	/// <see cref="DateTimeStyles.RoundtripKind"/> describes.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="format">The format of the field, as <see cref="DateTime.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTime GetDateTime(int index, string format)
-	{
-		ArgumentNullException.ThrowIfNull(format);
-
-		return CsvParse.DateTimeExact(GetSpan(index), format, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> in exactly the given format with
-	/// <paramref name="provider"/>. See <see cref="GetDateTime(int, string)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="format">The format of the field, as <see cref="DateTime.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTime GetDateTime(int index, string format, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(format);
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.DateTimeExact(GetSpan(index), format, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> in exactly one of the given formats, tried in
-	/// order, such as <c>"yyyy-MM-dd"</c> and <c>"dd/MM/yyyy"</c> for a file that mixes them, with the configured format
-	/// provider. See <see cref="GetDateTime(int, string)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="formats">The formats the field may have, as <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="formats"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTime GetDateTime(int index, string[] formats)
-	{
-		ArgumentNullException.ThrowIfNull(formats);
-
-		return CsvParse.DateTimeExact(GetSpan(index), formats, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> in exactly one of the given formats, tried in
-	/// order, with <paramref name="provider"/>. See <see cref="GetDateTime(int, string[])"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="formats">The formats the field may have, as <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="formats"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTime GetDateTime(int index, string[] formats, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(formats);
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.DateTimeExact(GetSpan(index), formats, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTimeOffset"/> (ISO 8601 or the format provider's
-	/// formats). A field without an offset gets the local time zone's offset.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is not a date and time.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTimeOffset GetDateTimeOffset(int index) => CsvParse.DateTimeOffset(GetSpan(index), provider, hideValues);
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTimeOffset"/> with <paramref name="provider"/>
-	/// instead of the configured format provider. See <see cref="GetDateTimeOffset(int)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field is not a date and time.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTimeOffset GetDateTimeOffset(int index, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.DateTimeOffset(GetSpan(index), provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTimeOffset"/> in exactly the given format, such as
-	/// <c>"yyyyMMddHHmmsszzz"</c>, with the configured format provider. A field without an offset gets the local time
-	/// zone's offset.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="format">The format of the field, as <see cref="DateTimeOffset.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTimeOffset GetDateTimeOffset(int index, string format)
-	{
-		ArgumentNullException.ThrowIfNull(format);
-
-		return CsvParse.DateTimeOffsetExact(GetSpan(index), format, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTimeOffset"/> in exactly the given format with
-	/// <paramref name="provider"/>. See <see cref="GetDateTimeOffset(int, string)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="format">The format of the field, as <see cref="DateTimeOffset.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTimeOffset GetDateTimeOffset(int index, string format, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(format);
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.DateTimeOffsetExact(GetSpan(index), format, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTimeOffset"/> in exactly one of the given formats, tried
-	/// in order, with the configured format provider. See <see cref="GetDateTimeOffset(int, string)"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="formats">The formats the field may have, as <see cref="DateTimeOffset.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="formats"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTimeOffset GetDateTimeOffset(int index, string[] formats)
-	{
-		ArgumentNullException.ThrowIfNull(formats);
-
-		return CsvParse.DateTimeOffsetExact(GetSpan(index), formats, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTimeOffset"/> in exactly one of the given formats, tried
-	/// in order, with <paramref name="provider"/>. See <see cref="GetDateTimeOffset(int, string[])"/>.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <param name="formats">The formats the field may have, as <see cref="DateTimeOffset.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
-	/// <param name="provider">The format provider to parse with.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="ArgumentNullException"><paramref name="formats"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
-	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public DateTimeOffset GetDateTimeOffset(int index, string[] formats, IFormatProvider provider)
-	{
-		ArgumentNullException.ThrowIfNull(formats);
-		ArgumentNullException.ThrowIfNull(provider);
-
-		return CsvParse.DateTimeOffsetExact(GetSpan(index), formats, provider, hideValues);
-	}
-
-	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="Guid"/>, in any of the formats that
-	/// <see cref="Guid.Parse(string)"/> accepts.
-	/// </summary>
-	/// <param name="index">The 0-based index of the field.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException">The field is not a GUID.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
-	/// <exception cref="IndexOutOfRangeException">
-	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
-	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
-	/// </exception>
-	public Guid GetGuid(int index) => CsvParse.Guid(GetSpan(index), hideValues);
 
 	/// <summary>Gets the index of the column with the given header name. See <see cref="TryGetFieldIndex(string, out int)"/>.</summary>
 	/// <param name="name">The header name of the column.</param>
@@ -1371,65 +1055,83 @@ public sealed partial class CsvReader
 
 	internal static string Utf8ToString(ReadOnlySpan<byte> utf8) => Utf8String.Create(utf8);
 
-#if NET
-	internal T ParseSpan<T>(ReadOnlySpan<byte> s, int column) where T : ISpanParsable<T> => ParseSpan<T>(s, column, provider);
-
-	internal T ParseSpan<T>(ReadOnlySpan<byte> s, int column, IFormatProvider provider) where T : ISpanParsable<T>
-	{
-		if (typeof(T) == typeof(int)) { var v = CsvParse.Int32(s, provider, hideValues); return Unsafe.As<int, T>(ref v); }
-		if (typeof(T) == typeof(long)) { var v = CsvParse.Int64(s, provider, hideValues); return Unsafe.As<long, T>(ref v); }
-		if (typeof(T) == typeof(double)) { var v = CsvParse.Double(s, provider, hideValues); return Unsafe.As<double, T>(ref v); }
-		if (typeof(T) == typeof(float)) { var v = CsvParse.Single(s, provider, hideValues); return Unsafe.As<float, T>(ref v); }
-		if (typeof(T) == typeof(decimal)) { var v = CsvParse.Decimal(s, provider, hideValues); return Unsafe.As<decimal, T>(ref v); }
-		if (typeof(T) == typeof(bool)) { var v = ParseBoolean(s); return Unsafe.As<bool, T>(ref v); }
-		if (typeof(T) == typeof(short) || typeof(T) == typeof(byte) || typeof(T) == typeof(uint) || typeof(T) == typeof(ulong))
-		{
-			// The BCL parsers of UTF-8, with the value in their messages unless it is hidden.
-			return hideValues ? CsvParse.Hide(s, provider, static (x, p) => ParseUtf8<T>(x, p), typeof(T).Name) : ParseUtf8<T>(s, provider);
-		}
-		if (typeof(T) == typeof(Guid)) { var v = CsvParse.Guid(s, hideValues); return Unsafe.As<Guid, T>(ref v); }
-		if (typeof(T) == typeof(DateTime)) { var v = CsvParse.DateTime(s, provider, hideValues); return Unsafe.As<DateTime, T>(ref v); }
-		if (typeof(T) == typeof(string)) { var v = MakeString(s, column); return Unsafe.As<string, T>(ref v); }
-
-		var chars = FieldChars(s);
-
-		// The BCL parsers put the value in their messages: without values, their exceptions are replaced.
-		return hideValues ? ParseCharsHidden<T>(chars, provider) : T.Parse(chars, provider);
-	}
-
+	/// <summary>Parses a field as <typeparamref name="T"/> with the configured format provider, as <see cref="Parse{T}(int)"/> describes.</summary>
+	/// <typeparam name="T">The type to parse the field as.</typeparam>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="column">The index of the field, for the string pool.</param>
+	/// <returns>The parsed value.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T ParseUtf8<T>(ReadOnlySpan<byte> s, IFormatProvider provider)
-	{
-		if (typeof(T) == typeof(short)) { var v = short.Parse(s, NumberStyles.Integer, provider); return Unsafe.As<short, T>(ref v); }
-		if (typeof(T) == typeof(byte)) { var v = byte.Parse(s, NumberStyles.Integer, provider); return Unsafe.As<byte, T>(ref v); }
-		if (typeof(T) == typeof(uint)) { var v = uint.Parse(s, NumberStyles.Integer, provider); return Unsafe.As<uint, T>(ref v); }
+	internal T ParseSpan<T>(ReadOnlySpan<byte> s, int column)
+#if NET
+		where T : ISpanParsable<T>
+#endif
+		=> ParseSpan<T>(s, column, provider);
 
-		var u = ulong.Parse(s, NumberStyles.Integer, provider);
-
-		return Unsafe.As<ulong, T>(ref u);
-	}
-
-	/// <summary>
-	/// Parses <paramref name="chars"/> with <typeparamref name="T"/>'s parser, and replaces its
-	/// <see cref="FormatException"/> or <see cref="OverflowException"/> with one whose message leaves the value out.
-	/// </summary>
-	/// <typeparam name="T">The type parsed.</typeparam>
-	/// <param name="chars">The decoded field.</param>
+	/// <summary>Parses a field as <typeparamref name="T"/> with <paramref name="provider"/>, as <see cref="Parse{T}(int)"/> describes.</summary>
+	/// <typeparam name="T">The type to parse the field as.</typeparam>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="column">The index of the field, for the string pool.</param>
 	/// <param name="provider">The format provider.</param>
 	/// <returns>The parsed value.</returns>
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	private static T ParseCharsHidden<T>(ReadOnlySpan<char> chars, IFormatProvider provider) where T : ISpanParsable<T>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal T ParseSpan<T>(ReadOnlySpan<byte> s, int column, IFormatProvider provider)
+#if NET
+		where T : ISpanParsable<T>
+#endif
 	{
-		try
+		if (typeof(T) == typeof(string))
 		{
-			return T.Parse(chars, provider);
+			// As GetString makes it, from the string pool when there is one.
+			var text = MakeString(s, column);
+
+			return Unsafe.As<string, T>(ref text);
 		}
-		catch (Exception e) when (e is FormatException or OverflowException)
+
+		if (CsvValue.IsBuiltIn<T>())
 		{
-			throw CsvParse.Hidden(e, typeof(T).Name);
+			return CsvValue.Parse<T>(s, provider, hideValues, booleans);
 		}
+
+#if NET
+		return CsvValue.ParseChars<T>(FieldChars(s), provider, hideValues);
+#else
+		throw CsvValue.NotSupported(typeof(T));
+#endif
 	}
 
+	/// <summary>Tries to parse a field as <typeparamref name="T"/>, as <see cref="ParseSpan{T}(ReadOnlySpan{byte}, int)"/> parses it.</summary>
+	/// <typeparam name="T">The type to parse the field as.</typeparam>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="column">The index of the field, for the string pool.</param>
+	/// <param name="value">The parsed value, or the default of <typeparamref name="T"/> when parsing fails.</param>
+	/// <returns>Whether the field could be parsed.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal bool TryParseSpan<T>(ReadOnlySpan<byte> s, int column, out T value)
+#if NET
+		where T : ISpanParsable<T>
+#endif
+	{
+		if (typeof(T) == typeof(string))
+		{
+			var text = MakeString(s, column);
+			value = Unsafe.As<string, T>(ref text);
+
+			return true;
+		}
+
+		if (CsvValue.IsBuiltIn<T>())
+		{
+			return CsvValue.TryParse(s, provider, booleans, out value);
+		}
+
+#if NET
+		return T.TryParse(FieldChars(s), provider, out value!);
+#else
+		throw CsvValue.NotSupported(typeof(T));
+#endif
+	}
+
+#if NET
 	/// <summary>
 	/// Decodes a field for a parser of chars. A field of up to <see cref="MaxFieldChars"/> bytes goes into this reader's
 	/// char buffer, valid until the next call (the parser runs before any other field is decoded); a longer one, which
@@ -1443,19 +1145,6 @@ public sealed partial class CsvReader
 		if (fieldChars.Length < s.Length) fieldChars = new char[BitOperations.RoundUpToPowerOf2((uint)Math.Max(s.Length, 64))];
 
 		return fieldChars.AsSpan(0, Utf8String.GetChars(s, fieldChars));
-	}
-
-	internal bool TryParseSpan<T>(ReadOnlySpan<byte> s, int column, out T value) where T : ISpanParsable<T>
-	{
-		if (typeof(T) == typeof(int)) { var ok = CsvParse.TryInt32(s, provider, out var v); value = Unsafe.As<int, T>(ref v); return ok; }
-		if (typeof(T) == typeof(long)) { var ok = CsvParse.TryInt64(s, provider, out var v); value = Unsafe.As<long, T>(ref v); return ok; }
-		if (typeof(T) == typeof(double)) { var ok = CsvParse.TryDouble(s, provider, out var v); value = Unsafe.As<double, T>(ref v); return ok; }
-		if (typeof(T) == typeof(float)) { var ok = CsvParse.TrySingle(s, provider, out var v); value = Unsafe.As<float, T>(ref v); return ok; }
-		if (typeof(T) == typeof(decimal)) { var ok = CsvParse.TryDecimal(s, provider, out var v); value = Unsafe.As<decimal, T>(ref v); return ok; }
-		if (typeof(T) == typeof(bool)) { var ok = TryParseBoolean(s, out var v); value = Unsafe.As<bool, T>(ref v); return ok; }
-		if (typeof(T) == typeof(string)) { var v = MakeString(s, column); value = Unsafe.As<string, T>(ref v); return true; }
-
-		return T.TryParse(FieldChars(s), provider, out value!);
 	}
 #endif
 }

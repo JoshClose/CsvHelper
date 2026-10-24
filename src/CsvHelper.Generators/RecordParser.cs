@@ -32,10 +32,6 @@ internal sealed class RecordParser
 	private const string ConverterInterfaceName = "CsvHelper.ICsvConverter`1";
 	private const string SetsRequiredMembersName = "System.Diagnostics.CodeAnalysis.SetsRequiredMembersAttribute";
 
-	// The typed getters that have an overload taking an IFormatProvider.
-	private static readonly HashSet<string> ProviderGetters =
-		new(StringComparer.Ordinal) { "GetInt32", "GetInt64", "GetDouble", "GetSingle", "GetDecimal", "GetDateTime", "GetDateTimeOffset" };
-
 	private readonly Compilation compilation;
 	private readonly SemanticModel semanticModel;
 	// The type whose records are read and written.
@@ -73,7 +69,8 @@ internal sealed class RecordParser
 	private readonly INamedTypeSymbol? setsRequiredMembers;
 	private readonly INamedTypeSymbol? spanParsable;
 	private readonly INamedTypeSymbol? formatProvider;
-	// Whether the referenced CsvHelper has CsvReader.Parse<T>(int) for ISpanParsable<T> types (its .NET build).
+	// Whether the referenced CsvHelper's CsvReader.Parse<T>(int) parses any ISpanParsable<T> type (its .NET build; the
+	// others parse only the built-in types).
 	private readonly bool readerParsesSpans;
 	// Whether it also has CsvReader.Parse<T>(int, IFormatProvider).
 	private readonly bool readerParsesSpansWithProvider;
@@ -152,7 +149,8 @@ internal sealed class RecordParser
 		var parses = spanParsable is null || compilation.GetTypeByMetadataName("CsvHelper.CsvReader") is not { } reader
 			? []
 			: reader.GetMembers("Parse").OfType<IMethodSymbol>().Where(m =>
-				m.TypeParameters.Length == 1 && m.Parameters.Length > 0 && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32).ToList();
+				m.TypeParameters.Length == 1 && m.Parameters.Length > 0 && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32 &&
+				m.TypeParameters[0].ConstraintTypes.Any(c => Is(c.OriginalDefinition, spanParsable))).ToList();
 		readerParsesSpans = parses.Any(m => m.Parameters.Length == 1);
 		readerParsesSpansWithProvider = parses.Any(m => m.Parameters.Length == 2 && Is(m.Parameters[1].Type, formatProvider));
 		formattable = compilation.GetTypeByMetadataName("System.IFormattable");
@@ -1490,29 +1488,27 @@ internal sealed class RecordParser
 			}
 		}
 
-		var getter = fieldType.SpecialType switch
+		if (fieldType.SpecialType == SpecialType.System_String)
 		{
 			// A nullable string reads the reader's NullValues as null.
-			SpecialType.System_String => fieldType.NullableAnnotation == NullableAnnotation.Annotated ? "GetStringOrNull" : "GetString",
-			SpecialType.System_Int32 => "GetInt32",
-			SpecialType.System_Int64 => "GetInt64",
-			SpecialType.System_Double => "GetDouble",
-			SpecialType.System_Single => "GetSingle",
-			SpecialType.System_Decimal => "GetDecimal",
-			SpecialType.System_Boolean => "GetBoolean",
-			SpecialType.System_DateTime => "GetDateTime",
-			_ => fieldType.ToDisplayString() switch
-			{
-				"System.DateTimeOffset" => "GetDateTimeOffset",
-				"System.Guid" => "GetGuid",
-				_ => null,
-			},
-		};
-		if (getter is not null)
+			return fieldType.NullableAnnotation == NullableAnnotation.Annotated ? $"reader.GetStringOrNull({column})" : $"reader.GetString({column})";
+		}
+
+		// Value types that CsvReader.Parse<T> parses on every target of CsvHelper.
+		var typeName = fieldType.ToDisplayString();
+		var builtIn = fieldType.SpecialType is SpecialType.System_Int32 or SpecialType.System_Int64 or SpecialType.System_Int16 or
+			SpecialType.System_Byte or SpecialType.System_SByte or SpecialType.System_UInt16 or SpecialType.System_UInt32 or
+			SpecialType.System_UInt64 or SpecialType.System_Double or SpecialType.System_Single or SpecialType.System_Decimal or
+			SpecialType.System_Boolean or SpecialType.System_Char or SpecialType.System_DateTime ||
+			typeName is "System.DateTimeOffset" or "System.Guid" or "System.TimeSpan" or "System.Numerics.BigInteger";
+		if (builtIn)
 		{
-			return context.CultureName is not null && ProviderGetters.Contains(getter)
-				? $"reader.{getter}({column}, {Provider(context)})"
-				: $"reader.{getter}({column})";
+			// bool and Guid are parsed without a format provider.
+			var withProvider = context.CultureName is not null && fieldType.SpecialType != SpecialType.System_Boolean && typeName != "System.Guid";
+
+			return withProvider
+				? $"reader.Parse<{Display(fieldType)}>({column}, {Provider(context)})"
+				: $"reader.Parse<{Display(fieldType)}>({column})";
 		}
 
 		// Uri has no static Parse: its constructor takes both absolute and relative URIs.
@@ -1547,12 +1543,11 @@ internal sealed class RecordParser
 	{
 		var column = context.Column;
 		var several = formats.Length > 1;
-		var getter = fieldType.SpecialType == SpecialType.System_DateTime ? "GetDateTime"
-			: fieldType.ToDisplayString() == "System.DateTimeOffset" ? "GetDateTimeOffset"
-			: null;
+		// The types of CsvReader.ParseExact<T>.
+		var readerExact = fieldType.SpecialType == SpecialType.System_DateTime || fieldType.ToDisplayString() == "System.DateTimeOffset";
 		// A static ParseExact(string, string, IFormatProvider) or ParseExact(string, string) (string[] for several
 		// formats), with any further parameters optional.
-		var parses = getter is not null
+		var parses = readerExact
 			? []
 			: StaticMethods(fieldType, "ParseExact")
 				.Where(m => m.Parameters.Length >= 2 && m.Parameters[0].Type.SpecialType == SpecialType.System_String &&
@@ -1562,17 +1557,17 @@ internal sealed class RecordParser
 				.ToList();
 		var withProvider = parses.Any(m => m.Parameters.Length >= 3 && Is(m.Parameters[2].Type, formatProvider) && m.Parameters.Skip(3).All(p => p.IsOptional));
 		var withoutProvider = parses.Any(m => m.Parameters.Skip(2).All(p => p.IsOptional));
-		if (getter is null && !withProvider && !withoutProvider)
+		if (!readerExact && !withProvider && !withoutProvider)
 		{
 			return null;
 		}
 
 		var argument = several ? FormatArray(formats) : SymbolDisplay.FormatLiteral(formats[0], quote: true);
-		if (getter is not null)
+		if (readerExact)
 		{
 			return context.CultureName is null
-				? $"reader.{getter}({column}, {argument})"
-				: $"reader.{getter}({column}, {argument}, {Provider(context)})";
+				? $"reader.ParseExact<{Display(fieldType)}>({column}, {argument})"
+				: $"reader.ParseExact<{Display(fieldType)}>({column}, {argument}, {Provider(context)})";
 		}
 
 		return withProvider

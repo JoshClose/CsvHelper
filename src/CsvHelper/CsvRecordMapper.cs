@@ -20,7 +20,8 @@ namespace CsvHelper;
 /// </para>
 /// <para>
 /// To write one by hand, find the columns in the constructor with <see cref="Column(CsvReader, string, int, bool, string)"/>,
-/// call <see cref="ThrowIfColumnsMissing"/>, and read the fields with the reader's typed getters in <see cref="Read(CsvReader)"/>.
+/// call <see cref="ThrowIfColumnsMissing"/>, and read the fields with the reader's <see cref="CsvReader.GetString(int)"/> and
+/// <see cref="CsvReader.Parse{T}(int)"/> in <see cref="Read(CsvReader)"/>.
 /// Register it with <see cref="CsvRecordMapper.Register{T}(Func{CsvReader, CsvRecordMapper{T}})"/>, or put a
 /// <see cref="CsvConverterAttribute"/> naming it on <typeparamref name="T"/>.
 /// </para>

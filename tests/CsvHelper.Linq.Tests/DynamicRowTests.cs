@@ -18,13 +18,14 @@ public class DynamicRowTests
 	[Fact]
 	public void FiltersAndProjectsByColumn()
 	{
-		SameRows(q => q.Where(r => r.GetDecimal("Total") > 100).Select(r => r["Customer"]));
-		SameRows(q => q.Where(r => r["Status"] == "Open" && r.GetInt32("Quantity") > 3).Select(r => new { Id = r.GetInt64("Id"), r.FieldCount }));
-		SameRows(q => q.Select(r => new { Placed = r.GetDateTime("Placed"), Note = r[6], Has = r.ContainsKey("Note"), Lacks = r.ContainsKey("Nope") }));
-		SameRows(q => q.Skip(5).Where(r => r.GetDouble("Total") < 50).Select(r => r["Id"]).Take(3));
+		SameRows(q => q.Where(r => r.Parse<decimal>("Total") > 100).Select(r => r["Customer"]));
+		SameRows(q => q.Where(r => r["Status"] == "Open" && r.Parse<int>("Quantity") > 3).Select(r => new { Id = r.Parse<long>("Id"), r.FieldCount }));
+		SameRows(q => q.Select(r => new { Placed = r.Parse<DateTime>("Placed"), Note = r[6], Has = r.ContainsKey("Note"), Lacks = r.ContainsKey("Nope") }));
+		SameRows(q => q.Skip(5).Where(r => r.Parse<double>("Total") < 50).Select(r => r["Id"]).Take(3));
 		SameRows(q => q.Where(r => r["Note"] == null).Count());
-		SameRows(q => q.GroupBy(r => r["Customer"]).Select(g => new { g.Key, Sum = g.Sum(r => r.GetDecimal("Total")) }));
-		SameRows(q => q.OrderBy(r => r.GetDecimal("Total")).Select(r => r["Id"]).First());
+		SameRows(q => q.GroupBy(r => r["Customer"]).Select(g => new { g.Key, Sum = g.Sum(r => r.Parse<decimal>("Total")) }));
+		SameRows(q => q.OrderBy(r => r.Parse<decimal>("Total")).Select(r => r["Id"]).First());
+		SameRows(q => q.Where(r => r.Parse<Status>("Status") == Status.Shipped).Select(r => new { Id = r["Id"], Status = r.Parse<Status>("Status") }));
 	}
 
 	[Fact]
@@ -53,22 +54,27 @@ public class DynamicRowTests
 	[Fact]
 	public void PushesTheColumnsIntoTheReader()
 	{
-		var plan = Plan(CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.GetDecimal("Total") > 100).Select(r => new { Customer = r["Customer"], Id = r.GetInt32("Id") }));
+		var plan = Plan(CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.Parse<decimal>("Total") > 100).Select(r => new { Customer = r["Customer"], Id = r.Parse<int>("Id") }));
 		Assert.Equal(["Where", "Select"], plan.PushedOperators);
 		Assert.Equal(["Total"], plan.FilterMembers);
 		Assert.Equal(["Customer", "Id"], plan.Members);
 		var column = "Quantity";
-		plan = Plan(CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.GetInt32(column) > 3));
+		plan = Plan(CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.Parse<int>(column) > 3));
 		Assert.Equal(["Where"], plan.PushedOperators);
 		Assert.Equal(["Quantity"], plan.FilterMembers);
 		Assert.Null(plan.Members);
+
+		// Enums too: an extension method of the row on .NET, the row's own Parse<T> elsewhere.
+		plan = Plan(CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.Parse<Status>("Status") == Status.Shipped));
+		Assert.Equal(["Where"], plan.PushedOperators);
+		Assert.Equal(["Status"], plan.FilterMembers);
 	}
 
 	[Fact]
 	public void RowsUsedOtherwiseAreMade()
 	{
 		SameRows(q => q.Where(r => r.Names.Count > 3).Select(r => r["Id"]));
-		SameRows(q => q.Where(r => r.GetInt32("Id") > 50).Select(r => r));
+		SameRows(q => q.Where(r => r.Parse<int>("Id") > 50).Select(r => r));
 		SameRows(q => q.Select(r => r.ToDictionary()).Select(d => d["Customer"]));
 		var plan = Plan(CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.Names.Count > 3).Select(r => r["Id"]));
 		Assert.Equal(["Where"], plan.PushedOperators);
@@ -80,7 +86,7 @@ public class DynamicRowTests
 	public void MissingColumnsThrowAsRowsDo()
 	{
 		SameRows(q => q.Select(r => r["Nope"]));
-		SameRows(q => q.Where(r => r.GetInt32("Nope") > 0));
+		SameRows(q => q.Where(r => r.Parse<int>("Nope") > 0));
 		SameRows(q => q.Where(r => r.ContainsKey("Nope")).Select(r => r["Nope"]));
 		// An empty source never reads the column.
 		Assert.Empty(CsvQueryable.FromText("Id\n").Select(r => r["Nope"]).ToList());
@@ -100,8 +106,8 @@ public class DynamicRowTests
 	public void PruningCanBeTurnedOff()
 	{
 		var options = new CsvQueryOptions { PruneColumns = false };
-		SameRows(q => q.Where(r => r.GetDecimal("Total") > 100).Select(r => r["Customer"]), options);
-		Assert.Equal(["Where"], Plan(CsvQueryable.FromText(Data.OrdersCsv, options).Where(r => r.GetDecimal("Total") > 100).Select(r => r["Customer"])).PushedOperators);
+		SameRows(q => q.Where(r => r.Parse<decimal>("Total") > 100).Select(r => r["Customer"]), options);
+		Assert.Equal(["Where"], Plan(CsvQueryable.FromText(Data.OrdersCsv, options).Where(r => r.Parse<decimal>("Total") > 100).Select(r => r["Customer"])).PushedOperators);
 	}
 
 	[Fact]
@@ -116,7 +122,7 @@ public class DynamicRowTests
 	[Fact]
 	public async Task RunsAsynchronously()
 	{
-		var query = CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.GetDecimal("Total") > 100).Select(r => r["Customer"]);
+		var query = CsvQueryable.FromText(Data.OrdersCsv).Where(r => r.Parse<decimal>("Total") > 100).Select(r => r["Customer"]);
 		Assert.Equal(query.ToList(), await query.AsCsvAsync().ToListAsync());
 		Assert.Equal(query.Count(), await query.AsCsvAsync().CountAsync());
 		var ids = new List<string?>();

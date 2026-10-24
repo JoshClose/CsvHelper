@@ -265,7 +265,7 @@ public class FloatsWrite : WriteBenchmarkBase
 		{
 			text.Add([reader.GetString(0), reader.GetString(1), reader.GetString(2)]);
 			var f = new float[DataGenerator.FloatColumns];
-			for (var i = 0; i < f.Length; i++) f[i] = reader.GetSingle(3 + i);
+			for (var i = 0; i < f.Length; i++) f[i] = reader.Parse<float>(3 + i);
 			floats.Add(f);
 		}
 

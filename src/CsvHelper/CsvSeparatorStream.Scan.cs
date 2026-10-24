@@ -26,9 +26,10 @@ namespace CsvHelper;
 //
 // Replacing keeps the first byte of each separator, overwritten with the replacement, and drops the others. The kept bytes
 // of a block are packed at the output position, which never passes the block (the output is never longer than the
-// input), so the stream works in the caller's buffer: one VPCOMPRESSB per block with AVX-512 VBMI2, otherwise a shuffle
-// of each 8 bytes from a table of the 256 masks of kept bytes (shifts on the targets without SIMD). With a separator of
-// two bytes the shuffle writes the replacement too: the byte before each dropped byte is the first of a separator.
+// input), so the stream works in the caller's buffer: one VPCOMPRESSB per block with AVX-512 VBMI2 (on .NET 10),
+// otherwise a shuffle of each 8 bytes from a table of the 256 masks of kept bytes (shifts on the targets without SIMD).
+// With a separator of two bytes the shuffle writes the replacement too: the byte before each dropped byte is the first
+// of a separator.
 public sealed partial class CsvSeparatorStream
 {
 	private const int BlockSize = 64;
@@ -57,8 +58,10 @@ public sealed partial class CsvSeparatorStream
 #endif
 
 	private static readonly int defaultCompaction =
-#if NET
+#if NET10_0_OR_GREATER
 		Avx512Vbmi2.IsSupported && Avx512Vbmi.IsSupported ? CompactCompress :
+#endif
+#if NET
 		Ssse3.IsSupported || AdvSimd.Arm64.IsSupported ? CompactPairShuffle :
 #endif
 		CompactScalar;
@@ -81,8 +84,10 @@ public sealed partial class CsvSeparatorStream
 	/// <returns><see langword="true"/> when <see cref="compaction"/> can be set to <paramref name="compaction"/>.</returns>
 	internal static bool CompactionSupported(int compaction) => compaction switch
 	{
-#if NET
+#if NET10_0_OR_GREATER
 		CompactCompress => Avx512Vbmi2.IsSupported && Avx512Vbmi.IsSupported,
+#endif
+#if NET
 		CompactShuffle or CompactPairShuffle => Ssse3.IsSupported || AdvSimd.Arm64.IsSupported,
 #endif
 		CompactScalar => true,
@@ -134,8 +139,10 @@ public sealed partial class CsvSeparatorStream
 	private int Replace<TM>(ref byte buf, int length, int processEnd) where TM : struct, ISeparatorMasks<TM> =>
 		compaction switch
 		{
-#if NET
+#if NET10_0_OR_GREATER
 			CompactCompress => Replace<TM, CompressCompactor>(ref buf, length, processEnd),
+#endif
+#if NET
 			CompactPairShuffle when separator.Length == 2 => Replace<TM, PairShuffleCompactor>(ref buf, length, processEnd),
 			CompactShuffle or CompactPairShuffle => Replace<TM, ShuffleCompactor>(ref buf, length, processEnd),
 #endif
@@ -981,7 +988,9 @@ internal struct PairShuffleCompactor : ICompactor<PairShuffleCompactor>
 		return written + BitOperations.PopCount((uint)index & 0xFF);
 	}
 }
+#endif
 
+#if NET10_0_OR_GREATER
 /// <summary>Packs a block with one AVX-512 VBMI2 compress.</summary>
 internal struct CompressCompactor : ICompactor<CompressCompactor>
 {

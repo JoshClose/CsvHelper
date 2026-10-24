@@ -1,5 +1,6 @@
 using System.Dynamic;
 using System.Globalization;
+using System.Numerics;
 using System.Text;
 using Microsoft.CSharp.RuntimeBinder;
 
@@ -7,7 +8,7 @@ namespace CsvHelper.Tests;
 
 /// <summary>
 /// Records read without a record type (<see cref="CsvDynamicRecord"/>): member access through <c>dynamic</c>, the values
-/// of every kind of field and source, the dictionary view and typed getters, and writing dynamic records and dictionaries.
+/// of every kind of field and source, the dictionary view and <c>Parse&lt;T&gt;</c>, and writing dynamic records and dictionaries.
 /// </summary>
 public class DynamicRecordTests
 {
@@ -23,11 +24,12 @@ public class DynamicRecordTests
 		{
 			names.Add(record.Name);
 			ages += int.Parse(record.Age, CultureInfo.InvariantCulture);
+			ages += (int)record.Parse<int>("Age");
 			Assert.Equal(3, (int)record.FieldCount);
 		}
 
 		Assert.Equal(["Ann", "Smith, Bob"], names);
-		Assert.Equal(73, ages);
+		Assert.Equal(146, ages);
 	}
 
 	[Fact]
@@ -150,20 +152,31 @@ public class DynamicRecordTests
 	}
 
 	[Fact]
-	public void TypedGettersParseAsTheReaderDoes()
+	public void ParseParsesAsTheReaderDoes()
 	{
 		var options = new CsvReaderOptions { TrueValues = ["J"], FalseValues = ["N"], FormatProvider = CultureInfo.GetCultureInfo("de-DE") };
-		using var reader = CsvReader.FromText("Int;Long;Double;Decimal;Bool;When\n5;9000000000;1,5;2,25;J;01.03.2024\n", options with { Separator = ';' });
+		using var reader = CsvReader.FromText(
+			"Int;Long;Double;Decimal;Bool;When;Text;Span;Status\n5;9000000000;1,5;2,25;J;01.03.2024;Zoë;01:30;on hold\n", options with { Separator = ';' });
 		var record = reader.GetRecords<CsvDynamicRecord>().Single();
 
-		Assert.Equal(5, record.GetInt32("Int"));
-		Assert.Equal(9000000000L, record.GetInt64("Long"));
-		Assert.Equal(1.5, record.GetDouble("Double"));
-		Assert.Equal(2.25m, record.GetDecimal("Decimal"));
-		Assert.True(record.GetBoolean("Bool"));
-		Assert.Equal(new DateTime(2024, 3, 1), record.GetDateTime("When"));
-		Assert.Throws<FormatException>(() => record.GetInt32("Bool"));
-		Assert.Throws<KeyNotFoundException>(() => record.GetInt32("Nope"));
+		Assert.Equal(5, record.Parse<int>("Int"));
+		Assert.Equal(9000000000L, record.Parse<long>("Long"));
+		Assert.Equal((short)5, record.Parse<short>("Int"));
+		Assert.Equal(1.5, record.Parse<double>("Double"));
+		Assert.Equal(2.25m, record.Parse<decimal>("Decimal"));
+		Assert.True(record.Parse<bool>("Bool"));
+		Assert.Equal(new DateTime(2024, 3, 1), record.Parse<DateTime>("When"));
+		Assert.Equal("Zoë", record.Parse<string>("Text"));
+		Assert.Throws<FormatException>(() => record.Parse<int>("Bool"));
+		Assert.Throws<KeyNotFoundException>(() => record.Parse<int>("Nope"));
+		Assert.Equal(new TimeSpan(1, 30, 0), record.Parse<TimeSpan>("Span"));
+		Assert.Equal(new BigInteger(9000000000L), record.Parse<BigInteger>("Long"));
+		Assert.Equal((sbyte)5, record.Parse<sbyte>("Int"));
+		Assert.Equal(ReaderTests.Status.OnHold, record.Parse<ReaderTests.Status>("Status"));
+		Assert.Throws<FormatException>(() => record.Parse<ReaderTests.Status>("Text"));
+#if !NET
+		Assert.Throws<NotSupportedException>(() => record.Parse<Uri>("Text"));
+#endif
 	}
 
 	[Fact]

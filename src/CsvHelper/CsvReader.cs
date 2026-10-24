@@ -45,8 +45,9 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		64;
 #endif
 
+	// AVX-512 VBMI2 is in the BCL from .NET 10.
 	private static readonly bool defaultCompressIndex =
-#if NET
+#if NET10_0_OR_GREATER
 		Avx512Vbmi2.IsSupported && Avx512Vbmi.IsSupported;
 #else
 		false;
@@ -170,7 +171,7 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	/// <param name="rentIndex">False for parallel workers, which use the index of the batches given to them.</param>
 	/// <param name="sharedPool">A string pool whose values this reader shares (parallel workers).</param>
 	// Not inlined: it runs once per reader, and inlined into the method that creates the reader it took registers from
-	// that method's read loop (a 13% slower loop over GetSingle, depending on the size of the constructor).
+	// that method's read loop (a 13% slower loop parsing floats, depending on the size of the constructor).
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private CsvReader(CsvReaderOptions? options, bool rentIndex = true, CsvStringPool? sharedPool = null)
 	{

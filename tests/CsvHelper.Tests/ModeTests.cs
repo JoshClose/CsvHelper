@@ -206,7 +206,7 @@ public class ModeTests
 		Assert.Equal(" ab ", Encoding.UTF8.GetString(reader.GetRawSpan(0)));
 		Assert.Equal(" 12", Encoding.UTF8.GetString(reader.GetRawSpan(1)));
 		Assert.Equal(" ab  12xyz", Encoding.UTF8.GetString(reader.RawRecord));
-		Assert.Equal(12, reader.GetInt32(1));
+		Assert.Equal(12, reader.Parse<int>(1));
 		Assert.True(reader.Read());
 		Assert.Equal(["q", ""], TestUtil.Record(reader));
 		Assert.Equal("", Encoding.UTF8.GetString(reader.GetRawSpan(1)));

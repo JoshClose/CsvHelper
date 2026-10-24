@@ -13,7 +13,7 @@ public readonly record struct Cents(long Value);
 public sealed class CentsConverter : ICsvConverter<Cents>
 {
 	/// <inheritdoc/>
-	public Cents Read(CsvReader reader, int index) => new((long)(reader.GetDecimal(index) * 100));
+	public Cents Read(CsvReader reader, int index) => new((long)(reader.Parse<decimal>(index) * 100));
 
 	/// <inheritdoc/>
 	public void Write(CsvWriter writer, Cents value) => writer.WriteField(value.Value / 100m);
@@ -23,7 +23,7 @@ public sealed class CentsConverter : ICsvConverter<Cents>
 public sealed class WholeCentsConverter : ICsvConverter<Cents>
 {
 	/// <inheritdoc/>
-	public Cents Read(CsvReader reader, int index) => new(reader.GetInt64(index));
+	public Cents Read(CsvReader reader, int index) => new(reader.Parse<long>(index));
 
 	/// <inheritdoc/>
 	public void Write(CsvWriter writer, Cents value) => writer.WriteField(value.Value);
@@ -310,11 +310,11 @@ public class RecordConversionTests
 		using var reader = CsvReader.FromText("2024-03-01,01/04/2024 10:00 +02:00\n", new CsvReaderOptions { HasHeader = false });
 		reader.Read();
 
-		Assert.Equal(new DateTime(2024, 3, 1), reader.GetDateTime(0, ["dd/MM/yyyy", "yyyy-MM-dd"]));
-		Assert.Equal(new DateTime(2024, 3, 1), reader.GetDateTime(0, ["yyyy-MM-dd"], CultureInfo.InvariantCulture));
-		Assert.Equal(new DateTimeOffset(2024, 4, 1, 10, 0, 0, TimeSpan.FromHours(2)), reader.GetDateTimeOffset(1, ["yyyy-MM-dd", "dd/MM/yyyy HH:mm zzz"]));
-		Assert.Throws<FormatException>(() => reader.GetDateTime(0, ["dd/MM/yyyy", "yyyyMMdd"]));
-		Assert.Throws<ArgumentNullException>(() => reader.GetDateTime(0, (string[])null!));
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, ["dd/MM/yyyy", "yyyy-MM-dd"]));
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, ["yyyy-MM-dd"], CultureInfo.InvariantCulture));
+		Assert.Equal(new DateTimeOffset(2024, 4, 1, 10, 0, 0, TimeSpan.FromHours(2)), reader.ParseExact<DateTimeOffset>(1, ["yyyy-MM-dd", "dd/MM/yyyy HH:mm zzz"]));
+		Assert.Throws<FormatException>(() => reader.ParseExact<DateTime>(0, ["dd/MM/yyyy", "yyyyMMdd"]));
+		Assert.Throws<ArgumentNullException>(() => reader.ParseExact<DateTime>(0, (string[])null!));
 	}
 
 	[Fact]

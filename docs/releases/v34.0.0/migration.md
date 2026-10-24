@@ -1,13 +1,13 @@
 # Migrating from CsvHelper 33 to 34
 
-CsvHelper 34 is a rewrite. The reader parses UTF-8 bytes instead of characters (with SIMD on .NET 10), records are
+CsvHelper 34 is a rewrite. The reader parses UTF-8 bytes instead of characters (with SIMD on .NET 8 and later), records are
 mapped by code that a source generator writes at compile time instead of by reflection, and the settings are immutable
 option records. Almost every public type changed or was replaced, so this guide goes concept by concept: how each thing
 you did in 33 is done now, with the old and new code side by side. Coming from an older version, read the guides of
 the versions in between for the old side ([32](../v32.0.0/migration.md), for example, changed dynamic records); the new
 side is the same.
 
-What you need: .NET 10, .NET Standard 2.0 or 2.1 (.NET 5 to 9, Mono, Unity), or .NET Framework 4.7 or later (4.6.2 is
+What you need: .NET 8 or later, .NET Standard 2.0 or 2.1 (.NET 5 to 7, Mono, Unity), or .NET Framework 4.7 or later (4.6.2 is
 no longer supported); C# 9 or later, since the options have `init` properties; and a Roslyn 4.3 compiler or later
 (the .NET 6.0.400 SDK, Visual Studio 2022 17.3) for the source generator, which comes in the package.
 
@@ -20,7 +20,7 @@ no longer supported); C# 9 or later, since the options have `init` properties; a
 | Any class, mapped by reflection | `[CsvRecord] partial` types, mapped by generated code |
 | `ClassMap<T>` and `RegisterClassMap` | Attributes, or `[CsvRecordMap(typeof(T))]` for types you can't change |
 | `ITypeConverter`, `DefaultTypeConverter` | `ICsvConverter<T>` |
-| `GetField<T>(name)` | `GetInt32(index)`, `GetString(name)`, `Parse<T>` |
+| `GetField<T>(name)` | `Parse<T>(index or name)`, `GetString(name)` |
 | `NextRecord()` | `EndRecord()` |
 | `GetRecords<dynamic>()` gives an `IDictionary<string, object>` | `GetRecords<dynamic>()` gives a `CsvDynamicRecord` |
 | `BadDataException`, `TypeConverterException`, ... | `CsvFormatException` and standard exceptions |
@@ -197,9 +197,9 @@ using var csv = CsvReader.Create(reader);
 var idColumn = csv.GetFieldIndex("Id");    // reads the header
 while (csv.Read())
 {
-    var id = csv.GetInt32(idColumn);
+    var id = csv.Parse<int>(idColumn);
     var name = csv.GetString("Name");
-    var price = csv.GetDecimal(2);
+    var price = csv.Parse<decimal>(2);
 }
 ```
 
@@ -210,8 +210,8 @@ file.
 | CsvHelper 33 | CsvHelper 34 |
 |---|---|
 | `GetField(index)`, `GetField(name)` | `GetString(index)`, `GetString(name)`: `""` for an empty field, never `null` |
-| `GetField<int>(index)` and the other types | `GetInt32`, `GetInt64`, `GetDouble`, `GetSingle`, `GetDecimal`, `GetBoolean`, `GetDateTime`, `GetDateTimeOffset`, `GetGuid`, by index |
-| `GetField<T>(...)` for other types, `TryGetField<T>` | `Parse<T>(index or name)` and `TryParse<T>(index, out value)` on .NET 10; `Parse(index, (text, provider) => ...)` and `TryParse(index, parser, out value)` everywhere |
+| `GetField<int>(index)` and the other built-in types, `TryGetField<int>` | `Parse<int>(index or name)` and `TryParse<int>(index, out value)`, for `int`, `long`, `short`, `byte`, `uint`, `ulong`, `double`, `float`, `decimal`, `bool`, `DateTime`, `DateTimeOffset`, `Guid` and `string` on every target; `ParseExact<DateTime>(index, format)` for an exact format |
+| `GetField<T>(...)` for other types, `TryGetField<T>` | `Parse<T>(index or name)` and `TryParse<T>(index, out value)` for any `ISpanParsable<T>` on .NET 8 and later (`TimeSpan`, `BigInteger`, `char`, `IPAddress` and enums everywhere); `Parse(index, (text, provider) => ...)` and `TryParse(index, parser, out value)` everywhere |
 | `GetField(name, index)` | `GetString(GetFieldIndex(name, index))` |
 | `csv[index]`, `csv[name]` | `csv[index]` and `csv[name]` are a `CsvField`: `.ToString()` or `.Parse<T>()` |
 | `HeaderRecord` | `Headers`, empty when there is no header |
@@ -581,7 +581,7 @@ foreach (var record in csv.GetRecords<CsvDynamicRecord>())
 
 - **Casts to `IDictionary<string, object>` fail:** a `CsvDynamicRecord` is an `IReadOnlyDictionary<string, string?>`.
   `ToDictionary()` gives a copy you can change.
-- **Typed values:** `record.GetInt32("Age")`, `GetDecimal`, `GetDateTime` and the other getters parse a column.
+- **Typed values:** `record.Parse<int>("Age")` parses a column, as the reader's `Parse<T>` does.
 - **Writing** dynamic records, `ExpandoObject` and dictionaries works with `WriteRecords`, as before.
 
 ## Bad data and errors
@@ -630,7 +630,7 @@ exceptions.
 |---|---|
 | `CsvHelperException`, to catch them all | No common base: `CsvFormatException` for the input and for records that can't be read, the exceptions below for the rest |
 | `BadDataException` | `CsvFormatException`, with `MalformedData = Throw` |
-| `TypeConverterException`, `ReaderException` | `CsvFormatException` from the record methods, with the cause as `InnerException`; `FormatException` from `GetInt32` and the other getters |
+| `TypeConverterException`, `ReaderException` | `CsvFormatException` from the record methods, with the cause as `InnerException`; `FormatException` from `Parse<T>` |
 | `FieldValidationException` | `CsvValidationException`, as the `InnerException` of a `CsvFormatException` |
 | `HeaderValidationException` | `KeyNotFoundException` |
 | `MissingFieldException` | `IndexOutOfRangeException` (with `MissingField = Throw`); `KeyNotFoundException` for a name the header lacks |
@@ -665,7 +665,7 @@ table.Load(dataReader);
 ```
 
 Code that needs typed values calls the data reader's typed getters (`GetInt32`, `GetDecimal`, `GetDateTime` and so
-on), which parse the field as the CSV reader's getters do.
+on), which parse the field as the CSV reader's `Parse<T>` does.
 
 ## Async
 

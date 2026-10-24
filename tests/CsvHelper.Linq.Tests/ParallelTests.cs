@@ -30,8 +30,8 @@ public class ParallelTests
 	[Fact]
 	public void DynamicRows()
 	{
-		var sequential = CsvQueryable.FromText(Many).Where(r => r.GetDecimal("Total") > 100).Select(r => r["Customer"]).ToList();
-		var parallel = CsvQueryable.FromText(Many, Parallel).Where(r => r.GetDecimal("Total") > 100).Select(r => r["Customer"]).ToList();
+		var sequential = CsvQueryable.FromText(Many).Where(r => r.Parse<decimal>("Total") > 100).Select(r => r["Customer"]).ToList();
+		var parallel = CsvQueryable.FromText(Many, Parallel).Where(r => r.Parse<decimal>("Total") > 100).Select(r => r["Customer"]).ToList();
 		Assert.Equal(sequential, parallel);
 		Assert.Equal(
 			CsvQueryable.FromText(Many).Skip(7).Select(r => r["Id"]).ToList(),

@@ -18,9 +18,9 @@ while (reader.Read())
 {
     string id = reader.GetString(0);                    // by index
     string name = reader.GetString("Name");             // by header name
-    decimal unitPrice = reader.GetDecimal(price);       // also GetInt32/GetInt64/GetDouble/GetBoolean/GetDateTime/GetGuid
+    decimal unitPrice = reader.Parse<decimal>(price);   // also int, long, double, bool, DateTime, Guid, ...
     ReadOnlySpan<byte> raw = reader.GetSpan(3);         // UTF-8, already unquoted, no allocation
-    DateOnly ordered = reader.Parse<DateOnly>(4);       // any ISpanParsable<T> (.NET 10)
+    DateOnly ordered = reader.Parse<DateOnly>(4);       // any ISpanParsable<T> (.NET 8 and later)
 }
 ```
 
@@ -151,7 +151,7 @@ reader.GetFieldIndex("Total");        // throws KeyNotFoundException: The CSV he
 
 Every accessor that takes a name (`GetString("Name")`, `reader["Name"]`, `Parse<T>("Name")`) matches it the same
 way. A lookup by name costs a dictionary lookup, so in a loop over many records, look the index up once with
-`GetFieldIndex` and use the index. The typed getters (`GetInt32`, `GetDecimal`, ...) take only indexes for that reason.
+`GetFieldIndex` and use the index.
 
 `NormalizeHeaderName` changes names before they are matched, both those of the header and those you look up, for
 names that differ in more than case. `Headers` keeps the names as they are:
@@ -218,7 +218,7 @@ using var reader = CsvReader.FromText("A-1,9.99\nA-2,24.50\n", options);
 while (reader.Read())
 {
     string id = reader.GetString(0);
-    decimal price = reader.GetDecimal(1);
+    decimal price = reader.Parse<decimal>(1);
 }
 ```
 
@@ -247,27 +247,31 @@ ReadOnlySpan<char> chars = buffer[..length];
 With `PoolStrings = true`, a value seen before in the same column returns the same string instance, which saves
 memory when you keep many records; see [Performance tips](#performance-tips).
 
-### Typed getters
+### Parse and TryParse
 
-The typed getters parse the UTF-8 bytes of the field directly, without creating a string first:
+`Parse<T>` parses a field as `T`, by index or by header name. On every target framework, the built-in types are parsed
+from the UTF-8 bytes of the field directly, without creating a string first:
 
-| Getter | Accepts |
+| Type | Accepts |
 |---|---|
-| `GetInt32`, `GetInt64` | Integers (`NumberStyles.Integer`: an optional sign and surrounding whitespace). |
-| `GetDouble`, `GetSingle` | Decimal and exponent notation, `NaN` and infinities, thousands separators (`NumberStyles.Float` plus thousands). Exactly rounded, like `double.Parse`; a value beyond the range is an infinity. |
-| `GetDecimal` | Numbers with thousands separators and exponents (`NumberStyles.Number` plus exponents). |
-| `GetBoolean` | `true`/`false`, `yes`/`no`, `y`/`n`, `t`/`f` and `1`/`0` (or `TrueValues` and `FalseValues`), in any case, with surrounding whitespace ignored. |
-| `GetDateTime` | ISO 8601 or the format provider's formats. `Z` gives a `DateTimeKind.Utc` value, an offset a local time; no zone gives `DateTimeKind.Unspecified`. |
-| `GetDateTimeOffset` | ISO 8601 or the format provider's formats; without an offset, the local time zone's. |
-| `GetGuid` | Any format `Guid.Parse` accepts. |
+| `int`, `long`, `short`, `byte`, `sbyte`, `ushort`, `uint`, `ulong` | Integers (`NumberStyles.Integer`: an optional sign and surrounding whitespace). |
+| `double`, `float` | Decimal and exponent notation, `NaN` and infinities, thousands separators (`NumberStyles.Float` plus thousands). Exactly rounded, like `double.Parse`; a value beyond the range is an infinity. |
+| `decimal` | Numbers with thousands separators and exponents (`NumberStyles.Number` plus exponents). |
+| `bool` | `true`/`false`, `yes`/`no`, `y`/`n`, `t`/`f` and `1`/`0` (or `TrueValues` and `FalseValues`), in any case, with surrounding whitespace ignored. |
+| `DateTime` | ISO 8601 or the format provider's formats. `Z` gives a `DateTimeKind.Utc` value, an offset a local time; no zone gives `DateTimeKind.Unspecified`. |
+| `DateTimeOffset` | ISO 8601 or the format provider's formats; without an offset, the local time zone's. |
+| `Guid` | Any format `Guid.Parse` accepts. |
+| `string` | The field, as `GetString` gets it. |
+| Enums | Member names, ignoring ASCII case, and numbers and lists of flags. See [Enums](#enums). |
 
 ```csharp
 // Active,Score,Seen,Key
 // yes,1e3,2024-03-01T10:30:00Z,0f8fad5b-d9cb-469f-a165-70867728950e
-bool active = reader.GetBoolean(0);               // true
-double score = reader.GetDouble(1);               // 1000
-DateTime seen = reader.GetDateTime(2);            // 2024-03-01 10:30:00, Kind = Utc
-Guid key = reader.GetGuid(3);
+bool active = reader.Parse<bool>(0);              // true
+double score = reader.Parse<double>(1);           // 1000
+DateTime seen = reader.Parse<DateTime>(2);        // 2024-03-01 10:30:00, Kind = Utc
+Guid key = reader.Parse<Guid>("Key");             // by header name
+bool ok = reader.TryParse<int>(1, out int count); // false: TryParse returns false instead of throwing
 ```
 
 A field that cannot be parsed throws `FormatException` (`The input string 'abc' was not in a correct format.`), and
@@ -282,56 +286,80 @@ the other:
 var options = new CsvReaderOptions { TrueValues = ["Ja", "J"], FalseValues = ["Nein", "N"] };
 // Aktiv
 //  ja
-reader.GetBoolean(0);                             // true
+reader.Parse<bool>(0);                            // true
 ```
 
-The number and date getters have an overload that takes a format provider for one call, and `GetDateTime` and
-`GetDateTimeOffset` have overloads that take an exact format, as `ParseExact` does:
+`Parse<T>(index, provider)` takes a format provider for one call, and `ParseExact<T>` parses a `DateTime` or a
+`DateTimeOffset` in an exact format, as their own `ParseExact` does:
 
 ```csharp
 // Opened;Amount;Month
 // 20240301;1.234,50;März 2024
 var german = CultureInfo.GetCultureInfo("de-DE");
-DateTime opened = reader.GetDateTime(0, "yyyyMMdd");              // 2024-03-01
-decimal amount = reader.GetDecimal(1, german);                    // 1234.50
-DateTime month = reader.GetDateTime(2, "MMMM yyyy", german);      // 2024-03-01: a format and a provider
+DateTime opened = reader.ParseExact<DateTime>(0, "yyyyMMdd");             // 2024-03-01
+decimal amount = reader.Parse<decimal>(1, german);                         // 1234.50
+DateTime month = reader.ParseExact<DateTime>(2, "MMMM yyyy", german);     // 2024-03-01: a format and a provider
 ```
 
-A field in another format throws `FormatException`. For files that mix formats, `GetDateTime(index, formats)` and
-`GetDateTimeOffset(index, formats)` take several, tried in order: `reader.GetDateTime(0, ["yyyy-MM-dd", "dd/MM/yyyy"])`.
-On .NET 10, `Parse<T>(index, provider)` does the same for any `ISpanParsable<T>` type.
+A field in another format throws `FormatException`. For files that mix formats, `ParseExact<T>(index, formats)` takes
+several, tried in order: `reader.ParseExact<DateTime>(0, ["yyyy-MM-dd", "dd/MM/yyyy"])`.
 
-### Any other type: Parse and TryParse
+### Enums
 
-On .NET 10, `Parse<T>` and `TryParse<T>` read any `ISpanParsable<T>` type (`DateOnly`, `TimeSpan`, `Half`,
-`BigInteger`, your own types). On every target framework, the overloads that take a parser get the field as a string
-and the reader's format provider:
+`Parse<T>`, `TryParse<T>` and `ParseOrNull<T>` read enums as [`[CsvRecord]` members](records.html#enums) do: the
+names of the members and the other names that [`[CsvEnumName]`](records.html#enums) gives them are matched in UTF-8,
+ignoring ASCII case (unless two names of different members differ only in case), and anything else, such as a number
+or a list of flags, goes to `Enum.TryParse`, ignoring case:
+
+```csharp
+public enum Status { Open, [CsvEnumName("on hold")] OnHold, Closed }
+
+[Flags]
+public enum Access { None = 0, Read = 1, Write = 2 }
+
+// Status,Access
+// On Hold,"Read, Write"
+Status status = reader.Parse<Status>("Status");   // Status.OnHold
+Access access = reader.Parse<Access>(1);          // Access.Read | Access.Write
+bool known = reader.TryParse(0, out Status other); // false for a value that is not a Status
+```
+
+A field that is not a value throws `FormatException` (`'pending' is not a value of Status.`, with the full name of the
+type). Enums are not `ISpanParsable<T>`, so on .NET 8 and later these overloads are extension methods, of
+`CsvEnumExtensions` in the `CsvHelper` namespace; on .NET Framework and .NET Standard the reader's own `Parse<T>` reads
+enums. The calls are the same everywhere.
+
+### Any other type
+
+On .NET 8 and later, `Parse<T>` and `TryParse<T>` also read any other `ISpanParsable<T>` type (`DateOnly`, `TimeSpan`,
+`Half`, `BigInteger`, your own types) with its own parser. On .NET Framework and .NET Standard they parse `TimeSpan`,
+`BigInteger`, `char` and `IPAddress` too, as .NET does (through a string), and throw `NotSupportedException` for the
+other types. On every target framework, the overloads that take a parser get the field as a string and the reader's
+format provider:
 
 ```csharp
 // When,Duration,Code
 // 2024-03-01,01:30:00,7
-DateOnly when = reader.Parse<DateOnly>("When");                       // .NET 10: ISpanParsable<T>
-bool ok = reader.TryParse<TimeSpan>(1, out TimeSpan duration);       // .NET 10
+DateOnly when = reader.Parse<DateOnly>("When");                       // .NET 8 and later: ISpanParsable<T>
+bool ok = reader.TryParse<TimeSpan>(1, out TimeSpan duration);       // every target
 
 TimeSpan parsed = reader.Parse("Duration", TimeSpan.Parse);           // every target: Func<string, IFormatProvider, T>
 bool valid = reader.TryParse(1, TimeSpan.TryParse, out TimeSpan d);   // every target: CsvTryParser<T>
-bool small = reader.TryParse(2, (string s, IFormatProvider p, out byte b) =>
-    byte.TryParse(s, NumberStyles.Integer, p, out b), out byte code); // any parsing code of yours
+bool small = reader.TryParse(2, (string s, IFormatProvider p, out sbyte b) =>
+    sbyte.TryParse(s, NumberStyles.Integer, p, out b), out sbyte code); // any parsing code of yours
 ```
-
-For `int`, `long`, `double`, `float`, `decimal`, `bool`, `Guid`, `DateTime` and `string`, `Parse<T>` uses the fast
-paths of the typed getters.
 
 ### Empty and missing fields
 
-An empty field reads as `string.Empty` from `GetString` and as an empty span from `GetSpan`; the typed getters throw
-`FormatException` for it. `IsEmpty` tells you whether a field is empty, which makes optional values easy:
+An empty field reads as `string.Empty` from `GetString` and as an empty span from `GetSpan`; `Parse<T>` throws
+`FormatException` for it (except as a `string`). `IsEmpty` tells you whether a field is empty, which makes optional
+values easy:
 
 ```csharp
 // A-3,"12"" ruler",3.25,,2024-03-02  (no quantity)
 int quantityIndex = reader.GetFieldIndex("Quantity");
-int? quantity = reader.IsEmpty(quantityIndex) ? null : reader.GetInt32(quantityIndex);
-int? sameQuantity = reader[quantityIndex].ParseOrNull<int>();     // .NET 10: null when empty or not an int
+int? quantity = reader.IsEmpty(quantityIndex) ? null : reader.Parse<int>(quantityIndex);
+int? sameQuantity = reader[quantityIndex].ParseOrNull<int>();     // null when empty or not an int
 ```
 
 Records do not need to have the same number of fields. A field past the end of a short record reads as empty, as if
@@ -361,7 +389,7 @@ var options = new CsvReaderOptions { NullValues = ["NULL", @"\N"] };
 // A-1,NULL,\N
 bool none = reader.IsNull(2);                      // true
 string? note = reader.GetStringOrNull(1);          // null
-int? quantity = reader[2].ParseOrNull<int>();      // .NET 10: null
+int? quantity = reader[2].ParseOrNull<int>();      // null
 ```
 
 The values are matched exactly, after [trimming](#whitespace); a quoted `"NULL"` is null too. Without `NullValues`,
@@ -392,7 +420,7 @@ int currency = reader.GetFieldIndex("Currency");
 while (reader.Read())
 {
     if (!reader.GetSpan(currency).SequenceEqual("EUR"u8)) continue;
-    total += reader.GetDecimal(amount);
+    total += reader.Parse<decimal>(amount);
 }
 ```
 
@@ -405,9 +433,9 @@ using var reader = CsvReader.FromFile("orders.csv");
 foreach (CsvRow row in reader)
 {
     string id = row[0].ToString();
-    decimal price = row["Unit Price"].Parse<decimal>();          // .NET 10
-    int? quantity = row["Quantity"].ParseOrNull<int>();          // .NET 10
-    DateTime ordered = row[4].Parse(DateTime.Parse);             // every target
+    decimal price = row["Unit Price"].Parse<decimal>();
+    int? quantity = row["Quantity"].ParseOrNull<int>();
+    DateOnly ordered = row[4].Parse(DateOnly.Parse);             // a parser of strings
     string[] all = row.ToArray();                                // every field as a string
     Console.WriteLine($"{row.RowNumber}: {row.ToString()}");     // the raw record: A-1,Widget,9.99,3,2024-03-01
 }
@@ -423,7 +451,7 @@ foreach (CsvRow row in reader)
 | `CsvRow.ToString`, `CsvRow.RawRecord` | The record as it appears in the input. |
 | `CsvField.Span`, `CsvField.Length`, `CsvField.IsEmpty` | The decoded value as UTF-8, its length in bytes, whether it is empty. |
 | `CsvField.ToString` | The value as a string. |
-| `CsvField.Parse`, `CsvField.TryParse`, `CsvField.ParseOrNull` | Parse the value, as an `ISpanParsable<T>` (.NET 10) or with a parser (every target). `ParseOrNull` returns `null` for an empty or invalid value. |
+| `CsvField.Parse`, `CsvField.TryParse`, `CsvField.ParseOrNull` | Parse the value, as a built-in type (on .NET 8 and later, any `ISpanParsable<T>`) or with a parser. `ParseOrNull` returns `null` for an empty or invalid value. |
 
 The reader's own indexer and `Current` work the same way, so `reader["Name"].ToString()` and `reader.Current` are
 available in a `while (reader.Read())` loop too.
@@ -443,7 +471,7 @@ await reader.ReadHeaderAsync(cancellationToken);              // optional: Heade
 while (await reader.ReadAsync(cancellationToken))
 {
     string id = reader.GetString(0);
-    decimal price = reader.GetDecimal(2);
+    decimal price = reader.Parse<decimal>(2);
 }
 ```
 
@@ -475,14 +503,14 @@ inputs where turning a record into an object (parsing, validation, lookups) cost
 ```csharp
 using var reader = CsvReader.FromFile("orders.csv");
 List<Order> orders = reader
-    .ParallelEnumerate(r => new Order(r.GetString(0), r.GetDecimal(2), r.GetInt32(3)))
+    .ParallelEnumerate(r => new Order(r.GetString(0), r.Parse<decimal>(2), r.Parse<int>(3)))
     .ToList();
 
 // Records of a [CsvRecord] type:
 List<Order> sameOrders = reader2.ParallelEnumerate<Order>().ToList();
 
 // At most 4 threads (the default, -1, is one per processor):
-decimal total = reader3.ParallelEnumerate(r => r.GetDecimal(2) * r.GetInt32(3), maxDegreeOfParallelism: 4).Sum();
+decimal total = reader3.ParallelEnumerate(r => r.Parse<decimal>(2) * r.Parse<int>(3), maxDegreeOfParallelism: 4).Sum();
 ```
 
 Workers take turns reading and scanning the next batch of records, then map that batch themselves while its bytes are
@@ -516,7 +544,7 @@ table.Load(data);      // columns Id, Name, Unit Price, ...; NULL fields are DBN
 Every column is a string column (`GetFieldType` is `string`), named after the header, or `Column1`, `Column2`, ...
 without one (the first record is read to count the columns). `GetValue` returns the field as a string, or `DBNull` for
 a [null value](#null-values). The typed getters (`GetInt32`, `GetDecimal`, `GetDateTime`, ...) parse the field as the
-reader's getters do, and `GetOrdinal` matches names as [`GetFieldIndex`](#how-names-are-matched) does. Disposing the
+reader's `Parse<T>` does, and `GetOrdinal` matches names as [`GetFieldIndex`](#how-names-are-matched) does. Disposing the
 data reader disposes the CSV reader, unless it was created with `leaveOpen: true`.
 
 ## Parsing modes
@@ -646,7 +674,7 @@ var options = new CsvReaderOptions { Mode = CsvMode.FixedWidth, FieldWidths = [6
 using var reader = CsvReader.FromFile("accounts.txt", options);
 while (reader.Read())
 {
-    int id = reader.GetInt32(0);
+    int id = reader.Parse<int>(0);
     string name = reader.GetString("Name");
     string balance = reader.GetString(2);
 }
@@ -805,15 +833,15 @@ Numbers, dates and times are parsed with the invariant culture: `.` is the decim
 var options = new CsvReaderOptions { FormatProvider = CultureInfo.GetCultureInfo("de-DE") };
 using var reader = CsvReader.FromFile("preise.csv", options);
 reader.Read();
-decimal price = reader.GetDecimal(1);      // 1234.50
-DateTime date = reader.GetDateTime(2);     // 2024-03-01
+decimal price = reader.Parse<decimal>(1);     // 1234.50
+DateTime date = reader.Parse<DateTime>(2);    // 2024-03-01
 ```
 
-The format provider is used by the typed getters, `Parse` and `TryParse`, the parsers you pass them, and records.
+The format provider is used by `Parse`, `TryParse` and `ParseExact`, the parsers you pass them, and records.
 Plain integers, and floats when the decimal separator is `.`, take fast paths that parse the UTF-8 directly; anything
 else goes through the .NET parsers. Booleans accept the same values in every culture.
 
-For a file whose columns use different cultures, pass a provider to a single getter (`reader.GetDecimal(1, culture)`),
+For a file whose columns use different cultures, pass a provider to a single call (`reader.Parse<decimal>(1, culture)`),
 or give a record member [`[CsvCulture("de-DE")]`](records.html#cultures-csvculture).
 
 ## Errors
@@ -821,7 +849,7 @@ or give a record member [`[CsvCulture("de-DE")]`](records.html#cultures-csvcultu
 | Exception | When |
 |---|---|
 | `CsvFormatException` | A malformed record, when `MalformedData` or `FieldCountMismatch` say to throw (see [Messy files](messy-files.html)), or a record too large to buffer or longer than `MaxRecordSize`. `RecordNumber`, `ByteOffset` and (with `TrackLineNumbers`) `LineNumber` say where. Also a record that cannot be read as a [record type](records.html#errors), with the member and field in `Member` and `FieldIndex`, and the cause in `InnerException`. |
-| `FormatException`, `OverflowException` | A typed getter or `Parse` got a field that is not a valid value, or is out of range. |
+| `FormatException`, `OverflowException` | `Parse`, `ParseExact` or a parser got a field that is not a valid value, or is out of range. |
 | `KeyNotFoundException` | No header column has the name you asked for. |
 | `IndexOutOfRangeException` | A field past the end of the record, with `MissingField = CsvMissingFieldHandling.Throw`. |
 | `ArgumentException` | Invalid options, when the reader is created: a separator that is not ASCII, the same character for two purposes, missing `FieldWidths` in FixedWidth mode. |
@@ -852,8 +880,8 @@ With `TrackLineNumbers = true`, messages name the line too (`Malformed CSV in re
 
 ### Values in exception messages
 
-The messages of the typed getters show the value that did not parse (`'abc' is not a valid boolean.`). When fields may
-hold personal data that must stay out of logs, set `IncludeValuesInExceptions = false`: the getters, `Parse` and the
+The messages of `Parse` show the value that did not parse (`'abc' is not a valid boolean.`). When fields may
+hold personal data that must stay out of logs, set `IncludeValuesInExceptions = false`: `Parse`, `ParseExact` and the
 generated record mappers then name the type but not the value (`The field is not a valid Int32
 (IncludeValuesInExceptions is off, so its value is not shown).`). The exceptions of your own parsers and converters are
 not changed.
@@ -876,8 +904,8 @@ chunks, so it does.
 ## Performance tips
 
 - **Look indexes up once.** Call `GetFieldIndex` before the loop and use the index inside it.
-- **Parse straight from the field.** `GetInt32`, `GetDouble`, `GetDecimal` and the other typed getters parse the UTF-8
-  bytes; `int.Parse(reader.GetString(i))` creates a string first.
+- **Parse straight from the field.** `Parse<int>`, `Parse<double>`, `Parse<decimal>` and the other built-in types
+  parse the UTF-8 bytes; `int.Parse(reader.GetString(i))` creates a string first.
 - **Use spans for comparisons and copies.** `reader.GetSpan(i).SequenceEqual("EUR"u8)` allocates nothing, and
   `CsvWriter.WriteField(reader.GetSpan(i))` copies a field to a writer as UTF-8.
 - **Keep strings with `PoolStrings`.** When you keep many records in memory, `PoolStrings = true` makes repeated values
@@ -923,7 +951,7 @@ Options are checked when a reader is created; invalid ones throw `ArgumentExcept
 | `TrackLineNumbers` | `false` | [The read loop](#the-read-loop) |
 | `MissingField` | `ReturnEmpty` | [Empty and missing fields](#empty-and-missing-fields) |
 | `NullValues` | `null` | [Null values](#null-values) |
-| `TrueValues`, `FalseValues` | `null`: the built-in values | [Typed getters](#typed-getters) |
+| `TrueValues`, `FalseValues` | `null`: the built-in values | [Parse and TryParse](#parse-and-tryparse) |
 | `MalformedData` | `Recover` | [Messy files](messy-files.html#options-for-malformed-files) |
 | `OnMalformedRecord` | `null` | [Messy files](messy-files.html#reporting-malformed-records) |
 | `AllowLineBreaksInQuotes` | `true` | [Messy files](messy-files.html#unbalanced-quotes) |

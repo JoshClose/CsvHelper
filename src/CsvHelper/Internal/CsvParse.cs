@@ -3,6 +3,9 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Buffers.Text;
 using System.Globalization;
+#if NET
+using System.Numerics;
+#endif
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -90,6 +93,37 @@ internal static class CsvParse
 
 #if NET
 	/// <summary>
+	/// Parses <paramref name="s"/> with the BCL's parser of UTF-8 for <typeparamref name="T"/>. On .NET 8 its
+	/// <see cref="FormatException"/> names the type of the span (<c>System.ReadOnlySpan&lt;Byte&gt;[6]</c>) instead of the
+	/// value, so a field it rejects is parsed again as a string, for the exception that names the value as on .NET 9 and later.
+	/// </summary>
+	/// <typeparam name="T">The number type.</typeparam>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="style">The number style.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> is not a valid <typeparamref name="T"/>.</exception>
+	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <typeparamref name="T"/>.</exception>
+#if NET9_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static T Bcl<T>(ReadOnlySpan<byte> s, NumberStyles style, IFormatProvider provider) where T : INumberBase<T> =>
+		T.Parse(s, style, provider);
+#else
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	internal static T Bcl<T>(ReadOnlySpan<byte> s, NumberStyles style, IFormatProvider provider) where T : INumberBase<T>
+	{
+		try
+		{
+			return T.Parse(s, style, provider);
+		}
+		catch (FormatException)
+		{
+			return T.Parse(Encoding.UTF8.GetString(s), style, provider);
+		}
+	}
+#endif
+
+	/// <summary>
 	/// Parses <paramref name="s"/> as an <see cref="int"/> in <see cref="NumberStyles.Integer"/> style. Up to 9 ASCII
 	/// digits with an optional leading <c>-</c> are parsed directly; anything else (more digits, whitespace, a <c>+</c>,
 	/// the provider's signs) goes to the BCL's <c>int.Parse</c>, which parses the UTF-8 bytes.
@@ -108,7 +142,7 @@ internal static class CsvParse
 	{
 		try
 		{
-			return int.Parse(s, IntegerStyle, provider);
+			return Bcl<int>(s, IntegerStyle, provider);
 		}
 		catch (Exception e) when (hide && e is FormatException or OverflowException)
 		{
@@ -146,7 +180,7 @@ internal static class CsvParse
 	{
 		try
 		{
-			return long.Parse(s, IntegerStyle, provider);
+			return Bcl<long>(s, IntegerStyle, provider);
 		}
 		catch (Exception e) when (hide && e is FormatException or OverflowException)
 		{
@@ -180,7 +214,7 @@ internal static class CsvParse
 	{
 		if (IsInvariantDecimal(provider) && FastFloat.TryParseDouble(s, out var v)) return v;
 
-		return hide ? Hide(s, provider, static (x, p) => double.Parse(x, FloatStyle, p), "Double") : double.Parse(s, FloatStyle, provider);
+		return hide ? Hide(s, provider, static (x, p) => double.Parse(x, FloatStyle, p), "Double") : Bcl<double>(s, FloatStyle, provider);
 	}
 
 	/// <summary>
@@ -213,7 +247,7 @@ internal static class CsvParse
 	{
 		if (IsInvariantDecimal(provider) && FastFloat.TryParseSingle(s, out var v)) return v;
 
-		return hide ? Hide(s, provider, static (x, p) => float.Parse(x, FloatStyle, p), "Single") : float.Parse(s, FloatStyle, provider);
+		return hide ? Hide(s, provider, static (x, p) => float.Parse(x, FloatStyle, p), "Single") : Bcl<float>(s, FloatStyle, provider);
 	}
 
 	/// <summary>
@@ -251,7 +285,7 @@ internal static class CsvParse
 	{
 		try
 		{
-			return decimal.Parse(s, DecimalStyle, provider);
+			return Bcl<decimal>(s, DecimalStyle, provider);
 		}
 		catch (Exception e) when (hide && e is FormatException or OverflowException)
 		{

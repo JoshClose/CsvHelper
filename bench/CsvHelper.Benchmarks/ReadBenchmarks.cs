@@ -610,7 +610,7 @@ public class FloatsRead : ReadBenchmarkBase
 		var sum = 0.0;
 		while (reader.Read())
 		{
-			for (var i = First; i < Last; i++) sum += reader.GetSingle(i);
+			for (var i = First; i < Last; i++) sum += reader.Parse<float>(i);
 		}
 
 		return sum;
@@ -652,7 +652,7 @@ public class FloatsRead : ReadBenchmarkBase
 		var sum = 0.0;
 		while (await reader.ReadAsync())
 		{
-			for (var i = First; i < Last; i++) sum += reader.GetSingle(i);
+			for (var i = First; i < Last; i++) sum += reader.Parse<float>(i);
 		}
 
 		return sum;

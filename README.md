@@ -10,8 +10,8 @@
 through each concept with before and after code.
 <!-- /docs:exclude -->
 
-A CSV reader and writer for .NET, built for speed. It targets .NET 10 and also runs on .NET Framework 4.7+ and
-.NET Standard 2.0 and 2.1 (see [Target frameworks](#target-frameworks)):
+A CSV reader and writer for .NET, built for speed. It targets .NET 10 and .NET 8, and also runs on .NET Framework 4.7+
+and .NET Standard 2.0 and 2.1 (see [Target frameworks](#target-frameworks)):
 
 - **Reader**: parses UTF-8 directly with SIMD (AVX-512, AVX2 or 128-bit vectors), finds quoted regions
   branch-free with a carry-less multiply, and exposes fields as zero-copy spans. Flexible: it adapts to
@@ -50,9 +50,9 @@ int price = reader.GetFieldIndex("Price");                // header lookup: exac
 while (reader.Read())
 {
     string name = reader.GetString(0);
-    double value = reader.GetDouble(price);              // also GetInt32/GetInt64/GetDecimal/GetBoolean/GetDateTime/GetGuid
+    double value = reader.Parse<double>(price);          // also int, long, decimal, bool, DateTime, Guid, ...
     ReadOnlySpan<byte> raw = reader.GetSpan(2);          // UTF-8, already unquoted and unescaped, no allocation
-    int qty = reader.Parse<int>("Quantity");             // any ISpanParsable<T>
+    int qty = reader.Parse<int>("Quantity");             // by header name; on .NET 8+, any ISpanParsable<T>
     TimeSpan t = reader.Parse("Duration", TimeSpan.Parse); // any parser of strings, on every target
 }
 ```
@@ -71,7 +71,7 @@ await when the buffer needs refilling; otherwise they complete synchronously wit
 - **Positions.** `ByteOffset` is where the current record starts in the UTF-8 input; with `TrackLineNumbers`,
   `LineNumber` is its line (counting the lines inside quoted fields), which error messages name too.
 - **Null and boolean texts.** `NullValues = ["NULL"]` makes `IsNull`, `GetStringOrNull`, `ParseOrNull` and nullable
-  record members read those values as `null`; `TrueValues` and `FalseValues` replace the texts of `GetBoolean`.
+  record members read those values as `null`; `TrueValues` and `FalseValues` replace the texts of `Parse<bool>`.
 - **Headers.** `NormalizeHeaderName` changes names before they are matched (`unit_price` finds `UnitPrice`),
   `GetFieldIndex("Amount", 1)` finds the second column of a name, and `ReadHeader` on a record makes it the header
   of the next data set in the same file.
@@ -85,7 +85,7 @@ await when the buffer needs refilling; otherwise they complete synchronously wit
 
 ```csharp
 using var reader = CsvReader.FromFile("data.csv");
-List<Order> orders = reader.ParallelEnumerate(r => new Order(r.GetString("Id"), r.GetDecimal(1))).ToList();
+List<Order> orders = reader.ParallelEnumerate(r => new Order(r.GetString("Id"), r.Parse<decimal>(1))).ToList();
 ```
 
 Workers take turns reading and scanning the next batch of records, then map that batch themselves while its
@@ -115,7 +115,7 @@ using var reader = CsvReader.FromFile("accounts.txt", options);
 while (reader.Read())
 {
     string id = reader.GetString(0);
-    decimal balance = reader.GetDecimal(2);
+    decimal balance = reader.Parse<decimal>(2);
 }
 ```
 
@@ -154,8 +154,8 @@ contains the replacement outside quoted fields throws `CsvFormatException`; UTF-
 
 Mark a `partial` class, struct or record `[CsvRecord]` and the CsvHelper source generator, which ships in the
 package, writes its mapping code at compile time. The columns are looked up once per reader, then each record is
-read with the same typed getter calls you would write by hand. There is no reflection, so it works with trimming
-and native AOT, and it runs as fast as hand-written code (`CsvHelper_RecordsGenerated` in the benchmarks).
+read with the same `GetString` and `Parse<T>` calls you would write by hand. There is no reflection, so it works with
+trimming and native AOT, and it runs as fast as hand-written code (`CsvHelper_RecordsGenerated` in the benchmarks).
 
 ```csharp
 [CsvRecord]
@@ -198,14 +198,14 @@ foreach (Order order in reader.EnumerateRecords(new Order())) { }  // one instan
   `FieldWidths = CsvRecordMapper.GetFieldWidths<T>()` reads (and writes) it.
 - **Types.** These can be read:
   - `string`;
-  - the types of the typed getters (`int`, `long`, `double`, `float`, `decimal`, `bool`, `DateTime`, `DateTimeOffset`,
-    `Guid`);
+  - the built-in value types of `Parse<T>` (`int`, `long`, `short`, `byte`, `sbyte`, `ushort`, `uint`, `ulong`,
+    `double`, `float`, `decimal`, `bool`, `char`, `DateTime`, `DateTimeOffset`, `TimeSpan`, `Guid`, `BigInteger`);
   - enums: names (and the other names of `[CsvEnumName("on hold")]`) are matched in UTF-8 ignoring ASCII case, and
     numbers and flag lists go through `Enum.TryParse`;
   - `Uri`, absolute or relative;
   - `Nullable<T>` of any of these, where an empty field reads as `null`;
-  - any type with a static `Parse`: `ISpanParsable<T>` on .NET 10, `Parse(string, IFormatProvider)` or `Parse(string)`
-    on the other targets;
+  - any type with a static `Parse`: `ISpanParsable<T>` on .NET 8 and later, `Parse(string, IFormatProvider)` or
+    `Parse(string)` on the other targets;
   - any type at all with `[CsvConverter(typeof(MyConverter))]`, an `ICsvConverter<T>` that the mapper creates with
     `new` and calls directly; `[assembly: CsvConverter(typeof(MyConverter))]` gives every member of its type the
     converter;
@@ -234,7 +234,7 @@ foreach (Order order in reader.EnumerateRecords(new Order())) { }  // one instan
 - **Options.** `[CsvOptions(Separator = ';', HasHeader = false, Culture = "de-DE")]` keeps a type's dialect with it;
   `CsvReaderOptions.For<T>()` and `CsvWriterOptions.For<T>()` return those options.
 - **Dynamic records.** Without a record type, `GetRecords<dynamic>()` reads each record as a `CsvDynamicRecord` whose
-  members are its columns (`record.Name`; values are strings, and `record.GetInt32("Age")` parses one). A record holds
+  members are its columns (`record.Name`; values are strings, and `record.Parse<int>("Age")` parses one). A record holds
   its bytes, not a dictionary of strings, and `record.Name` is bound once to its column for every record with that
   header, so reading them is 16-22x faster than `ExpandoObject`s (see [Benchmarks](#dynamic-records)). `WriteRecords` writes them back, and `ExpandoObject`s and dictionaries keyed by
   column name too.
@@ -382,25 +382,29 @@ orders.Delete(o => o.Status == Status.Cancelled);                  // the rest o
 | Target | Used by | Scanner |
 |---|---|---|
 | `net10.0` | .NET 10 and later | SIMD: AVX-512, AVX2 or 128-bit vectors (SSE, NEON), chosen at startup |
+| `net8.0` | .NET 8 and 9 | as `net10.0`, without the AVX-512 VBMI2 compress of the index, whose intrinsics came with .NET 10 |
 | `net47` | .NET Framework 4.7 and later | 64-bit integers: the masks of each 64-byte block from eight `ulong`s, then the same pipeline |
-| `netstandard2.1` | .NET Core 3.0 to .NET 9, Mono, Unity 2021.2 and later | same as `net47` |
+| `netstandard2.1` | .NET Core 3.0 to .NET 7, Mono, Unity 2021.2 and later | same as `net47` |
 | `netstandard2.0` | everything else: .NET Core 2.x, Unity before 2021.2 | same as `net47` |
 
 `net47` and `netstandard2.0` depend on two Microsoft packages, `System.Memory` and `Microsoft.Bcl.AsyncInterfaces`;
 `netstandard2.1`, which has spans and async streams built in, only on `System.Runtime.CompilerServices.Unsafe`. Every
-build reads and writes exactly the same CSV: the tests run on .NET 10, on .NET 8 (the `netstandard2.1` build) and on
-.NET Framework 4.8, and on .NET 10 the 64-bit scanner is also checked against the SIMD ones. The differences:
+build reads and writes exactly the same CSV: the tests run on .NET 10, on .NET 8 and on .NET Framework 4.8 (the `net47`
+build, whose code the `netstandard2.0` and `netstandard2.1` builds share), and on .NET 10 the 64-bit scanner is also
+checked against the SIMD ones. The differences between the .NET builds (`net10.0` and `net8.0`) and the others:
 
-- **Parsing to a type.** `Parse<T>`, `TryParse<T>` and `ParseOrNull<T>` for `ISpanParsable<T>` types need .NET 7
-  generic math, so they are .NET only. On every target, `Parse(index, parser)`, `TryParse(index, parser, out value)`
-  and `CsvField.ParseOrNull(parser)` take a parser that gets the field as a string and the reader's format provider:
-  `reader.Parse(3, TimeSpan.Parse)`. The typed getters (`GetInt32`, `GetDouble`, `GetDateTime`, ...) are on every
-  target. `[CsvRecord]` members follow the same rule. .NET 8 and 9 projects use the `netstandard2.1` build, so there
-  they are parsed through `Parse(string, IFormatProvider)` too.
+- **Parsing to a type.** `Parse<T>`, `TryParse<T>`, `ParseOrNull<T>` and `ParseExact<T>` parse the built-in types
+  (`int`, `long`, `short`, `byte`, `sbyte`, `ushort`, `uint`, `ulong`, `double`, `float`, `decimal`, `bool`, `char`,
+  `DateTime`, `DateTimeOffset`, `TimeSpan`, `Guid`, `BigInteger`, `IPAddress`, `string` and enums) on every target.
+  Any other `ISpanParsable<T>` type (`DateOnly`, `Half`, your own types) needs generic math, so only the .NET builds
+  parse it; the other builds throw `NotSupportedException`. Enums are not `ISpanParsable<T>`: on the .NET builds their
+  overloads are the extension methods of `CsvEnumExtensions`, so the calls are the same everywhere. On every target,
+  `Parse(index, parser)`, `TryParse(index, parser, out value)` and `CsvField.ParseOrNull(parser)` take a parser that
+  gets the field as a string and the reader's format provider: `reader.Parse(3, (text, _) => Version.Parse(text))`.
+  `[CsvRecord]` members follow the same rule.
 - **Writing values.** `WriteField<T>` takes `IUtf8SpanFormattable` values on .NET and `IFormattable` values elsewhere
   (numbers in the invariant culture are still formatted straight to UTF-8). The `DateOnly`, `Half` and `Int128`
-  overloads are .NET only, but on .NET 8 and 9 the `netstandard2.1` build still writes `DateOnly` and `TimeOnly`
-  values in ISO 8601 round-trip format ("O"). On the older targets `WriteRecord` and `WriteHeader` also take arrays, for compilers before C# 13.
+  overloads are .NET only. On the older targets `WriteRecord` and `WriteHeader` also take arrays, for compilers before C# 13.
 - **Floating point.** Doubles and floats are written in the shortest form that round-trips, as .NET Core 3.0 and
   later write them, not as .NET Framework's 15-digit `ToString()`. Parsing is exactly rounded, except for inputs the
   fast parser leaves to the BCL (thousands separators, other cultures, more than 19 significant digits right on a
@@ -414,7 +418,7 @@ build reads and writes exactly the same CSV: the tests run on .NET 10, on .NET 8
 
 ### Trimming and native AOT
 
-The `net10.0` builds of CsvHelper and CsvHelper.Linq are marked `IsAotCompatible` and `IsTrimmable`, so the trimming
+The `net10.0` and `net8.0` builds of CsvHelper and CsvHelper.Linq are marked `IsAotCompatible` and `IsTrimmable`, so the trimming
 and AOT analyzers check them on every build. Reading, writing and `[CsvRecord]` types work in trimmed and native AOT
 applications: the generated mappers are registered by a module initializer, not found with reflection. Two things need
 code generated at run time:

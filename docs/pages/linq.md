@@ -149,15 +149,15 @@ Reading only the members a query uses is what makes queries fast, and it changes
 
 Files without a record type are queried as `CsvDynamicRecord` rows. When a file has a header, the reader runs the
 filters and the projection on its records by column, without making rows: `row["Name"]` reads the field as a string,
-`row.GetDecimal("Total")` (and `GetInt32`, `GetInt64`, `GetDouble`, `GetBoolean`, `GetDateTime`) parses it, and
+`row.Parse<decimal>("Total")` (or any other type of `Parse<T>`) parses it, and
 `row.ContainsKey("Name")` and `row.FieldCount` work too. A column name that the header does not have throws
 `KeyNotFoundException` at the first row, as the row would.
 
 ```csharp
 var rows = CsvQueryable.FromFile("orders.csv");
 var totals = rows
-    .Where(r => r.GetDecimal("Total") > 100)
-    .Select(r => new { Customer = r["Customer"], Total = r.GetDecimal("Total") })
+    .Where(r => r.Parse<decimal>("Total") > 100)
+    .Select(r => new { Customer = r["Customer"], Total = r.Parse<decimal>("Total") })
     .ToList();
 ```
 

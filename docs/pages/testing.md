@@ -38,7 +38,7 @@ public static class OrderImporter
         var total = 0m;
         while (reader.Read())
         {
-            total += reader.GetDecimal(price) * reader.GetInt32(quantity);
+            total += reader.Parse<decimal>(price) * reader.Parse<int>(quantity);
         }
 
         return total;

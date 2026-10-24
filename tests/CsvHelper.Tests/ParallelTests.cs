@@ -73,7 +73,7 @@ public class ParallelTests
 			},
 		};
 		using var reader = CsvReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(text)), options);
-		var ids = reader.ParallelEnumerate(r => r.GetInt32(0)).ToList();
+		var ids = reader.ParallelEnumerate(r => r.Parse<int>(0)).ToList();
 		Assert.Equal(Enumerable.Range(0, 50_000).Where(i => i % 997 != 0), ids);
 		Assert.Equal(Enumerable.Range(0, 50_000).Where(i => i % 997 == 0).Count(), reported.Count);
 		Assert.True(reported.SequenceEqual(reported.Order()));
@@ -89,7 +89,7 @@ public class ParallelTests
 		{
 			foreach (var id in reader.ParallelEnumerate(r =>
 			{
-				var id = r.GetInt32(0);
+				var id = r.Parse<int>(0);
 
 				return id == 123_456 ? throw new InvalidDataException("boom") : id;
 			}))
@@ -110,7 +110,7 @@ public class ParallelTests
 		var seen = new List<int>();
 		Assert.Throws<CsvFormatException>(() =>
 		{
-			foreach (var id in reader.ParallelEnumerate(r => r.GetInt32(0))) seen.Add(id);
+			foreach (var id in reader.ParallelEnumerate(r => r.Parse<int>(0))) seen.Add(id);
 		});
 		Assert.Equal(Enumerable.Range(0, 77_777), seen);
 	}
@@ -120,7 +120,7 @@ public class ParallelTests
 	{
 		var text = BuildText(300_000, i => $"{i},value {i % 10}\n");
 		using var reader = CsvReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(text)), new CsvReaderOptions { HasHeader = false });
-		Assert.Equal(Enumerable.Range(0, 10), reader.ParallelEnumerate(r => r.GetInt32(0)).Take(10));
+		Assert.Equal(Enumerable.Range(0, 10), reader.ParallelEnumerate(r => r.Parse<int>(0)).Take(10));
 	}
 
 	[Fact]
@@ -138,10 +138,10 @@ public class ParallelTests
 		for (var i = 0; i < 3; i++)
 		{
 			Assert.True(reader.Read());
-			Assert.Equal(i, reader.GetInt32(0));
+			Assert.Equal(i, reader.Parse<int>(0));
 		}
 
-		Assert.Equal(Enumerable.Range(3, 100_000 - 3), reader.ParallelEnumerate(r => r.GetInt32(0)));
+		Assert.Equal(Enumerable.Range(3, 100_000 - 3), reader.ParallelEnumerate(r => r.Parse<int>(0)));
 	}
 
 	[Fact]

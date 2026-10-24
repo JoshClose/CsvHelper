@@ -178,7 +178,7 @@ public class RecordGeneratorTests
 
 		    public sealed class CentsConverter : ICsvConverter<Cents>
 		    {
-		        public Cents Read(CsvReader reader, int index) => new Cents { Value = reader.GetInt64(index) };
+		        public Cents Read(CsvReader reader, int index) => new Cents { Value = reader.Parse<long>(index) };
 
 		        public void Write(CsvWriter writer, Cents value) => writer.WriteField(value.Value);
 		    }
@@ -384,7 +384,7 @@ public class RecordGeneratorTests
 		Assert.Empty(generator);
 		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
 		Assert.Contains("public override void Read(global::CsvHelper.CsvReader reader, global::Sample.@event.Refillable record)", output);
-		Assert.Contains("if (column6 >= 0) record.Count = reader.GetInt32(column6);", output);
+		Assert.Contains("if (column6 >= 0) record.Count = reader.Parse<int>(column6);", output);
 		Assert.Contains("Column(reader, new string[] { \"Amount\" }, 1, -1, false, \"Refillable.Second\")", output);
 		Assert.Contains("Note = reader.GetStringOrNull(column1),", output);
 		// Types with init accessors or constructor parameters keep the base class's Read(reader, record), which throws.
@@ -392,7 +392,7 @@ public class RecordGeneratorTests
 		Assert.DoesNotContain("Read(global::CsvHelper.CsvReader reader, global::Sample.@event.Positional record)", output);
 		Assert.Contains("Register<global::Sample.@event.Outer.Middle.Deep>", output);
 		Assert.Contains("\"Column B\"", output);
-		Assert.Contains("column1 >= 0 ? reader.GetDecimal(column1) : 2.25M", output);
+		Assert.Contains("column1 >= 0 ? reader.Parse<decimal>(column1) : 2.25M", output);
 		Assert.DoesNotContain("ReadOnlyField", output);
 		Assert.DoesNotContain("Computed", output);
 	}
@@ -410,9 +410,9 @@ public class RecordGeneratorTests
 		Assert.Contains("Register<global::Sample.Plain>(static reader => new global::Sample.PlainMapper(reader));", output);
 		Assert.Contains("Column(reader, new string[] { \"A\", \"Alpha\", \"a\" }, -1, false, \"Everything.Name\")", output);
 		Assert.Contains("NestedMapper<global::Sample.Address>(reader, \"Home \")", output);
-		Assert.Contains("reader.GetDecimal(column9, culture0)", output);
-		Assert.Contains("reader.IsEmpty(column4) ? 2.5F : reader.GetSingle(column4)", output);
-		Assert.Contains("reader.IsEmpty(column8) ? (decimal)(1) : reader.GetDecimal(column8)", output);
+		Assert.Contains("reader.Parse<decimal>(column9, culture0)", output);
+		Assert.Contains("reader.IsEmpty(column4) ? 2.5F : reader.Parse<float>(column4)", output);
+		Assert.Contains("reader.IsEmpty(column8) ? (decimal)(1) : reader.Parse<decimal>(column8)", output);
 
 		// The record writers, which the C# 9 compilation above checked too.
 		Assert.Contains("global::CsvHelper.CsvRecordWriter.Register<global::Sample.Everything>(global::Sample.Everything.CreateCsvWriter);", output);
@@ -452,7 +452,7 @@ public class RecordGeneratorTests
 		Assert.Contains("Column(reader, \"Supplier Code\", -1, false, \"Foreign.Code\")", output);
 		Assert.DoesNotContain("Secret", output);
 		Assert.Contains("Total = converter0.Read(reader, column0),", output);
-		Assert.Contains("reader.GetDateTime(column2, formats0)", output);
+		Assert.Contains("reader.ParseExact<global::System.DateTime>(column2, formats0)", output);
 		Assert.Contains("global::System.TimeSpan.ParseExact(reader.GetString(column3), formats1, provider)", output);
 		Assert.Contains("new global::System.Uri(reader.GetString(column4), global::System.UriKind.RelativeOrAbsolute)", output);
 		Assert.Contains("Version = \"v2\",", output);
@@ -506,8 +506,8 @@ public class RecordGeneratorTests
 		Assert.Contains("new global::CsvHelper.CsvRecordMember(\"Name\", typeof(string), global::CsvHelper.CsvRecordMemberKind.Column, new string[] { \"Name\" }, -1, false, true),", output);
 		Assert.Contains("new global::CsvHelper.CsvRecordMember(\"X\", typeof(int), global::CsvHelper.CsvRecordMemberKind.Column, new string[] { \"X\" }, -1, false, false),", output);
 		Assert.Contains("select0 ? (reader.GetString(column0)) : \"\",", output);
-		Assert.Contains("select1 ? (column1 >= 0 ? reader.GetInt32(column1) : 3) : 3)", output);
-		Assert.Contains("X = select2 ? (reader.GetInt32(column2)) : default!,", output);
+		Assert.Contains("select1 ? (column1 >= 0 ? reader.Parse<int>(column1) : 3) : 3)", output);
+		Assert.Contains("X = select2 ? (reader.Parse<int>(column2)) : default!,", output);
 		Assert.Contains("Register<global::A>(global::A.CreateCsvMapper, null, global::A.GetCsvMembers, global::A.CreateCsvProjection);", output);
 	}
 
@@ -559,9 +559,9 @@ public class RecordGeneratorTests
 		var (_, _, output) = Run("[CsvHelper.CsvRecord] public partial class A { public int X { get; set; } public int? Y { get; set; } }");
 
 		Assert.Contains("column0 = Column(reader, \"X\", -1, false, \"A.X\");", output);
-		Assert.Contains("X = reader.GetInt32(column0),", output);
+		Assert.Contains("X = reader.Parse<int>(column0),", output);
 		// Nullable members read null for the reader's NullValues too, not only for empty fields.
-		Assert.Contains("Y = reader.IsNull(column1) ? default(int?) : reader.GetInt32(column1),", output);
+		Assert.Contains("Y = reader.IsNull(column1) ? default(int?) : reader.Parse<int>(column1),", output);
 		Assert.Contains("global::CsvHelper.CsvRecordMapper.Register<global::A>(global::A.CreateCsvMapper);", output);
 		// Without CsvHelper.Linq or [assembly: CsvRecordProjections], no projections.
 		Assert.DoesNotContain("Projection", output);

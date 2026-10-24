@@ -675,7 +675,7 @@ writer.WriteHeader("Item", "Price", "Note");
 while (reader.Read())
 {
     writer.WriteField(reader.GetSpan(0));          // copied as UTF-8
-    writer.WriteField(reader.GetDecimal(1));       // parsed as de-DE, written as invariant
+    writer.WriteField(reader.Parse<decimal>(1));   // parsed as de-DE, written as invariant
     writer.WriteField(reader.GetSpan(2));          // re-quoted for the new separator
     writer.EndRecord();
 }

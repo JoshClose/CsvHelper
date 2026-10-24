@@ -103,7 +103,7 @@ public class DecimalParseTests
 				RandomNumber(rng, text, info.NumberDecimalSeparator, maxDigits: 19);
 				var utf8 = Encoding.UTF8.GetBytes(text.ToString());
 				var fast = CsvParse.TryDecimalFast(utf8, point, out _);
-#if !NET10_0_OR_GREATER
+#if !NET
 				// Zeros are left to the BCL on the builds that may run on .NET Framework.
 				if (!fast && decimal.Parse(text.ToString(), Styles, provider) == 0m)
 				{
@@ -129,13 +129,10 @@ public class DecimalParseTests
 		{
 			var text = reader.GetString(i);
 			var expected = decimal.Parse(text, Styles, CultureInfo.InvariantCulture);
-			Assert.Equal(decimal.GetBits(expected), decimal.GetBits(reader.GetDecimal(i)));
-			Assert.Equal(expected.ToString(CultureInfo.InvariantCulture), reader.GetDecimal(i).ToString(CultureInfo.InvariantCulture));
-#if NET10_0_OR_GREATER
 			Assert.Equal(decimal.GetBits(expected), decimal.GetBits(reader.Parse<decimal>(i)));
+			Assert.Equal(expected.ToString(CultureInfo.InvariantCulture), reader.Parse<decimal>(i).ToString(CultureInfo.InvariantCulture));
 			Assert.True(reader.TryParse<decimal>(i, out var value));
 			Assert.Equal(decimal.GetBits(expected), decimal.GetBits(value));
-#endif
 		}
 	}
 

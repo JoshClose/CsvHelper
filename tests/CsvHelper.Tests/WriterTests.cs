@@ -261,7 +261,7 @@ public class WriterTests
 		});
 		using var reader = CsvReader.FromText(csv, new CsvReaderOptions { HasHeader = false });
 		var i = 0;
-		while (reader.Read()) Assert.Equal(values[i++], reader.GetDouble(0));
+		while (reader.Read()) Assert.Equal(values[i++], reader.Parse<double>(0));
 		Assert.Equal(values.Length, i);
 	}
 

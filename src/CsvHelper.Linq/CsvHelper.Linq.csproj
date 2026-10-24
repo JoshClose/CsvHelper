@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<!-- The same targets as CsvHelper, whose builds it runs on. -->
-		<TargetFrameworks>net10.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
+		<TargetFrameworks>net10.0;net8.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>

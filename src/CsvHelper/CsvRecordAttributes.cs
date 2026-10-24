@@ -121,8 +121,7 @@ public sealed class CsvConstructorAttribute : Attribute
 /// <remarks>
 /// <para>
 /// <see cref="DateTime"/> and <see cref="DateTimeOffset"/> members are read with
-/// <see cref="CsvReader.GetDateTime(int, string, IFormatProvider)"/> and
-/// <see cref="CsvReader.GetDateTimeOffset(int, string, IFormatProvider)"/>; members of other types, such as
+/// <see cref="CsvReader.ParseExact{T}(int, string, IFormatProvider)"/>; members of other types, such as
 /// <c>DateOnly</c>, <c>TimeOnly</c> and <see cref="TimeSpan"/>, with their static
 /// <c>ParseExact(string, string, IFormatProvider)</c> method.
 /// </para>
@@ -236,10 +235,10 @@ public sealed class CsvNullValuesAttribute : Attribute
 
 /// <summary>
 /// Reads a <see cref="bool"/> member of a <see cref="CsvRecordAttribute"/> type with the given true and false
-/// values, such as <c>Ja</c> and <c>Nein</c>, instead of those of <see cref="CsvReader.GetBoolean(int)"/>.
+/// values, such as <c>Ja</c> and <c>Nein</c>, instead of those of <c>Parse&lt;bool&gt;</c> (<see cref="CsvReader.Parse{T}(int)"/>).
 /// </summary>
 /// <remarks>
-/// The values are matched ignoring ASCII case and surrounding spaces and tabs, as <see cref="CsvReader.GetBoolean(int)"/>
+/// The values are matched ignoring ASCII case and surrounding spaces and tabs, as <c>Parse&lt;bool&gt;</c>
 /// matches its own. Any other value throws a <see cref="FormatException"/>.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
@@ -271,8 +270,8 @@ public sealed class CsvBooleanValuesAttribute : Attribute
 }
 
 /// <summary>
-/// Gives a member of an enum other names that the members of <see cref="CsvRecordAttribute"/> types read as it,
-/// such as <c>"on hold"</c> for <c>OnHold</c>. Its own name still matches.
+/// Gives a member of an enum other names that the members of <see cref="CsvRecordAttribute"/> types and
+/// <c>Parse&lt;T&gt;</c> of the reader read as it, such as <c>"on hold"</c> for <c>OnHold</c>. Its own name still matches.
 /// </summary>
 /// <remarks>
 /// The names are matched like the members' own names: ignoring ASCII case, unless two names of the enum differ only

@@ -11,24 +11,19 @@ namespace CsvHelper.Linq;
 /// <summary>
 /// Rewrites the lambdas that a query applies to <see cref="CsvDynamicRecord"/> rows into lambdas over the reader, so the
 /// reader runs them on its current record without creating the row: <c>row["Name"]</c> becomes
-/// <c>reader.GetStringOrNull(column)</c>, <c>row.GetDecimal("Total")</c> becomes <c>reader.GetDecimal(column)</c>, and so
-/// on, with the columns found by name once per run of the query.
+/// <c>reader.GetStringOrNull(column)</c>, <c>row.Parse&lt;decimal&gt;("Total")</c> becomes
+/// <c>reader.Parse&lt;decimal&gt;(column)</c>, and so on, with the columns found by name once per run of the query.
 /// </summary>
 [RequiresUnreferencedCode(Trimming.Unreferenced)]
 [RequiresDynamicCode(Trimming.Dynamic)]
 internal static class DynamicRows
 {
-	// The typed getters of CsvDynamicRecord, by name, and the helpers that read the same value from the reader.
-	private static readonly Dictionary<string, MethodInfo> Getters = new(StringComparer.Ordinal)
-	{
-		[nameof(CsvDynamicRecord.GetInt32)] = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Int32))!,
-		[nameof(CsvDynamicRecord.GetInt64)] = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Int64))!,
-		[nameof(CsvDynamicRecord.GetDouble)] = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Double))!,
-		[nameof(CsvDynamicRecord.GetDecimal)] = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Decimal))!,
-		[nameof(CsvDynamicRecord.GetBoolean)] = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Boolean))!,
-		[nameof(CsvDynamicRecord.GetDateTime)] = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.DateTime))!,
-	};
-
+	// Reads a field from the reader as CsvDynamicRecord.Parse<T> parses it; made generic for each type parsed.
+	private static readonly MethodInfo Parse = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Parse))!;
+#if NET
+	// The same for enums, which CsvEnumExtensions parses on .NET.
+	private static readonly MethodInfo ParseEnum = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.ParseEnum))!;
+#endif
 	private static readonly MethodInfo Text = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.Text))!;
 	private static readonly MethodInfo TextEquals = typeof(DynamicAccess).GetMethod(nameof(DynamicAccess.TextEquals))!;
 	private static readonly MethodInfo StringOrNull = typeof(CsvReader).GetMethod(nameof(CsvReader.GetStringOrNull), [typeof(int)])!;
@@ -37,7 +32,7 @@ internal static class DynamicRows
 	/// <summary>
 	/// Rewrites a lambda whose first parameter is a row into a lambda of <paramref name="reader"/> and
 	/// <paramref name="columns"/> (the indexes of the columns in <paramref name="slots"/>), when it uses the row only through
-	/// its indexers and typed getters with column names that do not depend on the row, and its <c>FieldCount</c> and
+	/// its indexers and <c>Parse&lt;T&gt;</c> with column names that do not depend on the row, and its <c>FieldCount</c> and
 	/// <c>ContainsKey</c>.
 	/// </summary>
 	/// <param name="lambda">The lambda.</param>
@@ -115,11 +110,26 @@ internal static class DynamicRows
 			return base.VisitBinary(node);
 		}
 
-		/// <summary>Replaces a call of the row's indexer, typed getters or <c>ContainsKey</c>.</summary>
+		/// <summary>Replaces a call of the row's indexer, <c>Parse&lt;T&gt;</c> or <c>ContainsKey</c>.</summary>
 		/// <param name="node">The call.</param>
 		/// <returns>The read of the reader, or the call with its arguments visited.</returns>
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
+#if NET
+			// row.Parse<MyEnum>("Name"), an extension method of the row on .NET.
+			if (node.Object is null && node.Method.DeclaringType == typeof(CsvEnumExtensions) && node.Arguments.Count == 2 && node.Arguments[0] == row)
+			{
+				if (Name(node.Arguments[1]) is not { } column)
+				{
+					return Fail($"the query calls {node.Method.Name} of the rows", node);
+				}
+
+				used.Add(column);
+
+				return Expression.Call(ParseEnum.MakeGenericMethod(node.Method.GetGenericArguments()), reader, Column(column), Expression.Constant(column));
+			}
+
+#endif
 			if (node.Object != row)
 			{
 				return base.VisitMethodCall(node);
@@ -147,8 +157,8 @@ internal static class DynamicRows
 				return Expression.Call(Text, reader, Column(name), Expression.Constant(name));
 			}
 
-			return Getters.TryGetValue(node.Method.Name, out var getter)
-				? Expression.Call(getter, reader, Column(name), Expression.Constant(name))
+			return node.Method is { Name: nameof(CsvDynamicRecord.Parse), IsGenericMethod: true }
+				? Expression.Call(Parse.MakeGenericMethod(node.Method.GetGenericArguments()), reader, Column(name), Expression.Constant(name))
 				: Fail($"the query calls {node.Method.Name} of the rows", node);
 		}
 
@@ -266,47 +276,29 @@ internal static class DynamicAccess
 	/// <returns>The value.</returns>
 	public static string? Text(CsvReader reader, int column, string name) => reader.GetStringOrNull(Column(column, name));
 
-	/// <summary>The field as an <see cref="int"/>, as <c>row.GetInt32(name)</c>.</summary>
+	/// <summary>The field parsed as <typeparamref name="T"/>, as <c>row.Parse&lt;T&gt;(name)</c>.</summary>
+	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="reader">The reader.</param>
 	/// <param name="column">The index of the column, or -1.</param>
 	/// <param name="name">The name of the column.</param>
 	/// <returns>The value.</returns>
-	public static int Int32(CsvReader reader, int column, string name) => reader.GetInt32(Column(column, name));
+	public static T Parse<T>(CsvReader reader, int column, string name)
+#if NET
+		where T : ISpanParsable<T>
+#endif
+		=> reader.Parse<T>(Column(column, name));
 
-	/// <summary>The field as a <see cref="long"/>, as <c>row.GetInt64(name)</c>.</summary>
+#if NET
+	/// <summary>The field parsed as the enum <typeparamref name="TEnum"/>, as <c>row.Parse&lt;TEnum&gt;(name)</c>.</summary>
+	/// <typeparam name="TEnum">The enum type.</typeparam>
 	/// <param name="reader">The reader.</param>
 	/// <param name="column">The index of the column, or -1.</param>
 	/// <param name="name">The name of the column.</param>
 	/// <returns>The value.</returns>
-	public static long Int64(CsvReader reader, int column, string name) => reader.GetInt64(Column(column, name));
-
-	/// <summary>The field as a <see cref="double"/>, as <c>row.GetDouble(name)</c>.</summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="column">The index of the column, or -1.</param>
-	/// <param name="name">The name of the column.</param>
-	/// <returns>The value.</returns>
-	public static double Double(CsvReader reader, int column, string name) => reader.GetDouble(Column(column, name));
-
-	/// <summary>The field as a <see cref="decimal"/>, as <c>row.GetDecimal(name)</c>.</summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="column">The index of the column, or -1.</param>
-	/// <param name="name">The name of the column.</param>
-	/// <returns>The value.</returns>
-	public static decimal Decimal(CsvReader reader, int column, string name) => reader.GetDecimal(Column(column, name));
-
-	/// <summary>The field as a <see cref="bool"/>, as <c>row.GetBoolean(name)</c>.</summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="column">The index of the column, or -1.</param>
-	/// <param name="name">The name of the column.</param>
-	/// <returns>The value.</returns>
-	public static bool Boolean(CsvReader reader, int column, string name) => reader.GetBoolean(Column(column, name));
-
-	/// <summary>The field as a <see cref="System.DateTime"/>, as <c>row.GetDateTime(name)</c>.</summary>
-	/// <param name="reader">The reader.</param>
-	/// <param name="column">The index of the column, or -1.</param>
-	/// <param name="name">The name of the column.</param>
-	/// <returns>The value.</returns>
-	public static DateTime DateTime(CsvReader reader, int column, string name) => reader.GetDateTime(Column(column, name));
+	public static TEnum ParseEnum<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields)] TEnum>(CsvReader reader, int column, string name)
+		where TEnum : struct, Enum
+		=> reader.Parse<TEnum>(Column(column, name));
+#endif
 
 	private static int Column(int column, string name) =>
 		column >= 0 ? column : throw new KeyNotFoundException($"The record has no column named '{name}'.");

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text;
 
 namespace CsvHelper.Tests;
@@ -176,10 +177,12 @@ public class ReaderOptionTests
 		var hidden = NoHeader with { IncludeValuesInExceptions = false };
 		Action<CsvReader>[] getters =
 		[
-			r => r.GetInt32(0), r => r.GetInt64(0), r => r.GetDouble(0), r => r.GetSingle(0), r => r.GetDecimal(0),
-			r => r.GetBoolean(0), r => r.GetDateTime(0), r => r.GetDateTimeOffset(0), r => r.GetGuid(0),
-#if NET10_0_OR_GREATER
-			r => r.Parse<short>(0), r => r.Parse<ulong>(0), r => r.Parse<TimeSpan>(0), r => r.Parse<DateOnly>(0),
+			r => r.Parse<int>(0), r => r.Parse<long>(0), r => r.Parse<double>(0), r => r.Parse<float>(0), r => r.Parse<decimal>(0),
+			r => r.Parse<bool>(0), r => r.Parse<DateTime>(0), r => r.Parse<DateTimeOffset>(0), r => r.Parse<Guid>(0),
+			r => r.Parse<short>(0), r => r.Parse<ulong>(0), r => r.ParseExact<DateTime>(0, "yyyyMMdd"),
+			r => r.Parse<TimeSpan>(0), r => r.Parse<BigInteger>(0),
+#if NET
+			r => r.Parse<DateOnly>(0),
 #endif
 		];
 		foreach (var get in getters)
@@ -194,13 +197,20 @@ public class ReaderOptionTests
 		// The BCL's messages (which name the value on .NET, but not for GUIDs) are kept otherwise.
 		using var shown = CsvReader.FromText(secret, NoHeader);
 		shown.Read();
-		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.GetBoolean(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<bool>(0)).Message);
 #if NET
-		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.GetInt32(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<int>(0)).Message);
+		// .NET 8's parsers of UTF-8 name the span instead of the value; the reader parses again as a string there.
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<long>(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<double>(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<float>(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<decimal>(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<short>(0)).Message);
+		Assert.Contains(secret, Assert.Throws<FormatException>(() => shown.Parse<ulong>(0)).Message);
 #endif
 		using var overflow = CsvReader.FromText("99999999999", hidden);
 		overflow.Read();
-		Assert.Contains("Int32", Assert.Throws<OverflowException>(() => overflow.GetInt32(0)).Message);
+		Assert.Contains("Int32", Assert.Throws<OverflowException>(() => overflow.Parse<int>(0)).Message);
 	}
 
 	[Fact]
@@ -255,17 +265,16 @@ public class ReaderOptionTests
 		using var reader = CsvReader.FromText("ja, J ,NEIN,n,true\n", options);
 		reader.Read();
 
-		Assert.Equal([true, true, false, false], Enumerable.Range(0, 4).Select(reader.GetBoolean));
-		Assert.Contains("'true'", Assert.Throws<FormatException>(() => reader.GetBoolean(4)).Message);
+		Assert.Equal([true, true, false, false], Enumerable.Range(0, 4).Select(i => reader.Parse<bool>(i)));
+		Assert.Contains("'true'", Assert.Throws<FormatException>(() => reader.Parse<bool>(4)).Message);
 
 		// Setting only one list keeps the built-in values of the other.
 		using var yes = CsvReader.FromText("oui,no\n", NoHeader with { TrueValues = ["oui"] });
 		yes.Read();
-		Assert.Equal([true, false], new[] { yes.GetBoolean(0), yes.GetBoolean(1) });
+		Assert.Equal([true, false], new[] { yes.Parse<bool>(0), yes.Parse<bool>(1) });
 		Assert.Throws<ArgumentException>(() => CsvReader.FromText("", NoHeader with { TrueValues = ["x"], FalseValues = ["X"] }));
 	}
 
-#if NET10_0_OR_GREATER
 	[Fact]
 	public void BooleanTextsApplyToTheGenericParse()
 	{
@@ -277,7 +286,6 @@ public class ReaderOptionTests
 		Assert.False(no);
 		Assert.False(reader.TryParse<bool>(2, out _));
 	}
-#endif
 
 	[Fact]
 	public void NormalizeHeaderName()
@@ -373,7 +381,7 @@ public class ReaderOptionTests
 		var csv = "id\n" + string.Concat(Enumerable.Range(0, 100_000).Select(i => i + "\n"));
 		var options = new CsvReaderOptions { ShouldSkipRecord = row => row.GetString(0).EndsWith("7", StringComparison.Ordinal) };
 		using var reader = CsvReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(csv)), options);
-		var rows = reader.ParallelEnumerate(r => (r.RowNumber, Id: r.GetInt32(0)), degree).ToList();
+		var rows = reader.ParallelEnumerate(r => (r.RowNumber, Id: r.Parse<int>(0)), degree).ToList();
 
 		Assert.Equal(Enumerable.Range(0, 100_000).Where(i => i % 10 != 7), rows.Select(r => r.Id));
 		Assert.Equal(Enumerable.Range(1, rows.Count).Select(i => (long)i), rows.Select(r => r.RowNumber));

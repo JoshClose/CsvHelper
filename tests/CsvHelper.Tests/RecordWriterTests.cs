@@ -53,7 +53,7 @@ public partial class NestsIndexed
 
 public sealed class PositiveConverter : ICsvConverter<int>
 {
-	public int Read(CsvReader reader, int index) => reader.GetInt32(index);
+	public int Read(CsvReader reader, int index) => reader.Parse<int>(index);
 
 	public void Write(CsvWriter writer, int value)
 	{

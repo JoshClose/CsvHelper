@@ -221,7 +221,7 @@ public sealed record CsvReaderOptions
 	/// <summary>
 	/// Whether exception messages contain field values, such as <c>'x' is not a valid boolean.</c> Defaults to
 	/// <see langword="true"/>. Set to <see langword="false"/> to keep values, which may be personal data, out of logs: the
-	/// messages of the typed getters, <c>Parse</c> and the generated record mappers then name the type but not the value.
+	/// messages of <c>Parse</c>, <c>ParseExact</c> and the generated record mappers then name the type but not the value.
 	/// Exceptions of your own parsers and converters are not changed.
 	/// </summary>
 	public bool IncludeValuesInExceptions { get; init; } = true;
@@ -262,14 +262,14 @@ public sealed record CsvReaderOptions
 	public IReadOnlyList<string>? NullValues { get; init; }
 
 	/// <summary>
-	/// The values that <see cref="CsvReader.GetBoolean(int)"/> reads as <see langword="true"/>, instead of <c>true</c>,
+	/// The values that <c>Parse&lt;bool&gt;</c> (<see cref="CsvReader.Parse{T}(int)"/>) reads as <see langword="true"/>, instead of <c>true</c>,
 	/// <c>yes</c>, <c>y</c>, <c>t</c> and <c>1</c>; matched ignoring ASCII case and surrounding spaces and tabs.
 	/// Defaults to <see langword="null"/>: the built-in values.
 	/// </summary>
 	public IReadOnlyList<string>? TrueValues { get; init; }
 
 	/// <summary>
-	/// The values that <see cref="CsvReader.GetBoolean(int)"/> reads as <see langword="false"/>, instead of <c>false</c>,
+	/// The values that <c>Parse&lt;bool&gt;</c> (<see cref="CsvReader.Parse{T}(int)"/>) reads as <see langword="false"/>, instead of <c>false</c>,
 	/// <c>no</c>, <c>n</c>, <c>f</c> and <c>0</c>; matched ignoring ASCII case and surrounding spaces and tabs.
 	/// Defaults to <see langword="null"/>: the built-in values.
 	/// </summary>

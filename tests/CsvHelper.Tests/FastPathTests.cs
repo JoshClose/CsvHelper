@@ -34,7 +34,7 @@ public class FastPathTests
 		}
 	}
 
-#if NET10_0_OR_GREATER
+#if NET
 	[Fact]
 	public void Utf8GetCharsAllLengths()
 	{

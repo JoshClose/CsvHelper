@@ -63,11 +63,14 @@ internal sealed class CsvDynamicSchema
 	/// <summary>Whether the input has a header; without one, the fields are called <c>Field1</c>, <c>Field2</c> and so on.</summary>
 	public bool HasHeader { get; }
 
-	/// <summary>The format provider of the typed getters.</summary>
+	/// <summary>The format provider of <see cref="CsvDynamicRecord.Parse{T}(string)"/>.</summary>
 	public IFormatProvider Provider { get; }
 
 	/// <summary>Whether exception messages leave values out (<see cref="CsvReaderOptions.IncludeValuesInExceptions"/> is off).</summary>
 	public bool HideValues { get; }
+
+	/// <summary>The true and false values of the options, or <see langword="null"/> for the built-in ones.</summary>
+	public CsvBooleanText? Booleans => booleans;
 
 	/// <summary>Whether a field past the end of a record throws instead of reading as empty.</summary>
 	public bool ThrowOnMissing { get; }
@@ -156,12 +159,6 @@ internal sealed class CsvDynamicSchema
 
 		return utf8.Length == 0 ? string.Empty : CsvReader.Utf8ToString(utf8);
 	}
-
-	/// <summary>Parses a field as a <see cref="bool"/> with the options' true and false values.</summary>
-	/// <param name="utf8">The field, decoded, as UTF-8.</param>
-	/// <returns>The value.</returns>
-	/// <exception cref="FormatException">The field is none of the true and false values.</exception>
-	public bool Boolean(ReadOnlySpan<byte> utf8) => booleans is null ? CsvParse.Boolean(utf8, HideValues) : booleans.Parse(utf8, HideValues);
 
 	private bool IsNullValue(ReadOnlySpan<byte> utf8)
 	{
