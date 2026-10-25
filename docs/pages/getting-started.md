@@ -10,6 +10,9 @@ CsvHelper runs on .NET 8 and later with SIMD, and on .NET Framework 4.7+ and .NE
 older .NET Core, Mono, Unity) with a portable scanner. Every build reads and writes the same CSV; see
 [Target frameworks](target-frameworks.html) for what differs.
 
+New to .NET? [Prerequisites](prerequisites.html) covers the basics that CsvHelper assumes, and that most questions
+about it turn out to be about: disposing, files and streams, encodings, cultures and lazy sequences.
+
 ## Upgrading from CsvHelper 33
 
 Version 34 is a rewrite with a new API: immutable options instead of `CsvConfiguration`, source-generated records
@@ -103,6 +106,8 @@ the same number of fields in every record.
 
 ## Next steps
 
+- [Prerequisites](prerequisites.html): the .NET basics that CsvHelper assumes, such as disposing, streams, encodings,
+  cultures and lazy sequences.
 - [Reading](reading.html): sources, headers, fields and rows, async and parallel reading, the parsing modes and every
   reader option.
 - [Records](records.html): the `[CsvRecord]`, `[CsvColumn]`, `[CsvIgnore]` and `[CsvConstructor]` attributes and

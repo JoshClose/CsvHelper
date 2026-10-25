@@ -21,6 +21,10 @@
 			"file": "docs/pages/getting-started.md"
 		},
 		{
+			"slug": "prerequisites",
+			"file": "docs/pages/prerequisites.md"
+		},
+		{
 			"slug": "reading",
 			"file": "docs/pages/reading.md"
 		},
@@ -196,6 +200,12 @@
 		],
 		"help": [
 			{
+				"icon": "graduation-cap",
+				"title": "Prerequisites",
+				"text": "Most questions turn out to be about .NET itself: disposing, streams, encodings, cultures and lazy sequences. Check here first.",
+				"link": "prerequisites"
+			},
+			{
 				"icon": "brands/stack-overflow",
 				"title": "Stack Overflow",
 				"text": "Ask questions with the csvhelper tag, where a large community can answer them.",
@@ -281,10 +291,10 @@
 		"migration/v29": "migration/v29.0.0.html",
 		"migration/v30": "migration/v30.0.0.html",
 		"examples": "getting-started.html#next-steps",
-		"examples/prerequisites": "getting-started.html",
-		"examples/prerequisites/reading-and-writing-files": "reading.html#opening-a-reader",
-		"examples/prerequisites/streams": "reading.html#opening-a-reader",
-		"examples/prerequisites/using-and-dispose": "getting-started.html#read-a-file",
+		"examples/prerequisites": "prerequisites.html",
+		"examples/prerequisites/reading-and-writing-files": "prerequisites.html#files-and-paths",
+		"examples/prerequisites/streams": "prerequisites.html#streams",
+		"examples/prerequisites/using-and-dispose": "prerequisites.html#using-and-dispose",
 		"examples/configuration": "records.html",
 		"examples/configuration/attributes": "records.html",
 		"examples/configuration/class-maps": "records.html#types-you-cannot-change-csvrecordmap",
@@ -313,7 +323,7 @@
 		"examples/type-conversion/custom-type-converter": "records.html#converters-csvconverter",
 		"examples/type-conversion/type-converter-options": "records.html#reading-values",
 		"examples/writing": "writing.html",
-		"examples/writing/appending-to-an-existing-file": "writing.html#creating-a-writer",
+		"examples/writing/appending-to-an-existing-file": "prerequisites.html#appending",
 		"examples/writing/write-anonymous-type-objects": "records.html#writing-dynamic-records",
 		"examples/writing/write-class-objects": "writing.html#writing-csvrecord-types",
 		"examples/writing/write-dynamic-objects": "records.html#writing-dynamic-records"

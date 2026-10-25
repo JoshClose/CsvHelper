@@ -1,5 +1,6 @@
 ﻿
 using CsvHelper;
+using CsvHelper.Linq;
 using System.Text;
 
 string[] newlines = ["\n", "\r\n", "\r"];
@@ -9,6 +10,11 @@ var getNewLine = () => newlines[rng.Next(3)];
 var sb = new StringBuilder();
 sb.Append("Id,Name").Append(getNewLine());
 sb.Append("1,one").Append(getNewLine());
+
+var query =
+	from record in CsvQueryable.FromText<Record>(sb.ToString())
+	where record.Id > 1
+	select record;
 
 using var writer = CsvWriter.Create(new MemoryStream(), new CsvWriterOptions
 {

@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" />
+		<ProjectReference Include="..\..\src\CsvHelper.Linq\CsvHelper.Linq.csproj" />
 		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
 	</ItemGroup>
 
