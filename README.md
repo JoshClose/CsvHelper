@@ -26,6 +26,8 @@ and .NET Standard 2.0 and 2.1 (see [Target frameworks](#target-frameworks)):
 Benchmarks against [Sep](https://github.com/nietras/Sep) and [Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan)
 are in [`bench/`](bench/CsvHelper.Benchmarks); results are in [Benchmarks](#benchmarks) below.
 
+For another cross-library view, see the [.NET Matrix CSV Processing comparison](https://matrix.dev-team.org/?category=csv-processing&library=CsvHelper).
+
 <!-- docs:exclude -->
 ## Install
 
