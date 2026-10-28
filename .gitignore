@@ -6,7 +6,18 @@ artifacts/
 .tmp/
 cache/
 .idea/
+TestResults/
 
 *.user
 *.psess
 *.log
+
+# Benchmark reports and dotnet-trace profiles (bench/CsvHelper.Benchmarks).
+BenchmarkDotNet.Artifacts/
+*.nettrace
+*.speedscope.json
+
+# The documentation site: its output, npm packages and the API snapshots of the release tags (docs/build.ps1).
+docs/_site/
+docs/node_modules/
+docs/.cache/

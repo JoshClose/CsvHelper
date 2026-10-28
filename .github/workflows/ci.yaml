@@ -2,14 +2,19 @@ name: CI
 on: [push, pull_request]
 jobs:
   ci:
-    runs-on: windows-latest
+    runs-on: windows-latest # The tests also run on .NET Framework 4.8.
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
+        uses: actions/checkout@v7
+        with:
           fetch-depth: 0
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          # The library and the tools target .NET 10; the tests also run on .NET 8.
+          dotnet-version: |
+            10.0.x
+            8.0.x
       - name: Display .NET Version
         run: dotnet --version
       - name: Restore

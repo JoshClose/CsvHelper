@@ -1,36 +1,30 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
-		<!-- Assembly -->
-		<AssemblyTitle>CsvHelper</AssemblyTitle>
-		<Description>A library for reading and writing CSV files. Extremely fast, flexible, and easy to use. Supports reading and writing of custom class objects.</Description>
-		<Copyright>Copyright © 2009-2024 Josh Close</Copyright>
-		<Authors>Josh Close</Authors>
-
-		<!-- Build -->
-		<AssemblyName>CsvHelper</AssemblyName>
-		<TargetFrameworks>net9.0;net8.0;netstandard2.1;netstandard2.0;net48;net47;net462</TargetFrameworks>
-		<!--<TargetFrameworks>net60</TargetFrameworks>-->
-		<LangVersion>latest</LangVersion>
-		<RootNamespace>CsvHelper</RootNamespace>
-		<DefaultLanguage>en-US</DefaultLanguage>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- net10.0 and net8.0 are the SIMD builds (net8.0 for .NET 8/9: generic math for Parse<T>, and SIMD without the
+		     AVX-512 VBMI2 compress, which needs .NET 10). netstandard2.1, netstandard2.0 and net47 (same code, see
+		     Polyfills/) use the portable 64-bit integer scanner. netstandard2.1 has spans and async streams built in, so it
+		     needs no System.Memory package: .NET Core 3.0 to 7 and Mono use it, and Unity 2021.2+, where that package clashes
+		     with the built-in types. net47 avoids the facade problems of .NET Standard libraries on .NET Framework 4.7/4.7.1. -->
+		<TargetFrameworks>net10.0;net8.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-        <WarningsAsErrors>nullable</WarningsAsErrors>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RootNamespace>CsvHelper</RootNamespace>
+		<AssemblyName>CsvHelper</AssemblyName>
+		<Description>A SIMD accelerated, allocation free CSV reader and RFC 4180 writer for .NET.</Description>
+	</PropertyGroup>
 
-		<!-- Sign -->
-		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
-		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-
-		<!-- NuGet -->
+	<PropertyGroup>
+		<!-- The NuGet package. ContinuousIntegrationBuild only on CI, so local builds keep real source paths. -->
+		<Authors>Josh Close</Authors>
+		<Copyright>Copyright © 2009-2026 Josh Close</Copyright>
 		<PackageId>CsvHelper</PackageId>
 		<PackageTags>csv;csvhelper;comma;separated;value;delimited</PackageTags>
 		<PackageIcon>Icon.png</PackageIcon>
-		<PackageIconUrl>https://raw.github.com/JoshClose/CsvHelper/master/logo/Comma-Small.png</PackageIconUrl>
 		<PackageProjectUrl>https://joshclose.github.io/CsvHelper/</PackageProjectUrl>
-		<PackageReleaseNotes>https://joshclose.github.io/CsvHelper/change-log</PackageReleaseNotes>
+		<PackageReleaseNotes>https://joshclose.github.io/CsvHelper/changelog.html</PackageReleaseNotes>
 		<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -39,62 +33,46 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 	</PropertyGroup>
-	
+
+	<PropertyGroup>
+		<!-- Strong named with CsvHelper 33's key, so the assembly keeps its identity. The tests and benchmarks are signed
+		     with it too: InternalsVisibleTo names them by this public key. -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+		<CsvHelperPublicKey>00240000048000009400000006020000002400005253413100040000010001000db97564beef98ad18a76ba31f769fab92b14341c9c37ed12f8004bb2a1a7fe42ad829b0e285915a816f05a32325c5e0ba83bd69d8f4d26a0785ccf446749842ad038f7325601a99c59a323dfa7ecf210139159da0aad1822b5d9c9be6d914ecbaa8b8c908c4af798a89b8777010971d81975079a49662ced398c742ff186a94</CsvHelperPublicKey>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+		<IsAotCompatible>true</IsAotCompatible>
+		<IsTrimmable>true</IsTrimmable>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net47'">
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+	</ItemGroup>
+
 	<ItemGroup>
-	  <None Remove="*.ncrunchproject" />
+		<!-- The source generator of [CsvRecord] types: built with the library and packed as its analyzer, so package
+		     consumers get it automatically. Projects that reference this project add it as an analyzer themselves. -->
+		<ProjectReference Include="..\CsvHelper.Generators\CsvHelper.Generators.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+		<None Include="..\CsvHelper.Generators\bin\$(Configuration)\netstandard2.0\CsvHelper.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<!-- .NET 4.6.2 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
-	</ItemGroup>
-
-	<!-- .NET 4.7 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
-	</ItemGroup>
-
-	<!-- .NET 4.8 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
-	</ItemGroup>
-
-	<!-- .NET Standard 2.0 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1" />
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Memory" Version="4.5.0" />
-	</ItemGroup>
-
-	<!-- .NET Standard 2.1 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-	</ItemGroup>
-
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="[1.0.0]">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+		<InternalsVisibleTo Include="CsvHelper.Tests" Key="$(CsvHelperPublicKey)" />
+		<InternalsVisibleTo Include="CsvHelper.Benchmarks" Key="$(CsvHelperPublicKey)" />
 	</ItemGroup>
 
 </Project>

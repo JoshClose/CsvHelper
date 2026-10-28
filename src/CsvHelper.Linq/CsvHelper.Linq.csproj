@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- The same targets as CsvHelper, whose builds it runs on. -->
+		<TargetFrameworks>net10.0;net8.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RootNamespace>CsvHelper.Linq</RootNamespace>
+		<AssemblyName>CsvHelper.Linq</AssemblyName>
+		<Description>A LINQ provider for CsvHelper: queries that read only the columns and rows they use, join with other LINQ providers, and write their results as CSV.</Description>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>Josh Close</Authors>
+		<Copyright>Copyright © 2009-2026 Josh Close</Copyright>
+		<PackageId>CsvHelper.Linq</PackageId>
+		<PackageTags>csv;csvhelper;linq;iqueryable;query;comma;separated;value;delimited</PackageTags>
+		<PackageIcon>Icon.png</PackageIcon>
+		<PackageProjectUrl>https://joshclose.github.io/CsvHelper/</PackageProjectUrl>
+		<PackageReleaseNotes>https://joshclose.github.io/CsvHelper/changelog.html</PackageReleaseNotes>
+		<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Strong named with CsvHelper's key, like CsvHelper itself: strong named assemblies can reference it. -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+		<!-- The query provider compiles expressions and needs reflection, which its public types say with
+		     [RequiresDynamicCode] and [RequiresUnreferencedCode]; the analyzers check that nothing else does. -->
+		<IsAotCompatible>true</IsAotCompatible>
+		<IsTrimmable>true</IsTrimmable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- PrivateAssets none: the package's dependency on CsvHelper keeps its analyzers, so the [CsvRecord] generator
+		     reaches applications that reference only CsvHelper.Linq. -->
+		<ProjectReference Include="..\CsvHelper\CsvHelper.csproj" PrivateAssets="none" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\CsvHelper\Icon.png" Pack="true" PackagePath="\" Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="CsvHelper.Linq.Tests" Key="00240000048000009400000006020000002400005253413100040000010001000db97564beef98ad18a76ba31f769fab92b14341c9c37ed12f8004bb2a1a7fe42ad829b0e285915a816f05a32325c5e0ba83bd69d8f4d26a0785ccf446749842ad038f7325601a99c59a323dfa7ecf210139159da0aad1822b5d9c9be6d914ecbaa8b8c908c4af798a89b8777010971d81975079a49662ced398c742ff186a94" />
+	</ItemGroup>
+
+</Project>

@@ -1,19 +1,22 @@
 name: Check Git Version
-on: 
+on:
   workflow_dispatch:
 jobs:
   git-version:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with: 
+        uses: actions/checkout@v7
+        with:
           fetch-depth: 0
       - name: Check Git Semantic Version
         id: gitversion
-        uses: PaulHatch/semantic-version@v5.3.0
+        uses: PaulHatch/semantic-version@v6.0.2
         with:
-          tag_prefix: ""
+          tag_prefix: "v"
+          # The same as publish.yaml: the (MAJOR) and (MINOR) commit markers of v5.
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
       - name: Output Version Info
         run: |
           echo "major: ${{ steps.gitversion.outputs.major }}"

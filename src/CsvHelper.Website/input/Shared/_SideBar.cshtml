@@ -1,9 +1,0 @@
-﻿@{
-	var items = TocItem.Create(Metadata.GetList<IMetadataDictionary>("toc"));
-	items.Add(new TocItem { Title = "Back to top", Link = "#" });
-	ViewBag.ShowChildren = true;
-}
-
-<div id="sidebar" class="sidebar">
-	<partial name="_TocItems" for="@items" />
-</div>

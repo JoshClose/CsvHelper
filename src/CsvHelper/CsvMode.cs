@@ -1,37 +1,33 @@
-﻿// Copyright 2009-2024 Josh Close
-// This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
-// See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
-// https://github.com/JoshClose/CsvHelper
-using CsvHelper.Configuration;
-
 namespace CsvHelper;
 
-/// <summary>
-/// Mode to use when parsing and writing.
-/// </summary>
+/// <summary>How fields are delimited and escaped, for <see cref="CsvReader"/> and <see cref="CsvWriter"/>.</summary>
 public enum CsvMode
 {
 	/// <summary>
-	/// Uses RFC 4180 format (default).<br/>
-	/// If a field contains a <see cref="CsvConfiguration.Delimiter"/> or <see cref="CsvConfiguration.NewLine"/>,
-	/// it is wrapped in <see cref="CsvConfiguration.Quote"/>s.<br/>
-	/// If quoted field contains a <see cref="CsvConfiguration.Quote"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.
+	/// RFC 4180 (the default). A quote at the start of a field opens a quoted field in which separators and line breaks
+	/// are ordinary text and a doubled quote (<c>""</c>) is an escaped quote. When reading, a quote that appears anywhere
+	/// else in an unquoted field is kept as an ordinary character.
 	/// </summary>
-	RFC4180 = 0,
+	Rfc4180 = 0,
 
 	/// <summary>
-	/// Uses escapes.<br/>
-	/// If a field contains a <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.NewLine"/>,
-	/// or <see cref="CsvConfiguration.Escape"/>, it is preceded by <see cref="CsvConfiguration.Escape"/>.<br/>
-	/// Newline defaults to \n.
+	/// No quoting: the escape character (<see cref="CsvReaderOptions.Escape"/>, <c>\</c> by default) makes the character
+	/// after it ordinary text. <c>a\,b</c> is the value <c>a,b</c>, <c>\\</c> is <c>\</c>, and an escape before a line
+	/// break keeps the line break in the field (before CR LF, the pair). Any other escaped character is itself:
+	/// <c>\n</c> is the letter <c>n</c>. Quotes are ordinary text.
 	/// </summary>
-	Escape,
+	Escape = 1,
 
 	/// <summary>
-	/// Doesn't use quotes or escapes.<br/>
-	/// This will ignore quoting and escape characters. This means a field cannot contain a
-	/// <see cref="CsvConfiguration.Delimiter"/>, <see cref="CsvConfiguration.Quote"/>, or
-	/// <see cref="CsvConfiguration.NewLine"/>, as they cannot be escaped.
+	/// No quoting or escaping: every character except the separator and line breaks is text, read and written as is
+	/// (TSV exports, logs).
 	/// </summary>
-	NoEscape
+	NoEscape = 2,
+
+	/// <summary>
+	/// Fixed-width columns without separators. Each line is a record, split into columns by
+	/// <see cref="CsvReaderOptions.FieldWidths"/>, counted in characters (UTF-16 code units, as <see cref="string.Length"/>
+	/// counts them).
+	/// </summary>
+	FixedWidth = 3,
 }

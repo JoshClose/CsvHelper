@@ -1,0 +1,7 @@
+<Project>
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+		<Deterministic>true</Deterministic>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+</Project>

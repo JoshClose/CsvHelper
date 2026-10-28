@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- net8.0 runs the netstandard2.1 builds of CsvHelper and CsvHelper.Linq, net48 the net47 builds. -->
+		<TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Signed with the libraries' key: CsvHelper.Linq's InternalsVisibleTo names this assembly by its public key. -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\src\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<None Remove="App.config" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="coverlet.collector" Version="6.0.4" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+	</ItemGroup>
+
+	<!-- Entity Framework Core with SQLite, for the queries that join CSV with a database. EF Core 9 runs on .NET 8 and later. -->
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.8" />
+		<!-- Newer than the one EF Core 9.0.8 brings, which has a known vulnerability. -->
+		<PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+		<Using Include="CsvHelper.Linq" />
+		<Using Include="System.Linq.Expressions" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\CsvHelper.Linq\CsvHelper.Linq.csproj" />
+		<!-- The [CsvRecord] generator, which writes projections because this assembly references CsvHelper.Linq. -->
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+</Project>

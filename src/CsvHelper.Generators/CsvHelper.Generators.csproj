@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Source generator for [CsvRecord] types. It ships inside the CsvHelper package (analyzers/dotnet/cs).
+		     Built against Roslyn 4.3, the version Unity loads generators with (and the compiler of the .NET 6.0.400 SDK and
+		     Visual Studio 17.3), so it runs there and on every later compiler. Newer Roslyn APIs do not compile here. -->
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsRoslynComponent>true</IsRoslynComponent>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>CsvHelper.Generators</RootNamespace>
+		<AssemblyName>CsvHelper.Generators</AssemblyName>
+		<!-- RS2008: analyzer release tracking files, for analyzer packages. -->
+		<NoWarn>$(NoWarn);RS2008</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+	</ItemGroup>
+
+</Project>

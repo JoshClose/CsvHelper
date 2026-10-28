@@ -46,9 +46,12 @@ csharp_style_allow_blank_lines_between_consecutive_braces_experimental = true:si
 csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true:suggestion
 csharp_style_prefer_primary_constructors = true:suggestion
 
-[*.yml]
+[*.{yml,yaml}]
 indent_style = space
 indent_size = 2
+
+[*.{js,css,json,ps1,csproj,props,targets,config,xml}]
+indent_style = tab
 
 [*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
