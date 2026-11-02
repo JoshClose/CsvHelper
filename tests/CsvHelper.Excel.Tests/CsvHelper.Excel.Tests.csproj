@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- net10.0 runs the net10.0 builds of CsvHelper and CsvHelper.Excel (ZipArchive's async API), net8.0 the net8.0
+		     builds (the sync fallback), and net48 the net47 builds, on .NET Framework's ZipArchive. The netstandard builds
+		     are compiled but not run; their zip code is the same as net8.0's. -->
+		<TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Signed with the libraries' key: CsvHelper.Excel's InternalsVisibleTo names this assembly by its public key. -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\src\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+		<!-- The package assemblies (System.Memory, System.Buffers, ...) reference older versions of each other; an
+		     application gets binding redirects for them, a test library has to ask. -->
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<None Remove="App.config" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="coverlet.collector" Version="6.0.4" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\CsvHelper.Excel\CsvHelper.Excel.csproj" />
+		<!-- For the gate tests: reader.Query<T>() over a sheet. It also makes the generator write projections. -->
+		<ProjectReference Include="..\..\src\CsvHelper.Linq\CsvHelper.Linq.csproj" />
+		<!-- The [CsvRecord] generator, for the generated mappers of the test types. -->
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+</Project>

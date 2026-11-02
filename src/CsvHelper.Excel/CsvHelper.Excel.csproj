@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- The same targets as CsvHelper, whose internals it builds on: each build runs on CsvHelper's build of the
+		     same target. -->
+		<TargetFrameworks>net10.0;net8.0;netstandard2.1;netstandard2.0;net47</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<RootNamespace>CsvHelper.Excel</RootNamespace>
+		<AssemblyName>CsvHelper.Excel</AssemblyName>
+		<Description>Excel workbooks (.xlsx) for CsvHelper: streaming reads and writes of typed cells with CsvHelper's record mapping, in constant memory and without an Excel library.</Description>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>Josh Close</Authors>
+		<Copyright>Copyright © 2009-2026 Josh Close</Copyright>
+		<PackageId>CsvHelper.Excel</PackageId>
+		<PackageTags>excel;xlsx;spreadsheet;csvhelper</PackageTags>
+		<PackageIcon>Icon.png</PackageIcon>
+		<PackageProjectUrl>https://joshclose.github.io/CsvHelper/</PackageProjectUrl>
+		<PackageReleaseNotes>https://joshclose.github.io/CsvHelper/changelog.html</PackageReleaseNotes>
+		<PackageLicenseExpression>MS-PL OR Apache-2.0</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<RepositoryUrl>https://github.com/JoshClose/CsvHelper</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Strong named with CsvHelper's key: CsvHelper's InternalsVisibleTo names this assembly by that public key. -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
+		<!-- No reflection and no code generated at run time, which the analyzers check. -->
+		<IsAotCompatible>true</IsAotCompatible>
+		<IsTrimmable>true</IsTrimmable>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net47'">
+		<!-- ZipArchive. SDK-style .NET Framework projects reference only System.IO.Compression.FileSystem implicitly, and
+		     pack turns this reference into a frameworkAssembly entry of the package. -->
+		<Reference Include="System.IO.Compression" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- PrivateAssets none: the package's dependency on CsvHelper keeps its analyzers, so the [CsvRecord] generator
+		     reaches applications that reference only CsvHelper.Excel. System.Memory, Microsoft.Bcl.AsyncInterfaces and
+		     the polyfills (internal, visible through InternalsVisibleTo) come from CsvHelper too. -->
+		<ProjectReference Include="..\CsvHelper\CsvHelper.csproj" PrivateAssets="none" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\CsvHelper\Icon.png" Pack="true" PackagePath="\" Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="CsvHelper.Excel.Tests" Key="00240000048000009400000006020000002400005253413100040000010001000db97564beef98ad18a76ba31f769fab92b14341c9c37ed12f8004bb2a1a7fe42ad829b0e285915a816f05a32325c5e0ba83bd69d8f4d26a0785ccf446749842ad038f7325601a99c59a323dfa7ecf210139159da0aad1822b5d9c9be6d914ecbaa8b8c908c4af798a89b8777010971d81975079a49662ced398c742ff186a94" />
+	</ItemGroup>
+
+	<!-- CsvHelper.Excel uses CsvHelper's internals, so its package needs that exact CsvHelper version, not a minimum. NuGet
+	     writes a project reference as ">= version"; this rewrites CsvHelper's to "[version]" after NuGet's
+	     _GetProjectReferenceVersions has computed it. The target and item names are NuGet's internals (in
+	     NuGet.Build.Tasks.Pack.targets of SDK 10.0.402), so CI packs with a known version and checks the nuspec
+	     (.github/workflows/ci.yaml). VersionGuard covers applications that override the pin anyway. -->
+	<Target Name="PinCsvHelperVersion" AfterTargets="_GetProjectReferenceVersions">
+		<ItemGroup>
+			<_ProjectReferencesWithVersions Update="@(_ProjectReferencesWithVersions)" Condition="'%(Filename)' == 'CsvHelper'" ProjectVersion="[%(ProjectVersion)]" />
+		</ItemGroup>
+	</Target>
+
+</Project>

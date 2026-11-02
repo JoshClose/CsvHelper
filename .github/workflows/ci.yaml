@@ -23,3 +23,30 @@ jobs:
         run: dotnet build --configuration Release --no-restore
       - name: Test
         run: dotnet test --configuration Release --no-restore --no-build
+      - name: Check CsvHelper.Excel Package
+        # CsvHelper.Excel uses CsvHelper's internals, so its package must depend on its exact CsvHelper version. The
+        # PinCsvHelperVersion target of its project does that through NuGet's internal pack targets; this fails if they
+        # change. It also checks the frameworkAssembly entry of net47, which needs System.IO.Compression for ZipArchive.
+        run: |
+          dotnet pack src/CsvHelper.Excel --configuration Release --no-build -o pack-check -p:PackageVersion=0.0.0-ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip = [System.IO.Compression.ZipFile]::OpenRead("pack-check/CsvHelper.Excel.0.0.0-ci.nupkg")
+          try {
+            $reader = [System.IO.StreamReader]::new($zip.GetEntry("CsvHelper.Excel.nuspec").Open())
+            [xml]$nuspec = $reader.ReadToEnd()
+            $reader.Dispose()
+          } finally {
+            $zip.Dispose()
+          }
+          $metadata = $nuspec.package.metadata
+          $groups = @($metadata.dependencies.group)
+          $pinned = @($groups | Where-Object { @($_.dependency | Where-Object { $_.id -eq "CsvHelper" -and $_.version -eq "[0.0.0-ci]" }).Count -eq 1 })
+          if ($groups.Count -eq 0 -or $pinned.Count -ne $groups.Count) {
+            throw "Every target of CsvHelper.Excel must depend on CsvHelper [0.0.0-ci]:`n$($metadata.dependencies.OuterXml)"
+          }
+          $compression = @($metadata.frameworkAssemblies.frameworkAssembly | Where-Object { $_.assemblyName -eq "System.IO.Compression" -and $_.targetFramework -eq ".NETFramework4.7" })
+          if ($compression.Count -ne 1) {
+            throw "The net47 target of CsvHelper.Excel must reference System.IO.Compression:`n$($metadata.frameworkAssemblies.OuterXml)"
+          }
+          "CsvHelper.Excel depends on CsvHelper [0.0.0-ci] in all $($groups.Count) targets, and on System.IO.Compression in net47."

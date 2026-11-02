@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted; it is not built yet.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its step 1 (skeleton and packaging) was built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Nothing in it is built yet. The changes it made to other sections are listed at the end of this phase ("Changes elsewhere").
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Step 1 of "Order of work" was built on 2026-11-02; "As built", at the end of this phase, records it. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -282,6 +282,8 @@ Type layout (`src/CsvHelper.Excel`):
 
 ```
 ExcelWorkbook.cs, ExcelReader.cs, ExcelReaderOptions.cs, ExcelSheet.cs (with the two enums), AssemblyInfo.cs
+Internal/
+  VersionGuard.cs       the check that the loaded CsvHelper is the version built with (see "Version guard")
 Internal/Package/
   PackageArchive.cs     the ZipArchive: input handling, signature sniffing, temp-file spill, entries by part name
   InflateGuard.cs       the workbook's byte budget, and LimitedReadStream around every part
@@ -761,6 +763,43 @@ Applied at approval (2026-11-02):
 - **Layout:** added `tools/CsvHelper.Excel.Corpus` and `bench/CsvHelper.Benchmarks/Data`.
 - **Defaults:** added the limits, the default sheet, empty-row handling and padding.
 - **Feature coverage:** split "All sheets, and the sheet list with metadata" into the list (Phase 1), and all sheets plus dimensions (Phase 3).
+
+#### As built
+
+Filled in step by step; the code is the reference.
+
+**Step 1: skeleton and packaging (2026-11-02).**
+
+- **Projects:**
+  - `src/CsvHelper.Excel` and `tests/CsvHelper.Excel.Tests` are in `CsvHelper.sln`, under its `src` and `tests` folders. `tools/CsvHelper.Excel.Corpus` joins at step 7.
+  - The library's csproj follows "Project setup" item by item. It also has `AssemblyInfo.cs` with `[assembly: CLSCompliant(true)]`, as core and CsvHelper.Linq do.
+  - Its description covers v1 (reads and writes). Nothing publishes it before Phase 6.
+  - The test project targets `net10.0;net8.0;net48`, is signed, and references CsvHelper.Excel, CsvHelper.Linq and the generator (as an analyzer only). It has the net48 binding redirects and `App.config`, as CsvHelper.Linq.Tests does.
+  - The oracle packages (DocumentFormat.OpenXml, ClosedXML, ExcelDataReader) aren't referenced yet. They come with step 7, whose tests are the first to use them.
+- **Checked by hand:**
+  - All the assemblies have CsvHelper's public key token (`8c4959082be5c823`).
+  - Core's `InternalsVisibleTo CsvHelper.Excel` lets the assembly in. A throwaway file that used `CsvCellKind`, `CsvRecordSource` and the `ArgumentNullException.ThrowIfNull` polyfill compiled on all five targets, and was then deleted.
+- **Pack:**
+  - `dotnet pack src/CsvHelper.Excel -p:PackageVersion=0.0.0-ci` gives `<dependency id="CsvHelper" version="[0.0.0-ci]" include="All" />` in each of the five groups. `include="All"` comes from `PrivateAssets="none"`, so the generator reaches applications.
+  - net47 gets `<frameworkAssembly assemblyName="System.IO.Compression" targetFramework=".NETFramework4.7" />`. That holds even though no code uses `ZipArchive` yet, because pack reads the `Reference` item, not the compiled references.
+  - NuGet notes that the package has no readme, as it does for CsvHelper.Linq.
+- **CI pack check:** the "Check CsvHelper.Excel Package" step in `ci.yaml`, after the tests.
+  - It packs with `--no-build` and `-p:PackageVersion=0.0.0-ci`, then reads the nuspec from the `.nupkg`.
+  - It fails unless every dependency group pins CsvHelper `[0.0.0-ci]` and net47 has the `System.IO.Compression` framework assembly.
+  - It counts the groups rather than expecting five, so a change of targets doesn't break it.
+  - It was run locally from the YAML text. It passes as is, and it fails, naming what's wrong, with the pin target disabled or with the net47 reference removed.
+- **Version guard** (`Internal/VersionGuard.cs`):
+  - `EnsureMatch()` is for every way of opening a workbook to call first. Step 6 wires it into `ExcelWorkbook` and `ExcelReader`.
+  - Only a passing check is remembered. A failed one runs again, and throws again, on the next call.
+  - `Check(csvHelper, excel)` compares the two assemblies' `AssemblyInformationalVersion` without the build metadata after `+`. Prerelease labels count: `34.0.0-beta.1` and `34.0.0` differ.
+  - A missing or empty attribute skips the check.
+  - The message: "CsvHelper.Excel 34.0.0 needs CsvHelper 34.0.0, but CsvHelper 34.1.0 is loaded. CsvHelper.Excel uses CsvHelper's internals, so it works only with the CsvHelper version of the same release: reference CsvHelper 34.0.0, or CsvHelper.Excel 34.1.0." The second suggestion relies on lockstep releases.
+  - The guard touches only the public `CsvReader` type, so it still runs against a CsvHelper whose internals differ.
+  - `VersionGuardTests`:
+    - The built pair matches.
+    - The mismatch tests use dynamic assemblies (`AssemblyBuilder`) with their own informational version as stand-ins for other builds, because one test run loads only one CsvHelper. They cover a mismatch with the exact message, prerelease labels, build metadata ignored, a missing or empty attribute, and `VersionOf`.
+  - The gate's "a mismatched CsvHelper fails with the guard's message" is covered at unit level. Step 6 adds a test that each `Open` runs the guard before anything else.
+- **Result:** the solution builds in Release with no warnings. Every test passes: the existing counts are unchanged, plus the 10 new tests on each of net10.0, net8.0 and net48.
 
 ### Phase 2: typed reading (M)
 
