@@ -165,35 +165,55 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 
 	private bool disposed;
 
+	// The fields of a record source (CsvReader.Cells.cs) come after all the others: the CLR lays out reference fields
+	// first, in declaration order, and partial files in compile order, where CsvReader.Cells.cs comes first. Declared there,
+	// they moved buffer and ends past offset 127, which makes each access to them 3 bytes longer.
+
+	// Whether the fields have cell kinds (the reader reads a record source, or is a parallel worker of one).
+	private readonly bool typedCells;
+	// The source of the records, owned by the reader; on the workers of ParallelEnumerate, only for Locate.
+	private CsvRecordSource? recordSource;
+	private RecordBatch? recordBatch;
+	// The kind of each field, at the index of its first entry in ends (kinds[fieldBase + i] for field i).
+	private CsvCellKind[]? kinds;
+	// The line of each record of the index, as the source numbers them (rowLines[r] for rowEnds[r]).
+	private long[]? rowLines;
+
 	private enum Step { Rows, NeedData, End }
 
 	/// <param name="options">The options.</param>
 	/// <param name="rentIndex">False for parallel workers, which use the index of the batches given to them.</param>
 	/// <param name="sharedPool">A string pool whose values this reader shares (parallel workers).</param>
+	/// <param name="cells">
+	/// True for a reader of a <see cref="CsvRecordSource"/> (and its parallel workers): its fields are decoded and have
+	/// cell kinds, so none of the CSV dialect applies, and the source numbers the lines.
+	/// </param>
 	// Not inlined: it runs once per reader, and inlined into the method that creates the reader it took registers from
 	// that method's read loop (a 13% slower loop parsing floats, depending on the size of the constructor).
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	private CsvReader(CsvReaderOptions? options, bool rentIndex = true, CsvStringPool? sharedPool = null)
+	private CsvReader(CsvReaderOptions? options, bool rentIndex = true, CsvStringPool? sharedPool = null, bool cells = false)
 	{
 		options ??= CsvReaderOptions.Default;
 		options.Validate();
 		this.options = options;
 		provider = options.FormatProvider ?? System.Globalization.CultureInfo.InvariantCulture;
-		quotes = options.Mode == CsvMode.Rfc4180;
-		escapes = options.Mode == CsvMode.Escape;
-		fixedWidth = options.Mode == CsvMode.FixedWidth;
+		typedCells = cells;
+		var csv = !cells;
+		quotes = csv && options.Mode == CsvMode.Rfc4180;
+		escapes = csv && options.Mode == CsvMode.Escape;
+		fixedWidth = csv && options.Mode == CsvMode.FixedWidth;
 		// The scanner's quote mask matches the escape character in Escape mode; elsewhere quoteByte is only used with quotes.
 		quoteByte = (byte)(escapes ? options.Escape : options.Quote);
 		quoteInt = quotes ? quoteByte : -1;
 		escapeByte = (byte)options.Escape;
 		escapeInt = escapes ? escapeByte : -1;
-		comments = options.CommentPrefix.HasValue;
+		comments = csv && options.CommentPrefix.HasValue;
 		commentByte = (byte)options.CommentPrefix.GetValueOrDefault();
 		commentInt = comments ? commentByte : -1;
 		malformedMode = options.MalformedData;
 		onMalformed = options.OnMalformedRecord;
 		// Detect malformed quoting only when someone needs to know about it.
-		strict = malformedMode != CsvMalformedDataHandling.Recover || onMalformed is not null;
+		strict = csv && (malformedMode != CsvMalformedDataHandling.Recover || onMalformed is not null);
 		lineBreaksInQuotes = options.AllowLineBreaksInQuotes;
 		trim = options.TrimWhitespace ?? fixedWidth;
 		trimInsideQuotes = quotes && options.TrimInsideQuotes;
@@ -202,7 +222,8 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		whitespace = customWhitespace ? WhitespaceTable(options.WhitespaceCharacters) : defaultWhitespace;
 
 		maxRecordSize = options.MaxRecordSize ?? 0;
-		trackLines = options.TrackLineNumbers;
+		// A record source knows the line (row) of each record, at no cost, and its errors name it.
+		trackLines = cells || options.TrackLineNumbers;
 		hideValues = !options.IncludeValuesInExceptions;
 		normalizeHeader = options.NormalizeHeaderName;
 		shouldSkip = options.ShouldSkipRecord;
@@ -238,6 +259,12 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 			fixedStarts = FixedWidth.Starts(options.FieldWidths!);
 			// A line writes a column entry for every column but the first, its terminator and, after CR, an LF entry.
 			indexReserve = Math.Max(BlockSize, fixedStarts.Length) + 1;
+			separatorKnown = true;
+		}
+		else if (cells)
+		{
+			// Nothing to detect: the byte the source's fields are followed by, which RawRecord shows between them.
+			sepByte = (byte)(options.Separator ?? ',');
 			separatorKnown = true;
 		}
 		else if (options.Separator is char sep)
@@ -634,9 +661,17 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		var recordEnd = (ends[b + count] & int.MaxValue) - 1;
 		if (trackLines)
 		{
-			// Every record, skipped or not, is at least one line, and its quoted (or escaped) line breaks are more.
-			lineNumber = nextLine;
-			nextLine += 1 + LineBreaks(new ReadOnlySpan<byte>(buffer, start, Math.Max(recordEnd - start, 0)));
+			if (rowLines is { } lines)
+			{
+				// A record source numbers its records itself (the rows of a sheet); this is the record's entry.
+				lineNumber = lines[rowIndex - 1];
+			}
+			else
+			{
+				// Every record, skipped or not, is at least one line, and its quoted (or escaped) line breaks are more.
+				lineNumber = nextLine;
+				nextLine += 1 + LineBreaks(new ReadOnlySpan<byte>(buffer, start, Math.Max(recordEnd - start, 0)));
+			}
 		}
 
 		if (nextBadPos != int.MaxValue && (ends[last] & int.MaxValue) > nextBadPos)
@@ -670,7 +705,7 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 				{
 					throw new CsvFormatException(
 						$"Record {recordNumber + 1}{AtLine} has {count} fields but {expectedFieldCount} were expected.",
-						recordNumber + 1, discarded + start) { LineNumber = LineOrZero };
+						recordNumber + 1, discarded + start) { LineNumber = LineOrZero, Location = Locate(-1) };
 				}
 
 				onMalformed?.Invoke(new CsvMalformedRecord(recordNumber + 1, CsvMalformedReason.FieldCountMismatch, true,
@@ -704,8 +739,25 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	// The line of the record being checked, for errors: 0 without TrackLineNumbers.
 	private long LineOrZero => trackLines ? lineNumber : 0;
 
-	// " (line n)" in error messages, with TrackLineNumbers.
-	private string AtLine => trackLines ? $" (line {lineNumber})" : "";
+	// " (line n)" in error messages, with TrackLineNumbers; where the record is, such as " (Orders!14:14)", for a record source.
+	private string AtLine => At(-1);
+
+	/// <summary>
+	/// Where the current record, or its field <paramref name="field"/>, is, for error messages: <c>" (line n)"</c> with
+	/// <see cref="CsvReaderOptions.TrackLineNumbers"/>, the location a record source gives (<c>" (Orders!C14)"</c>), or
+	/// nothing.
+	/// </summary>
+	/// <param name="field">The 0-based index of the field, or -1 for the whole record.</param>
+	/// <returns>The text, with a leading space, or an empty string.</returns>
+	private string At(int field)
+	{
+		if (Locate(field) is { } location)
+		{
+			return $" ({location})";
+		}
+
+		return trackLines ? $" (line {lineNumber})" : "";
+	}
 
 	/// <summary>The number of line breaks in <paramref name="s"/>: CR, LF and CR LF each count once.</summary>
 	private static int LineBreaks(ReadOnlySpan<byte> s)
@@ -762,6 +814,11 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 
 	private bool Fill()
 	{
+		if (recordSource is not null)
+		{
+			return FillFromSource();
+		}
+
 		Recycle();
 		while (true)
 		{
@@ -776,6 +833,11 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 
 	private async ValueTask<bool> FillAsync(CancellationToken cancellationToken)
 	{
+		if (recordSource is not null)
+		{
+			return await FillFromSourceAsync(cancellationToken).ConfigureAwait(false);
+		}
+
 		Recycle();
 		while (true)
 		{
@@ -1027,6 +1089,18 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		ArrayPool<int>.Shared.Return(rowEnds);
 		ends = [];
 		rowEnds = [];
+		if (kinds is not null)
+		{
+			ArrayPool<CsvCellKind>.Shared.Return(kinds);
+			kinds = [];
+		}
+
+		if (rowLines is not null)
+		{
+			ArrayPool<long>.Shared.Return(rowLines);
+			rowLines = [];
+		}
+
 		if (chars is not null) ArrayPool<char>.Shared.Return(chars);
 		chars = null;
 		rowCount = rowIndex = fieldCount = 0;

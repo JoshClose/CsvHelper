@@ -13,7 +13,7 @@ internal sealed class CsvDynamicSchema
 {
 	// The schemas made so far, by header and options; cleared when it grows past MaxInterned.
 	private const int MaxInterned = 256;
-	private static readonly Dictionary<(string Names, CsvReaderOptions Options), CsvDynamicSchema> Interned = [];
+	private static readonly Dictionary<(string Names, CsvReaderOptions Options, bool Cells), CsvDynamicSchema> Interned = [];
 
 	private readonly Dictionary<string, int> exact;
 	private readonly Dictionary<string, int> loose;
@@ -21,10 +21,11 @@ internal sealed class CsvDynamicSchema
 	private readonly byte[][]? nullValues;
 	private readonly CsvBooleanText? booleans;
 
-	private CsvDynamicSchema(string[] names, string[] keys, CsvReaderOptions options, byte[][]? nullValues, CsvBooleanText? booleans)
+	private CsvDynamicSchema(string[] names, string[] keys, CsvReaderOptions options, byte[][]? nullValues, CsvBooleanText? booleans, bool cells)
 	{
 		Names = names;
 		HasHeader = options.HasHeader;
+		Cells = cells;
 		normalize = options.NormalizeHeaderName;
 		Provider = options.FormatProvider ?? CultureInfo.InvariantCulture;
 		HideValues = !options.IncludeValuesInExceptions;
@@ -79,17 +80,24 @@ internal sealed class CsvDynamicSchema
 	public byte Quote { get; }
 
 	/// <summary>
-	/// The schema of a reader's records: an existing one for the same header and options, else a new one.
+	/// Whether the records come from a record source: each keeps the <see cref="CsvCellKind"/> of its fields after its
+	/// offsets, and parses its numbers and booleans with the invariant culture.
+	/// </summary>
+	public bool Cells { get; }
+
+	/// <summary>
+	/// The schema of a reader's records: an existing one for the same header, options and kind of input, else a new one.
 	/// </summary>
 	/// <param name="names">The header names; empty without a header.</param>
 	/// <param name="keys">The names as they are matched (<see cref="CsvReaderOptions.NormalizeHeaderName"/> applied).</param>
 	/// <param name="options">The reader's options.</param>
 	/// <param name="nullValues">The UTF-8 of <see cref="CsvReaderOptions.NullValues"/>, or <see langword="null"/>.</param>
 	/// <param name="booleans">The true and false values of the options, or <see langword="null"/> for the built-in ones.</param>
+	/// <param name="cells">Whether the reader reads a record source, whose fields have cell kinds.</param>
 	/// <returns>The schema.</returns>
-	public static CsvDynamicSchema Get(string[] names, string[] keys, CsvReaderOptions options, byte[][]? nullValues, CsvBooleanText? booleans)
+	public static CsvDynamicSchema Get(string[] names, string[] keys, CsvReaderOptions options, byte[][]? nullValues, CsvBooleanText? booleans, bool cells)
 	{
-		var key = (string.Join("\u0000", names), options);
+		var key = (string.Join("\u0000", names), options, cells);
 		lock (Interned)
 		{
 			if (Interned.TryGetValue(key, out var schema))
@@ -102,7 +110,7 @@ internal sealed class CsvDynamicSchema
 				Interned.Clear();
 			}
 
-			schema = new CsvDynamicSchema(names, keys, options, nullValues, booleans);
+			schema = new CsvDynamicSchema(names, keys, options, nullValues, booleans, cells);
 			Interned.Add(key, schema);
 
 			return schema;

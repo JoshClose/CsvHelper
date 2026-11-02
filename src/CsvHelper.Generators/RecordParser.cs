@@ -77,6 +77,8 @@ internal sealed class RecordParser
 	// The constraint of the referenced CsvWriter.WriteField<T>(T, ReadOnlySpan<char>, IFormatProvider): IUtf8SpanFormattable
 	// in its .NET build, IFormattable in the others; null when it has no such method.
 	private readonly INamedTypeSymbol? writerFormattable;
+	// Whether the referenced CsvWriter has WriteField(Uri), which writes OriginalString as CSV and a link to a cell sink.
+	private readonly bool writerWritesUris;
 	private readonly INamedTypeSymbol? formattable;
 
 	private readonly List<DiagnosticInfo> diagnostics = [];
@@ -154,7 +156,8 @@ internal sealed class RecordParser
 		readerParsesSpans = parses.Any(m => m.Parameters.Length == 1);
 		readerParsesSpansWithProvider = parses.Any(m => m.Parameters.Length == 2 && Is(m.Parameters[1].Type, formatProvider));
 		formattable = compilation.GetTypeByMetadataName("System.IFormattable");
-		writerFormattable = compilation.GetTypeByMetadataName("CsvHelper.CsvWriter") is { } writer
+		var writerType = compilation.GetTypeByMetadataName("CsvHelper.CsvWriter");
+		writerFormattable = writerType is { } writer
 			? writer.GetMembers("WriteField").OfType<IMethodSymbol>()
 				.Where(m => m.TypeParameters.Length == 1 && m.Parameters.Length == 3 && m.Parameters[0].Type is ITypeParameterSymbol &&
 							Is(m.Parameters[2].Type, formatProvider))
@@ -162,6 +165,8 @@ internal sealed class RecordParser
 				.OfType<INamedTypeSymbol>()
 				.FirstOrDefault()
 			: null;
+		writerWritesUris = writerType is not null && uriType is not null && writerType.GetMembers("WriteField").OfType<IMethodSymbol>()
+			.Any(m => m.Parameters.Length == 1 && Is(m.Parameters[0].Type, uriType));
 	}
 
 	/// <summary>
@@ -1898,10 +1903,11 @@ internal sealed class RecordParser
 			return $"writer.WriteField({EnumFormatMethod((INamedTypeSymbol)valueType)}({value}));";
 		}
 
-		// As it was read, not ToString's unescaped form.
+		// As it was read, not ToString's unescaped form: WriteField(Uri) writes OriginalString as CSV, and tells a cell sink
+		// that it is a URI (a link); without that overload (an older CsvHelper), the string itself.
 		if (Is(valueType, uriType))
 		{
-			return $"writer.WriteField({value}.OriginalString);";
+			return writerWritesUris ? $"writer.WriteField({value});" : $"writer.WriteField({value}.OriginalString);";
 		}
 
 		var name = valueType.ToDisplayString();

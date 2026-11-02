@@ -88,6 +88,31 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	private long records;
 	private bool disposed;
 
+	// The fields of a cell sink come after all the others: the CLR lays out reference fields first, in declaration order,
+	// and a reference field declared before buffer moved it past offset 127, which made each of the hot paths' accesses to
+	// it 3 bytes longer (and CSV writes 1-2% slower). Declared here, it moves only the value fields, by 8 bytes, which
+	// the hot paths already reach with 4-byte offsets: keeping the sink off the writer (on a copy of the options) to avoid
+	// that measured the same.
+
+	// The destination of the fields instead of CSV text (CsvHelper.Excel's cells); null for CSV. Only branches that CSV
+	// takes for rare options, and overloads that generated record writers do not call (WriteField with a quoting) or that
+	// are new (WriteField(Uri)), test it. Any IL added to the methods that record loops inline (WriteField, WriteHeader,
+	// FinishRecord), even a test that is never taken or a single store, changed how the JIT inlined and allocated
+	// registers in those loops: 2-8% slower CSV writes. So a sink's writer sets the flags of custom handling (injection,
+	// ShouldQuote), and every field and record takes that path:
+	// - Each field is formatted into the buffer as for CSV and reaches EncodeCustom with its type: encodeAll without
+	//   encodeQuote sends formattable values and UTF-8 there, writeOther without narrowFast sends text to the custom
+	//   branch of WriteFieldOther, and WriteUtf8 sends booleans and nulls. EncodeCustom hands the field's UTF-8 and type
+	//   to the sink, and puts pos back where the record started: the buffer holds no fields.
+	// - checkRecord makes FinishRecord call ValidateRecord, which checks the record as for CSV, and protectComments makes
+	//   that call ProtectFromComment last (CSV calls it only with a comment prefix), which ends the record in the sink.
+	//   TerminateOpenRecord (on Dispose) calls it too.
+	// - flushThreshold is 0, so the record loops call FlushBuffer after every record, which drops the line ending that
+	//   FinishRecord wrote and flushes the sink when it asked (cellFlush).
+	private readonly CsvCellSink? sink;
+	// The sink asked to be flushed when its last record ended.
+	private bool cellFlush;
+
 	private CsvWriter(CsvWriterOptions? options, bool leaveOpen)
 	{
 		options ??= CsvWriterOptions.Default;
@@ -146,6 +171,40 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 					   (mode == CsvMode.Escape && NumberChars.Contains(options.Escape));
 		buffer = ArrayPool<byte>.Shared.Rent(options.BufferSize);
 		flushThreshold = Math.Max(buffer.Length - 4096, buffer.Length / 2);
+	}
+
+	/// <summary>
+	/// Creates a writer whose fields go to <paramref name="sink"/> instead of CSV text: each one as the UTF-8 that CSV
+	/// writes before quoting, with its type. See <see cref="CsvCellSink"/> for what the options do then. Disposing the
+	/// writer completes the sink.
+	/// </summary>
+	/// <param name="sink">The destination of the fields and records.</param>
+	/// <param name="options">The options, or <see langword="null"/> for <see cref="CsvWriterOptions.Default"/>.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="sink"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException"><paramref name="options"/> are not valid (see <see cref="Create(Stream, CsvWriterOptions?, bool)"/>).</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><see cref="CsvWriterOptions.BufferSize"/> is less than 256.</exception>
+	internal CsvWriter(CsvCellSink sink, CsvWriterOptions? options)
+		: this(options, leaveOpen: true)
+	{
+		ArgumentNullException.ThrowIfNull(sink);
+		this.sink = sink;
+		// The branches of custom handling, for every field and record (see sink). The settings that the constructor above
+		// made from these flags stay as they are: changing them here only picks the branches.
+		custom = true;
+		encodeAll = true;
+		encodeQuote = false;
+		narrowFast = false;
+		writeOther = true;
+		checkRecord = true;
+		protectComments = true;
+		escapedCrBeforeLf = false;
+		flushThreshold = 0;
+		// The CSV text of values does not apply: a null value is an empty field, and booleans are written as
+		// bool.ToString writes them. Nor does FixedWidth's column count: field counts are checked against the first record.
+		nullValue = null;
+		trueValue = Encoding.UTF8.GetBytes(bool.TrueString);
+		falseValue = Encoding.UTF8.GetBytes(bool.FalseString);
+		expectedFields = -1;
 	}
 
 	/// <summary>Creates a writer that writes UTF-8 to a stream.</summary>
@@ -311,7 +370,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
 	public void WriteField(string? value, CsvQuoting quoting)
 	{
-		WriteField((value ?? options.NullValue).AsSpan(), quoting);
+		// A cell sink's null is an empty field, not the text of NullValue (see sink).
+		WriteField((value ?? (sink is null ? options.NullValue : null)).AsSpan(), quoting);
 	}
 
 	/// <summary>Writes a field from UTF-16 text, quoted as <paramref name="quoting"/> says instead of <see cref="CsvWriterOptions.Quoting"/>.</summary>
@@ -687,6 +747,29 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	public void WriteField(bool value) => WriteUtf8(value ? trueValue : falseValue, typeof(bool));
 
 	/// <summary>
+	/// Writes a URI as the text it was created from (<see cref="Uri.OriginalString"/>), which reads back as the same URI;
+	/// <see langword="null"/> is written as <see cref="CsvWriterOptions.NullValue"/>, an empty field by default.
+	/// </summary>
+	/// <param name="value">
+	/// The URI. Its text is quoted when it contains the separator, a quote, CR or LF, or escaped or padded as
+	/// <see cref="CsvWriterOptions.Mode"/> says, as for <see cref="WriteField(string)"/>.
+	/// </param>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	public void WriteField(Uri? value)
+	{
+		if (value is null)
+		{
+			WriteNull(typeof(string));
+
+			return;
+		}
+
+		// As a string field, byte for byte (and as text for injection protection and ShouldQuote); a cell sink gets the
+		// type, to make a link.
+		WriteText(value.OriginalString.AsSpan(), sink is null ? typeof(string) : typeof(Uri));
+	}
+
+	/// <summary>
 	/// Writes UTF-8 text formatted from a value of type <paramref name="type"/> (a boolean, or a null value), which custom
 	/// handling (injection, ShouldQuote) gets.
 	/// </summary>
@@ -961,13 +1044,48 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Ends a record of a cell sink, after <see cref="ValidateRecord"/> checked it as for CSV (at least one field, and the
+	/// field count with <see cref="CsvWriterOptions.ValidateFieldCount"/>), or when Dispose ends a record left open: ends it
+	/// in the sink and drops what was written for it (ValidateRecord writes <c>""</c> for a lone empty field). FinishRecord
+	/// then counts the record and writes a line ending, which the FlushBuffer that the record loops call next drops; that
+	/// FlushBuffer flushes the sink if it asked, sync or async (see <c>sink</c>).
+	/// </summary>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void EndCellRecord()
+	{
+		ThrowIfDisposed();
+		if (sink!.EndRecord())
+		{
+			cellFlush = true;
+		}
+
+		pos = recordStart;
+	}
+
+	/// <summary>
 	/// Keeps the current record from reading as a comment when its first field starts with the comment prefix: quotes
 	/// that field (Rfc4180 mode) or escapes the prefix (Escape mode). FixedWidth mode cannot do either, so it throws
-	/// when <paramref name="canThrow"/> is set, discarding the record.
+	/// when <paramref name="canThrow"/> is set, discarding the record. A cell sink's writer sets protectComments so that its
+	/// records end here (<see cref="EndCellRecord"/>), at the end of <see cref="ValidateRecord"/> and of
+	/// TerminateOpenRecord: off the CSV paths, which come here only with a comment prefix (see <c>sink</c>).
 	/// </summary>
+	/// <param name="canThrow">Whether a record that cannot be protected throws (when it ends) rather than being left alone.</param>
+	/// <exception cref="InvalidOperationException">
+	/// FixedWidth mode, <paramref name="canThrow"/> is set, and the first field starts with the comment prefix. The record is
+	/// discarded.
+	/// </exception>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private void ProtectFromComment(bool canThrow)
 	{
+		if (sink is not null)
+		{
+			// FlushBuffer takes the sink's own path before PrepareFlush, which calls this too.
+			EndCellRecord();
+
+			return;
+		}
+
 		var start = recordStart;
 		// Unknown start: the beginning of the record was flushed (Flush in the middle of a record), and checked then.
 		if (start < 0 || pos == start || buffer[start] != comment)
@@ -1038,6 +1156,11 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	public void WriteComment(ReadOnlySpan<char> text)
 	{
 		ThrowIfDisposed();
+		if (sink is not null)
+		{
+			throw new NotSupportedException("Comments cannot be written to this destination: it has no comment lines.");
+		}
+
 		if (!comments)
 		{
 			throw new InvalidOperationException("Set CommentPrefix in the writer options to write comments.");
@@ -1083,6 +1206,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	{
 		if (recordStart >= 0) pos = recordStart;
 		fieldCount = 0;
+		sink?.DiscardRecord();
 	}
 
 	/// <summary>
@@ -1116,6 +1240,15 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private int EncodeCustom(int start, int length, Type type, CsvQuoting quoting)
 	{
+		if (sink is not null)
+		{
+			// Every field of a cell sink ends here, as CSV formatted it before quoting (see sink). The field and the
+			// separator before it go: the returned length puts pos back where the record started.
+			sink.WriteField(buffer.AsSpan(start, length), type);
+
+			return recordStart - start;
+		}
+
 		var always = quoteAll || quoting == CsvQuoting.Always;
 		if (injection != CsvInjection.None && length > 0 && IsInjectionCharacter(buffer[start]) && IsText(type))
 		{
@@ -1446,6 +1579,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	public void Flush()
 	{
 		ThrowIfDisposed();
+		// A sink is flushed whether or not it asked.
+		cellFlush = sink is not null;
 		FlushBuffer();
 		stream?.Flush();
 		textWriter?.Flush();
@@ -1459,6 +1594,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	public async ValueTask FlushAsync(CancellationToken cancellationToken = default)
 	{
 		ThrowIfDisposed();
+		cellFlush = sink is not null;
 		await FlushBufferAsync(cancellationToken).ConfigureAwait(false);
 		if (stream is not null) await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
 		if (textWriter is not null) await textWriter.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -1469,6 +1605,20 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		// A worker of a parallel write keeps its output, which the parallel write writes out.
 		if (parallelWorker)
 		{
+			return;
+		}
+
+		// The record loops come here after every record of a cell sink (see sink): the buffer holds only the line endings
+		// that FinishRecord wrote, and the sink is flushed when it asked.
+		if (sink is not null)
+		{
+			pos = recordStart = 0;
+			if (cellFlush)
+			{
+				cellFlush = false;
+				sink.Flush();
+			}
+
 			return;
 		}
 
@@ -1483,6 +1633,18 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	{
 		if (parallelWorker)
 		{
+			return;
+		}
+
+		if (sink is not null)
+		{
+			pos = recordStart = 0;
+			if (cellFlush)
+			{
+				cellFlush = false;
+				await sink.FlushAsync(cancellationToken).ConfigureAwait(false);
+			}
+
 			return;
 		}
 
@@ -1579,9 +1741,12 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		try
 		{
 			if (fieldCount > 0) TerminateOpenRecord();
+			// A sink is flushed whether or not it asked, and then completed.
+			cellFlush = sink is not null;
 			FlushBuffer();
 			stream?.Flush();
 			textWriter?.Flush();
+			sink?.Complete();
 		}
 		finally
 		{
@@ -1607,9 +1772,14 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		try
 		{
 			if (fieldCount > 0) TerminateOpenRecord();
+			cellFlush = sink is not null;
 			await FlushBufferAsync(default).ConfigureAwait(false);
 			if (stream is not null) await stream.FlushAsync().ConfigureAwait(false);
 			if (textWriter is not null) await textWriter.FlushAsync().ConfigureAwait(false);
+			if (sink is not null)
+			{
+				await sink.CompleteAsync().ConfigureAwait(false);
+			}
 		}
 		finally
 		{

@@ -1043,6 +1043,11 @@ public sealed partial class CsvReader
 
 	internal string MakeString(ReadOnlySpan<byte> utf8, int column)
 	{
+		if (typedCells && CellString(utf8, column) is { } cell)
+		{
+			return cell;
+		}
+
 		if (utf8.Length <= 1)
 		{
 			if (utf8.Length == 0) return string.Empty;
@@ -1067,7 +1072,10 @@ public sealed partial class CsvReader
 #endif
 		=> ParseSpan<T>(s, column, provider);
 
-	/// <summary>Parses a field as <typeparamref name="T"/> with <paramref name="provider"/>, as <see cref="Parse{T}(int)"/> describes.</summary>
+	/// <summary>
+	/// Parses a field as <typeparamref name="T"/> with <paramref name="provider"/>, as <see cref="Parse{T}(int)"/> describes;
+	/// a field of a record source by its kind (<see cref="ParseCell{T}(ReadOnlySpan{byte}, int, IFormatProvider)"/>).
+	/// </summary>
 	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="column">The index of the field, for the string pool.</param>
@@ -1087,6 +1095,11 @@ public sealed partial class CsvReader
 			return Unsafe.As<string, T>(ref text);
 		}
 
+		if (typedCells)
+		{
+			return ParseCell<T>(s, column, provider);
+		}
+
 		if (CsvValue.IsBuiltIn<T>())
 		{
 			return CsvValue.Parse<T>(s, provider, hideValues, booleans);
@@ -1099,7 +1112,10 @@ public sealed partial class CsvReader
 #endif
 	}
 
-	/// <summary>Tries to parse a field as <typeparamref name="T"/>, as <see cref="ParseSpan{T}(ReadOnlySpan{byte}, int)"/> parses it.</summary>
+	/// <summary>
+	/// Tries to parse a field as <typeparamref name="T"/>, as <see cref="ParseSpan{T}(ReadOnlySpan{byte}, int)"/> parses it;
+	/// a field of a record source by its kind (<see cref="TryParseCell{T}(ReadOnlySpan{byte}, int, out T)"/>).
+	/// </summary>
 	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="column">The index of the field, for the string pool.</param>
@@ -1117,6 +1133,11 @@ public sealed partial class CsvReader
 			value = Unsafe.As<string, T>(ref text);
 
 			return true;
+		}
+
+		if (typedCells)
+		{
+			return TryParseCell(s, column, out value);
 		}
 
 		if (CsvValue.IsBuiltIn<T>())

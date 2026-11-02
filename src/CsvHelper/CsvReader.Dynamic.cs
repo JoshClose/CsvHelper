@@ -23,21 +23,27 @@ public sealed partial class CsvReader
 			EnsureHeader();
 		}
 
-		return CsvDynamicSchema.Get(headers, headerKeys, options, nullValues, booleans);
+		return CsvDynamicSchema.Get(headers, headerKeys, options, nullValues, booleans, typedCells);
 	}
 
 	/// <summary>
 	/// The current record as a <see cref="CsvDynamicRecord"/>: its field positions, with the reader's flag on the fields
 	/// that need decoding, and its bytes as they are in the input (referenced in place when the input is a byte array).
 	/// A flagged field is a quoted field that the record unquotes when it is read; in the modes and with the trimming
-	/// whose decoding is more than that, the fields are decoded now instead.
+	/// whose decoding is more than that, the fields are decoded now instead. A record of a record source keeps the cell
+	/// kinds of its fields after its offsets.
 	/// </summary>
 	internal CsvDynamicRecord ReadDynamicRecord(CsvDynamicSchema schema)
 	{
 		var count = fieldCount;
 		var ends = this.ends;
 		var b = fieldBase;
-		var offsets = TakeOffsets(count + 1, out var first);
+		var offsets = TakeOffsets(count + 1 + (typedCells ? count : 0), out var first);
+		if (typedCells)
+		{
+			CopyKinds(offsets, first + count + 1);
+		}
+
 		var start = ends[b] & int.MaxValue;
 		if (!quickUnquote && !NoFieldFlagged(ends, b, count))
 		{
@@ -66,6 +72,17 @@ public sealed partial class CsvReader
 		}
 
 		return new CsvDynamicRecord(schema, bytes, offsets, first, count);
+	}
+
+	/// <summary>Copies the cell kinds of the fields of the current record into <paramref name="offsets"/>, one entry each.</summary>
+	/// <param name="offsets">The offsets of a dynamic record.</param>
+	/// <param name="at">Where the kind of the first field goes: after the record's offsets.</param>
+	private void CopyKinds(int[] offsets, int at)
+	{
+		for (var k = 0; k < fieldCount; k++)
+		{
+			offsets[at + k] = (int)kinds![fieldBase + k];
+		}
 	}
 
 	/// <summary>Whether no field of the record needs decoding: the flag of field k is on the entry after it.</summary>

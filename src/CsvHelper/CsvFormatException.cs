@@ -44,9 +44,17 @@ public sealed class CsvFormatException : FormatException
 
 	/// <summary>
 	/// The 1-based line of the input where the record with the problem starts, when
-	/// <see cref="CsvReaderOptions.TrackLineNumbers"/> is on; 0 otherwise.
+	/// <see cref="CsvReaderOptions.TrackLineNumbers"/> is on; 0 otherwise. For a reader of a spreadsheet, the row number
+	/// of the record in its sheet.
 	/// </summary>
 	public long LineNumber { get; init; }
+
+	/// <summary>
+	/// Where the problem is in input that is not CSV text, such as a spreadsheet: the cell of the field at fault, like
+	/// <c>Orders!C14</c>, or the record's row when no field is. <see langword="null"/> for CSV input, whose position is
+	/// <see cref="LineNumber"/> and <see cref="ByteOffset"/>, and when the position is not known.
+	/// </summary>
+	public string? Location { get; init; }
 
 	/// <summary>
 	/// For a record that could not be read as its <see cref="CsvRecordAttribute"/> type, the member whose field could not

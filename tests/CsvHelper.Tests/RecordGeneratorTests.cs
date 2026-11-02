@@ -461,7 +461,8 @@ public class RecordGeneratorTests
 		Assert.Contains("public override string? FindFailingMember(global::CsvHelper.CsvReader reader, out int fieldIndex)", output);
 		Assert.Contains("return record0.FindFailingMember(reader, out fieldIndex) ?? \"Constructed.Inner\";", output);
 		Assert.Contains("throw new global::CsvHelper.CsvValidationException(\"A note is needed.\");", output);
-		Assert.Contains("if (record.Home is { } value5) writer.WriteField(value5.OriginalString);", output);
+		// WriteField(Uri) writes OriginalString as CSV, and a URI to a cell sink.
+		Assert.Contains("if (record.Home is { } value5) writer.WriteField(value5);", output);
 		Assert.Contains("Records of Collections cannot be written: 'Collections.Values' is a collection without a fixed number of columns", output);
 	}
 

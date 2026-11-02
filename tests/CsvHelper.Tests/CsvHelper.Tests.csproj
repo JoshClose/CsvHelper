@@ -45,6 +45,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
+		<!-- For CellHookTests: reader.Query<T>() over a record source. It also makes the generator write projections. -->
+		<ProjectReference Include="..\..\src\CsvHelper.Linq\CsvHelper.Linq.csproj" />
 	</ItemGroup>
 
 	<!-- The [CsvRecord] generator runs on the test types for both targets; on .NET the tests also run it directly. -->

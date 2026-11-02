@@ -421,8 +421,8 @@ public sealed partial class CsvReader
 		}
 	}
 
-	private CsvRecordError RecordError(Exception e) =>
-		new(rowNumber, ByteOffset, e, System.Text.Encoding.UTF8.GetString(RawRecord));
+	private CsvRecordError RecordError(CsvFormatException e) =>
+		new(rowNumber, ByteOffset, e, System.Text.Encoding.UTF8.GetString(RawRecord)) { Location = e.Location };
 
 	/// <summary>
 	/// The exception for a record that <paramref name="mapper"/> could not read: a <see cref="CsvFormatException"/> that
@@ -454,9 +454,15 @@ public sealed partial class CsvReader
 		{
 			var name = field >= 0 && field < headers.Length ? $" '{headers[field]}'" : "";
 			var from = field >= 0 ? $" from field {field}{name}" : "";
-			message = $"Cannot read {member}{from} of record {recordNumber}{AtLine}: {e.Message}";
+			message = $"Cannot read {member}{from} of record {recordNumber}{At(field)}: {e.Message}";
 		}
 
-		return new CsvFormatException(message, recordNumber, ByteOffset, e) { LineNumber = LineOrZero, Member = member, FieldIndex = field };
+		return new CsvFormatException(message, recordNumber, ByteOffset, e)
+		{
+			LineNumber = LineOrZero,
+			Location = Locate(field),
+			Member = member,
+			FieldIndex = field,
+		};
 	}
 }

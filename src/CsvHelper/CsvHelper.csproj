@@ -73,6 +73,9 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="CsvHelper.Tests" Key="$(CsvHelperPublicKey)" />
 		<InternalsVisibleTo Include="CsvHelper.Benchmarks" Key="$(CsvHelperPublicKey)" />
+		<!-- The reader's record source and the writer's cell sink (CsvRecordSource, CsvCellSink), which stay internal so the
+		     index format can change; CsvHelper.Excel depends on an exact version of this package. -->
+		<InternalsVisibleTo Include="CsvHelper.Excel" Key="$(CsvHelperPublicKey)" />
 	</ItemGroup>
 
 </Project>

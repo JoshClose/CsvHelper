@@ -98,7 +98,15 @@ public delegate bool CsvShouldSkipRecord(CsvRow record);
 /// <see langword="false"/>.
 /// </param>
 /// <param name="RawRecord">The record as it appears in the input, without the line break.</param>
-public readonly record struct CsvRecordError(long RowNumber, long ByteOffset, Exception Exception, string RawRecord);
+public readonly record struct CsvRecordError(long RowNumber, long ByteOffset, Exception Exception, string RawRecord)
+{
+	/// <summary>
+	/// Where the record is in input that is not CSV text, such as a spreadsheet: the cell of the field at fault, like
+	/// <c>Orders!C14</c>, or the record's row when no field is (the <see cref="CsvFormatException.Location"/> of
+	/// <see cref="Exception"/>). <see langword="null"/> for CSV input, and when the position is not known.
+	/// </summary>
+	public string? Location { get; init; }
+}
 
 /// <summary>What happens when a field past the end of the current record is requested.</summary>
 public enum CsvMissingFieldHandling

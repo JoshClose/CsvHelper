@@ -12,7 +12,8 @@ namespace CsvHelper;
 
 public sealed partial class CsvReader
 {
-	private enum SourceKind { Memory, Stream, TextReader, String }
+	// Records: a CsvRecordSource writes decoded records into the buffer (CsvReader.Cells.cs).
+	private enum SourceKind { Memory, Stream, TextReader, String, Records }
 
 	private SourceKind sourceKind;
 	private Stream? stream;
@@ -519,17 +520,25 @@ public sealed partial class CsvReader
 	{
 		if (disposeStream) stream?.Dispose();
 		if (disposeTextReader) textReader?.Dispose();
+		recordSource?.Dispose();
 		stream = null;
 		textReader = null;
 		text = null;
+		recordSource = null;
 	}
 
 	private async ValueTask DisposeSourceAsync()
 	{
 		if (disposeStream && stream is not null) await stream.DisposeAsync().ConfigureAwait(false);
 		if (disposeTextReader) textReader?.Dispose();
+		if (recordSource is not null)
+		{
+			await recordSource.DisposeAsync().ConfigureAwait(false);
+		}
+
 		stream = null;
 		textReader = null;
 		text = null;
+		recordSource = null;
 	}
 }

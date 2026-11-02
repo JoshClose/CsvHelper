@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -37,6 +38,7 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	private readonly byte[] data;
 	// Field k is data[offsets[first + k] .. offsets[first + k + 1] - 1), masked with int.MaxValue: as in the reader's
 	// index, the high bit of entry k + 1 says that field k is quoted, and it is unquoted when it is read.
+	// For a record of a record source (schema.Cells), the CsvCellKind of field k follows them, at offsets[first + count + 1 + k].
 	private readonly int[] offsets;
 	private readonly int first;
 	private readonly int count;
@@ -193,14 +195,24 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 		where T : ISpanParsable<T>
 #endif
 	{
-		var field = GetSpan(IndexOrThrow(name));
+		var index = IndexOrThrow(name);
+		var field = GetSpan(index);
+		var provider = schema.Provider;
+		var booleans = schema.Booleans;
+		// Numbers and booleans of a record source are in invariant form, as the reader parses them.
+		if (schema.Cells && (uint)index < (uint)count && CellKind(index).IsInvariant())
+		{
+			provider = CultureInfo.InvariantCulture;
+			booleans = null;
+		}
+
 		if (CsvValue.IsBuiltIn<T>())
 		{
-			return CsvValue.Parse<T>(field, schema.Provider, schema.HideValues, schema.Booleans);
+			return CsvValue.Parse<T>(field, provider, schema.HideValues, booleans);
 		}
 
 #if NET
-		return CsvValue.ParseDecoded<T>(field, schema.Provider, schema.HideValues);
+		return CsvValue.ParseDecoded<T>(field, provider, schema.HideValues);
 #else
 		throw CsvValue.NotSupported(typeof(T));
 #endif
@@ -231,7 +243,8 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 		var end = offsets[first + count] & int.MaxValue;
 		var bytes = new byte[Math.Max(end - start, 0)];
 		Array.Copy(data, start, bytes, 0, bytes.Length);
-		var own = new int[count + 1];
+		var kinds = schema.Cells ? count : 0;
+		var own = new int[count + 1 + kinds];
 		for (var i = 0; i <= count; i++)
 		{
 			// Moved to the start of the copy, with the quoted flag kept.
@@ -239,6 +252,7 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 		}
 
 		own[0] &= int.MaxValue;
+		Array.Copy(offsets, first + count + 1, own, count + 1, kinds);
 
 		return new CsvDynamicRecord(schema, bytes, own, 0, count);
 	}
@@ -309,6 +323,11 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 
 	/// <summary>Whether the messages of parsing exceptions leave the value out (<see cref="CsvReaderOptions.IncludeValuesInExceptions"/> is off).</summary>
 	internal bool HideValues => schema.HideValues;
+
+	/// <summary>The cell kind of field <paramref name="index"/> of a record of a record source (<see cref="CsvDynamicSchema.Cells"/>).</summary>
+	/// <param name="index">The 0-based index of a field of the record.</param>
+	/// <returns>The kind of the field.</returns>
+	private CsvCellKind CellKind(int index) => (CsvCellKind)offsets[first + count + 1 + index];
 
 	/// <summary>The value that <c>record.Name</c> gets, for the rules of the binder.</summary>
 	private object? GetMemberValue(int index) => this[index];

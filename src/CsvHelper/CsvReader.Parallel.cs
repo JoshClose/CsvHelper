@@ -155,6 +155,14 @@ public sealed partial class CsvReader
 	/// <summary>Reads until the buffer is full (or the input ends) and scans it, until it holds a whole record.</summary>
 	private void ScanBatch()
 	{
+		if (recordSource is not null)
+		{
+			// A source writes whole records: one batch of it is a batch for the workers.
+			AppendFromSource();
+
+			return;
+		}
+
 		while (true)
 		{
 			// Checked each time: encoding detection can turn in-memory input into a transcoding source.
@@ -210,6 +218,15 @@ public sealed partial class CsvReader
 		var pendingCount = endsCount - pending;
 		var ends = run.TakeIndex(this.ends.Length);
 		batch.Ends = this.ends;
+		if (kinds is not null)
+		{
+			// The kinds of the fields go with their index.
+			var pendingKinds = run.TakeKinds(kinds.Length);
+			Array.Copy(kinds, pending, pendingKinds, 0, pendingCount);
+			batch.Kinds = kinds;
+			kinds = pendingKinds;
+		}
+
 		if (sourceKind == SourceKind.Memory)
 		{
 			// Every batch reads the same input array in place: only the index moves.
@@ -244,9 +261,13 @@ public sealed partial class CsvReader
 		rowIndex = 0;
 	}
 
-	/// <summary>A reader for a worker thread: it serves the records of the batches given to it.</summary>
-	private CsvReader CreateParallelWorker() => new(options, rentIndex: false, sharedPool: pool)
+	/// <summary>
+	/// A reader for a worker thread: it serves the records of the batches given to it. A worker of a record source reads
+	/// typed cells, and has the source only to locate errors (it never fills from it or disposes it).
+	/// </summary>
+	private CsvReader CreateParallelWorker() => new(options, rentIndex: false, sharedPool: pool, cells: typedCells)
 	{
+		recordSource = recordSource,
 		parallelWorker = true,
 		sourceKind = SourceKind.Memory,
 		sepByte = sepByte,
@@ -266,6 +287,11 @@ public sealed partial class CsvReader
 	{
 		buffer = batch.Buffer;
 		ends = batch.Ends;
+		if (typedCells)
+		{
+			kinds = batch.Kinds;
+		}
+
 		discarded = batch.Discarded;
 		var records = batch.Records;
 		var results = batch.Results;
@@ -296,6 +322,11 @@ public sealed partial class CsvReader
 		batch.Completed = i;
 		buffer = [];
 		ends = [];
+		if (typedCells)
+		{
+			kinds = [];
+		}
+
 		fieldCount = 0;
 	}
 
@@ -328,6 +359,12 @@ public sealed partial class CsvReader
 		/// processed.
 		/// </summary>
 		public int[] Ends = [];
+
+		/// <summary>
+		/// For a record source, the cell kind of each field, at the indexes of <see cref="Ends"/> (see <c>kinds</c> in the
+		/// reader); empty for CSV, and once the batch is processed.
+		/// </summary>
+		public CsvCellKind[] Kinds = [];
 
 		/// <summary>
 		/// The field base and the field count of each record, two entries per record; empty once the batch is
@@ -397,6 +434,7 @@ public sealed partial class CsvReader
 		// shared array pool: workers would return them to their own thread's cache, out of reach of the reader.
 		private readonly Stack<byte[]> freeBuffers = new();
 		private readonly Stack<int[]> freeIndexes = new();
+		private readonly Stack<CsvCellKind[]> freeKinds = new();
 		private readonly Stack<int[]> freeRecords = new();
 		private readonly Lock freeLock = new();
 
@@ -453,6 +491,11 @@ public sealed partial class CsvReader
 		/// <returns>The index of a processed batch, or one rented from the shared pool.</returns>
 		public int[] TakeIndex(int length) => Take(freeIndexes, length);
 
+		/// <summary>A free array of cell kinds of at least <paramref name="length"/> entries for the reader of a record source.</summary>
+		/// <param name="length">The smallest length the array may have.</param>
+		/// <returns>The kinds of a processed batch, or an array rented from the shared pool.</returns>
+		public CsvCellKind[] TakeKinds(int length) => Take(freeKinds, length);
+
 		private TItem[] Take<TItem>(Stack<TItem[]> free, int length)
 		{
 			lock (freeLock)
@@ -481,11 +524,17 @@ public sealed partial class CsvReader
 			{
 				if (batch.OwnsBuffer) freeBuffers.Push(batch.Buffer);
 				if (batch.Ends.Length > 0) freeIndexes.Push(batch.Ends);
+				if (batch.Kinds.Length > 0)
+				{
+					freeKinds.Push(batch.Kinds);
+				}
+
 				if (batch.Records.Length > 0) freeRecords.Push(batch.Records);
 			}
 
 			batch.Buffer = [];
 			batch.Ends = [];
+			batch.Kinds = [];
 			batch.Records = [];
 			batch.OwnsBuffer = false;
 		}
@@ -506,6 +555,10 @@ public sealed partial class CsvReader
 			{
 				while (freeBuffers.TryPop(out var buffer)) ArrayPool<byte>.Shared.Return(buffer);
 				while (freeIndexes.TryPop(out var index)) ArrayPool<int>.Shared.Return(index);
+				while (freeKinds.TryPop(out var kinds))
+				{
+					ArrayPool<CsvCellKind>.Shared.Return(kinds);
+				}
 			}
 		}
 

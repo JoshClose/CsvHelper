@@ -361,6 +361,12 @@ public sealed partial class CsvWriter
 			throw new InvalidOperationException("The writer passed to a ParallelWrite callback writes the records of one item; it cannot start a parallel write.");
 		}
 
+		if (sink is not null)
+		{
+			// The workers would format CSV text: a cell sink takes its fields on this writer only.
+			throw new NotSupportedException("Parallel writes are not supported by this destination; write the records with WriteRecords.");
+		}
+
 		return maxDegreeOfParallelism == -1 ? Environment.ProcessorCount : maxDegreeOfParallelism;
 	}
 
