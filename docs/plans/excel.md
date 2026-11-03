@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its step 1 (skeleton and packaging) was built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging) and 2 (XML layer) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Step 1 of "Order of work" was built on 2026-11-02; "As built", at the end of this phase, records it. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 and 2 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -295,7 +295,9 @@ Internal/Package/
   SharedStrings.cs      the UTF-8 arena
 Internal/Xml/
   XmlWindow.cs          the refillable byte window over a part's stream
-  XmlScanner.cs         forward-only tokens
+  Utf16Stream.cs        UTF-16 parts read as UTF-8
+  XmlScanner.cs         forward-only tokens (with XmlTokenKind and XmlScannerState)
+  XmlAttributes.cs      the attributes of a start tag, read one at a time
   XmlText.cs            decoding text into UTF-8
 Internal/Sheet/
   SheetRecordSource.cs  the CsvRecordSource: Fill, FillAsync, Locate, Dispose
@@ -308,9 +310,9 @@ Internal/Sheet/
 **XML layer:**
 
 - **`XmlWindow`:**
-  - It is a rented 64 KB `byte[]` with a start and an end.
-  - `Refill`/`RefillAsync` moves the unconsumed bytes, from the start of the token in progress, to the front and reads more.
-  - When a token doesn't fit, the window doubles, up to `MaxPartSize`.
+  - It is a rented 64 KB `byte[]` (or `MaxPartSize`, if that is smaller) with an end.
+  - A refill is two calls. `Compact` moves the unconsumed bytes, from the start of the token in progress, to the front; it is synchronous. `Read`/`ReadAsync` then reads once from the stream. A cancelled async read leaves the window as `Compact` left it.
+  - When a token fills the window, the window doubles, up to `MaxPartSize`.
   - A UTF-8 byte order mark is skipped. UTF-16 (LE or BE, with its byte order mark) is transcoded to UTF-8 by a wrapping stream. That is rare, but OPC allows it.
   - The declaration's `encoding` is otherwise ignored.
 - **`XmlScanner`:**
@@ -323,12 +325,13 @@ Internal/Sheet/
 - **`XmlText`** decodes into a destination span:
   - The five predefined entities, and decimal and hex character references, which must be valid XML characters.
   - CR LF and lone CR become LF, as XML's end-of-line handling (and `XmlReader`) does.
-  - CDATA is copied verbatim.
-  - Text values then get `_xHHHH_` decoding (ST_Xstring):
+  - CDATA is copied verbatim, except that its line ends become LF too (as XML's end-of-line handling, which comes first, does).
+  - Attribute values also get XML's attribute-value normalization: a literal tab, LF or CR becomes a space, and CR LF one space.
+  - Text values then get `_xHHHH_` decoding (ST_Xstring), in place, over the joined text of a value:
     - Hex digits in either case; `_x005F_` is `_`.
     - Two escapes forming a surrogate pair become one character; a lone surrogate becomes U+FFFD.
   - Decoded text is never longer than its XML, so `GetFieldSpan(raw length)` always has room.
-  - The fast path is one `IndexOfAny` for `&`, `_` and CR, then a copy.
+  - The fast path is one `IndexOfAny` for `&` and CR, then a copy; escapes are a second pass, one `IndexOf` for `_`. (The design had one pass for all three; see "As built".)
 
 **Package:**
 
@@ -800,6 +803,62 @@ Filled in step by step; the code is the reference.
     - The mismatch tests use dynamic assemblies (`AssemblyBuilder`) with their own informational version as stand-ins for other builds, because one test run loads only one CsvHelper. They cover a mismatch with the exact message, prerelease labels, build metadata ignored, a missing or empty attribute, and `VersionOf`.
   - The gate's "a mismatched CsvHelper fails with the guard's message" is covered at unit level. Step 6 adds a test that each `Open` runs the guard before anything else.
 - **Result:** the solution builds in Release with no warnings. Every test passes: the existing counts are unchanged, plus the 10 new tests on each of net10.0, net8.0 and net48.
+
+**Step 2: XML layer (2026-11-02).**
+
+- **Files** in `Internal/Xml`: `XmlWindow`, `XmlScanner` (with `XmlTokenKind` and `XmlScannerState`), `XmlAttributes`, `XmlText`, and `Utf16Stream`, which the layout above now lists.
+- **Window:**
+  - **The refill is split in two.** `Compact(keepFrom)` is sync: it drops the bytes before the token in progress and doubles the window when that token fills it. `Read`/`ReadAsync` then reads the stream once. So a cancelled async read leaves the window and the scanner consistent, and the next refill just reads again.
+  - **One stream read per refill**, never a loop until the window is full. A one-byte stream then really splits tokens at every position. A real inflate stream returns as much as it has, so this costs nothing.
+  - **Byte order mark:** the first reads ask for 2 bytes, then a third only after `EF BB`.
+    - So nothing past a UTF-16 byte order mark is read before `Utf16Stream` wraps the stream.
+    - A UTF-8 byte order mark is dropped, but byte offsets still count it, so they are file offsets.
+    - In a UTF-16 part, offsets count bytes of the UTF-8 text.
+  - **Size:** the window starts at 64 KB, or at `MaxPartSize` if that is smaller (at least 4 bytes). It grows to at most `MaxPartSize` (capped at `Array.MaxLength`).
+    - The bound is exact: a 64-byte tag reads with a 64-byte limit, and a 65-byte one throws.
+    - The error names the token's offset: "The XML of test.xml can't be read at byte 0: the token or cell there is larger than ExcelReaderOptions.MaxPartSize (64 bytes)."
+- **Scanner:**
+  - `TryRead` returns false at the start of a token the window doesn't hold yet, and `Refill` keeps that token. `Read`/`ReadAsync` loop over the two.
+  - **Depth and root tracking (an addition).** The scanner counts open elements and knows whether the root has started and ended. It throws for:
+    - a part that ends inside an element;
+    - a part with no root element;
+    - an end tag with no start tag;
+    - a second root element.
+  - With these, every truncated part throws, which the lying-header tests (step 8) rely on. A truncation test checks it at every length of seeded documents.
+  - The depth also drives skipping: `TrySkipTo(depth)` / `SkipTo` / `SkipToAsync`.
+    - **Skipped text is consumed as it arrives**, so it needn't fit the window. A 10,000-byte text inside a skipped element reads under a 64-byte limit.
+    - Every other token, comments included, must fit the window.
+  - **`Save`/`Restore`** (`XmlScannerState`) is for the sheet scanner's rewind to a cell's `<c` (step 5).
+    - A test runs that pattern in every mode: save before `<c`, read the cell if the window holds it, otherwise restore and refill.
+    - A state is no good after a refill. A refill counter catches that and `Restore` throws.
+  - **Errors** are `InvalidDataException`: "The XML of {part} can't be read at byte {offset}: {detail}."
+    - Step 6's sheet source will turn errors from scanning into `CsvFormatException` with a `Location`.
+    - It leaves errors from refills alone, because those carry the limit and inflate errors, which stay `InvalidDataException`.
+  - **Not validating**, as designed. It doesn't check end-tag names, name characters or duplicate attributes, and text or attributes that are never decoded go unchecked. A lowercase `<!doctype` is rejected as unknown `<!` markup rather than as a DOCTYPE.
+- **Attributes:**
+  - `XmlAttributes` is a plain struct of offsets, so the async read paths can hold one. It reads the attributes one at a time and skips namespace declarations (`xmlns`, `xmlns:*`).
+  - Malformed attributes throw only when enumerated: no name, no `=`, or no quotes.
+  - The scanner finds a tag's end past quoted values, so a `>` inside a value is fine.
+- **Text:**
+  - The decoders throw nothing. They return the bytes written, or `~index` of a reference they can't decode, and the scanner adds the part and byte offset.
+  - Numeric references must use a lowercase `x` (`&#X41;` is rejected), as XML requires. They may have any number of leading zeros, and don't overflow.
+  - **Escapes are a second pass** (a change from the single `IndexOfAny` for `&`, `_` and CR). `DecodeEscapes` runs in place over a value's joined text, after the XML decoding of its pieces. So an escape split across text and CDATA pieces still decodes, and CDATA content gets escapes too. The cost is one more vectorized `IndexOf` per value.
+  - The escape needs a lowercase `x`: `_X0041_` is literal.
+  - CDATA line ends become LF, as XML does before parsing (and `XmlReader` does); its references stay literal.
+- **Tests** (191 per target, all passing on net10.0, net8.0 and net48):
+  - **Modes:** most tests run in all 8 `ScanMode`s: whole or one-byte reads, a 64 KB or 16-byte starting window, sync or async.
+  - **Oracle:** 200 seeded random documents are compared with `System.Xml.XmlReader` (DTDs prohibited) in every mode. They mix prefixes, namespaces, entities, character references, every kind of line end, CDATA, comments, processing instructions and non-ASCII text, in UTF-8 with and without a byte order mark and in UTF-16 LE and BE. They average about 640 bytes and 16 events, and run up to about 2.9 KB and 71 events.
+  - **Truncation:** for 12 documents, every prefix either throws `InvalidDataException` or reads the same as the whole document.
+  - **DOCTYPE:** five cases (including billion laughs and an external entity) throw with the DOCTYPE's offset. Through a one-byte stream, the scanner reads exactly the 9 bytes of `<!DOCTYPE` and no more.
+  - **Exact error messages** for 30 malformed inputs, for attributes, and for references.
+  - Plus: byte order marks, UTF-16 transcoding with code units and surrogate pairs split, window growth and the exact limit, parts much larger than the window, deep nesting (100,000 levels), skipping, save and restore, a cancelled refill retried, and disposal.
+  - **Mutation check:** six bugs were planted one at a time and run against the net10.0 tests:
+    - "a split text token taken as whole": 14 failures;
+    - "an unclosed quote ends the tag": 15;
+    - "the window never grows": 20;
+    - "CR LF becomes two LFs": 7;
+    - "the first read not limited to a byte order mark": 3;
+    - "skipped text must fit the window": the tests hang. Without its `position = end`, the skip loop spins at the end of the input; that step is what keeps the "never loops forever" guarantee.
 
 ### Phase 2: typed reading (M)
 
