@@ -141,6 +141,9 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// <summary>The position in the window of the next token.</summary>
 	public int Position => position;
 
+	/// <summary>The position in the window where the token read starts (its <c>&lt;</c>), as <see cref="Error"/> reports it.</summary>
+	public int TokenStart => tokenStart;
+
 	/// <summary>The local name of a start or end tag (<c>c</c> for <c>x:c</c>); empty for other tokens.</summary>
 	public ReadOnlySpan<byte> LocalName =>
 		Kind is XmlTokenKind.StartTag or XmlTokenKind.EndTag ? window.Buffer.AsSpan(nameStart, nameLength) : default;
@@ -148,6 +151,12 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// <summary>The content of a text or CDATA token, as it is in the XML; empty for other tokens.</summary>
 	public ReadOnlySpan<byte> Content =>
 		Kind is XmlTokenKind.Text or XmlTokenKind.CData ? window.Buffer.AsSpan(contentStart, contentLength) : default;
+
+	/// <summary>
+	/// The position in the window of <see cref="Content"/>, for a caller that decodes a value of several tokens once all of
+	/// them are read: the bytes stay where they are until the next refill.
+	/// </summary>
+	public int ContentStart => Kind is XmlTokenKind.Text or XmlTokenKind.CData ? contentStart : position;
 
 	/// <summary>The attributes of a start tag; none for other tokens.</summary>
 	public XmlAttributes Attributes => Kind == XmlTokenKind.StartTag ? new XmlAttributes(this, contentStart, contentLength) : default;

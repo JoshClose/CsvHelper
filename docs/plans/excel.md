@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package) and 4 (shared strings) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings) and 5 (sheet scanner) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 4 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 5 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -301,12 +301,14 @@ Internal/Xml/
   XmlAttributes.cs      the attributes of a start tag, read one at a time
   XmlElements.cs        walking a part's elements, sync or async, for the package parts' parsers
   XmlText.cs            decoding text into UTF-8
+  XmlError.cs           the XML's exceptions, with the offset and the detail kept apart for a sheet's errors
 Internal/Sheet/
   SheetRecordSource.cs  the CsvRecordSource: Fill, FillAsync, Locate, Dispose
   SheetScanner.cs       the row and cell state machine
   IRecordTarget.cs      where the scanner writes, and RecordBatchTarget, a struct over CsvReader.RecordBatch
   SheetCellKind.cs      a mirror of CsvCellKind (see "Writing into the reader")
-  CellReference.cs      A1 references: parsing, column letters, Location text
+  CellReference.cs      A1 references: parsing, column letters
+  SheetLocation.cs      Location text: Orders!C14 and Orders!14:14, with the sheet's name quoted as Excel quotes it
 ```
 
 **XML layer:**
@@ -394,7 +396,7 @@ Internal/Sheet/
 
 **Sheet scanner:**
 
-- It skips to `<sheetData>` (by local name). It stops at `</sheetData>` and inflates nothing after it; Phase 3's merged-cell fill pays for its own second pass. No `sheetData`, or `<sheetData/>`, gives no records.
+- Its root must be `worksheet`. It skips to `<sheetData>` (by local name). It stops at `</sheetData>` and inflates nothing after it; Phase 3's merged-cell fill pays for its own second pass. No `sheetData`, or `<sheetData/>`, gives no records.
 - Elements it reads:
   - In `sheetData`, it reads `row` and skips everything else.
   - In `row`, it reads `c` and skips everything else (`extLst`).
@@ -413,6 +415,10 @@ Internal/Sheet/
 | anything else | `<v>`, decoded | Text |
 
 - A cell with no `<v>` or `<is>`, or with empty text, is **valueless**. That covers styled empty cells, formulas without a cached value (openpyxl writes these) and empty strings.
+  - A number, boolean or shared string index whose `<v>` is only XML white space is valueless too.
+  - A value that only character references make blank (`&#32;`) is an Empty field.
+- `<is>` is read only for `inlineStr`, and `<v>` for every type. A cell's first `<v>` (or `<is>`) is its value, and the rest of the cell is skipped.
+- Numbers, booleans and shared string indexes are trimmed of XML white space; text, errors and dates are not.
 
 **Placement:**
 
@@ -429,7 +435,7 @@ Internal/Sheet/
   - Ranges, Tables and header detection (Phase 3) do the clipping.
 - **Emission:** a valued cell in column k first adds an Empty field for each column skipped since the last valued cell, then its value. Valueless cells add nothing, so a row ends at its last valued cell.
 - **Width:**
-  - A row with a value is padded with Empty fields to the field count of the first record (the header, when `HasHeader`).
+  - A row with a value is padded with Empty fields to the field count of the first record with a value (the header, when `HasHeader` and the first row has a value).
   - Ragged sheets then read the way Excel's own CSV export pads them, and `FieldCountMismatch = Throw` flags only rows with cells beyond the header. Longer rows stay longer.
   - Without padding, every short row would differ in `FieldCount`.
 - **Empty rows:**
@@ -453,9 +459,9 @@ Internal/Sheet/
 - **Columns:** a field's column is its index plus the sheet's first column. That is 0 in Phase 1; Phase 3's ranges and hidden-column skipping replace it with a field-to-column map.
 - **Format:**
   - `Locate` gives `Orders!C14` for a field and `Orders!14:14` for a whole row (field -1).
-  - Sheet names are quoted as Excel quotes them in formulas (`'Q1 Orders'!C14`, `'Bob''s'!A1`). That applies when a name has characters other than letters, digits, `_` and `.`, starts with a digit, or reads as a cell reference.
+  - Sheet names are quoted as Excel quotes them in formulas (`'Q1 Orders'!C14`, `'Bob''s'!A1`). That applies when a name has characters other than letters, digits, `_` and `.`, starts with a digit or a `.`, is `TRUE` or `FALSE`, or reads as a cell reference. That includes R1C1 references and names that start like one (`R2D2`, `C3PO`). Excel 365 was checked through COM; see step 5's "As built".
   - `Locate` uses only immutable data, so it is thread-safe.
-- **Scanner errors** (malformed XML, a bad shared string index, cells out of order) name the cell being scanned in `Location`, set `LineNumber`, and put the part name in the message.
+- **Scanner errors** (malformed XML, a bad shared string index, cells out of order) name the cell being scanned in `Location`, set `LineNumber`, and put the part name in the message: `Cell Orders!B3 can't be read at byte 1234 of xl/worksheets/sheet1.xml: ...`. Without a cell they name the row (`Row Orders!3:3`), or the sheet (`Sheet Orders`, no `Location`). Limits, and a part that can't be inflated, stay `InvalidDataException`.
 
 **A value split across batches or reads:**
 
@@ -1015,6 +1021,119 @@ Filled in step by step; the code is the reference.
     - "arrays not trimmed": 3;
     - "no room check at the limit": 1;
     - "`uniqueCount` trusted past the cap": 1 (the allocation check).
+
+**Step 5: sheet scanner (2026-11-02).**
+
+- **Files:**
+  - `Internal/Sheet`: `SheetScanner`, `IRecordTarget`, `CellReference` and `SheetLocation` (split from the layout's `CellReference`, since `Locate` needs the quoting too).
+  - `Internal/Xml/XmlError.cs` is new. `XmlScanner` gained `ContentStart` and `TokenStart`.
+  - `RecordBatchTarget`, the target over core's batch, comes with step 6, which first puts a reader over the scanner.
+  - The scanner owns its `XmlScanner`, and disposes it.
+- **Shape:**
+  - The scanner is a token-by-token state machine over the window, like the shared strings parser. `Fill` and `FillAsync` loop over a synchronous scan, and only the refills differ.
+  - Each mode skips what it doesn't read with `TrySkipTo`, which resumes across refills.
+  - A cell is read from its `<c` to the end of its value in one go. When the window runs out first, the scanner restores the state it saved before the `<c`, and the refill keeps the cell. The rest of the cell after its value is skipped across refills.
+- **Placement, as designed, with these decisions:**
+  - **Width** is the field count of the first record with a value, not of the first record: with `SkipEmptyLines = false`, an empty first row would otherwise make the width 1.
+  - **Missing rows** (`SkipEmptyLines = false`) are written before the row's first field.
+    - When they fill a fill, the row waits for the next one. The scanner restores to the row's `<row` (or its first `<c`, when the cell's reference gave the number) and reads it again.
+    - A row's fields never wait: rows are missing only before a row's first field.
+  - **References:**
+    - A reference is letters of either case, then digits, within `A1` to `XFD1048576`. A leading zero in the row is accepted (`A01`), as Excel's formulas accept it. `$`, white space and ranges are not references.
+    - Past the last row or column without a reference is an error, as is a reference outside the grid.
+  - **Counting:** gap fields and padding are counted before they are added, and each missing row before it is written. So a million missing rows stop at the first row past `MaxUncompressedSize`, rather than after all of them are written.
+- **Values, with these decisions:**
+  - `<is>` is read only for `inlineStr`, and `<v>` for every type; the first of them in the cell is the value. A `t="s"` or `t="str"` cell with an `<is>` is valueless.
+  - Numbers, booleans and shared string indexes are trimmed of XML white space; text, errors and dates are not.
+  - A number, boolean or index whose `<v>` is only XML white space is valueless. A value that only character references make blank (`&#32;`) is an Empty field, since telling it apart would mean decoding before placing the gap fields.
+  - The text of `<v>` is decoded as one text: its XML tokens, then its escapes. An `<is>` is decoded `<t>` by `<t>`, as shared strings are.
+  - A cell's `s` must be an integer (strict, like step 3's attributes). One past the cell formats means the first (the style table's rule).
+- **Errors:**
+  - The format is `{Subject} can't be read at byte {offset} of {part}: {detail}.`, where the subject is `Cell Data!B3`, `Row Data!3:3` or `Sheet Data`, with the sheet's name quoted as in a location.
+  - `CsvFormatException` carries `Location` (the cell or row, null for the sheet) and `LineNumber` (the row, 0 for the sheet). `RecordNumber` and `ByteOffset` are 0, since the reader doesn't know a sheet's records or bytes there; the message has the part's offset.
+  - The XML's own errors keep their detail and get the cell or row the scanner is in, with the XML's `InvalidDataException` as the inner exception. `InvalidDataException` is sealed, so `XmlError` puts the offset and the detail in `Exception.Data`, and the scanner's filter tells them from a limit's.
+  - Limits stay `InvalidDataException`: the window's `MaxPartSize` comes from a refill, outside the scan, and the guard's from counting gap fields, which has no XML detail.
+  - After either kind, every fill throws the same exception object again: the scanner's state is not to be trusted after one.
+  - The messages:
+    - "its root element is not worksheet";
+    - "its row number, {n}, is not one of a sheet's (1 to 1048576)";
+    - "it is not after the row before it, {n}: rows must be in order";
+    - "the attribute r=\"{r}\" is not a cell reference (A1 to XFD1048576)";
+    - "it is not after the cell before it, {ref}: a row's cells must be in column order";
+    - "it is past the last column, XFD";
+    - "its value, \"{v}\", is not a shared string index" (quoting up to 32 characters);
+    - "it is shared string {i}, past the last of {part}, {n}", "it is shared string {i}, and {part} has no strings", and "it is shared string {i}, and the workbook has no shared strings".
+- **Sheet-name quoting, checked against Excel 365 (build 20527) through COM:**
+  - A script named a sheet each of about 120 names, set `='name'!A1` on another sheet, and read the formula back. Excel re-quotes it, so the read-back shows Excel's own rule.
+  - The plan's rule was right for spaces, `'`, a leading digit and A1 references (within the grid only: `XFE1`, `A0` and `A1048577` are not quoted, while `A01` is).
+  - Excel also quotes:
+    - names starting with `.`;
+    - `TRUE` and `FALSE` in any case;
+    - R1C1 references (`R`, `C`, `RC`, `R5`, `C5`, `R1C`, `RC1`, `R1C1`, with numbers up to 1,048,576);
+    - names that start like one and go on with a letter or `_`: `R2D2`, `C3PO`, `R1_`, `RC1x`. A column number there must be at most 16,384: `C16385x` is not quoted, though `C16385` is.
+  - A `.` after such a start doesn't count (`R1.` is not quoted).
+  - Every probed name is in the tests. Lowercase forms (`a1`, `r`) can't sit beside the upper case ones in one workbook, so Excel couldn't confirm them; the tests check them against the rule only.
+- **Test helpers:**
+  - `CapturingTarget` is a struct over `Captured`, as the reader's will be over its batch. It checks the target's rules on every call:
+    - whole records in each fill;
+    - at least one record when a fill says more are to come;
+    - no more records than a fill takes;
+    - no call between `GetFieldSpan` and `CommitField`;
+    - no value longer than the room asked for (it gives exactly that much).
+  - `SheetMode` is each of the eight scan modes, with fills that take every record and fills that take one: sixteen modes.
+- **Tests** (60 new, 414 per target, all passing on net10.0, net8.0 and net48):
+  - In every sheet mode:
+    - Excel's shape;
+    - every cell type, with `true`/`false` booleans and other text;
+    - trimming;
+    - decoding (entities, CDATA, line ends, escapes per `<v>` and per `<t>`);
+    - valueless cells at the start, middle and end;
+    - placement by reference, lowercase and with row digits that differ from the row;
+    - rows and cells without references;
+    - the last column (16,384 fields);
+    - padding;
+    - empty rows skipped and kept;
+    - no rows (no `sheetData`, `<sheetData/>`, an empty root);
+    - nothing read after `</sheetData>` (broken XML there reads fine);
+    - skipped elements;
+    - prefixes and the strict namespace.
+  - Errors, in every mode:
+    - rows and cells out of order or repeated;
+    - references outside the grid;
+    - rows past the last;
+    - shared string indexes;
+    - XML errors at a cell, a row and the sheet;
+    - a DOCTYPE;
+    - quoted sheet names in locations;
+    - the same exception again;
+    - `MaxPartSize` staying `InvalidDataException`.
+  - Through a package, sync and async: gap fields, padding and missing rows counted to the byte against `MaxUncompressedSize`, exactly at and one past, and a million missing rows stopped at the limit.
+  - `CellReference` and `SheetLocation`: column names, parsing (every column round-trips), rejections, and the Excel quoting table.
+  - **Comparison:** 100 generated sheets, read in all 16 modes with empty rows skipped and kept, against a reference that applies the rules to an `XDocument` and decodes escapes with its own regular expression. The sheets have rows and cells with and without references, gaps, every type, valueless cells, rich inline text, noise elements, prefixes, the strict namespace and indenting.
+  - **Mutation check:** 17 bugs planted one at a time, all caught on net10.0:
+    - "no gap fields": 12 failures;
+    - "no padding": 9;
+    - "an empty shared string is a value": 2;
+    - "rows not checked for order": 3;
+    - "cells not checked for order": 2;
+    - "a row's number not taken from its first cell": 4;
+    - "the row goes on after missing rows fill a fill": 2;
+    - "missing rows never wait for a fill": 2;
+    - "no rewind when a value is not whole": 20;
+    - "no escapes in values": 2;
+    - "`true` and `false` not booleans": 2;
+    - "empty rows always kept": 5;
+    - "XML errors not turned into the sheet's": 2;
+    - "gap fields not counted": 4;
+    - "reading on after `</sheetData>`": 1;
+    - "numbers not trimmed": 3;
+    - "R1C1 prefixes not quoted": 1.
+  - **What the check fixed:**
+    - "Reading on after `</sheetData>`" passed at first. The broken XML the test put after `</sheetData>` was inside a tag's attributes, which the scanner never parses for an empty element it skips.
+    - The test now puts markup there that the tokenizer rejects at once. It also reads a long tail through a one-byte stream and checks that the stream delivered nothing past the first refill after `</sheetData>`.
+  - **Bugs the tests found while building:** both were in the missing rows' pause.
+    - After the missing rows filled a fill, the row's own record was written into it too, one past full.
+    - Then, when a row whose number came from its first cell was read again, the rest of its missing rows were skipped. `FlushGaps` now runs before every cell, and pauses only after writing missing rows itself.
 
 ### Phase 2: typed reading (M)
 

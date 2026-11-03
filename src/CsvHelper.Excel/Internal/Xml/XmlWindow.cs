@@ -153,8 +153,7 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 	/// <param name="position">The position in <see cref="Buffer"/> of what can't be read.</param>
 	/// <param name="detail">What is wrong, as a clause, such as "it ends inside a tag".</param>
 	/// <returns>The exception, to throw.</returns>
-	public InvalidDataException Error(int position, string detail) =>
-		new($"The XML of {partName} can't be read at byte {Offset(position)}: {detail}.");
+	public InvalidDataException Error(int position, string detail) => XmlError.Create(partName, Offset(position), detail);
 
 	/// <summary>Returns the window's buffer and disposes the stream.</summary>
 	public void Dispose()
