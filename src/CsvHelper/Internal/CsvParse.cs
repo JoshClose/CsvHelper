@@ -871,6 +871,217 @@ internal static class CsvParse
 	private static DateTimeOffset DateTimeOffsetExactHidden(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
 		Hide(s, provider, (x, p) => DateTimeOffsetExactCore(x, formats, p), "DateTimeOffset");
 
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeSpan"/> in exactly <paramref name="format"/>, with the BCL's
+	/// <c>TimeSpan.ParseExact</c> and the provider, as <see cref="TimeSpanExactCore(ReadOnlySpan{byte}, string, IFormatProvider)"/> describes.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="format">The exact format of the field, as <c>TimeSpan.ParseExact</c> takes it.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
+	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <see cref="System.TimeSpan"/>.</exception>
+	public static TimeSpan TimeSpanExact(ReadOnlySpan<byte> s, string format, IFormatProvider provider, bool hide) =>
+		hide ? TimeSpanExactHidden(s, format, provider) : TimeSpanExactCore(s, format, provider);
+
+	private static TimeSpan TimeSpanExactHidden(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
+		Hide(s, provider, (x, p) => TimeSpanExactCore(x, format, p), "TimeSpan");
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeSpan"/> in exactly one of <paramref name="formats"/>, tried in
+	/// order, as <see cref="TimeSpanExactCore(ReadOnlySpan{byte}, string[], IFormatProvider)"/> describes.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="formats">The formats the field may have.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
+	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <see cref="System.TimeSpan"/>.</exception>
+	public static TimeSpan TimeSpanExact(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider, bool hide) =>
+		hide ? TimeSpanExactHidden(s, formats, provider) : TimeSpanExactCore(s, formats, provider);
+
+	private static TimeSpan TimeSpanExactHidden(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
+		Hide(s, provider, (x, p) => TimeSpanExactCore(x, formats, p), "TimeSpan");
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeSpan"/> in exactly <paramref name="format"/>, with the BCL's
+	/// <c>TimeSpan.ParseExact</c> and the provider (<see cref="TimeSpanStyles.None"/>). On .NET, a field of at most 128 bytes
+	/// is decoded on the stack, a longer one to a string; elsewhere it is decoded to a string.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="format">The exact format of the field.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
+	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <see cref="System.TimeSpan"/>.</exception>
+	private static TimeSpan TimeSpanExactCore(ReadOnlySpan<byte> s, string format, IFormatProvider provider)
+	{
+#if NET
+		if (s.Length <= 128)
+		{
+			Span<char> chars = stackalloc char[128];
+			var n = Encoding.UTF8.GetChars(s, chars);
+
+			return System.TimeSpan.ParseExact(chars.Slice(0, n), format, provider);
+		}
+
+		return System.TimeSpan.ParseExact(Encoding.UTF8.GetString(s), format, provider);
+#else
+		return System.TimeSpan.ParseExact(Text(s), format, provider);
+#endif
+	}
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeSpan"/> in exactly one of <paramref name="formats"/>, tried in
+	/// order, as <see cref="TimeSpanExactCore(ReadOnlySpan{byte}, string, IFormatProvider)"/> parses one format.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="formats">The formats the field may have.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
+	/// <exception cref="OverflowException"><paramref name="s"/> is outside the range of <see cref="System.TimeSpan"/>.</exception>
+	private static TimeSpan TimeSpanExactCore(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider)
+	{
+#if NET
+		if (s.Length <= 128)
+		{
+			Span<char> chars = stackalloc char[128];
+			var n = Encoding.UTF8.GetChars(s, chars);
+
+			return System.TimeSpan.ParseExact(chars.Slice(0, n), formats, provider);
+		}
+
+		return System.TimeSpan.ParseExact(Encoding.UTF8.GetString(s), formats, provider);
+#else
+		return System.TimeSpan.ParseExact(Text(s), formats, provider);
+#endif
+	}
+
+#if NET
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.DateOnly"/> in exactly <paramref name="format"/>, with the BCL's
+	/// <c>DateOnly.ParseExact</c> and the provider (<see cref="DateTimeStyles.None"/>).
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="format">The exact format of the field.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
+	public static DateOnly DateOnlyExact(ReadOnlySpan<byte> s, string format, IFormatProvider provider, bool hide) =>
+		hide ? DateOnlyExactHidden(s, format, provider) : DateOnlyExactCore(s, format, null, provider);
+
+	private static DateOnly DateOnlyExactHidden(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
+		Hide(s, provider, (x, p) => DateOnlyExactCore(x, format, null, p), "DateOnly");
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.DateOnly"/> in exactly one of <paramref name="formats"/>, tried in
+	/// order, as <see cref="DateOnlyExact(ReadOnlySpan{byte}, string, IFormatProvider, bool)"/> parses one format.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="formats">The formats the field may have.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
+	public static DateOnly DateOnlyExact(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider, bool hide) =>
+		hide ? DateOnlyExactHidden(s, formats, provider) : DateOnlyExactCore(s, null, formats, provider);
+
+	private static DateOnly DateOnlyExactHidden(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
+		Hide(s, provider, (x, p) => DateOnlyExactCore(x, null, formats, p), "DateOnly");
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeOnly"/> in exactly <paramref name="format"/>, with the BCL's
+	/// <c>TimeOnly.ParseExact</c> and the provider (<see cref="DateTimeStyles.None"/>).
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="format">The exact format of the field.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
+	public static TimeOnly TimeOnlyExact(ReadOnlySpan<byte> s, string format, IFormatProvider provider, bool hide) =>
+		hide ? TimeOnlyExactHidden(s, format, provider) : TimeOnlyExactCore(s, format, null, provider);
+
+	private static TimeOnly TimeOnlyExactHidden(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
+		Hide(s, provider, (x, p) => TimeOnlyExactCore(x, format, null, p), "TimeOnly");
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeOnly"/> in exactly one of <paramref name="formats"/>, tried in
+	/// order, as <see cref="TimeOnlyExact(ReadOnlySpan{byte}, string, IFormatProvider, bool)"/> parses one format.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="formats">The formats the field may have.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
+	public static TimeOnly TimeOnlyExact(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider, bool hide) =>
+		hide ? TimeOnlyExactHidden(s, formats, provider) : TimeOnlyExactCore(s, null, formats, provider);
+
+	private static TimeOnly TimeOnlyExactHidden(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
+		Hide(s, provider, (x, p) => TimeOnlyExactCore(x, null, formats, p), "TimeOnly");
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.DateOnly"/> in exactly <paramref name="format"/>, or in one of
+	/// <paramref name="formats"/>, with <see cref="DateTimeStyles.None"/>. A field of at most 128 bytes is decoded on the
+	/// stack, a longer one to a string.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="format">The format, or <see langword="null"/> for <paramref name="formats"/>.</param>
+	/// <param name="formats">The formats, when <paramref name="format"/> is <see langword="null"/>.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
+	private static DateOnly DateOnlyExactCore(ReadOnlySpan<byte> s, string? format, string[]? formats, IFormatProvider provider)
+	{
+		if (s.Length > 128)
+		{
+			var text = Encoding.UTF8.GetString(s);
+
+			return format is not null ? System.DateOnly.ParseExact(text, format, provider) : System.DateOnly.ParseExact(text, formats!, provider);
+		}
+
+		Span<char> chars = stackalloc char[128];
+		var n = Encoding.UTF8.GetChars(s, chars);
+
+		return format is not null
+			? System.DateOnly.ParseExact(chars.Slice(0, n), format, provider)
+			: System.DateOnly.ParseExact(chars.Slice(0, n), formats!, provider);
+	}
+
+	/// <summary>
+	/// Parses <paramref name="s"/> as a <see cref="System.TimeOnly"/> in exactly <paramref name="format"/>, or in one of
+	/// <paramref name="formats"/>, with <see cref="DateTimeStyles.None"/>. A field of at most 128 bytes is decoded on the
+	/// stack, a longer one to a string.
+	/// </summary>
+	/// <param name="s">The UTF-8 text of the field.</param>
+	/// <param name="format">The format, or <see langword="null"/> for <paramref name="formats"/>.</param>
+	/// <param name="formats">The formats, when <paramref name="format"/> is <see langword="null"/>.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
+	private static TimeOnly TimeOnlyExactCore(ReadOnlySpan<byte> s, string? format, string[]? formats, IFormatProvider provider)
+	{
+		if (s.Length > 128)
+		{
+			var text = Encoding.UTF8.GetString(s);
+
+			return format is not null ? System.TimeOnly.ParseExact(text, format, provider) : System.TimeOnly.ParseExact(text, formats!, provider);
+		}
+
+		Span<char> chars = stackalloc char[128];
+		var n = Encoding.UTF8.GetChars(s, chars);
+
+		return format is not null
+			? System.TimeOnly.ParseExact(chars.Slice(0, n), format, provider)
+			: System.TimeOnly.ParseExact(chars.Slice(0, n), formats!, provider);
+	}
+#endif
+
 	/// <summary>Parses <paramref name="s"/> as a <see cref="System.Guid"/>, as <see cref="GuidCore"/> describes.</summary>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="hide">Whether the message of an exception leaves the value out.</param>

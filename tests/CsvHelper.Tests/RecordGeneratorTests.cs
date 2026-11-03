@@ -312,6 +312,47 @@ public class RecordGeneratorTests
 	}
 
 	[Fact]
+	public void FormatsOfTimesAndDurationsAreParsedByTheReader()
+	{
+#if NET
+		const string onNet = """
+			    [CsvFormat("dd.MM.yyyy")]
+			    public DateOnly Day { get; set; }
+			    [CsvFormat("HH.mm", "HH:mm")]
+			    public TimeOnly? Time { get; set; }
+			""";
+#else
+		const string onNet = "";
+#endif
+		var source = $$"""
+			using System;
+			using CsvHelper;
+
+			[CsvRecord]
+			public partial class Times
+			{
+			    [CsvFormat("c")]
+			    public TimeSpan Span { get; set; }
+			    [CsvFormat("c", "g")]
+			    public TimeSpan? Maybe { get; set; }
+			{{onNet}}
+			}
+			""";
+		var (generator, compilation, output) = Run(source);
+
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+		// The reader parses them, so that a spreadsheet's date and duration cells read as dates and durations.
+		Assert.Contains("reader.ParseExact<global::System.TimeSpan>(column0, \"c\")", output);
+		Assert.Contains("reader.ParseExact<global::System.TimeSpan>(column1, formats0)", output);
+		Assert.DoesNotContain("TimeSpan.ParseExact(", output);
+#if NET
+		Assert.Contains("reader.ParseExact<global::System.DateOnly>(column2, \"dd.MM.yyyy\")", output);
+		Assert.Contains("reader.ParseExact<global::System.TimeOnly>(column3, formats1)", output);
+#endif
+	}
+
+	[Fact]
 	public void GeneratedCodeCompilesWithoutWarnings()
 	{
 		const string source = """
@@ -453,7 +494,7 @@ public class RecordGeneratorTests
 		Assert.DoesNotContain("Secret", output);
 		Assert.Contains("Total = converter0.Read(reader, column0),", output);
 		Assert.Contains("reader.ParseExact<global::System.DateTime>(column2, formats0)", output);
-		Assert.Contains("global::System.TimeSpan.ParseExact(reader.GetString(column3), formats1, provider)", output);
+		Assert.Contains("reader.ParseExact<global::System.TimeSpan>(column3, formats1)", output);
 		Assert.Contains("new global::System.Uri(reader.GetString(column4), global::System.UriKind.RelativeOrAbsolute)", output);
 		Assert.Contains("Version = \"v2\",", output);
 		Assert.Contains("columns0 = Columns(reader, new string[] { \"Value\", \"Val\" }, true, \"Collections.Values\");", output);

@@ -38,7 +38,7 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	private readonly byte[] data;
 	// Field k is data[offsets[first + k] .. offsets[first + k + 1] - 1), masked with int.MaxValue: as in the reader's
 	// index, the high bit of entry k + 1 says that field k is quoted, and it is unquoted when it is read.
-	// For a record of a record source (schema.Cells), the CsvCellKind of field k follows them, at offsets[first + count + 1 + k].
+	// For a record of a record source (schema.CellOptions), the CsvCellKind of field k follows them, at offsets[first + count + 1 + k].
 	private readonly int[] offsets;
 	private readonly int first;
 	private readonly int count;
@@ -84,13 +84,16 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	/// <summary>
 	/// Gets field <paramref name="index"/> as a string, or <see langword="null"/> when it is one of the reader's
 	/// <see cref="CsvReaderOptions.NullValues"/>. A field past the end of the record reads as empty, unless the reader's
-	/// <see cref="CsvReaderOptions.MissingField"/> is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// <see cref="CsvReaderOptions.MissingField"/> is <see cref="CsvMissingFieldHandling.Throw"/>. A field of a
+	/// spreadsheet reads as the reader's <see cref="CsvReader.GetString(int)"/> reads it: a date as ISO 8601 text, a
+	/// boolean as <c>TRUE</c> or <c>FALSE</c>.
 	/// </summary>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <returns>The value of the field.</returns>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">The record has no such field and missing fields throw.</exception>
-	public string? this[int index] => schema.Value(GetSpan(index));
+	/// <exception cref="FormatException">The field is an error cell of a spreadsheet whose error cells fail every read.</exception>
+	public string? this[int index] => schema.CellOptions is null ? schema.Value(GetSpan(index)) : CellValue(index);
 
 	/// <summary>Gets the field of the column called <paramref name="name"/>. See <see cref="this[int]"/>.</summary>
 	/// <param name="name">The name of the column, matched as by <see cref="CsvReader.TryGetFieldIndex(string, out int)"/>.</param>
@@ -199,9 +202,14 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 		var field = GetSpan(index);
 		var provider = schema.Provider;
 		var booleans = schema.Booleans;
-		// Numbers and booleans of a record source are in invariant form, as the reader parses them.
-		if (schema.Cells && (uint)index < (uint)count && CellKind(index).IsInvariant())
+		// The typed cells of a record source convert as the reader converts them, else parse in invariant form.
+		if (schema.CellOptions is { } cells && (uint)index < (uint)count && CellKind(index) is var kind && kind.IsTyped())
 		{
+			if (CsvCells.Parse(field, kind, schema.HideValues, cells, out T value))
+			{
+				return value;
+			}
+
 			provider = CultureInfo.InvariantCulture;
 			booleans = null;
 		}
@@ -243,7 +251,7 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 		var end = offsets[first + count] & int.MaxValue;
 		var bytes = new byte[Math.Max(end - start, 0)];
 		Array.Copy(data, start, bytes, 0, bytes.Length);
-		var kinds = schema.Cells ? count : 0;
+		var kinds = schema.CellOptions is null ? 0 : count;
 		var own = new int[count + 1 + kinds];
 		for (var i = 0; i <= count; i++)
 		{
@@ -324,10 +332,39 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	/// <summary>Whether the messages of parsing exceptions leave the value out (<see cref="CsvReaderOptions.IncludeValuesInExceptions"/> is off).</summary>
 	internal bool HideValues => schema.HideValues;
 
-	/// <summary>The cell kind of field <paramref name="index"/> of a record of a record source (<see cref="CsvDynamicSchema.Cells"/>).</summary>
+	/// <summary>The cell kind of field <paramref name="index"/> of a record of a record source (<see cref="CsvDynamicSchema.CellOptions"/>).</summary>
 	/// <param name="index">The 0-based index of a field of the record.</param>
 	/// <returns>The kind of the field.</returns>
 	private CsvCellKind CellKind(int index) => (CsvCellKind)offsets[first + count + 1 + index];
+
+	/// <summary>
+	/// The value of field <paramref name="index"/> of a record of a record source: <see langword="null"/> for one of the
+	/// null values (compared with the stored form, as the reader's <see cref="CsvReader.GetStringOrNull(int)"/> does), else
+	/// the cell's text (<see cref="CsvCells.Text"/>).
+	/// </summary>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <returns>The value.</returns>
+	/// <exception cref="FormatException">The field is an error cell, and the source's error cells fail every read.</exception>
+	private string? CellValue(int index)
+	{
+		var field = GetSpan(index);
+		if ((uint)index < (uint)count && !schema.IsNull(field))
+		{
+			var kind = CellKind(index);
+			var options = schema.CellOptions!;
+			if (kind == CsvCellKind.Error && options.ThrowOnErrorCells)
+			{
+				throw CsvCells.ErrorRead(field, schema.HideValues, null);
+			}
+
+			if (CsvCells.Text(field, kind, options) is { } text)
+			{
+				return text;
+			}
+		}
+
+		return schema.Value(field);
+	}
 
 	/// <summary>The value that <c>record.Name</c> gets, for the rules of the binder.</summary>
 	private object? GetMemberValue(int index) => this[index];

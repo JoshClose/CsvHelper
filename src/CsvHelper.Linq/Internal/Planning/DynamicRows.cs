@@ -87,9 +87,9 @@ internal static class DynamicRows
 		public string? Failure { get; private set; }
 
 		/// <summary>
-		/// Replaces <c>row["Name"] == "text"</c> (and <c>!=</c>) by a comparison of the field's UTF-8 bytes with those of the
-		/// text, which makes no string: the same result, as the field's string is those bytes decoded, and a null value is
-		/// never equal to text that is not one.
+		/// Replaces <c>row["Name"] == "text"</c> (and <c>!=</c>) by <see cref="CsvReader.FieldEquals(int, ReadOnlySpan{byte})"/>
+		/// with the text's UTF-8 bytes, which makes no string: the same result, as the field's string is its text, and a null
+		/// value is never equal to text that is not one.
 		/// </summary>
 		/// <param name="node">The comparison.</param>
 		/// <returns>The comparison of bytes, or the node visited.</returns>
@@ -261,13 +261,16 @@ internal static class DynamicRows
 /// </summary>
 internal static class DynamicAccess
 {
-	/// <summary>Whether the field is <paramref name="utf8"/>, as <c>row[name] == text</c> for text that is not a null value.</summary>
+	/// <summary>
+	/// Whether the field is <paramref name="utf8"/>, as <c>row[name] == text</c> for text that is not a null value: the
+	/// field's text, which for a spreadsheet's date and boolean cells is not their bytes.
+	/// </summary>
 	/// <param name="reader">The reader.</param>
 	/// <param name="column">The index of the column, or -1.</param>
 	/// <param name="name">The name of the column.</param>
 	/// <param name="utf8">The text, as UTF-8.</param>
 	/// <returns><see langword="true"/> when the field is the text.</returns>
-	public static bool TextEquals(CsvReader reader, int column, string name, byte[] utf8) => reader.GetSpan(Column(column, name)).SequenceEqual(utf8);
+	public static bool TextEquals(CsvReader reader, int column, string name, byte[] utf8) => reader.FieldEquals(Column(column, name), utf8);
 
 	/// <summary>The field as a string, or <see langword="null"/> for a null value, as <c>row[name]</c>.</summary>
 	/// <param name="reader">The reader.</param>

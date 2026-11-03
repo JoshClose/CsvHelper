@@ -578,7 +578,7 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		var exact = new Dictionary<string, int>(count, StringComparer.Ordinal);
 		for (var i = 0; i < count; i++)
 		{
-			var name = MakeString(GetSpan(i), -1);
+			var name = typedCells ? CellHeader(i) : MakeString(GetSpan(i), -1);
 			names[i] = name;
 			var key = HeaderKey(name);
 			keys[i] = key;

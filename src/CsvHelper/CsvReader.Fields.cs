@@ -192,7 +192,7 @@ public sealed partial class CsvReader
 	/// </exception>
 	public string GetString(string name) => GetString(GetFieldIndex(name));
 
-	/// <summary>Copies field <paramref name="index"/> into <paramref name="destination"/> as UTF-16.</summary>
+	/// <summary>Copies field <paramref name="index"/> into <paramref name="destination"/> as UTF-16: the text that <see cref="GetString(int)"/> gets.</summary>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="destination">Receives the value of the field.</param>
 	/// <returns>The number of chars written to <paramref name="destination"/>.</returns>
@@ -202,7 +202,27 @@ public sealed partial class CsvReader
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
 	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
 	/// </exception>
-	public int GetChars(int index, Span<char> destination) => Encoding.UTF8.GetChars(GetSpan(index), destination);
+	public int GetChars(int index, Span<char> destination) =>
+		typedCells ? CellChars(index, destination) : Encoding.UTF8.GetChars(GetSpan(index), destination);
+
+	/// <summary>
+	/// Whether the text of field <paramref name="index"/>, the text that <see cref="GetString(int)"/> gets, is
+	/// <paramref name="utf8"/>, compared ordinally and without making a string. For CSV, that text is the field's bytes
+	/// (<see cref="GetSpan(int)"/>). A reader of a spreadsheet gives some cells text of their own: a date cell's is
+	/// ISO 8601 (<c>2024-01-15</c>) and a boolean cell's <c>TRUE</c> or <c>FALSE</c>, where its bytes are a serial number
+	/// and <c>1</c> or <c>0</c>.
+	/// </summary>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="utf8">The text to compare with, as UTF-8.</param>
+	/// <returns>Whether the text of the field is <paramref name="utf8"/>.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
+	/// <exception cref="IndexOutOfRangeException">
+	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
+	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// </exception>
+	/// <exception cref="FormatException">The field is a spreadsheet's error cell, and the reader's error cells fail every read.</exception>
+	public bool FieldEquals(int index, ReadOnlySpan<byte> utf8) =>
+		typedCells ? CellEquals(index, utf8) : GetSpan(index).SequenceEqual(utf8);
 
 	/// <summary>Whether field <paramref name="index"/> is empty (or missing).</summary>
 	/// <param name="index">The 0-based index of the field.</param>
@@ -321,6 +341,11 @@ public sealed partial class CsvReader
 	/// the field decoded to a string, as .NET parses them, and other types are not supported: parse them with
 	/// <see cref="Parse{T}(int, Func{string, IFormatProvider, T})"/>.
 	/// </para>
+	/// <para>
+	/// A reader of a spreadsheet (CsvHelper.Excel) parses a text cell as above, and converts the other cells by their
+	/// type: a date cell for <see cref="DateTime"/> and the other date and time types, a number cell rounded to Excel's
+	/// significant digits for <see cref="decimal"/> and integer types, and so on.
+	/// </para>
 	/// </remarks>
 	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="index">The 0-based index of the field.</param>
@@ -411,19 +436,25 @@ public sealed partial class CsvReader
 		=> TryParseSpan(GetSpan(index), index, out value);
 
 	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly the
-	/// given format, such as <c>"yyyyMMdd"</c>, with the configured format provider. A time zone offset or <c>Z</c> in the
-	/// field gives a <see cref="DateTimeKind.Local"/> or <see cref="DateTimeKind.Utc"/> <see cref="DateTime"/> as
+	/// Parses field <paramref name="index"/> as a date, time or duration in exactly the given format, such as
+	/// <c>"yyyyMMdd"</c>, with the configured format provider. A time zone offset or <c>Z</c> in the field gives a
+	/// <see cref="DateTimeKind.Local"/> or <see cref="DateTimeKind.Utc"/> <see cref="DateTime"/> as
 	/// <see cref="DateTimeStyles.RoundtripKind"/> describes; a <see cref="DateTimeOffset"/> field without an offset gets
-	/// the local time zone's.
+	/// the local time zone's. <see cref="TimeSpan"/>, <c>DateOnly</c> and <c>TimeOnly</c> parse as their own
+	/// <c>ParseExact</c> parses them. A reader of a spreadsheet applies the format to text cells, and converts number and
+	/// date cells as <see cref="Parse{T}(int)"/> does.
 	/// </summary>
-	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <typeparam name="T">
+	/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/> or <see cref="TimeSpan"/>, or on .NET 8 and later <c>DateOnly</c>
+	/// or <c>TimeOnly</c>.
+	/// </typeparam>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="format">The format of the field, as <see cref="DateTime.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="format"/> is <see langword="null"/>.</exception>
 	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
-	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="OverflowException">A <see cref="TimeSpan"/> field is outside its range.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is not one of those types.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
@@ -432,22 +463,30 @@ public sealed partial class CsvReader
 	public T ParseExact<T>(int index, string format)
 	{
 		ArgumentNullException.ThrowIfNull(format);
+		if (typedCells)
+		{
+			return ParseExactCell<T>(index, format, null, provider);
+		}
 
 		return CsvValue.ParseExact<T>(GetSpan(index), format, provider, hideValues);
 	}
 
 	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly the
+	/// Parses field <paramref name="index"/> as a date, time or duration in exactly the
 	/// given format with <paramref name="provider"/>. See <see cref="ParseExact{T}(int, string)"/>.
 	/// </summary>
-	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <typeparam name="T">
+	/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/> or <see cref="TimeSpan"/>, or on .NET 8 and later <c>DateOnly</c>
+	/// or <c>TimeOnly</c>.
+	/// </typeparam>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="format">The format of the field, as <see cref="DateTime.ParseExact(string, string, IFormatProvider)"/> takes it.</param>
 	/// <param name="provider">The format provider to parse with.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="format"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
 	/// <exception cref="FormatException">The field does not have the format, or the format is not valid.</exception>
-	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="OverflowException">A <see cref="TimeSpan"/> field is outside its range.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is not one of those types.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
@@ -457,22 +496,30 @@ public sealed partial class CsvReader
 	{
 		ArgumentNullException.ThrowIfNull(format);
 		ArgumentNullException.ThrowIfNull(provider);
+		if (typedCells)
+		{
+			return ParseExactCell<T>(index, format, null, provider);
+		}
 
 		return CsvValue.ParseExact<T>(GetSpan(index), format, provider, hideValues);
 	}
 
 	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly one of
+	/// Parses field <paramref name="index"/> as a date, time or duration in exactly one of
 	/// the given formats, tried in order, such as <c>"yyyy-MM-dd"</c> and <c>"dd/MM/yyyy"</c> for a file that mixes
 	/// them, with the configured format provider. See <see cref="ParseExact{T}(int, string)"/>.
 	/// </summary>
-	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <typeparam name="T">
+	/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/> or <see cref="TimeSpan"/>, or on .NET 8 and later <c>DateOnly</c>
+	/// or <c>TimeOnly</c>.
+	/// </typeparam>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="formats">The formats the field may have, as <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="formats"/> is <see langword="null"/>.</exception>
 	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="OverflowException">A <see cref="TimeSpan"/> field is outside its range.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is not one of those types.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
@@ -481,22 +528,30 @@ public sealed partial class CsvReader
 	public T ParseExact<T>(int index, string[] formats)
 	{
 		ArgumentNullException.ThrowIfNull(formats);
+		if (typedCells)
+		{
+			return ParseExactCell<T>(index, null, formats, provider);
+		}
 
 		return CsvValue.ParseExact<T>(GetSpan(index), formats, provider, hideValues);
 	}
 
 	/// <summary>
-	/// Parses field <paramref name="index"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly one of
+	/// Parses field <paramref name="index"/> as a date, time or duration in exactly one of
 	/// the given formats, tried in order, with <paramref name="provider"/>. See <see cref="ParseExact{T}(int, string[])"/>.
 	/// </summary>
-	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <typeparam name="T">
+	/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/> or <see cref="TimeSpan"/>, or on .NET 8 and later <c>DateOnly</c>
+	/// or <c>TimeOnly</c>.
+	/// </typeparam>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="formats">The formats the field may have, as <see cref="DateTime.ParseExact(string, string[], IFormatProvider, DateTimeStyles)"/> takes them.</param>
 	/// <param name="provider">The format provider to parse with.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="formats"/> or <paramref name="provider"/> is <see langword="null"/>.</exception>
 	/// <exception cref="FormatException">The field has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="OverflowException">A <see cref="TimeSpan"/> field is outside its range.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is not one of those types.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
 	/// <exception cref="IndexOutOfRangeException">
 	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
@@ -506,6 +561,10 @@ public sealed partial class CsvReader
 	{
 		ArgumentNullException.ThrowIfNull(formats);
 		ArgumentNullException.ThrowIfNull(provider);
+		if (typedCells)
+		{
+			return ParseExactCell<T>(index, null, formats, provider);
+		}
 
 		return CsvValue.ParseExact<T>(GetSpan(index), formats, provider, hideValues);
 	}

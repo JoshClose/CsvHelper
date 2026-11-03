@@ -289,8 +289,9 @@ var options = new CsvReaderOptions { TrueValues = ["Ja", "J"], FalseValues = ["N
 reader.Parse<bool>(0);                            // true
 ```
 
-`Parse<T>(index, provider)` takes a format provider for one call, and `ParseExact<T>` parses a `DateTime` or a
-`DateTimeOffset` in an exact format, as their own `ParseExact` does:
+`Parse<T>(index, provider)` takes a format provider for one call, and `ParseExact<T>` parses a `DateTime`,
+`DateTimeOffset` or `TimeSpan` (and on .NET 8 and later a `DateOnly` or `TimeOnly`) in an exact format, as their own
+`ParseExact` does:
 
 ```csharp
 // Opened;Amount;Month
@@ -423,6 +424,10 @@ while (reader.Read())
     total += reader.Parse<decimal>(amount);
 }
 ```
+
+`FieldEquals(index, utf8)` makes the same comparison with the field's text, the string that `GetString` would make.
+For CSV that is the span. A reader of a spreadsheet gives date and boolean cells text of their own (`2024-01-15`,
+`TRUE`) where their spans hold what the file stores (a serial number, `1`), so compare those with `FieldEquals`.
 
 ## Rows and fields
 

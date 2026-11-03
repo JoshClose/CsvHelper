@@ -561,14 +561,46 @@ public class ReaderTests
 	}
 
 	[Fact]
-	public void ParseExactParsesOnlyDates()
+	public void ParseExactParsesDatesTimesAndDurations()
 	{
-		using var reader = CsvReader.FromText("20240301,01:30\n", NoHeader);
+		// A field of more than 128 bytes is decoded to a string rather than on the stack.
+		var longSpan = new string('x', 200);
+		using var reader = CsvReader.FromText($"20240301,01:30,24.12.2024,14.05,1:02:03,{longSpan}\n", NoHeader);
 		Assert.True(reader.Read());
 
 		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, ["dd/MM/yyyy", "yyyyMMdd"]));
-		Assert.Throws<NotSupportedException>(() => reader.ParseExact<TimeSpan>(1, "hh\\:mm"));
+		// As each type's own ParseExact parses the field, with the reader's format provider or the one given.
+		Assert.Equal(new TimeSpan(1, 30, 0), reader.ParseExact<TimeSpan>(1, "hh\\:mm"));
+		Assert.Equal(new TimeSpan(1, 30, 0), reader.ParseExact<TimeSpan>(1, "hh\\:mm", CultureInfo.InvariantCulture));
+		Assert.Equal(new TimeSpan(1, 2, 3), reader.ParseExact<TimeSpan>(4, ["hh\\:mm", "h\\:mm\\:ss"]));
+		Assert.Equal(new TimeSpan(1, 2, 3), reader.ParseExact<TimeSpan>(4, ["h\\:mm\\:ss"], CultureInfo.InvariantCulture));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeSpan>(5, "g"));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeSpan>(5, ["g", "c"]));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeSpan>(0, "hh\\:mm"));
+#if NET
+		Assert.Equal(new DateOnly(2024, 12, 24), reader.ParseExact<DateOnly>(2, "dd.MM.yyyy"));
+		Assert.Equal(new DateOnly(2024, 12, 24), reader.ParseExact<DateOnly>(2, ["yyyyMMdd", "dd.MM.yyyy"]));
+		Assert.Equal(new DateOnly(2024, 3, 1), reader.ParseExact<DateOnly>(0, "yyyyMMdd", CultureInfo.InvariantCulture));
+		Assert.Equal(new TimeOnly(14, 5), reader.ParseExact<TimeOnly>(3, "HH.mm"));
+		Assert.Equal(new TimeOnly(14, 5), reader.ParseExact<TimeOnly>(3, ["HH:mm", "HH.mm"], CultureInfo.InvariantCulture));
+		Assert.Throws<FormatException>(() => reader.ParseExact<DateOnly>(3, "dd.MM.yyyy"));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeOnly>(2, ["HH:mm"]));
+		Assert.Throws<FormatException>(() => reader.ParseExact<DateOnly>(5, "d"));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeOnly>(5, ["t"]));
+#endif
 		Assert.Throws<NotSupportedException>(() => reader.ParseExact<int>(0, ["yyyyMMdd"]));
+		Assert.Throws<NotSupportedException>(() => reader.ParseExact<Guid>(0, "D"));
+
+		// Messages without the value.
+		using var hidden = CsvReader.FromText("01:30x\n", new CsvReaderOptions { HasHeader = false, IncludeValuesInExceptions = false });
+		Assert.True(hidden.Read());
+		var e = Assert.Throws<FormatException>(() => hidden.ParseExact<TimeSpan>(0, "hh\\:mm"));
+		Assert.DoesNotContain("01:30x", e.Message);
+		Assert.Contains("TimeSpan", e.Message);
+#if NET
+		Assert.DoesNotContain("01:30x", Assert.Throws<FormatException>(() => hidden.ParseExact<TimeOnly>(0, ["HH:mm"])).Message);
+		Assert.DoesNotContain("01:30x", Assert.Throws<FormatException>(() => hidden.ParseExact<DateOnly>(0, "yyyy")).Message);
+#endif
 	}
 
 	[Fact]

@@ -1,3 +1,4 @@
+using System.Text;
 using CsvHelper.Excel.Tests.Api;
 
 namespace CsvHelper.Excel.Tests.Corpus;
@@ -82,7 +83,8 @@ public class CorpusTests
 		var options = new ExcelReaderOptions { Csv = new() { HasHeader = false, SkipEmptyLines = false } };
 		foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet))
 		{
-			// Record n is row n, and field c is column c: each field is the cell's text, or empty.
+			// Record n is row n, and field c is column c: each field's stored form is the cell's text, or empty. Its text is
+			// the same, except for a boolean, which reads as TRUE or FALSE (Phase 2).
 			using var reader = await workbook.OpenReaderAsync(async, sheet, options);
 			var cells = expected[sheet.Name];
 			var rows = 0L;
@@ -92,8 +94,13 @@ public class CorpusTests
 				Assert.Equal(rows, reader.LineNumber);
 				for (var column = 0; column < reader.FieldCount; column++)
 				{
-					var text = cells.TryGetValue((rows, column), out var value) ? value.Text : "";
-					Assert.True(text == reader.GetString(column), $"{new SheetLocation(sheet.Name).Cell(column, rows)}: {CellValue.Show(text)} read as {CellValue.Show(reader.GetString(column))}");
+					var found = cells.TryGetValue((rows, column), out var value);
+					var text = found ? value.Text : "";
+					var cell = new SheetLocation(sheet.Name).Cell(column, rows);
+					var stored = Encoding.UTF8.GetString(reader.GetSpan(column).ToArray());
+					Assert.True(text == stored, $"{cell}: {CellValue.Show(text)} read as {CellValue.Show(stored)}");
+					var expectedText = found && value.Kind == SheetCellKind.Bool ? text switch { "1" => "TRUE", "0" => "FALSE", _ => text } : text;
+					Assert.True(expectedText == reader.GetString(column), $"{cell}: {CellValue.Show(expectedText)} read as {CellValue.Show(reader.GetString(column))}");
 				}
 			}
 
@@ -132,8 +139,8 @@ public class CorpusTests
 				"5: negative|-17.5|",
 				"6: small|1.0000000000000001E-5|",
 				"7: precise|0.30000000000000004|",
-				"8: boolean true|1|",
-				"9: boolean false|0|",
+				"8: boolean true|TRUE|",
+				"9: boolean false|FALSE|",
 				"10: not available|#N/A|",
 				"11: divide by zero|#DIV/0!|",
 				"12: gap|a||d",

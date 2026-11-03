@@ -23,7 +23,7 @@ public sealed partial class CsvReader
 			EnsureHeader();
 		}
 
-		return CsvDynamicSchema.Get(headers, headerKeys, options, nullValues, booleans, typedCells);
+		return CsvDynamicSchema.Get(headers, headerKeys, options, nullValues, booleans, typedCells ? recordSource!.CellOptions : null);
 	}
 
 	/// <summary>

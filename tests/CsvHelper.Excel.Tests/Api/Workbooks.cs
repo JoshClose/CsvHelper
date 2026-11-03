@@ -48,7 +48,7 @@ public partial class SheetOrderWithCustomer
 internal static class Workbooks
 {
 	/// <summary>The rows of the Orders sheet, after its header, as <see cref="ReadAllAsync"/> reads them.</summary>
-	public static readonly string[] OrderRows = ["apple|3|1.5|1|first", "pear|10|0.25|0|", "plum|7|2|1|third"];
+	public static readonly string[] OrderRows = ["apple|3|1.5|TRUE|first", "pear|10|0.25|FALSE|", "plum|7|2|TRUE|third"];
 
 	/// <summary>
 	/// A workbook as Excel writes one: a chartsheet first, a hidden worksheet, then "Orders" (a header and three orders,

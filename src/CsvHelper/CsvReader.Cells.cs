@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,7 +11,8 @@ namespace CsvHelper;
 // Records from a CsvRecordSource (CsvHelper.Excel's sheets) instead of CSV text. The source writes decoded fields into
 // the same buffer and index the scanner fills (see CsvReader.Scan.cs), each with a CsvCellKind, so everything that reads
 // the index works unchanged. What differs is behind typedCells, which is false for CSV and is tested only off the hot
-// paths: in ParseSpan, TryParseSpan and MakeString, and per batch in Fill and the parallel batches.
+// paths: in ParseSpan, TryParseSpan and MakeString, in GetChars, the ParseExact overloads and header capture, and per
+// batch in Fill and the parallel batches. The conversions of typed cells are CsvCells'.
 public sealed partial class CsvReader
 {
 	// The fields (typedCells, recordSource, recordBatch, kinds, rowLines) are declared at the end of CsvReader.cs, after
@@ -125,9 +127,11 @@ public sealed partial class CsvReader
 	private CsvCellKind CellKind(int column) => (uint)column < (uint)fieldCount ? kinds![fieldBase + column] : CsvCellKind.Text;
 
 	/// <summary>
-	/// Parses a field of a record source as <typeparamref name="T"/>: as <see cref="ParseSpan{T}(ReadOnlySpan{byte}, int, IFormatProvider)"/>
-	/// parses text, but numbers and booleans, which are stored in invariant form, with the invariant culture and the
-	/// built-in boolean values, whatever <paramref name="provider"/> is.
+	/// Parses a field of a record source as <typeparamref name="T"/>. A text or empty field parses as
+	/// <see cref="ParseSpan{T}(ReadOnlySpan{byte}, int, IFormatProvider)"/> parses CSV text. A typed field converts as
+	/// <see cref="CsvCells"/> says (serial dates for date targets, rounding for decimal and integer targets, error cells
+	/// fail), and otherwise its stored text, which is in invariant form, parses with the invariant culture and the built-in
+	/// boolean values, whatever <paramref name="provider"/> is.
 	/// </summary>
 	/// <typeparam name="T">The type to parse the field as.</typeparam>
 	/// <param name="s">The UTF-8 text of the field.</param>
@@ -141,9 +145,14 @@ public sealed partial class CsvReader
 #endif
 	{
 		var booleans = this.booleans;
-		// A date cell parses as the number it is: converting serial dates for date and time targets is typed reading's.
-		if (CellKind(column).IsInvariant())
+		var kind = CellKind(column);
+		if (kind.IsTyped())
 		{
+			if (CsvCells.Parse(s, kind, hideValues, recordSource!.CellOptions, out T value))
+			{
+				return value;
+			}
+
 			provider = CultureInfo.InvariantCulture;
 			booleans = null;
 		}
@@ -174,8 +183,14 @@ public sealed partial class CsvReader
 	{
 		var provider = this.provider;
 		var booleans = this.booleans;
-		if (CellKind(column).IsInvariant())
+		var kind = CellKind(column);
+		if (kind.IsTyped())
 		{
+			if (CsvCells.TryParse(s, kind, recordSource!.CellOptions, out value) is { } converted)
+			{
+				return converted;
+			}
+
 			provider = CultureInfo.InvariantCulture;
 			booleans = null;
 		}
@@ -193,17 +208,113 @@ public sealed partial class CsvReader
 	}
 
 	/// <summary>
-	/// The text of a field of a record source when it is not the field's bytes, for <see cref="MakeString(ReadOnlySpan{byte}, int)"/>.
-	/// For now every kind's text is its bytes (numbers in invariant form, serial dates as numbers, booleans as 1 or 0), so
-	/// this returns <see langword="null"/>. Typed reading gives date and boolean cells their own text (ISO 8601,
-	/// <c>TRUE</c> and <c>FALSE</c>) here: the <see cref="RecordBatch"/> flags those fields, so that
-	/// <see cref="GetString(int)"/> comes here too.
+	/// The text of a field of a record source when it is not the field's bytes, for <see cref="MakeString(ReadOnlySpan{byte}, int)"/>:
+	/// ISO 8601 for a date, <c>[h]:mm:ss</c> for a duration, <c>TRUE</c> or <c>FALSE</c> for a boolean (see
+	/// <see cref="CsvCells.Text"/>). The <see cref="RecordBatch"/> flags those fields, so that <see cref="GetString(int)"/>
+	/// comes here too. Numbers, text and error cells read as their bytes.
 	/// </summary>
 	/// <param name="utf8">The UTF-8 text of the field.</param>
 	/// <param name="column">The index of the field in the current record, for its kind (<see cref="CellKind(int)"/>).</param>
 	/// <returns>The text of the field, or <see langword="null"/> when it is the field's bytes.</returns>
+	/// <exception cref="FormatException">The field is an error cell, and the source's error cells fail every read.</exception>
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	private string? CellString(ReadOnlySpan<byte> utf8, int column) => null;
+	private string? CellString(ReadOnlySpan<byte> utf8, int column)
+	{
+		var kind = CellKind(column);
+		var options = recordSource!.CellOptions;
+		if (kind == CsvCellKind.Error && options.ThrowOnErrorCells)
+		{
+			throw CsvCells.ErrorRead(utf8, hideValues, Locate(column));
+		}
+
+		return CsvCells.Text(utf8, kind, options);
+	}
+
+	/// <summary>The header name of field <paramref name="column"/> of a record source: its text, so that a date names its column <c>2024-01-15</c>.</summary>
+	/// <param name="column">The index of the field in the header.</param>
+	/// <returns>The name.</returns>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private string CellHeader(int column)
+	{
+		var utf8 = GetSpan(column);
+
+		return CellString(utf8, column) ?? MakeString(utf8, -1);
+	}
+
+	/// <summary>Copies the text of field <paramref name="index"/> of a record source into <paramref name="destination"/>, for <see cref="GetChars(int, Span{char})"/>.</summary>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="destination">Receives the text of the field.</param>
+	/// <returns>The number of chars written to <paramref name="destination"/>.</returns>
+	/// <exception cref="ArgumentException"><paramref name="destination"/> is too small for the text.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private int CellChars(int index, Span<char> destination)
+	{
+		var utf8 = GetSpan(index);
+		if (CellString(utf8, index) is not { } text)
+		{
+			return Encoding.UTF8.GetChars(utf8, destination);
+		}
+
+		text.AsSpan().CopyTo(destination);
+
+		return text.Length;
+	}
+
+	/// <summary>Whether the text of field <paramref name="index"/> of a record source is <paramref name="utf8"/>, for <see cref="FieldEquals(int, ReadOnlySpan{byte})"/>.</summary>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="utf8">The text to compare with, as UTF-8.</param>
+	/// <returns>Whether the text of the field is <paramref name="utf8"/>.</returns>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private bool CellEquals(int index, ReadOnlySpan<byte> utf8)
+	{
+		var field = GetSpan(index);
+		if (CellString(field, index) is not { } text)
+		{
+			return field.SequenceEqual(utf8);
+		}
+
+		// The text of a typed cell is ASCII (CsvCells.Text), so each char is one byte, and a byte of more than one is unequal.
+		if (text.Length != utf8.Length)
+		{
+			return false;
+		}
+
+		for (var i = 0; i < text.Length; i++)
+		{
+			if (text[i] != utf8[i])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// Parses field <paramref name="index"/> of a record source in exactly a format, for the <c>ParseExact</c> overloads:
+	/// a number, date or duration cell converts as <see cref="Parse{T}(int)"/> converts it, without the format, which
+	/// applies to text cells.
+	/// </summary>
+	/// <typeparam name="T">A type that <c>ParseExact</c> parses.</typeparam>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="format">The format, or <see langword="null"/> for <paramref name="formats"/>.</param>
+	/// <param name="formats">The formats, when <paramref name="format"/> is <see langword="null"/>.</param>
+	/// <param name="provider">The format provider of text cells.</param>
+	/// <returns>The parsed value.</returns>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private T ParseExactCell<T>(int index, string? format, string[]? formats, IFormatProvider provider)
+	{
+		var s = GetSpan(index);
+		var kind = CellKind(index);
+		if (CsvValue.ParsesExact<T>() && kind.IsTyped() && CsvCells.Parse(s, kind, hideValues, recordSource!.CellOptions, out T value))
+		{
+			return value;
+		}
+
+		return format is not null
+			? CsvValue.ParseExact<T>(s, format, provider, hideValues)
+			: CsvValue.ParseExact<T>(s, formats!, provider, hideValues);
+	}
 
 	/// <summary>Where the current record, or its field <paramref name="field"/>, is in a record source; <see langword="null"/> for CSV input.</summary>
 	/// <param name="field">The 0-based index of the field, or -1 for the whole record.</param>
@@ -216,9 +327,9 @@ public sealed partial class CsvReader
 	/// after the last field of a record), so that <see cref="RawRecord"/> reads as the fields with separators between them.
 	/// </summary>
 	/// <remarks>
-	/// Date, boolean and error fields carry the index's needs-decoding flag, as every field does when the reader trims:
-	/// <see cref="GetString(int)"/> then leaves its fast path for <see cref="MakeString(ReadOnlySpan{byte}, int)"/>, whose
-	/// typed-cell path gives them their text. Decoding a flagged field of a source only trims it.
+	/// Date, duration, boolean and error fields carry the index's needs-decoding flag, as every field does when the reader
+	/// trims: <see cref="GetString(int)"/> then leaves its fast path for <see cref="MakeString(ReadOnlySpan{byte}, int)"/>,
+	/// whose typed-cell path gives them their text. Decoding a flagged field of a source only trims it.
 	/// </remarks>
 	internal sealed class RecordBatch
 	{
@@ -294,7 +405,7 @@ public sealed partial class CsvReader
 			r.buffer[end] = r.sepByte;
 			// The kind goes with the field's first entry, the flag on the entry after it.
 			r.kinds![r.endsCount - 1] = kind;
-			var flagged = r.trim || kind is CsvCellKind.DateNumber or CsvCellKind.Bool or CsvCellKind.Error;
+			var flagged = r.trim || kind.HasText();
 			r.ends[r.endsCount++] = (end + 1) | (flagged ? int.MinValue : 0);
 			r.dataEnd = end + 1;
 			recordFields++;

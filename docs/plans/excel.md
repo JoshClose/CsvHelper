@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted; its build is under way (see "As built" under Phase 2).
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -61,9 +61,9 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader =
   - `Sheet` (a name) or `SheetIndex`, `Range`, `Table`, `DefinedName`: what to read.
   - `HeaderRow`: a fixed row, or detect it from `T` (with a scan limit).
   - `FillMergedCells`, `SkipHiddenRows`, `SkipHiddenColumns`.
-  - `ErrorCells`: Text, Null or Error (routes to `OnRecordError`).
-  - `DecimalDigits`: significant digits for `decimal` targets (default 15).
-  - `Formulas`: CachedValue (default) or FormulaText.
+  - `ErrorCells`: Text (default; the error's text, and typed targets fail), Null (an empty cell) or Error (every read of the cell fails, and `GetRecords` routes it to `OnRecordError`).
+  - `SignificantDigits`: significant digits for `decimal` and integer targets (default 15; null reads the stored text exactly).
+  - `Formulas`: CachedValue (default) or FormulaText (`=` and the formula, with shared formulas moved to each cell).
   - `Text`: Raw (default) or Formatted (Phase 8).
   - `MaxUncompressedSize`, `MaxPartSize`: zip-bomb limits. Phase 1's "Public API" says what each bounds.
   - `Csv`: a composed `CsvReaderOptions` for `FormatProvider`, header matching, `OnRecordError`, null values, trimming and the rest. CSV-only settings (separator, quoting, comments) are ignored.
@@ -261,7 +261,7 @@ public enum ExcelSheetKind { Worksheet, Chartsheet, DialogSheet, MacroSheet }
 
 Later phases add:
 
-- **Phase 2:** `ErrorCells`, `DecimalDigits`, `Formulas`. Date conversion uses `Date1904`.
+- **Phase 2:** `ErrorCells`, `SignificantDigits`, `Formulas`, and the enums `ExcelErrorCells` and `ExcelFormulas`. Date conversion uses `Date1904`.
 - **Phase 3:**
   - Options: `Range`, `Table`, `DefinedName`, `HeaderRow`, `FillMergedCells`, `SkipHiddenRows` and `SkipHiddenColumns`.
   - `ExcelSheet.Dimension` and `ExcelSheet.Tables`; `ExcelWorkbook.Tables` and `ExcelWorkbook.DefinedNames`; reading all sheets.
@@ -695,7 +695,7 @@ None. Phase 0's hooks cover Phase 1:
 Considered and avoided:
 
 - **`InternalsVisibleTo CsvHelper.Excel.Tests` in core**, so tests could name `CsvCellKind`. `SheetCellKind` avoids it. If the mirror ever has to go, this becomes a csproj-only change: it adds one assembly attribute and no IL to any method. It would then need the user's OK to verify it with an IL diff of CsvHelper.dll instead of the full benchmark gate.
-- **A cell kind for `t="d"` ISO dates.** Phase 1 reads them as Text. Whether Phase 2 needs a new `CsvCellKind` is Phase 2's decision, and would be a core change then.
+- **A cell kind for `t="d"` ISO dates.** Phase 1 reads them as Text. Phase 2 settled it without a new `CsvCellKind`: its scanner converts them to serials.
 - **A public record-source API.** Still not wanted (decision 3).
 
 Because nothing in core changes, Phase 1 does not run the CSV benchmark gate. The bench project gains a class, a data file and package references; its CSV benchmark classes are not edited.
@@ -871,7 +871,7 @@ Filled in step by step; the code is the reference.
   - ExcelDataReader, MiniExcel and the Open XML SDK's SAX reader take 2.4–4.4x Sylvan's time.
   - Inflating is about 5% of the read on .NET 10; scanning is the rest.
 - **Left for later phases:**
-  - **Phase 2:** typed reading, and whether `t="d"` dates, read as text in Phase 1, need a cell kind of their own (a core change then).
+  - **Phase 2:** typed reading, and whether `t="d"` dates, read as text in Phase 1, need a cell kind of their own (a core change then). Phase 2's design settled it: no new kind.
   - **Phase 3:** dimensions, Tables and defined names.
   - **Phase 4:** LibreOffice in CI.
   - **Phase 6:** `publish.yaml` and the docs page.
@@ -1625,7 +1625,11 @@ Allocated per operation, in BenchmarkDotNet's MB (1,024 KB), shared / inline:
 - **Tests:** 689 per target, all passing on net10.0, net8.0 and net48. The solution builds with 0 warnings.
 - **Core:** no change. The bench's CSV benchmark classes aren't edited; its project gained CsvHelper.Excel, four package references, the data and the embedded generator source.
 
-### Phase 2: typed reading (M)
+### Phase 2: typed reading (L)
+
+Status: the detailed design below was written and approved on 2026-11-03, with every recommendation accepted. The user also settled that core, CsvHelper.Linq and CsvHelper.Excel are always released together. The design makes the phase L rather than M, because it adds formula text with shared formulas, Excel's own answers as an oracle, and a typed benchmark. "Changes elsewhere" was applied to the rest of the plan at approval. "As built" at the end records each step.
+
+Scope, as planned:
 
 - **Numbers:** number cells are doubles, parsed invariant. Integer targets accept integral doubles only.
   - Excel sometimes writes 17 significant digits (`0.30000000000000004`), so `decimal` targets round to `DecimalDigits` (15), matching what Excel displays.
@@ -1642,6 +1646,519 @@ Allocated per operation, in BenchmarkDotNet's MB (1,024 KB), shared / inline:
 - **`GetString` on typed cells:** raw invariant text for numbers, ISO 8601 for date cells, `TRUE`/`FALSE` for booleans.
 - **Formulas:** the cached value by default, or the formula text.
   - Shared formulas store their text only in the cell that defines them. Every other cell in the range needs the relative references shifted from that cell, and that's the fiddly part.
+
+#### Public API
+
+Typed reading adds three options and two enums. Everything else goes through `CsvReader`'s existing methods, which now read each cell by its kind.
+
+```csharp
+public sealed record ExcelReaderOptions
+{
+	// Phase 1: Default, Sheet, SheetIndex, Csv, MaxPartSize, MaxUncompressedSize.
+
+	public ExcelErrorCells ErrorCells { get; init; } = ExcelErrorCells.Text;
+	public int? SignificantDigits { get; init; } = 15;
+	public ExcelFormulas Formulas { get; init; } = ExcelFormulas.CachedValue;
+}
+
+public enum ExcelErrorCells { Text, Null, Error }
+
+public enum ExcelFormulas { CachedValue, FormulaText }
+```
+
+- **`ErrorCells`** decides how a cell holding an error (`#N/A`, `#DIV/0!` and the rest) reads:
+  - `Text` (default): as its text. String targets, `GetString`, dynamic records and `CsvDataReader` values get `#N/A`. Any other target fails with a `FormatException` that names the error. Inside `GetRecords`, that becomes a `CsvFormatException` with the cell's `Location`, and goes to `OnRecordError`. `CsvReaderOptions.NullValues` can name error texts to read them as null.
+  - `Null`: as an empty cell would, so nullable targets get null. A row whose only values are errors is an empty row.
+  - `Error`: reading the cell fails for every target, strings included: `GetString`, `Parse`, dynamic record values and `CsvDataReader` values throw `FormatException`. Inside `GetRecords`, it goes to `OnRecordError` with the cell. Cells that aren't read raise nothing, and `GetSpan` still gives the stored text.
+- **`SignificantDigits`:** `decimal` and integer targets get a number cell's value rounded to this many significant digits, half away from zero, which is what Excel displays. `null` reads the stored text exactly.
+  - It must be from 1 to 28, or null; anything else throws `ArgumentOutOfRangeException`.
+  - `double` and `float` targets are never rounded, and neither are text cells.
+- **`Formulas`:**
+  - `CachedValue` (default) reads the value Excel saved with a formula, as Phase 1 does. A formula saved without one (openpyxl writes these) is an empty cell.
+  - `FormulaText` reads a cell that has a formula as a text cell: `=` and the formula as the file stores it. Cells without a formula read their values.
+- **Validation:** `Validate` adds "ExcelReaderOptions.ErrorCells is not an ExcelErrorCells value.", the same for `Formulas`, and "ExcelReaderOptions.SignificantDigits must be from 1 to 28, or null." (each `ArgumentOutOfRangeException`).
+- `ExcelWorkbook.Date1904` (Phase 1) now decides how serial dates convert.
+
+**What a cell reads as.** A number cell is a date cell when its number format shows a date or a time, and a duration cell when it shows elapsed time (`[h]:mm`); see "Date detection" below.
+
+| Target | Number cell | Date cell | Duration cell | Boolean cell | Error cell |
+| --- | --- | --- | --- | --- | --- |
+| `string`, and every text accessor (below) | its stored text: `1.5`, `0.30000000000000004`, POI's `42.0` | ISO 8601: `2024-01-15`, `13:45:00`, `2024-01-15T13:45:00.25` | `36:00:00` | `TRUE` or `FALSE` | `#N/A`, as `ErrorCells` says |
+| `double`, `float` | the number | its serial | its serial (days) | 1 or 0 | fails |
+| `decimal` | the number, rounded to `SignificantDigits` | the same | the same | 1 or 0 | fails |
+| `int`, `long` and the other BCL integers | the number, rounded to `SignificantDigits`, if whole and in range | the same | the same | 1 or 0 | fails |
+| `bool` | 1 is true, 0 false; any other number fails | fails | fails | its value | fails |
+| `DateTime` | the serial's date and time | the same | the same | fails | fails |
+| `DateOnly` (.NET 8+) | the serial's date | the same | the same | fails | fails |
+| `TimeOnly` (.NET 8+) | the serial's time of day | the same | the same | fails | fails |
+| `TimeSpan` | the serial as days | the same | the same | fails | fails |
+| `DateTimeOffset` | the serial's date and time, offset zero | the same | the same | fails | fails |
+| enums, `Guid`, anything else | its stored text, with the invariant culture (Phase 1) | the same | the same | the same | fails |
+
+- Text cells read as CSV text does: the reader's format provider, true and false values (Phase 1). Empty cells read as empty CSV fields.
+- "Fails" is a `FormatException`, or an `OverflowException` for a number out of the type's range, as for CSV. `GetRecords` reports either with the cell's `Location`.
+- Integer targets read `42`, `42.0` and `1E3`; `3.0000000000000004` reads as 3 after rounding to 15 digits; `1.5` fails.
+- Date and time targets read plain number cells as serials too, not only date cells: the target says the column holds dates, and a number in Excel can only be a serial then.
+
+**Serial dates:**
+
+- Times are rounded to the millisecond, as Excel shows them and `DateTime.FromOADate` rounds.
+- **1900 date system** (the default):
+  - Serial 1 is 1900-01-01. Excel counts a 1900-02-29 that never existed (serial 60), so serials 1 to 59 are 1900-01-01 to 1900-02-28, and 61 on are 1900-03-01 on.
+  - Serial 60 fails for date targets, and its text is `1900-02-29`.
+  - Serials below 1 are times alone. Excel shows them on day 0 (`1/0/1900`). Date targets get 1899-12-31, the day before serial 1, as ClosedXML and ExcelDataReader do.
+- **1904 date system:** serial 0 is 1904-01-01.
+- Dates run to 9999-12-31 23:59:59.999. A serial past that, a negative one, or one that isn't a number fails for date targets (`DateTime`, `DateOnly`, `TimeOnly`, `DateTimeOffset`), and the cell's text is its stored text. Excel shows such cells as `####`, or, in the 1904 system, negatives as negative dates.
+- `TimeSpan` takes any finite serial, negatives included, within `TimeSpan`'s range.
+- `DateTime` values have `DateTimeKind.Unspecified`.
+
+**Text of date and duration cells:**
+
+- A date cell's text comes from its value, not its format:
+  - a whole day: `yyyy-MM-dd`;
+  - a serial below 1 (a time alone): `HH:mm:ss`;
+  - otherwise: `yyyy-MM-ddTHH:mm:ss`;
+  - with `.fff` when the milliseconds aren't 0, and trailing zeros dropped (`.25`).
+- A duration cell's text is Excel's `[h]:mm:ss`: hours of at least two digits and no day part (`36:00:00`, `-01:30:00`), with `.fff` as above.
+- A boolean cell's text is `TRUE` or `FALSE`.
+
+**Text accessors and byte accessors:**
+
+- These give a typed cell's text: `GetString`, `GetStringOrNull`, `GetChars`, `Parse<string>`, `CsvField.ToString()`, `CsvRow.ToArray()` and `ToDictionary()`, dynamic record values, `CsvDataReader` values, and header names. So a date in the header row names its column `2024-01-15`.
+- These give the stored form (`45306.5`, `1`): `GetSpan`, `GetRawSpan`, `RawRecord`, `CsvField.Span` and `CsvRow.GetSpan`.
+- A new `CsvReader.FieldEquals(int index, ReadOnlySpan<byte> utf8)` compares a field's text without making a string, for CsvHelper.Linq (decision 3).
+
+**Formats on members:**
+
+- `ParseExact<DateTime>` and `ParseExact<DateTimeOffset>`, which the generator emits for `[CsvFormat]`, read number, date and duration cells as `Parse` does, without the format. The format applies to text cells.
+- `DateOnly`, `TimeOnly` and `TimeSpan` members with `[CsvFormat]` do the same once `ParseExact` covers them (decision 4).
+- A provider (`Parse<T>(index, provider)`, `[CsvCulture]`) applies to text cells only, as in Phase 1.
+
+**Date detection** (which number cells are date or duration cells):
+
+- **Built-in format ids** follow ECMA-376's list. Date and time formats are 14–22, 27–36, 45, 47, 50–58, 71–78, 80 and 81; durations are 46 (`[h]:mm:ss`) and 79. Every other id is a number. The locale-dependent ids (27–36, 50–58, 71–81) get checked against Excel at step 4.
+- **Format codes:** an id that `styles.xml` defines in `numFmts` is classified by its code, even when the id is a built-in one (to be checked against Excel at step 4). The code is read token by token:
+  - Skipped: quoted text (`"days"`), escaped characters (`\d`), the character after `_` and `*`, and brackets such as `[Red]`, `[Color10]`, `[>=100]` and `[$-409]`.
+  - `General` (in any case) is a number. `E+` and `E-` are exponents.
+  - `[h]`, `[hh]`, `[m]`, `[mm]`, `[s]` and `[ss]` make a duration. That wins over date tokens.
+  - Otherwise `y`, `m`, `d`, `h`, `s`, `e`, `g`, `b` (in any case), `AM/PM` and `A/P` make a date.
+  - Every section counts: `[h]:mm;@` is a duration.
+- **ISO dates (`t="d"`):** the text is converted to a serial in the workbook's date system, so the cell reads as a date cell, or as a duration cell in an elapsed format. Excel's Strict files write these, as dates (`2024-01-02`), date-times with 17 digits of fraction (`2024-01-02T03:04:05.00000006519257800`), and times alone (`03:04:05.000...`). A text that isn't one of those forms, with an optional `Z`, or a date outside the date system's range, stays a text cell, as in Phase 1.
+
+**Formula text** (`Formulas = FormulaText`):
+
+- A cell's formula is its `<f>` text, decoded like a value (entities, `_xHHHH_` escapes, CR LF as LF), after `=`.
+- **Shared formulas** (`t="shared"`): the first cell of the group stores the text (with `ref` and `si`). Every other cell stores only `si`, and gets the text with its relative references moved by its offset from the first cell, as Excel's fill moves them:
+  - What moves: `A1` one row down becomes `A2`. `$A$1` stays, `A$1` keeps its row and `$A1` its column. Whole columns and rows (`A:A`, `$1:1`) move too, and so do references after a sheet name (`'Q1 Orders'!A1`, `Sheet1:Sheet3!A1`) or a workbook index (`[1]Sheet1!A1`).
+  - What doesn't: function names (`LOG10(` looks like a reference), defined names, `TRUE` and `FALSE`, string literals (`"A1"`), structured references (`Table1[Col]`), array constants (`{1,2}`), numbers and error literals.
+  - A reference moved off the grid becomes `#REF!`, as Excel writes it.
+- **Array formulas** (`t="array"`): the first cell of the range has the formula. The other cells have no `<f>` of their own, so they read their values. Excel's `Formula` property repeats the formula there for a legacy array (Ctrl+Shift+Enter) and gives nothing for a spilled one.
+- **Data tables** (`t="dataTable"`) read their values.
+- Newer functions keep the prefix the file stores (`=_xlfn.XLOOKUP(...)`), as openpyxl and ClosedXML return them. Excel shows them without it.
+
+**Checked on 2026-11-03,** with probe workbooks in a scratch folder:
+
+- **Excel 365 (COM):**
+  - Serial 0 shows as `1/0/1900` and `1900-01-00 00:00:00`, serial 60 as `2/29/1900`, and serial 2,958,465.99999999 as `9999-12-31 23:59:59.999`. Times are rounded to the millisecond (0.999999999 shows as the next day).
+  - In the 1900 system negatives show as `####`. In the 1904 system they show as negative dates (`-1/2/1904`) and negative durations (`-24:00:00`).
+  - `[h]:mm:ss` shows 1.5 as `36:00:00`.
+  - Shared formulas: a fill down turned `SUM($1:1)` into `SUM($1:2)` and `'Other Sheet'!A1` into `'Other Sheet'!A2`, and left `LOG10(A1)`'s name and `MyName` alone. A fill off the grid stored `#REF!` itself.
+  - Excel writes `_xlfn.XLOOKUP` and `_xlfn.SEQUENCE`, and shows them without the prefix. It writes the CR LF of a multi-line formula as is, without `xml:space`.
+  - Array formulas store `<f t="array" ref="G1:G3">` in the first cell only, a spilled one with `cm="1"` too. `Range.Formula` gives the master's formula on a legacy array's other cells, and nothing on a spilled array's.
+  - Not every fill makes a shared formula: in one probe, Excel wrote every cell's formula in full.
+- **ClosedXML 0.105.1:** day 0 is 1899-12-31. Serial 60 reads as 1900-03-01, and 60.5 throws `ArgumentException`. It can't load a 1904 workbook that has a serial of 60 at all.
+- **ExcelDataReader 3.9.0:** day 0 is 1899-12-31, serial 60 reads as 1900-02-28, negatives as dates before 1900, and 2,958,466 stays a double.
+- **Sylvan.Data.Excel 0.5.8:** a serial below 1 has no date (empty string, `InvalidCastException`), and neither does 60.
+
+#### Internal design
+
+**Core** (each item is also under "Core changes"):
+
+- **`CsvCellKind.Duration`** (6): a number in invariant form in an elapsed-time format. `IsInvariant` covers it, and `RecordBatch.CommitField` flags it as it flags date, boolean and error cells, so that text accessors reach `CellString`.
+- **`CsvCellOptions`** (`Internal/CsvCellOptions.cs`), a sealed record with `Date1904`, `SignificantDigits` (`int?`) and `ThrowOnErrorCells`, and `Default` (the 1900 system, 15, false).
+- **`CsvRecordSource.CellOptions`:** a virtual property, `CsvCellOptions.Default` unless a source overrides it.
+  - The reader reads it through its `recordSource`, which parallel workers have too. So `CsvReader` gets no new field (Phase 0's field-layout lesson).
+- **`CsvCells`** (`Internal/CsvCells.cs`) holds every conversion, for the reader and dynamic records alike:
+  - `Parse<T>(s, kind, provider, booleans, hide, options)` and `TryParse<T>`: by `T` and kind, as the table says. The rest goes to `CsvValue`, or `ParseChars` on .NET, as now.
+  - `Text(s, kind, options, hide)`: the text of a date, duration, boolean or error cell, or `null` when the text is the bytes.
+  - The serial arithmetic (both date systems, day 0, serial 60, the range, millisecond rounding), rounding to significant digits, and whole numbers from doubles.
+  - Messages leave the value out when `IncludeValuesInExceptions` is off, as `CsvValue`'s do. For example: "The cell holds the error #N/A.", "60 is 1900-02-29 in Excel's 1900 date system, a day that doesn't exist.", "-1 is not a date: Excel's dates are serials from 0 to 2958465.99999999 (9999-12-31).", "1.5 is not a whole number."
+- **`CsvReader`:**
+  - `ParseCell`, `TryParseCell` and `CellString` call `CsvCells`. They are reached as now, behind `typedCells`.
+  - `CaptureHeader` takes a typed cell's text.
+  - `GetChars` gives a typed cell's text.
+  - The `ParseExact` overloads send number, date and duration cells to `CsvCells`, through a method that isn't inlined.
+  - The new `FieldEquals`.
+  - Under `ErrorCells = Error`, `GetString` names the cell (`Data!B3 holds the error #N/A.`), since nothing wraps it there.
+- **`CsvDynamicRecord`:**
+  - Its values (the indexer, `TryGetValue`, enumeration, `ToDictionary`) give a typed cell's text, and `Parse<T>` calls `CsvCells`.
+  - `CsvDynamicSchema` keeps the source's `CsvCellOptions` (null for CSV) in place of its `Cells` flag, and interns by it.
+- **CsvHelper.Linq:** `DynamicAccess.TextEquals` calls `reader.FieldEquals`.
+
+**CsvHelper.Excel:**
+
+- **New files:**
+  - `ExcelErrorCells.cs` and `ExcelFormulas.cs`.
+  - `Internal/Package/NumberFormats.cs`: the built-in table and the code classifier.
+  - `Internal/Sheet/IsoDate.cs`: `t="d"` text to a serial.
+  - `Internal/Sheet/FormulaShifter.cs`: moving a shared formula's references.
+  - `Internal/Sheet/SharedFormulas.cs`: a sheet's shared formulas, by `si`.
+- **`StyleTable`:** each cell format's kind (Number, DateNumber or Duration) comes from `NumberFormats`, once per format at load.
+- **`SheetCellKind`:** gains `Duration`, mirroring core.
+- **`SheetRecordSource.CellOptions`:** the workbook's `Date1904` and the reader options' `SignificantDigits`, and whether `ErrorCells` is `Error`.
+- **Scanner:**
+  - `t="d"`: the value is decoded and trimmed as now, then `IsoDate` turns it into a serial. Core's `FloatFormatter` (internal, reached through `InternalsVisibleTo`) writes the serial's shortest round-trip text into the field. The style decides between DateNumber and Duration.
+  - `t="e"`: with `ErrorCells = Null`, the cell is valueless, as one without a value is. Otherwise it is an Error field, as now.
+  - **`FormulaText`:** in a `c`, the scanner reads `f` (its `t`, `si` and `ref`, and its text through `TryReadText`), which comes before `v`. It writes the formula as the value, and skips the rest of the cell, `v` included, in the resumable `CellRest` mode. With `CachedValue`, `f` is skipped, as in Phase 1. The window rules don't change: a cell is read whole or read again after a refill.
+  - **Shared formulas:**
+    - The first cell of a group is stored when its field is committed (once, even when a refill made the scanner read the cell again): its formula's UTF-8 and its row and column.
+    - The store's bytes count toward `MaxPartSize`. Past it, `InvalidDataException` names the part.
+    - A cell whose `si` no earlier cell defined throws `CsvFormatException`: "it uses shared formula 3, which no cell before it defines".
+    - A shifted formula is written into a growable scratch buffer, then added with `AddField`.
+- **`FormulaShifter`:** one forward pass, no recursion, so nesting depth costs nothing.
+  - **Copied as is:**
+    - string literals (`"..."`, with `""` inside);
+    - brackets, nested, with `'` escapes inside (structured references, workbook indexes);
+    - array constants (`{...}`);
+    - error literals (`#REF!`, `#N/A` and the others; a lone `#` is the spill operator);
+    - numbers (digits, `.`, an exponent);
+    - operators and white space.
+  - **Words** (letters, digits, `_`, `.`, `\`, `$`, `?`, and non-ASCII letters):
+    - a word before `(` is a function;
+    - a word before `!` is a sheet name, also as `Sheet1:Sheet3!`;
+    - `'...'!` is a quoted sheet name, with `''` inside;
+    - `[$]COL[$]ROW` within the grid is a cell;
+    - `[$]COL:[$]COL` and `[$]ROW:[$]ROW` are whole columns and rows;
+    - anything else is a name.
+  - A range with an end moved off the grid becomes `#REF!` as a whole, keeping its sheet name. That will be checked against Excel's fills at step 6.
+
+#### Testing
+
+**Core** (`CsvHelper.Tests`, with a test record source as Phase 0's `CellHookTests` has):
+
+- **The table:** every target and kind, through `Parse`, `TryParse`, `Parse` with a provider, `ParseExact`, `CsvField`, `CsvDataReader`'s getters, dynamic records, `GetRecords<T>` with generated mappers, `ParallelEnumerate` workers, and header names.
+- **Serials:** both date systems around every boundary (0, below 1, 1, 59, 60, 61, the last millisecond of 9999, negatives, NaN and infinities, text that isn't a number), against an independent implementation in the test. That includes every millisecond step across day ends, and random serials compared with `DateTime.FromOADate` corrected by the 1900 rule.
+- **Rounding:** 1 to 28 digits, carries (`9.9999999999999999` to 10), large and small exponents, negatives, and the half-way cases.
+- **Messages,** with and without values.
+- **`FieldEquals`** for CSV fields (quoted, trimmed) and typed cells.
+
+**CsvHelper.Linq.Tests:** `row["Date"] == "2024-01-15"` and `row["Paid"] == "TRUE"` filter typed cells as `row[...]` reads them.
+
+**CsvHelper.Excel.Tests:**
+
+- **`NumberFormats`:**
+  - The built-in table and about 150 codes (dates, times, durations, numbers with literals, colors, conditions, locales, `General`, exponents, fractions, text), against Excel's answers.
+  - The corpus tool's new `formats` command gets them through COM. For each code, it reads `Range.Value`'s type for a number with that format, since `Value` returns a date for a date format. It also opens a generated workbook with a cell format for every id from 0 to 163, a `numFmts` entry redefining a built-in id, and an `applyNumberFormat="0"`. It writes `Files/excel-formats.json`, which is committed.
+  - Durations are checked against ClosedXML, which reads them as `TimeSpan`.
+- **`IsoDate`:** every accepted form, fractions of 1 to 20 digits, the range limits, and rejected forms (offsets, week dates, basic format, `24:00`, February 29 of a common year).
+- **`FormulaShifter`:**
+  - Unit cases for every token kind, references at the edges of the grid, `#REF!`, and deep nesting.
+  - A comparison with ClosedXML's `FormulaA1` on generated shared formulas, then with Excel's answers on the corpus (below).
+- **Scanner,** in every one of the 16 sheet modes:
+  - `t="d"` cells;
+  - each `ErrorCells` policy;
+  - `FormulaText`: own, shared (first and other cells), array, data table, an empty `f`, an `f` without text, a missing first cell;
+  - the shared formulas' limit.
+- **End to end,** sync and async: typed records through `GetRecords<T>`, `Parse`, dynamic records, `CsvDataReader` (`DataTable.Load` and typed getters), `Query<T>()` and `ParallelEnumerate`, in both date systems; the options' validation.
+
+**Corpus:**
+
+- **New `typed` content** in the corpus tool, defined once like `basic`:
+  - "Dates": each built-in date id; about 30 custom date, time and duration codes; number codes with literals; values around 0, 1, 60 and 61, the limits, and milliseconds.
+  - "Numbers": integers, 17-digit values, exponents, large integers, booleans, and each error value.
+  - "Formulas": fills down and right of relative, absolute and mixed references, ranges, whole rows and columns, other sheets' (quoted) references, names, `LOG10`, strings with references in them, a legacy array, a spilled array, a newer function, a fill off the grid, and structured references in a table.
+- **Its producers:**
+  - Excel: `excel/typed.xlsx`, `typed-1904.xlsx` and `typed-strict.xlsx` (with `t="d"`);
+  - LibreOffice, from Excel's file;
+  - openpyxl, plus `typed-isodates.xlsx` with `iso_dates`, which writes `t="d"`;
+  - XlsxWriter, Apache POI and ClosedXML.
+  - The corpus `README.md` records what each writes.
+- **Excel's answers:** the tool's new `oracle` command opens every corpus workbook read-only through COM. For each used cell of each worksheet, it writes:
+  - `Value2`, and the type of `Value` (date, number, text, boolean, error or empty);
+  - `Formula` and `HasArray`;
+  - `Text`, with columns widened in memory.
+  - The output is `Files/excel-oracle/<file>.json`, committed, and `all` regenerates it. The privacy check covers it. `excel/packageassets-1695.xlsx` is left out (42,000 text cells).
+- **Oracle tests:**
+  - **Excel's answers:** each cell's kind (date, number, boolean, error, text), its value (the serial, `t="d"` cells included), the text of booleans and errors, and `FormulaText` against `Formula`. Each difference is listed with its reason (for example, a legacy array's other cells, or `_xlfn.`).
+  - **ClosedXML:** dates compare as `DateTime` and durations as `TimeSpan`, no longer as serials; `FormulaA1` compares with `FormulaText`.
+  - **ExcelDataReader:** dates compare as `DateTime`. Its `t="d"` difference from Phase 1 goes away.
+  - **LibreOffice:** unchanged. It exports displayed text, so date cells stay out of the comparison.
+- **Phase 1's corpus tests:** fields still compare with their cells through the stored form (`GetSpan`), and the text accessors are checked against the rules above.
+
+**Security and fuzzing:**
+
+- The fuzzer also varies `Formulas`, `ErrorCells` and `SignificantDigits`, and reads typed records as well as strings.
+- A sheet of a million shared formula groups stops at `MaxPartSize`.
+- A long formula, brackets nested a million deep in a formula, and absurd `t="d"` texts (a year of 10,000 digits, 10,000 fraction digits) are handled without growth or recursion.
+
+#### Benchmark
+
+- **Core gate:** the changes to core and CsvHelper.Linq go through Phase 0's gate, measured as before:
+  - A/B against a baseline worktree of `b3f8079f` at `Csv\_bench\base`, with the machine checked first (paged pool, free RAM), the BenchmarkDotNet processes pinned, and pairs interleaved.
+  - ReadBenchmarks (its Dynamic category included), the Linq Dynamic benchmarks and NCsvPerf (`CsvHelperLocal` and `_MT`). WriteBenchmarks get one pair as a control: the writer doesn't change.
+  - A new CSV class, `FormattedDatesRead`, covers `ParseExact`, which nothing measures today: records with `[CsvFormat]` `DateTime`, `DateTimeOffset`, `DateOnly` and `TimeOnly` members. It is copied into the baseline for the A/B.
+  - If a method moves, its JIT output is compared base against new (IL size, inlinees), as Phase 0 did for the writer.
+- **Typed reading:** a new class, `ExcelOrdersRead`.
+  - **Data:** a million rows of `OrderRecord.Generate`'s orders (the parallel-write benchmark's), each member in the cell type Excel gives it:
+    - dates and times as serials in a date format;
+    - `Total`, `Weight`, `Quantity` and `Sku` as numbers;
+    - `Paid` as booleans;
+    - text, the `Guid` included, as shared strings.
+  - **Writer:** `ExcelTypedWorkbook`, in Excel's shape as `ExcelTextWorkbook` is. It is cached as PackageAssets is. Excel opens it without a repair (checked through COM), and ExcelDataReader reads the same values.
+  - **Categories:**
+    - Records: `GetRecords<OrderRecord>`, Sylvan's and ExcelDataReader's typed getters through `IColumnSource`-style builders, and MiniExcel's `Query<T>` if it reads every member;
+    - Values: each field through its typed getter, folded into a checksum.
+  - Sylvan is the baseline. The same orders as CSV are the reference.
+  - One BenchmarkDotNet run, recorded in "As built".
+- **Phase 1's benchmark:** a QuickRunner A/B of `ExcelPackageAssetsRead`, base against new, shows the scanner's new `f` check costs nothing measurable.
+
+#### Core changes
+
+Phase 2 changes core, and this lists every change for approval. Each must pass the gate under "Benchmark".
+
+| Change | CSV paths it touches |
+| --- | --- |
+| `CsvCellKind.Duration`; `IsInvariant`; `CommitField`'s flag | none: record sources only |
+| `CsvCellOptions`; `CsvRecordSource.CellOptions` | none |
+| `CsvCells`, and the bodies of `ParseCell`, `TryParseCell` and `CellString` | none: behind `typedCells`, not inlined |
+| `CaptureHeader` takes a typed cell's text | header reading, once per file |
+| `GetChars` gives a typed cell's text | `GetChars` |
+| `ParseExact` sends number cells to `CsvCells` | the four public overloads, which generated mappers call for `[CsvFormat]` dates |
+| `ParseExact` for `DateOnly`, `TimeOnly` and `TimeSpan`; the generator emits it for them (decision 4) | generated mappers of those members with `[CsvFormat]`: a `ParseExact` from chars in place of `T.ParseExact(GetString(...))` |
+| `CsvDynamicRecord` values and `Parse<T>`; `CsvDynamicSchema` keeps `CsvCellOptions` | dynamic records' values: one test of the schema |
+| `CsvReader.FieldEquals`, public (decision 3) | none: new |
+| CsvHelper.Linq: `TextEquals` calls `FieldEquals` | dynamic-row queries that compare text |
+
+Considered and avoided:
+
+- **A new kind for `t="d"` cells.** The scanner converts them to serials instead. Phase 1's "Core changes" left this open.
+- **New fields on `CsvReader`.** The options come through the source.
+- **Branches in `GetSpan`, `GetString`'s fast path, `DecodeField` or `ParseSpan`.** Typed cells reach the typed code through the needs-decoding flag and the existing `typedCells` tests.
+
+#### Decisions
+
+Each comes with a recommendation.
+
+1. **Where the conversions live.** Recommended: in core (`CsvCells`), as above. That covers the 1900 rule too, which is Excel's, but core is already in lockstep with CsvHelper.Excel. The JIT folds the `typeof(T)` tests, and nothing is dispatched virtually.
+   - Alternative: a converter that CsvHelper.Excel implements, behind non-generic virtual methods per target type. Excel's rules would stay in CsvHelper.Excel, but it adds a dispatch per value and a wider internal interface for the same result.
+   - Alternative: the scanner writes texts (ISO dates, `TRUE`) into the buffer. `GetSpan` would then match `GetString`, but every date cell pays for the conversion whether it's read or not, and date targets would have to parse the text back.
+2. **Stored form for bytes, text for strings.** Recommended: the byte accessors give the stored form and the string accessors give the text, as "Text accessors and byte accessors" lists. Making `GetSpan` give the text would need a branch in `GetSpan`, which every CSV read loop inlines.
+3. **CsvHelper.Linq's text comparisons.** Without a change, `row["Paid"] == "TRUE"` compares `1` with `TRUE` and silently filters the row out. Recommended: a public `CsvReader.FieldEquals(int, ReadOnlySpan<byte>)`, whether a field's text is the UTF-8 text, without making a string. Linq's `TextEquals` calls it. It's a small public API, and useful on its own.
+   - Alternative: `InternalsVisibleTo CsvHelper.Linq` in core, and Linq checks the reader's `typedCells`. That ties Linq to core's internals, so its package would need the exact pin too.
+   - At approval, the user noted that core, Linq and Excel are always released together, so the alternative's pin would cost little. The recommendation stands: the user chose it, and it keeps Linq on public API.
+4. **`[CsvFormat]` on `DateOnly`, `TimeOnly` and `TimeSpan` members.** Today the generator emits `DateOnly.ParseExact(reader.GetString(i), format, ...)`. On a date cell that parses `2024-01-15` with the member's format and fails. Recommended: `CsvReader.ParseExact<T>` takes these three types too (`DateOnly` and `TimeOnly` on .NET 8+), and the generator emits it for them. Date cells then read as `Parse` reads them. CSV gains a `ParseExact` from chars without a string. It's a public behavior change: `ParseExact<T>` stops throwing `NotSupportedException` for them.
+   - Alternative: leave it and document that formats on those members need text cells.
+5. **A duration kind.** Recommended: `CsvCellKind.Duration`, so that `[h]:mm` cells read as `36:00:00` rather than `1900-01-01T12:00:00`. Timesheets use these formats. Alternative: read durations as date cells, or as plain numbers (`1.5`).
+6. **Date cells' text.** Recommended: from the value (a day, a time alone, or both), so no stored information is lost. A date format holding a time shows the time too, which Phase 8's displayed text will not. Alternatives: from the format (a date format gives only the date), or always the full `yyyy-MM-ddTHH:mm:ss`.
+7. **Durations' text.** Recommended: Excel's `[h]:mm:ss` (`36:00:00`), which Excel, LibreOffice and pandas read back. Alternatives: .NET's `1.12:00:00`, which `TimeSpan.Parse` reads, or ISO 8601's `PT36H`.
+8. **Plain number cells into date targets.** Recommended: read them as serials. That way a date column that lost its format, as some exports write it, still reads. Alternative: date cells only, as Phase 1 behaves (an error).
+9. **Day 0 and times alone.** Recommended: 1899-12-31, the day before serial 1. That's what ClosedXML and ExcelDataReader give, and it keeps day arithmetic continuous. Alternative: 1899-12-30, the OLE Automation date that `DateTime.FromOADate` and Excel's COM `Value` give.
+10. **Serial 60 (1900-02-29).** Recommended: date targets fail, and the text is `1900-02-29`. Alternatives: 1900-02-28 (ExcelDataReader) or 1900-03-01 (ClosedXML).
+11. **`DateTimeOffset` from a serial.** Recommended: offset zero, as planned. It's deterministic, and it matches Phase 4's `DateTimeOffsets = Utc` writes. Alternative: the local offset, as CSV text without an offset gets.
+12. **Significant digits.** Recommended: rename `DecimalDigits` to `SignificantDigits`, and apply it to integer targets as well as `decimal`. Then `3.0000000000000004` reads as 3, as Excel shows it. Default 15; null is exact.
+    - The cost: a 17-digit ID stored as a number reads rounded (12345678901234567 as 12345678901234600), as Excel shows it. Such IDs belong in text cells, which Phase 4 writes by default.
+    - Alternative: integers exact when the text is a whole number, and rounded otherwise.
+13. **Error cells.** Recommended: `Text` by default, which matches Excel's CSV export and keeps the information; typed targets fail with the cell named. `Null` makes the cell valueless, and `Error` fails every read of the cell, strings included.
+14. **`t="d"`.** Recommended: the scanner converts it to a serial (no new kind), accepting the forms Excel writes, plus `Z`. Other text stays text.
+15. **Formula text's form.** Recommended: `=` first, as Excel's formula bar, `Range.Formula` and openpyxl show it, so formulas stand apart from values in a mixed column. The text is as stored, `_xlfn.` included. Alternatives: no `=` (ClosedXML, EPPlus), or Excel's displayed form, which would need `_xlfn.ANCHORARRAY(B1)` turned into `B1#`, `_xlfn.SINGLE` into `@`, and more.
+16. **The other cells of an array formula.** Recommended: their values, since the file gives them no formula. Mirroring Excel would need `metadata.xml` to tell spilled arrays (no formula) from legacy ones (the master's formula).
+17. **A shared formula whose first cell is missing.** Recommended: `CsvFormatException`, since no producer I know writes one. Alternative: read the cell's value.
+18. **Shared formulas' memory.** Recommended: count it toward `MaxPartSize`, as a part held in memory.
+19. **Built-in ids redefined in `numFmts`, and `applyNumberFormat="0"`.** Recommended: the definition wins, and `applyNumberFormat` is ignored, unless Excel's answers at step 4 say otherwise; then follow Excel.
+20. **Header names.** Recommended: header cells give their text, as other text accessors do.
+21. **`CsvDataReader`'s types.** Recommended: it stays string-typed (`GetFieldType` is `string`, values are the text), and its typed getters convert. Typed `GetValue` values (double, `DateTime`, bool) are a possible later option, for `SqlBulkCopy` into typed columns.
+22. **Number cells' text.** Recommended: the stored text, as planned: `0.30000000000000004`, POI's `42.0`. Rounding it to 15 digits would cost a parse and a format for every number read as a string, and Phase 8's `Text = Formatted` is the displayed form. Alternative: round it.
+23. **Booleans from number cells.** Recommended: only 1 and 0, as the built-in parser reads them. Alternative: Excel's rule, any number other than 0 is true.
+24. **Excel's answers as committed files.** Recommended: the `formats` and `oracle` commands write what Excel says through COM, and CI's tests compare with it. Excel itself only runs here.
+25. **A new `typed` content set.** Recommended: rather than growing `basic`, whose files and golden records every Phase 1 test uses.
+26. **The typed benchmark.** Recommended: `OrderRecord`'s data, which the write benchmarks already generate, with Sylvan as the baseline.
+
+#### Risks
+
+- **JIT sensitivity:** `ParseExact`, `GetChars`, `CaptureHeader` and dynamic values get a test each. The gate measures them. If one costs, the typed path moves behind a separate method or schema, as Phase 0 did for the writer.
+- **The formula grammar's corners.** Excel's answers, ClosedXML and the fuzzer cover it, and `#REF!` and sheet-qualified references are checked against real fills.
+- **Locale formats:** built-in ids 27–36 and 50–58 mean different things in different locales. Excel's answers settle them for an en-US Excel; others may differ.
+- **Excel's rules in core:** the 1900 rule and the significant digits live in core's internals, which lockstep releases already cover.
+- **Text from values, not formats:** a date format holding a time shows the time in `GetString`, and numbers show all 17 digits. Phase 8 gives the displayed text.
+- **Phase 1 behavior changes:** `GetString` of date and boolean cells, and header names from such cells. Nothing has shipped, so nothing breaks for users.
+
+#### Order of work
+
+Each step is reviewable on its own and gets committed when you ask.
+
+1. **Core conversions (M):**
+   - `CsvCellKind.Duration`, `CsvCellOptions`, `CsvRecordSource.CellOptions` and `CsvCells`.
+   - The reader's paths: `ParseCell`, `TryParseCell`, `CellString`, `CaptureHeader`, `GetChars` and `ParseExact`.
+   - Dynamic records.
+   - Core tests with a test source.
+2. **Public additions (S):**
+   - `FieldEquals` and Linq's `TextEquals` (decision 3).
+   - `ParseExact` for `DateOnly`, `TimeOnly` and `TimeSpan`, and the generator (decision 4), with the generator's tests.
+3. **Core gate (S):** the A/B benchmarks under "Benchmark", with `FormattedDatesRead`. If a later step changes core again, the gate runs again.
+4. **Number formats (S):**
+   - `NumberFormats`, `StyleTable`'s kinds and `SheetCellKind.Duration`.
+   - The corpus tool's `formats` command and `Files/excel-formats.json`.
+5. **Typed cells in the scanner (M):**
+   - `t="d"` and `ErrorCells`.
+   - The three options and their validation, and `SheetRecordSource.CellOptions`.
+   - End-to-end tests.
+6. **Formula text (M):** `FormulaShifter`, `SharedFormulas`, and the scanner's `f`, with the tests. The `#REF!` rule is checked against Excel's fills through COM.
+7. **Corpus and oracles (M):**
+   - The `typed` content and its producers.
+   - The `oracle` command and Excel's answers for every corpus workbook.
+   - The oracle tests.
+8. **Security and fuzzing (S).**
+9. **Benchmarks (M):**
+   - `ExcelTypedWorkbook` and its cross-check, and `ExcelOrdersRead`, with a run on the benchmark machine.
+   - The QuickRunner A/B of `ExcelPackageAssetsRead`.
+10. **"As built" (S):** the decisions made while building, and the numbers.
+
+#### Gate
+
+- Every row of "What a cell reads as" works through `GetRecords<T>`, `Parse` and `TryParse`, dynamic records, `CsvDataReader`, `Query<T>()` and `ParallelEnumerate`. That holds in both date systems, sync and async, on net10.0, net8.0 and net48.
+- Date detection agrees with Excel on every id and code of `excel-formats.json`, and on every number cell of the corpus.
+- Dates and durations agree with ClosedXML and ExcelDataReader, each difference documented (serial 60, for one).
+- `t="d"` cells read as the serials Excel gives them.
+- `FormulaText` agrees with Excel's `Formula` on every formula cell of the corpus, and shared formulas also agree with ClosedXML, each difference documented.
+- The three `ErrorCells` policies behave as "Public API" says, and so does CsvHelper.Linq's text comparison.
+- The security and fuzz tests pass, `FormulaText` included.
+- Core's changes pass Phase 0's benchmark gate.
+- The typed benchmark's baseline is recorded.
+- CI's pack check still passes.
+
+#### Changes elsewhere
+
+Applied at approval on 2026-11-03:
+
+- **API sketch:**
+  - `DecimalDigits` becomes `SignificantDigits` (`decimal` and integer targets).
+  - `Formulas` is `CachedValue` or `FormulaText`.
+  - `ErrorCells` says what each policy does.
+- **Phase 1's "Public API":** the "Later phases add" line gets the new names.
+- **Phase 1's "Core changes":** the `t="d"` question is settled (no new kind).
+- **Testing:**
+  - Excel's answers through COM, committed as files.
+  - The `typed` content.
+- **Feature coverage:** a row for durations, and "Formula cached value vs formula text" notes shared formulas.
+- **Defaults:**
+  - `decimal` and integer targets round to 15 significant digits.
+  - Error cells read as text.
+  - Formulas read their cached values.
+  - Date cells' text is ISO 8601.
+- **Phase 9:** the typed benchmark joins the baseline it starts from.
+- **Risks:** "Lockstep releases" covers CsvHelper.Linq too.
+
+#### As built
+
+**Step 1, core conversions** (built 2026-11-03, not committed):
+
+- **New in core** (`src/CsvHelper/Internal`):
+  - `CsvCells.cs`: every conversion of "What a cell reads as", and the text of dates, durations and booleans.
+    - `Parse<T>` gives the value, throws, or returns `false` so the caller parses the stored text with the invariant culture, as Phase 1 did. `TryParse<T>` returns `true`, `false`, or `null` for the same fallback.
+    - `Text` gives a cell's own text. `ErrorRead` is the exception for reading an error cell under `ErrorCells = Error`.
+  - `CsvCellOptions.cs`: `Date1904`, `SignificantDigits` (validated: 1 to 28, or null) and `ThrowOnErrorCells`.
+  - `CsvCellKind.Duration` (6).
+- **Changed in core:**
+  - `CsvRecordSource.CellOptions`.
+  - The reader's `ParseCell`, `TryParseCell`, `CellString`, and the new `CellHeader`, `CellChars` and `ParseExactCell`, all not inlined. They are reached from `CaptureHeader`, `GetChars` and the four `ParseExact` overloads behind `typedCells`.
+  - `CommitField` flags durations.
+  - `CsvDynamicRecord`'s indexer and `Parse<T>`. `CsvDynamicSchema.CellOptions` replaces the `Cells` flag and is part of the interning key.
+  - `CsvValue.ParsesExact<T>`.
+- **Decisions made while building:**
+  - **`CellOptions` is not virtual.** It is a property with a protected setter, so a typed parse loads a field instead of making a virtual call.
+  - **New helpers on `CsvCellKind`.** `IsInvariant` went. `IsTyped` covers what `CsvCells` sees, error cells included. `HasText` covers what `CommitField` flags.
+  - **`double` and `float` targets aren't converted.** They parse the stored text as Phase 1 did (a date's serial, a boolean's 1 or 0), so they cost nothing new. Error cells fail for them too.
+  - **`TimeOnly` reads serial 60's time of day** (12:00 for 60.5): a time doesn't need the day that never existed. `DateTime`, `DateOnly` and `DateTimeOffset` fail on it.
+  - **A serial that rounds to day 0 is a time alone, in both date systems.** So serial 0's text is `00:00:00`, not a date.
+  - **Rounding to `SignificantDigits`** works on the stored decimal text, half away from zero, not on the binary value.
+    - Stored text with no more bytes than the digits needs no rounding. A `decimal` then parses it exactly as before, and an integer in `[-]digits` form takes a fast path.
+    - Otherwise a digit reader keeps 40 significant digits, rounds, and builds the `decimal` from a 96-bit integer and a scale.
+    - Values smaller than `decimal`'s 28 decimal places round to them (`5E-29` at 1 digit is `1E-28`).
+  - **A number cell whose text isn't a number** falls back to the Phase 1 parse, and fails with its usual message.
+  - **`NullValues` are compared with the stored form**, as `GetStringOrNull` and `IsNull` already compared them, before any text is made. An error's stored form is its text, so `#N/A` works as a null value.
+  - **`TryParse<string>` throws under `ErrorCells = Error`**, as `GetString` does. Its string path goes through `MakeString`, and changing that would add a branch to the CSV hot path. `TryParse` of other types returns `false`.
+  - **Messages:**
+    - `'1.5' is not a whole number, so it is not a valid Int32.`
+    - `'2147483648' is outside the range of Int32.`
+    - `'2' is not a valid boolean: a number cell is true when it is 1 and false when it is 0.`
+    - `'60' is 1900-02-29 in Excel's 1900 date system, a day that doesn't exist, so it is not a valid DateTime.`
+    - `'-1' is not a valid DateTime: Excel's dates are serials from 0 to 2958465.99999999 (9999-12-31).` The 1904 system's limit is 2957003.99999999.
+    - `The cell is a date, so it is not a valid Boolean.` (also for durations and booleans).
+    - `The cell holds the error #N/A, so it is not a valid Int32.`
+    - `Data!B3 holds the error #N/A.` A dynamic record says `The cell` in place of the location.
+    - Each has a variant without the value, for when `IncludeValuesInExceptions` is off.
+  - **`DateTime.FromOADate` is a millisecond off for some doubles.** It adds its epoch to the milliseconds before truncating them. The tests compare it exactly on serials of whole milliseconds and within a millisecond on arbitrary doubles, and check the millisecond rounding exactly.
+- **Left for later (the user's choice, 2026-11-03):**
+  - `CsvWriter` writes a `CsvDynamicRecord`'s stored form (`TryGetSpan`). So `WriteRecords(sheet.GetRecords<dynamic>())` writes a sheet's dates as serials and its booleans as 1 or 0.
+  - The design doesn't cover it, and the writer is JIT-sensitive. Phase 6's conversion is the natural place.
+- **Tests:**
+  - **`CellConversionTests`** (18 tests):
+    - every kind for every target, through every accessor, generated mappers (sync, async, `ParallelEnumerate`) and `OnRecordError`;
+    - both date systems at their limits;
+    - every millisecond across six day ends, plus 40,000 random serials against `FromOADate`;
+    - rounding at 1 to 28 digits against `decimal` arithmetic (16,800 values), with carries and limits;
+    - messages with and without values.
+  - `FakeRecordSource.Cells` sets a source's options.
+  - **Phase 0 and 1 expectations updated:** boolean cells read as `TRUE`/`FALSE` and dates as ISO 8601 (Phase 1's sheets have no date cells until step 4).
+    - `CorpusTests.ReadsEveryWorksheetThroughThePublicApi` compares the stored form through `GetSpan`, then the text.
+- **Counts:**
+  - CsvHelper.Tests: 1305 (net10.0), 1300 (net8.0), 841 (net48).
+  - CsvHelper.Linq.Tests: 112, 110, 101.
+  - CsvHelper.Excel.Tests: 689 on each target.
+  - The solution builds with 0 warnings.
+- **CSV paths changed, for step 3's gate:**
+  - the four `ParseExact` overloads, `GetChars` and `CaptureHeader` (a `typedCells` test each);
+  - `CsvDynamicRecord`'s indexer (a test of the schema) and `Parse<T>` (a null test in place of a flag);
+  - the schema's interning key.
+
+**Step 2, public additions** (built 2026-11-03, not committed):
+
+- **`CsvReader.FieldEquals(int, ReadOnlySpan<byte>)`**, public: whether a field's text, the string `GetString` would make, is the UTF-8 given.
+  - For CSV it is `GetSpan(index).SequenceEqual(utf8)` behind a `typedCells` test.
+  - Typed cells go to `CellEquals`, which isn't inlined and compares the cell's ASCII text char by byte.
+  - Under `ErrorCells = Error`, it throws for an error cell, as every read does.
+- **CsvHelper.Linq:** `DynamicAccess.TextEquals` calls `FieldEquals`, so `row["Paid"] == "TRUE"` matches a boolean cell.
+- **`ParseExact<T>`** takes `TimeSpan` on every target, and `DateOnly` and `TimeOnly` on .NET 8 and later.
+  - Each parses as its own `ParseExact` does (`TimeSpanStyles.None`, `DateTimeStyles.None`), the call generated mappers made before. Fields of up to 128 bytes are decoded on the stack instead of to a string.
+  - Messages leave the value out when `IncludeValuesInExceptions` is off. The generated `T.ParseExact(reader.GetString(i), ...)` used to ignore that option.
+  - Typed cells convert as `Parse` does (`ParseExactCell`), so a date cell fills a `[CsvFormat]` `DateOnly`.
+  - `ParseExact<TimeSpan>` used to throw `NotSupportedException`. `ReaderTests.ParseExactParsesOnlyDates` became `ParseExactParsesDatesTimesAndDurations`.
+- **Generator:** `[CsvFormat]` members emit `reader.ParseExact<T>`:
+  - `TimeSpan` always.
+  - `DateOnly` and `TimeOnly` only when the referenced CsvHelper is its .NET build. The generator tells by `readerParsesSpans`, the flag that already gates `ISpanParsable` parsing. An application on .NET 6 or 7 gets the netstandard2.1 build, so its mappers keep the type's own `ParseExact`. No test covers that case: it would need the netstandard2.1 build as a reference.
+  - Without `[CsvCulture]`, the call takes no provider and the reader's applies, as the generated `provider` local did before.
+  - `MappingFeaturesGenerateCSharp9WithoutWarnings` now expects `reader.ParseExact<global::System.TimeSpan>(column3, formats1)`.
+- **Tests:**
+  - `CellConversionTests` gained:
+    - `ParseExactReadsDateCellsForTimesAndDurations`: the cells, and generated mappers through `FormattedCellRecord`;
+    - `FieldEqualsComparesTheText`: CSV quoted, trimmed and missing fields; each cell kind; the error policy;
+    - `LinqComparesTheTextOfTypedCells`: `==` and `!=` on date and boolean cells, with `Explain` checking that the reader runs the comparison.
+  - The Linq test lives in CsvHelper.Tests, whose test source needs core's internals, which CsvHelper.Linq.Tests can't see.
+  - `RecordGeneratorTests.FormatsOfTimesAndDurationsAreParsedByTheReader`.
+- **Docs:** `docs/pages/reading.md` gives `ParseExact`'s types and a paragraph on `FieldEquals`. `docs/pages/records.md` says `[CsvFormat]` members of these types are read by `ParseExact<T>`.
+- **Counts:**
+  - CsvHelper.Tests: 1309 (net10.0), 1304 (net8.0), 844 (net48).
+  - CsvHelper.Linq.Tests: 112, 110, 101.
+  - CsvHelper.Excel.Tests: 689 on each target.
+  - The solution builds with 0 warnings.
+- **CSV paths changed, for step 3's gate:**
+  - Linq's dynamic text comparisons: `FieldEquals` in place of `GetSpan` and `SequenceEqual`.
+  - Generated mappers of `[CsvFormat]` `TimeSpan`, `DateOnly` and `TimeOnly` members: `ParseExact<T>` from chars in place of a string. `FormattedDatesRead` should include a `TimeSpan` member too.
+- Steps 1 and 2 were committed together on 2026-11-03: their changes share files.
+
+**Step 3, core gate** (deferred, the user's choice, 2026-11-03):
+
+- **`FormattedDatesRead`** (`bench/CsvHelper.Benchmarks/FormattedDatesBenchmarks.cs`, committed with steps 1 and 2): 200,000 rows of a `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly` and `TimeSpan` in exact formats.
+  - Records: the generated mapper's `[CsvFormat]` parsing.
+  - ParseExact: the reader's `ParseExact<DateTime>` and `ParseExact<DateTimeOffset>`, with Sep's `DateTime.ParseExact` on the same columns as a control.
+  - QuickRunner's `verify` gives the same checksums on base and new.
+- **The baseline:** a worktree of `b3f8079f` at `Csv\_bench\base`, with its NCsvPerf copy and `FormattedDatesRead` copied in. Steps 4 to 8 plan no core change, so it stays the right baseline.
+- **The selection:**
+  - 56 read benchmarks: `PackageAssetsRead`, `PackageAssetsReadFromString`, `PackageAssetsReadFile`, `FloatsRead`, `QuotedRead`, `FormattedDatesRead`, and `PackageAssetsLinq`'s Dynamic category, in 2 interleaved pairs.
+  - The 15 write benchmarks, as a control pair.
+  - NCsvPerf, in 3 interleaved pairs.
+- **Filters must name the classes exactly** (`CsvHelper.Benchmarks.PackageAssetsRead.*`). A leading `*` also matched `ExcelPackageAssetsRead`, an hour per run, and `SeparatorPackageAssetsRead`.
+- The run was started and then stopped at the user's request. It will run later, overnight or with step 9's benchmarks.
 
 ### Phase 3: choosing what to read, and messy sheets (M)
 
@@ -1750,6 +2267,7 @@ Allocated per operation, in BenchmarkDotNet's MB (1,024 KB), shared / inline:
 - **Scanner:** SIMD search for `<c`, `<v`, `</row>` and attribute values, the same approach as the CSV scanner.
 - **Read pipeline:** an inflate thread, a scan thread and mapping workers. `ParallelEnumerate` already maps record-source batches on workers (Phase 0), but its batches are filled under the read lock, so inflating and scanning run serially there. Inflating one entry is inherently sequential and sets the ceiling.
 - **Where Phase 1's baseline points** (step 9's "As built"): on .NET 10, inflate is about 5% of a read of the benchmark's sheet, so the ceiling is far off and the time is in scanning cells and filling records, about 160 ns a cell. With shared strings, Sylvan.Data.Excel is 1.36–1.53x faster and returns its table's own strings, where CsvHelper.Excel makes a new string per field; with inline strings the two are level.
+- **Phase 2's typed baseline:** `ExcelOrdersRead` (a million `OrderRecord` rows of dates, numbers, booleans and text) joins `ExcelPackageAssetsRead` as a starting point.
 - **Parallel writing:**
   - Generate cell XML in parallel through `ParallelWriteRecords`. Until then, a writer with a cell sink throws `NotSupportedException` for the parallel methods.
   - The style registry must be thread-safe.
@@ -1783,7 +2301,7 @@ Every feature from the brainstorm, and where it lands.
 | Excel Tables by name | 3 |
 | Header-row detection | 3 |
 | Raw value vs displayed text | 8 |
-| Formula cached value vs formula text | 2 |
+| Formula cached value vs formula text, shared formulas moved to each cell | 2 |
 | Merged-cell fill, skipping hidden rows and columns | 3 |
 | Error-cell policy | 2 |
 | Errors that name the cell | 0, 1 |
@@ -1806,6 +2324,7 @@ Every feature from the brainstorm, and where it lands.
 | CsvHelper.Linq and dynamic records over a sheet | 1 |
 | `.xlsx` ↔ CSV conversion | 6 |
 | 1900 leap-year bug, 1904 date system | 2 |
+| Durations (`[h]:mm`) as `TimeSpan` | 2 |
 | Long numbers losing digits | 2 (read), 4 (write) |
 | Leading zeros | 4, 6 |
 | Cell size and sheet name limits | 4 |
@@ -1825,6 +2344,8 @@ Testing runs through every phase.
   - `tools/CsvHelper.Excel.Corpus` makes them from one definition of the content. It drives Excel through COM, LibreOffice and Python by command line, and the .NET producers directly.
   - It runs on demand; the tests only read the committed files.
   - Phase 1's "Testing" has the files, the producer versions and how each is made.
+  - Content sets: `basic` (Phase 1) and `typed` (Phase 2: dates, numbers, formulas).
+- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand.
 - **Oracles** (test-only dependencies):
   - The Open XML SDK (DocumentFormat.OpenXml 3.5.1), for raw cell structure and, from Phase 4, `OpenXmlValidator`.
   - ClosedXML 0.105.1 and ExcelDataReader 3.9.0.
@@ -1843,7 +2364,7 @@ Testing runs through every phase.
 ## Risks
 
 - **Hot-path cost of the hooks.** Phase 0's gate exists for this.
-- **Lockstep releases.** Internal hooks mean every core release must ship a matching CsvHelper.Excel.
+- **Lockstep releases.** Internal hooks mean every core release must ship a matching CsvHelper.Excel. Core, CsvHelper.Linq and CsvHelper.Excel are always released together (settled 2026-11-03).
 - **Producer tolerance.** Excel accepts things the spec doesn't promise, and other producers rely on that. The corpus is the defense.
 - **Merged-cell fill** needs a second inflate pass.
 - **Shared-strings memory** on huge workbooks.
@@ -1868,7 +2389,10 @@ Chosen during planning, and still open to change:
 
 - A sheet reads as a plain `CsvReader` and writes as a plain `CsvWriter`.
 - Internal core hooks with an exact version pin.
-- `decimal` targets round to 15 significant digits.
+- `decimal` and integer targets round to 15 significant digits (Phase 2).
+- Error cells read as their text (Phase 2).
+- Formulas read their cached values (Phase 2).
+- Date cells' text is ISO 8601, from the value (Phase 2).
 - `DateTimeOffset` is written as ISO 8601 text.
 - Row and column limits throw.
 - Strings are written inline.

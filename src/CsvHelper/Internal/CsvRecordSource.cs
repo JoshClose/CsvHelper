@@ -24,6 +24,16 @@ namespace CsvHelper;
 internal abstract class CsvRecordSource : IDisposable, IAsyncDisposable
 {
 	/// <summary>
+	/// How the typed cells of the source convert: its date system, the rounding of numbers and the policy for error cells.
+	/// A source sets it before the reader reads; <see cref="CsvCellOptions.Default"/> unless it does.
+	/// </summary>
+	/// <remarks>
+	/// The reader and its parallel workers read it here, through the source they share, rather than from a field of their
+	/// own: a new field on <see cref="CsvReader"/> moves the fields of the CSV paths (see Phase 0 of docs/plans/excel.md).
+	/// </remarks>
+	public CsvCellOptions CellOptions { get; protected set; } = CsvCellOptions.Default;
+
+	/// <summary>
 	/// Writes the next records into <paramref name="batch"/>: at least one, unless no records remain, and usually until
 	/// <see cref="CsvReader.RecordBatch.IsFull"/>. Records must be whole: the reader starts the next batch over in its buffer.
 	/// </summary>

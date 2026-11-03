@@ -76,6 +76,13 @@ internal sealed class FakeRecordSource(string sheet, IReadOnlyList<FakeRow> rows
 	/// <summary>Whether the next fill writes a field and returns without ending its record (a broken source).</summary>
 	public bool LeaveRecordOpen { get; set; }
 
+	/// <summary>The options of the typed cells, as a source sets them (<see cref="CsvRecordSource.CellOptions"/>).</summary>
+	public CsvCellOptions Cells
+	{
+		get => CellOptions;
+		init => CellOptions = value;
+	}
+
 	/// <inheritdoc/>
 	public override bool Fill(CsvReader.RecordBatch batch)
 	{
@@ -329,10 +336,11 @@ public class CellHookTests
 		Assert.Equal(9, reader.FieldCount);
 		Assert.Equal("Widget", reader.GetString(0));
 		Assert.Equal("1.5", reader.GetString(2));
-		// Booleans and dates keep their bytes for now (they are flagged for typed reading's text).
-		Assert.Equal("1", reader.GetString(4));
-		Assert.Equal("45352.5", reader.GetString(6));
-		Assert.Equal("45352.5", reader[6].ToString());
+		// Booleans and dates have text of their own (flagged fields); their bytes are the stored form.
+		Assert.Equal("TRUE", reader.GetString(4));
+		Assert.Equal("2024-03-01T12:00:00", reader.GetString(6));
+		Assert.Equal("2024-03-01T12:00:00", reader[6].ToString());
+		Assert.Equal("1"u8.ToArray(), reader.GetSpan(4).ToArray());
 		Assert.True(reader.IsEmpty(8));
 		Assert.Equal("", reader.GetString(8));
 		Assert.Equal("45352.5"u8.ToArray(), reader.GetSpan(6).ToArray());
@@ -492,7 +500,7 @@ public class CellHookTests
 			Assert.Equal(Enumerable.Range(0, 5000), results.Select(r => r.Id));
 			Assert.Equal(Enumerable.Range(0, 5000).Select(i => i + 0.5), results.Select(r => r.Value));
 			Assert.Equal(Enumerable.Range(0, 5000).Select(i => (long)(i * 2 + 2)), results.Select(r => r.Line));
-			Assert.Equal(Enumerable.Range(0, 5000).Select(i => i % 3 == 0 ? "1" : "no"), results.Select(r => r.Text));
+			Assert.Equal(Enumerable.Range(0, 5000).Select(i => i % 3 == 0 ? "TRUE" : "no"), results.Select(r => r.Text));
 		}
 
 		// Records mapped on the workers, after records read on this thread.

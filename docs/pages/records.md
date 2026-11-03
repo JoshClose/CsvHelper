@@ -508,9 +508,9 @@ public partial class Shift
 }
 ```
 
-`DateTime` and `DateTimeOffset` members are read with `ParseExact<T>(index, format)`, which parses without creating a
-string. Other types need a static `ParseExact(string, string, IFormatProvider)` method, as `DateOnly`, `TimeOnly` and
-`TimeSpan` have. A field in another format throws `FormatException`.
+`DateTime`, `DateTimeOffset`, `TimeSpan`, `DateOnly` and `TimeOnly` members are read with
+`ParseExact<T>(index, format)`, which parses without creating a string. Other types need a static
+`ParseExact(string, string, IFormatProvider)` method. A field in another format throws `FormatException`.
 
 For files that mix formats, such as data merged from several sources, give several: a field may have any of them,
 tried in order, and the record writer writes the first.
