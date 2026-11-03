@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Writes the committed workbooks of tests/CsvHelper.Excel.Tests/Files with each producer: Excel through COM,
+		     LibreOffice, Python (openpyxl, XlsxWriter, pandas), Apache POI (Java) and .NET libraries. It runs on demand,
+		     never in CI; see the README.md beside the files. -->
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>CsvHelper.Excel.Corpus</RootNamespace>
+		<AssemblyName>CsvHelper.Excel.Corpus</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.1" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+		<PackageReference Include="EPPlus" Version="4.5.3.3" />
+		<PackageReference Include="LargeXlsx" Version="2.0.2" />
+		<PackageReference Include="MiniExcel" Version="1.46.0" />
+		<PackageReference Include="SpreadCheetah" Version="1.28.0" />
+	</ItemGroup>
+
+	<!-- Patched versions of packages the producers bring in with known vulnerabilities (EPPlus 4.5.3.3's System.Drawing.Common
+	     4.7.0, and the cryptography packages 10.0.10). The tool only writes workbooks of its own content. -->
+	<ItemGroup>
+		<PackageReference Include="System.Drawing.Common" Version="10.0.14" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.14" />
+	</ItemGroup>
+
+</Project>

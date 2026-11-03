@@ -166,6 +166,33 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// <returns>Whether the token is that start tag.</returns>
 	public bool IsStartTag(ReadOnlySpan<byte> localName) => Kind == XmlTokenKind.StartTag && LocalName.SequenceEqual(localName);
 
+	/// <summary>
+	/// The <c>xml:space</c> of the start tag read: <see langword="true"/> for <c>preserve</c>, <see langword="false"/>
+	/// for <c>default</c>, and <see langword="null"/> when it has none (or another value), so that the element's parent's
+	/// applies, as XML says.
+	/// </summary>
+	/// <returns>Whether the element preserves white space, or <see langword="null"/> to inherit it.</returns>
+	/// <exception cref="InvalidDataException">An attribute can't be read.</exception>
+	public bool? SpaceOf()
+	{
+		var attributes = Attributes;
+		while (attributes.MoveNext())
+		{
+			if (attributes.IsQualifiedName("xml:space"u8))
+			{
+				return SpaceValue(attributes.Value);
+			}
+		}
+
+		return null;
+	}
+
+	/// <summary>What an <c>xml:space</c> value says.</summary>
+	/// <param name="value">The value, as it is in the XML.</param>
+	/// <returns><see langword="true"/> for <c>preserve</c>, <see langword="false"/> for <c>default</c>, and <see langword="null"/> for anything else.</returns>
+	public static bool? SpaceValue(ReadOnlySpan<byte> value) =>
+		value.SequenceEqual("preserve"u8) ? true : value.SequenceEqual("default"u8) ? false : null;
+
 	/// <summary>Whether the token is an end tag with the local name <paramref name="localName"/>.</summary>
 	/// <param name="localName">The local name, as UTF-8.</param>
 	/// <returns>Whether the token is that end tag.</returns>

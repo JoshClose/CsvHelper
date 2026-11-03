@@ -1,0 +1,9 @@
+# The exact versions of the corpus's Python producers (Python 3.14.10), and of what they install: pip freeze
+# after installing them.
+et_xmlfile==2.0.0
+numpy==2.5.4
+openpyxl==3.1.5
+pandas==3.1.0
+python-dateutil==4.0.0
+tzdata==2026.6
+XlsxWriter==3.3.1

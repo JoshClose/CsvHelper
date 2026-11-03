@@ -128,7 +128,7 @@ public class SharedStringsComparisonTests
 				return;
 			}
 
-			xml.Append($"<{prefix}si>");
+			xml.Append(random.Next(6) == 0 ? $"<{prefix}si xml:space=\"preserve\">" : $"<{prefix}si>");
 			Noise();
 			if (kind <= 4 || random.Next(4) == 0)
 			{
@@ -140,7 +140,7 @@ public class SharedStringsComparisonTests
 				for (var run = random.Next(1, 5); run > 0; run--)
 				{
 					Noise();
-					xml.Append($"<{prefix}r>");
+					xml.Append(random.Next(6) == 0 ? $"<{prefix}r xml:space=\"preserve\">" : $"<{prefix}r>");
 					if (random.Next(2) == 0)
 					{
 						xml.Append($"<{prefix}rPr><{prefix}b/><{prefix}sz val=\"11\"/></{prefix}rPr>");
@@ -174,7 +174,12 @@ public class SharedStringsComparisonTests
 					return;
 			}
 
-			xml.Append(random.Next(3) == 0 ? $"<{prefix}t xml:space=\"preserve\">" : $"<{prefix}t>");
+			xml.Append(random.Next(4) switch
+			{
+				0 => $"<{prefix}t xml:space=\"preserve\">",
+				1 => $"<{prefix}t xml:space=\"default\">",
+				_ => $"<{prefix}t>",
+			});
 			for (var fragment = random.Next(1, 7); fragment > 0; fragment--)
 			{
 				xml.Append(Fragments[random.Next(Fragments.Length)]);
@@ -223,6 +228,7 @@ public class SharedStringsComparisonTests
 		var path = new List<string>();
 		var value = new StringBuilder();
 		var text = new StringBuilder();
+		var trim = false;
 		while (reader.Read())
 		{
 			switch (reader.NodeType)
@@ -236,6 +242,9 @@ public class SharedStringsComparisonTests
 					else if (IsText())
 					{
 						text.Clear();
+
+						// Trimmed unless xml:space="preserve" is in scope, as Excel reads it.
+						trim = reader.XmlSpace != XmlSpace.Preserve;
 					}
 
 					if (reader.IsEmptyElement)
@@ -271,7 +280,8 @@ public class SharedStringsComparisonTests
 		{
 			if (IsText())
 			{
-				var decoded = Regex.Replace(text.ToString(), "_x([0-9A-Fa-f]{4})_", m => ((char)Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
+				var raw = trim ? text.ToString().Trim(' ', '\t', '\r', '\n') : text.ToString();
+				var decoded = Regex.Replace(raw,"_x([0-9A-Fa-f]{4})_", m => ((char)Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
 				value.Append(Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(decoded)));
 			}
 			else if (IsString())

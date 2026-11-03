@@ -21,8 +21,10 @@ namespace CsvHelper.Excel;
 /// style gives (<see cref="StyleTable.NumberKind"/>); <c>s</c> is the shared string its <c>v</c> indexes; <c>b</c> is
 /// <c>1</c> or <c>0</c> (<c>true</c> and <c>false</c> of any case become those; anything else stays text); <c>e</c> is
 /// an error; <c>inlineStr</c> is the runs of its <c>is</c> joined, or its <c>v</c>; and <c>str</c>, <c>d</c> and any other
-/// type are the text of <c>v</c>. Values are decoded as XML and then for their <c>_xHHHH_</c> escapes. A cell without a
-/// <c>v</c> or <c>is</c>, or whose value is empty, is valueless and adds no field.
+/// type are the text of <c>v</c>. Values are decoded as XML and then for their <c>_xHHHH_</c> escapes; between the two,
+/// a text (a <c>v</c>, or a <c>t</c> of an <c>is</c>) that <c>xml:space="preserve"</c> doesn't apply to, on it or inherited,
+/// loses the white space around it, as Excel trims it. A cell without a <c>v</c> or <c>is</c>, or whose value is empty, is
+/// valueless and adds no field.
 /// </para>
 /// <para>
 /// <b>Placement.</b> A row's number is its <c>r</c>, else the row of its first cell's <c>r</c>, else the row before's plus
@@ -76,6 +78,10 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private long row;
 	private bool rowKnown;
 	private long lastRow;
+	// Whether xml:space="preserve" applies in the root, in sheetData and in the row being read.
+	private bool rootPreserves;
+	private bool dataPreserves;
+	private bool rowPreserves;
 	// The column of the row's last cell (-1 before its first), and the number of fields the row has.
 	private int lastColumn;
 	private int fields;
@@ -248,32 +254,6 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		return value.Slice(start, end - start);
 	}
 
-	/// <summary>Trims the XML white space around a value in place: it moves to the start of <paramref name="span"/>.</summary>
-	/// <param name="span">The value, from its start.</param>
-	/// <param name="length">The value's length.</param>
-	/// <returns>The trimmed value's length.</returns>
-	private static int TrimInPlace(Span<byte> span, int length)
-	{
-		var start = 0;
-		var end = length;
-		while (start < end && XmlScanner.IsWhitespace(span[start]))
-		{
-			start++;
-		}
-
-		while (end > start && XmlScanner.IsWhitespace(span[end - 1]))
-		{
-			end--;
-		}
-
-		if (start > 0)
-		{
-			span.Slice(start, end - start).CopyTo(span);
-		}
-
-		return end - start;
-	}
-
 	/// <summary>A value for an error message, quoted, and cut short when it is long.</summary>
 	/// <param name="value">The value, as UTF-8.</param>
 	/// <returns>The quoted text.</returns>
@@ -384,6 +364,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					throw Error(TokenOffset, "its root element is not worksheet", -1, 0);
 				}
 
+				rootPreserves = scanner.SpaceOf() ?? false;
 				mode = Mode.Worksheet;
 
 				return Step.Read;
@@ -391,6 +372,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				if (scanner.IsStartTag("sheetData"u8))
 				{
 					// An empty sheetData has no rows, and nothing after it is read.
+					dataPreserves = scanner.SpaceOf() ?? rootPreserves;
 					mode = scanner.IsEmptyElement ? Mode.Done : Mode.SheetData;
 
 					return mode == Mode.Done ? Step.Done : Step.Read;
@@ -458,6 +440,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		where TTarget : struct, IRecordTarget
 	{
 		int? number = null;
+		bool? space = null;
 		var attributes = scanner.Attributes;
 		while (attributes.MoveNext())
 		{
@@ -465,7 +448,13 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			{
 				number = attributes.GetInt32();
 			}
+			else if (attributes.IsQualifiedName("xml:space"u8))
+			{
+				space = XmlScanner.SpaceValue(attributes.Value);
+			}
 		}
+
+		rowPreserves = space ?? dataPreserves;
 
 		mode = Mode.Row;
 		rowKnown = false;
@@ -598,6 +587,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		ReadOnlySpan<byte> reference = default;
 		var type = CellType.Number;
 		var style = 0;
+		bool? space = null;
 		var attributes = scanner.Attributes;
 		while (attributes.MoveNext())
 		{
@@ -614,7 +604,13 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			{
 				style = attributes.GetInt32();
 			}
+			else if (attributes.IsQualifiedName("xml:space"u8))
+			{
+				space = XmlScanner.SpaceValue(attributes.Value);
+			}
 		}
+
+		var preserves = space ?? rowPreserves;
 
 		int column;
 		var referenceRow = 0;
@@ -688,7 +684,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 			if (scanner.IsStartTag("v"u8) || (type == CellType.InlineString && scanner.IsStartTag("is"u8)))
 			{
-				var whole = scanner.IsStartTag("v"u8) ? TryReadText() : TryReadInline();
+				var whole = scanner.IsStartTag("v"u8) ? TryReadText(preserves) : TryReadInline(preserves);
 				if (!whole)
 				{
 					scanner.Restore(before);
@@ -726,15 +722,21 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		return Step.Read;
 	}
 
-	/// <summary>Reads the text and CDATA of a <c>v</c> or <c>t</c> element as one text, if the window holds all of it.</summary>
+	/// <summary>
+	/// Reads the text and CDATA of a <c>v</c> or <c>t</c> element as one text, if the window holds all of it, marked to be
+	/// trimmed unless <c>xml:space="preserve"</c> applies to it.
+	/// </summary>
+	/// <param name="inherited">Whether <c>xml:space="preserve"</c> applies in the element's parent.</param>
 	/// <returns>Whether the element's end tag was read.</returns>
-	private bool TryReadText()
+	private bool TryReadText(bool inherited)
 	{
 		if (scanner.IsEmptyElement)
 		{
 			return true;
 		}
 
+		var trim = !(scanner.SpaceOf() ?? inherited);
+		var first = segmentCount;
 		while (true)
 		{
 			if (!scanner.TryRead())
@@ -758,7 +760,12 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					break;
 				case XmlTokenKind.EndTag:
 					// The element's own: one inside it was skipped whole.
-					if (segmentCount > 0)
+					for (var i = first; i < segmentCount; i++)
+					{
+						segments[i].Trim = trim;
+					}
+
+					if (segmentCount > first)
 					{
 						segments[segmentCount - 1].EndsText = true;
 					}
@@ -772,8 +779,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// Reads the text of an <c>is</c> element, if the window holds all of it: its <c>t</c> elements, directly in it or in
 	/// its runs (<c>r</c>), each a text of its own; phonetic runs, properties and other elements are skipped.
 	/// </summary>
+	/// <param name="inherited">Whether <c>xml:space="preserve"</c> applies in the cell.</param>
 	/// <returns>Whether the element's end tag was read.</returns>
-	private bool TryReadInline()
+	private bool TryReadInline(bool inherited)
 	{
 		if (scanner.IsEmptyElement)
 		{
@@ -781,6 +789,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		}
 
 		var depth = scanner.Depth;
+		var inlinePreserves = scanner.SpaceOf() ?? inherited;
+		var runPreserves = inlinePreserves;
+		var inRun = false;
 		while (true)
 		{
 			if (!scanner.TryRead())
@@ -797,16 +808,29 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return true;
 				}
 
+				inRun = false;
+
 				continue;
 			}
 
-			if (kind != XmlTokenKind.StartTag || scanner.IsStartTag("r"u8))
+			if (kind != XmlTokenKind.StartTag)
 			{
 				continue;
 			}
 
+			if (scanner.IsStartTag("r"u8))
+			{
+				if (!scanner.IsEmptyElement)
+				{
+					inRun = true;
+					runPreserves = scanner.SpaceOf() ?? inlinePreserves;
+				}
+
+				continue;
+			}
+
 			var whole = scanner.IsStartTag("t"u8)
-				? TryReadText()
+				? TryReadText(inRun ? runPreserves : inlinePreserves)
 				: scanner.IsEmptyElement || scanner.TrySkipTo(scanner.Depth - 1);
 			if (!whole)
 			{
@@ -880,7 +904,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 				AddGap(target, column);
 				var span = target.GetFieldSpan(rawLength);
-				var length = TrimInPlace(span, Decode(span));
+				var length = XmlText.TrimWhitespace(span.Slice(0, Decode(span)));
 				var kind = type == CellType.Number ? styles.NumberKind(style) : SheetCellKind.Bool;
 				if (type == CellType.Boolean)
 				{
@@ -894,14 +918,17 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			}
 			default:
 			{
-				if (rawLength == 0)
+				if (!HasText())
 				{
 					return;
 				}
 
 				AddGap(target, column);
 				var span = target.GetFieldSpan(rawLength);
-				target.CommitField(Decode(span), type == CellType.Error ? SheetCellKind.Error : SheetCellKind.Text);
+				var length = Decode(span);
+
+				// Only references can decode to blank text: an empty field, then, as for numbers.
+				target.CommitField(length, length == 0 ? SheetCellKind.Empty : type == CellType.Error ? SheetCellKind.Error : SheetCellKind.Text);
 
 				break;
 			}
@@ -946,6 +973,39 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		{
 			budget?.Charge(count);
 		}
+	}
+
+	/// <summary>
+	/// Whether the value being read has text once each of its texts is trimmed as <c>xml:space</c> says: a text kept whole
+	/// has it when it isn't empty, a trimmed one when it has more than XML white space.
+	/// </summary>
+	/// <returns>Whether it has text.</returns>
+	private bool HasText()
+	{
+		var buffer = scanner.Window.Buffer;
+		for (var i = 0; i < segmentCount; i++)
+		{
+			var segment = segments[i];
+			if (segment.Length == 0)
+			{
+				continue;
+			}
+
+			if (!segment.Trim)
+			{
+				return true;
+			}
+
+			foreach (var b in buffer.AsSpan(segment.Start, segment.Length))
+			{
+				if (!XmlScanner.IsWhitespace(b))
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/// <summary>Whether the value being read is only XML white space, or nothing.</summary>
@@ -1000,6 +1060,11 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 			if (segment.EndsText)
 			{
+				if (segment.Trim)
+				{
+					written = textStart + XmlText.TrimWhitespace(destination.Slice(textStart, written - textStart));
+				}
+
 				written = textStart + XmlText.DecodeEscapes(destination.Slice(textStart, written - textStart));
 				textStart = written;
 			}
@@ -1190,6 +1255,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			Length = length;
 			CData = cdata;
 			EndsText = false;
+			Trim = false;
 		}
 
 		/// <summary>Its content's position in the window.</summary>
@@ -1203,5 +1269,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		/// <summary>Whether it is the last token of its text (a <c>v</c> or <c>t</c>), whose escapes are decoded after it.</summary>
 		public bool EndsText { get; set; }
+
+		/// <summary>Whether its text is trimmed of the XML white space around it: <c>xml:space="preserve"</c> doesn't apply to it.</summary>
+		public bool Trim { get; set; }
 	}
 }

@@ -40,6 +40,18 @@
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
 	</ItemGroup>
 
+	<!-- The oracles the corpus is compared with: the raw cells, typed values, and an independent streaming reader. -->
+	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.1" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+		<PackageReference Include="ExcelDataReader" Version="3.9.0" />
+	</ItemGroup>
+
+	<!-- The corpus (see Files/README.md), read from the output folder. -->
+	<ItemGroup>
+		<None Include="Files\**" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>

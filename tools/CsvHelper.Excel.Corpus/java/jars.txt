@@ -1,0 +1,17 @@
+# The jars java/Corpus.java runs with: Apache POI 6.0.0 (poi, poi-ooxml, poi-ooxml-lite) and the runtime dependencies
+# their POMs declare, resolved as Maven resolves them, where the nearest version wins (log4j-api's comes from the
+# log4j-bom that POI's POM imports). Each line is group:artifact:version and the jar's SHA-256. The hashes were pinned
+# on 2026-11-02, after each jar matched the .sha512 or .sha1 that Maven Central publishes for it.
+org.apache.poi:poi:6.0.0 4977f1ae04e1c77e42c81dd94cca008e0d81ff8d0daa8b85e2a0740c3c1da3cc
+org.apache.poi:poi-ooxml:6.0.0 759d97d608ef03b8aa701f56fef0cf9c67fac49f7fa0de4be43c01ca97542c9c
+org.apache.poi:poi-ooxml-lite:6.0.0 d722039d325de73562ec79758253e6a659750a53d2e8e998bb3da54c0ad157fc
+org.apache.xmlbeans:xmlbeans:5.4.1 b8fe946b41983e86496a7a68508af82a41daafd0e2a2cc8c9302c53fcbd9802c
+commons-codec:commons-codec:1.23.0 47504a3ce71d73a1b0af07675546b8d8c5af87f82ef12b6381f9eb3c17dd5a5b
+org.apache.commons:commons-collections4:4.6.0 4e0d0896bac5356cead277bac0283f09813e14417e3e84e0c86b573b54d218a3
+org.apache.commons:commons-math3:3.6.1 1e56d7b058d28b65abd256b8458e3885b674c1d588fa43cd7d1cbb9c7ef2b308
+commons-io:commons-io:2.22.0 2b9a7b1f726fb86216dbd2c8321eabe0221dbd5b1be81c18e1cb53811b104758
+com.zaxxer:SparseBitSet:1.3 f76b85adb0c00721ae267b7cfde4da7f71d3121cc2160c9fc00c0c89f8c53c8a
+org.apache.logging.log4j:log4j-api:2.26.1 f1810a4704ccce019d02bba029dc02a4f2ac0c997f647b465e7d409c1927f822
+org.apache.commons:commons-compress:1.28.0 e1522945218456f3649a39bc4afd70ce4bd466221519dba7d378f2141a4642ca
+org.apache.commons:commons-lang3:3.18.0 4eeeae8d20c078abb64b015ec158add383ac581571cddc45c68f0c9ae0230720
+com.github.virtuald:curvesapi:1.08 ad95b08b8bbf9d7d17e5e00814898fa23324f32bc5b62f1a37801e6a56ce0079

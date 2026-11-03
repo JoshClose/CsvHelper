@@ -53,15 +53,36 @@ public class SheetScannerTests
 	}
 
 	[Fact]
-	public async Task TrimsNumbersAndBooleansOnly()
+	public async Task TrimsValuesUnlessTheirSpaceIsPreserved()
 	{
+		// As Excel 365 reads them (checked through COM on 2026-11-02): text and errors are trimmed unless xml:space="preserve"
+		// applies, on the v or t, or inherited from the is, r, c, row, sheetData or root. Excel won't open a workbook whose
+		// number, boolean, index or error keeps spaces that way; numbers, booleans and indexes are trimmed anyway, since they
+		// must parse, and errors keep them, as text does.
 		var xml = Sheets.Worksheet(
-			"<row r=\"1\"><c r=\"A1\"><v> 42 </v></c><c r=\"B1\"><v>&#9;7&#10;</v></c><c r=\"C1\" t=\"str\"><v> text </v></c><c r=\"D1\" t=\"e\"><v> #N/A</v></c><c r=\"E1\" t=\"b\"><v>&#32;</v></c></row>");
+			"<row r=\"1\"><c r=\"A1\"><v> 42 </v></c><c r=\"B1\"><v>&#9;7&#10;</v></c><c r=\"C1\" t=\"str\"><v> text </v></c><c r=\"D1\" t=\"e\"><v> #N/A </v></c>" +
+			"<c r=\"E1\" t=\"str\"><v xml:space=\"preserve\"> kept </v></c><c r=\"F1\" t=\"inlineStr\"><is><t>  inline  </t></is></c>" +
+			"<c r=\"G1\" t=\"inlineStr\"><is><r><t>bold </t></r><r><t> plain</t></r></is></c><c r=\"H1\" t=\"str\" xml:space=\"preserve\"><v> on c </v></c>" +
+			"<c r=\"I1\" t=\"str\"><v>&#32;references&#32;</v></c><c r=\"J1\" t=\"str\"><v>_x0020_escapes_x0020_</v></c><c r=\"K1\" t=\"str\"><v>a  b</v></c></row>" +
+			"<row r=\"2\" xml:space=\"preserve\"><c r=\"A2\" t=\"str\"><v> on row </v></c><c r=\"B2\" t=\"inlineStr\"><is><r><t xml:space=\"default\"> default </t></r></is></c></row>" +
+			"<row r=\"3\"><c r=\"A3\" t=\"inlineStr\"><is xml:space=\"preserve\"><r><t> on is </t></r></is></c><c r=\"B3\" t=\"str\"><v>   </v></c><c r=\"C3\" t=\"b\"><v>&#32;</v></c></row>" +
+			"<row r=\"4\"><c r=\"A4\" t=\"str\"><v> \r\n</v></c><c r=\"B4\" t=\"inlineStr\"><is><r><t> </t></r><r><t>\t</t></r></is></c></row>" +
+			"<row r=\"5\"><c r=\"A5\" t=\"str\"><v>&#32;</v></c></row>");
+		var root = Sheets.Worksheet("<row r=\"1\"><c r=\"A1\" t=\"str\"><v> under the root </v></c></row>").Replace("<worksheet ", "<worksheet xml:space=\"preserve\" ");
 
 		await Sheets.InEveryModeAsync(async mode =>
 		{
-			// A value that only references make blank is an empty field, not a valueless cell.
-			Assert.Equal(["1: number:42 | number:7 |  text  | error: #N/A | ()"], await Sheets.ReadAsync(xml, mode));
+			// Blank text is valueless, so row 4, whose texts are all blank, is dropped; a value that only references make
+			// blank is an empty field, not a valueless cell, so row 5 is kept.
+			Assert.Equal(
+				[
+					"1: number:42 | number:7 | text | error:#N/A |  kept  | inline | boldplain |  on c  | references |  escapes  | a  b",
+					"2:  on row  | default | () | () | () | () | () | () | () | () | ()",
+					"3:  on is  | () | () | () | () | () | () | () | () | () | ()",
+					"5: () | () | () | () | () | () | () | () | () | () | ()",
+				],
+				await Sheets.ReadAsync(xml, mode));
+			Assert.Equal(["1:  under the root "], await Sheets.ReadAsync(root, mode));
 		});
 	}
 

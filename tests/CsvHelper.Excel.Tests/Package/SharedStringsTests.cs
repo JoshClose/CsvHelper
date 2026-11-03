@@ -73,15 +73,35 @@ public class SharedStringsTests
 	}
 
 	[Fact]
-	public async Task KeepsWhiteSpaceInATextOnly()
+	public async Task TrimsATextUnlessItsSpaceIsPreserved()
 	{
-		var spaces = "<si><t xml:space=\"preserve\">  two  </t></si><si><t> one </t></si><si><t>a\nb</t></si><si><t>\t</t></si>";
+		// Each as Excel 365 reads it (checked through COM on 2026-11-02).
+		var cases = new (string Xml, string Expected)[]
+		{
+			("<si><t>  plain  </t></si>", "plain"),
+			("<si><t xml:space=\"preserve\">  preserved  </t></si>", "  preserved  "),
+			("<si><t>   </t></si>", ""),
+			("<si><t>\n\ttabs and lines\t\n</t></si>", "tabs and lines"),
+			("<si><t>a  b</t></si>", "a  b"),
+			("<si><t>a\nb</t></si>", "a\nb"),
+			("<si><r><t>bold </t></r><r><t> plain</t></r></si>", "boldplain"),
+			("<si><r><t xml:space=\"preserve\">run </t></r><r><t> two</t></r></si>", "run two"),
+			("<si xml:space=\"preserve\"><t>  on si  </t></si>", "  on si  "),
+			("<si><r xml:space=\"preserve\"><t> on r </t></r></si>", " on r "),
+			("<si><t>&#32;references&#32;</t></si>", "references"),
+			("<si><t>&#9;tab and line&#10;</t></si>", "tab and line"),
+			("<si><t><![CDATA[  cdata  ]]></t></si>", "cdata"),
+			("<si><t>_x0020_escapes_x0020_</t></si>", " escapes "),
+		};
+		var xml = Sst(string.Concat(cases.Select(c => c.Xml)));
 		var indented = "\r\n  <si>\r\n    <t>a</t>\r\n  </si>\r\n  <si>\r\n    <r>\r\n      <t>b</t>\r\n    </r>\r\n  </si>\r\n";
+		var root = Sst("<si><t>  under the root  </t></si><si><t xml:space=\"default\">  default  </t></si>", " xml:space=\"preserve\"");
 
 		await XmlScan.InEveryModeAsync(async mode =>
 		{
-			Assert.Equal(["  two  ", " one ", "a\nb", "\t"], Packages.Strings(await ReadAsync(Sst(spaces), mode)));
+			Assert.Equal(cases.Select(c => c.Expected), Packages.Strings(await ReadAsync(xml, mode)));
 			Assert.Equal(["a", "b"], Packages.Strings(await ReadAsync(Sst(indented), mode)));
+			Assert.Equal(["  under the root  ", "default"], Packages.Strings(await ReadAsync(root, mode)));
 		});
 	}
 
@@ -93,7 +113,7 @@ public class SharedStringsTests
 			"<si><t>&#233;&#xE9;&#x1F600;</t></si>" +
 			"<si><t><![CDATA[<b>&amp;</b>]]></t></si>" +
 			"<si><t>a\r\nb\rc</t></si>" +
-			"<si><t>a&#13;&#10;b&#xD;</t></si>" +
+			"<si><t xml:space=\"preserve\">a&#13;&#10;b&#xD;</t></si>" +
 			"<si><t>a<!-- not text -->b<?pi not text?>c</t></si>" +
 			"<si><t>a<![CDATA[\r\n]]>b</t></si>";
 

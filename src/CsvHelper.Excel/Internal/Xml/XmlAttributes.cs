@@ -25,6 +25,8 @@ internal struct XmlAttributes
 	private readonly int length;
 	// Where the next attribute starts, from start.
 	private int offset;
+	private int qualifiedStart;
+	private int qualifiedLength;
 	private int nameStart;
 	private int nameLength;
 	private int valueStart;
@@ -39,7 +41,7 @@ internal struct XmlAttributes
 		this.scanner = scanner;
 		this.start = start;
 		this.length = length;
-		offset = nameStart = nameLength = valueStart = valueLength = 0;
+		offset = qualifiedStart = qualifiedLength = nameStart = nameLength = valueStart = valueLength = 0;
 	}
 
 	/// <summary>The local name of the attribute.</summary>
@@ -99,12 +101,20 @@ internal struct XmlAttributes
 			}
 
 			var colon = qualified.IndexOf((byte)':');
+			qualifiedStart = start + name;
+			qualifiedLength = nameEnd - name;
 			nameStart = start + name + colon + 1;
 			nameLength = nameEnd - name - colon - 1;
 
 			return true;
 		}
 	}
+
+	/// <summary>Whether the attribute's name, with its prefix, is <paramref name="qualifiedName"/>, such as <c>xml:space</c>.</summary>
+	/// <param name="qualifiedName">The name with its prefix, as UTF-8.</param>
+	/// <returns>Whether the names are the same.</returns>
+	public readonly bool IsQualifiedName(ReadOnlySpan<byte> qualifiedName) =>
+		scanner is not null && scanner.Window.Buffer.AsSpan(qualifiedStart, qualifiedLength).SequenceEqual(qualifiedName);
 
 	/// <summary>Whether the attribute's local name is <paramref name="localName"/>.</summary>
 	/// <param name="localName">The local name, as UTF-8.</param>

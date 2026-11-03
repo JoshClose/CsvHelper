@@ -18,8 +18,10 @@ namespace CsvHelper.Excel;
 /// run) there, joined in order. Phonetic runs (<c>rPh</c>), phonetic properties (<c>phoneticPr</c>), run properties
 /// (<c>rPr</c>), unknown elements, elements inside a <c>t</c>, and text outside a <c>t</c> are skipped. Each <c>t</c> is
 /// decoded as XML (entities, character references, CDATA, line ends), and then for its <c>_xHHHH_</c> escapes
-/// (<see cref="XmlText.DecodeEscapes"/>) on its own, as the string value it is. White space is kept, with or without
-/// <c>xml:space</c>. An <c>si</c> without text is an empty string, which keeps its place.
+/// (<see cref="XmlText.DecodeEscapes"/>) on its own, as the string value it is. Between the two, a <c>t</c> that
+/// <c>xml:space="preserve"</c> doesn't apply to (on it, or inherited from its <c>r</c>, <c>si</c> or the root) loses the
+/// white space around it, as Excel trims it (<see cref="XmlText.TrimWhitespace"/>). An <c>si</c> without text is an empty
+/// string, which keeps its place.
 /// </para>
 /// <para>
 /// The part is read through its window, never whole. The arrays start at capacities from the part's declared size and
@@ -194,6 +196,11 @@ internal sealed class SharedStrings
 		// The mode a skip goes back to, and the mode the end of a t goes back to (String or Run).
 		private Mode resume;
 		private Mode textParent;
+		// Whether xml:space="preserve" applies in the root, the current si and r, and whether the current t is trimmed.
+		private bool rootPreserves;
+		private bool stringPreserves;
+		private bool runPreserves;
+		private bool trimText;
 		private int skipDepth;
 		private int textStart;
 
@@ -286,6 +293,7 @@ internal sealed class SharedStrings
 					}
 
 					Reserve(UniqueCount());
+					rootPreserves = scanner.SpaceOf() ?? false;
 					mode = Mode.Table;
 
 					return;
@@ -298,6 +306,7 @@ internal sealed class SharedStrings
 						}
 						else
 						{
+							stringPreserves = scanner.SpaceOf() ?? rootPreserves;
 							mode = Mode.String;
 						}
 
@@ -317,6 +326,7 @@ internal sealed class SharedStrings
 					{
 						if (!scanner.IsEmptyElement)
 						{
+							runPreserves = scanner.SpaceOf() ?? stringPreserves;
 							mode = Mode.Run;
 						}
 
@@ -351,6 +361,11 @@ internal sealed class SharedStrings
 			switch (mode)
 			{
 				case Mode.Text:
+					if (trimText)
+					{
+						length = textStart + XmlText.TrimWhitespace(arena.AsSpan(textStart, length - textStart));
+					}
+
 					length = textStart + XmlText.DecodeEscapes(arena.AsSpan(textStart, length - textStart));
 					mode = textParent;
 
@@ -367,7 +382,7 @@ internal sealed class SharedStrings
 			}
 		}
 
-		/// <summary>Starts a <c>t</c>, whose text the string gets: nothing for an empty one.</summary>
+		/// <summary>Starts a <c>t</c>, whose text the string gets (nothing for an empty one), trimmed unless <c>xml:space="preserve"</c> applies.</summary>
 		private void StartText()
 		{
 			if (scanner.IsEmptyElement)
@@ -377,6 +392,7 @@ internal sealed class SharedStrings
 
 			textStart = length;
 			textParent = mode;
+			trimText = !(scanner.SpaceOf() ?? (mode == Mode.Run ? runPreserves : stringPreserves));
 			mode = Mode.Text;
 		}
 

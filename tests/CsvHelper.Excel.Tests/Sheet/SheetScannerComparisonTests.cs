@@ -67,7 +67,8 @@ public class SheetScannerComparisonTests
 			}
 
 			var spans = random.Next(3) == 0 ? " spans=\"1:3\"" : "";
-			xml.Append(rowReference ? $"<{p}row r=\"{row}\"{spans}" : $"<{p}row{spans}");
+			var rowSpace = random.Next(8) == 0 ? " xml:space=\"preserve\"" : "";
+			xml.Append(rowReference ? $"<{p}row r=\"{row}\"{spans}{rowSpace}" : $"<{p}row{spans}{rowSpace}");
 			if (cellCount == 0 && random.Next(2) == 0)
 			{
 				xml.Append("/>");
@@ -109,7 +110,12 @@ public class SheetScannerComparisonTests
 	/// <returns>The cell's XML.</returns>
 	private static string Cell(Random random, string p, string at)
 	{
-		string Value(string text) => $"<{p}v>{text}</{p}v>";
+		string Value(string text) => random.Next(4) switch
+		{
+			0 => $"<{p}v xml:space=\"preserve\">{text}</{p}v>",
+			1 => $"<{p}v xml:space=\"default\">{text}</{p}v>",
+			_ => $"<{p}v>{text}</{p}v>",
+		};
 
 		string Number() => (random.Next(4) == 0 ? " " : "") + (random.Next(2) == 0 ? random.Next(-100, 100).ToString(System.Globalization.CultureInfo.InvariantCulture) : "1.5E-05") + (random.Next(4) == 0 ? "\r\n" : "");
 
@@ -257,10 +263,10 @@ public class SheetScannerComparisonTests
 		}
 
 		var text = element.Name.LocalName == "v"
-			? Decode(DirectText(element))
+			? Decode(Trimmed(element))
 			: string.Concat(element.Elements()
 				.SelectMany(e => e.Name.LocalName == "t" ? new[] { e } : e.Name.LocalName == "r" ? [.. e.Elements().Where(t => t.Name.LocalName == "t")] : Array.Empty<XElement>())
-				.Select(t => Decode(DirectText(t))));
+				.Select(t => Decode(Trimmed(t))));
 		var trimmed = text.Trim(' ', '\t', '\r', '\n');
 		switch (type)
 		{
@@ -287,6 +293,20 @@ public class SheetScannerComparisonTests
 	/// <param name="element">The element.</param>
 	/// <returns>The text.</returns>
 	private static string DirectText(XElement element) => string.Concat(element.Nodes().OfType<XText>().Select(t => t.Value));
+
+	/// <summary>
+	/// The direct text of a <c>v</c> or <c>t</c>, trimmed of the XML white space around it unless the nearest
+	/// <c>xml:space</c>, on it or an ancestor, is <c>preserve</c>: as Excel reads it.
+	/// </summary>
+	/// <param name="element">The element.</param>
+	/// <returns>The text.</returns>
+	private static string Trimmed(XElement element)
+	{
+		var space = element.AncestorsAndSelf().Select(e => e.Attribute(XNamespace.Xml + "space")?.Value).FirstOrDefault(v => v is not null);
+		var text = DirectText(element);
+
+		return space == "preserve" ? text : text.Trim(' ', '\t', '\r', '\n');
+	}
 
 	/// <summary>Decodes a text's escapes with a regular expression, then as UTF-8, where a lone surrogate becomes U+FFFD.</summary>
 	/// <param name="text">The text, with its XML decoded.</param>

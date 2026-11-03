@@ -141,6 +141,35 @@ internal static class XmlText
 		return written;
 	}
 
+	/// <summary>
+	/// Trims the XML white space (space, tab, LF, CR) around a decoded text in place: what is left moves to the start of
+	/// <paramref name="text"/>. Excel trims a text this way when <c>xml:space="preserve"</c> doesn't apply to it, after its
+	/// references are decoded and before its <c>_xHHHH_</c> escapes are (so <c>_x0020_</c> stays).
+	/// </summary>
+	/// <param name="text">The text, from its start.</param>
+	/// <returns>The length of the trimmed text.</returns>
+	public static int TrimWhitespace(Span<byte> text)
+	{
+		var start = 0;
+		var end = text.Length;
+		while (start < end && XmlScanner.IsWhitespace(text[start]))
+		{
+			start++;
+		}
+
+		while (end > start && XmlScanner.IsWhitespace(text[end - 1]))
+		{
+			end--;
+		}
+
+		if (start > 0)
+		{
+			text.Slice(start, end - start).CopyTo(text);
+		}
+
+		return end - start;
+	}
+
 	/// <summary>Whether a code point is a character XML allows (the Char production of XML 1.0).</summary>
 	/// <param name="codePoint">The code point.</param>
 	/// <returns><see langword="true"/> for tab, LF, CR and U+0020 to U+10FFFF without the surrogates, U+FFFE and U+FFFF.</returns>

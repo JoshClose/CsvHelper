@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner) and 6 (record source and public API) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API) and 7 (corpus and oracles) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 6 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 7 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. Step 7 changed one rule of the design: texts are trimmed of XML white space unless `xml:space="preserve"` applies, as Excel reads them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -386,8 +386,8 @@ Internal/Sheet/
   - The arrays double as needed. At the end, they are trimmed when more than an eighth is spare.
 - In each `<si>`, the text is the `<t>` elements directly under `<si>` or under `<r>`, joined in order.
   - `<rPh>`, `<phoneticPr>`, `<rPr>` and unknown elements are skipped with their text, as are elements inside a `<t>`. Text outside a `<t>` is ignored.
-  - White space is kept, with or without `xml:space`.
-- Each `<t>` is decoded with `XmlText`: its XML first (entities, character references, CDATA, line ends), then its `_xHHHH_` escapes.
+  - Each `<t>` loses the XML white space (space, tab, CR, LF) at its ends unless `xml:space="preserve"` applies to it: on the `<t>`, or inherited from its `<r>`, its `<si>` or the root, where `xml:space="default"` ends it. Each run is trimmed on its own. (Changed at step 7, which checked Excel: the design kept white space with or without `xml:space`.)
+- Each `<t>` is decoded with `XmlText`: its XML first (entities, character references, CDATA, line ends), then trimmed, then its `_xHHHH_` escapes. So spaces from character references or CDATA are trimmed, and `_x0020_` is kept.
   - The escapes are decoded over the `<t>`'s whole text, but not across runs, since each `<t>` is a string value of its own.
   - So a surrogate pair whose halves are escapes in two runs reads as two U+FFFD.
 - A cell gets its string with `TryGet(index, out span)`, and copies it with one copy and no .NET string: `AddField(span, Text)`. An empty string makes the cell valueless (see "Placement").
@@ -417,10 +417,13 @@ Internal/Sheet/
 | anything else | `<v>`, decoded | Text |
 
 - A cell with no `<v>` or `<is>`, or with empty text, is **valueless**. That covers styled empty cells, formulas without a cached value (openpyxl writes these) and empty strings.
-  - A number, boolean or shared string index whose `<v>` is only XML white space is valueless too.
+  - A value whose `<v>` (or every `<t>`) is only XML white space, and is trimmed, is valueless too.
   - A value that only character references make blank (`&#32;`) is an Empty field.
 - `<is>` is read only for `inlineStr`, and `<v>` for every type. A cell's first `<v>` (or `<is>`) is its value, and the rest of the cell is skipped.
-- Numbers, booleans and shared string indexes are trimmed of XML white space; text, errors and dates are not.
+- **White space** (changed at step 7, which checked Excel; the design trimmed only numbers, booleans and indexes):
+  - A `<v>`, and each `<t>` of an `<is>`, loses the XML white space at its ends unless `xml:space="preserve"` applies: on it, or inherited from its `<r>`, `<is>`, `<c>`, `<row>`, `<sheetData>` or the root. `xml:space="default"` ends an inherited one. That covers text, errors and `t="d"` dates.
+  - Trimming comes after the XML is decoded and before the escapes, as for shared strings.
+  - Numbers, booleans and shared string indexes are always trimmed, since they must parse. Excel won't open a workbook where `preserve` keeps spaces around one, or around an error; the reader reads such a cell anyway, and an error keeps its spaces, as text does.
 
 **Placement:**
 
@@ -574,7 +577,7 @@ Gate tests, over synthetic sheets and corpus files:
   - What its `.xlsx` showed: boolean attributes as `true`/`false` (`date1904="false"`, `hidden="false"`), the sheet's relationship as `rId3` rather than `rId1`, and `[Content_Types].xml` as the last zip entry.
 - Python: 3.14.10, installed by the user on 2026-11-02 at `%LOCALAPPDATA%\Programs\Python\Python314`, with pip 26.2.2 and venv. Shells started before the install still resolve `python` to the Microsoft Store alias, so the corpus tool takes the interpreter from the PEP 514 registry entry (`HKCU\Software\Python\PythonCore`), not from PATH. All the producers support 3.14: openpyxl 3.1.5 and XlsxWriter 3.3.1 are pure Python, and pandas 3.1.0 (with numpy 2.5.4) has cp314 wheels.
 - Node: 24.13.1, with npm 11.8.0.
-- Java: none, so Apache POI itself can't run here.
+- Java: none, so Apache POI itself can't run here. (Changed at step 7: the user approved a portable JDK, Eclipse Temurin 25.0.5+8, unpacked from its zip into `%LOCALAPPDATA%\CsvHelper.Excel.Corpus` beside the venv. Nothing is installed, and nothing on PATH or in the registry changes.)
 - .NET: SDKs 8.0.427, 10.0.401 and 10.0.402; runtimes 8.0.33, 9.0.20 and 10.0.13.
 - No Mac and no Google account are reachable from here.
 
@@ -587,13 +590,14 @@ Gate tests, over synthetic sheets and corpus files:
 | `excel/packageassets-1695.xlsx` | Excel | NCsvPerf's CSV opened with every column as text (`Workbooks.OpenText`, `xlTextFormat`) and saved as `.xlsx`, to cross-check the benchmark generator |
 | `libreoffice/basic.xlsx`, `libreoffice/basic-ooxml.xlsx` | LibreOffice 26.8.2.2 | `soffice --headless --convert-to` from `excel/basic.xlsx`, with the "Calc MS Excel 2007 XML" and "Calc Office Open XML" filters and a throwaway `-env:UserInstallation` profile |
 | `openpyxl/`, `xlsxwriter/` (default, and `constant_memory`, which writes inline strings), `pandas/` (each engine named explicitly, since pandas picks XlsxWriter when it is installed) | Python 3.14.10 with openpyxl 3.1.5, XlsxWriter 3.3.1 and pandas 3.1.0 | a venv outside the repo (`python -m venv`, then `pip install` of the exact versions from a committed `requirements.txt`); a script in `tools/CsvHelper.Excel.Corpus/python`, run with `-I` |
-| `closedxml/`, `openxmlsdk/` (default namespace, and an `x:`-prefixed variant), `npoi/` (XSSF and the streaming SXSSF), `epplus/`, `miniexcel/`, `spreadcheetah/`, `largexlsx/` | ClosedXML 0.105.1, Open XML SDK 3.5.1, NPOI 2.8.1, EPPlus 4.5.3.3 (the last LGPL version), MiniExcel 1.46.0, SpreadCheetah 1.28.0, LargeXlsx 2.0.2 | the corpus tool. Which of these omit `r` or write inline strings gets checked and recorded |
-| `google/`, `numbers/`, `excel-mac/` | Google Sheets, Apple Numbers, Excel for Mac | not possible here: the user exports `excel/basic.xlsx` through them, or a few files come from Apache POI's test-data and SheetJS's test_files (both Apache-2.0) |
+| `poi/xssf.xlsx`, `poi/sxssf.xlsx` | Apache POI 6.0.0 on Java 25 | added at step 7, in place of NPOI: `java/Corpus.java` in the corpus tool, run by the portable JDK with the jars `java/jars.txt` pins |
+| `closedxml/`, `openxmlsdk/` (`x:`-prefixed), `epplus/`, `miniexcel/`, `spreadcheetah/`, `largexlsx/` | ClosedXML 0.105.1, Open XML SDK 3.5.1, EPPlus 4.5.3.3 (the last LGPL version), MiniExcel 1.46.0, SpreadCheetah 1.28.0, LargeXlsx 2.0.2 | the corpus tool. Which of these omit `r` or write inline strings is recorded in the corpus's `README.md`. (Changed at step 7: the SDK can't write the default-namespace variant, and NPOI is out; see step 7's "As built".) |
+| `google/`, `numbers/`, `excel-mac/` | Google Sheets, Apple Numbers, Excel for Mac | not possible here: the user exports `excel/basic.xlsx` through them, or a few files come from Apache POI's test-data and SheetJS's test_files (both Apache-2.0). The user can't make the exports, so they come from those test files, after step 7's commit |
 
 - **`basic` content:** the corpus tool (`tools/CsvHelper.Excel.Corpus`, a net10.0 console that is not packed) defines it once:
   - Sheets: "Data", "Hidden" (hidden), "VeryHidden" (very hidden), a chartsheet in second place, "Q1 Orders", "Bob's" and a Japanese name.
-  - Values: text, integers, decimals, negatives, `1E-05`, a 17-digit double, booleans, `#N/A` and `#DIV/0!`, empty cells mid-row and at row ends, an empty row, a block that starts in column C, emoji, leading and trailing spaces, a line break, U+0001, a literal `_x0041_`, `&<>"'`, a 32,767-character cell, rich text, a phonetic run (Excel only), and formulas with number, text and error results plus a shared formula down a column.
-  - Dates: dates and times in built-in and custom formats.
+  - Values: text, integers, decimals, negatives, `1E-05`, a 17-digit double, booleans, `#N/A` and `#DIV/0!`, empty cells mid-row and at row ends, an empty row, a block that starts in column C, emoji, leading and trailing spaces, a line break, U+0001, a literal `_x0041_`, `&<>"'`, a 32,767-character cell, rich text, a phonetic run (the Open XML SDK and ClosedXML write it; Excel can't through COM here, see step 7), and formulas with number, text and error results plus a shared formula down a column.
+  - Dates: dates and times in built-in and custom formats, and a time alone, which every producer writes as a number in a time format.
 - **Regenerating:** the tool runs on demand, never in CI. Tests only read the committed files.
 
 **Oracles:**
@@ -707,8 +711,8 @@ These were the open questions. Every recommendation was accepted on 2026-11-02, 
 9. **Exceptions.** The `InvalidDataException`, `CsvFormatException` and `NotSupportedException` split under "Public API". The alternative is a new public `ExcelFormatException`, which adds a type users must learn for little gain.
 10. **Thread safety.** A workbook is single-threaded, and its readers can be used in turn on one thread. Later, if wanted, a workbook opened from a path could give each reader its own `FileStream` and `ZipArchive`, so sheets could be read in parallel.
 11. **Metadata now.** Expose `Sheets` (name, index, visibility, kind) and `Date1904` in Phase 1. That pulls part of Phase 3's metadata forward; `Dimension`, Tables and defined names stay in Phase 3.
-12. **Installs for the corpus.** Done: the user installed Python 3.14.10 and LibreOffice 26.8.2.2 on 2026-11-02 (see "What this machine has"). Node producers (ExcelJS, SheetJS) come in only if a gap remains.
-13. **Google Sheets, Numbers and Excel for Mac.** The user exports `excel/basic.xlsx` through Google Sheets, and through Numbers or Excel for Mac if they have a Mac. That happens at step 7, once the file exists. Otherwise a few files from POI's and SheetJS's corpora, with licenses recorded.
+12. **Installs for the corpus.** Done: the user installed Python 3.14.10 and LibreOffice 26.8.2.2 on 2026-11-02 (see "What this machine has"). Node producers (ExcelJS, SheetJS) come in only if a gap remains. (At step 7 the user also approved a portable JDK for Apache POI, unpacked rather than installed.)
+13. **Google Sheets, Numbers and Excel for Mac.** The user exports `excel/basic.xlsx` through Google Sheets, and through Numbers or Excel for Mac if they have a Mac. That happens at step 7, once the file exists. Otherwise a few files from POI's and SheetJS's corpora, with licenses recorded. (At step 7's review the user said the exports can't be made, so the files come from those corpora.)
 14. **NCsvPerf data in the repo.** Copy it: 519 KB, MIT. The alternative is the bench's synthetic `DataGenerator.PackageAssets`, which has the same columns but isn't NCsvPerf's data.
 15. **CI.** Add the pack check for the pin now; add CsvHelper.Excel to `publish.yaml` at v1.0; keep LibreOffice out of CI before Phase 4.
 16. **UTF-16 parts.** Support them by transcoding. They're rare and the cost is small.
@@ -793,7 +797,7 @@ Filled in step by step; the code is the reference.
 **Step 1: skeleton and packaging (2026-11-02).**
 
 - **Projects:**
-  - `src/CsvHelper.Excel` and `tests/CsvHelper.Excel.Tests` are in `CsvHelper.sln`, under its `src` and `tests` folders. `tools/CsvHelper.Excel.Corpus` joins at step 7.
+  - `src/CsvHelper.Excel` and `tests/CsvHelper.Excel.Tests` are in `CsvHelper.sln`, under its `src` and `tests` folders. `tools/CsvHelper.Excel.Corpus` joined at step 7, under `tools`.
   - The library's csproj follows "Project setup" item by item. It also has `AssemblyInfo.cs` with `[assembly: CLSCompliant(true)]`, as core and CsvHelper.Linq do.
   - Its description covers v1 (reads and writes). Nothing publishes it before Phase 6.
   - The test project targets `net10.0;net8.0;net48`, is signed, and references CsvHelper.Excel, CsvHelper.Linq and the generator (as an analyzer only). It has the net48 binding redirects and `App.config`, as CsvHelper.Linq.Tests does.
@@ -998,7 +1002,7 @@ Filled in step by step; the code is the reference.
     - empty strings keeping their place (`<si/>`, `<t/>`, `<r/>`);
     - Excel's rich text, and a `<t>` before the runs;
     - phonetic runs;
-    - white space with and without `xml:space`, and indented parts;
+    - white space with and without `xml:space`, and indented parts (kept then; step 7 trims it unless `xml:space="preserve"` applies);
     - XML decoding;
     - every escape case: after `&#95;`, inside CDATA, split by a comment, and across runs;
     - `x:` prefixes and the strict namespace;
@@ -1046,7 +1050,7 @@ Filled in step by step; the code is the reference.
   - **Counting:** gap fields and padding are counted before they are added, and each missing row before it is written. So a million missing rows stop at the first row past `MaxUncompressedSize`, rather than after all of them are written.
 - **Values, with these decisions:**
   - `<is>` is read only for `inlineStr`, and `<v>` for every type; the first of them in the cell is the value. A `t="s"` or `t="str"` cell with an `<is>` is valueless.
-  - Numbers, booleans and shared string indexes are trimmed of XML white space; text, errors and dates are not.
+  - Numbers, booleans and shared string indexes are trimmed of XML white space; text, errors and dates are not. (Step 7 changed this: they are trimmed too, unless `xml:space="preserve"` applies.)
   - A number, boolean or index whose `<v>` is only XML white space is valueless. A value that only character references make blank (`&#32;`) is an Empty field, since telling it apart would mean decoding before placing the gap fields.
   - The text of `<v>` is decoded as one text: its XML tokens, then its escapes. An `<is>` is decoded `<t>` by `<t>`, as shared strings are.
   - A cell's `s` must be an integer (strict, like step 3's attributes). One past the cell formats means the first (the style table's rule).
@@ -1224,6 +1228,109 @@ Filled in step by step; the code is the reference.
     - "No disposed check before a fill": the part's stream also throws once the workbook is disposed, so a large sheet hid the missing check. The test now also reads a sheet the window holds whole, which no stream read would stop.
     - "Kinds lost on the way to the batch": numbers parse the same as text under the invariant culture. The new test reads them under `de-DE`.
   - The version guard's call in `Open` can't be planted out in-process (both versions match there); the end-to-end check above covers it.
+
+**Step 7: corpus and oracles (2026-11-02).**
+
+- **Files:**
+  - `tools/CsvHelper.Excel.Corpus`, a net10.0 console in `CsvHelper.sln` under `tools`, not packed: `Program.cs` (the commands), `Basic.cs` (the content), `ExcelProducer.cs`, `Privacy.cs`, a file per .NET producer with `DotNetProducers.cs`, `PoiProducer.cs`, `python/corpus.py` with its `requirements.txt`, and `java/Corpus.java` with its `jars.txt`.
+  - `tests/CsvHelper.Excel.Tests/Files`: 24 workbooks, about 550 KB, with a `README.md`. It records each file's producer, version and how it was made, what each producer writes, and the download's source and license.
+  - `tests/CsvHelper.Excel.Tests/Corpus`: `CorpusFiles`, `Oracles`, `LibreOffice`, `OracleTests` and `CorpusTests`.
+  - The test project gained the three oracles and copies `Files/` to its output.
+- **The tool:**
+  - Its commands are `excel`, `packageassets`, `libreoffice`, `python`, `poi` and `dotnet`, each writing one producer's files; `spec`, which prints the content as JSON for the Python and Java producers; `check`; and `all`.
+  - Excel runs through late-bound COM (`dynamic`). After `SaveAs`, Excel stays running for seconds to minutes and then exits by itself.
+  - LibreOffice runs headless in a throwaway profile.
+  - Python comes from the PEP 514 registry entry. It runs in a venv outside the repository, with `-I`.
+  - Java comes from `--java`, or the newest `jdk-*` folder in `%LOCALAPPDATA%\CsvHelper.Excel.Corpus`, where the venv is. The JDK's source launcher runs `Corpus.java` without a build step, which is why it's a JDK and not the smaller JRE.
+  - The tool pins System.Drawing.Common, System.Security.Cryptography.Pkcs and System.Security.Cryptography.Xml to 10.0.14. The producers' own versions pull in vulnerable ones (NU1902 to NU1904).
+- **Privacy (found while building):**
+  - Excel wrote the Office account's email address into `docProps/core.xml` (`dc:creator`, `cp:lastModifiedBy`), and the folder it saved to into `workbook.xml` (`x15ac:absPath`). That was caught before anything was committed.
+  - Now Excel saves with `RemovePersonalInformation`, into `%PUBLIC%\CsvHelper.Excel.Corpus`, and the tool copies Excel's bytes. The other producers get the author `CsvHelper.Excel.Corpus`.
+  - `check` runs at the end of every command. It reads every part of every file as UTF-8, Latin-1 and UTF-16, and fails on the user's or machine's name, the profile folder, or any email address.
+- **Corpus decisions** (changes from the design):
+  - **Apache POI itself, and not NPOI** (the user's decision at this step's review):
+    - NPOI's releases from 2.8.0 (April 2026) carry an "Open Source Maintenance Fee" EULA. The package's build warns until `AcceptNPOIOSMFLicense` is set, but the EULA says that using the binary accepts it.
+    - In the tool, NPOI would have reached every CI run and every contributor's build of the solution. So would a committed acceptance, made on their behalf.
+    - NPOI 2.7.6 (February 2026) was the alternative: the last release under plain Apache-2.0, checked to have no EULA. But NPOI is a port of POI, and the corpus would have been stuck at that version.
+    - POI is the producer people meet: Java systems' exports. So the user approved a portable JDK (Eclipse Temurin 25.0.5+8, a 141 MB zip unpacked to 291 MB) in the tool's folder outside the repository, checked against Adoptium's SHA-256.
+    - POI 6.0.0 needs Java 17, and no longer ships a binary distribution: its jars are only on Maven Central. Without Maven, `jars.txt` pins the 13 jars of its runtime dependencies, resolved from POI's POMs as Maven would (log4j-api's version comes from the log4j-bom that POI's POM imports). The tool downloads each missing jar and checks its SHA-256, which was pinned after each jar matched Central's own `.sha512` or `.sha1`.
+    - `Corpus.java` reads the spec's JSON with a small reader of its own, since Java has none. It writes `poi/xssf.xlsx` and `poi/sxssf.xlsx`, with POI's evaluator for the formulas' results.
+    - POI can't create a chartsheet or a phonetic run. SXSSF writes rich text as plain text.
+  - **The Open XML SDK writes only the `x:`-prefixed variant.** `AddNamespaceDeclaration("")` throws, and a root parsed with a default namespace is still written prefixed.
+  - **LargeXlsx has one file.** With `requireCellReferences: false` it wrote the same bytes.
+  - **Excel's workbook has no phonetic run.** Without the Japanese editing language, Excel ignores `Phonetics`, `SetPhonetic` and `PhoneticCharacters` through COM. The Open XML SDK and ClosedXML write `<rPh>`.
+  - **The boolean rows' labels are "boolean true" and "boolean false".** Excel turns the text `true` into a boolean when a cell is set to it.
+  - **A time alone is a number in a time format.** Producers that count from Excel's epoch wrote `DateTime(1899, 12, 30, ...)` as a negative serial.
+  - **Not made yet:** Google Sheets, Numbers and Excel for Mac (decision 13). The user can't export through them, so they come from POI's and SheetJS's test files, after this step's commit. The copy of NCsvPerf's CSV is step 9's.
+- **The white space rule (a design change):**
+  - The design kept the white space of texts. Excel 365 (build 20527) reads them otherwise. Workbooks of cases were opened through COM, and each cell's `Value2` read back.
+  - What Excel does:
+    - It trims space, tab, CR and LF from the ends of a `<t>` or `<v>` unless `xml:space="preserve"` applies: on it, or inherited from the `si`, `r`, `is`, `c`, `row`, `sheetData` or root. Each of those was checked, and `xml:space="default"` ends an inherited one.
+    - It trims each run on its own: `bold ` and ` plain` read `boldplain`.
+    - It trims spaces that come from character references or CDATA, but not `_x0020_`.
+    - It reads a text of only white space as an empty string.
+    - It trims errors as it trims text. It won't open a workbook where `preserve` keeps spaces around a number, boolean, shared string index or error, though the attribute alone is fine.
+  - The library now follows it:
+    - `XmlScanner.SpaceOf()` reads a start tag's `xml:space`, through the new `XmlAttributes.IsQualifiedName`. `XmlText.TrimWhitespace` trims in place.
+    - The shared strings parser tracks whether `preserve` applies at the root, the `si` and the `r`. It trims each `<t>` after its XML and before its escapes.
+    - The scanner tracks it for the root, `sheetData` and the row, and reads it on `c`, `v`, `is`, `r` and `t`. Each group of text segments is marked to trim.
+    - `HasText()` decides whether a cell is valueless before decoding: a trimmed text of only raw XML white space is valueless. One that references make blank is still an Empty field, for the reason step 5 gives.
+  - The test references follow it too. The Open XML SDK oracle uses the nearest `xml:space`, and both comparison tests' generators put random `xml:space` on `si`, `r`, `t`, rows and `v`.
+- **Oracles:**
+  - CsvHelper.Excel's side reads each worksheet through its own layers (`CorpusFiles.Read`), so that kinds are compared, not only text.
+  - **The Open XML SDK** gives the DOM's raw cells, read by the documented rules (placement, valueless cells, trimming, booleans). Escapes are decoded by a regular expression, and phonetic runs are left out.
+    - It must match exactly, and it does on all 21 workbooks.
+    - That also confirms that the SDK leaves `_xHHHH_` undecoded, as the design expected: decoding twice would read `_x005F_x0041_` as `A`.
+  - **ClosedXML** gives typed values, and dates compare as serials. On `excel/strict.xlsx` it throws `FormatException` at Excel's `t="d"` dates (17 digits of fraction), and the test expects that.
+  - **ExcelDataReader** gives each row's values. On .NET it needs `CodePagesEncodingProvider`.
+  - **Dates from both:**
+    - Like Excel, they count 1900 as a leap year, so a serial below 61 comes back a day later than its OLE Automation date. `Oracles.Serial` takes that day back, and subtracts 1,462 days in a 1904 workbook.
+    - A .NET date from a serial is rounded to the millisecond, so dates compare within a few milliseconds.
+  - **LibreOffice** converts every workbook in one headless run, to a CSV per sheet. Only text cells are compared, since it exports what cells show.
+  - **On .NET Framework**, the Open XML SDK and ClosedXML can't open `poi/sxssf.xlsx`. They use WindowsBase's `System.IO.Packaging` there, and it rejects SXSSF's zip as corrupt: a Zip64 data descriptor after each entry, behind local headers that say version 45 without a Zip64 field. The net48 tests check that they throw `FileFormatException`. Excel opens the file, and CsvHelper.Excel (`ZipArchive`) reads it on every target.
+  - **Differences:** each one is listed by cell, with its reason, and each test checks that the differences are exactly those. Excel was asked through COM about a cell of each reason, and it reads each as CsvHelper.Excel does.
+    - ClosedXML, 17 cells in 7 files:
+      - it returns the line break of an inline or `str` text as CR LF, where Excel keeps LF;
+      - it doesn't decode the escapes of an inline or `str` text, where Excel gives `A`, U+0001 and the emoji;
+      - it keeps the spaces of a text without `preserve`, where Excel trims them.
+    - ExcelDataReader, 10 cells in 2 files:
+      - it converts `t="d"` cells to dates, which Phase 1 leaves as text (Phase 2 converts them);
+      - it reads only `1` as true, while the Open XML SDK writes `true`, and Excel reads that as TRUE.
+    - LibreOffice, 7 cells in 3 files: it shows `t="d"` cells in their date formats, doesn't decode the escapes of a `str` value, and keeps the spaces of a text without `preserve`.
+- **What the producers write:** the corpus's `README.md` has the list. These are the shapes that matter most:
+  - `x:` prefixes (the Open XML SDK, ClosedXML, MiniExcel), and EPPlus's runs with a `d:` prefix declared on each;
+  - SpreadCheetah's cells without `r`;
+  - inline strings (openpyxl, SpreadCheetah, LargeXlsx, XlsxWriter's `constant_memory`), and MiniExcel's text as `t="str"`;
+  - openpyxl's formulas without cached values;
+  - a literal `_x0041_` written unescaped by the Open XML SDK, openpyxl, POI and SpreadCheetah, so that every reader, Excel included, reads `A`;
+  - Excel's Strict dates as `t="d"`;
+  - SpreadCheetah's spaces without `preserve`, which Excel trims;
+  - POI's numbers in Java's form (`42.0`, `1.0E-5`), and its `?` for U+0001;
+  - SXSSF's stray `>` between an error formula's `</f>` and its `<v>`, which Excel ignores, as every reader here does, and its Zip64 data descriptors.
+  - Excel was asked through COM about the unusual cells of both POI files, and read each as CsvHelper.Excel does.
+- **Tests** (131 new, 593 per target, all passing on net10.0, net8.0 and net48; the LibreOffice tests run here and skip where `soffice` is missing):
+  - `CorpusTests`:
+    - the list of workbooks matches the table of each producer's sheets;
+    - every worksheet of every workbook is read through the public API, sync and async, with empty rows kept, so that record n is row n and each field is checked against its cell;
+    - each producer's sheets (name, visibility, kind) and `Date1904`;
+    - `.xlsb`, encrypted and `.xls` files rejected with their messages;
+    - Excel's basic workbook read as records, with its header, against golden records.
+  - `OracleTests`: the four oracles on each of the 21 workbooks.
+  - White space: `SharedStringsTests.TrimsATextUnlessItsSpaceIsPreserved` and `SheetScannerTests.TrimsValuesUnlessTheirSpaceIsPreserved`, with Excel's cases, replace step 4's and step 5's white space tests.
+  - Every other test in the solution passes too (CsvHelper.Tests and CsvHelper.Linq.Tests unchanged), and the solution, the tool included, builds with no warnings.
+- **Mutation check** (before the POI files were added): seven bugs in the white space rule, planted one at a time, all caught on net10.0:
+  - "shared strings not trimmed": 3 failures;
+  - "a shared string's `preserve` not inherited": 3;
+  - "shared strings trimmed after their escapes": 4;
+  - "cell values not trimmed": 6, the four oracle tests among them;
+  - "a row's `xml:space` ignored": 2;
+  - "blank text counted as a value": 2;
+  - "`default` read as `preserve`": 5.
+- **What the check fixed:**
+  - At first, only the generated comparison caught "blank text counted as a value". In the direct test, an Empty field and a valueless cell look the same once the row is padded.
+  - The test now has a row whose texts are all raw white space, which is dropped, and a row that a reference makes blank, which is kept.
+- **Left for step 9:** the cross-check of `excel/packageassets-1695.xlsx` against the generator.
+- **Core:** no change.
 
 ### Phase 2: typed reading (M)
 
