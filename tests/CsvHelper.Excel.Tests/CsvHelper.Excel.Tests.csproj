@@ -52,6 +52,12 @@
 		<None Include="Files\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<!-- The benchmarks' workbook writer and NCsvPerf's data, for the test that checks the writer against Excel's file. -->
+	<ItemGroup>
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelTextWorkbook.cs" Link="Bench\ExcelTextWorkbook.cs" />
+		<None Include="..\..\bench\CsvHelper.Benchmarks\Data\PackageAssets.csv" Link="Bench\PackageAssets.csv" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>

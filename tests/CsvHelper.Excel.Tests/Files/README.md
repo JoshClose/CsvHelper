@@ -93,7 +93,7 @@ These are the shapes the corpus covers; the oracle tests check every cell.
 ## Downloads
 
 - **`google/` and `excel-mac/`:** from [apache/poi](https://github.com/apache/poi)'s `test-data/spreadsheet`, commit `81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408` (2026-11-02), unchanged; `tools/CsvHelper.Excel.Corpus/downloads.txt` has each URL and SHA-256. Apache License 2.0, whose text is in the repository's `LICENSE.txt`, and POI's NOTICE: "Apache POI. Copyright 2003-2026 The Apache Software Foundation. This product includes software developed at The Apache Software Foundation (https://www.apache.org/)."
-- **`excel/packageassets-1695.xlsx`:** made from `NCsvPerf/TestData/PackageAssets.csv` in [joelverhagen/NCsvPerf](https://github.com/joelverhagen/NCsvPerf), commit `c7bff62e601eb1e2ce97c95a5b54ef94eff4b6ab`: 1,695 records of 25 fields, no header. MIT License, copyright 2020 Joel Verhagen; its text is in `LICENSE-NCsvPerf.txt` here, as the license asks of copies.
+- **`excel/packageassets-1695.xlsx`:** made from `NCsvPerf/TestData/PackageAssets.csv` in [joelverhagen/NCsvPerf](https://github.com/joelverhagen/NCsvPerf), commit `c7bff62e601eb1e2ce97c95a5b54ef94eff4b6ab`: 1,695 records of 25 fields, no header. The repository keeps a copy, which the tool reads, in `bench/CsvHelper.Benchmarks/Data`. MIT License, copyright 2020 Joel Verhagen; its text is in `LICENSE-NCsvPerf.txt` here, as the license asks of copies.
 
 ## Not here yet
 

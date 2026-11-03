@@ -30,7 +30,8 @@ internal static class Program
 		  check          Only the check, which every command ends with, that no file holds personal information
 		  all            Every command, in order
 
-		--files defaults to the repository's tests/CsvHelper.Excel.Tests/Files, and --csv to NCsvPerf's TestData beside it.
+		--files defaults to the repository's tests/CsvHelper.Excel.Tests/Files, and --csv to its copy of NCsvPerf's file in
+		bench/CsvHelper.Benchmarks/Data.
 		--java defaults to the newest jdk-* folder in %LOCALAPPDATA%\CsvHelper.Excel.Corpus, where the venv and POI's jars
 		are kept too.
 		""";
@@ -50,7 +51,7 @@ internal static class Program
 		var command = args.FirstOrDefault() ?? "";
 		var root = FindRepository();
 		var files = Option(args, "--files") ?? Path.Combine(root, "tests", "CsvHelper.Excel.Tests", "Files");
-		var csv = Option(args, "--csv") ?? Path.GetFullPath(Path.Combine(root, "..", "NCsvPerf", "NCsvPerf", "TestData", "PackageAssets.csv"));
+		var csv = Option(args, "--csv") ?? Path.Combine(root, "bench", "CsvHelper.Benchmarks", "Data", "PackageAssets.csv");
 		var python = Path.Combine(root, "tools", "CsvHelper.Excel.Corpus", "python");
 		var java = Path.Combine(root, "tools", "CsvHelper.Excel.Corpus", "java");
 		var jdk = Option(args, "--java");

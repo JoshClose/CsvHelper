@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) 2026-11-03; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -650,13 +650,17 @@ Gate tests, over synthetic sheets and corpus files:
   - It writes the package with `ZipArchive` (`CompressionLevel.Optimal`) in the shape Excel writes: content types, relationships, workbook, minimal styles, `<dimension ref="A1:Y1000001"/>`, rows with `r` and `spans="1:25"`, cells with `r`, and no cell for an empty field.
   - It has two variants. Shared strings keeps the unique values in first-seen order, with `count` and `uniqueCount`. Inline strings writes `t="inlineStr"`.
   - The result is cached under `%TEMP%\csvhelper-bench`, keyed by row count, variant, and a hash of the CSV and the generator, because building it takes seconds.
+  - (Changed at step 9: the writing is `ExcelTextWorkbook.Write(stream, sheetName, rows, strings, level)`, in a file of its own that the test project links, so the cross-check tests the code the benchmark runs. `ExcelDataGenerator` keeps the data and the cache. The generator's hash is of its two source files, embedded in the bench assembly as resources. Excel's file showed `s="1"` on every cell, the text format, so the generator writes it; it also writes each row's `x14ac:dyDescent` and the sheet's `sheetViews`, `sheetFormatPr` and `pageMargins` as Excel does, and `spans` per block of 16 rows, the rule Excel follows, checked through COM.)
 - **Cross-check:**
   - A test compares the generator's 1,695-row output with Excel's `excel/packageassets-1695.xlsx`: the same values through our reader and through ExcelDataReader.
   - The XML shapes get compared once by hand. If Excel adds `s` attributes for the text format, the generator writes them too, so the benchmark runs the style lookup.
+  - (Changed at step 9: the shapes are compared by the test, not by hand. The sheet from its `dimension` on, the shared strings and the cell formats are identical to Excel's, byte for byte, and the zip entries come in Excel's order.)
 - **Class:** `ExcelPackageAssetsRead` in `ExcelReadBenchmarks.cs`.
   - It is a `ReadBenchmarkBase` whose `Generate` returns the CSV text, so its MB/s column is CSV-equivalent throughput, directly comparable with `PackageAssetsRead`.
   - `[Params]` `Strings` is Shared or Inline.
   - Every library reads the same `byte[]` through a `MemoryStream`.
+  - Categories: Rows (count them), Strings (every field as a string; the method returns their total length) and Records (a `PackageAsset` per row). Sylvan is each category's baseline, as Sep is in the CSV classes: the reader that claims to be fastest.
+  - (Changed at step 9: the CSV reference is three `Csv_` methods in this class, reading the same data as CSV, rather than `PackageAssetsRead`, whose synthetic data differs. The CSV text has LF line ends; NCsvPerf's has `Environment.NewLine`.)
 
 | Library | Version | Rows | Strings | Records |
 | --- | --- | --- | --- | --- |
@@ -665,13 +669,14 @@ Gate tests, over synthetic sheets and corpus files:
 | Sylvan.Data.Excel | 0.5.8 | `Read()` loop | `GetString(i)` | `IColumnSource` |
 | MiniExcel | 1.46.0 | counts `Query(useHeaderRow: true)` | the row dictionary's values | `IColumnSource` over the row dictionary |
 | Open XML SDK SAX | DocumentFormat.OpenXml 3.5.1 | `OpenXmlReader` over the worksheet part, counting `Row` elements | each `Cell`'s attributes and `CellValue` text, with shared strings preloaded into a `string[]` | `IColumnSource` |
-| CsvHelper, CSV | this repo | reference only: the same data as CSV, from `PackageAssetsRead` | | |
+| CsvHelper, CSV | this repo | reference only, the same data as CSV: a `Read()` loop (changed at step 9 from citing `PackageAssetsRead`) | `GetString` per field | `GetRecords<PackageAsset>()` (generated mapper) |
 
 - **Setup details:**
   - ExcelDataReader on .NET needs `Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)`, done in the setup.
   - The bench project already references Sylvan.Data.Csv 1.4.4. Check that Sylvan.Data.Excel's Sylvan.Common dependency resolves next to it.
   - Sylvan's and ExcelDataReader's `ExcelDataReader` type names clash, so the file uses aliases.
 - **Equal work:** QuickRunner's `verify` mode checks that every library returns the same row count and a checksum of the strings, so no library skips work.
+  - (Changed at step 9: the checksum is the strings' total length, which costs little inside the timing; the Records category's records are hashed in `verify` mode, outside it. QuickRunner ran no `[Params]` before, so it now runs each combination, as BenchmarkDotNet does, and `verify` flags a category whose results differ.)
 - **Procedure:**
   - Check the benchmark machine first: paged pool and free RAM.
   - Use `BenchConfig`'s core-4 pin, net10.0, and one BenchmarkDotNet run with every library, so libraries are only compared within one run.
@@ -726,7 +731,7 @@ These were the open questions. Every recommendation was accepted on 2026-11-02, 
 - **No target checks CRCs.** Corrupt data that still inflates can read as wrong values.
 - **The pin target relies on NuGet internals.** The CI pack check catches a change in them.
 - **NU1608 lets an application override the pin.** The version guard turns that into a clear error.
-- **Inflate bounds read speed,** and .NET 8 and .NET Framework inflate more slowly than .NET 9+.
+- **Inflate bounds read speed,** and .NET 8 and .NET Framework inflate more slowly than .NET 9+. (Measured at step 9 on .NET 10: inflating the benchmark's sheet runs at 5.3–5.6 GB/s of XML, about 5% of CsvHelper.Excel's read of it. The scanning bounds read speed, not inflate.)
 - **Shared-strings memory** on huge workbooks. The arena halves it, but it stays proportional to the table.
 - **Producer tolerance.** Rejecting out-of-order rows and cells follows the spec and the producers I know; if the corpus shows a producer writing them, revisit.
 - **Window growth:** a single huge cell can grow the window up to `MaxPartSize`. (White space between rows can't, since step 8.)
@@ -1434,6 +1439,111 @@ Filled in step by step; the code is the reference.
 - **What the check fixed:** a fourth bug, "text skipped before the root too", passed every test. The scanner doesn't check text outside the root, though my first comments said it did, so skipping it there changes nothing. The sheet scanner now skips text in every mode outside a cell, and the comments say what it does.
 - **Core:** no change.
 
+**Step 9: benchmarks (2026-11-03).**
+
+- **Data:**
+  - `bench/CsvHelper.Benchmarks/Data/PackageAssets.csv` is NCsvPerf's file at commit `c7bff62`, byte for byte as committed there: 517,049 bytes with LF line ends. Decision 14's 519 KB was its size with CRLF.
+  - Beside it are `LICENSE-NCsvPerf.txt` (the MIT text) and a `README.md` with the source and the SHA-256.
+  - The corpus tool's `--csv` now defaults to this copy, not to an NCsvPerf checkout beside the repository.
+- **Generator:**
+  - `ExcelTextWorkbook.Write` writes the package. It compiles on net48 too, since the test project links it.
+  - `ExcelDataGenerator` makes the data (NCsvPerf's lines repeated as `LineCache` does, under `DataGenerator.PackageAssetHeader`), the CSV text and the cache.
+  - The shape is Excel's: `s="1"` (the text format) on every cell, `spans` per block of 16 rows, `x14ac:dyDescent` on each row, and Excel's `sheetViews`, `sheetFormatPr` and `pageMargins`.
+  - The parts are in Excel's order, so the shared strings come after the sheet. Excel's theme and document properties are left out.
+  - It writes the text this data has: `&`, `<` and `>` are escaped, and leading or trailing spaces get `xml:space="preserve"`. Control characters, and text of the form `_xHHHH_`, throw `NotSupportedException`, since Excel would escape them.
+  - The million-row workbooks:
+    - Shared strings: 53 MB, with 714 MB of sheet XML, 16,123,924 cells and 3,085 distinct strings.
+    - Inline strings: 80 MB, with 1,223 MB of sheet XML.
+    - Writing both takes about 16 s.
+  - They are cached in `%TEMP%\csvhelper-bench`. The key is the row count, the variant, and the first 8 bytes of a SHA-256 of the CSV and of the generator's two source files, which the bench assembly embeds as resources. Writing a new one deletes the variant's stale ones.
+- **Cross-check** (`Bench/ExcelTextWorkbookTests`, 22 tests):
+  - Against Excel's `excel/packageassets-1695.xlsx`, these are identical: the sheet from its `dimension` on, `sharedStrings.xml`, the `cellXfs`, and the order of the entries.
+  - Both variants read as NCsvPerf's lines through CsvHelper.Excel (sync and async) and through ExcelDataReader, as Excel's file does.
+  - The Open XML SDK's validator finds no error in either variant.
+  - `spans`: Excel 16.0 build 20527, through COM, wrote `1:2` on rows 1–16, `1:3` on 17 and 18, and `5:5` on 40 for cells in A1:B16, C17, A18 and E40: the columns of each block of 16 rows. That case is now a test.
+  - The rest: escapes, `xml:space`, the rejections, and column names up to XFD.
+  - Excel opened both generated 1,695-row variants read-only through COM without repairing them (no repair log). It found 27,330 values in A1:Y1695, in the text format.
+  - **Mutation check** on net10.0, eight bugs planted in the writer one at a time, all caught:
+    - no `x14ac:dyDescent` on rows: 1 failure;
+    - no `s="1"` on shared cells: 1;
+    - an unknown element in `sheetData`: 3, the validator's among them;
+    - no `xml:space="preserve"`: 4;
+    - `&` not escaped: 4;
+    - no rejections: 4;
+    - per-row spans: 2;
+    - the `_xHHHH_` check reading past the text's end: 4. It survived at first. A test now has a text that ends in `_x0041`.
+- **Class:** `ExcelPackageAssetsRead`, as designed, with the changes noted under "Baseline benchmark":
+  - Sylvan is each category's baseline.
+  - The CSV reference is the class's own `Csv_` methods.
+  - Strings returns the total length.
+- **QuickRunner:**
+  - It now runs each combination of a class's `[Params]` values; before, it ran only the defaults.
+  - Warmup stops after three calls when they average a second or more. That leaves the warmup of sub-second benchmarks, such as all the CSV ones, as it was.
+  - `verify` prints "the results differ" under a category whose results disagree.
+- **Equal work:** in `verify`, all six readers agree on both variants:
+  - 1,000,000 rows;
+  - 280,044,328 characters;
+  - records hash `A46BD7E4C52574F1`.
+- **The run** (2026-11-03, 06:50–07:55):
+  - Tools: BenchmarkDotNet 0.15.8, .NET 10.0.13 (x64, x86-64-v4).
+  - Job: `BenchConfig`'s. Core 4 is pinned, with 4 warmups, 12 iterations and `DOTNET_TC_CallCountingDelayMs=0`.
+  - One run held all 36 benchmarks and took 64 minutes.
+  - The machine before: paged pool 3.6 GB, 32.5 GB free, CPU idle. After: 3.7 GB and 31.1 GB.
+  - The Excel readers' standard deviation was at most 3.3% of the mean (ExcelDataReader's inline Rows). The CSV reference's Records reached 5.3%.
+  - MB/s is of the same data as CSV, 305 MB.
+
+Mean times, with shared strings (as Excel writes them):
+
+| Library | Rows | Strings | Records |
+| --- | ---: | ---: | ---: |
+| Sylvan.Data.Excel 0.5.8 (baseline) | 2,019 ms (151 MB/s) | 2,052 ms (149 MB/s) | 2,301 ms (133 MB/s) |
+| CsvHelper.Excel | 2,742 ms, 1.36x slower | 2,804 ms, 1.37x slower | 3,511 ms, 1.53x slower |
+| ExcelDataReader 3.9.0 | 5,677 ms, 2.81x | 5,590 ms, 2.72x | 6,451 ms, 2.81x |
+| MiniExcel 1.46.0 | 7,205 ms, 3.57x | 7,499 ms, 3.65x | 7,894 ms, 3.43x |
+| Open XML SDK 3.5.1, SAX | 8,198 ms, 4.06x | 9,020 ms, 4.40x | 9,900 ms, 4.31x |
+| CsvHelper, the same data as CSV | 22.5 ms | 104 ms | 712 ms |
+
+With inline strings:
+
+| Library | Rows | Strings | Records |
+| --- | ---: | ---: | ---: |
+| Sylvan.Data.Excel 0.5.8 (baseline) | 3,151 ms (97 MB/s) | 3,171 ms (96 MB/s) | 3,864 ms (79 MB/s) |
+| CsvHelper.Excel | 3,117 ms, 1.01x faster | 3,229 ms, 1.02x slower | 3,874 ms, 1.00x |
+| ExcelDataReader 3.9.0 | 7,833 ms, 2.49x slower | 7,528 ms, 2.37x | 10,871 ms, 2.81x |
+| MiniExcel 1.46.0 | 8,935 ms, 2.84x | 8,725 ms, 2.75x | 12,127 ms, 3.14x |
+| Open XML SDK 3.5.1, SAX | 11,643 ms, 3.70x | 12,588 ms, 3.97x | 15,520 ms, 4.02x |
+| CsvHelper, the same data as CSV | 23.0 ms | 104 ms | 716 ms |
+
+Allocated per operation, in BenchmarkDotNet's MB (1,024 KB), shared / inline:
+
+| Library | Rows | Strings | Records |
+| --- | ---: | ---: | ---: |
+| Sylvan.Data.Excel | 5 / 922 | 6 / 922 | 228 / 1,144 |
+| CsvHelper.Excel | 0.13 / 0.02 | 913 / 913 | 1,135 / 1,135 |
+| ExcelDataReader | 3,558 / 7,037 | 3,558 / 7,037 | 3,780 / 7,259 |
+| MiniExcel | 17,052 / 26,803 | 17,136 / 26,887 | 17,275 / 27,024 |
+| Open XML SDK, SAX | 7,285 / 10,781 | 8,854 / 12,348 | 9,076 / 12,570 |
+| CsvHelper, CSV | 0.003 | 913 | 1,135 |
+
+- **What the numbers say:**
+  - **Ranking:** CsvHelper.Excel comes second of the five with shared strings, at 1.36–1.53x Sylvan's time. With inline strings it is level with Sylvan, within 2%. The others take 2.4–4.4x Sylvan's time.
+  - **Inflate is not the limit.** A scratch program pinned to core 4 inflated the cached sheets through `ZipArchive` alone, median of 8:
+    - shared: 135 ms for 714 MB;
+    - inline: 218 ms for 1,223 MB;
+    - that is 5.3–5.6 GB/s. So about 95% of CsvHelper.Excel's 2.7 s goes to scanning the XML and filling records, about 160 ns per cell.
+  - **Shared strings:**
+    - Sylvan returns its table's own string objects: 6 MB allocated for Strings, against CsvHelper.Excel's 913 MB, a new string per field, as for CSV.
+    - Sylvan's lead also shows in Rows, where no strings are made: 720 ms.
+    - My guess is that the cost is in handling a shared cell, copying its UTF-8 into the batch, as well as in the strings. It is a hypothesis for Phase 9 to profile; nothing here measured it.
+  - **Excel against CSV:** with shared strings, reading the data from a workbook takes CsvHelper 122x the CSV time for Rows, 27x for Strings and 4.9x for Records. Inline: 136x, 31x and 5.4x.
+- **Phase 9 candidates** (not decisions):
+  - one string per shared-string index;
+  - not copying shared strings into the batch;
+  - the scanner's per-cell cost.
+  - Phase 1 sets no speed target.
+- **Tests:** 689 per target, all passing on net10.0, net8.0 and net48. The solution builds with 0 warnings.
+- **Core:** no change. The bench's CSV benchmark classes aren't edited; its project gained CsvHelper.Excel, four package references, the data and the embedded generator source.
+
 ### Phase 2: typed reading (M)
 
 - **Numbers:** number cells are doubles, parsed invariant. Integer targets accept integral doubles only.
@@ -1558,6 +1668,7 @@ Filled in step by step; the code is the reference.
 
 - **Scanner:** SIMD search for `<c`, `<v`, `</row>` and attribute values, the same approach as the CSV scanner.
 - **Read pipeline:** an inflate thread, a scan thread and mapping workers. `ParallelEnumerate` already maps record-source batches on workers (Phase 0), but its batches are filled under the read lock, so inflating and scanning run serially there. Inflating one entry is inherently sequential and sets the ceiling.
+- **Where Phase 1's baseline points** (step 9's "As built"): on .NET 10, inflate is about 5% of a read of the benchmark's sheet, so the ceiling is far off and the time is in scanning cells and filling records, about 160 ns a cell. With shared strings, Sylvan.Data.Excel is 1.36–1.53x faster and returns its table's own strings, where CsvHelper.Excel makes a new string per field; with inline strings the two are level.
 - **Parallel writing:**
   - Generate cell XML in parallel through `ParallelWriteRecords`. Until then, a writer with a cell sink throws `NotSupportedException` for the parallel methods.
   - The style registry must be thread-safe.
