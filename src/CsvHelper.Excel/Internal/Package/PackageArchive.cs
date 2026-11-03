@@ -163,28 +163,63 @@ internal sealed class PackageArchive : IDisposable, IAsyncDisposable
 		}
 
 		var copied = stream != input;
+		ZipArchive? archive = null;
 		try
 		{
 #if NET10_0_OR_GREATER
-			var archive = async
+			archive = async
 				? await ZipArchive.CreateAsync(stream, ZipArchiveMode.Read, true, Encoding.UTF8, cancellationToken).ConfigureAwait(false)
 				: new ZipArchive(stream, ZipArchiveMode.Read, true, Encoding.UTF8);
 #else
-			var archive = new ZipArchive(stream, ZipArchiveMode.Read, true, Encoding.UTF8);
+			archive = new ZipArchive(stream, ZipArchiveMode.Read, true, Encoding.UTF8);
 #endif
 
 			return new PackageArchive(archive, stream, ownsStream, copied, guard);
 		}
-		catch
+		catch (Exception e)
 		{
+			archive?.Dispose();
+
 			// Only the copy: the caller's stream is the caller's to dispose when the open fails.
 			if (copied)
 			{
 				await DisposeAsync(stream, async).ConfigureAwait(false);
 			}
 
+			if (IsCorruptZip(e))
+			{
+				throw new InvalidDataException($"The workbook's zip archive is corrupt: {e.Message}", e);
+			}
+
 			throw;
 		}
+	}
+
+	/// <summary>
+	/// Whether an exception from reading the zip's central directory means the zip is corrupt, though it isn't an
+	/// <see cref="InvalidDataException"/>, which is what <see cref="ZipArchive"/> throws for most corruption:
+	/// <list type="bullet">
+	/// <item>an <see cref="IOException"/> that <c>System.IO.Compression</c> throws itself ("Zip file corrupt: unexpected end of
+	/// stream reached", before .NET 10), as opposed to one from the stream;</item>
+	/// <item>an <see cref="ArgumentException"/> from inside it, such as .NET Framework's "Illegal characters in path" for an
+	/// entry's name.</item>
+	/// </list>
+	/// The stack trace's text tells where it came from, without the reflection that trimming would warn about.
+	/// </summary>
+	/// <param name="e">The exception.</param>
+	/// <returns>Whether the zip is corrupt.</returns>
+	private static bool IsCorruptZip(Exception e)
+	{
+		const string Compression = "System.IO.Compression.";
+		var trace = e.StackTrace ?? "";
+		if (e.GetType() == typeof(IOException))
+		{
+			var first = trace.Split('\n')[0].TrimStart();
+
+			return first.StartsWith("at " + Compression, StringComparison.Ordinal);
+		}
+
+		return e is ArgumentException && e is not ArgumentNullException && trace.Contains(Compression);
 	}
 
 	/// <summary>

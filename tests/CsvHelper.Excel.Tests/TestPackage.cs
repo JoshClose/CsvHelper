@@ -26,7 +26,8 @@ internal sealed class TestSheet(string name, string? state = null, string type =
 /// <summary>
 /// Builds packages for tests: zip archives of named entries with exactly the bytes given, so that tests control the entry
 /// names, the compression, byte order marks and missing parts. <see cref="Workbook(TestSheet[])"/> starts from the parts
-/// Excel writes.
+/// Excel writes. A large entry can be streamed into the zip (<see cref="SetStreamed"/>), so that a test of a zip bomb
+/// never holds the inflated bytes.
 /// </summary>
 internal sealed class TestPackage
 {
@@ -48,7 +49,7 @@ internal sealed class TestPackage
 	/// <summary>The namespace of the content types part.</summary>
 	public const string ContentTypesNamespace = "http://schemas.openxmlformats.org/package/2006/content-types";
 
-	private readonly List<(string Name, byte[] Data, CompressionLevel Level)> entries = [];
+	private readonly List<(string Name, byte[]? Data, Action<Stream>? Write, CompressionLevel Level)> entries = [];
 
 	/// <summary>The names of the entries, in order.</summary>
 	public IEnumerable<string> Names => entries.Select(e => e.Name);
@@ -181,20 +182,17 @@ internal sealed class TestPackage
 	/// <param name="data">The bytes.</param>
 	/// <param name="level">The compression of the entry.</param>
 	/// <returns>The package.</returns>
-	public TestPackage Set(string name, byte[] data, CompressionLevel level = CompressionLevel.Optimal)
-	{
-		var index = entries.FindIndex(e => e.Name == name);
-		if (index < 0)
-		{
-			entries.Add((name, data, level));
-		}
-		else
-		{
-			entries[index] = (name, data, level);
-		}
+	public TestPackage Set(string name, byte[] data, CompressionLevel level = CompressionLevel.Optimal) => Put((name, data, null, level));
 
-		return this;
-	}
+	/// <summary>
+	/// Sets an entry to what a callback writes into the zip entry's stream when the package is written: replaces the entry of
+	/// that exact name, or adds one. The bytes are compressed as they are written, so a large entry is never held whole.
+	/// </summary>
+	/// <param name="name">The entry's name, exactly as it goes in the zip.</param>
+	/// <param name="write">Writes the entry's bytes.</param>
+	/// <param name="level">The compression of the entry.</param>
+	/// <returns>The package.</returns>
+	public TestPackage SetStreamed(string name, Action<Stream> write, CompressionLevel level = CompressionLevel.Optimal) => Put((name, null, write, level));
 
 	/// <summary>Adds an entry, even when one has that name already.</summary>
 	/// <param name="name">The entry's name, exactly as it goes in the zip.</param>
@@ -202,7 +200,7 @@ internal sealed class TestPackage
 	/// <returns>The package.</returns>
 	public TestPackage Add(string name, string xml)
 	{
-		entries.Add((name, Encoding.UTF8.GetBytes(xml), CompressionLevel.Optimal));
+		entries.Add((name, Encoding.UTF8.GetBytes(xml), null, CompressionLevel.Optimal));
 
 		return this;
 	}
@@ -225,7 +223,7 @@ internal sealed class TestPackage
 	{
 		var index = entries.FindIndex(e => e.Name == from);
 		Assert.True(index >= 0, $"No entry {from}.");
-		entries[index] = (to, entries[index].Data, entries[index].Level);
+		entries[index] = (to, entries[index].Data, entries[index].Write, entries[index].Level);
 
 		return this;
 	}
@@ -264,7 +262,7 @@ internal sealed class TestPackage
 	/// <summary>An entry's text, as UTF-8.</summary>
 	/// <param name="name">The entry's exact name.</param>
 	/// <returns>The text.</returns>
-	public string Text(string name) => Encoding.UTF8.GetString(entries.Single(e => e.Name == name).Data);
+	public string Text(string name) => Encoding.UTF8.GetString(entries.Single(e => e.Name == name).Data ?? throw new InvalidOperationException($"{name} is streamed."));
 
 	/// <summary>Writes the package as a zip archive.</summary>
 	/// <returns>The bytes of the archive.</returns>
@@ -273,14 +271,39 @@ internal sealed class TestPackage
 		var output = new MemoryStream();
 		using (var zip = new ZipArchive(output, ZipArchiveMode.Create, true))
 		{
-			foreach (var (name, data, level) in entries)
+			foreach (var (name, data, write, level) in entries)
 			{
 				using var stream = zip.CreateEntry(name, level).Open();
-				stream.Write(data, 0, data.Length);
+				if (data is not null)
+				{
+					stream.Write(data, 0, data.Length);
+				}
+				else
+				{
+					write!(stream);
+				}
 			}
 		}
 
 		return output.ToArray();
+	}
+
+	/// <summary>Sets an entry: replaces the entry of that exact name, or adds one.</summary>
+	/// <param name="entry">The entry.</param>
+	/// <returns>The package.</returns>
+	private TestPackage Put((string Name, byte[]? Data, Action<Stream>? Write, CompressionLevel Level) entry)
+	{
+		var index = entries.FindIndex(e => e.Name == entry.Name);
+		if (index < 0)
+		{
+			entries.Add(entry);
+		}
+		else
+		{
+			entries[index] = entry;
+		}
+
+		return this;
 	}
 
 	/// <summary>Writes the package as a zip archive in a seekable, read-only stream.</summary>

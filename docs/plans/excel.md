@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API) and 7 (corpus and oracles) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 7 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. Step 7 changed one rule of the design: texts are trimmed of XML white space unless `xml:space="preserve"` applies, as Excel reads them. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 8 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. Step 7 changed one rule of the design: texts are trimmed of XML white space unless `xml:space="preserve"` applies, as Excel reads them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -1350,6 +1350,65 @@ Filled in step by step; the code is the reference.
   - Its pivot table's sheet is written as seven empty rows, without the table's cells. Excel builds the cells from the pivot table when it opens the file, but every reader of the sheet's XML, CsvHelper.Excel included, reads the sheet as empty. Pivot tables are out of scope.
   - Apart from that, the oracles agree with CsvHelper.Excel on every cell. Excel, asked through COM, reads every other cell of the four files as their XML holds it.
 - **Tests:** 24 new, 617 per target, all passing on net10.0, net8.0 and net48.
+
+**Step 8: security and fuzzing (2026-11-02).**
+
+- **Files:**
+  - `tests/CsvHelper.Excel.Tests/Security`:
+    - `SecurityTests`, the plan's security cases end to end through the public API;
+    - `FuzzTests`, the mutation fuzzer;
+    - `ZipBytes`, which patches a zip's headers;
+    - `ReadTrackingStream`, which records the byte ranges a reader reads.
+  - `TestPackage.SetStreamed` writes an entry from a callback straight into the zip's deflate stream, so that a bomb's inflated bytes are never held. The bombs are made at test time; nothing large is committed.
+- **What the earlier steps already covered** (not repeated here):
+  - a DOCTYPE in each of the six parts, and billion laughs and external entities stopping the scanner right after `<!DOCTYPE`, with no byte read past it (step 2);
+  - the declared-size check, counting what a part really inflates to, and the non-seekable copy's limit and deletion (step 3);
+  - gap fields, padding and missing rows counted to the byte (step 5);
+  - compound files, `.xlsb` and other packages (steps 3 and 7).
+- **Security tests**, each sync and async:
+  - **Inflate bomb:** 64 MB of white space between two rows, about 64 KB deflated, under a 16 MB limit, throws the limit's `InvalidDataException`, naming the part.
+    - "After at most the limit plus one read" is measured on the compressed side: the reader got no further into the sheet's compressed data than twice the limit's share of it, plus 16 KB for the inflater's input buffer.
+    - The record of what was read starts after the workbook opens. `ZipArchive` reads 4 KB blocks backwards from the end of the file, looking for the central directory, and in a small zip those reach into the last entries' data.
+  - **A held part too large:** 64 MB of shared strings under a 1 MB part limit fail on the declared size, before any of the part's compressed data is read.
+  - **Sizes the zip understates:** the sheet (20 MB under a 16 MB total) or the shared strings (2 MB under 1 MB), with the uncompressed size patched to 100 in both headers, or the compressed size halved. Every case ends in an error on every target:
+    - .NET 8 and 10 stop inflating at the declared uncompressed size, so those cases end as truncated XML ("it ends inside a tag", "it ends inside an element").
+    - .NET Framework ignores the declared size and inflates everything, so the count stops it: the window's `MaxPartSize`, or the shared strings' part limit.
+    - A halved compressed size ends at the part limit on every target.
+  - **Entries that share one entry's data:** twelve sheets whose central records point at the first sheet's data. Each sheet reads as the first, each read counts toward the workbook's total, and the seventh sheet stops at the limit.
+  - **Gap amplification:** a million rows of one cell in XFD under a 16 MB limit stop within the first 1,024 rows, in about 0.4 s.
+  - **Single tokens:** a 300 MB `<v>`, and a cell with a million attributes (about 11 MB), stop at a 4 MB `MaxPartSize` with the window's error. The reader got no further into the compressed data than twice the limit's share.
+  - **Nesting:** a million unknown elements nested in a cell, in `sheetData`, or in a shared string are skipped, and the value after them is read.
+  - **External entities and billion laughs** in the workbook, styles, shared strings and sheet parts are rejected at the DOCTYPE, with the part's name in the message.
+    - The external entity points at a file held open with `FileShare.None`, so any attempt to open it would throw a sharing violation instead. That is the plan's canary.
+  - **References that aren't characters** (`&#0;`, `&#xD800;`, `&#x110000;`, an undefined entity) in a cell throw `CsvFormatException` at `Data!A1`.
+- **Fuzzer:**
+  - **Sources:** three synthetic packages (one with every kind of cell, the orders workbook, and numbers), and the 25 corpus workbooks CsvHelper.Excel reads.
+  - **Mutations:** each seed picks a source, then applies one to four mutations.
+    - Two times in three, it mutates an XML part (sheets and shared strings three times in four). The mutations are bit flips, byte changes, deletions, inserted markup from a list of the scanner's delimiters, elements and edge cases, copies of a range elsewhere, extreme numbers in place of a run of digits, and truncation. The part is then zipped again, stored or deflated.
+    - Otherwise it mutates the zip's bytes: a byte of a local header, a central record or the end record; a byte anywhere; or truncation.
+  - **Reading:** every worksheet is read to its end, every field through `GetString`, under 1 MB and 16 MB limits. Seeds alternate sync and async, and vary `HasHeader`, `SkipEmptyLines` and trimming.
+  - **Outcome:** each input must finish within 5 s, and either read or throw `InvalidDataException`, `CsvFormatException` or `NotSupportedException`.
+  - **Runs:** 3,000 inputs by default, in about 2 s on net10.0, 2 s on net8.0 and 3 s on net48. `CSVHELPER_EXCEL_FUZZ_INPUTS` sets the count, and `CSVHELPER_EXCEL_FUZZ_SEED` the first seed, so that a failure, reported with its seed and mutations, replays alone.
+  - **A long run:** 200,000 inputs on each target passed in 1 min 16 s (net10.0), 1 min 59 s (net8.0) and 4 min 7 s (net48). About 40% read to the end, 29% failed at a sheet with `CsvFormatException`, 9% at a sheet with `InvalidDataException`, and 22% as a workbook with `InvalidDataException`.
+- **What fuzzing found** (a library fix in `PackageArchive`, not core):
+  - On net8.0 and net48, `ZipArchive` throws `IOException` ("Zip file corrupt: unexpected end of stream reached") when a central record runs a little past the end of the archive. On net48 it also throws `ArgumentException` ("Illegal characters in path") for an entry name with a character Windows paths forbid. .NET 10 throws `InvalidDataException` for both, or accepts the name.
+  - `PackageArchive` now reports both as `InvalidDataException`: "The workbook's zip archive is corrupt: {message}", with the original inside. The check is narrow:
+    - only an `IOException` of exactly that type, thrown by `System.IO.Compression` itself, so that the stream's own I/O errors still pass through, as "Public API" says;
+    - only an `ArgumentException` raised inside `System.IO.Compression`.
+  - It reads the stack trace's text rather than `TargetSite` or `StackFrame.GetMethod`, which would bring trimming warnings.
+  - A failed open now disposes the `ZipArchive` it made, too.
+  - Two tests pin both cases down without the fuzzer: a central record whose extra field runs 8 bytes past the end, and a `<` in an entry's name (on .NET, that name just reads as a missing styles part).
+- **A finding left as designed:** white space between rows is a text token like any other, so it must fit in the window. A long run of it grows the window up to `MaxPartSize`, and past that fails with the window's error, though the scanner could skip it without holding it, as the XML layer's own skip already does. Memory stays within the limit, which is what "Public API" and "Risks" promise; skipping it is an option for Phase 9.
+- **Tests:** 47 new, 664 per target, all passing on net10.0, net8.0 and net48. The whole solution builds without warnings, and the other suites pass.
+- **Mutation check** on net8.0, five bugs planted one at a time, all caught:
+  - "corrupt zips not reported as InvalidDataException": 3 failures;
+  - "the workbook's total not checked": 6;
+  - "gap fields not counted": 2;
+  - "no declared-size check": 2;
+  - "the window grows past MaxPartSize": 6.
+- **What the check fixed:** at first, only the fuzzer caught "corrupt zips not reported". The deterministic test declared 65,535 bytes of extra field, which hits net8.0's own "Central Directory is invalid" check, an `InvalidDataException`. A scratch probe showed that only a field running a little past the end gives the `IOException`, so the test now declares 30 bytes.
+- **Left for Phase 9:** coverage-guided fuzzing (SharpFuzz).
+- **Core:** no change.
 
 ### Phase 2: typed reading (M)
 
