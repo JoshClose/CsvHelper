@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) 2026-11-03; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -782,6 +782,8 @@ Added at approval (2026-11-02):
 - `dotnet pack` shows the exact pin, and a mismatched CsvHelper fails with the guard's message.
 - Nothing in core changes.
 
+Met on 2026-11-03, every item; "As built" opens with the evidence for each.
+
 #### Changes elsewhere
 
 Applied at approval (2026-11-02):
@@ -799,6 +801,85 @@ Applied at approval (2026-11-02):
 #### As built
 
 Filled in step by step; the code is the reference.
+
+**Summary (step 10, 2026-11-03).** Phase 1 is complete. This summary gathers what the steps below record one by one.
+
+- **What it delivers:**
+  - **Public API**, as "Public API" designs it:
+    - `ExcelWorkbook`: `Open` and `OpenAsync` from a path or a stream, `Sheets`, `Date1904`, and `OpenReader`/`OpenReaderAsync` for the default sheet, a name, an index or an `ExcelSheet`.
+    - `ExcelReader`: `FromFile` and `Create`, sync and async, returning a reader that owns its workbook.
+    - `ExcelReaderOptions`: `Sheet`, `SheetIndex`, `Csv`, `MaxPartSize`, `MaxUncompressedSize`.
+    - `ExcelSheet` (`Name`, `Index`, `Visibility`, `Kind`), and the two enums.
+    - Every read comes back as a plain `CsvReader`.
+  - **Internals:**
+    - the XML layer (window, scanner, attributes, text, UTF-16);
+    - the package layer (archive, inflate guard, part names, content types, relationships, workbook, styles);
+    - shared strings;
+    - the sheet scanner;
+    - the record source over core's batch;
+    - the version guard.
+  - Size: 6,799 lines of library code, and 8,162 of tests.
+  - **Tests:** 689 per target, run on net10.0, net8.0 and net48, every reading test sync and async. They cover:
+    - unit tests of each layer, each in every scan mode;
+    - comparisons with `XmlReader`- and `XDocument`-based references over generated documents;
+    - the corpus against four oracles;
+    - the security cases;
+    - a seeded mutation fuzzer;
+    - the benchmark generator's cross-check.
+  - **Corpus:** 25 workbooks CsvHelper.Excel reads, plus three it rejects (`.xlsb`, encrypted, `.xls`). They come from 14 producers: Excel, LibreOffice, openpyxl, XlsxWriter, pandas, Apache POI (XSSF and SXSSF), ClosedXML, the Open XML SDK, EPPlus, MiniExcel, SpreadCheetah, LargeXlsx, Google Sheets and Excel for Mac. The corpus tool regenerates them.
+  - **Benchmarks:** `ExcelPackageAssetsRead`, with NCsvPerf's data in the repository.
+- **The gate**, item by item:
+  - `GetRecords<T>`, dynamic records, `CsvDataReader`, Linq and header validation over a sheet: met by step 6's gate tests.
+  - Errors name the cell: met (steps 5 and 6). Sheet errors carry the cell or row in `Location` and in the message, and a field that doesn't parse gives its cell.
+  - The baseline benchmark against ExcelDataReader, Sylvan.Data.Excel, MiniExcel and the Open XML SDK: met (step 9, below).
+  - Every test passes on net10.0, net8.0 and net48, sync and async: met. On 2026-11-03 the whole solution's tests passed:
+    - CsvHelper.Excel.Tests: 689 on each target;
+    - CsvHelper.Tests: 1,287, 1,282 and 823;
+    - CsvHelper.Linq.Tests: 112, 110 and 101.
+  - The oracles agree on every corpus file, with each difference documented: met (step 7). There are 34 listed cells, each with its reason, and Excel was asked about a cell of each reason.
+  - The security and fuzz tests pass: met (step 8). That includes a 200,000-input run on each target.
+  - `dotnet pack` shows the exact pin, and a mismatched CsvHelper fails with the guard's message:
+    - CI's pack check was run again on 2026-11-03: CsvHelper is `[0.0.0-ci]` in all 5 targets, and net47 has System.IO.Compression.
+    - The guard was checked end to end at step 6, and its unit tests run in the suite.
+  - Nothing in core changes: met. `git diff e5207c4c` (Phase 0's commit) shows no change to `src/CsvHelper`, `src/CsvHelper.Linq`, `src/CsvHelper.Generators` or their tests, in the commits or the working tree. The CSV benchmark gate wasn't needed.
+- **Decisions made while building** (each step's "As built" has the details):
+  - **XML layer** (step 2):
+    - The scanner tracks depth and the root, so that every truncated part throws.
+    - A refill is a sync compaction, then one stream read.
+    - Escapes are decoded in a second pass over a value's joined text.
+  - **One parser for both modes** (step 3): each part's parser is one method with an `async` flag, checked synchronous by `SyncOrAsync`. The large parts, shared strings and sheets, are token state machines that wait only on refills (steps 4 and 5).
+  - **Input** (step 3):
+    - Paths open with `FileShare.Delete` too, so Excel can still save a file being read.
+    - A seekable stream is read from its start.
+    - Sheets without a readable part stay in the list, with the reason they can't be read.
+  - **Placement** (step 5): the width is the first record with a value. Missing rows and gap fields are counted toward `MaxUncompressedSize` before they are written. Excel's rules for quoting sheet names in a location were found through COM.
+  - **Ownership** (step 6): a failed open leaves the caller's stream open, and a disposed workbook stops its readers at their next fill.
+  - **White space** (step 7): texts, errors and values are trimmed unless `xml:space="preserve"` applies, as Excel reads them. Checked through COM, this replaced the design's rule of keeping white space.
+  - **The corpus** (step 7):
+    - Apache POI on a portable JDK in place of NPOI, whose newer releases carry an EULA.
+    - Google Sheets and Excel for Mac files from POI's test data.
+    - No Numbers file exists in either source.
+  - **Corrupt zips** (step 8): `ZipArchive`'s `IOException` and `ArgumentException` on .NET 8 and .NET Framework are reported as `InvalidDataException`.
+  - **White space between rows** (after step 8): it is skipped as it comes, so it never grows the window.
+  - **The benchmark** (step 9):
+    - The generator writes Excel's shape exactly, and a test, not a look by hand, checks it against Excel's file.
+    - The CSV reference is read in the same class.
+    - QuickRunner runs `[Params]`.
+- **The baseline** (step 9's tables):
+  - With shared strings, CsvHelper.Excel reads the million-row PackageAssets workbook in 2.7–3.5 s. That is 1.36–1.53x Sylvan.Data.Excel's time, and second of the five readers.
+  - With inline strings it is level with Sylvan, within 2%.
+  - ExcelDataReader, MiniExcel and the Open XML SDK's SAX reader take 2.4–4.4x Sylvan's time.
+  - Inflating is about 5% of the read on .NET 10; scanning is the rest.
+- **Left for later phases:**
+  - **Phase 2:** typed reading, and whether `t="d"` dates, read as text in Phase 1, need a cell kind of their own (a core change then).
+  - **Phase 3:** dimensions, Tables and defined names.
+  - **Phase 4:** LibreOffice in CI.
+  - **Phase 6:** `publish.yaml` and the docs page.
+  - **Phase 9:**
+    - the scanner's per-cell cost;
+    - shared strings returned as one string each;
+    - coverage-guided fuzzing (SharpFuzz);
+    - a zip reader that checks CRCs.
 
 **Step 1: skeleton and packaging (2026-11-02).**
 
