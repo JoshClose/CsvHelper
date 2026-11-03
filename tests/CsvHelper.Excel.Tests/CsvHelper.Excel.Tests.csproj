@@ -28,6 +28,11 @@
 		<None Remove="App.config" />
 	</ItemGroup>
 
+	<!-- ZipArchive, for TestPackage, which .NET has in its shared framework. -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<Reference Include="System.IO.Compression" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="coverlet.collector" Version="6.0.4" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

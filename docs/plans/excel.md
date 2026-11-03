@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging) and 2 (XML layer) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer) and 3 (package) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 and 2 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 3 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -284,6 +284,7 @@ Type layout (`src/CsvHelper.Excel`):
 ExcelWorkbook.cs, ExcelReader.cs, ExcelReaderOptions.cs, ExcelSheet.cs (with the two enums), AssemblyInfo.cs
 Internal/
   VersionGuard.cs       the check that the loaded CsvHelper is the version built with (see "Version guard")
+  SyncOrAsync.cs        the results of code written once for both modes, with an async flag
 Internal/Package/
   PackageArchive.cs     the ZipArchive: input handling, signature sniffing, temp-file spill, entries by part name
   InflateGuard.cs       the workbook's byte budget, and LimitedReadStream around every part
@@ -298,6 +299,7 @@ Internal/Xml/
   Utf16Stream.cs        UTF-16 parts read as UTF-8
   XmlScanner.cs         forward-only tokens (with XmlTokenKind and XmlScannerState)
   XmlAttributes.cs      the attributes of a start tag, read one at a time
+  XmlElements.cs        walking a part's elements, sync or async, for the package parts' parsers
   XmlText.cs            decoding text into UTF-8
 Internal/Sheet/
   SheetRecordSource.cs  the CsvRecordSource: Fill, FillAsync, Locate, Dispose
@@ -336,11 +338,11 @@ Internal/Sheet/
 **Package:**
 
 - **Input:**
-  - A path opens a `FileStream` (`FileShare.ReadWrite`, `FileOptions.Asynchronous` for `OpenAsync`).
-  - A seekable stream is used as is.
+  - A path opens a `FileStream` (`FileShare.ReadWrite | FileShare.Delete`, so that Excel can still save the file; `FileOptions.Asynchronous` for `OpenAsync`).
+  - A seekable stream is used as is, from its start whatever its position, as `ZipArchive` reads it.
   - A non-seekable stream is copied to a temp file, because `ZipArchive` in Read mode would copy it into a `MemoryStream`.
     - The file gets a random name in `Path.GetTempPath()` and opens with `CreateNew`, `FileShare.None` and `DeleteOnClose`. On Windows the OS deletes it even if the process dies; elsewhere it is also deleted right after creation, since the open handle keeps it readable.
-    - `OpenAsync` copies with `CopyToAsync`.
+    - `OpenAsync` copies asynchronously, in counted 80 KB chunks.
     - The copied bytes count toward `MaxUncompressedSize`.
 - **Signature:** the first 8 bytes decide.
   - `PK\x03\x04` is a zip. `PK\x05\x06` is an empty zip, which has no workbook.
@@ -354,13 +356,13 @@ Internal/Sheet/
   - Every part stream is wrapped in a counting stream. It throws `InvalidDataException` when a held part passes `MaxPartSize` or the workbook's total passes `MaxUncompressedSize`.
   - It counts real bytes because declared sizes can lie. .NET caps Deflate reads at the declared size, which truncates a lying entry; .NET Framework doesn't. Counting ourselves makes every target the same.
 - **Parts:**
-  - `_rels/.rels`: the officeDocument relationship (transitional or strict type URI) gives the workbook part. With no relationships part, it falls back to `xl/workbook.xml`.
+  - `_rels/.rels`: the officeDocument relationship (transitional or strict type URI, matched by its last segment) gives the workbook part. With no relationships part, it falls back to `xl/workbook.xml`.
   - `[Content_Types].xml`:
-    - It must give a known spreadsheet main type: `.xlsx`, `.xlsm`, `.xltx` or `.xltm`.
+    - It must give a known spreadsheet main type: `.xlsx`, `.xlsm`, `.xltx`, `.xltm` or `.xlam`, ignoring case and parameters. A content types part that gives the workbook part no type is accepted.
     - The `.xlsb` type throws `NotSupportedException`, and any other type `InvalidDataException` ("not a spreadsheet", for a `.docx` say).
     - A missing content types part is accepted.
   - The workbook's relationships map each `rId` to a type and a target.
-    - The type is matched by its last segment: `worksheet`, `chartsheet`, `dialogsheet`, `xlMacrosheet`, `sharedStrings` or `styles`. Both the transitional and strict URIs match.
+    - The type is matched by its last segment: `worksheet`, `chartsheet`, `dialogsheet`, `xlMacrosheet` (or `xlIntlMacrosheet`), `sharedStrings` or `styles`. Both the transitional and strict URIs match.
     - Targets are resolved against the source part's folder. External targets are ignored.
   - `workbook.xml`:
     - It gives `workbookPr/@date1904`, and for each `sheets/sheet` its name (entity-decoded), its `state` (`visible`, `hidden` or `veryHidden`) and its `r:id`.
@@ -369,7 +371,7 @@ Internal/Sheet/
 - **Styles:**
   - `cellXfs/xf/@numFmtId` in order (missing means 0), and `numFmts` from id to decoded format code.
   - From these, `StyleTable` builds a `SheetCellKind[]` per xf: the kind of a number cell with that style. Phase 1 makes every entry Number, and Phase 2 marks the date formats DateNumber. So the scanner's style lookup is in place and tested before date detection exists.
-  - With no styles part, every xf is General. An `s` out of range means xf 0.
+  - With no styles part (or one the workbook names but the package lacks), every xf is General. An `s` out of range means xf 0.
 
 **Shared strings:**
 
@@ -859,6 +861,98 @@ Filled in step by step; the code is the reference.
     - "CR LF becomes two LFs": 7;
     - "the first read not limited to a byte order mark": 3;
     - "skipped text must fit the window": the tests hang. Without its `position = end`, the skip loop spins at the end of the input; that step is what keeps the "never loops forever" guarantee.
+
+**Step 3: package (2026-11-02).**
+
+- **Files:**
+  - `Internal/Package`: `PackageArchive`, `InflateGuard` (with `PartLimits` and `LimitedReadStream`), `PartName`, `ContentTypes`, `Relationships` (with `Relationship`), `WorkbookPart` (with `WorkbookSheet`) and `StyleTable`.
+  - New beyond the layout: `Internal/SyncOrAsync.cs` and `Internal/Xml/XmlElements.cs` (below).
+  - Pulled forward from later steps: `Internal/Sheet/SheetCellKind.cs` and the two public enums in `ExcelSheet.cs`, because the styles and the workbook part produce them. The `ExcelSheet` class itself comes with step 6.
+- **One parser for both modes (a design addition):**
+  - Each part's parser is a single `async ValueTask` method that takes a `bool async`. `XmlElements` gives the scanner `ReadAsync(async)`, `ReadRootAsync`, `ReadChildAsync(parentDepth)`, `SkipElementAsync` and `DisposeAsync(async)`.
+  - With `async: false`, every read is synchronous, so the task has completed when it returns. `SyncOrAsync.Result` checks that and throws if code that should be synchronous went async. The tests' sync paths all go through it.
+  - That saves keeping a sync and an async copy of each parser in step. The cost is one state machine per part, which is nothing next to the part's inflate.
+  - The scanner gained `ElementDepth`, the depth of a tag's element whether or not it is empty, which `ReadChildAsync` needs.
+- **Input:**
+  - **A path opens with `FileShare.ReadWrite | FileShare.Delete`** (the design had `ReadWrite` only).
+    - Without `Delete`, Excel couldn't save a workbook while a reader holds it, because its save renames the old file away. That would turn "read a file that is open in Excel" into "block Excel's next save".
+    - A test does what Excel's save does: renames the open file away, moves a new one in, deletes the old one. The archive goes on reading the copy it opened. A planted bug that dropped `Delete` failed that test.
+  - **A seekable stream is read from its start, whatever its position** (a fix found by a test). `ZipArchive` reads a seekable stream as a whole, from its end and at absolute offsets. Sniffing at the current position read the end-of-central-directory signature when the same stream was opened twice.
+  - **Non-seekable input** is copied to `CsvHelper.Excel.<random>` in `Path.GetTempPath()`, with `CreateNew` and `FileShare.None`.
+    - On Windows the file has `DeleteOnClose`; elsewhere it is deleted at once, and only the open handle keeps it.
+    - The copy uses 80 KB reads and writes, each counted, rather than `CopyToAsync`, so it stops at the read that passes `MaxUncompressedSize`. The partial copy is deleted.
+    - An internal `tempDirectory` parameter lets tests check that nothing is left behind.
+  - **A failed open disposes only what it created** (a path's `FileStream`, the temporary copy), never the caller's stream, even with `leaveOpen: false`. A successful open with `leaveOpen: false` that needed a copy disposes the caller's stream once the copy is done.
+- **Signature:** a seekable or a copied stream gets the same check. Inputs shorter than 4 bytes, and `PK\x07\x08` (a spanned-archive marker), are "not a workbook".
+- **Parts:**
+  - **Reading order:** content types, the package's relationships, the workbook's relationships, then `workbook.xml`.
+  - **Content types:**
+    - Matched ignoring case, with parameters (`; charset=...`) dropped.
+    - `.xlam` (add-in) is accepted too, as the macro-enabled workbook it is.
+    - A content types part that gives the workbook part no type at all is accepted, like a missing content types part.
+    - A type that isn't a workbook's (including `application/xml` from a `Default`, when the workbook part has no `Override`) is rejected.
+  - **Relationships:**
+    - The package's officeDocument relationship is matched by its last segment too.
+    - `xlIntlMacrosheet` counts as a macro sheet.
+    - A relationship without an `Id`, `Type` or `Target` is ignored, and of two with one id, the first counts.
+    - Ids compare exactly (they are XML ids); part names ignoring case.
+  - **Sheets with no readable part** stay in the list, in tab order, with the reason in `WorkbookSheet.Problem`, so that opening them (step 6) throws `InvalidDataException` with it. The cases:
+    - no `r:id`;
+    - an `r:id` that isn't in the relationships part (or no relationships part);
+    - a relationship type that isn't a sheet's (the sheet is listed as a Worksheet);
+    - an external target;
+    - a missing part.
+  - **Strict values:**
+    - `state` must be `visible`, `hidden` or `veryHidden`.
+    - Booleans must be `1`, `0`, `true` or `false` (white space around them allowed).
+    - Number format ids must be integers 0 or more.
+    - A sheet with no name throws.
+    - Each throws `InvalidDataException` naming the attribute and its value, with the part and byte offset.
+  - **Sheet names** are XML-decoded (entities, character references, attribute-value normalization). `_xHHHH_` escapes are not decoded in names or format codes: Excel allows no control characters in either, and the Open XML SDK leaves them alone too.
+  - **A styles part the workbook names but the package lacks** gives the empty table rather than an error. Styles only tell dates from numbers.
+- **Guard:**
+  - `PartLimits` carries a call's two limits. `InflateGuard` holds the workbook's running total, which every call's reads add to and check against their own limit.
+  - `LimitedReadStream.Charge(bytes)` is there for step 5's gap fields (decision 5).
+  - `LimitedReadStream` also checks the archive's disposed flag on every read. So "dispose the workbook, then read" throws `ObjectDisposedException` on every target, whatever `ZipArchive` does with its open entry streams.
+- **Messages:**
+  - "The workbook has no part {part}."
+  - "{part} is larger than ExcelReaderOptions.MaxPartSize ({n} bytes uncompressed): its size in the zip is {m} bytes." This one comes before inflating; without the clause after the colon, it comes from the count.
+  - "Reading {part} takes the workbook past ExcelReaderOptions.MaxUncompressedSize ({n} bytes uncompressed)."
+  - "The input stream is longer than ExcelReaderOptions.MaxUncompressedSize ({n} bytes), which bounds its copy to a temporary file too."
+  - "The package has no workbook: ...".
+  - "The package is not a spreadsheet: its main part, {part}, has the content type {type}."
+  - "The workbook is an Excel binary workbook (.xlsb), which CsvHelper.Excel doesn't read."
+  - The empty-zip, compound-file and not-a-zip messages.
+- **Test project:** the net48 build references `System.IO.Compression` for `TestPackage`, as the library does.
+- **Tests** (139 new, 330 per target, all passing on net10.0, net8.0 and net48; each loading test runs sync and async):
+  - `TestPackage` writes exact entries (names, compression, byte order marks, duplicates, order). Its `Workbook(...)` starts from Excel's parts.
+  - `PartName`: normalizing, resolving (relative, absolute, `.` and `..` past the root, percent-encoding, backslashes, fragments), relationships part names, extensions.
+  - `PackageArchive`:
+    - every signature, for seekable and non-seekable input;
+    - the temporary copy (counted, deleted on dispose and on failure, input disposed only as asked);
+    - the copy limit (it stops at the read that passes it);
+    - a path that others replace while it is open;
+    - normalized entry lookup (a check confirms the zip itself keeps the raw names);
+    - the declared-size check before inflating (the guard's total is still 0);
+    - counting across parts against each call's own limit;
+    - counting what a part really inflates to, and `Charge`;
+    - disposal.
+  - `WorkbookPart`:
+    - kinds and states in tab order (chartsheets first and in between), decoded names and every `date1904` form;
+    - strict namespaces, `x:` prefixes, LibreOffice's shape (rId3, `true`/`false`, content types last);
+    - the fallback without `_rels/.rels`, a workbook part elsewhere with `..` and absolute targets, OPC name matching;
+    - every unreadable-sheet case, missing workbook relationships;
+    - all five workbook content types, missing or partial content types, `.xlsb` and `.docx`;
+    - wrong roots and a DOCTYPE in each of the four parts, UTF-16 BE and a UTF-8 byte order mark;
+    - both limits, exactly at and one past.
+  - `StyleTable`: cell formats in order without the `cellStyleXfs`, an index out of range, the Number kind, no styles part or a missing one, format codes (first of duplicates, missing ids, white space), invalid ids, a wrong root and a DOCTYPE, the part limit.
+  - **Mutation check:** six bugs planted one at a time, all caught on net10.0:
+    - "no `FileShare.Delete`": 2 failures;
+    - "no declared-size check": 4;
+    - "every content type is a workbook": 4;
+    - "`cellStyleXfs` read as cell formats": 4;
+    - "the last duplicate entry wins": 2;
+    - "relative targets resolved from the root": 39.
 
 ### Phase 2: typed reading (M)
 

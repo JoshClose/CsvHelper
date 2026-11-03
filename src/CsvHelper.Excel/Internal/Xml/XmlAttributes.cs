@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.IO;
 using System.Text;
 
@@ -15,6 +16,9 @@ namespace CsvHelper.Excel;
 /// </remarks>
 internal struct XmlAttributes
 {
+	/// <summary>The room on the stack for a value with references to decode.</summary>
+	private const int ScratchSize = 64;
+
 	private readonly XmlScanner? scanner;
 	// The attributes of the tag in the window: from after its name to its '>' or '/>'.
 	private readonly int start;
@@ -137,6 +141,82 @@ internal struct XmlAttributes
 		var written = DecodeValue(decoded);
 
 		return Encoding.UTF8.GetString(decoded, 0, written);
+	}
+
+	/// <summary>
+	/// Reads the value as an XML Schema boolean: <c>1</c>, <c>0</c>, <c>true</c> or <c>false</c>, with white space around it
+	/// allowed. Excel writes <c>1</c> and <c>0</c>, LibreOffice <c>true</c> and <c>false</c>.
+	/// </summary>
+	/// <returns>The boolean.</returns>
+	/// <exception cref="InvalidDataException">The value is not a boolean.</exception>
+	public readonly bool GetBoolean()
+	{
+		Span<byte> scratch = stackalloc byte[ScratchSize];
+		var value = Trimmed(scratch);
+		if (value.SequenceEqual("1"u8) || value.SequenceEqual("true"u8))
+		{
+			return true;
+		}
+
+		if (value.SequenceEqual("0"u8) || value.SequenceEqual("false"u8))
+		{
+			return false;
+		}
+
+		throw InvalidValue("a boolean");
+	}
+
+	/// <summary>Reads the value as a 32-bit integer, with white space around it allowed.</summary>
+	/// <returns>The integer.</returns>
+	/// <exception cref="InvalidDataException">The value is not an integer, or doesn't fit 32 bits.</exception>
+	public readonly int GetInt32()
+	{
+		Span<byte> scratch = stackalloc byte[ScratchSize];
+		var value = Trimmed(scratch);
+		if (!Utf8Parser.TryParse(value, out int result, out var consumed) || consumed != value.Length)
+		{
+			throw InvalidValue("an integer");
+		}
+
+		return result;
+	}
+
+	/// <summary>The value, decoded when it has references, without the white space around it.</summary>
+	/// <param name="scratch">Room for the decoded value; a longer one gets its own array.</param>
+	/// <returns>The value.</returns>
+	private readonly ReadOnlySpan<byte> Trimmed(Span<byte> scratch)
+	{
+		ReadOnlySpan<byte> value = Value;
+		if (value.IndexOf((byte)'&') >= 0)
+		{
+			var destination = value.Length <= scratch.Length ? scratch : new byte[value.Length];
+			value = destination.Slice(0, DecodeValue(destination));
+		}
+
+		var start = 0;
+		var end = value.Length;
+		while (start < end && XmlScanner.IsWhitespace(value[start]))
+		{
+			start++;
+		}
+
+		while (end > start && XmlScanner.IsWhitespace(value[end - 1]))
+		{
+			end--;
+		}
+
+		return value.Slice(start, end - start);
+	}
+
+	/// <summary>Creates the exception for a value that is not what it should be, with the part's name and the byte offset.</summary>
+	/// <param name="what">What it should be, such as "a boolean".</param>
+	/// <returns>The exception, to throw.</returns>
+	public readonly InvalidDataException InvalidValue(string what)
+	{
+		var name = Encoding.UTF8.GetString(LocalName);
+		var value = Encoding.UTF8.GetString(Value);
+
+		return scanner!.Window.Error(valueStart, $"the attribute {name}=\"{value}\" is not {what}");
 	}
 
 	/// <summary>Moves <see cref="offset"/> past white space.</summary>

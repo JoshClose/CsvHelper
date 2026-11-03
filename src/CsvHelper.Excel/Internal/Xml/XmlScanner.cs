@@ -127,6 +127,17 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// </summary>
 	public int Depth => depth;
 
+	/// <summary>
+	/// The depth of the element a start or end tag belongs to: 1 for the root element, 2 for its children, empty or not.
+	/// For other tokens, the depth of the element they are in (<see cref="Depth"/>).
+	/// </summary>
+	public int ElementDepth => Kind switch
+	{
+		XmlTokenKind.StartTag => IsEmptyElement ? depth + 1 : depth,
+		XmlTokenKind.EndTag => depth + 1,
+		_ => depth,
+	};
+
 	/// <summary>The position in the window of the next token.</summary>
 	public int Position => position;
 
