@@ -1,0 +1,10 @@
+# The corpus's files from other projects' test data, which the tool's downloads command fetches into the corpus
+# folder: the path there, the URL at a pinned commit, and the file's SHA-256. Each project's license is recorded in
+# tests/CsvHelper.Excel.Tests/Files/README.md.
+#
+# Apache POI's test-data/spreadsheet at commit 81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408 (2026-11-02), Apache License
+# 2.0: Google Sheets and Excel for Mac files, chosen because none holds a person's name or email address.
+google/64450.xlsx https://raw.githubusercontent.com/apache/poi/81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408/test-data/spreadsheet/64450.xlsx 203eaf3275f3d4edaf000728defcece4bc44306852f27b59c9371e52d2338dec
+google/66365.xlsx https://raw.githubusercontent.com/apache/poi/81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408/test-data/spreadsheet/66365.xlsx 244452f8198102b2191646cca864afdf243620c95988869f31c82ac2fc8be6b8
+excel-mac/github-321.xlsx https://raw.githubusercontent.com/apache/poi/81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408/test-data/spreadsheet/github-321.xlsx d21baec31e606f2d5b59ada58e91430347ca85a1395bc256c03d905bd8b17da0
+excel-mac/test_conditional_formatting.xlsx https://raw.githubusercontent.com/apache/poi/81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408/test-data/spreadsheet/test_conditional_formatting.xlsx dca9ea05ea5cf2a52941e10c1e1ce44ee2416b309771b5e93ae6fdb625010ebe

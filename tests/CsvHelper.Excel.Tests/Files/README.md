@@ -1,12 +1,12 @@
 # CsvHelper.Excel's test corpus
 
-Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. All of them were written on 2026-11-02.
+Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. All of them were written on 2026-11-02, except the four from Apache POI's test data under "Downloads".
 
 ```
 dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 ```
 
-`excel`, `packageassets`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, and `check` only checks them.
+`excel`, `packageassets`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, and `check` only checks them.
 
 ## The basic workbook
 
@@ -36,6 +36,7 @@ The files are public, and producers record personal data: Excel recorded the Off
 
 - Excel saves with "remove personal information" set, into `%PUBLIC%\CsvHelper.Excel.Corpus`, and the tool then copies the file, which keeps Excel's bytes.
 - The other producers get the author `CsvHelper.Excel.Corpus`.
+- The downloaded files were chosen from POI's test data because none of them names a person or holds an email address. One Excel for Mac file was passed over for the email address its threaded comment records.
 - Every command ends with a check of every part of every file here: as UTF-8, Latin-1 and UTF-16. It fails on the user's or machine's name, the profile folder, or any email address.
 
 ## Files
@@ -50,6 +51,8 @@ The files are public, and producers record personal data: Excel recorded the Off
 | `xlsxwriter/basic.xlsx`, `constant_memory.xlsx` | XlsxWriter 3.3.1 | the same script; the second with `constant_memory` |
 | `pandas/openpyxl.xlsx`, `pandas/xlsxwriter.xlsx` | pandas 3.1.0 | the same script: a data frame per sheet, with each engine named |
 | `poi/xssf.xlsx`, `poi/sxssf.xlsx` | Apache POI 6.0.0, on Java 25 (Eclipse Temurin 25.0.5+8) | `java/Corpus.java`, run by a JDK unpacked from its zip into `%LOCALAPPDATA%\CsvHelper.Excel.Corpus`, with the jars of `java/jars.txt` from Maven Central, each checked against its pinned SHA-256. XSSF writes the first, and SXSSF, POI's streaming writer, the second. POI's evaluator computes the formulas' results. |
+| `google/64450.xlsx`, `google/66365.xlsx` | Google Sheets | downloaded from Apache POI's test data (see "Downloads"). Google Sheets writes no `docProps`, a theme named "Sheets" and Arial as the default font. The first has a pivot table and a chart; the second an array formula. |
+| `excel-mac/github-321.xlsx`, `excel-mac/test_conditional_formatting.xlsx` | Excel for Mac ("Microsoft Macintosh Excel", app versions 16.0300 and 15.0300) | downloaded from Apache POI's test data: 17-digit numbers with and without a format, and text and numbers with formulas and conditional formats |
 | `closedxml/basic.xlsx` | ClosedXML 0.105.1 | the tool, with formulas evaluated before saving |
 | `openxmlsdk/basic.xlsx` | DocumentFormat.OpenXml 3.5.1 | the tool, building each part from the SDK's elements, with Excel's formula results |
 | `epplus/basic.xlsx` | EPPlus 4.5.3.3, the last LGPL version | the tool, with its calculation engine for the formulas |
@@ -81,13 +84,18 @@ These are the shapes the corpus covers; the oracle tests check every cell.
 - **Zip:** POI's SXSSF writes a Zip64 data descriptor after each entry. Its local headers say version 45 but have no Zip64 field, and its central directory says version 20. Excel, .NET's `ZipArchive` and its `System.IO.Packaging` read it; .NET Framework's `System.IO.Packaging` (WindowsBase), which the Open XML SDK and ClosedXML use there, rejects it as corrupt.
 - **White space:** SpreadCheetah writes a text with spaces around it without `xml:space="preserve"`, so Excel, and CsvHelper.Excel, read it trimmed.
 - **Strict:** Excel's Strict workbook writes its dates as `t="d"` ISO 8601 cells.
+- **Google Sheets:**
+  - It writes numbers in Java's form (`1.0`), `state="visible"` on every sheet, and declares Excel for Mac 2008's `mx` namespace.
+  - It writes a relationship with no `Id` or `Target` in a pivot cache's relationships (POI's bug 64450). `System.IO.Packaging`, which the Open XML SDK and ClosedXML use, rejects the package for it; Excel opens it.
+  - It writes a pivot table's sheet as empty rows, without the table's cells. Excel builds them from the pivot table when it opens the file, but they aren't in the sheet, so CsvHelper.Excel and every other reader here read the sheet as empty.
 - **Phonetic runs:** the Open XML SDK and ClosedXML write `<rPh>`. Excel can't here: without the Japanese editing language it ignores phonetic readings set through COM. POI has no way to write one.
 
 ## Downloads
 
-- **`excel/packageassets-1695.xlsx`:** made from `NCsvPerf/TestData/PackageAssets.csv` in [joelverhagen/NCsvPerf](https://github.com/joelverhagen/NCsvPerf), commit `c7bff62e601eb1e2ce97c95a5b54ef94eff4b6ab` (MIT License, copyright 2020 Joel Verhagen): 1,695 records of 25 fields, no header.
+- **`google/` and `excel-mac/`:** from [apache/poi](https://github.com/apache/poi)'s `test-data/spreadsheet`, commit `81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408` (2026-11-02), unchanged; `tools/CsvHelper.Excel.Corpus/downloads.txt` has each URL and SHA-256. Apache License 2.0, whose text is in the repository's `LICENSE.txt`, and POI's NOTICE: "Apache POI. Copyright 2003-2026 The Apache Software Foundation. This product includes software developed at The Apache Software Foundation (https://www.apache.org/)."
+- **`excel/packageassets-1695.xlsx`:** made from `NCsvPerf/TestData/PackageAssets.csv` in [joelverhagen/NCsvPerf](https://github.com/joelverhagen/NCsvPerf), commit `c7bff62e601eb1e2ce97c95a5b54ef94eff4b6ab`: 1,695 records of 25 fields, no header. MIT License, copyright 2020 Joel Verhagen; its text is in `LICENSE-NCsvPerf.txt` here, as the license asks of copies.
 
 ## Not here yet
 
 - **NPOI:** left out. Its releases from 2.8.0 on carry an "Open Source Maintenance Fee" EULA, and the corpus has POI itself, which NPOI ports.
-- **Google Sheets, Apple Numbers, Excel for Mac:** not reachable from this machine, and no export of `excel/basic.xlsx` can be made through them. Their files will come from Apache POI's and SheetJS's test files, with their licenses recorded here.
+- **Apple Numbers:** no export of `excel/basic.xlsx` can be made, and Apache POI's test data has no Numbers file. SheetJS's test files, the other source the plan named, are blocked on GitHub ("private_information", since 2024-07-19), so none are taken from there or from a copy.

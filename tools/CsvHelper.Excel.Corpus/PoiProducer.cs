@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 
 namespace CsvHelper.Excel.Corpus;
 
@@ -75,7 +74,7 @@ internal static class PoiProducer
 	/// <param name="list">The <c>jars.txt</c> file: a <c>group:artifact:version sha256</c> line per jar.</param>
 	/// <param name="folder">The folder that holds the jars.</param>
 	/// <returns>The jars' paths, in the list's order.</returns>
-	/// <exception cref="InvalidOperationException">A download doesn't match its pinned SHA-256.</exception>
+	/// <exception cref="InvalidOperationException">A download doesn't match its pinned SHA-256 (from <see cref="Downloads.Fetch"/>).</exception>
 	private static List<string> Jars(string list, string folder)
 	{
 		Directory.CreateDirectory(folder);
@@ -88,17 +87,10 @@ internal static class PoiProducer
 			var (group, artifact, version) = (coordinate[0], coordinate[1], coordinate[2]);
 			var expected = parts[1];
 			var path = Path.Combine(folder, $"{artifact}-{version}.jar");
-			if (!File.Exists(path) || Sha256(File.ReadAllBytes(path)) != expected)
+			if (!File.Exists(path) || Downloads.Sha256(File.ReadAllBytes(path)) != expected)
 			{
 				var url = $"{MavenCentral}{group.Replace('.', '/')}/{artifact}/{version}/{artifact}-{version}.jar";
-				var bytes = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
-				var actual = Sha256(bytes);
-				if (actual != expected)
-				{
-					throw new InvalidOperationException($"{url} has the SHA-256 {actual}, not the {expected} that jars.txt pins.");
-				}
-
-				File.WriteAllBytes(path, bytes);
+				File.WriteAllBytes(path, Downloads.Fetch(client, url, expected));
 				Console.WriteLine($"  downloaded {artifact}-{version}.jar");
 			}
 
@@ -107,9 +99,4 @@ internal static class PoiProducer
 
 		return jars;
 	}
-
-	/// <summary>The SHA-256 of some bytes, in lowercase hexadecimal.</summary>
-	/// <param name="bytes">The bytes.</param>
-	/// <returns>The hash.</returns>
-	private static string Sha256(byte[] bytes) => Convert.ToHexStringLower(SHA256.HashData(bytes));
 }

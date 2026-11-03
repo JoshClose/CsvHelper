@@ -18,6 +18,12 @@ public class CorpusTests
 		["excel/template.xltx"] = ExcelSheets,
 		["excel/packageassets-1695.xlsx"] = ["PackageAssets Visible Worksheet"],
 
+		// Apache POI's test files from Google Sheets and Excel for Mac (see downloads.txt), each with sheets of its own.
+		["excel-mac/github-321.xlsx"] = ["Sheet1 Visible Worksheet"],
+		["excel-mac/test_conditional_formatting.xlsx"] = ["Sheet1 Visible Worksheet"],
+		["google/64450.xlsx"] = ["Hoja 1 Visible Worksheet", "Hoja 2 Visible Worksheet"],
+		["google/66365.xlsx"] = ["Sheet1 Visible Worksheet"],
+
 		// LibreOffice has no very hidden sheets, and keeps a chartsheet as a worksheet with a chart.
 		["libreoffice/basic.xlsx"] = LibreOfficeSheets,
 		["libreoffice/basic-ooxml.xlsx"] = LibreOfficeSheets,

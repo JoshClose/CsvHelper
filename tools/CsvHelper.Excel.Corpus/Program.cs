@@ -25,6 +25,7 @@ internal static class Program
 		  python         openpyxl, XlsxWriter and pandas, in a venv outside the repository: openpyxl/, xlsxwriter/, pandas/
 		  poi            Apache POI's XSSF and SXSSF, run by a JDK outside the repository: poi/
 		  dotnet         ClosedXML, the Open XML SDK, EPPlus, MiniExcel, SpreadCheetah and LargeXlsx
+		  downloads      Other projects' test files that downloads.txt pins: google/, excel-mac/
 		  spec           The basic workbook's content as JSON, to standard output
 		  check          Only the check, which every command ends with, that no file holds personal information
 		  all            Every command, in order
@@ -53,6 +54,7 @@ internal static class Program
 		var python = Path.Combine(root, "tools", "CsvHelper.Excel.Corpus", "python");
 		var java = Path.Combine(root, "tools", "CsvHelper.Excel.Corpus", "java");
 		var jdk = Option(args, "--java");
+		var downloads = Path.Combine(root, "tools", "CsvHelper.Excel.Corpus", "downloads.txt");
 		switch (command)
 		{
 			case "excel":
@@ -79,6 +81,10 @@ internal static class Program
 				DotNetProducers.Write(files);
 
 				break;
+			case "downloads":
+				Downloads.Write(files, downloads);
+
+				break;
 			case "spec":
 				Console.WriteLine(Basic.ToJson());
 
@@ -92,6 +98,7 @@ internal static class Program
 				Python(files, python);
 				PoiProducer.Write(files, java, jdk);
 				DotNetProducers.Write(files);
+				Downloads.Write(files, downloads);
 
 				break;
 			default:

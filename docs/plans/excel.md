@@ -592,7 +592,7 @@ Gate tests, over synthetic sheets and corpus files:
 | `openpyxl/`, `xlsxwriter/` (default, and `constant_memory`, which writes inline strings), `pandas/` (each engine named explicitly, since pandas picks XlsxWriter when it is installed) | Python 3.14.10 with openpyxl 3.1.5, XlsxWriter 3.3.1 and pandas 3.1.0 | a venv outside the repo (`python -m venv`, then `pip install` of the exact versions from a committed `requirements.txt`); a script in `tools/CsvHelper.Excel.Corpus/python`, run with `-I` |
 | `poi/xssf.xlsx`, `poi/sxssf.xlsx` | Apache POI 6.0.0 on Java 25 | added at step 7, in place of NPOI: `java/Corpus.java` in the corpus tool, run by the portable JDK with the jars `java/jars.txt` pins |
 | `closedxml/`, `openxmlsdk/` (`x:`-prefixed), `epplus/`, `miniexcel/`, `spreadcheetah/`, `largexlsx/` | ClosedXML 0.105.1, Open XML SDK 3.5.1, EPPlus 4.5.3.3 (the last LGPL version), MiniExcel 1.46.0, SpreadCheetah 1.28.0, LargeXlsx 2.0.2 | the corpus tool. Which of these omit `r` or write inline strings is recorded in the corpus's `README.md`. (Changed at step 7: the SDK can't write the default-namespace variant, and NPOI is out; see step 7's "As built".) |
-| `google/`, `numbers/`, `excel-mac/` | Google Sheets, Apple Numbers, Excel for Mac | not possible here: the user exports `excel/basic.xlsx` through them, or a few files come from Apache POI's test-data and SheetJS's test_files (both Apache-2.0). The user can't make the exports, so they come from those test files, after step 7's commit |
+| `google/`, `numbers/`, `excel-mac/` | Google Sheets, Apple Numbers, Excel for Mac | not possible here: the user exports `excel/basic.xlsx` through them, or a few files come from Apache POI's test-data and SheetJS's test_files (both Apache-2.0). The user can't make the exports. Added after step 7's commit: two Google Sheets and two Excel for Mac files from POI's test data, which the tool's `downloads` command fetches. Neither source has a Numbers file: POI's test data has none, and SheetJS's test files are blocked on GitHub |
 
 - **`basic` content:** the corpus tool (`tools/CsvHelper.Excel.Corpus`, a net10.0 console that is not packed) defines it once:
   - Sheets: "Data", "Hidden" (hidden), "VeryHidden" (very hidden), a chartsheet in second place, "Q1 Orders", "Bob's" and a Japanese name.
@@ -712,7 +712,7 @@ These were the open questions. Every recommendation was accepted on 2026-11-02, 
 10. **Thread safety.** A workbook is single-threaded, and its readers can be used in turn on one thread. Later, if wanted, a workbook opened from a path could give each reader its own `FileStream` and `ZipArchive`, so sheets could be read in parallel.
 11. **Metadata now.** Expose `Sheets` (name, index, visibility, kind) and `Date1904` in Phase 1. That pulls part of Phase 3's metadata forward; `Dimension`, Tables and defined names stay in Phase 3.
 12. **Installs for the corpus.** Done: the user installed Python 3.14.10 and LibreOffice 26.8.2.2 on 2026-11-02 (see "What this machine has"). Node producers (ExcelJS, SheetJS) come in only if a gap remains. (At step 7 the user also approved a portable JDK for Apache POI, unpacked rather than installed.)
-13. **Google Sheets, Numbers and Excel for Mac.** The user exports `excel/basic.xlsx` through Google Sheets, and through Numbers or Excel for Mac if they have a Mac. That happens at step 7, once the file exists. Otherwise a few files from POI's and SheetJS's corpora, with licenses recorded. (At step 7's review the user said the exports can't be made, so the files come from those corpora.)
+13. **Google Sheets, Numbers and Excel for Mac.** The user exports `excel/basic.xlsx` through Google Sheets, and through Numbers or Excel for Mac if they have a Mac. That happens at step 7, once the file exists. Otherwise a few files from POI's and SheetJS's corpora, with licenses recorded. (At step 7's review the user said the exports can't be made. Google Sheets and Excel for Mac files came from POI's test data; SheetJS's test files are blocked on GitHub, and neither has a Numbers file.)
 14. **NCsvPerf data in the repo.** Copy it: 519 KB, MIT. The alternative is the bench's synthetic `DataGenerator.PackageAssets`, which has the same columns but isn't NCsvPerf's data.
 15. **CI.** Add the pack check for the pin now; add CsvHelper.Excel to `publish.yaml` at v1.0; keep LibreOffice out of CI before Phase 4.
 16. **UTF-16 parts.** Support them by transcoding. They're rare and the cost is small.
@@ -1261,7 +1261,7 @@ Filled in step by step; the code is the reference.
   - **Excel's workbook has no phonetic run.** Without the Japanese editing language, Excel ignores `Phonetics`, `SetPhonetic` and `PhoneticCharacters` through COM. The Open XML SDK and ClosedXML write `<rPh>`.
   - **The boolean rows' labels are "boolean true" and "boolean false".** Excel turns the text `true` into a boolean when a cell is set to it.
   - **A time alone is a number in a time format.** Producers that count from Excel's epoch wrote `DateTime(1899, 12, 30, ...)` as a negative serial.
-  - **Not made yet:** Google Sheets, Numbers and Excel for Mac (decision 13). The user can't export through them, so they come from POI's and SheetJS's test files, after this step's commit. The copy of NCsvPerf's CSV is step 9's.
+  - **Not made yet:** Google Sheets, Numbers and Excel for Mac (decision 13). The user can't export through them, so Google Sheets and Excel for Mac came from POI's test data after this step's commit (see below), and Numbers not at all. The copy of NCsvPerf's CSV is step 9's.
 - **The white space rule (a design change):**
   - The design kept the white space of texts. Excel 365 (build 20527) reads them otherwise. Workbooks of cases were opened through COM, and each cell's `Value2` read back.
   - What Excel does:
@@ -1331,6 +1331,25 @@ Filled in step by step; the code is the reference.
   - The test now has a row whose texts are all raw white space, which is dropped, and a row that a reference makes blank, which is kept.
 - **Left for step 9:** the cross-check of `excel/packageassets-1695.xlsx` against the generator.
 - **Core:** no change.
+
+**Step 7, after its commit: Google Sheets and Excel for Mac files (2026-11-02).**
+
+- **Sources:**
+  - The user can't export `excel/basic.xlsx` through Google Sheets, Numbers or Excel for Mac, so the files come from test data, as decision 13 allowed.
+  - SheetJS's test files are blocked on GitHub ("Repository access blocked", reason "private_information", since 2024-07-19). So nothing is taken from them, or from a copy of them.
+  - Apache POI's `test-data/spreadsheet`, at commit `81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408`, is under POI's Apache License 2.0; its LICENSE excludes nothing there. The corpus README records the license and POI's NOTICE.
+- **Choosing:**
+  - All 353 of POI's `.xlsx` files were surveyed for their producer: `docProps/app.xml`'s application, `fileVersion`, and the sheets' default sizes.
+  - Google Sheets' files have no `docProps`, a theme named "Sheets", Arial, and its default column widths (14.43, or 12.63 in newer exports). POI has three; the two without a person's name are in.
+  - Excel for Mac ("Microsoft Macintosh Excel") wrote 30, and all but three name a person. Of those three, two record only "Microsoft Office User" or "Apache POI", and one `IEUser`, the stock name of Microsoft's test VMs. One of the first two records a person's work email in its threaded comment's `persons` part, so the other two are in: a 16.0300 file and a 15.0300 file.
+  - No file in POI's test data comes from Numbers.
+  - POI also has files from Excel Online, ONLYOFFICE, Hancom Hancell, the ODF Converter and Access. They're not in the corpus.
+- **The tool:** `downloads` fetches each file that `downloads.txt` lists (path, URL at the pinned commit, SHA-256) when it is missing or doesn't match. It shares its checked download with POI's jars. `all` runs it last.
+- **What they turned up:**
+  - `google/64450.xlsx` has a relationship with no `Id` or `Target` in its pivot cache's relationships (POI's bug 64450). `System.IO.Packaging` rejects the package on every target, so the Open XML SDK and ClosedXML can't read it; the tests check their `XmlException`. Excel opens it. CsvHelper.Excel ignores such a relationship (step 3), and never reads pivot caches.
+  - Its pivot table's sheet is written as seven empty rows, without the table's cells. Excel builds the cells from the pivot table when it opens the file, but every reader of the sheet's XML, CsvHelper.Excel included, reads the sheet as empty. Pivot tables are out of scope.
+  - Apart from that, the oracles agree with CsvHelper.Excel on every cell. Excel, asked through COM, reads every other cell of the four files as their XML holds it.
+- **Tests:** 24 new, 617 per target, all passing on net10.0, net8.0 and net48.
 
 ### Phase 2: typed reading (M)
 

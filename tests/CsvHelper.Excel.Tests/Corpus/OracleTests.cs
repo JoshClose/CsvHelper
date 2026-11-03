@@ -40,6 +40,13 @@ public class OracleTests
 	/// </summary>
 	private const string Zip64Descriptors = "poi/sxssf.xlsx";
 
+	/// <summary>
+	/// The workbook whose relationships <c>System.IO.Packaging</c> rejects on every target: Google Sheets wrote a
+	/// relationship with no <c>Id</c> or <c>Target</c> in its pivot cache's relationships (POI's bug 64450). Excel opens it;
+	/// CsvHelper.Excel ignores such a relationship, and doesn't read pivot caches.
+	/// </summary>
+	private const string RelationshipWithoutId = "google/64450.xlsx";
+
 	/// <summary>The cells where ClosedXML reads the corpus otherwise, and why.</summary>
 	private static readonly (string File, string Cell, string Reason)[] ClosedXmlDifferences =
 	[
@@ -94,7 +101,7 @@ public class OracleTests
 	public void MatchesTheOpenXmlSdksCells(string file)
 	{
 		var ours = CorpusFiles.Read(file, out _);
-		if (RejectsTheZip(file, () => Oracles.OpenXmlSdk(file)))
+		if (RejectsThePackage(file, () => Oracles.OpenXmlSdk(file)))
 		{
 			return;
 		}
@@ -119,7 +126,7 @@ public class OracleTests
 			return;
 		}
 
-		if (RejectsTheZip(file, () => Oracles.ClosedXml(file, date1904)))
+		if (RejectsThePackage(file, () => Oracles.ClosedXml(file, date1904)))
 		{
 			return;
 		}
@@ -170,25 +177,32 @@ public class OracleTests
 	}
 
 	/// <summary>
-	/// On .NET Framework, checks that an oracle built on <c>System.IO.Packaging</c> rejects <see cref="Zip64Descriptors"/>
-	/// as corrupt, as WindowsBase does; CsvHelper.Excel has read it by then.
+	/// Checks that an oracle built on <c>System.IO.Packaging</c> (the Open XML SDK, ClosedXML) rejects the workbooks it
+	/// can't open here, with the exception it throws for each: <see cref="RelationshipWithoutId"/> everywhere, and
+	/// <see cref="Zip64Descriptors"/> on .NET Framework. CsvHelper.Excel has read the workbook by then.
 	/// </summary>
 	/// <param name="file">The workbook.</param>
 	/// <param name="read">Reads the workbook with the oracle.</param>
 	/// <returns>Whether the oracle can't read the workbook here, so that there is nothing to compare.</returns>
-	private static bool RejectsTheZip(string file, Action read)
+	private static bool RejectsThePackage(string file, Action read)
 	{
-#if NETFRAMEWORK
-		if (file == Zip64Descriptors)
+		var expected = file switch
 		{
-			var e = Assert.ThrowsAny<FormatException>(read);
-			Assert.Equal("System.IO.FileFormatException", e.GetType().FullName);
-
-			return true;
-		}
+			RelationshipWithoutId => "System.Xml.XmlException",
+#if NETFRAMEWORK
+			Zip64Descriptors => "System.IO.FileFormatException",
 #endif
+			_ => null,
+		};
+		if (expected is null)
+		{
+			return false;
+		}
 
-		return false;
+		var e = Assert.ThrowsAny<Exception>(read);
+		Assert.Equal(expected, e.GetType().FullName);
+
+		return true;
 	}
 
 	/// <summary>Checks that an oracle differs from CsvHelper.Excel in exactly the cells listed for a file.</summary>
