@@ -437,6 +437,46 @@ public class XmlScannerTests
 	}
 
 	[Fact]
+	public async Task SkipsTextAsItComes()
+	{
+		// Text up to the next markup, across refills, without growing the window; markup stays a token, and at markup
+		// there is nothing to skip.
+		var text = new string(' ', 10_000);
+		var xml = Utf8("<a>" + text + "<![CDATA[x]]>" + text + "<b/></a>");
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			using var scanner = XmlScan.Open(xml, mode, 64);
+			await scanner.NextAsync(mode);
+			await scanner.SkipTextAsync(mode);
+			await scanner.NextAsync(mode);
+			Assert.Equal(XmlTokenKind.CData, scanner.Kind);
+			await scanner.SkipTextAsync(mode);
+			await scanner.SkipTextAsync(mode);
+			await scanner.NextAsync(mode);
+			Assert.True(scanner.IsStartTag("b"u8));
+			await scanner.SkipTextAsync(mode);
+			await scanner.NextAsync(mode);
+			Assert.True(scanner.IsEndTag("a"u8));
+			Assert.False(await scanner.NextAsync(mode));
+			Assert.True(scanner.Window.Capacity <= 64);
+		});
+	}
+
+	[Fact]
+	public async Task SkippingTextThatEndsInsideAnElementLeavesTheErrorToTheNextRead()
+	{
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			using var scanner = XmlScan.Open(Utf8("<a>" + new string(' ', 1000)), mode, 64);
+			await scanner.NextAsync(mode);
+			await scanner.SkipTextAsync(mode);
+			var e = await Assert.ThrowsAsync<InvalidDataException>(() => scanner.NextAsync(mode));
+			Assert.Equal(Message(1003, "it ends inside an element"), e.Message);
+		});
+	}
+
+	[Fact]
 	public async Task SkipThatEndsInsideAnElementThrows()
 	{
 		await XmlScan.InEveryModeAsync(async mode =>

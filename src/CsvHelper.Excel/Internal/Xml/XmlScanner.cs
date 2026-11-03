@@ -388,6 +388,47 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 		return true;
 	}
 
+	/// <summary>
+	/// Skips the text at the scanner's position, if it is at text, as it comes, so that the text needn't fit the window:
+	/// for text the caller ignores, such as the white space between rows. CDATA, comments and other markup stay tokens for
+	/// <see cref="TryRead"/>. Skipped text is neither decoded nor checked, as <see cref="TryRead"/> leaves a text token's
+	/// content to whoever decodes it.
+	/// </summary>
+	/// <returns>
+	/// <see langword="true"/> when the scanner is past the text, at markup or at the end of what the part holds;
+	/// <see langword="false"/> when the window ends inside the text, which <see cref="Refill"/> fixes: what is skipped
+	/// already stays skipped.
+	/// </returns>
+	public bool TrySkipText()
+	{
+		var buffer = window.Buffer;
+		var end = window.End;
+		var pos = position;
+
+		// At the end of what the window holds, what comes next is unknown until a refill, unless the part has ended.
+		if (pos == end)
+		{
+			return window.IsEof;
+		}
+
+		if (buffer[pos] == (byte)'<')
+		{
+			return true;
+		}
+
+		var length = buffer.AsSpan(pos, end - pos).IndexOf((byte)'<');
+		if (length < 0)
+		{
+			position = end;
+
+			return window.IsEof;
+		}
+
+		position = pos + length;
+
+		return true;
+	}
+
 	/// <summary>Skips tokens until the depth is <paramref name="targetDepth"/>, refilling the window as needed. See <see cref="TrySkipTo"/>.</summary>
 	/// <param name="targetDepth">The depth to stop at.</param>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="targetDepth"/> is negative.</exception>

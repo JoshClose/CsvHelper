@@ -403,6 +403,7 @@ Internal/Sheet/
   - In `sheetData`, it reads `row` and skips everything else.
   - In `row`, it reads `c` and skips everything else (`extLst`).
   - In `c`, it reads `v` and `is`. `f` is skipped in Phase 1 (Phase 2 reads it). Everything else is skipped.
+  - Text outside a cell (mostly white space between rows and cells) is skipped as it comes, so that it never has to fit in the window. A cell, its own white space included, is read whole. (Added after step 8's commit; see its "As built".)
 - How each cell type is read:
 
 | `t` | Value | Kind |
@@ -728,7 +729,7 @@ These were the open questions. Every recommendation was accepted on 2026-11-02, 
 - **Inflate bounds read speed,** and .NET 8 and .NET Framework inflate more slowly than .NET 9+.
 - **Shared-strings memory** on huge workbooks. The arena halves it, but it stays proportional to the table.
 - **Producer tolerance.** Rejecting out-of-order rows and cells follows the spec and the producers I know; if the corpus shows a producer writing them, revisit.
-- **Window growth:** a single huge cell can grow the window up to `MaxPartSize`.
+- **Window growth:** a single huge cell can grow the window up to `MaxPartSize`. (White space between rows can't, since step 8.)
 
 #### Order of work
 
@@ -1398,7 +1399,7 @@ Filled in step by step; the code is the reference.
   - It reads the stack trace's text rather than `TargetSite` or `StackFrame.GetMethod`, which would bring trimming warnings.
   - A failed open now disposes the `ZipArchive` it made, too.
   - Two tests pin both cases down without the fuzzer: a central record whose extra field runs 8 bytes past the end, and a `<` in an entry's name (on .NET, that name just reads as a missing styles part).
-- **A finding left as designed:** white space between rows is a text token like any other, so it must fit in the window. A long run of it grows the window up to `MaxPartSize`, and past that fails with the window's error, though the scanner could skip it without holding it, as the XML layer's own skip already does. Memory stays within the limit, which is what "Public API" and "Risks" promise; skipping it is an option for Phase 9.
+- **A finding, changed after the commit (see below):** white space between rows was a text token like any other, so it had to fit in the window. A long run of it grew the window up to `MaxPartSize`, and past that failed with the window's error, though the scanner could skip it without holding it, as the XML layer's own skip already did. Memory stayed within the limit, which is what "Public API" and "Risks" promise.
 - **Tests:** 47 new, 664 per target, all passing on net10.0, net8.0 and net48. The whole solution builds without warnings, and the other suites pass.
 - **Mutation check** on net8.0, five bugs planted one at a time, all caught:
   - "corrupt zips not reported as InvalidDataException": 3 failures;
@@ -1408,6 +1409,29 @@ Filled in step by step; the code is the reference.
   - "the window grows past MaxPartSize": 6.
 - **What the check fixed:** at first, only the fuzzer caught "corrupt zips not reported". The deterministic test declared 65,535 bytes of extra field, which hits net8.0's own "Central Directory is invalid" check, an `InvalidDataException`. A scratch probe showed that only a field running a little past the end gives the `IOException`, so the test now declares 30 bytes.
 - **Left for Phase 9:** coverage-guided fuzzing (SharpFuzz).
+- **Core:** no change.
+
+**Step 8, after its commit: skipping the text between elements (2026-11-03).**
+
+- **The change** (the user's choice, over leaving it for Phase 9):
+  - `XmlScanner.TrySkipText()` skips the text at the scanner's position up to the next `<`, as it comes, like `TrySkipTo`'s skipping of text: what is skipped is dropped at the next refill.
+  - At the end of what the window holds, it asks for a refill unless the part has ended, since more text may follow.
+  - The sheet scanner calls it before each token it reads outside a cell: before the root, in the worksheet, in `sheetData` and in rows. All text there was ignored already; now it is never held.
+  - A cell is read whole, as before, its white space included.
+  - CDATA, comments and processing instructions between rows are still tokens, which must fit in the window.
+- **What it changes:** a sheet's memory no longer grows with the white space between its rows. A long run of it now fails only at `MaxUncompressedSize`, as other inflated bytes do, and never at `MaxPartSize`.
+- **A bug the tests found while building:** at first, at the end of the window `TrySkipText` reported that it was past the text, though a refill could bring more. The sheet scanner recovered, since it calls it again after each refill, but the XML layer's own tests failed.
+- **Tests** (3 new, 667 per target, all passing on net10.0, net8.0 and net48; 30,000 fuzz inputs passed on each):
+  - `XmlScannerTests`:
+    - text skipped up to markup across refills, without growing a 64-byte window, with CDATA left as a token;
+    - text that ends inside an element, whose error comes from the next read.
+  - `SheetScannerTests`: 100 KB of white space before `sheetData`, between rows and between cells reads with a window that can't grow past 1 KB, in every mode; the same white space inside a cell still needs the window.
+  - `SecurityTests`: the inflate bomb now also has a 64 KB part limit, which the white space would pass first if it were held.
+- **Mutation check** on net8.0, three bugs planted one at a time, all caught:
+  - "white space not skipped in the sheet": 3 failures;
+  - "`TrySkipText` says it's past the text at the window's end": 2;
+  - "skipped text kept in the window": 5.
+- **What the check fixed:** a fourth bug, "text skipped before the root too", passed every test. The scanner doesn't check text outside the root, though my first comments said it did, so skipping it there changes nothing. The sheet scanner now skips text in every mode outside a cell, and the comments say what it does.
 - **Core:** no change.
 
 ### Phase 2: typed reading (M)

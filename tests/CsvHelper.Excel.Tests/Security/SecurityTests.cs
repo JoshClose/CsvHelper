@@ -34,11 +34,12 @@ public class SecurityTests
 	[InlineData(true)]
 	public async Task StopsASheetThatInflatesPastTheLimit(bool async)
 	{
-		// 64 MB of white space between two rows, which deflate makes about 64 KB, read under a 16 MB limit.
+		// 64 MB of white space between two rows, which deflate makes about 64 KB, read under a 16 MB limit. The part limit
+		// is 64 KB, which the white space would pass first if the window held it rather than skipping it.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream => WriteSheet(stream, FirstRow, 64L * MiB, "<row r=\"2\"><c r=\"A2\"><v>2</v></c></row>"));
 		var zip = package.ToArray();
 		var input = new ReadTrackingStream(zip);
-		var options = NoHeader(maxUncompressedSize: 16L * MiB);
+		var options = NoHeader(maxPartSize: 64 * 1024, maxUncompressedSize: 16L * MiB);
 
 		using var workbook = async ? await ExcelWorkbook.OpenAsync(input, options) : ExcelWorkbook.Open(input, options);
 		input.Forget();

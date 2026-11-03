@@ -64,6 +64,25 @@ internal static class XmlScan
 	public static async Task<bool> NextAsync(this XmlScanner scanner, ScanMode mode) =>
 		mode.Async ? await scanner.ReadAsync(CancellationToken.None) : scanner.Read();
 
+	/// <summary>Skips the text at the scanner's position as <paramref name="mode"/> says, refilling until it is past it.</summary>
+	/// <param name="scanner">The scanner.</param>
+	/// <param name="mode">How to read.</param>
+	/// <returns>A task that completes past the text.</returns>
+	public static async Task SkipTextAsync(this XmlScanner scanner, ScanMode mode)
+	{
+		while (!scanner.TrySkipText())
+		{
+			if (mode.Async)
+			{
+				await scanner.RefillAsync(CancellationToken.None);
+			}
+			else
+			{
+				scanner.Refill();
+			}
+		}
+	}
+
 	/// <summary>Skips to a depth as <paramref name="mode"/> says.</summary>
 	/// <param name="scanner">The scanner.</param>
 	/// <param name="depth">The depth to skip to.</param>

@@ -40,8 +40,9 @@ namespace CsvHelper.Excel;
 /// <b>Fills.</b> A fill writes whole records: it ends after the row that fills the target, or at the end of the rows,
 /// and reads the window as often as it needs to in between. A cell is written only once its value is all in the window:
 /// otherwise the scanner goes back to the cell's start, refills (which keeps the cell, and grows the window for one larger
-/// than it), and reads the cell again. The rest of a cell after its value is skipped across refills. Only the refills read
-/// the part's stream, synchronously (<see cref="Fill"/>) or not (<see cref="FillAsync"/>).
+/// than it), and reads the cell again. The rest of a cell after its value, elements it doesn't read, and text between the
+/// elements it reads (white space between rows and cells) are skipped across refills, so they never grow the window. Only
+/// the refills read the part's stream, synchronously (<see cref="Fill"/>) or not (<see cref="FillAsync"/>).
 /// </para>
 /// <para>
 /// <b>Errors.</b> The sheet's content that can't be read (its XML, a cell reference, cells or rows out of order, a shared
@@ -326,6 +327,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					continue;
 				case Mode.Done:
 					return Step.Done;
+			}
+
+			// Text between the elements read, mostly white space between rows and cells, is ignored, so it is skipped as it
+			// comes rather than held in the window: a long run of it doesn't grow the window. A cell's value is read whole,
+			// in ReadCell.
+			if (!scanner.TrySkipText())
+			{
+				return Step.More;
 			}
 
 			var before = scanner.Save();

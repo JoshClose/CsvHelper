@@ -260,6 +260,25 @@ public class SheetScannerTests
 	}
 
 	[Fact]
+	public async Task SkipsTheWhiteSpaceBetweenElementsWithoutHoldingIt()
+	{
+		// 100 KB of white space before sheetData, between rows and between cells, read with a window that can't grow past
+		// 1 KB: the text between the elements read is skipped as it comes. Before a cell's value it is part of the cell,
+		// which the window must hold whole.
+		var spaces = new string(' ', 100_000);
+		var xml = Sheets.Worksheet($"<row r=\"1\"><c r=\"A1\"><v>1</v></c>{spaces}<c r=\"B1\"><v>2</v></c>{spaces}</row>{spaces}<row r=\"2\"><c r=\"A2\"><v>3</v></c></row>{spaces}")
+			.Replace("<sheetData>", spaces + "<sheetData>");
+		var inCell = Sheets.Worksheet($"<row r=\"1\"><c r=\"A1\">{spaces}<v>1</v></c></row>");
+
+		await Sheets.InEveryModeAsync(async mode =>
+		{
+			Assert.Equal(["1: number:1 | number:2", "2: number:3 | ()"], await Sheets.ReadAsync(xml, mode, maxSize: 1024));
+			var e = await Assert.ThrowsAsync<InvalidDataException>(() => Sheets.ReadAsync(inCell, mode, maxSize: 1024));
+			Assert.EndsWith("the token or cell there is larger than ExcelReaderOptions.MaxPartSize (1024 bytes).", e.Message);
+		});
+	}
+
+	[Fact]
 	public async Task SkipsWhatIsNotARowOrACell()
 	{
 		var xml = Sheets.Worksheet(
