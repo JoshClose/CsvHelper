@@ -47,7 +47,8 @@ internal sealed class PackageArchive : IDisposable, IAsyncDisposable
 
 	private readonly ZipArchive archive;
 	private readonly Stream stream;
-	private readonly bool ownsStream;
+	private readonly bool copied;
+	private bool ownsStream;
 	private readonly Dictionary<string, ZipArchiveEntry> entries;
 	private readonly InflateGuard guard;
 	private bool disposed;
@@ -56,12 +57,14 @@ internal sealed class PackageArchive : IDisposable, IAsyncDisposable
 	/// <param name="archive">The zip archive.</param>
 	/// <param name="stream">The stream the archive reads.</param>
 	/// <param name="ownsStream">Whether disposing the archive disposes <paramref name="stream"/>.</param>
+	/// <param name="copied">Whether <paramref name="stream"/> is a temporary copy of the input, rather than the input.</param>
 	/// <param name="guard">The workbook's byte budget, which counts the copy of a non-seekable input already.</param>
-	private PackageArchive(ZipArchive archive, Stream stream, bool ownsStream, InflateGuard guard)
+	private PackageArchive(ZipArchive archive, Stream stream, bool ownsStream, bool copied, InflateGuard guard)
 	{
 		this.archive = archive;
 		this.stream = stream;
 		this.ownsStream = ownsStream;
+		this.copied = copied;
 		this.guard = guard;
 		entries = new Dictionary<string, ZipArchiveEntry>(PartName.Comparer);
 		foreach (var entry in archive.Entries)
@@ -170,7 +173,7 @@ internal sealed class PackageArchive : IDisposable, IAsyncDisposable
 			var archive = new ZipArchive(stream, ZipArchiveMode.Read, true, Encoding.UTF8);
 #endif
 
-			return new PackageArchive(archive, stream, ownsStream, guard);
+			return new PackageArchive(archive, stream, ownsStream, copied, guard);
 		}
 		catch
 		{
@@ -181,6 +184,18 @@ internal sealed class PackageArchive : IDisposable, IAsyncDisposable
 			}
 
 			throw;
+		}
+	}
+
+	/// <summary>
+	/// Makes disposing the archive leave the caller's stream open, for an open that fails after the archive: the caller's
+	/// stream is the caller's to dispose then, as when the archive itself fails to open. A temporary copy is still deleted.
+	/// </summary>
+	public void LeaveInputOpen()
+	{
+		if (!copied)
+		{
+			ownsStream = false;
 		}
 	}
 

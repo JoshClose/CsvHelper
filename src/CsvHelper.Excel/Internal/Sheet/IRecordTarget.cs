@@ -3,7 +3,7 @@ using System;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// Where <see cref="SheetScanner"/> writes the records of a sheet: the reader's batch (step 6's <c>RecordBatchTarget</c>,
+/// Where <see cref="SheetScanner"/> writes the records of a sheet: the reader's batch (<see cref="RecordBatchTarget"/>,
 /// over <c>CsvReader.RecordBatch</c>), or a test's capturing target. Implemented by structs and passed as a generic
 /// parameter, so that the JIT specializes the scanner for each and nothing is dispatched through the interface.
 /// </summary>
@@ -34,4 +34,32 @@ internal interface IRecordTarget
 	/// <summary>Ends the current record; a record without fields gets one empty field.</summary>
 	/// <param name="row">The record's row in the sheet, 1-based: its line.</param>
 	void EndRecord(long row);
+}
+
+/// <summary>
+/// The <see cref="IRecordTarget"/> of a reader: a struct over its <see cref="CsvReader.RecordBatch"/>, converting each
+/// <see cref="SheetCellKind"/> to the <see cref="CsvCellKind"/> of the same value.
+/// </summary>
+internal readonly struct RecordBatchTarget : IRecordTarget
+{
+	private readonly CsvReader.RecordBatch batch;
+
+	/// <summary>Creates the target.</summary>
+	/// <param name="batch">The reader's batch.</param>
+	public RecordBatchTarget(CsvReader.RecordBatch batch) => this.batch = batch;
+
+	/// <inheritdoc/>
+	public bool IsFull => batch.IsFull;
+
+	/// <inheritdoc/>
+	public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind) => batch.AddField(utf8, kind.ToCsv());
+
+	/// <inheritdoc/>
+	public Span<byte> GetFieldSpan(int sizeHint) => batch.GetFieldSpan(sizeHint);
+
+	/// <inheritdoc/>
+	public void CommitField(int length, SheetCellKind kind) => batch.CommitField(length, kind.ToCsv());
+
+	/// <inheritdoc/>
+	public void EndRecord(long row) => batch.EndRecord(row);
 }

@@ -1,5 +1,43 @@
 namespace CsvHelper.Excel;
 
+/// <summary>
+/// A sheet of an <see cref="ExcelWorkbook"/>, as the workbook lists it: its name, place in tab order, visibility and kind.
+/// Pass it to <see cref="ExcelWorkbook.OpenReader(ExcelSheet, ExcelReaderOptions?)"/> to read it.
+/// </summary>
+public sealed class ExcelSheet
+{
+	/// <summary>Creates the sheet.</summary>
+	/// <param name="workbook">The workbook it is a sheet of.</param>
+	/// <param name="sheet">The sheet, as the workbook part lists it.</param>
+	internal ExcelSheet(ExcelWorkbook workbook, WorkbookSheet sheet)
+	{
+		Workbook = workbook;
+		Part = sheet;
+	}
+
+	/// <summary>The sheet's name, as its tab shows it.</summary>
+	public string Name => Part.Name;
+
+	/// <summary>The sheet's 0-based place in tab order, in <see cref="ExcelWorkbook.Sheets"/>.</summary>
+	public int Index => Part.Index;
+
+	/// <summary>Whether the sheet shows as a tab.</summary>
+	public ExcelSheetVisibility Visibility => Part.Visibility;
+
+	/// <summary>What the sheet is: only a <see cref="ExcelSheetKind.Worksheet"/> can be read.</summary>
+	public ExcelSheetKind Kind => Part.Kind;
+
+	/// <summary>The workbook the sheet is a sheet of.</summary>
+	internal ExcelWorkbook Workbook { get; }
+
+	/// <summary>The sheet as the workbook part lists it, with its part.</summary>
+	internal WorkbookSheet Part { get; }
+
+	/// <summary>The sheet's name.</summary>
+	/// <returns><see cref="Name"/>.</returns>
+	public override string ToString() => Name;
+}
+
 /// <summary>Whether a sheet shows as a tab in Excel.</summary>
 public enum ExcelSheetVisibility
 {

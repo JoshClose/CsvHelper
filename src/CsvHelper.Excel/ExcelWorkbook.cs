@@ -1,0 +1,517 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace CsvHelper.Excel;
+
+/// <summary>
+/// An Excel workbook opened to read: an <c>.xlsx</c>, <c>.xlsm</c>, <c>.xltx</c> or <c>.xltm</c> file (or an <c>.xlam</c>),
+/// its sheets, and a <see cref="CsvReader"/> over any of its worksheets, which reads the sheet's rows as records.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>Reading.</b> <see cref="OpenReader(ExcelReaderOptions?)"/> returns a plain <see cref="CsvReader"/>: records, dynamic
+/// records, <see cref="CsvDataReader"/> and CsvHelper.Linq work as for CSV. Field <c>i</c> of a record is column <c>i</c>
+/// of its row (<c>A</c> is 0), empty cells are empty fields, and rows are padded to the first record's width. Numbers and
+/// booleans parse with the invariant culture, as they are stored; dates read as their serial numbers until typed
+/// reading. Errors in a sheet name their cell, such as <c>Orders!C14</c>, in <see cref="CsvFormatException.Location"/>.
+/// </para>
+/// <para>
+/// <b>Ownership.</b> A reader holds its sheet's stream, not the workbook, and disposing the reader leaves the workbook
+/// open. After the workbook is disposed, a reader's next fill throws <see cref="ObjectDisposedException"/>.
+/// <see cref="ExcelReader"/>'s readers own their workbook instead.
+/// </para>
+/// <para>
+/// <b>Threading.</b> A workbook is not thread-safe. Several readers of one workbook can be open and used in turn on one
+/// thread, but not from several threads at once. <see cref="CsvReader.ParallelEnumerate{T}(Func{CsvReader, T}, int)"/>
+/// works, since its fills run one at a time.
+/// </para>
+/// <para>
+/// <b>Files.</b> A path is opened so that others can read, write and delete the file, so a workbook that is open in Excel
+/// can be read, and Excel can still save it; the workbook goes on reading the copy it opened. A stream that can seek is
+/// read from its start; one that can't is copied to a temporary file first.
+/// </para>
+/// </remarks>
+public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
+{
+	private readonly PackageArchive archive;
+	private readonly WorkbookPart part;
+	private readonly ExcelReaderOptions options;
+	private readonly bool fromStream;
+	private StyleTable? styles;
+	private SharedStrings? strings;
+
+	/// <summary>Creates the workbook.</summary>
+	/// <param name="archive">The package.</param>
+	/// <param name="part">The workbook part.</param>
+	/// <param name="options">The workbook's options.</param>
+	/// <param name="fromStream">Whether the package reads the caller's stream.</param>
+	private ExcelWorkbook(PackageArchive archive, WorkbookPart part, ExcelReaderOptions options, bool fromStream)
+	{
+		this.archive = archive;
+		this.part = part;
+		this.options = options;
+		this.fromStream = fromStream;
+		Sheets = new ReadOnlyCollection<ExcelSheet>([.. part.Sheets.Select(s => new ExcelSheet(this, s))]);
+	}
+
+	/// <summary>
+	/// The sheets, in tab order: worksheets, chartsheets and the legacy kinds, hidden ones included. A sheet's
+	/// <see cref="ExcelSheet.Index"/> is its place here.
+	/// </summary>
+	public IReadOnlyList<ExcelSheet> Sheets { get; }
+
+	/// <summary>
+	/// Whether the workbook uses the 1904 date system, whose serial date 0 is January 1, 1904 rather than the end of 1899:
+	/// Excel for Mac used it by default before 2011.
+	/// </summary>
+	public bool Date1904 => part.Date1904;
+
+	/// <summary>Whether the workbook is disposed.</summary>
+	internal bool IsDisposed => archive.IsDisposed;
+
+	/// <summary>Opens the workbook at a path.</summary>
+	/// <param name="path">The path of the workbook.</param>
+	/// <param name="options">The workbook's options, which its readers use unless they are given their own; <see langword="null"/> for <see cref="ExcelReaderOptions.Default"/>.</param>
+	/// <returns>The workbook.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="path"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">The options are not valid: both a sheet name and an index, or no <see cref="ExcelReaderOptions.Csv"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="InvalidDataException">The file is not a workbook, a part can't be read, or a part passes a limit.</exception>
+	/// <exception cref="NotSupportedException">The file is an <c>.xlsb</c>, an encrypted workbook or an <c>.xls</c>.</exception>
+	/// <exception cref="InvalidOperationException">The CsvHelper loaded is not the version this CsvHelper.Excel was built with.</exception>
+	/// <exception cref="IOException">The file can't be opened.</exception>
+	public static ExcelWorkbook Open(string path, ExcelReaderOptions? options = null) =>
+		SyncOrAsync.Result(OpenCoreAsync(path, options, false, CancellationToken.None));
+
+	/// <summary>Opens the workbook in a stream.</summary>
+	/// <param name="stream">The stream of the workbook: one that can seek is read from its start, and one that can't is copied to a temporary file.</param>
+	/// <param name="options">The workbook's options, which its readers use unless they are given their own; <see langword="null"/> for <see cref="ExcelReaderOptions.Default"/>.</param>
+	/// <param name="leaveOpen">
+	/// Whether disposing the workbook leaves <paramref name="stream"/> open. A stream that is copied is disposed once the
+	/// copy is made, unless this is <see langword="true"/>. When the open fails, a stream that can seek is left open.
+	/// </param>
+	/// <returns>The workbook.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">The stream can't be read, or the options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="InvalidDataException">The stream is not a workbook, a part can't be read, or a part passes a limit.</exception>
+	/// <exception cref="NotSupportedException">The stream is an <c>.xlsb</c>, an encrypted workbook or an <c>.xls</c>.</exception>
+	/// <exception cref="InvalidOperationException">The CsvHelper loaded is not the version this CsvHelper.Excel was built with.</exception>
+	public static ExcelWorkbook Open(Stream stream, ExcelReaderOptions? options = null, bool leaveOpen = false) =>
+		SyncOrAsync.Result(OpenCoreAsync(stream, options, leaveOpen, false, CancellationToken.None));
+
+	/// <summary>Asynchronously opens the workbook at a path. See <see cref="Open(string, ExcelReaderOptions?)"/>.</summary>
+	/// <param name="path">The path of the workbook.</param>
+	/// <param name="options">The workbook's options; <see langword="null"/> for <see cref="ExcelReaderOptions.Default"/>.</param>
+	/// <param name="cancellationToken">Cancels the open.</param>
+	/// <returns>A task whose result is the workbook.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="path"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">The options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="InvalidDataException">The file is not a workbook, a part can't be read, or a part passes a limit.</exception>
+	/// <exception cref="NotSupportedException">The file is an <c>.xlsb</c>, an encrypted workbook or an <c>.xls</c>.</exception>
+	/// <exception cref="InvalidOperationException">The CsvHelper loaded is not the version this CsvHelper.Excel was built with.</exception>
+	/// <exception cref="IOException">The file can't be opened.</exception>
+	public static ValueTask<ExcelWorkbook> OpenAsync(string path, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default) =>
+		OpenCoreAsync(path, options, true, cancellationToken);
+
+	/// <summary>Asynchronously opens the workbook in a stream. See <see cref="Open(Stream, ExcelReaderOptions?, bool)"/>.</summary>
+	/// <param name="stream">The stream of the workbook.</param>
+	/// <param name="options">The workbook's options; <see langword="null"/> for <see cref="ExcelReaderOptions.Default"/>.</param>
+	/// <param name="leaveOpen">Whether disposing the workbook leaves <paramref name="stream"/> open.</param>
+	/// <param name="cancellationToken">Cancels the open.</param>
+	/// <returns>A task whose result is the workbook.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">The stream can't be read, or the options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="InvalidDataException">The stream is not a workbook, a part can't be read, or a part passes a limit.</exception>
+	/// <exception cref="NotSupportedException">The stream is an <c>.xlsb</c>, an encrypted workbook or an <c>.xls</c>.</exception>
+	/// <exception cref="InvalidOperationException">The CsvHelper loaded is not the version this CsvHelper.Excel was built with.</exception>
+	public static ValueTask<ExcelWorkbook> OpenAsync(Stream stream, ExcelReaderOptions? options = null, bool leaveOpen = false, CancellationToken cancellationToken = default) =>
+		OpenCoreAsync(stream, options, leaveOpen, true, cancellationToken);
+
+	/// <summary>
+	/// Opens a reader of the sheet the options choose (<see cref="ExcelReaderOptions.Sheet"/> or
+	/// <see cref="ExcelReaderOptions.SheetIndex"/>), or of the first worksheet, hidden ones included.
+	/// </summary>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentException">The options name no sheet of the workbook, or are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, or a limit is 0 or less.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet, or the workbook has none.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public CsvReader OpenReader(ExcelReaderOptions? options = null) =>
+		SyncOrAsync.Result(OpenReaderCoreAsync(null, null, null, options, false, false, CancellationToken.None));
+
+	/// <summary>Opens a reader of the sheet with a name, matched ignoring case.</summary>
+	/// <param name="sheetName">The sheet's name; it wins over the options' sheet.</param>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="sheetName"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentException">The workbook has no sheet of that name (the message lists its sheets), or the options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public CsvReader OpenReader(string sheetName, ExcelReaderOptions? options = null)
+	{
+		ArgumentNullException.ThrowIfNull(sheetName);
+
+		return SyncOrAsync.Result(OpenReaderCoreAsync(sheetName, null, null, options, false, false, CancellationToken.None));
+	}
+
+	/// <summary>Opens a reader of the sheet at a place in tab order.</summary>
+	/// <param name="sheetIndex">The sheet's 0-based index in <see cref="Sheets"/>; it wins over the options' sheet.</param>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, or a limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentException">The options are not valid.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public CsvReader OpenReader(int sheetIndex, ExcelReaderOptions? options = null) =>
+		SyncOrAsync.Result(OpenReaderCoreAsync(null, sheetIndex, null, options, false, false, CancellationToken.None));
+
+	/// <summary>Opens a reader of a sheet of this workbook.</summary>
+	/// <param name="sheet">The sheet, from <see cref="Sheets"/>; it wins over the options' sheet.</param>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="sheet"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentException">The sheet is another workbook's, or the options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public CsvReader OpenReader(ExcelSheet sheet, ExcelReaderOptions? options = null)
+	{
+		ArgumentNullException.ThrowIfNull(sheet);
+
+		return SyncOrAsync.Result(OpenReaderCoreAsync(null, null, sheet, options, false, false, CancellationToken.None));
+	}
+
+	/// <summary>Asynchronously opens a reader of the sheet the options choose, or of the first worksheet. See <see cref="OpenReader(ExcelReaderOptions?)"/>.</summary>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <param name="cancellationToken">Cancels reading the styles and shared strings.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentException">The options name no sheet of the workbook, or are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, or a limit is 0 or less.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet, or the workbook has none.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public ValueTask<CsvReader> OpenReaderAsync(ExcelReaderOptions? options = null, CancellationToken cancellationToken = default) =>
+		OpenReaderCoreAsync(null, null, null, options, false, true, cancellationToken);
+
+	/// <summary>Asynchronously opens a reader of the sheet with a name. See <see cref="OpenReader(string, ExcelReaderOptions?)"/>.</summary>
+	/// <param name="sheetName">The sheet's name, matched ignoring case.</param>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <param name="cancellationToken">Cancels reading the styles and shared strings.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="sheetName"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentException">The workbook has no sheet of that name, or the options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public ValueTask<CsvReader> OpenReaderAsync(string sheetName, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(sheetName);
+
+		return OpenReaderCoreAsync(sheetName, null, null, options, false, true, cancellationToken);
+	}
+
+	/// <summary>Asynchronously opens a reader of the sheet at a place in tab order. See <see cref="OpenReader(int, ExcelReaderOptions?)"/>.</summary>
+	/// <param name="sheetIndex">The sheet's 0-based index in <see cref="Sheets"/>.</param>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <param name="cancellationToken">Cancels reading the styles and shared strings.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, or a limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentException">The options are not valid.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public ValueTask<CsvReader> OpenReaderAsync(int sheetIndex, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default) =>
+		OpenReaderCoreAsync(null, sheetIndex, null, options, false, true, cancellationToken);
+
+	/// <summary>Asynchronously opens a reader of a sheet of this workbook. See <see cref="OpenReader(ExcelSheet, ExcelReaderOptions?)"/>.</summary>
+	/// <param name="sheet">The sheet, from <see cref="Sheets"/>.</param>
+	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
+	/// <param name="cancellationToken">Cancels reading the styles and shared strings.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="sheet"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="ArgumentException">The sheet is another workbook's, or the options are not valid.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
+	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	public ValueTask<CsvReader> OpenReaderAsync(ExcelSheet sheet, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(sheet);
+
+		return OpenReaderCoreAsync(null, null, sheet, options, false, true, cancellationToken);
+	}
+
+	/// <summary>Disposes the workbook: its file, or its stream unless it was opened to leave it open. Its readers' next fills throw.</summary>
+	public void Dispose() => archive.Dispose();
+
+	/// <summary>Asynchronously disposes the workbook. See <see cref="Dispose"/>.</summary>
+	/// <returns>A task that completes when the workbook is disposed.</returns>
+	public ValueTask DisposeAsync() => archive.DisposeAsync();
+
+	/// <summary>Opens the workbook at a path, synchronously or not.</summary>
+	/// <param name="path">The path of the workbook.</param>
+	/// <param name="options">The workbook's options, or <see langword="null"/>.</param>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous open.</param>
+	/// <returns>A task whose result is the workbook.</returns>
+	internal static async ValueTask<ExcelWorkbook> OpenCoreAsync(string path, ExcelReaderOptions? options, bool async, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(path);
+		var settings = Prepare(options);
+		var archive = await PackageArchive.OpenAsync(path, settings.Limits, async, cancellationToken).ConfigureAwait(false);
+
+		return await LoadAsync(archive, settings, false, async, cancellationToken).ConfigureAwait(false);
+	}
+
+	/// <summary>Opens the workbook in a stream, synchronously or not.</summary>
+	/// <param name="stream">The stream of the workbook.</param>
+	/// <param name="options">The workbook's options, or <see langword="null"/>.</param>
+	/// <param name="leaveOpen">Whether disposing the workbook leaves <paramref name="stream"/> open.</param>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous open.</param>
+	/// <returns>A task whose result is the workbook.</returns>
+	internal static async ValueTask<ExcelWorkbook> OpenCoreAsync(Stream stream, ExcelReaderOptions? options, bool leaveOpen, bool async, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(stream);
+		var settings = Prepare(options);
+		var archive = await PackageArchive.OpenAsync(stream, leaveOpen, settings.Limits, async, cancellationToken).ConfigureAwait(false);
+
+		return await LoadAsync(archive, settings, true, async, cancellationToken).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Opens a reader of the workbook's default sheet that owns the workbook, for <see cref="ExcelReader"/>: disposing the
+	/// reader disposes the workbook. When the reader can't be opened, the workbook is disposed, leaving the caller's
+	/// stream open.
+	/// </summary>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	internal async ValueTask<CsvReader> OpenOwningReaderAsync(bool async, CancellationToken cancellationToken)
+	{
+		try
+		{
+			return await OpenReaderCoreAsync(null, null, null, null, true, async, cancellationToken).ConfigureAwait(false);
+		}
+		catch
+		{
+			if (fromStream)
+			{
+				archive.LeaveInputOpen();
+			}
+
+			archive.Dispose();
+
+			throw;
+		}
+	}
+
+	/// <summary>Checks the version of CsvHelper and the options, before an open reads anything.</summary>
+	/// <param name="options">The options, or <see langword="null"/> for the default.</param>
+	/// <returns>The options to use.</returns>
+	private static ExcelReaderOptions Prepare(ExcelReaderOptions? options)
+	{
+		VersionGuard.EnsureMatch();
+		var settings = options ?? ExcelReaderOptions.Default;
+		settings.Validate(nameof(options));
+
+		return settings;
+	}
+
+	/// <summary>Loads the workbook part of an open package; when that fails, disposes the package, leaving the caller's stream open.</summary>
+	/// <param name="archive">The package.</param>
+	/// <param name="options">The workbook's options.</param>
+	/// <param name="fromStream">Whether the package reads the caller's stream.</param>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task whose result is the workbook.</returns>
+	private static async ValueTask<ExcelWorkbook> LoadAsync(PackageArchive archive, ExcelReaderOptions options, bool fromStream, bool async, CancellationToken cancellationToken)
+	{
+		try
+		{
+			var part = await WorkbookPart.LoadAsync(archive, options.Limits, async, cancellationToken).ConfigureAwait(false);
+
+			return new ExcelWorkbook(archive, part, options, fromStream);
+		}
+		catch
+		{
+			if (fromStream)
+			{
+				archive.LeaveInputOpen();
+			}
+
+			archive.Dispose();
+
+			throw;
+		}
+	}
+
+	/// <summary>The name of a kind of sheet, for messages.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <returns>The name, such as "chartsheet".</returns>
+	private static string Describe(ExcelSheetKind kind) => kind switch
+	{
+		ExcelSheetKind.Worksheet => "worksheet",
+		ExcelSheetKind.Chartsheet => "chartsheet",
+		ExcelSheetKind.DialogSheet => "dialog sheet",
+		_ => "macro sheet",
+	};
+
+	/// <summary>Opens a reader, synchronously or not: chooses the sheet, loads the styles and shared strings the first time, and opens the sheet's part.</summary>
+	/// <param name="sheetName">The sheet's name, or <see langword="null"/>.</param>
+	/// <param name="sheetIndex">The sheet's index, or <see langword="null"/>.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/>.</param>
+	/// <param name="options">The reader's options, or <see langword="null"/> for the workbook's.</param>
+	/// <param name="ownsWorkbook">Whether disposing the reader disposes the workbook.</param>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	private async ValueTask<CsvReader> OpenReaderCoreAsync(
+		string? sheetName, int? sheetIndex, ExcelSheet? sheet, ExcelReaderOptions? options, bool ownsWorkbook, bool async, CancellationToken cancellationToken)
+	{
+		if (IsDisposed)
+		{
+			throw new ObjectDisposedException(nameof(ExcelWorkbook), "The workbook is disposed.");
+		}
+
+		var settings = options ?? this.options;
+		settings.Validate(nameof(options));
+		var chosen = Choose(sheetName, sheetIndex, sheet, settings);
+		if (chosen.Kind != ExcelSheetKind.Worksheet)
+		{
+			throw new NotSupportedException($"The sheet \"{chosen.Name}\" is a {Describe(chosen.Kind)}, and only worksheets have cells to read.");
+		}
+
+		var partName = chosen.Part.PartName ?? throw new InvalidDataException($"The sheet \"{chosen.Name}\" can't be read: {chosen.Part.Problem}.");
+		var limits = settings.Limits;
+		styles ??= await StyleTable.LoadAsync(archive, part.StylesPart, limits, async, cancellationToken).ConfigureAwait(false);
+		strings ??= await SharedStrings.LoadAsync(archive, part.SharedStringsPart, limits, async, cancellationToken).ConfigureAwait(false);
+		var stream = await archive.OpenPartAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
+		SheetScanner scanner;
+		try
+		{
+			scanner = new SheetScanner(new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize)), chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream);
+		}
+		catch
+		{
+			stream.Dispose();
+
+			throw;
+		}
+
+		try
+		{
+			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook), settings.Csv);
+		}
+		catch
+		{
+			// The options of the reader can't be used: the reader never took the source.
+			scanner.Dispose();
+
+			throw;
+		}
+	}
+
+	/// <summary>Chooses the sheet to read: the one given, else the options', else the first worksheet.</summary>
+	/// <param name="sheetName">The sheet's name, or <see langword="null"/>.</param>
+	/// <param name="sheetIndex">The sheet's index, or <see langword="null"/>.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/>.</param>
+	/// <param name="options">The reader's options.</param>
+	/// <returns>The sheet.</returns>
+	private ExcelSheet Choose(string? sheetName, int? sheetIndex, ExcelSheet? sheet, ExcelReaderOptions options)
+	{
+		if (sheet is not null)
+		{
+			if (!ReferenceEquals(sheet.Workbook, this))
+			{
+				throw new ArgumentException("The sheet is a sheet of another workbook.", nameof(sheet));
+			}
+
+			return sheet;
+		}
+
+		if (sheetName is not null)
+		{
+			return Find(sheetName, nameof(sheetName));
+		}
+
+		if (sheetIndex is not null)
+		{
+			return At(sheetIndex.Value, nameof(sheetIndex));
+		}
+
+		if (options.Sheet is not null)
+		{
+			return Find(options.Sheet, nameof(options));
+		}
+
+		if (options.SheetIndex is not null)
+		{
+			return At(options.SheetIndex.Value, nameof(options));
+		}
+
+		if (Sheets.Count == 0)
+		{
+			throw new InvalidDataException("The workbook has no sheets.");
+		}
+
+		return Sheets.FirstOrDefault(s => s.Kind == ExcelSheetKind.Worksheet) ??
+			throw new NotSupportedException($"The workbook has no worksheet, and only worksheets have cells to read. Its sheets are {List()}.");
+	}
+
+	/// <summary>Finds a sheet by name, ignoring case.</summary>
+	/// <param name="name">The name.</param>
+	/// <param name="paramName">The parameter the name came from.</param>
+	/// <returns>The sheet.</returns>
+	/// <exception cref="ArgumentException">The workbook has no sheet of that name.</exception>
+	private ExcelSheet Find(string name, string paramName)
+	{
+		foreach (var sheet in Sheets)
+		{
+			if (string.Equals(sheet.Name, name, StringComparison.OrdinalIgnoreCase))
+			{
+				return sheet;
+			}
+		}
+
+		var sheets = Sheets.Count == 0 ? "It has no sheets." : $"Its sheets are {List()}.";
+
+		throw new ArgumentException($"The workbook has no sheet named \"{name}\". {sheets}", paramName);
+	}
+
+	/// <summary>Gets a sheet by its place in tab order.</summary>
+	/// <param name="index">The 0-based index.</param>
+	/// <param name="paramName">The parameter the index came from.</param>
+	/// <returns>The sheet.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">The index is out of range.</exception>
+	private ExcelSheet At(int index, string paramName)
+	{
+		if ((uint)index >= (uint)Sheets.Count)
+		{
+			var range = Sheets.Count == 0 ? "The workbook has no sheets." : $"The workbook has {Sheets.Count} sheets, so an index is 0 to {Sheets.Count - 1}.";
+
+			throw new ArgumentOutOfRangeException(paramName, index, range);
+		}
+
+		return Sheets[index];
+	}
+
+	/// <summary>The names of the sheets, quoted, for messages.</summary>
+	/// <returns>The list, such as <c>"Data", "Chart1" (chartsheet)</c>.</returns>
+	private string List() => string.Join(", ", Sheets.Select(s => s.Kind == ExcelSheetKind.Worksheet ? $"\"{s.Name}\"" : $"\"{s.Name}\" ({Describe(s.Kind)})"));
+}

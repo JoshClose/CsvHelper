@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings) and 5 (sheet scanner) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner) and 6 (record source and public API) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 5 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 6 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -229,6 +229,7 @@ public enum ExcelSheetKind { Worksheet, Chartsheet, DialogSheet, MacroSheet }
   - An index is 0-based into `Sheets`, which lists every sheet in tab order, chartsheets included. Out of range throws `ArgumentOutOfRangeException`.
   - A sheet that is not a worksheet throws `NotSupportedException`.
   - An `ExcelSheet` from another workbook throws `ArgumentException`.
+  - With no sheet chosen, a workbook without a worksheet throws `NotSupportedException`, and one without sheets `InvalidDataException`.
 - **Options and limits:**
   - The options passed to `Open` belong to the workbook and are the default for `OpenReader`. Options passed to `OpenReader` replace them for that reader; they are not merged.
   - Each call checks the parts it reads against the limits of its own options.
@@ -241,7 +242,8 @@ public enum ExcelSheetKind { Worksheet, Chartsheet, DialogSheet, MacroSheet }
   - These apply: `HasHeader`, `SkipEmptyLines`, trimming, `NullValues`, `TrueValues`/`FalseValues` (text cells only), `FieldCountMismatch`, `MissingField`, header matching, `OnRecordError`, `FormatProvider` (text cells only), `PoolStrings` and `BufferSize`.
   - The dialect settings are ignored.
 - **Ownership:**
-  - A reader from `OpenReader` holds its sheet's entry stream, not the workbook. Disposing the workbook first makes the reader's next read throw `ObjectDisposedException`.
+  - A reader from `OpenReader` holds its sheet's entry stream, not the workbook. Disposing the workbook first makes the reader's next fill throw `ObjectDisposedException`; the records the reader holds already can still be read.
+  - A failed `Open`, or `ExcelReader` call, leaves the caller's seekable stream open, whatever `leaveOpen` says.
   - A reader from `ExcelReader` owns its workbook and disposes it.
 - **Threading:**
   - A workbook is not thread-safe. Several readers of one workbook can be open and used in turn on one thread, because `ZipArchive` repositions its stream before each entry read. They must not be used from several threads at once.
@@ -1134,6 +1136,94 @@ Filled in step by step; the code is the reference.
   - **Bugs the tests found while building:** both were in the missing rows' pause.
     - After the missing rows filled a fill, the row's own record was written into it too, one past full.
     - Then, when a row whose number came from its first cell was read again, the rest of its missing rows were skipped. `FlushGaps` now runs before every cell, and pauses only after writing missing rows itself.
+
+**Step 6: record source and public API (2026-11-02).**
+
+- **Files:** `ExcelWorkbook.cs`, `ExcelReader.cs`, `ExcelReaderOptions.cs` and the `ExcelSheet` class (beside its two enums), with the signatures under "Public API". `Internal/Sheet/SheetRecordSource.cs`, and `RecordBatchTarget` in `IRecordTarget.cs`.
+- **Shape:**
+  - Every public method, sync or async, runs one internal method with an `async` flag, as the package layer does. The sync forms go through `SyncOrAsync.Result`.
+  - `OpenReader` validates its options, chooses the sheet, and loads the styles and the shared strings the first time, under that call's limits. Then it opens the sheet's part (streamed, so only `MaxPartSize` bounds its window) and returns `new CsvReader(source, options.Csv)`.
+  - When the reader's options can't be used (core's constructor throws), the sheet's stream is disposed before the exception goes on.
+  - `ExcelReader` opens the workbook, then a reader that owns it. When that reader can't be opened, it disposes the workbook.
+- **Options:**
+  - `ExcelReaderOptions.Validate` runs on every `Open` and `OpenReader`, with the parameter name `options`. Its messages:
+    - "ExcelReaderOptions.Sheet and ExcelReaderOptions.SheetIndex can't both be set.";
+    - "ExcelReaderOptions.Csv can't be null.";
+    - "ExcelReaderOptions.MaxPartSize must be more than 0.", and the same for `MaxUncompressedSize` (`ArgumentOutOfRangeException`).
+  - The CSV options pass straight to core. `SkipEmptyLines` also goes to the scanner, which applies it itself.
+- **Choosing the sheet**, as designed. The messages:
+  - "The workbook has no sheet named \"{name}\". Its sheets are \"Chart\" (chartsheet), \"Hidden\", \"Orders\"." Sheets other than worksheets are marked with their kind.
+  - "The workbook has {n} sheets, so an index is 0 to {n - 1}." (`ArgumentOutOfRangeException`).
+  - "The sheet \"Chart\" is a chartsheet, and only worksheets have cells to read." (`NotSupportedException`).
+  - "The sheet \"Orders\" can't be read: {problem}." (`InvalidDataException`, from step 3's unreadable-sheet reasons).
+  - "The workbook has no worksheet, and only worksheets have cells to read. Its sheets are ..." (`NotSupportedException`), and "The workbook has no sheets." (`InvalidDataException`).
+  - The parameter name is the argument's (`sheetName`, `sheetIndex`, `sheet`), or `options` when the choice came from the options.
+- **Ownership:**
+  - **A failed open leaves the caller's stream open:** a failed `Open(stream)`, or an `ExcelReader.Create` whose reader can't be opened, leaves a seekable stream open, even with `leaveOpen: false`.
+    - `PackageArchive.LeaveInputOpen()` is new for this. A failed archive open already worked that way (step 3); now a failure after it does too.
+    - A non-seekable stream was disposed once its copy was made, as `leaveOpen: false` says; the copy is deleted.
+  - **A disposed workbook stops its readers:** the source checks the workbook before each fill, and throws `ObjectDisposedException` ("The workbook is disposed."). So the design's "next read" is the next fill: the records a reader holds already can still be read.
+  - **Disposing a reader** disposes its sheet's stream. With `ExcelReader`, it also disposes the workbook, and so its file or stream.
+- **`Locate`** returns `null` for a line outside 1 to 1,048,576, and a row's location for a field past `XFD`, so that it can't throw; neither happens with the scanner's records.
+- **`Sheets`** is a `ReadOnlyCollection<ExcelSheet>`, so it can't be cast back to an array and changed. `ExcelSheet.ToString()` is its name.
+- **Version guard:**
+  - `VersionGuard.EnsureMatch()` runs first in every `Open`, before the options are checked. Only a pass is remembered.
+  - **Checked end to end:**
+    - A console app referenced CsvHelper.Excel, and opened a workbook with the matching CsvHelper.
+    - Then CsvHelper was rebuilt with `-p:InformationalVersion=99.0.0-mismatch` (the same assembly version, so it binds), and its DLL was swapped into the app's output.
+    - The app's `Open` then threw `InvalidOperationException`: "CsvHelper.Excel 1.0.0 needs CsvHelper 1.0.0, but CsvHelper 99.0.0-mismatch is loaded. CsvHelper.Excel uses CsvHelper's internals, so it works only with the CsvHelper version of the same release: reference CsvHelper 1.0.0, or CsvHelper.Excel 99.0.0-mismatch."
+    - With the matching DLL back, it opened again.
+  - That needs two builds of CsvHelper, so it isn't in the test suite; step 1's tests cover the check itself.
+- **Tests** (48 new, 462 per target, all passing on net10.0, net8.0 and net48, each sync and async):
+  - **The gate:**
+    - `GetRecords<T>` and `GetRecordsAsync<T>` with generated mappers (text, numbers, decimals, booleans and empty cells);
+    - `CsvDynamicRecord`;
+    - `CsvDataReader` with `DataTable.Load`;
+    - `reader.Query<T>()`;
+    - `ParallelEnumerate` over 5,000 rows in 256-byte batches;
+    - header validation (`KeyNotFoundException`).
+  - **Errors name their cell:**
+    - a field that doesn't parse gives `CsvFormatException` with `Location` (`Data!B3`, and `'Q1 Orders'!B3`), `LineNumber` and the location in the message;
+    - `OnRecordError` gets the same `Location` and can skip the record;
+    - a sheet's own error (rows out of order) comes out of the read, and no handler sees it.
+  - **The workbook:**
+    - the sheets in tab order with visibility and kind, and `Date1904`;
+    - a path (closed after dispose), and a stream that can't seek;
+    - `leaveOpen`, and a failed open leaving the stream open;
+    - options checked on `Open` and `OpenReader`, and a reader's options replacing the workbook's;
+    - each call's limits (a reader's `MaxPartSize` stops the shared strings, which, once loaded, are kept, and stops a large cell);
+    - readers disposed and opened again;
+    - a disposed workbook stopping its readers, and three readers of two sheets read in turn on one thread, in small batches.
+  - **Choosing the sheet:**
+    - the default past a chartsheet to a hidden worksheet;
+    - by name ignoring case, by index, by `ExcelSheet`, and by the options;
+    - an argument winning over the options;
+    - every error, with its parameter name.
+  - **`ExcelReader`:** a file closed with the reader, and not held when the reader can't be opened; a stream disposed unless left open, and left open on failure.
+  - **CSV options:**
+    - `SkipEmptyLines = false` (a missing row is an empty record), `HasHeader = false` and `TrimWhitespace`.
+    - Numbers parse invariantly under a `de-DE` reader while its text cells use `de-DE`.
+    - With empty rows skipped, a row a million down reads under a 100 KB limit, which the missing rows pass when they are kept.
+  - **Mutation check:** 14 bugs planted one at a time, all caught on net10.0:
+    - "the options' sheet wins over the one given": 2 failures;
+    - "hidden sheets skipped by default": 4;
+    - "names matched with case": 2;
+    - "another workbook's sheet accepted": 2;
+    - "a reader's options ignored": 16;
+    - "a reader's options not checked": 2;
+    - "styles and strings read again for each reader": 2;
+    - "a failed open disposes the caller's stream": 2;
+    - "a reader of OpenReader owns the workbook": 12;
+    - "a reader of ExcelReader doesn't own the workbook": 4;
+    - "empty rows kept whatever the options": 2;
+    - "no disposed check before a fill": 2;
+    - "fields located as rows": 2;
+    - "kinds lost on the way to the batch": 2.
+  - **What the check fixed:** three of the bugs passed at first, each through a test that couldn't tell.
+    - "Empty rows kept whatever the options": core's reader drops the empty records anyway. The new test shows that the missing rows are then counted against the limit.
+    - "No disposed check before a fill": the part's stream also throws once the workbook is disposed, so a large sheet hid the missing check. The test now also reads a sheet the window holds whole, which no stream read would stop.
+    - "Kinds lost on the way to the batch": numbers parse the same as text under the invariant culture. The new test reads them under `de-DE`.
+  - The version guard's call in `Open` can't be planted out in-process (both versions match there); the end-to-end check above covers it.
 
 ### Phase 2: typed reading (M)
 
