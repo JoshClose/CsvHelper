@@ -190,6 +190,14 @@ internal sealed class PackageArchive : IDisposable, IAsyncDisposable
 	public bool Contains(string partName) => entries.ContainsKey(partName);
 
 	/// <summary>
+	/// The uncompressed size of a part as the zip declares it, before it is inflated: a hint for sizing, since a zip can
+	/// state it wrongly. What a part really inflates to is counted as it is read.
+	/// </summary>
+	/// <param name="partName">The part's name, normalized.</param>
+	/// <returns>The declared size, or 0 when the package has no such part.</returns>
+	public long DeclaredSize(string partName) => entries.TryGetValue(partName, out var entry) ? entry.Length : 0;
+
+	/// <summary>
 	/// Opens a part for reading. A part held in memory (<paramref name="held"/>) must declare a size within
 	/// <see cref="PartLimits.MaxPartSize"/> before it is inflated, and must stay within it as it is read.
 	/// </summary>

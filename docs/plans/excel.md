@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer) and 3 (package) were built 2026-11-02; see "As built" under Phase 1.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package) and 4 (shared strings) were built 2026-11-02; see "As built" under Phase 1.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -142,7 +142,7 @@ Sizes are S, M, L and XL. Phases 0–6 make v1.0.
 
 ### Phase 1: reader foundation (L)
 
-Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 3 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
+Status: the detailed design below was approved on 2026-11-02, with every recommendation under "Decisions" accepted (question 12 updated: Python and LibreOffice are both installed). Steps 1 to 4 of "Order of work" were built on 2026-11-02; "As built", at the end of this phase, records them. The changes the design made to other sections are listed under "Changes elsewhere".
 
 Scope, as approved:
 
@@ -375,12 +375,21 @@ Internal/Sheet/
 
 **Shared strings:**
 
-- The part is streamed through an `XmlWindow`, not buffered whole.
-- Strings go into a `byte[]` arena plus an `int[]` of starts (count + 1). The initial capacities come from the entry's declared size and `uniqueCount`, both capped, since either can lie.
-- In each `<si>`, the text is the `<t>` directly under `<si>` or under `<r>`. `<rPh>`, `<phoneticPr>` and `<rPr>` are skipped. Text is decoded with `XmlText`, including `_xHHHH_`.
-- A cell copies its string with one copy and no .NET string: `AddField(arena.AsSpan(start, length), Text)`. An empty string makes the cell valueless (see "Placement").
+- The part is streamed through an `XmlWindow`, not buffered whole. Its parser works token by token over what the window holds, and only the refills wait (synchronously or not), as in the sheet scanner. A large table has many tokens, and the package parts' walk (`XmlElements`) awaits each element.
+- Strings go into a `byte[]` arena plus an `int[]` of starts (count + 1).
+  - The initial capacities come from the entry's declared size and `uniqueCount`, capped at 16 MiB and a million strings, since either can lie.
+  - `uniqueCount` is only a hint, and a value that isn't a count is ignored.
+  - The arrays double as needed. At the end, they are trimmed when more than an eighth is spare.
+- In each `<si>`, the text is the `<t>` elements directly under `<si>` or under `<r>`, joined in order.
+  - `<rPh>`, `<phoneticPr>`, `<rPr>` and unknown elements are skipped with their text, as are elements inside a `<t>`. Text outside a `<t>` is ignored.
+  - White space is kept, with or without `xml:space`.
+- Each `<t>` is decoded with `XmlText`: its XML first (entities, character references, CDATA, line ends), then its `_xHHHH_` escapes.
+  - The escapes are decoded over the `<t>`'s whole text, but not across runs, since each `<t>` is a string value of its own.
+  - So a surrogate pair whose halves are escapes in two runs reads as two U+FFFD.
+- A cell gets its string with `TryGet(index, out span)`, and copies it with one copy and no .NET string: `AddField(span, Text)`. An empty string makes the cell valueless (see "Placement").
 - The table loads once per workbook, sync or async, by the first `OpenReader` that needs it. It is immutable afterwards, so readers and workers share it.
-- An arena past `Array.MaxLength` throws `InvalidDataException`. An index out of range in a cell throws `CsvFormatException` at that cell.
+- No shared strings part, or one the workbook names but the package lacks, gives the empty table, as for styles. A sheet without `t="s"` cells still reads.
+- An arena past `Array.MaxLength` bytes, or more strings than that, throws `InvalidDataException`. An index out of range in a cell throws `CsvFormatException` at that cell.
 - Memory is the UTF-8 size of the strings plus 4 bytes each, about half of what a `string[]` costs for ASCII text.
 
 **Sheet scanner:**
@@ -953,6 +962,59 @@ Filled in step by step; the code is the reference.
     - "`cellStyleXfs` read as cell formats": 4;
     - "the last duplicate entry wins": 2;
     - "relative targets resolved from the root": 39.
+
+**Step 4: shared strings (2026-11-02).**
+
+- **Files:** `Internal/Package/SharedStrings.cs`, with its parser nested in it. `PackageArchive` gained `DeclaredSize(part)`, the uncompressed size the zip declares for an entry, which sets the first capacity.
+- **A parser that waits only on refills (a design change):**
+  - `SharedStrings.ReadAsync` loops `TryParse` over what the window holds, and then refills, synchronously or not. The parsing itself is synchronous. Its state lasts across refills: where it is, what it is skipping, and where the current `<t>` starts. Decoded text is already in the arena, so a refill can come between any two tokens.
+  - Step 3's parts walk their elements with `XmlElements`, which awaits a `ValueTask` for each element. That suits small parts, but a shared strings part has several tokens per string, and can have millions of strings. This is the shape the sheet scanner will have.
+  - Skipped elements use `TrySkipTo`, which keeps what it skipped across a refill.
+- **Decoding:**
+  - Escapes are decoded for each `<t>` on its own, over its whole text. XML text, CDATA, and text split by a comment or processing instruction are joined first. An escape doesn't continue into the next run.
+  - So `_x00` and `41_` in two runs stay literal. A surrogate pair whose halves are escapes in two runs reads as two U+FFFD. I know of no producer that splits a pair that way.
+  - Elements inside a `<t>` are skipped, with their text. Text directly in `<si>` or `<r>` is ignored without being decoded, so a bad reference there is not an error.
+- **Capacities:**
+  - The first capacities come from `uniqueCount` and from the declared size less 16 bytes of markup per declared string. `uniqueCount` counts for 16 to 1,048,576 strings, and the arena gets 256 bytes to 16 MiB.
+  - A `uniqueCount` that isn't a positive 32-bit integer is ignored: it is only a hint, and a wrong hint shouldn't fail a read. `count` (the number of cells that use shared strings) is ignored too.
+  - The arrays double as needed. At the end, either is trimmed when more than an eighth of it is spare. `MemorySize` reports what the table holds on to.
+  - At the limit, a text whose XML is longer than the room left is decoded into a temporary array first, since its decoded text may still fit.
+  - Past the limit, it throws "its strings come to more than {n} bytes, the most the table can hold" or "it has more than {n} strings, the most the table can hold", with the part and the byte offset. `ReadAsync` has an internal `maxLength`, so that tests reach both without 2 GB of XML.
+- **Missing part:** no shared strings part, or one the workbook names but the package lacks, gives `SharedStrings.Empty` (its `PartName` is null), as styles do. `PartName` lets step 5's error for an index out of range say which case it is.
+- **Test helpers:**
+  - `TestPackage.SharedStrings(items)` writes Excel's shape, with `count` and `uniqueCount`. `SharedStringsPart(xml)` writes any XML. Both add the workbook's relationship and the content type.
+  - `Packages.LoadSharedStringsAsync` loads the workbook with the default limits and the strings with the test's, so that a small part limit doesn't stop the workbook part.
+- **Tests** (24 new, 354 per target, all passing on net10.0, net8.0 and net48):
+  - In every scan mode (whole and one-byte streams, 64 KB and 16-byte windows, sync and async):
+    - order, and indexes out of range;
+    - empty strings keeping their place (`<si/>`, `<t/>`, `<r/>`);
+    - Excel's rich text, and a `<t>` before the runs;
+    - phonetic runs;
+    - white space with and without `xml:space`, and indented parts;
+    - XML decoding;
+    - every escape case: after `&#95;`, inside CDATA, split by a comment, and across runs;
+    - `x:` prefixes and the strict namespace;
+    - skipped elements and text;
+    - wrong `uniqueCount` values (allocations stay under 8 MB on .NET);
+    - growth and trimming under true, zero and huge declared sizes;
+    - both table limits, exactly at and one past;
+    - a wrong root, a DOCTYPE, an undefined entity, a truncated part, and cancellation.
+  - Through a package, sync and async:
+    - the part the workbook names;
+    - no part, a missing part, and an empty one;
+    - UTF-16 LE and BE;
+    - `MaxPartSize` (declared, exactly at and one past) and the workbook's total.
+  - **Comparison:** 200 generated parts, read in every mode, against a reference built on `XmlReader` that decodes escapes with its own regular expression. The parts have Excel's shape, with rich text, phonetic runs, prefixes, indenting, noise, CDATA, comments and every escape case. Every truncation of 10 more parts throws `InvalidDataException`, in two modes.
+  - **Mutation check:** nine bugs planted one at a time, all caught on net10.0:
+    - "no escape pass": 3 failures;
+    - "escapes decoded over the whole string, not each `<t>`": 2;
+    - "phonetic runs read as runs": 4;
+    - "text outside a `<t>` kept": 4;
+    - "an empty `<si/>` not counted": 4;
+    - "a skip inside a `<t>` ends the `<t>`": 3;
+    - "arrays not trimmed": 3;
+    - "no room check at the limit": 1;
+    - "`uniqueCount` trusted past the cap": 1 (the allocation check).
 
 ### Phase 2: typed reading (M)
 

@@ -135,6 +135,40 @@ internal sealed class TestPackage
 	/// <summary>The XML declaration Excel writes.</summary>
 	public const string Declaration = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n";
 
+	/// <summary>The content type of a shared strings part.</summary>
+	public const string SharedStringsContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml";
+
+	/// <summary>
+	/// Adds a shared strings part as Excel writes it, with <c>count</c> and <c>uniqueCount</c>; see <see cref="SharedStringsPart"/>.
+	/// </summary>
+	/// <param name="items">The content of each <c>si</c>, such as <c>&lt;t&gt;a&lt;/t&gt;</c>.</param>
+	/// <returns>The package.</returns>
+	public TestPackage SharedStrings(params string[] items) => SharedStringsPart(
+		Declaration + $"<sst xmlns=\"{MainNamespace}\" count=\"{items.Length}\" uniqueCount=\"{items.Length}\">" +
+		string.Concat(items.Select(i => $"<si>{i}</si>")) + "</sst>");
+
+	/// <summary>
+	/// Sets <c>xl/sharedStrings.xml</c>, and adds the workbook's relationship to it (after the others, as Excel numbers
+	/// them) and its content type, unless they are there already.
+	/// </summary>
+	/// <param name="xml">The part.</param>
+	/// <returns>The package.</returns>
+	public TestPackage SharedStringsPart(string xml)
+	{
+		var relationships = Text("xl/_rels/workbook.xml.rels");
+		if (!relationships.Contains(RelationshipType("sharedStrings")))
+		{
+			var id = relationships.Split(["<Relationship "], StringSplitOptions.None).Length;
+			Replace(
+				"xl/_rels/workbook.xml.rels",
+				"</Relationships>",
+				$"<Relationship Id=\"rId{id}\" Type=\"{RelationshipType("sharedStrings")}\" Target=\"sharedStrings.xml\"/></Relationships>");
+			Replace("[Content_Types].xml", "</Types>", $"<Override PartName=\"/xl/sharedStrings.xml\" ContentType=\"{SharedStringsContentType}\"/></Types>");
+		}
+
+		return Set("xl/sharedStrings.xml", xml);
+	}
+
 	/// <summary>Sets an entry to XML text, encoded as UTF-8 without a byte order mark: replaces the entry of that exact name, or adds one.</summary>
 	/// <param name="name">The entry's name, exactly as it goes in the zip.</param>
 	/// <param name="xml">The XML.</param>
