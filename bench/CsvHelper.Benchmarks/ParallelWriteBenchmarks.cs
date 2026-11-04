@@ -14,58 +14,6 @@ public sealed partial class FloatRecord
 		Feature20, Feature21, Feature22, Feature23, Feature24;
 }
 
-/// <summary>A typical business record: dates, a decimal, a Guid, numbers and some text.</summary>
-[CsvRecord]
-public sealed partial class OrderRecord
-{
-	public int Id;
-	public Guid CustomerId;
-	public string Customer = "";
-	public DateTime OrderDate;
-	public DateTimeOffset ShippedAt;
-	public decimal Total;
-	public double Weight;
-	public int Quantity;
-	public bool Paid;
-	public string Status = "";
-	public long Sku;
-	public string Notes = "";
-
-	/// <summary>Deterministic orders.</summary>
-	public static OrderRecord[] Generate(int rows = DataGenerator.DefaultRows, int seed = 42)
-	{
-		var rng = new Random(seed);
-		string[] customers = ["Contoso Ltd", "Fabrikam, Inc.", "Northwind Traders", "Adventure Works", "Tailspin Toys", "Wide World Importers"];
-		string[] statuses = ["Pending", "Shipped", "Delivered", "Cancelled", "Returned"];
-		string[] notes = ["", "", "", "Leave at the door", "Call before delivery", "Gift wrap, no invoice", "Fragile: \"glass\""];
-		var start = new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		var guid = new byte[16];
-		var result = new OrderRecord[rows];
-		for (var i = 0; i < rows; i++)
-		{
-			rng.NextBytes(guid);
-			var date = start.AddSeconds(rng.Next(0, 5 * 365 * 24 * 3600)).AddTicks(rng.Next(10_000_000));
-			result[i] = new OrderRecord
-			{
-				Id = i + 1,
-				CustomerId = new Guid(guid),
-				Customer = customers[rng.Next(customers.Length)],
-				OrderDate = date,
-				ShippedAt = new DateTimeOffset(date.AddHours(rng.Next(1, 96)).Ticks, TimeSpan.FromHours(rng.Next(-8, 9))),
-				Total = rng.Next(100, 10_000_000) / 100m,
-				Weight = rng.NextDouble() * 50,
-				Quantity = rng.Next(1, 100),
-				Paid = rng.Next(4) != 0,
-				Status = statuses[rng.Next(statuses.Length)],
-				Sku = rng.NextInt64(1_000_000_000, 9_999_999_999),
-				Notes = notes[rng.Next(notes.Length)],
-			};
-		}
-
-		return result;
-	}
-}
-
 /// <summary>
 /// WriteRecords against ParallelWriteRecords with 4, 8 and 16 workers and one per processor (All), to memory and to a
 /// file. These run on every core, unlike the other benchmarks.
@@ -197,5 +145,5 @@ public class FloatsParallelWrite : ParallelWriteBenchmarkBase<FloatRecord>
 [CategoriesColumn]
 public class OrdersParallelWrite : ParallelWriteBenchmarkBase<OrderRecord>
 {
-	protected override OrderRecord[] Create() => OrderRecord.Generate();
+	protected override OrderRecord[] Create() => OrderRecord.Generate(DataGenerator.DefaultRows);
 }

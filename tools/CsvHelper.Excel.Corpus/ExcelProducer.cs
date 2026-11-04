@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using CsvHelper.Benchmarks;
 
 namespace CsvHelper.Excel.Corpus;
 
@@ -137,6 +138,67 @@ internal static class ExcelProducer
 		{
 			Directory.Delete(temp, true);
 		}
+	}
+
+	/// <summary>
+	/// Writes <c>excel/orders-1000.xlsx</c>: the first 1,000 of the typed benchmark's orders (<see cref="ExcelOrders"/>)
+	/// entered in Excel with their types, in one assignment of the range's values, the date columns formatted below the
+	/// header, and saved, to cross-check the benchmark's <c>ExcelTypedWorkbook</c>.
+	/// </summary>
+	/// <param name="files">The corpus folder.</param>
+	public static void WriteOrders(string files)
+	{
+		var folder = Directory.CreateDirectory(Path.Combine(files, "excel")).FullName;
+		var rows = ExcelOrders.Rows(ExcelOrders.Generate(1000));
+		var columns = ExcelOrders.Header.Length;
+		var values = new object?[rows.Count, columns];
+		for (var r = 0; r < rows.Count; r++)
+		{
+			for (var c = 0; c < columns; c++)
+			{
+				// An empty string would make a cell of empty text; ExcelOrders means no cell.
+				var value = rows[r][c];
+				values[r, c] = value is string { Length: 0 } ? null : value;
+			}
+		}
+
+		Run(excel =>
+		{
+			var workbook = excel.Workbooks.Add();
+			try
+			{
+				var sheet = workbook.Worksheets[1];
+				sheet.Name = ExcelOrders.SheetName;
+				for (var c = 0; c < columns; c++)
+				{
+					if (ExcelOrders.Formats[c] is { } format)
+					{
+						sheet.Range[sheet.Cells[2, c + 1], sheet.Cells[rows.Count, c + 1]].NumberFormat = format;
+					}
+				}
+
+				sheet.Range[sheet.Cells[1, 1], sheet.Cells[rows.Count, columns]].Value2 = values;
+
+				// Entering text as typing does, Excel gives the scientific format to a text that starts like a number with an
+				// exponent, such as the Guid 54e5160b-...; the text columns go back to the default format, as a writer
+				// leaves them.
+				for (var c = 0; c < columns; c++)
+				{
+					if (ExcelOrders.Formats[c] is null && rows.Skip(1).Any(r => r[c] is string))
+					{
+						sheet.Range[sheet.Cells[2, c + 1], sheet.Cells[rows.Count, c + 1]].ClearFormats();
+					}
+				}
+
+				SaveAs(workbook, Path.Combine(folder, "orders-1000.xlsx"), Xlsx, null);
+			}
+			finally
+			{
+				workbook.Close(false);
+			}
+
+			CopyPending();
+		});
 	}
 
 	/// <summary>

@@ -39,22 +39,22 @@ public enum ExcelStrings
 internal static class ExcelTextWorkbook
 {
 	/// <summary>The XML declaration Excel starts each part with, and the line break after it.</summary>
-	private const string Declaration = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n";
+	internal const string Declaration = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\r\n";
 
 	/// <summary>The SpreadsheetML namespace.</summary>
-	private const string Main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+	internal const string Main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 
 	/// <summary>The namespace of relationship ids, and the prefix of the relationship types.</summary>
-	private const string Relationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+	internal const string Relationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
 
 	/// <summary>The namespace of relationship parts.</summary>
-	private const string PackageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";
+	internal const string PackageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";
 
 	/// <summary>The prefix of the SpreadsheetML content types.</summary>
-	private const string ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.";
+	internal const string ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.";
 
 	/// <summary>The number of rows that share a <c>spans</c> value, as in Excel's files.</summary>
-	private const int SpanBlock = 16;
+	internal const int SpanBlock = 16;
 
 	/// <summary>UTF-8 without a byte order mark, as Excel writes its parts.</summary>
 	private static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false);
@@ -104,7 +104,7 @@ internal static class ExcelTextWorkbook
 	/// <param name="name">The entry's name.</param>
 	/// <param name="level">The entry's compression.</param>
 	/// <param name="write">Writes the part after the declaration.</param>
-	private static void WriteEntry(ZipArchive archive, string name, CompressionLevel level, Action<TextWriter> write)
+	internal static void WriteEntry(ZipArchive archive, string name, CompressionLevel level, Action<TextWriter> write)
 	{
 		var entry = archive.CreateEntry(name, level);
 
@@ -117,7 +117,7 @@ internal static class ExcelTextWorkbook
 	/// <summary>Writes the content types of the parts.</summary>
 	/// <param name="writer">The entry's writer.</param>
 	/// <param name="shared">Whether the package has a shared-strings part.</param>
-	private static void WriteContentTypes(TextWriter writer, bool shared)
+	internal static void WriteContentTypes(TextWriter writer, bool shared)
 	{
 		writer.Write("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">");
 		writer.Write("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>");
@@ -136,7 +136,7 @@ internal static class ExcelTextWorkbook
 
 	/// <summary>Writes the package's relationships: the workbook.</summary>
 	/// <param name="writer">The entry's writer.</param>
-	private static void WritePackageRelationships(TextWriter writer)
+	internal static void WritePackageRelationships(TextWriter writer)
 	{
 		writer.Write($"<Relationships xmlns=\"{PackageRelationships}\">");
 		writer.Write($"<Relationship Id=\"rId1\" Type=\"{Relationships}/officeDocument\" Target=\"xl/workbook.xml\"/>");
@@ -146,7 +146,7 @@ internal static class ExcelTextWorkbook
 	/// <summary>Writes the workbook part, with its one sheet.</summary>
 	/// <param name="writer">The entry's writer.</param>
 	/// <param name="sheetName">The sheet's name.</param>
-	private static void WriteWorkbook(TextWriter writer, string sheetName)
+	internal static void WriteWorkbook(TextWriter writer, string sheetName)
 	{
 		writer.Write($"<workbook xmlns=\"{Main}\" xmlns:r=\"{Relationships}\">");
 		writer.Write("<bookViews><workbookView/></bookViews>");
@@ -157,7 +157,7 @@ internal static class ExcelTextWorkbook
 	/// <summary>Writes the workbook's relationships: the sheet, the styles, and the shared strings if there are any.</summary>
 	/// <param name="writer">The entry's writer.</param>
 	/// <param name="shared">Whether the package has a shared-strings part.</param>
-	private static void WriteWorkbookRelationships(TextWriter writer, bool shared)
+	internal static void WriteWorkbookRelationships(TextWriter writer, bool shared)
 	{
 		writer.Write($"<Relationships xmlns=\"{PackageRelationships}\">");
 		writer.Write($"<Relationship Id=\"rId1\" Type=\"{Relationships}/worksheet\" Target=\"worksheets/sheet1.xml\"/>");
@@ -294,7 +294,7 @@ internal static class ExcelTextWorkbook
 	/// <summary>Writes the shared-strings part.</summary>
 	/// <param name="writer">The entry's writer.</param>
 	/// <param name="shared">The table the sheet filled.</param>
-	private static void WriteSharedStrings(TextWriter writer, SharedStrings shared)
+	internal static void WriteSharedStrings(TextWriter writer, SharedStrings shared)
 	{
 		writer.Write($"<sst xmlns=\"{Main}\" count=\"{Number(shared.Count)}\" uniqueCount=\"{Number(shared.Strings.Count)}\">");
 
@@ -312,7 +312,7 @@ internal static class ExcelTextWorkbook
 	/// <param name="writer">The entry's writer.</param>
 	/// <param name="value">The text, which isn't empty.</param>
 	/// <exception cref="NotSupportedException">The text has a character this writer doesn't write.</exception>
-	private static void WriteText(TextWriter writer, string value)
+	internal static void WriteText(TextWriter writer, string value)
 	{
 		var preserve = value[0] == ' ' || value[value.Length - 1] == ' ';
 		writer.Write(preserve ? "<t xml:space=\"preserve\">" : "<t>");
@@ -413,10 +413,10 @@ internal static class ExcelTextWorkbook
 	/// <summary>Formats a number for the XML.</summary>
 	/// <param name="value">The number.</param>
 	/// <returns>Its digits.</returns>
-	private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
+	internal static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
 
 	/// <summary>The shared-strings table: each distinct string once, in the order first seen.</summary>
-	private sealed class SharedStrings
+	internal sealed class SharedStrings
 	{
 		private readonly Dictionary<string, int> indexes = new(StringComparer.Ordinal);
 

@@ -58,6 +58,14 @@
 		<None Include="..\..\bench\CsvHelper.Benchmarks\Data\PackageAssets.csv" Link="Bench\PackageAssets.csv" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<!-- The typed benchmark's workbook writer and orders, for the test that checks them against Excel's file. They need
+	     .NET's double formatting and Random.NextInt64, so they aren't built for net48. -->
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelTypedWorkbook.cs" Link="Bench\ExcelTypedWorkbook.cs" />
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelOrders.cs" Link="Bench\ExcelOrders.cs" />
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\OrderRecord.cs" Link="Bench\OrderRecord.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>

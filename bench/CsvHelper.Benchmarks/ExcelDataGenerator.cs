@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
@@ -5,19 +6,19 @@ using System.Text;
 namespace CsvHelper.Benchmarks;
 
 /// <summary>
-/// NCsvPerf's package assets data (<c>Data/PackageAssets.csv</c>, see <c>Data/README.md</c>) as CSV text and as
-/// workbooks, for the Excel read benchmarks.
+/// The Excel read benchmarks' data, as CSV text and as workbooks: NCsvPerf's package assets data
+/// (<c>Data/PackageAssets.csv</c>, see <c>Data/README.md</c>), and the orders of <see cref="ExcelOrders"/>.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The rows are NCsvPerf's 1,695 lines repeated the way its <c>LineCache</c> repeats them: as many whole copies as fit,
-/// then the first lines again. A header row, <see cref="DataGenerator.PackageAssetHeader"/>, comes first, so that records
-/// can be read by name.
+/// The package assets rows are NCsvPerf's 1,695 lines repeated the way its <c>LineCache</c> repeats them: as many whole
+/// copies as fit, then the first lines again. A header row, <see cref="DataGenerator.PackageAssetHeader"/>, comes first,
+/// so that records can be read by name.
 /// </para>
 /// <para>
 /// Writing a workbook of a million rows takes seconds, so the workbooks are cached under <c>%TEMP%\csvhelper-bench</c>,
-/// keyed by the row count, the strings variant, and a hash of the CSV file and of the generator's source (embedded in this
-/// assembly), so that a change to either writes them again.
+/// keyed by the data, the row count, the strings variant, and a hash of the CSV file and of the generator's source
+/// (embedded in this assembly), so that a change to either writes them again.
 /// </para>
 /// </remarks>
 public static class ExcelDataGenerator
@@ -27,6 +28,9 @@ public static class ExcelDataGenerator
 
 	/// <summary>The name of the workbook's sheet, the one Excel gave it when it opened NCsvPerf's file.</summary>
 	public const string SheetName = "PackageAssets";
+
+	/// <summary>The number of orders the typed benchmark reads: a million, as the package assets benchmark reads.</summary>
+	public const int OrderRows = 1_000_000;
 
 	/// <summary>The prefix of the generator's source files among this assembly's resources.</summary>
 	private const string SourcePrefix = "ExcelGenerator/";
@@ -95,10 +99,40 @@ public static class ExcelDataGenerator
 	/// <param name="rows">The number of data rows.</param>
 	/// <param name="strings">Where the cells' strings go.</param>
 	/// <returns>The workbook's bytes.</returns>
-	public static byte[] PackageAssets(int rows, ExcelStrings strings)
+	public static byte[] PackageAssets(int rows, ExcelStrings strings) =>
+		Cached(
+			$"packageassets-{rows}-{strings.ToString().ToLowerInvariant()}-",
+			stream => ExcelTextWorkbook.Write(stream, SheetName, PackageAssetRecords(rows), strings, CompressionLevel.Optimal));
+
+	/// <summary>Returns the orders as the cells hold them, as CSV text with a header, written by CsvHelper.</summary>
+	/// <param name="rows">The number of orders.</param>
+	/// <returns>The text.</returns>
+	public static string OrdersCsv(int rows)
+	{
+		using var writer = new StringWriter(CultureInfo.InvariantCulture);
+		using (var csv = CsvWriter.Create(writer, leaveOpen: true))
+		{
+			csv.WriteRecords(ExcelOrders.Generate(rows));
+		}
+
+		return writer.ToString();
+	}
+
+	/// <summary>Returns the orders as a workbook, from the cache or written into it.</summary>
+	/// <param name="rows">The number of orders.</param>
+	/// <returns>The workbook's bytes.</returns>
+	public static byte[] Orders(int rows) =>
+		Cached(
+			$"orders-{rows}-",
+			stream => ExcelTypedWorkbook.Write(stream, ExcelOrders.SheetName, ExcelOrders.Rows(ExcelOrders.Generate(rows)), ExcelOrders.Formats, CompressionLevel.Optimal));
+
+	/// <summary>Returns a workbook from the cache, or writes it and caches it.</summary>
+	/// <param name="prefix">The start of the cached file's name: the data, the row count and the variant.</param>
+	/// <param name="write">Writes the workbook.</param>
+	/// <returns>The workbook's bytes.</returns>
+	private static byte[] Cached(string prefix, Action<Stream> write)
 	{
 		var folder = Path.Combine(Path.GetTempPath(), "csvhelper-bench");
-		var prefix = $"packageassets-{rows}-{strings.ToString().ToLowerInvariant()}-";
 		var path = Path.Combine(folder, $"{prefix}{SourceHash.Value}.xlsx");
 		if (File.Exists(path))
 		{
@@ -108,7 +142,7 @@ public static class ExcelDataGenerator
 		Directory.CreateDirectory(folder);
 
 		using var stream = new MemoryStream();
-		ExcelTextWorkbook.Write(stream, SheetName, PackageAssetRecords(rows), strings, CompressionLevel.Optimal);
+		write(stream);
 		var bytes = stream.ToArray();
 
 		// Written under a name of its own and then moved, so that a run stopped halfway leaves no partial workbook.

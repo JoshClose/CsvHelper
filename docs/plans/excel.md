@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted; its build is under way (see "As built" under Phase 2).
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -1627,7 +1627,7 @@ Allocated per operation, in BenchmarkDotNet's MB (1,024 KB), shared / inline:
 
 ### Phase 2: typed reading (L)
 
-Status: the detailed design below was written and approved on 2026-11-03, with every recommendation accepted. The user also settled that core, CsvHelper.Linq and CsvHelper.Excel are always released together. The design makes the phase L rather than M, because it adds formula text with shared formulas, Excel's own answers as an oracle, and a typed benchmark. "Changes elsewhere" was applied to the rest of the plan at approval. "As built" at the end records each step.
+Status: the detailed design below was written and approved on 2026-11-03, with every recommendation accepted. The user also settled that core, CsvHelper.Linq and CsvHelper.Excel are always released together. The design makes the phase L rather than M, because it adds formula text with shared formulas, Excel's own answers as an oracle, and a typed benchmark. "Changes elsewhere" was applied to the rest of the plan at approval. All ten steps were built on 2026-11-03 and 2026-11-04, and the phase is complete. "As built" at the end opens with a summary (step 10), then records each step. Where building changed the design, the design says so.
 
 Scope, as planned:
 
@@ -1921,10 +1921,13 @@ public enum ExcelFormulas { CachedValue, FormulaText }
     - `Total`, `Weight`, `Quantity` and `Sku` as numbers;
     - `Paid` as booleans;
     - text, the `Guid` included, as shared strings.
+    - (Changed at step 9: the dates' format is `yyyy-mm-dd hh:mm:ss`, and `ShippedAt` is its UTC time. A cell holds a time to the millisecond and no offset, so the orders are those times, as reading gives them back; `ExcelOrders` makes them and their cells.)
   - **Writer:** `ExcelTypedWorkbook`, in Excel's shape as `ExcelTextWorkbook` is. It is cached as PackageAssets is. Excel opens it without a repair (checked through COM), and ExcelDataReader reads the same values.
+    - (Changed at step 9: as for `ExcelTextWorkbook`, Excel's shape is a file of Excel's, `excel/orders-1000.xlsx`, which the corpus tool's new `orders` command has Excel enter from the same cells, and a test compares the writer's with it. The numbers' text follows Excel's rule as far as Excel's files show it; see step 9's "As built".)
   - **Categories:**
     - Records: `GetRecords<OrderRecord>`, Sylvan's and ExcelDataReader's typed getters through `IColumnSource`-style builders, and MiniExcel's `Query<T>` if it reads every member;
     - Values: each field through its typed getter, folded into a checksum.
+    - (Changed at step 9: the builders are one `Create` over an `IOrderSource` of typed getters, a struct per library, and Values folds the same getters. MiniExcel is left out: its `Query<T>` doesn't read every member. It fills properties only, and `OrderRecord`'s members are fields; with properties, it reads `ShippedAt` without its milliseconds and at the local offset.)
   - Sylvan is the baseline. The same orders as CSV are the reference.
   - One BenchmarkDotNet run, recorded in "As built".
 - **Phase 1's benchmark:** a QuickRunner A/B of `ExcelPackageAssetsRead`, base against new, shows the scanner's new `f` check costs nothing measurable.
@@ -1945,6 +1948,7 @@ Phase 2 changes core, and this lists every change for approval. Each must pass t
 | `CsvDynamicRecord` values and `Parse<T>`; `CsvDynamicSchema` keeps `CsvCellOptions` | dynamic records' values: one test of the schema |
 | `CsvReader.FieldEquals`, public (decision 3) | none: new |
 | CsvHelper.Linq: `TextEquals` calls `FieldEquals` | dynamic-row queries that compare text |
+| `CsvValue.ParseExact<T>`'s two overloads are `AggressiveInlining` (added at step 9's gate, approved at its review) | every `ParseExact`: the type dispatch inlines again, as base's did for `DateTime` |
 
 Considered and avoided:
 
@@ -2011,7 +2015,7 @@ Each step is reviewable on its own and gets committed when you ask.
 2. **Public additions (S):**
    - `FieldEquals` and Linq's `TextEquals` (decision 3).
    - `ParseExact` for `DateOnly`, `TimeOnly` and `TimeSpan`, and the generator (decision 4), with the generator's tests.
-3. **Core gate (S):** the A/B benchmarks under "Benchmark", with `FormattedDatesRead`. If a later step changes core again, the gate runs again. (Deferred to step 9; step 8 changed `CellHeader`, which it covers.)
+3. **Core gate (S):** the A/B benchmarks under "Benchmark", with `FormattedDatesRead`. If a later step changes core again, the gate runs again. (Deferred to step 9; step 8 changed `CellHeader`, which it covers. Run at step 9: one loss, `FormattedDatesRead`'s Records, 3.5% and about 2% after a fix the user approved.)
 4. **Number formats (S):**
    - `NumberFormats`, `StyleTable`'s kinds and `SheetCellKind.Duration`.
    - The corpus tool's `formats` command and `Files/excel-formats.json`.
@@ -2066,6 +2070,87 @@ Applied at approval on 2026-11-03:
 - **Risks:** "Lockstep releases" covers CsvHelper.Linq too.
 
 #### As built
+
+**Summary (step 10, 2026-11-04).** Phase 2 is complete. This summary gathers what the steps below record one by one.
+
+- **What it delivers:**
+  - **Typed reading through `CsvReader`'s existing methods**, as "What a cell reads as" lists:
+    - numbers as numbers, with integer targets taking whole numbers only, and `decimal` and integer targets rounded to `SignificantDigits`;
+    - cells in date and time formats as dates, in both date systems, and elapsed-time formats as durations;
+    - booleans; error cells by the `ErrorCells` policy; formulas' cached values or their text, shared formulas moved;
+    - a cell's text: the stored number, ISO 8601 for dates, `[h]:mm:ss` for durations, `TRUE` or `FALSE`, an error's text.
+  - **Public API:**
+    - `ExcelReaderOptions.ErrorCells`, `SignificantDigits` and `Formulas`, with the enums `ExcelErrorCells` and `ExcelFormulas`.
+    - In core, `CsvReader.FieldEquals`, and `ParseExact<T>` for `TimeSpan`, and for `DateOnly` and `TimeOnly` on .NET 8 and later.
+  - **Core**, every change listed in "Core changes":
+    - `CsvCells`' conversions, `CsvCellKind.Duration`, and `CsvCellOptions` through `CsvRecordSource.CellOptions`;
+    - the typed paths behind `typedCells` (`ParseCell`, `TryParseCell`, `CellString`, `CellHeader`, `CellChars`, `ParseExactCell`, `CellEquals`), dynamic records, and the `ParseExact` dispatch, now inlined;
+    - the generator's `ParseExact<T>` for `[CsvFormat]` times and durations, and CsvHelper.Linq's `TextEquals`.
+  - **CsvHelper.Excel internals:**
+    - `NumberFormats` and `StyleTable`'s kinds;
+    - `IsoDate`, for `t="d"` dates and ISO 8601 durations;
+    - `FormulaShifter` and `SharedFormulas`;
+    - the scanner's typed cells, error policy and formulas, and `ChargeBeyondCell`.
+  - **Size:** CsvHelper.Excel has 8,556 lines of library code (6,799 at Phase 1's end), and 11,467 of tests (8,162). Core gained 1,739 lines, 1,106 of them `CsvCells.cs`, and CsvHelper.Tests 1,062.
+  - **Tests:**
+    - CsvHelper.Excel.Tests: 1,033 on net10.0 and net8.0, and 1,005 on net48, where the benchmark writer's 28 tests don't build (689 on each at Phase 1's end).
+    - CsvHelper.Tests: 1,309, 1,304 and 844 (1,287, 1,282 and 823).
+    - CsvHelper.Linq.Tests: 112, 110 and 101, unchanged.
+  - **Corpus:** 10 new workbooks.
+    - The `typed` content: Excel's three (the 1900 and 1904 systems, and Strict), and LibreOffice's, openpyxl's two, XlsxWriter's, Apache POI's and ClosedXML's.
+    - Excel's `orders-1000.xlsx`, for the benchmark writer's cross-check.
+    - The tests now read 34 workbooks, besides the three CsvHelper.Excel rejects.
+    - Excel's answers through COM are committed: `excel-formats.json` (180 codes, and the built-in ids 0 to 163) and `excel-oracle/`, every cell of 33 workbooks.
+  - **Benchmarks:** `FormattedDatesRead` (CSV, for the core gate) and `ExcelOrdersRead` (typed cells), whose writer, `ExcelTypedWorkbook`, a test checks against Excel's file.
+- **The gate**, item by item:
+  - Every row of "What a cell reads as" through `GetRecords<T>`, `Parse` and `TryParse`, dynamic records, `CsvDataReader`, `Query<T>()` and `ParallelEnumerate`, in both date systems, sync and async, on net10.0, net8.0 and net48: met.
+    - Step 1's `CellConversionTests` take every kind into every target through every accessor, and through generated mappers sync, async and in `ParallelEnumerate`.
+    - Step 5's `TypedReadingTests` do the same over a sheet, in both date systems.
+  - Date detection agrees with Excel on every id and code of `excel-formats.json`, and on every number cell of the corpus: met (steps 4 and 7).
+    - `NumberFormatsTests` checks the ids and codes.
+    - `ExcelAnswersTests` compares every cell of the 33 workbooks. 39 cells differ, and so does Google's pivot table sheet, each listed with one of 11 reasons.
+  - Dates and durations agree with ClosedXML and ExcelDataReader, each difference documented: met (step 7).
+    - ClosedXML can open no typed workbook, and the test checks each of its exceptions.
+    - ExcelDataReader's differences are listed: ids 79 and 80 swapped, serial 60, negatives, `t="d"` as local times, and the rest.
+  - `t="d"` cells read as the serials Excel gives them, but for the Strict workbooks' days before March 1900: met (steps 5 and 7). The Strict date system is left as it is, the user's choice.
+  - `FormulaText` agrees with Excel's `Formula` on every formula cell, with Excel's display allowed for, and shared formulas with ClosedXML's `FormulaA1` on every workbook it opens but for one array cell (decision 16): met (steps 6 and 7).
+  - The three `ErrorCells` policies, and CsvHelper.Linq's text comparison: met (steps 1, 2, 5 and 8).
+  - The security and fuzz tests pass, `FormulaText` included: met (step 8). That includes 200,000 inputs on each target, and 5,000,000 formulas through the formula fuzzer.
+  - Core's changes pass Phase 0's benchmark gate: met at step 9, after a fix the user approved. `FormattedDatesRead`'s Records is about 2% slower than base, with 65% less allocation. Everything else is within noise.
+  - The typed benchmark's baseline is recorded: met (step 9).
+  - CI's pack check still passes: run again on 2026-11-04. CsvHelper is `[0.0.0-ci]` in all 5 targets, and net47 has System.IO.Compression.
+  - Every test in the solution passed on 2026-11-04, after the fix, with the counts above, and the solution builds with 0 warnings.
+- **Decisions made while building** (each step's "As built" has the details):
+  - **Conversions** (step 1):
+    - `double` and `float` targets read the stored text, as in Phase 1, so they cost nothing new.
+    - `TimeOnly` reads serial 60's time of day.
+    - A serial that rounds to day 0 is a time alone.
+    - Rounding works on the stored decimal text, half away from zero.
+    - `CellOptions` is a field load, not a virtual call.
+  - **Excel's answers changed date detection** (step 4): only a format's first section counts; a date needs a day, a month or a year in it; a date part wins over elapsed time; and ids 79 and 81 are times, 80 a duration.
+  - **Shared formulas wrap around the grid's edges** (step 6), as Excel reads them, rather than becoming `#REF!`. Moved references are written in capitals.
+  - **`t="d"`** (step 7): a cell's kind is its style's, and Excel's Strict ISO 8601 durations read as durations.
+  - **Security** (step 8; both were the user's choices at review):
+    - a header's error cell names its column, a core change to `CellHeader`;
+    - shared strings and moved formulas count their bytes beyond their cell toward `MaxUncompressedSize`.
+  - **The benchmark** (step 9):
+    - The writer follows Excel's rule for numbers' text as far as Excel's files show it: 15 digits when they read back, otherwise 17.
+    - MiniExcel is left out, since its `Query<T>` can't read the orders.
+    - The `ParseExact` dispatch is inlined, a core change the user approved after the gate found its cost.
+- **The numbers** (step 9):
+  - On typed cells, CsvHelper.Excel reads a million orders in 2.34 s, 1.04x Sylvan.Data.Excel's time, where ExcelDataReader takes 2.30x. The same orders as CSV read in 0.35 s.
+  - Phase 1's benchmark: the scanner's Phase 2 work costs nothing measurable (every method within 1%).
+  - Core: `FormattedDatesRead`'s Records about 2% slower with 65% less allocation; the other reads, the writes and NCsvPerf within noise.
+- **Left for later:**
+  - **Phase 6:** `CsvWriter` writes a dynamic record's stored form, so a sheet's dates copied to CSV come out as serials (step 1, the user's choice).
+  - **Phase 8:** the displayed text, which date cells' ISO 8601 text doesn't follow.
+  - **Phase 9:**
+    - why typed sheets read close to Sylvan's time while text sheets don't (step 9 gives a guess);
+    - Phase 1's open items: the scanner's per-cell cost, shared strings returned as one string each, coverage-guided fuzzing, and a zip reader that checks CRCs.
+  - **Left as they are, each documented:**
+    - Strict workbooks' `dateCompatibility="0"` (step 7);
+    - a reference right after a number, which Excel can't write (step 8);
+    - an array formula's other cells, which read their values (decision 16).
 
 **Step 1, core conversions** (built 2026-11-03, committed in 1ec418e9):
 
@@ -2176,6 +2261,7 @@ Applied at approval on 2026-11-03:
   - NCsvPerf, in 3 interleaved pairs.
 - **Filters must name the classes exactly** (`CsvHelper.Benchmarks.PackageAssetsRead.*`). A leading `*` also matched `ExcelPackageAssetsRead`, an hour per run, and `SeparatorPackageAssetsRead`.
 - The run was started and then stopped at the user's request. It will run later, overnight or with step 9's benchmarks.
+- (Run at step 9, 2026-11-04: see step 9's "The core gate".)
 
 **Step 4, number formats** (built 2026-11-03, committed with steps 4 to 8 on 2026-11-04):
 
@@ -2396,6 +2482,104 @@ Applied at approval on 2026-11-03:
   - After the review's changes: "shared strings not counted beyond their cells": 6; "moved formulas not counted beyond their cells": 4.
 - **Counts:** CsvHelper.Excel.Tests: 999 on each target (20 security cases, 4 scanner cases, the formula fuzzer and the shifter's case are new), all passing on net10.0, net8.0 and net48. CsvHelper.Tests: 1309, 1304 and 844, with the header case added to `ErrorCellsCanFailEveryRead`; CsvHelper.Linq.Tests unchanged. The solution builds with 0 warnings.
 - **Core:** one change, flagged and approved at review: `CsvReader.CellHeader` takes `CsvCells.Text` of the cell, or its bytes, without `CellString`'s check of `ThrowOnErrorCells`. It is on the header's path alone, once per file, behind `typedCells`, in a method that isn't inlined. Step 9's deferred gate covers it.
+
+**Step 9, benchmarks** (built 2026-11-04):
+
+- **The orders** (`bench/CsvHelper.Benchmarks`):
+  - `OrderRecord` moved from `ParallelWriteBenchmarks.cs` to a file of its own, `OrderRecord.cs`, unchanged but for its XML docs, and `Generate` taking the row count (the parallel write passes `DataGenerator.DefaultRows`). The test project and the corpus tool link it.
+  - `ExcelOrders.cs` makes the cells: the header row of member names, then each order's cells. `Id`, `Total`, `Weight`, `Quantity` and `Sku` are numbers in General; `OrderDate` and `ShippedAt` (its UTC time) are serials in `yyyy-mm-dd hh:mm:ss`, which Excel stores as `yyyy\-mm\-dd\ hh:mm:ss`; `Paid` is a boolean; the text, the `Guid` included, is shared strings, and an empty `Notes` (3 orders in 7) has no cell.
+  - `ExcelOrders.Generate` gives the orders as the cells hold them: the times to the millisecond, `ShippedAt` at offset zero. The CSV reference is those orders written by `CsvWriter.WriteRecords`.
+- **`ExcelTypedWorkbook`** writes rows of strings, doubles, booleans and nulls, each column's number format applying below row 1. The package and the sheet around the cells are `ExcelTextWorkbook`'s, whose helpers it uses (they became `internal`; that file's output is unchanged). Each distinct format is a custom format from 164 with a cell format of its own; a cell in General has no `s`, as in Excel's file.
+- **Excel's file:** the corpus tool's new `orders` command has Excel write `excel/orders-1000.xlsx`, the first 1,000 orders entered in one assignment of `Range.Value2`, the date columns formatted first.
+  - Entered as typing enters them, text that starts like a number with an exponent, such as the `Guid` `54e5160b-...`, got the scientific format (25 of the 1,000). That comes from entering, not from saving, so the tool clears the text columns' formats after; Excel then drops the unused format when it saves. Setting them to General instead made a cell format of its own, on every text cell.
+  - The file joins `CorpusTests`' list, and, like `packageassets-1695.xlsx`, is left out of Excel's answers (12,000 cells). The corpus README describes it, and the privacy check passes.
+- **How Excel writes numbers.** Excel's file showed 17 significant digits for most numbers, 15 for about two thirds of the totals, and an exponent for a weight below 0.1 (`5.7447142925787315E-2`). To find the rule, Excel wrote 172,368 chosen numbers through COM (totals in cents, weights at every scale to 1E-9, serials, large numbers, and short decimals from 1E-8 to 1E+7):
+  - The text always reads back as the number. When it has 15 digits or fewer, it is exactly the 15-digit rounding, and only when that reads back.
+  - Excel sometimes writes 17 digits where 15 read back: 17,345 of the 75,285 such numbers (`36021.370000000003` for 36021.37, but `33002.81`). Nothing tried explains which: not Excel's own parse of the 15 digits (it parses them exactly), not its `TEXT` of 15 digits (exact too), not a threshold on how far the number is from its 15 digits, and not a rounding to 15 digits in double arithmetic. Two numbers as far from their 15 digits, with the same low bits, came out differently (33002.81 short, 33268.56 long).
+  - A tie of the 17th digit rounds away from zero (`13463503243.257813`), where .NET rounds to even: 111 numbers.
+  - The form: an exponent below 0.01 (`1E-3`), from 0.01 to 0.1 unless there is one significant digit (`0.05`, but `1.23E-2`), and from 1E+16 (`1.2345678901234568E+16`); otherwise none.
+  - **The writer's rule:** 15 digits when they read back, else 17, in Excel's form. It gives Excel's text for 154,912 of the 172,368, and for the rest differs only as above. `ExcelTypedWorkbook.Number` documents it.
+- **Cross-check** (`Bench/ExcelTypedWorkbookTests`, 28 tests on net10.0 and net8.0; not on net48, where `OrderRecord` needs `Random.NextInt64` and the formatting .NET's digits):
+  - Against Excel's `excel/orders-1000.xlsx`: the entries in Excel's order (without its theme and document properties), the sheet from its `dimension` on with each number compared as its value, `sharedStrings.xml` byte for byte, and the `numFmts` and `cellXfs`.
+  - The numbers whose text differs are exactly the unexplained case: 314 of the 7,000, among the totals (162), the dates (51 and 58) and the weights (43). Each is Excel's 17 digits against the writer's 15, of the same number. No tie occurs.
+  - Both files read through `GetRecords<OrderRecord>`, sync and async, as `ExcelOrders.Generate`'s orders, and through ExcelDataReader as the same values.
+  - The Open XML SDK's validator finds no error; a small sheet pins each cell's form (text, number, boolean, a formatted number, no cell for null or empty text) and reads its dates as dates; 19 numbers' texts are Excel's, from its corpus files and the 172,368; numbers that aren't finite throw.
+  - Excel opened the writer's 1,000 orders and the benchmark's million read-only through COM without a repair (its `Open` throws when a file needs one): 11,577 values (12,012 cells less the empty notes), and, in 6 s, A1:L1000001 with 11,570,435 values. Numbers, text and booleans come back with their types.
+  - **Mutation check** on net10.0, nine bugs planted one at a time, all caught:
+    - always 17 digits: 3 failures (the numbers' texts, the sheet);
+    - an exponent only below 0.001: 1;
+    - booleans as numbers: 5;
+    - the header with its column's format: 1;
+    - a cell for empty text: 6, the validator's among them;
+    - spans per row: 3;
+    - no `applyNumberFormat`: 1;
+    - `ShippedAt` at its local time: 3;
+    - totals as text: 1.
+- **`ExcelOrdersRead`** (`ExcelOrdersBenchmarks.cs`): a `ReadBenchmarkBase` whose CSV is the orders', so MB/s is CSV-equivalent.
+  - Records: `Sylvan_Records` (the baseline), `CsvHelper_Records` (`GetRecords<OrderRecord>`, the generated mapper), `ExcelDataReader_Records`, and `Csv_Records`, the reference.
+  - Values: the same four, each folding every field's typed value into a checksum: the numbers, the dates' ticks, the strings' lengths.
+  - Sylvan and ExcelDataReader go through one `Create` and one `Fold` over an `IOrderSource`, a struct per library. Sylvan's getters are used as they are. ExcelDataReader's typed getters unbox the value it read (`GetInt32` is `(int)GetValue(i)`, by its IL), so on a number cell, a boxed `double`, all but `GetDouble` throw: its adapter converts `GetDouble` for the integer and decimal columns, and parses the `Guid` from its string. A date cell has no offset, so the libraries other than CsvHelper make `ShippedAt` at offset zero.
+  - MiniExcel is left out (see "Benchmark").
+  - The million-order workbook is 114 MB, cached as `orders-1000000-<hash>.xlsx`; the generator's hash now covers the five source files it embeds.
+- **Equal work:** in `verify`, the four readers agree in both categories: 1,000,000 orders, hash `199B37C22F244824` (every member, the dates' ticks and offsets, the totals whatever their scale), and checksum `-5419681878775476871`. Since the CSV is written from `ExcelOrders.Generate`, that is also every reader returning the generated orders.
+- **QuickRunner:** `verify` hashes lists of orders.
+- **The run** (2026-11-04, 10:13–10:20):
+  - Tools: BenchmarkDotNet 0.15.8, .NET 10.0.13 (x64, x86-64-v4). Job: `BenchConfig`'s, core 4 pinned, 4 warmups, 12 iterations.
+  - One run of the 8 benchmarks took 7 minutes. The machine before: paged pool 3.0 GB, 26.4 GB free; after, the same.
+  - The workbook: 113.5 MB, with 487.7 MB of sheet XML, 52.0 MB of shared strings (the million `Guid`s, the header and 15 other texts), and 11,570,435 cells. The CSV is about 191 MB. Standard deviations were at most 2% of the mean but for the CSV reference's Records (5%).
+
+Mean times:
+
+| Library | Records | Values |
+| --- | ---: | ---: |
+| Sylvan.Data.Excel 0.5.8 (baseline) | 2,251.6 ms (85 MB/s) | 2,193.1 ms (87 MB/s) |
+| CsvHelper.Excel | 2,341.0 ms, 1.04x slower | 2,270.9 ms, 1.04x slower |
+| ExcelDataReader 3.9.0 | 5,178.0 ms, 2.30x | 5,005.7 ms, 2.28x |
+| CsvHelper, the same orders as CSV | 347.7 ms | 293.3 ms |
+
+Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 / 110, CsvHelper.Excel 411 / 273, ExcelDataReader 3,038 / 2,900, CsvHelper on CSV 261 / 123.
+
+- **What the numbers say:**
+  - On typed data, CsvHelper.Excel is within 4% of Sylvan, against 1.36–1.53x on Phase 1's text data. Nothing here measured why. A guess for Phase 9: two thirds of these cells are numbers, booleans and serials, which need no shared-string lookup, where all of Phase 1's cells were shared strings.
+  - CsvHelper.Excel's 163 MB more than Sylvan's is in its strings: it makes a string of each text field, as for CSV, where Sylvan returns its table's (Phase 1's finding).
+  - Reading from the workbook takes CsvHelper 6.7x the CSV time for Records and 7.7x for Values: about 200 ns per cell, near Phase 1's 160 ns for text cells.
+  - ExcelDataReader allocates 2.9 GB, about 250 bytes per cell.
+- **Phase 1's benchmark, base against new** (2026-11-04, 09:42–10:13): QuickRunner's `ExcelPackageAssetsRead` for CsvHelper.Excel's three methods, both variants, in three interleaved pairs (base, new; new, base; base, new), each process pinned to CCD0 and QuickRunner pinning core 4. The machine: paged pool 3.1 GB, 38.9 GB free.
+  - Base and new wrote the same workbooks: the content of every entry hashed the same, in both variants. (Their caches have different keys, so each run wrote its own.)
+  - Two base runs were noisy: the second was about 10% slower in all six methods, and the first's inline Rows and Strings had medians 15% over their minimums. The third pair, the cleanest, gives new/base of 0.992 (Rows), 1.000 (Strings) and 1.000 (Records) with shared strings, and 1.004, 0.993 and 0.988 inline.
+  - The best median of each side's three runs, in ms:
+
+| Strings | Method | Base | New | New/base |
+| --- | --- | ---: | ---: | ---: |
+| Shared | Rows | 2,681.6 | 2,661.1 | 0.992 |
+| Shared | Strings | 2,757.5 | 2,750.8 | 0.998 |
+| Shared | Records | 3,411.3 | 3,411.5 | 1.000 |
+| Inline | Rows | 3,152.3 | 3,149.9 | 0.999 |
+| Inline | Strings | 3,230.7 | 3,208.7 | 0.993 |
+| Inline | Records | 3,874.6 | 3,914.0 | 1.010 |
+
+  - So the scanner's Phase 2 work (the `f` check, the typed cells' paths, `ChargeBeyondCell` on each shared string) costs nothing measurable here: every method is within 1%, in both directions.
+- **The core gate** (2026-11-04, 10:20–11:38, follow-ups and the fix's re-gate to 12:51): step 3's deferred gate, for steps 1 and 2 and step 8's `CellHeader`.
+  - Measured as in Phase 0: BenchmarkDotNet against the `b3f8079f` worktree with `FormattedDatesRead` copied in, each process pinned to CCD0 and the job to core 4, pairs interleaved, filters naming the classes exactly. Both NCsvPerf builds were checked against their sources. The machine: paged pool 3.0–3.1 GB and 26.2–26.5 GB free, before and after.
+  - **Reads**, 56 benchmarks in 2 pairs: geometric means of new/base 1.006 and 1.001.
+    - Six moved more than 3% the same way in both pairs. Four are Sep and Sylvan controls, which don't use CsvHelper: `PackageAssetsRead.Sep_Cols` 1.031, `PackageAssetsReadFile.Sep_Cols` 1.031, `QuotedRead.Sep_Rows` 1.030 and `QuotedRead.Sylvan_Rows` 0.968. `CsvHelper_ExpandoObjectToList` is 0.957, faster; the Expando runs are GC-bound, with standard deviations up to 32 ms of 105 (`CsvHelper_ExpandoObject` read 1.349 in one pair and 0.965 in the other). The sixth is `FormattedDatesRead.CsvHelper_Records`, below.
+    - Every other CsvHelper read, the dynamic and Linq ones that steps 1 and 2 touched included, is within 3% or moved in opposite directions in the two pairs.
+  - **`FormattedDatesRead.CsvHelper_Records` loses about 3.5%**, step 2's change to the generated mappers:
+    - BenchmarkDotNet's pairs gave 1.000 and 1.064. QuickRunner, 4 more pairs: 1.049, 1.067, 1.027, 1.096. Then 12 rounds in rotating order, Records alone: medians of 52.80 ms base and 54.72 ms new (+3.6%), means +3.3%, best runs +2.3%.
+    - Allocation falls from 35.9 MB to 12.5 MB per operation, since the `DateOnly`, `TimeOnly` and `TimeSpan` members no longer make a string. `CsvHelper_ParseExact` moved 1–2%, within noise.
+    - It isn't the parsing. A micro-benchmark of the three columns alone, over the same 200,000 rows, put `reader.ParseExact<T>` at 31.75 ms against base's `GetString` plus `T.ParseExact` at 33.28. Zeroing the 128-char stack buffer costs about 0.2 ns a field.
+    - It is inlining. `CsvValue.ParseExact<T>`, the type dispatch behind every `ParseExact`, was 100 bytes of IL in base: exactly the most the JIT inlines without `AggressiveInlining`. Step 2's three types made it 226, so it stopped inlining. The mapper's Tier 1 code now calls it for each of the five members, where base's called `DateTimeExactCore` and `DateTimeOffsetExactCore` directly. (JIT method summaries and disassembly, from QuickRunner's process, base and new.)
+    - **The fix, a core change the user approved at step 9's review:** `[MethodImpl(MethodImplOptions.AggressiveInlining)]` on the two `CsvValue.ParseExact<T>` overloads, with a remark saying why. An instantiation's `typeof` tests fold to one call, so inlining adds only that call. Tried first in a scratch copy: in the same 12 rounds, Records came to 53.34 ms (+1.0% on base), means +1.7%, best +1.4%.
+    - **After the fix:** every test passes (CsvHelper.Tests 1309, 1304 and 844; CsvHelper.Linq.Tests 112, 110 and 101; CsvHelper.Excel.Tests 1033, 1033 and 1005), and the solution builds with 0 warnings. In QuickRunner's process, the mapper's Tier 1 code calls `DateTimeExactCore`, `DateTimeOffsetExactCore`, `DateOnlyExactCore`, `TimeOnlyExactCore` and `TimeSpanExactCore` directly (1,561 bytes, 47 inlinees, as in the scratch copy).
+    - **Re-gate** (2026-11-04, 12:36–12:43): `FormattedDatesRead` in BenchmarkDotNet, 4 interleaved pairs, measured as above, with 3.1 GB paged pool and 39.5 GB free. Records: 1.037, 1.023, 1.023 and 1.002, a mean of 1.021 (base 52.4–53.4 ms, new 53.5–54.5). `CsvHelper_ParseExact` 0.989 and the Sep control 1.000.
+    - **The remaining 2%** wasn't pinned down. A scratch copy without step 1's `typedCells` test in each `ParseExact` came to +1.8% in 12 QuickRunner rounds, against +3.2% for new in the same rounds. But QuickRunner's sessions differ by about 2% for the same code (+1.0% for the fix's copy earlier, +3.2% for new here), so that difference can't be read. A first try at those rounds was disturbed by something else on the machine and was discarded.
+    - Only `FormattedDatesRead` uses `ParseExact`.
+  - **Writes**, the control (the writer didn't change, nor any file it uses): 15 benchmarks in 2 pairs, geometric means 1.015 and 1.001. `PackageAssetsWrite.CsvHelper_WriteAsync` read 1.067 and then 1.017: base 6.73 and 6.51 ms, new 7.19 and 6.62. Sylvan's writes moved 8–13% in the first pair.
+  - **NCsvPerf**, 3 pairs, new/base:
+    - `CsvHelperLocal`: 0.991, 1.033 and 0.989 (mean 1.004).
+    - `CsvHelperLocal_MT`: 1.020, 1.009 and 1.007 (1.012), with standard deviations of 1.8–10.2 ms on 206–216 ms.
+    - The controls' means: Sep 0.983, Sep_MT 0.970, Sylvan 1.003, RecordParser 0.996.
+  - So the gate passes. With the fix, `FormattedDatesRead`'s Records is about 2% slower than base, the same way in all 4 pairs, within the ±3% Phase 0 accepted, and it allocates 65% less.
 
 ### Phase 3: choosing what to read, and messy sheets (M)
 

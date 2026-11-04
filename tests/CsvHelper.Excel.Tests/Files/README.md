@@ -1,12 +1,12 @@
 # CsvHelper.Excel's test corpus
 
-Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, and the typed workbooks and Excel's answers on 2026-11-03; the four from Apache POI's test data are under "Downloads".
+Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, and the orders on 2026-11-04; the four from Apache POI's test data are under "Downloads".
 
 ```
 dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 ```
 
-`excel`, `packageassets`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, `formats` asks Excel about number formats and `oracle` about every workbook's cells (below), and `check` only checks them.
+`excel`, `packageassets`, `orders`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, `formats` asks Excel about number formats and `oracle` about every workbook's cells (below), and `check` only checks them.
 
 ## Excel's answers
 
@@ -28,7 +28,7 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 
 ## Excel's reading of the corpus
 
-`excel-oracle/<file>.json` (written 2026-11-03 by `oracle`) records how Excel 365 reads each corpus workbook, every one but `excel/encrypted.xlsx` and `excel/packageassets-1695.xlsx`. `Corpus/ExcelAnswersTests.cs` compares CsvHelper.Excel's reading with it, cell by cell.
+`excel-oracle/<file>.json` (written 2026-11-03 by `oracle`) records how Excel 365 reads each corpus workbook, every one but `excel/encrypted.xlsx` and the benchmarks' cross-checks, `excel/packageassets-1695.xlsx` and `excel/orders-1000.xlsx`. `Corpus/ExcelAnswersTests.cs` compares CsvHelper.Excel's reading with it, cell by cell.
 
 - **How:** Excel opens each workbook read-only, with calculation manual, so that it shows the values the file stores rather than computing its own, and with macros disabled. Columns are widened in memory, so that a number's text isn't `####` for want of room.
 - **What:** for each cell of each worksheet's used range that has a value or a formula:
@@ -91,6 +91,7 @@ The files are public, and producers record personal data: Excel recorded the Off
 | `excel/basic.xlsx`, `date1904.xlsx`, `strict.xlsx` (Strict Open XML), `macro.xlsm`, `template.xltx` | Excel 365, 16.0 build 20527 | COM automation (late bound) builds the workbook, then `SaveAs` with file formats 51, 51 (after setting `Date1904`), 61, 52 and 54 |
 | `excel/binary.xlsb`, `encrypted.xlsx` (password `secret`), `legacy.xls` | Excel, the same way | file formats 50, 51 with a password, and 56: the formats CsvHelper.Excel rejects |
 | `excel/packageassets-1695.xlsx` | Excel | NCsvPerf's `PackageAssets.csv` opened with `Workbooks.OpenText`, every column as text, and saved. See "Downloads" for the CSV's source. |
+| `excel/orders-1000.xlsx` | Excel | The typed benchmark's first 1,000 orders (`bench/CsvHelper.Benchmarks/ExcelOrders.cs`, which the tool links), entered in one assignment of `Range.Value2`: numbers, booleans, text, and dates as serials in `yyyy-mm-dd hh:mm:ss`. The text columns' formats are cleared after, since Excel gives text such as the Guid `54e5160b-...` the scientific format as it would when typed. `Bench/ExcelTypedWorkbookTests.cs` checks the benchmark's writer against it. |
 | `libreoffice/basic.xlsx`, `basic-ooxml.xlsx` | LibreOffice 26.8.2.2 | `soffice --headless --convert-to` from `excel/basic.xlsx`, with the "Calc MS Excel 2007 XML" and "Calc Office Open XML" filters, in a throwaway profile |
 | `openpyxl/basic.xlsx` | openpyxl 3.1.5, Python 3.14.10 | `python/corpus.py`, in a venv outside the repository with the versions of `python/requirements.txt`, run with `-I` |
 | `xlsxwriter/basic.xlsx`, `constant_memory.xlsx` | XlsxWriter 3.3.1 | the same script; the second with `constant_memory` |

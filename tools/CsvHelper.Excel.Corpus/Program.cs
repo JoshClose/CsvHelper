@@ -22,6 +22,7 @@ internal static class Program
 		  excel          Excel through COM: excel/ (the basic workbook in each format, and .xlsb, encrypted and .xls; the
 		                 typed workbook as .xlsx, in the 1904 date system, and as Strict Open XML)
 		  packageassets  Excel: excel/packageassets-1695.xlsx from NCsvPerf's PackageAssets.csv, every column as text
+		  orders         Excel: excel/orders-1000.xlsx, the typed benchmark's first 1,000 orders entered with their types
 		  libreoffice    LibreOffice: libreoffice/, converted from excel/basic.xlsx and excel/typed.xlsx
 		  python         openpyxl, XlsxWriter and pandas, in a venv outside the repository: openpyxl/, xlsxwriter/, pandas/
 		  poi            Apache POI's XSSF and SXSSF, run by a JDK outside the repository: poi/
@@ -69,6 +70,10 @@ internal static class Program
 				ExcelProducer.WritePackageAssets(files, csv);
 
 				break;
+			case "orders":
+				ExcelProducer.WriteOrders(files);
+
+				break;
 			case "libreoffice":
 				LibreOffice(files);
 
@@ -106,6 +111,7 @@ internal static class Program
 			case "all":
 				ExcelProducer.Write(files);
 				ExcelProducer.WritePackageAssets(files, csv);
+				ExcelProducer.WriteOrders(files);
 				LibreOffice(files);
 				Python(files, python);
 				PoiProducer.Write(files, java, jdk);

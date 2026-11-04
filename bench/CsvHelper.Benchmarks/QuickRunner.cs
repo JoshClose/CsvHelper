@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using BenchmarkDotNet.Attributes;
 
@@ -149,6 +150,7 @@ public static class QuickRunner
 	private static string Describe(object? result) => result switch
 	{
 		List<PackageAsset> list => $"{list.Count} records, content hash {ContentHash(list):X16}",
+		List<OrderRecord> list => $"{list.Count} orders, content hash {OrderHash(list):X16}",
 		List<object> list => $"{list.Count} dynamic records, content hash {DynamicHash(list):X16}",
 		double d => d.ToString("R"),
 		null => "null",
@@ -193,6 +195,37 @@ public static class QuickRunner
 			for (var i = 0; i < 25; i++)
 			{
 				foreach (var c in asset.Get(i)) h = (h ^ c) * 1099511628211UL;
+				h = (h ^ 0x1F) * 1099511628211UL;
+			}
+		}
+
+		return h;
+	}
+
+	/// <summary>
+	/// A hash of every member of every order: the numbers' exact values (the total's, whatever its scale), the dates'
+	/// ticks (with the offset's), and the strings' characters.
+	/// </summary>
+	/// <param name="list">The orders.</param>
+	/// <returns>The hash.</returns>
+	private static ulong OrderHash(List<OrderRecord> list)
+	{
+		var h = 14695981039346656037UL;
+		foreach (var order in list)
+		{
+			var values = new object[]
+			{
+				order.Id, order.CustomerId, order.Customer, order.OrderDate.Ticks, order.ShippedAt.Ticks, order.ShippedAt.Offset.Ticks,
+				decimal.ToOACurrency(order.Total), BitConverter.DoubleToInt64Bits(order.Weight), order.Quantity, order.Paid,
+				order.Status, order.Sku, order.Notes,
+			};
+			foreach (var value in values)
+			{
+				foreach (var c in Convert.ToString(value, CultureInfo.InvariantCulture)!)
+				{
+					h = (h ^ c) * 1099511628211UL;
+				}
+
 				h = (h ^ 0x1F) * 1099511628211UL;
 			}
 		}

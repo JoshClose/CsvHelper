@@ -22,6 +22,14 @@
 		<PackageReference Include="SpreadCheetah" Version="1.28.0" />
 	</ItemGroup>
 
+	<!-- The typed benchmark's orders, which the orders command enters in Excel. OrderRecord's [CsvRecord] is CsvHelper's;
+	     without the generator, it does nothing here. -->
+	<ItemGroup>
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\OrderRecord.cs" Link="Bench\OrderRecord.cs" />
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelOrders.cs" Link="Bench\ExcelOrders.cs" />
+		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
+	</ItemGroup>
+
 	<!-- Patched versions of packages the producers bring in with known vulnerabilities (EPPlus 4.5.3.3's System.Drawing.Common
 	     4.7.0, and the cryptography packages 10.0.10). The tool only writes workbooks of its own content. -->
 	<ItemGroup>

@@ -37,8 +37,11 @@ internal static class ExcelOracle
 	/// <summary>The SCODE of an error value as COM passes it, less Excel's code: <c>0x800A0000</c>.</summary>
 	private const int ErrorScode = unchecked((int)0x800A0000);
 
-	/// <summary>The corpus workbooks left out: the encrypted one Excel can't open without its password, and 42,000 text cells.</summary>
-	private static readonly string[] LeftOut = ["excel/encrypted.xlsx", "excel/packageassets-1695.xlsx"];
+	/// <summary>
+	/// The corpus workbooks left out: the encrypted one Excel can't open without its password, and the benchmarks'
+	/// cross-checks, of 42,000 text cells and 12,000 typed cells.
+	/// </summary>
+	private static readonly string[] LeftOut = ["excel/encrypted.xlsx", "excel/packageassets-1695.xlsx", "excel/orders-1000.xlsx"];
 
 	/// <summary>The texts of Excel's error values, by their codes.</summary>
 	private static readonly Dictionary<int, string> Errors = new()

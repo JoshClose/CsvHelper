@@ -81,8 +81,9 @@ public class ExcelAnswersTests
 		("xlsxwriter/typed.xlsx", "Numbers!B22", Subnormal),
 	];
 
-	/// <summary>The workbooks that have Excel's answers: all but the one of 42,000 text cells.</summary>
-	public static IEnumerable<object[]> AnsweredWorkbooks => CorpusFiles.WorkbookData.Where(w => (string)w[0] != "excel/packageassets-1695.xlsx");
+	/// <summary>The workbooks that have Excel's answers: all but the benchmarks' cross-checks, of 42,000 and 12,000 cells.</summary>
+	public static IEnumerable<object[]> AnsweredWorkbooks =>
+		CorpusFiles.WorkbookData.Where(w => (string)w[0] is not "excel/packageassets-1695.xlsx" and not "excel/orders-1000.xlsx");
 
 	[Fact]
 	public void AnswersForEveryWorkbook()
