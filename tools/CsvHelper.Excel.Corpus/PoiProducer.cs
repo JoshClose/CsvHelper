@@ -16,7 +16,7 @@ internal static class PoiProducer
 	private const string MavenCentral = "https://repo1.maven.org/maven2/";
 
 	/// <summary>
-	/// Writes <c>poi/xssf.xlsx</c> and <c>poi/sxssf.xlsx</c> with the JDK given, or the newest <c>jdk-*</c> folder in
+	/// Writes <c>poi/xssf.xlsx</c>, <c>poi/sxssf.xlsx</c> and <c>poi/typed.xlsx</c> with the JDK given, or the newest <c>jdk-*</c> folder in
 	/// the tool's folder outside the repository.
 	/// </summary>
 	/// <param name="files">The corpus folder.</param>
@@ -27,18 +27,9 @@ internal static class PoiProducer
 		var home = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CsvHelper.Excel.Corpus");
 		var program = FindJava(home, java);
 		var jars = Jars(Path.Combine(scripts, "jars.txt"), Path.Combine(home, "jars"));
-		var spec = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
-		try
-		{
-			File.WriteAllText(spec, Basic.ToJson());
 
-			// The source launcher compiles Corpus.java in memory, so nothing is written beside it.
-			Program.Run(program, "-cp", string.Join(Path.PathSeparator, jars), Path.Combine(scripts, "Corpus.java"), spec, files);
-		}
-		finally
-		{
-			File.Delete(spec);
-		}
+		// The source launcher compiles Corpus.java in memory, so nothing is written beside it.
+		Program.WithSpecs((basic, typed) => Program.Run(program, "-cp", string.Join(Path.PathSeparator, jars), Path.Combine(scripts, "Corpus.java"), basic, typed, files));
 	}
 
 	/// <summary>Finds the <c>java.exe</c> to run: the one given, or the newest JDK unpacked into the tool's folder.</summary>

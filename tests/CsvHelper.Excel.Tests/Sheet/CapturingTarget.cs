@@ -31,6 +31,7 @@ internal sealed class CapturedRecord(long row, List<(string Text, SheetCellKind 
 		SheetCellKind.DateNumber => $"date:{field.Text}",
 		SheetCellKind.Bool => $"bool:{field.Text}",
 		SheetCellKind.Error => $"error:{field.Text}",
+		SheetCellKind.Duration => $"duration:{field.Text}",
 		_ => $"{field.Kind}:{field.Text}",
 	};
 }

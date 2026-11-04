@@ -83,8 +83,9 @@ internal static class CorpusFiles
 	/// </summary>
 	/// <param name="file">The workbook, relative to <see cref="Folder"/>.</param>
 	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
+	/// <param name="formulas">What cells with a formula read as: their cached values, or their formulas.</param>
 	/// <returns>The cells with a value of each worksheet.</returns>
-	public static SheetCells Read(string file, out bool date1904)
+	public static SheetCells Read(string file, out bool date1904, ExcelFormulas formulas = ExcelFormulas.CachedValue)
 	{
 		using var archive = SyncOrAsync.Result(PackageArchive.OpenAsync(PathOf(file), Packages.Limits, false, CancellationToken.None));
 		var workbook = SyncOrAsync.Result(WorkbookPart.LoadAsync(archive, Packages.Limits, false, CancellationToken.None));
@@ -95,7 +96,8 @@ internal static class CorpusFiles
 		foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet && s.PartName is not null))
 		{
 			var stream = SyncOrAsync.Result(archive.OpenPartAsync(sheet.PartName!, false, Packages.Limits, false, CancellationToken.None));
-			using var scanner = new SheetScanner(new XmlScanner(new XmlWindow(stream, sheet.PartName!, Packages.Limits.MaxPartSize)), sheet.Name, strings, styles, true, stream);
+			var xml = new XmlScanner(new XmlWindow(stream, sheet.PartName!, Packages.Limits.MaxPartSize));
+			using var scanner = new SheetScanner(xml, sheet.Name, strings, styles, true, stream, workbook.Date1904, ExcelErrorCells.Text, formulas);
 			var captured = new Captured(int.MaxValue);
 			Sheets.FillAllAsync(scanner, captured, false).GetAwaiter().GetResult();
 			var cells = new Dictionary<(long, int), CellValue>();
@@ -147,9 +149,9 @@ internal static class CorpusFiles
 	}
 
 	/// <summary>
-	/// Whether an oracle's value is ours: the same text and kind, or the same number. A date an oracle gives as a date is
-	/// the same as our number within a few milliseconds, since a .NET date from a serial is rounded to the millisecond;
-	/// Phase 1 reads dates as their serials.
+	/// Whether an oracle's value is ours: the same text and kind, or the same number of the same kind. A date or duration
+	/// an oracle gives as a .NET value is the same as our serial within a few milliseconds, since the .NET value is
+	/// rounded to the millisecond.
 	/// </summary>
 	/// <param name="ours">CsvHelper.Excel's value.</param>
 	/// <param name="theirs">The oracle's value.</param>
@@ -161,14 +163,89 @@ internal static class CorpusFiles
 			return true;
 		}
 
-		if (ours.Kind != SheetCellKind.Number || theirs.Kind is not (SheetCellKind.Number or SheetCellKind.DateNumber)
+		if (ours.Kind != theirs.Kind || ours.Kind is not (SheetCellKind.Number or SheetCellKind.DateNumber or SheetCellKind.Duration)
 			|| !double.TryParse(ours.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var a)
 			|| !double.TryParse(theirs.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var b))
 		{
 			return false;
 		}
 
-		return theirs.Kind == SheetCellKind.Number ? a == b : Math.Abs(a - b) < 1e-7;
+		return ours.Kind == SheetCellKind.Number ? a == b : Math.Abs(a - b) < 1e-7;
+	}
+
+	/// <summary>
+	/// The cells with dates and durations as .NET values, as the public reader converts them (<c>TryParse&lt;DateTime&gt;</c>
+	/// and <c>TryParse&lt;TimeSpan&gt;</c>), for oracles that give .NET values: a date's text is <see cref="DateText"/>, a
+	/// duration's <see cref="DurationText"/>. A cell that doesn't convert, such as serial 60 (1900-02-29), keeps its serial.
+	/// </summary>
+	/// <param name="file">The workbook, relative to <see cref="Folder"/>.</param>
+	/// <param name="cells">Its cells, as <see cref="Read"/> gives them.</param>
+	/// <returns>The cells, each date and duration converted.</returns>
+	public static SheetCells AsDotNet(string file, SheetCells cells)
+	{
+		using var workbook = ExcelWorkbook.Open(PathOf(file));
+		var result = new SheetCells();
+		var options = new ExcelReaderOptions { Csv = new CsvReaderOptions { HasHeader = false, SkipEmptyLines = false } };
+		foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet && cells.ContainsKey(s.Name)))
+		{
+			var source = cells[sheet.Name];
+			var converted = new Dictionary<(long Row, int Column), CellValue>(source);
+			using var reader = workbook.OpenReader(sheet, options);
+			var row = 0L;
+			while (reader.Read())
+			{
+				row++;
+				for (var column = 0; column < reader.FieldCount; column++)
+				{
+					if (!source.TryGetValue((row, column), out var value))
+					{
+						continue;
+					}
+
+					if (value.Kind == SheetCellKind.DateNumber && reader.TryParse<DateTime>(column, out var date))
+					{
+						converted[(row, column)] = new CellValue(DateText(date), SheetCellKind.DateNumber);
+					}
+					else if (value.Kind == SheetCellKind.Duration && reader.TryParse<TimeSpan>(column, out var duration))
+					{
+						converted[(row, column)] = new CellValue(DurationText(duration), SheetCellKind.Duration);
+					}
+				}
+			}
+
+			result[sheet.Name] = converted;
+		}
+
+		return result;
+	}
+
+	/// <summary>A date as the .NET oracles are compared: ISO 8601 to the millisecond.</summary>
+	/// <param name="date">The date.</param>
+	/// <returns>The text.</returns>
+	public static string DateText(DateTime date) => date.ToString("yyyy-MM-dd'T'HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture);
+
+	/// <summary>A duration as the .NET oracles are compared: .NET's constant form (<c>1.12:00:00</c>).</summary>
+	/// <param name="duration">The duration.</param>
+	/// <returns>The text.</returns>
+	public static string DurationText(TimeSpan duration) => duration.ToString("c", System.Globalization.CultureInfo.InvariantCulture);
+
+	/// <summary>
+	/// The cells with dates and durations as numbers, for an oracle that reads cells without their number formats (the
+	/// Open XML SDK's): which formats are dates is <c>NumberFormatsTests</c>' to check, against Excel's answers.
+	/// </summary>
+	/// <param name="cells">The cells.</param>
+	/// <returns>The same cells, each date or duration a number.</returns>
+	public static SheetCells WithoutDates(SheetCells cells)
+	{
+		var result = new SheetCells();
+		foreach (var sheet in cells)
+		{
+			result[sheet.Key] = sheet.Value.ToDictionary(
+				pair => pair.Key,
+				pair => pair.Value.Kind is SheetCellKind.DateNumber or SheetCellKind.Duration ? new CellValue(pair.Value.Text, SheetCellKind.Number) : pair.Value);
+		}
+
+		return result;
 	}
 
 	/// <summary>Decodes the <c>_xHHHH_</c> escapes of a text with a regular expression, then as UTF-8 (a lone surrogate becomes U+FFFD).</summary>

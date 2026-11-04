@@ -30,6 +30,9 @@ internal enum CellType
 
 	/// <summary>Japanese text with a phonetic reading (furigana).</summary>
 	Phonetic,
+
+	/// <summary>An error value as a constant, such as <c>#N/A</c>, not a formula's result.</summary>
+	Error,
 }
 
 /// <summary>A cell of the basic workbook.</summary>
@@ -68,6 +71,28 @@ internal sealed class CellSpec
 	[JsonPropertyName("format")]
 	public string? Format { get; init; }
 
+	/// <summary>
+	/// The built-in number format id of a date cell, in place of <see cref="Format"/>, for the producers that set ids
+	/// (feature <c>formatId</c>). Excel only takes codes.
+	/// </summary>
+	[JsonPropertyName("formatId")]
+	public int? FormatId { get; init; }
+
+	/// <summary>
+	/// A formula's result as Excel computes it, for the producers that write the result they're given: a number, a text,
+	/// a boolean, or an error's text (<c>#N/A</c>).
+	/// </summary>
+	[JsonPropertyName("result")]
+	public object? Result { get; init; }
+
+	/// <summary>The range of a legacy array formula (Ctrl+Shift+Enter), such as <c>G14:G16</c>, whose first cell this is.</summary>
+	[JsonPropertyName("array")]
+	public string? Array { get; init; }
+
+	/// <summary>Whether the formula is a dynamic array formula, which spills.</summary>
+	[JsonPropertyName("spill")]
+	public bool? Spill { get; init; }
+
 	/// <summary>The runs of a rich text cell: their text, and whether each is bold.</summary>
 	[JsonPropertyName("runs")]
 	public RunSpec[]? Runs { get; init; }
@@ -78,7 +103,10 @@ internal sealed class CellSpec
 
 	/// <summary>
 	/// What the cell needs from a producer beyond plain values, so that one that lacks it leaves the cell out:
-	/// <c>control</c> (a control character), <c>long</c> (32,767 characters), <c>formula</c>, <c>rich</c>, <c>phonetic</c> or <c>date</c>.
+	/// <c>control</c> (a control character), <c>long</c> (32,767 characters), <c>formula</c>, <c>rich</c>, <c>phonetic</c> or
+	/// <c>date</c>; in the typed workbook also <c>formatId</c>, <c>error</c> (a constant error), <c>array</c> (a legacy array
+	/// formula), <c>spill</c> (a dynamic array formula), <c>name</c> (a formula with a defined name), <c>table</c> (a
+	/// structured reference) and <c>newer</c> (a function newer than Excel 2010).
 	/// </summary>
 	[JsonPropertyName("feature")]
 	public string? Feature { get; init; }
@@ -131,6 +159,57 @@ internal sealed class SheetSpec
 	/// <summary>The sheet's rows; none for a chartsheet.</summary>
 	[JsonPropertyName("rows")]
 	public RowSpec[] Rows { get; init; } = [];
+
+	/// <summary>
+	/// Ranges Excel fills from their first cell, down or right, as a user fills them, so that it writes shared formulas.
+	/// The rows have each cell's formula as the fill gives it, which the other producers write.
+	/// </summary>
+	[JsonPropertyName("fills")]
+	public FillSpec[] Fills { get; init; } = [];
+
+	/// <summary>Cells Excel copies to another, as a user copies them, so that it moves their references; the target's formula is in the rows.</summary>
+	[JsonPropertyName("copies")]
+	public CopySpec[] Copies { get; init; } = [];
+
+	/// <summary>The sheet's tables; their cells are in the rows.</summary>
+	[JsonPropertyName("tables")]
+	public TableSpec[] Tables { get; init; } = [];
+}
+
+/// <summary>A range Excel fills from its first cell.</summary>
+internal sealed class FillSpec
+{
+	/// <summary>The range, such as <c>A8:A12</c>.</summary>
+	[JsonPropertyName("range")]
+	public string Range { get; init; } = "";
+
+	/// <summary><c>down</c> or <c>right</c>.</summary>
+	[JsonPropertyName("direction")]
+	public string Direction { get; init; } = "down";
+}
+
+/// <summary>A cell Excel copies to another.</summary>
+internal sealed class CopySpec
+{
+	/// <summary>The cell copied.</summary>
+	[JsonPropertyName("from")]
+	public string From { get; init; } = "";
+
+	/// <summary>The cell it is copied to.</summary>
+	[JsonPropertyName("to")]
+	public string To { get; init; } = "";
+}
+
+/// <summary>A table (a list object): its name and range, the first row its headers.</summary>
+internal sealed class TableSpec
+{
+	/// <summary>The table's name.</summary>
+	[JsonPropertyName("name")]
+	public string Name { get; init; } = "";
+
+	/// <summary>The table's range, headers included, such as <c>A20:D23</c>.</summary>
+	[JsonPropertyName("range")]
+	public string Range { get; init; } = "";
 }
 
 /// <summary>

@@ -61,7 +61,7 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader =
   - `Sheet` (a name) or `SheetIndex`, `Range`, `Table`, `DefinedName`: what to read.
   - `HeaderRow`: a fixed row, or detect it from `T` (with a scan limit).
   - `FillMergedCells`, `SkipHiddenRows`, `SkipHiddenColumns`.
-  - `ErrorCells`: Text (default; the error's text, and typed targets fail), Null (an empty cell) or Error (every read of the cell fails, and `GetRecords` routes it to `OnRecordError`).
+  - `ErrorCells`: Text (default; the error's text, and typed targets fail), Null (an empty cell) or Error (every read of the cell fails, and `GetRecords` routes it to `OnRecordError`; a header cell still names its column, since step 8 of Phase 2).
   - `SignificantDigits`: significant digits for `decimal` and integer targets (default 15; null reads the stored text exactly).
   - `Formulas`: CachedValue (default) or FormulaText (`=` and the formula, with shared formulas moved to each cell).
   - `Text`: Raw (default) or Formatted (Phase 8).
@@ -236,7 +236,7 @@ public enum ExcelSheetKind { Worksheet, Chartsheet, DialogSheet, MacroSheet }
     - `Open` reads the content types, the relationships and `workbook.xml`.
     - `OpenReader` reads the styles and shared strings (on first use, kept by the workbook) and streams its sheet.
   - `MaxPartSize` bounds each part held in memory (content types, relationships, workbook, styles, shared strings) and any single token or cell of a streamed sheet.
-  - `MaxUncompressedSize` bounds everything inflated through the workbook, plus the temp-file copy of a non-seekable input.
+  - `MaxUncompressedSize` bounds everything inflated through the workbook, plus the temp-file copy of a non-seekable input, plus what a sheet's cells give beyond their XML (decision 5, and since Phase 2's step 8 the bytes a shared string or a moved shared formula has beyond its cell).
   - A limit of 0 or less throws `ArgumentOutOfRangeException`.
 - **`Csv`** applies as for any record source (Phase 0 "As built"):
   - These apply: `HasHeader`, `SkipEmptyLines`, trimming, `NullValues`, `TrueValues`/`FalseValues` (text cells only), `FieldCountMismatch`, `MissingField`, header matching, `OnRecordError`, `FormatProvider` (text cells only), `PoolStrings` and `BufferSize`.
@@ -710,7 +710,7 @@ These were the open questions. Every recommendation was accepted on 2026-11-02, 
 4. **Limits.**
    - Defaults of `MaxPartSize` 256 MiB and `MaxUncompressedSize` 4 GiB, with the semantics under "Public API". 4 GiB covers about four million PackageAssets rows of sheet XML.
    - No compression-ratio check for now. POI's 100:1 default is a known source of false "zip bomb" errors, because rows of styled empty cells compress far better than that. Measure the ratios across the corpus first.
-5. **Gap amplification.** One `<c r="XFD1">` makes 16,384 fields from about 30 bytes of XML. A sheet of such rows could keep a reader busy for minutes while inflating only a few hundred MB. Count each gap and padding field as one byte toward `MaxUncompressedSize`.
+5. **Gap amplification.** One `<c r="XFD1">` makes 16,384 fields from about 30 bytes of XML. A sheet of such rows could keep a reader busy for minutes while inflating only a few hundred MB. Count each gap and padding field as one byte toward `MaxUncompressedSize`. (Phase 2's step 8 found that a shared string repeated does the same with bytes, and counts what each has beyond its cell.)
 6. **Empty rows.** The source applies `SkipEmptyLines` itself: it drops valueless rows, or with `false` emits every row so that record n is row n.
 7. **Padding.** Pad rows that have a value to the first record's width.
 8. **Columns.** Field i is column i, with no clipping before Phase 3.
@@ -1669,7 +1669,7 @@ public enum ExcelFormulas { CachedValue, FormulaText }
 - **`ErrorCells`** decides how a cell holding an error (`#N/A`, `#DIV/0!` and the rest) reads:
   - `Text` (default): as its text. String targets, `GetString`, dynamic records and `CsvDataReader` values get `#N/A`. Any other target fails with a `FormatException` that names the error. Inside `GetRecords`, that becomes a `CsvFormatException` with the cell's `Location`, and goes to `OnRecordError`. `CsvReaderOptions.NullValues` can name error texts to read them as null.
   - `Null`: as an empty cell would, so nullable targets get null. A row whose only values are errors is an empty row.
-  - `Error`: reading the cell fails for every target, strings included: `GetString`, `Parse`, dynamic record values and `CsvDataReader` values throw `FormatException`. Inside `GetRecords`, it goes to `OnRecordError` with the cell. Cells that aren't read raise nothing, and `GetSpan` still gives the stored text.
+  - `Error`: reading the cell fails for every target, strings included: `GetString`, `Parse`, dynamic record values and `CsvDataReader` values throw `FormatException`. Inside `GetRecords`, it goes to `OnRecordError` with the cell. Cells that aren't read raise nothing, and `GetSpan` still gives the stored text. A header cell is a name, not a value: it names its column with the error's text, as under `Text` (changed at step 8, when the fuzzer found `Read` throwing the policy's `FormatException` for one).
 - **`SignificantDigits`:** `decimal` and integer targets get a number cell's value rounded to this many significant digits, half away from zero, which is what Excel displays. `null` reads the stored text exactly.
   - It must be from 1 to 28, or null; anything else throws `ArgumentOutOfRangeException`.
   - `double` and `float` targets are never rounded, and neither are text cells.
@@ -1736,22 +1736,33 @@ public enum ExcelFormulas { CachedValue, FormulaText }
 
 **Date detection** (which number cells are date or duration cells):
 
-- **Built-in format ids** follow ECMA-376's list. Date and time formats are 14–22, 27–36, 45, 47, 50–58, 71–78, 80 and 81; durations are 46 (`[h]:mm:ss`) and 79. Every other id is a number. The locale-dependent ids (27–36, 50–58, 71–81) get checked against Excel at step 4.
-- **Format codes:** an id that `styles.xml` defines in `numFmts` is classified by its code, even when the id is a built-in one (to be checked against Excel at step 4). The code is read token by token:
+- **Built-in format ids,** as Excel (en-US) shows them (checked at step 4):
+  - Dates and times: 14–22, 27–36, 45, 47, 50–58, 71–79 and 81.
+  - Durations: 46 and 80 (`[h]:mm:ss`).
+  - Every other id is a number.
+  - (The design said durations were 46 and 79; Excel shows 79 as `mm:ss` and 80 as `[h]:mm:ss`.)
+- **Format codes:** an id that `styles.xml` defines in `numFmts` is classified by its code, even when the id is a built-in one, as Excel reads it. A cell format's `applyNumberFormat="0"` is ignored, as Excel ignores it. Only the code's first section counts, as in Excel (`0;yyyy` is a number). It is read token by token:
   - Skipped: quoted text (`"days"`), escaped characters (`\d`), the character after `_` and `*`, and brackets such as `[Red]`, `[Color10]`, `[>=100]` and `[$-409]`.
-  - `General` (in any case) is a number. `E+` and `E-` are exponents.
-  - `[h]`, `[hh]`, `[m]`, `[mm]`, `[s]` and `[ss]` make a duration. That wins over date tokens.
-  - Otherwise `y`, `m`, `d`, `h`, `s`, `e`, `g`, `b` (in any case), `AM/PM` and `A/P` make a date.
-  - Every section counts: `[h]:mm;@` is a duration.
-- **ISO dates (`t="d"`):** the text is converted to a serial in the workbook's date system, so the cell reads as a date cell, or as a duration cell in an elapsed format. Excel's Strict files write these, as dates (`2024-01-02`), date-times with 17 digits of fraction (`2024-01-02T03:04:05.00000006519257800`), and times alone (`03:04:05.000...`). A text that isn't one of those forms, with an optional `Z`, or a date outside the date system's range, stays a text cell, as in Phase 1.
+  - `General` (in any case) is a number. `E+` and `E-` after a digit placeholder are exponents.
+  - `y`, `d`, `e`, `g`, `b` (in any case) and a weekday (`aaa`) make a date. A date part wins over elapsed time: `yyyy-mm-dd [h]:mm` shows the hour of the day.
+  - Otherwise `[h]`, `[hh]`, `[hhh]`, `[m]`, `[mm]`, `[s]` and `[ss]` make a duration.
+  - Otherwise `h`, `m`, `s`, `AM/PM` and `A/P` make a date (a time).
+- **ISO dates (`t="d"`):** the text is converted to a serial in the workbook's date system, and the cell then reads as a number cell of that serial does: its style decides between a date, a duration and a number, as Excel reads it (a `t="d"` cell in General is a number to Excel). Excel's Strict files write these, as dates (`2024-01-02`), date-times with 17 digits of fraction (`2024-01-02T03:04:05.00000006519257800`), times alone (`03:04:05.000...`), and in elapsed-time formats ISO 8601 durations (`PT36H0M0.000S`). A text that isn't one of those forms, with an optional `Z` on a date or time, or a date outside the date system's range, stays a text cell, as in Phase 1. (The design had every `t="d"` date read as a date cell, and no durations; Excel's answers at step 7 changed both.)
+  - Excel's Strict workbooks have `dateCompatibility="0"`, a 1900 date system without 1900-02-29 that counts days as OLE Automation dates do. Their `t="d"` dates read as the same dates in the 1900 system, so their serials before March 1900 are a day less than Excel's, and 1899-12-30, which the 1900 system lacks, stays text. A plain serial in such a workbook reads in the 1900 system; Excel writes Strict dates as `t="d"`, so only serials outside the date range are plain there. See step 7's "As built".
 
 **Formula text** (`Formulas = FormulaText`):
 
-- A cell's formula is its `<f>` text, decoded like a value (entities, `_xHHHH_` escapes, CR LF as LF), after `=`.
-- **Shared formulas** (`t="shared"`): the first cell of the group stores the text (with `ref` and `si`). Every other cell stores only `si`, and gets the text with its relative references moved by its offset from the first cell, as Excel's fill moves them:
+- A cell's formula is its `<f>` text, decoded like a value (entities, `_xHHHH_` escapes, CR LF as LF, and the white space around it trimmed unless `xml:space="preserve"` applies), after `=`.
+  - A cell with a formula reads it whatever its type and value, so `ErrorCells` doesn't apply to it.
+  - An `f` without text (`<f/>`, `<f></f>`, white space only) is no formula: the cell reads its value.
+- **Shared formulas** (`t="shared"`): the cell whose `f` has a `ref` defines the group (`si`) with its text. Every other cell of the group has an `f` with the `si` and no `ref`, and reads the defining cell's formula with the relative references moved by its offset from that cell, as Excel reads them. Such a cell's own text, if it has any, is ignored, as Excel ignores it.
   - What moves: `A1` one row down becomes `A2`. `$A$1` stays, `A$1` keeps its row and `$A1` its column. Whole columns and rows (`A:A`, `$1:1`) move too, and so do references after a sheet name (`'Q1 Orders'!A1`, `Sheet1:Sheet3!A1`) or a workbook index (`[1]Sheet1!A1`).
   - What doesn't: function names (`LOG10(` looks like a reference), defined names, `TRUE` and `FALSE`, string literals (`"A1"`), structured references (`Table1[Col]`), array constants (`{1,2}`), numbers and error literals.
-  - A reference moved off the grid becomes `#REF!`, as Excel writes it.
+  - A reference moved past an edge of the grid wraps around it, as Excel reads it: `XFD1` moved a column right is `A1`, and `SUM(1:1048576)` moved a row down is `SUM(2:1)`. (The design said `#REF!`, which is what Excel's own fills store, in each cell's full formula; see step 6's "As built".)
+  - A moved formula's references are written in capitals (`a1+$b$1` moved down is `A2+$B$1`), as Excel and ClosedXML write them. The rest of it stays as stored.
+  - A defining cell without text reads its value, and so do the other cells of its group.
+  - A cell whose group no cell before it defines throws `CsvFormatException` (decision 17).
+  - Excel repairs files with a cell outside its group's `ref`, or an `si` defined twice; CsvHelper.Excel moves the formula to such a cell anyway, and a later definition replaces the earlier one.
 - **Array formulas** (`t="array"`): the first cell of the range has the formula. The other cells have no `<f>` of their own, so they read their values. Excel's `Formula` property repeats the formula there for a legacy array (Ctrl+Shift+Enter) and gives nothing for a spilled one.
 - **Data tables** (`t="dataTable"`) read their values.
 - Newer functions keep the prefix the file stores (`=_xlfn.XLOOKUP(...)`), as openpyxl and ClosedXML return them. Excel shows them without it.
@@ -1785,7 +1796,7 @@ public enum ExcelFormulas { CachedValue, FormulaText }
   - Messages leave the value out when `IncludeValuesInExceptions` is off, as `CsvValue`'s do. For example: "The cell holds the error #N/A.", "60 is 1900-02-29 in Excel's 1900 date system, a day that doesn't exist.", "-1 is not a date: Excel's dates are serials from 0 to 2958465.99999999 (9999-12-31).", "1.5 is not a whole number."
 - **`CsvReader`:**
   - `ParseCell`, `TryParseCell` and `CellString` call `CsvCells`. They are reached as now, behind `typedCells`.
-  - `CaptureHeader` takes a typed cell's text.
+  - `CaptureHeader` takes a typed cell's text, and an error cell's text under every policy (step 8: `CellHeader` no longer goes through `CellString`'s check of `ThrowOnErrorCells`).
   - `GetChars` gives a typed cell's text.
   - The `ParseExact` overloads send number, date and duration cells to `CsvCells`, through a method that isn't inlined.
   - The new `FieldEquals`.
@@ -1807,14 +1818,15 @@ public enum ExcelFormulas { CachedValue, FormulaText }
 - **`SheetCellKind`:** gains `Duration`, mirroring core.
 - **`SheetRecordSource.CellOptions`:** the workbook's `Date1904` and the reader options' `SignificantDigits`, and whether `ErrorCells` is `Error`.
 - **Scanner:**
-  - `t="d"`: the value is decoded and trimmed as now, then `IsoDate` turns it into a serial. Core's `FloatFormatter` (internal, reached through `InternalsVisibleTo`) writes the serial's shortest round-trip text into the field. The style decides between DateNumber and Duration.
+  - `t="d"`: the value is decoded and trimmed as now, then `IsoDate` turns it into a serial. Core's `FloatFormatter` (internal, reached through `InternalsVisibleTo`) writes the serial's shortest round-trip text into the field. The style gives the kind, as for a number cell: Number, DateNumber or Duration.
   - `t="e"`: with `ErrorCells = Null`, the cell is valueless, as one without a value is. Otherwise it is an Error field, as now.
   - **`FormulaText`:** in a `c`, the scanner reads `f` (its `t`, `si` and `ref`, and its text through `TryReadText`), which comes before `v`. It writes the formula as the value, and skips the rest of the cell, `v` included, in the resumable `CellRest` mode. With `CachedValue`, `f` is skipped, as in Phase 1. The window rules don't change: a cell is read whole or read again after a refill.
   - **Shared formulas:**
-    - The first cell of a group is stored when its field is committed (once, even when a refill made the scanner read the cell again): its formula's UTF-8 and its row and column.
-    - The store's bytes count toward `MaxPartSize`. Past it, `InvalidDataException` names the part.
-    - A cell whose `si` no earlier cell defined throws `CsvFormatException`: "it uses shared formula 3, which no cell before it defines".
-    - A shifted formula is written into a growable scratch buffer, then added with `AddField`.
+    - The defining cell of a group is stored when its field is committed (once, even when a refill made the scanner read the cell again): its formula's UTF-8 and its row and column. A defining cell without text is stored with none, and a definition of the same `si` replaces the one before.
+    - The store counts toward `MaxPartSize`: each group its formula's bytes plus 64, and the room moved formulas are written in. Past it, `InvalidDataException`: "The shared formulas of xl/worksheets/sheet1.xml take more than ExcelReaderOptions.MaxPartSize (N bytes)."
+    - A moved formula counts the bytes it has beyond its cell's XML (up to its `f`) toward `MaxUncompressedSize`, and so does a shared string beyond its cell, as gap fields count (Phase 1's decision 5): a short cell repeated can't make gigabytes of fields. Other fields are no longer than their XML. (Added at step 8.)
+    - A cell whose `si` no earlier cell defined throws `CsvFormatException`: "it uses shared formula 3, which no cell before it defines". An `si` that isn't an index from 0 throws `CsvFormatException` at the cell, as other attributes do.
+    - A moved formula is written into the store's growable room, after its `=`, then added with `AddField`. The room grows until the formula fits, which it always does in five times the defining formula's length.
 - **`FormulaShifter`:** one forward pass, no recursion, so nesting depth costs nothing.
   - **Copied as is:**
     - string literals (`"..."`, with `""` inside);
@@ -1830,7 +1842,8 @@ public enum ExcelFormulas { CachedValue, FormulaText }
     - `[$]COL[$]ROW` within the grid is a cell;
     - `[$]COL:[$]COL` and `[$]ROW:[$]ROW` are whole columns and rows;
     - anything else is a name.
-  - A range with an end moved off the grid becomes `#REF!` as a whole, keeping its sheet name. That will be checked against Excel's fills at step 6.
+  - A part without `$` moves modulo the grid's size, so it wraps around the edges as Excel reads it. Each end of a range moves on its own. (The design had a range moved off the grid become `#REF!` as a whole; Excel's answers at step 6 changed it.)
+  - A moved formula's references are written in capitals. A row that doesn't move is copied as it is.
 
 #### Testing
 
@@ -1848,11 +1861,15 @@ public enum ExcelFormulas { CachedValue, FormulaText }
 
 - **`NumberFormats`:**
   - The built-in table and about 150 codes (dates, times, durations, numbers with literals, colors, conditions, locales, `General`, exponents, fractions, text), against Excel's answers.
-  - The corpus tool's new `formats` command gets them through COM. For each code, it reads `Range.Value`'s type for a number with that format, since `Value` returns a date for a date format. It also opens a generated workbook with a cell format for every id from 0 to 163, a `numFmts` entry redefining a built-in id, and an `applyNumberFormat="0"`. It writes `Files/excel-formats.json`, which is committed.
-  - Durations are checked against ClosedXML, which reads them as `TimeSpan`.
+  - The corpus tool's new `formats` command gets them through COM. For each code, it reads three answers for a number with that format:
+    - `Range.Value`'s type, a date when the format shows a day, a month or a year (built, it turned out not to cover a time alone);
+    - `CELL("format")`, `D6` to `D9` for Excel's four time formats;
+    - the text Excel shows, where an elapsed-time format shows 1.5 days as 36 hours.
+  - It also opens a generated workbook with a cell format for every id from 0 to 163, `numFmts` entries redefining built-in ids, and `applyNumberFormat="0"`. It writes `Files/excel-formats.json`, which is committed.
+  - Durations are checked against Excel's text: an elapsed-time format shows 1.5 as 36 hours. (ClosedXML, planned for this, reads a time of day as a `TimeSpan` too.)
 - **`IsoDate`:** every accepted form, fractions of 1 to 20 digits, the range limits, and rejected forms (offsets, week dates, basic format, `24:00`, February 29 of a common year).
 - **`FormulaShifter`:**
-  - Unit cases for every token kind, references at the edges of the grid, `#REF!`, and deep nesting.
+  - Unit cases for every token kind, references wrapping at the edges of the grid, and deep nesting.
   - A comparison with ClosedXML's `FormulaA1` on generated shared formulas, then with Excel's answers on the corpus (below).
 - **Scanner,** in every one of the 16 sheet modes:
   - `t="d"` cells;
@@ -1976,7 +1993,7 @@ Each comes with a recommendation.
 #### Risks
 
 - **JIT sensitivity:** `ParseExact`, `GetChars`, `CaptureHeader` and dynamic values get a test each. The gate measures them. If one costs, the typed path moves behind a separate method or schema, as Phase 0 did for the writer.
-- **The formula grammar's corners.** Excel's answers, ClosedXML and the fuzzer cover it, and `#REF!` and sheet-qualified references are checked against real fills.
+- **The formula grammar's corners.** Excel's answers, ClosedXML and the fuzzer cover it. How Excel reads shared formulas at the grid's edges, and moves sheet-qualified references in its fills, was checked through COM at step 6. One corner is left as it is (step 8): a reference right after a number, which Excel can't write (`20A1`), reads as the number's exponent once it moves to column E (`20E1`).
 - **Locale formats:** built-in ids 27–36 and 50–58 mean different things in different locales. Excel's answers settle them for an en-US Excel; others may differ.
 - **Excel's rules in core:** the 1900 rule and the significant digits live in core's internals, which lockstep releases already cover.
 - **Text from values, not formats:** a date format holding a time shows the time in `GetString`, and numbers show all 17 digits. Phase 8 gives the displayed text.
@@ -1994,7 +2011,7 @@ Each step is reviewable on its own and gets committed when you ask.
 2. **Public additions (S):**
    - `FieldEquals` and Linq's `TextEquals` (decision 3).
    - `ParseExact` for `DateOnly`, `TimeOnly` and `TimeSpan`, and the generator (decision 4), with the generator's tests.
-3. **Core gate (S):** the A/B benchmarks under "Benchmark", with `FormattedDatesRead`. If a later step changes core again, the gate runs again.
+3. **Core gate (S):** the A/B benchmarks under "Benchmark", with `FormattedDatesRead`. If a later step changes core again, the gate runs again. (Deferred to step 9; step 8 changed `CellHeader`, which it covers.)
 4. **Number formats (S):**
    - `NumberFormats`, `StyleTable`'s kinds and `SheetCellKind.Duration`.
    - The corpus tool's `formats` command and `Files/excel-formats.json`.
@@ -2002,7 +2019,7 @@ Each step is reviewable on its own and gets committed when you ask.
    - `t="d"` and `ErrorCells`.
    - The three options and their validation, and `SheetRecordSource.CellOptions`.
    - End-to-end tests.
-6. **Formula text (M):** `FormulaShifter`, `SharedFormulas`, and the scanner's `f`, with the tests. The `#REF!` rule is checked against Excel's fills through COM.
+6. **Formula text (M):** `FormulaShifter`, `SharedFormulas`, and the scanner's `f`, with the tests. How Excel reads shared formulas, at the grid's edges too, is checked through COM.
 7. **Corpus and oracles (M):**
    - The `typed` content and its producers.
    - The `oracle` command and Excel's answers for every corpus workbook.
@@ -2018,7 +2035,7 @@ Each step is reviewable on its own and gets committed when you ask.
 - Every row of "What a cell reads as" works through `GetRecords<T>`, `Parse` and `TryParse`, dynamic records, `CsvDataReader`, `Query<T>()` and `ParallelEnumerate`. That holds in both date systems, sync and async, on net10.0, net8.0 and net48.
 - Date detection agrees with Excel on every id and code of `excel-formats.json`, and on every number cell of the corpus.
 - Dates and durations agree with ClosedXML and ExcelDataReader, each difference documented (serial 60, for one).
-- `t="d"` cells read as the serials Excel gives them.
+- `t="d"` cells read as the serials Excel gives them (but for the Strict workbooks' days before March 1900; see step 7's "As built").
 - `FormulaText` agrees with Excel's `Formula` on every formula cell of the corpus, and shared formulas also agree with ClosedXML, each difference documented.
 - The three `ErrorCells` policies behave as "Public API" says, and so does CsvHelper.Linq's text comparison.
 - The security and fuzz tests pass, `FormulaText` included.
@@ -2050,7 +2067,7 @@ Applied at approval on 2026-11-03:
 
 #### As built
 
-**Step 1, core conversions** (built 2026-11-03, not committed):
+**Step 1, core conversions** (built 2026-11-03, committed in 1ec418e9):
 
 - **New in core** (`src/CsvHelper/Internal`):
   - `CsvCells.cs`: every conversion of "What a cell reads as", and the text of dates, durations and booleans.
@@ -2111,7 +2128,7 @@ Applied at approval on 2026-11-03:
   - `CsvDynamicRecord`'s indexer (a test of the schema) and `Parse<T>` (a null test in place of a flag);
   - the schema's interning key.
 
-**Step 2, public additions** (built 2026-11-03, not committed):
+**Step 2, public additions** (built 2026-11-03, committed in 1ec418e9):
 
 - **`CsvReader.FieldEquals(int, ReadOnlySpan<byte>)`**, public: whether a field's text, the string `GetString` would make, is the UTF-8 given.
   - For CSV it is `GetSpan(index).SequenceEqual(utf8)` behind a `typedCells` test.
@@ -2159,6 +2176,226 @@ Applied at approval on 2026-11-03:
   - NCsvPerf, in 3 interleaved pairs.
 - **Filters must name the classes exactly** (`CsvHelper.Benchmarks.PackageAssetsRead.*`). A leading `*` also matched `ExcelPackageAssetsRead`, an hour per run, and `SeparatorPackageAssetsRead`.
 - The run was started and then stopped at the user's request. It will run later, overnight or with step 9's benchmarks.
+
+**Step 4, number formats** (built 2026-11-03, committed with steps 4 to 8 on 2026-11-04):
+
+- **`NumberFormats`** (`src/CsvHelper.Excel/Internal/Package/NumberFormats.cs`): `BuiltIn(id)` and `Classify(code)`.
+  - `StyleTable` gives each cell format the kind of its format, classified once per id at load.
+  - `SheetCellKind.Duration` mirrors core's, and the compile-time check covers it.
+  - Number cells in date and time formats are now date cells everywhere CsvHelper.Excel reads them.
+- **`SheetRecordSource.CellOptions`** passes the workbook's `Date1904`. The design put this in step 5, but date cells appear here, and without it a 1904 workbook would read in the 1900 system until then. Step 5 adds the other two options.
+- **The corpus tool's `formats` command** (`tools/CsvHelper.Excel.Corpus/ExcelFormats.cs`, also run by `all`) writes `Files/excel-formats.json` from Excel 365 (en-US) through COM:
+  - 180 codes, 172 of which Excel takes;
+  - built-in ids 0 to 163, from a workbook the tool writes;
+  - eight cases of `numFmts` redefinitions and `applyNumberFormat="0"`.
+  - The corpus README describes it, and the privacy check passes.
+- **What Excel's answers changed** (the design's "Date detection" now says so):
+  - **`Range.Value` returns a date only when a format's first section shows a day, a month or a year.** A time alone (`h:mm`) and an era, a Buddhist year or a weekday alone (`e`, `b`, `aaa`) come back as numbers. So the tool also asks `CELL("format")`, which flags Excel's four time formats (`D6` to `D9`), and records the text Excel shows, which marks elapsed time.
+  - **Only the first section counts:** Excel takes `0;yyyy` and `[<1]h:mm;yyyy-mm-dd` for what their first sections are. The design said every section counts.
+  - **A date part wins over elapsed time:** `yyyy-mm-dd [h]:mm` shows the hour of the day, not 1,087,356 hours. The design said a duration wins.
+  - **Built-in ids:** 79 and 81 are times (`mm:ss`, `mm:ss.0`), and 80 is a duration (`[h]:mm:ss`). The design had 79 as the duration. In an en-US Excel, 27–31, 36 and 50–58 show as `m/d/yyyy`, 32–35 as `h:mm:ss`, 59–70 as plain numbers, and 23–26 and 82 on as General.
+  - **Confirmed:** a `numFmts` definition wins over a built-in id, and `applyNumberFormat="0"` is ignored (decision 19).
+  - **Also found:** `[hhh]` is elapsed time too; Excel refuses lowercase `e+` (`0.00e+00`), `0 h` and `[s]0`; `General d` is a date.
+  - **The exponent rule:** `E+` or `E-` is an exponent only after a digit placeholder, so `e-m-d` stays a date.
+- **Tests:**
+  - **`NumberFormatsTests`** (31 per target):
+    - every code Excel takes, against its answers;
+    - every built-in id against Excel's answers, and against `Classify` of the code Excel shows for it;
+    - the redefinition and `applyNumberFormat` cases through `StyleTable`;
+    - 27 token cases.
+    - The JSON is read with `JsonReaderWriterFactory`, which net48 has as well, so no package was added.
+  - **`TimesAndCalendarParts`:** 23 codes that none of Excel's answers flags but that show a time or a date part: `mm:ss`, `h`, `AM/PM` alone, `e`, `b`, `aaa`, and the like. The test lists them, each shown by Excel's text.
+  - **Durations are checked against Excel's text** rather than ClosedXML, which reads a time of day as a `TimeSpan`.
+  - **`StyleTableTests.GivesEachStyleTheKindOfItsNumberFormat`** replaces Phase 1's "number kind for now" test.
+- **Phase 1 tests updated for date cells:**
+  - `Workbooks.Orders()`' prices had style 1, the test package's built-in date (14). They no longer have a style.
+  - Excel's basic workbook reads its date rows as `2024-01-02`, `2024-01-02T03:04:05`, `03:04:05` and `2024-12-31`.
+  - The corpus test works out each date cell's text with .NET's own date arithmetic (`Corpus/CellTexts.cs`).
+  - The Open XML SDK oracle compares date cells as numbers (`CorpusFiles.WithoutDates`), since it reads no formats.
+  - ClosedXML and ExcelDataReader compare date kinds. Their `TimeSpan`s map to `Duration`.
+  - ClosedXML's one new difference: Data!B33, a time of day, in 16 files (`TimesAsTimeSpans`).
+  - The oracle tests compare each file's differing cells as a set, not in order.
+- **Counts:** CsvHelper.Excel.Tests: 720 on each target. Core and Linq unchanged. The solution builds with 0 warnings.
+
+**Step 5, typed cells in the scanner** (built 2026-11-03, committed with steps 4 to 8 on 2026-11-04):
+
+- **Public:** `ExcelErrorCells` and `ExcelFormulas`, and `ExcelReaderOptions.ErrorCells`, `SignificantDigits` and `Formulas`.
+  - Each is validated with the design's messages.
+  - `Formulas = FormulaText` is accepted, and step 6 makes it read formulas. Until then it reads cached values.
+- **`ExcelReaderOptions.CellOptions(date1904)`** (internal) gives the record source its `CsvCellOptions`: the workbook's date system, `SignificantDigits`, and whether `ErrorCells` is `Error`. Step 4's interim wiring of `Date1904` alone is gone.
+- **The scanner** takes the date system and the error policy (optional parameters, so Phase 1's test call sites stand):
+  - `t="d"`: `IsoDate` converts the decoded text to a serial. Core's `FloatFormatter` writes it into the field, with room for at least 32 bytes. The cell is a date, or a duration in an elapsed-time style. Text that isn't an ISO date stays text, as in Phase 1.
+  - `t="e"` with `ErrorCells = Null`: valueless, as a cell without a value is.
+- **`IsoDate`** (`Internal/Sheet/IsoDate.cs`) takes `yyyy-MM-dd`, `yyyy-MM-ddTHH:mm[:ss[.f]]` and `HH:mm[:ss[.f]]`, each with an optional `Z` and XML white space around it.
+  - The day counts in the date system: the 1900 system's day 0 is 1899-12-31, and 1900-03-01 is serial 61.
+  - The time is worked out in `decimal` from the first 20 fraction digits (the rest must be digits) and parsed once to a `double`.
+  - Excel's Strict texts come out the same doubles as the serials of `excel/basic.xlsx` (`45293.127835648149`, `0.12783564814814816`).
+  - **Not dates:** offsets, week and ordinal dates, the basic format, `24:00`, leap seconds, invalid days, and days before day 0.
+- **Tests:**
+  - **`IsoDateTests`** (53 per target): Excel's forms to the bit, both date systems at their limits, 31 rejected forms, 5,000 random texts against `Corpus/IsoSerials.cs` (an independent computation: a regex, `ToOADate`, `decimal`), and texts of 10,000 digits.
+  - **`TypedCellScannerTests`**, in every sheet mode: number cells by style, `t="d"` in both systems (an elapsed style, invalid text, a preserved space, a character reference, empty values), and the three error policies with empty rows kept and dropped.
+  - **`TypedReadingTests`** (13): `TypedOrder` through generated mappers (sync and async), `Parse` and `ParseExact`, `FieldEquals`, dynamic records, `CsvDataReader` (`DataTable.Load` and typed getters), `Query<T>()` and `ParallelEnumerate`, in both date systems. Also the error policies with `OnRecordError`'s location and `NullValues`, `SignificantDigits` at 15, 17, 2 and null, and the options' checks.
+  - The test helpers take a `CellReading` (styles, date system, error policy). `CapturedRecord` shows durations as `duration:`.
+- **Phase 1 tests updated:**
+  - The scanner's cell-type test reads `t="d"` as `date:45293.12783564815`.
+  - The reference model of `SheetScannerComparisonTests` converts `t="d"` with `IsoSerials`. So does the Open XML SDK oracle, whose comparison sets dates to numbers on both sides.
+  - The Strict differences listed for ExcelDataReader and LibreOffice (`t="d"` read as text) went.
+  - ExcelDataReader has two new differences in `excel/strict.xlsx`: it reads a `t="d"` date-time as a `DateTimeOffset` in the local time zone (B32), and a time alone on today's date (B33).
+  - On .NET Framework, `double.ToString("R")` gives 17 digits where CsvHelper writes the shortest form, so `IsoSerials` finds the shortest round-trip text itself.
+- **Counts:** CsvHelper.Excel.Tests: 789 on each target. Core and Linq unchanged. The solution builds with 0 warnings.
+
+**Step 6, formula text** (built 2026-11-03, committed with steps 4 to 8 on 2026-11-04):
+
+- **`FormulaShifter`** (`Internal/Sheet/FormulaShifter.cs`): `TryShift(formula, rows, columns, destination, out written)`, one forward pass over the UTF-8, as the design's token rules say. `MaxGrowth` is 5: `A1` grows to at most `XFD1048576`, and `1:1` to `1048576:1048576`.
+- **`SharedFormulas`** (`Internal/Sheet/SharedFormulas.cs`): the groups by `si`, `Define`, `TryFind` and `TryGet`. `TryGet` moves the formula into a room that starts at twice the formula's length and doubles until it fits. The groups (each its formula plus 64 bytes) and the room count toward `MaxPartSize`. `XmlWindow.MaxSize` gives the scanner the limit.
+- **The scanner** takes `ExcelFormulas` (an optional parameter), and holds a `SharedFormulas` only under `FormulaText`. `TryReadFormula` reads `f`'s attributes and text and decides what the cell reads (`CellFormula`: none, its own, defining, or shared). `AddFormula` writes it. Its class remarks describe formulas.
+- **Excel's answers, through COM, on 2026-11-03.** Probe workbooks were written by hand, one case each, and their formulas read back with `Range.Formula`:
+  - **Shared formulas wrap around the grid's edges.** Excel opened, without repairing them, groups whose other cells move references past every edge:
+    - `A1` moved a column left is `XFD2`, and `XFD1` moved right is `A1`;
+    - `B1048576` moved a row down is `B1`;
+    - `SUM(1:1048576)` moved down is `SUM(2:1)`, `SUM(B1:XFD1)` moved right is `SUM(C1:A1)`, and neither is put in order.
+    - So the design's `#REF!` rule went. `#REF!` is what Excel's own fills store, as each cell's full formula; those cells read as they're stored.
+  - **Excel repairs, so takes as corrupt:**
+    - a cell outside its group's `ref`, which reads `#N/A`;
+    - an `si` defined twice, whose second definition loses its formula;
+    - a defining cell without a `ref`, or without text;
+    - a cell before its group's defining cell, or with no definition at all;
+    - any shared formula with a sheet-qualified reference, `Sheet1!A1` on its own sheet included.
+    - Excel's fills write such formulas in full in each cell: other sheets' references, string literals and table columns. In the probes Excel shared only same-sheet references, functions, names and numbers.
+  - **Excel takes:**
+    - a cell's own text in a shared `f` without `ref`, which it ignores (`C7` read as `A2`);
+    - an `si` that skips numbers (7 first);
+    - lowercase references, which it shows in capitals, functions too.
+  - **Text:**
+    - Excel trims `f` as it trims `v`: `<f>  A1 + 1  </f>` is `=A1 + 1`. With `xml:space="preserve"` it keeps the white space in front but drops what follows (`=  A1 + 1`). CsvHelper.Excel keeps both, as the file stores them; Excel never writes either.
+    - Excel writes `xml:space="preserve"` on an `f` that starts with a space, and escapes `_x` in formulas as in values (`"_x005F_x0041_"`), so `_xHHHH_` escapes decode.
+    - A raw CR LF or LF is a line feed, and `&#13;` makes Excel repair the file.
+    - `<f/>`, `<f></f>` and `<f>   </f>` read their values.
+  - **Shown differently from the file:**
+    - numbers (`1E+5` as `100000`, `.5` as `0.5`);
+    - a whole column stored as `C1:C1048576` (`C:C`);
+    - newer functions without `_xlfn.`;
+    - everything in capitals.
+    - Step 7's oracle lists these as differences.
+- **ClosedXML 0.105.1** moves references as Excel does within the grid. It writes `#REF!` past an edge where Excel wraps, writes a moved formula's references in capitals, unmoved and absolute ones too, and ignores a cell's own text, as Excel does. CsvHelper.Excel writes references in capitals as both do (the first build kept their case).
+- **Tests:**
+  - **`FormulaShifterTests`** (47 per target):
+    - 18 of Excel's answers;
+    - 27 token cases: other sheets, quotes, brackets, arrays, errors, the spill operator, functions, names, numbers, leading zeros, offsets of a whole grid, and unclosed literals;
+    - the growth bound, and a million brackets deep.
+  - **`SharedFormulaComparisonTests`:** 60 generated groups of every kind of reference, literal and function, some in lowercase, each with up to 12 other cells, all the same as ClosedXML's `FormulaA1`.
+  - **`SharedFormulasTests`:** the room's growth, the replacement of a group, and both limits.
+  - **`FormulaScannerTests`**, in every sheet mode:
+    - own formulas in every cell type;
+    - decoding: trimming, `xml:space`, entities, escapes, CDATA, line ends;
+    - shared formulas with wrapping and ignored text;
+    - arrays, data tables, empty `f`, and a defining cell without text;
+    - a missing or later definition, and bad `si` values;
+    - `ErrorCells`;
+    - the limit, and redefinitions under it.
+  - **`FormulaReadingTests`:** end to end, sync and async, through fields, `GetRecords<T>`, dynamic records and `ParallelEnumerate`, with `ErrorCells = Error`.
+  - **A look ahead at step 7 (not kept):** every corpus file's formula cells read with `FormulaText` agree with ClosedXML's `FormulaA1`, Excel's shared formulas included. Two exceptions: ClosedXML can't open `excel/strict.xlsx` or `google/64450.xlsx`, and `google/66365.xlsx`'s B2 is an array formula's other cell, which reads its value (decision 16) where ClosedXML repeats the formula.
+- **Counts:** CsvHelper.Excel.Tests: 851 on each target. Core and Linq unchanged. The solution builds with 0 warnings.
+
+**Step 7, corpus and oracles** (built 2026-11-03, committed with steps 4 to 8 on 2026-11-04):
+
+- **The `typed` content** (`tools/CsvHelper.Excel.Corpus/Typed.cs`), defined once, as `basic` is:
+  - "Dates": 51 built-in ids set by id, 29 format codes, four elapsed-time codes, durations, 16 serials around the date systems' limits shown to the millisecond, and six dates written as dates.
+  - "Numbers": integers, 17-digit doubles, the largest and least normal doubles, exponents, booleans, the seven classic errors as constants and as results, `#CALC!`, and texts that look like values.
+  - "Formulas": fills down and right, a legacy array, a spill and a reference to it, `XLOOKUP`, a reference copied off the grid, line breaks, and the table `Orders` with a calculated column. The fills are listed apart, for Excel to fill, and the rows hold each cell's formula as the fill gives it, for the other producers.
+  - "Other Sheet", and the defined name `Rate`.
+  - The spec's cells gained a format id, a formula's result, an array's range and a spill flag; its sheets gained fills, copies and tables; and `CellType.Error` is a constant error.
+- **Its producers**, nine files of 10 to 20 KB:
+  - Excel: `excel/typed.xlsx`, `typed-1904.xlsx` (which leaves out the dates before 1904, which Excel can't hold) and `typed-strict.xlsx`;
+  - LibreOffice, from Excel's;
+  - openpyxl (`typed.xlsx`, and `typed-isodates.xlsx` with `iso_dates`), XlsxWriter, POI's XSSF, and ClosedXML.
+  - The commands that write them write the basic files again too. Those were put back from git, unchanged in content, so their committed bytes stand.
+- **The `oracle` command** (`tools/CsvHelper.Excel.Corpus/ExcelOracle.cs`, also run by `all`) writes `Files/excel-oracle/<file>.json`: 33 files, 2 MB, in 17 seconds. The corpus README describes them. Found while building it:
+  - Excel opens the files with calculation manual if a blank workbook set it first, and then shows the stored values: openpyxl's formulas without values are empty.
+  - `Range.Formula` fails for a whole range with a text longer than a formula can be, and `Range.Value` for a date past 9999, so both are read per cell.
+  - Excel repairs `closedxml/typed.xlsx`. So the command opens a workbook it can't open as it is with repair, and records the repair log's records, not its summary, which names the file's full path.
+- **Excel's answers changed CsvHelper.Excel twice** (the design's "ISO dates" now says so):
+  - **ISO 8601 durations:** Excel's Strict file writes elapsed-time cells as `t="d"` durations (`PT36H0M0.000S`, `PT2160M0.000S`, `PT129600.000S`), which read as text. `IsoDate` now takes days, hours, minutes and seconds (`P1DT12H`), each a whole number of up to 15 digits, in order, at least one, with a fraction only in the seconds. The tests' `IsoSerials` takes them too.
+  - **A `t="d"` cell's kind is its style's**, as a number cell's is: Excel showed a `t="d"` cell in `0;yyyy` as a number, and a probe showed General `t="d"` cells as numbers (45293, and 1.5 for `PT36H`). Step 5 made every `t="d"` date a date cell. Step 5's scanner test now styles its dates and adds cells in General, and `TypedReadingTests`' `t="d"` order date has a date style, as Excel writes one.
+- **Excel's answers found, and the test lists:**
+  - **Strict workbooks' date system:** `dateCompatibility="0"` is a 1900 system without 1900-02-29 that counts days as OLE Automation dates do; Excel shows serial 1 as 1899-12-31 and 60 as 1900-02-28 there. Its `t="d"` dates read as the same dates in the 1900 system, a serial a day less before March 1900, and 1899-12-30 stays text. Reading such a workbook's plain serials as Excel does would take a third date system in core's `CsvCellOptions` and conversions. At review the user chose to leave it as it is: documented, with no core change.
+  - A serial past the last day has no `Value` date, and Excel's 1904 system shows a negative serial as a date before 1904.
+  - `#CALC!` and `#SPILL!` are stored as `#VALUE!` with rich value metadata.
+  - Excel reads a number past the largest double as `#NULL!`, and a subnormal one as 0.
+  - It shows `#VALUE!` in a legacy array's other cell whatever the file stores, and 0 where openpyxl stores nothing.
+  - It builds a pivot table's cells that Google Sheets leaves out.
+  - COM put a date before March 1900 a day off, and rounded milliseconds to the second.
+- **`ExcelAnswersTests`** (34 per target) compares every cell of the 33 workbooks:
+  - kind and value, the kind from `Range.Value`, `CELL("format")` and the elapsed text, as `NumberFormatsTests` judges them;
+  - the text of booleans, errors, and dates and durations in the millisecond formats, against `CellTexts`, which `CorpusTests` ties to `GetString`: Excel's own date arithmetic (serial 0 as `1900-01-00`, 60 as `1900-02-29`, `0.999999999` as the next day) agrees, but for day 0, which reads as a time alone (decision 9);
+  - formulas read as text against `Formula`, with Excel's display allowed for: no `_xlfn.` or `_xlws.`, `H14#`, `[@Qty]`, and no formulas for a legacy array's other cells.
+  - 39 cells differ, and Google's pivot table sheet, each listed with one of 11 reasons. Every basic workbook agrees with Excel in every cell, and so do all the shared formulas, moved.
+- **ClosedXML and ExcelDataReader** compare dates as `DateTime` and durations as `TimeSpan` (`CorpusFiles.AsDotNet`, through the public reader's `TryParse`), no longer as serials:
+  - **ClosedXML** can open no typed workbook. It rejects serial 60 in a date format (in the 1904 system too), a number past the largest double, and the `t="d"` texts of Excel's Strict files and openpyxl. The test checks each exception.
+  - Its `FormulaA1` is compared with `FormulaText` on every workbook it opens: they agree but for Google's legacy array's other cell.
+  - **ExcelDataReader** differs in typed cells for reasons of its own, each listed:
+    - built-in ids 79 and 80 swapped;
+    - `e`, `yyyy-mm-dd [h]:mm` and `0;yyyy` classified otherwise;
+    - serial 60 as 1900-02-28;
+    - negatives as dates;
+    - serials past the last day as numbers;
+    - unrounded `TimeSpan`s on .NET, while .NET Framework's `TimeSpan.FromDays` rounds;
+    - `t="d"` as local `DateTimeOffset`s or text.
+    - On .NET Framework, a number past the largest double throws in `double.Parse`, so it gives text there.
+  - **LibreOffice:** two more cells, the Strict 1899-12-30 and its own `Err:533`.
+- **Also found in the producers** (the corpus README's "What the producers write"):
+  - openpyxl and XlsxWriter write 16 significant digits, and LibreOffice and ClosedXML 15 (`0.1+0.2` as `0.3`), where Excel writes 17 and POI the shortest form.
+  - ClosedXML wrote `NA()`'s result as a number, which Excel repairs.
+  - XlsxWriter writes `#` as it is, which makes Excel repair the file; its users write `ANCHORARRAY()`, as the producer now does.
+  - LibreOffice writes `#ref!` and `_xlfn.anchorarray` in lowercase.
+  - POI can't parse an undefined name.
+- **Tests:**
+  - `IsoDateTests`: 87 per target, with 21 rejected and 12 accepted durations, and 2,000 random durations against `IsoSerials`.
+  - `CorpusTests` list the typed files, and check every cell's stored form and text through the public API.
+  - The Open XML SDK matches every typed workbook exactly.
+  - `NumberFormatsTests`' kind rule and its list of times are shared with `ExcelAnswersTests`, and `CorpusFiles.Read` takes `ExcelFormulas`.
+- **Counts:** CsvHelper.Excel.Tests: 973 on each target, LibreOffice's included. Core and Linq unchanged. The solution builds with 0 warnings.
+
+**Step 8, security and fuzzing** (built 2026-11-03, committed with steps 4 to 8 on 2026-11-04):
+
+- **Security tests** (`SecurityTests`, each sync and async, through the public API):
+  - **A million shared formula groups:** a sheet of a million cells that each define a group of their own. Read as text, the store counts each group's formula and 64 bytes, 66 MB in all, toward a 4 MB `MaxPartSize`, and stops at about the 63,000th group with its error. Read as values, nothing is held, and all million rows read.
+  - **A long formula:** 64 MB of formula under a 4 MB part limit stops the window at the limit, whether formulas read as text or as values, since a cell is read whole with its `f`. The reader got no further into the compressed data than twice the limit's share.
+  - **A shared formula that grows:** 1 MB of `1:1,` repeated. Moved a row down it reads; moved to the last row it would be 4 MB (`1048576:1048576,`), and the room for it, with the formula the store holds, passes the 4 MB limit with the store's error, after the two records before it.
+  - **Nesting:** shared formulas of a million parentheses around a reference, a million brackets nested around one, and a million brackets that never close. Each follower moves in one pass: the references outside brackets move, those inside don't.
+  - **Absurd `t="d"` texts** of a million characters: a year of a million digits, a million digits of a second's fraction (of which the first 20 count), a million-digit number of hours, a million zeros of seconds, and a date in a million spaces. The dates read as dates and the rest as text, each in one pass. (The design said 10,000 characters; step 5's tests have those.)
+- **The fuzzer** (`FuzzTests`):
+  - **Settings:** besides sync or async and the CSV options, each seed picks `Formulas`, `ErrorCells`, `SignificantDigits` (15, 17, null, 1 or 28) and how to read, from numbers of its own (its bits mixed first: `Random` gives seeds near each other nearly the same first numbers, so the read mode at first followed the next seed's mutations).
+  - **Three ways to read:**
+    - **Strings:** every field through `GetString`, as in Phase 1.
+    - **Typed fields:** every field through `GetString`, and the fields of each sheet's first 64 records through `TryParse` as `double`, `decimal`, `long`, `int`, `byte`, `bool`, `DateTime`, `DateTimeOffset` and `TimeSpan` (and `DateOnly` and `TimeOnly` on .NET), which must not throw. `Parse` runs for one of those types in turn, since exceptions are slow: it must give `TryParse`'s value, or throw `FormatException` or `OverflowException` where `TryParse` failed.
+    - **Typed records:** `GetRecords<FuzzRecord>` (or `GetRecordsAsync`), a record of those types by index, with `OnRecordError` skipping the records that fail. Each failure must be a `CsvFormatException` around a `FormatException` or an `OverflowException`.
+  - Under `ErrorCells = Error`, an error cell's `GetString` may throw the policy's `FormatException`.
+  - **Sources:** a fourth synthetic package, of formulas (a shared group, a two-column group, a group whose defining cell has no text, an array, a data table, a structured reference) among dates, `t="d"` dates and a duration, an error and 17 digits. The typed corpus files came in with step 7.
+  - **Tokens:** formulas' elements and attributes, the formula grammar's delimiters, references at the grid's edges, styles 1 and 3, and ISO 8601 texts; numbers such as `1E+309`, `4.9E-324`, 60 and 2958466.
+  - **Runs:** 3,000 inputs by default, in about 4 s on net10.0, 5 s on net8.0 and 7 s on net48 (Phase 1's took 2 to 3 s). 200,000 inputs passed on each target with the review's changes: 5 min 5 s (net10.0), 7 min 47 s (net8.0) and 9 min 27 s (net48). Each way of reading took a third of them, with the same mix: about 39% read to the end, 30% failed at a sheet with `CsvFormatException`, 9% at a sheet with `InvalidDataException`, and 22% as a workbook with `InvalidDataException`. Before the changes, two runs of 200,000 on each target passed too, the first with the read mode following the mutations, and 0.16% of the inputs stopped at a header's error cell (below), which now read.
+- **The formula fuzzer** (`FormulaFuzzTests`): random formulas of the grammar's pieces and stray bytes, moved by random offsets, at and past the grid's edges. A moved formula fits in five times its length, exactly in its own and not in a byte less; unmoved, it is itself; and moved twice, it is moved once by both offsets, which holds only if the shifter reads a moved formula's pieces as it read the formula's. (Where a move rewrites a row or column, in capitals and without leading zeros, and both moves together leave it unmoved, which copies it as it is, the last check is skipped.) 20,000 formulas by default, in 0.2 to 0.4 s; `CSVHELPER_EXCEL_FUZZ_FORMULAS` sets the count. 5,000,000 passed in 65 s on net10.0.
+- **What fuzzing found:**
+  - **A header cell holding an error, under `ErrorCells = Error`:** `Read()` threw the policy's plain `FormatException` from core's `CaptureHeader` ("Data!E1 holds the error #DIV/0!."), which `Read` doesn't document; it documents `CsvFormatException` for a malformed header. The alternatives were a `CsvFormatException` naming the cell, or documenting it. At review the user chose the recommendation: a header cell is a name, not a value, so it names its column with the error's text under `Error`, as under `Text`. (Under `Null` it is empty, as every error cell is, so the header ends before it.) This is a core change, below.
+  - **A reference right after a number** (`20A1`, `$2B1048576`), which Excel can't write, reads as the number's exponent once it moves to column E (`20E1`), so it moves no further. The formula fuzzer found it, twice. Excel's grammar puts an operator after a number, so the shifter is left as it is, and the fuzzer joins its pieces with a space where a number would run into a letter. "Risks" says so.
+- **Found reading the code, and measured:** a shared string or a shared formula repeated in many cells multiplied bytes and work that no limit counted. The window bounds a cell's XML, and `MaxUncompressedSize` the XML inflated, but not the fields a cell gives.
+  - 3,000 rows each reading one 1 MB shared string give 3.1 GB of fields from a 17 KB zip, under a 16 MB total limit.
+  - One row of 300 such cells is a 315 MB record, and allocates 1 GB; core's buffer stops a record at 2 GB ("A single record is too large to buffer").
+  - A 1 MB shared formula and 3,000 cells of its group (a 23 KB zip) kept a Release reader busy for 10 s, giving 1.7 GB of fields, before the store's room passed a 4 MB part limit. Under the default 256 MB, a larger formula could keep it busy for days.
+  - The shared strings' case is Phase 1's; decision 5 counted gap fields for the same reason.
+  - **The fix** (the user's choice at review, of three: this, counting a shared string's or moved formula's every byte, which would make large workbooks reach the limit sooner, or documenting it): a shared string and a moved shared formula count the bytes they have beyond their cell's XML, up to the end of the value, toward `MaxUncompressedSize`, as gap fields count. `SheetScanner.ChargeBeyondCell` is a subtraction and a comparison per shared string cell, and charges nothing for a string shorter than its cell, which ordinary workbooks' strings mostly are. Other fields are no longer than their XML (a `t="d"` serial, at most 24 bytes, can pass its cell by a few). So a reader's fields stay within about the bytes the workbook may inflate to, and the probe's cases now stop within 16 cells under a 16 MB limit. The `MaxUncompressedSize` docs, the scanner's remarks and the design ("Scanner", and Phase 1's "Public API" and decision 5) say so; step 9's A/B of `ExcelPackageAssetsRead` measures it.
+  - **Its tests:** `SheetScannerTests` counts both to the byte (a 100-byte string in a 24-byte cell counts 76, a shorter one nothing; a moved formula counts its length less its cell's, and nothing when formulas read as values). `SecurityTests`: a megabyte's shared string read by a million rows, or by a row of 16,384 cells, and a megabyte's shared formula with a million cells in its group, each stop at a 16 MB limit within 16 cells.
+- **Mutation check** on net8.0, seven bugs planted one at a time, over the Security, Sheet and Api tests:
+  - "shared formula groups not counted": 4 failures;
+  - "the room for moved formulas not counted": 3;
+  - "rows don't wrap at the grid's edge": 4, the formula fuzzer among them;
+  - "every fraction digit read" (a `decimal` overflow): 4;
+  - "a `t="d"` text kept with the style's date kind": 1 (`TypedCellScannerTests`; core reads such a field as text, so the fuzzer can't see it);
+  - "a `'` in brackets escapes nothing": 0 at first. The one case escaped a balanced pair (`['[A1']]`), so a column name with a bracket of its own, `Table1[x'[A1]` and `Table1[y']A1]`, is now a `FormulaShifterTests` case, which catches it;
+  - "a bracket's depth not tracked" (the first `]` ends brackets): 0. It changes nothing a valid formula holds: what follows a closing bracket inside brackets is always another bracketed item.
+  - After the review's changes: "shared strings not counted beyond their cells": 6; "moved formulas not counted beyond their cells": 4.
+- **Counts:** CsvHelper.Excel.Tests: 999 on each target (20 security cases, 4 scanner cases, the formula fuzzer and the shifter's case are new), all passing on net10.0, net8.0 and net48. CsvHelper.Tests: 1309, 1304 and 844, with the header case added to `ErrorCellsCanFailEveryRead`; CsvHelper.Linq.Tests unchanged. The solution builds with 0 warnings.
+- **Core:** one change, flagged and approved at review: `CsvReader.CellHeader` takes `CsvCells.Text` of the cell, or its bytes, without `CellString`'s check of `ThrowOnErrorCells`. It is on the header's path alone, once per file, behind `typedCells`, in a method that isn't inlined. Step 9's deferred gate covers it.
 
 ### Phase 3: choosing what to read, and messy sheets (M)
 

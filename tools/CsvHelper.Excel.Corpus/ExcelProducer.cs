@@ -57,7 +57,28 @@ internal static class ExcelProducer
 	/// <summary>The files saved in the public folder, and where each goes in the corpus.</summary>
 	private static readonly List<(string Staged, string Path)> Pending = [];
 
-	/// <summary>Writes <c>excel/</c>: the basic workbook as each format, and the formats that aren't read.</summary>
+	/// <summary><c>xlSrcRange</c>, for a table over a range.</summary>
+	private const int SourceRange = 1;
+
+	/// <summary><c>xlYes</c>, for a table whose first row is its headers.</summary>
+	private const int Yes = 1;
+
+	/// <summary>The SCODE of an error value as COM passes it: <c>0x800A0000</c> and Excel's code (2042 for <c>#N/A</c>).</summary>
+	private const uint ErrorScode = 0x800A0000;
+
+	/// <summary>Excel's codes of its error values, as <c>CVErr</c> takes them.</summary>
+	private static readonly Dictionary<string, int> ErrorCodes = new()
+	{
+		["#NULL!"] = 2000,
+		["#DIV/0!"] = 2007,
+		["#VALUE!"] = 2015,
+		["#REF!"] = 2023,
+		["#NAME?"] = 2029,
+		["#NUM!"] = 2036,
+		["#N/A"] = 2042,
+	};
+
+	/// <summary>Writes <c>excel/</c>: the basic workbook as each format, the formats that aren't read, and the typed workbook.</summary>
 	/// <param name="files">The corpus folder.</param>
 	public static void Write(string files)
 	{
@@ -72,6 +93,9 @@ internal static class ExcelProducer
 			Save(excel, Path.Combine(folder, "binary.xlsb"), Xlsb);
 			Save(excel, Path.Combine(folder, "legacy.xls"), Xls);
 			Save(excel, Path.Combine(folder, "encrypted.xlsx"), Xlsx, password: Password);
+			SaveTyped(excel, Path.Combine(folder, "typed.xlsx"), Xlsx);
+			SaveTyped(excel, Path.Combine(folder, "typed-1904.xlsx"), Xlsx, date1904: true);
+			SaveTyped(excel, Path.Combine(folder, "typed-strict.xlsx"), StrictXlsx);
 		});
 	}
 
@@ -120,7 +144,7 @@ internal static class ExcelProducer
 	/// objects is referenced, so every object the work used is released (collected) before Excel quits.
 	/// </summary>
 	/// <param name="work">What to do with Excel.</param>
-	private static void Run(Action<dynamic> work)
+	internal static void Run(Action<dynamic> work)
 	{
 		var type = Type.GetTypeFromProgID("Excel.Application") ?? throw new InvalidOperationException("Excel is not installed.");
 		dynamic excel = Activator.CreateInstance(type) ?? throw new InvalidOperationException("Excel didn't start.");
@@ -184,6 +208,161 @@ internal static class ExcelProducer
 		}
 
 		CopyPending();
+	}
+
+	/// <summary>Builds the typed workbook in a new workbook and saves it.</summary>
+	/// <param name="excel">Excel.</param>
+	/// <param name="path">Where to save it.</param>
+	/// <param name="format">The file format.</param>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
+	private static void SaveTyped(dynamic excel, string path, int format, bool date1904 = false)
+	{
+		var workbook = excel.Workbooks.Add();
+		try
+		{
+			if (date1904)
+			{
+				workbook.Date1904 = true;
+			}
+
+			BuildTyped(workbook, date1904);
+			SaveAs(workbook, path, format, null);
+		}
+		finally
+		{
+			workbook.Close(false);
+		}
+
+		CopyPending();
+	}
+
+	/// <summary>
+	/// Builds the typed workbook's sheets, in tab order: each sheet's values and formats first, then its tables and the
+	/// defined names, which formulas refer to, then its formulas, its fills (which make shared formulas) and its copies.
+	/// Every feature but <c>formatId</c> is written: Excel sets format codes, not ids.
+	/// </summary>
+	/// <param name="workbook">The workbook, with one sheet.</param>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system, which has no dates before 1904.</param>
+	private static void BuildTyped(dynamic workbook, bool date1904)
+	{
+		var previous = workbook.Worksheets[1];
+		previous.Name = Typed.Sheets[0].Name;
+		foreach (var spec in Typed.Sheets.Skip(1))
+		{
+			var added = workbook.Worksheets.Add(After: previous);
+			added.Name = spec.Name;
+			previous = added;
+		}
+
+		foreach (var (name, value) in Typed.Names)
+		{
+			workbook.Names.Add(Name: name, RefersTo: "=" + value);
+		}
+
+		var features = new[] { "date", "error", "formula", "array", "spill", "name", "table", "newer" };
+		foreach (var spec in Typed.Sheets)
+		{
+			var sheet = workbook.Worksheets[spec.Name];
+			var cells = Basic.Rows(spec, features).SelectMany(r => r.Cells.Select(c => (Row: r.Row, Cell: c))).ToList();
+			foreach (var (row, cell) in cells.Where(c => c.Cell.Type != CellType.Formula))
+			{
+				if (!(date1904 && cell.Date < new DateTime(1904, 1, 1)))
+				{
+					WriteValue(sheet.Range[cell.Reference(row)], cell);
+				}
+			}
+
+			foreach (var table in spec.Tables)
+			{
+				var list = sheet.ListObjects.Add(SourceType: SourceRange, Source: sheet.Range[table.Range], XlListObjectHasHeaders: Yes);
+				list.Name = table.Name;
+			}
+
+			foreach (var (row, cell) in cells.Where(c => c.Cell.Type == CellType.Formula))
+			{
+				var range = sheet.Range[cell.Array ?? cell.Reference(row)];
+				if (cell.Array is not null)
+				{
+					range.FormulaArray = "=" + cell.Formula;
+				}
+				else if (cell.Spill == true || cell.Feature == "newer")
+				{
+					// As typed in Excel 365, without the implicit intersection Range.Formula would add.
+					range.Formula2 = "=" + cell.Formula;
+				}
+				else
+				{
+					range.Formula = "=" + cell.Formula;
+				}
+			}
+
+			foreach (var fill in spec.Fills)
+			{
+				var range = sheet.Range[fill.Range];
+				if (fill.Direction == "down")
+				{
+					range.FillDown();
+				}
+				else
+				{
+					range.FillRight();
+				}
+			}
+
+			foreach (var copy in spec.Copies)
+			{
+				sheet.Range[copy.From].Copy(sheet.Range[copy.To]);
+			}
+		}
+
+		workbook.Worksheets[Typed.Sheets[0].Name].Activate();
+	}
+
+	/// <summary>
+	/// Writes a value of the typed workbook: a text (as text, with the text format when Excel would read it as a number, a
+	/// boolean, an error or a date), a number, a boolean, an error value, or a number or date with its format.
+	/// </summary>
+	/// <param name="range">The cell.</param>
+	/// <param name="cell">Its content.</param>
+	private static void WriteValue(dynamic range, CellSpec cell)
+	{
+		switch (cell.Type)
+		{
+			case CellType.Text:
+				range.Value2 = cell.Text;
+				if (range.Value2 is not string text || text != cell.Text)
+				{
+					range.NumberFormat = "@";
+					range.Value2 = cell.Text;
+				}
+
+				break;
+			case CellType.Number:
+				range.Value2 = cell.Number!.Value;
+
+				break;
+			case CellType.Bool:
+				range.Value2 = cell.Bool!.Value;
+
+				break;
+			case CellType.Error:
+				range.Value2 = new ErrorWrapper(unchecked((int)(ErrorScode | (uint)ErrorCodes[cell.Text!])));
+
+				break;
+			case CellType.Date:
+				if (cell.Date is { } date)
+				{
+					range.Value = date;
+				}
+				else
+				{
+					range.Value2 = cell.Number!.Value;
+				}
+
+				range.NumberFormat = cell.Format;
+
+				break;
+		}
 	}
 
 	/// <summary>

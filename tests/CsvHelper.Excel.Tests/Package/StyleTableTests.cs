@@ -36,11 +36,28 @@ public class StyleTableTests
 	[Theory]
 	[InlineData(false)]
 	[InlineData(true)]
-	public async Task GivesEveryStyleTheNumberKindForNow(bool async)
+	public async Task GivesEachStyleTheKindOfItsNumberFormat(bool async)
 	{
 		var styles = await TestPackage.Workbook("Data").LoadStylesAsync(async);
 
-		Assert.All(new[] { 0, 1, 2, 3, -1 }, s => Assert.Equal(SheetCellKind.Number, styles.NumberKind(s)));
+		// General, 14 (m/d/yyyy) and 164 (yyyy\-mm\-dd); a style past the cell formats has the first one's.
+		Assert.Equal([SheetCellKind.Number, SheetCellKind.DateNumber, SheetCellKind.DateNumber], Enumerable.Range(0, 3).Select(styles.NumberKind));
+		Assert.Equal(SheetCellKind.Number, styles.NumberKind(3));
+		Assert.Equal(SheetCellKind.Number, styles.NumberKind(-1));
+
+		// Durations, numbers, a format that numFmts defines for a built-in id (the definition wins, as in Excel), and a
+		// cell format that says not to apply its format (Excel applies it anyway).
+		var more = await TestPackage.Workbook("Data")
+			.Replace("xl/styles.xml", "<numFmts count=\"1\"><numFmt numFmtId=\"164\" formatCode=\"yyyy\\-mm\\-dd\"/></numFmts>",
+				"<numFmts count=\"3\"><numFmt numFmtId=\"164\" formatCode=\"[h]:mm\"/><numFmt numFmtId=\"14\" formatCode=\"0.00\"/>" +
+				"<numFmt numFmtId=\"165\" formatCode=\"#,##0 &quot;days&quot;\"/></numFmts>")
+			.Replace("xl/styles.xml", "<xf numFmtId=\"164\" applyNumberFormat=\"1\"/>",
+				"<xf numFmtId=\"164\" applyNumberFormat=\"1\"/><xf numFmtId=\"46\"/><xf numFmtId=\"165\"/><xf numFmtId=\"22\" applyNumberFormat=\"0\"/><xf numFmtId=\"4\"/>")
+			.LoadStylesAsync(async);
+
+		Assert.Equal(
+			[SheetCellKind.Number, SheetCellKind.Number, SheetCellKind.Duration, SheetCellKind.Duration, SheetCellKind.Number, SheetCellKind.DateNumber, SheetCellKind.Number],
+			Enumerable.Range(0, 7).Select(more.NumberKind));
 	}
 
 	[Theory]

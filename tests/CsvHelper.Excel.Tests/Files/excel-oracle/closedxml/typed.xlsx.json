@@ -1,0 +1,3642 @@
+{
+  "file": "closedxml/typed.xlsx",
+  "date1904": false,
+  "repaired": [
+    "Repaired Records: Cell information from /xl/worksheets/sheet2.xml part"
+  ],
+  "sheets": [
+    {
+      "name": "Dates",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "id 14",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A3",
+          "value2": "id 15",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "15-Jan-24",
+          "numberFormat": "d-mmm-yy",
+          "category": "D1",
+          "elapsed": "1-Jan-00"
+        },
+        {
+          "cell": "A4",
+          "value2": "id 16",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "15-Jan",
+          "numberFormat": "d-mmm",
+          "category": "D2",
+          "elapsed": "1-Jan"
+        },
+        {
+          "cell": "A5",
+          "value2": "id 17",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "Jan-24",
+          "numberFormat": "mmm-yy",
+          "category": "D3",
+          "elapsed": "Jan-00"
+        },
+        {
+          "cell": "A6",
+          "value2": "id 18",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00 PM",
+          "numberFormat": "h:mm AM/PM",
+          "category": "D7",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "A7",
+          "value2": "id 19",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00 PM",
+          "numberFormat": "h:mm:ss AM/PM",
+          "category": "D6",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "A8",
+          "value2": "id 20",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00",
+          "numberFormat": "h:mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "A9",
+          "value2": "id 21",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00",
+          "numberFormat": "h:mm:ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A10",
+          "value2": "id 22",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B10",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024 12:00",
+          "numberFormat": "m/d/yyyy h:mm",
+          "category": "D4",
+          "elapsed": "1/1/1900 12:00"
+        },
+        {
+          "cell": "A11",
+          "value2": "id 27",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B11",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A12",
+          "value2": "id 28",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B12",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A13",
+          "value2": "id 29",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B13",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A14",
+          "value2": "id 30",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B14",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A15",
+          "value2": "id 31",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B15",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A16",
+          "value2": "id 32",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B16",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00",
+          "numberFormat": "h:mm:ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A17",
+          "value2": "id 33",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B17",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00",
+          "numberFormat": "h:mm:ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A18",
+          "value2": "id 34",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B18",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00",
+          "numberFormat": "h:mm:ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A19",
+          "value2": "id 35",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B19",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00",
+          "numberFormat": "h:mm:ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A20",
+          "value2": "id 36",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B20",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A21",
+          "value2": "id 45",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B21",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "00:00",
+          "numberFormat": "mm:ss",
+          "category": "G",
+          "elapsed": "00:00"
+        },
+        {
+          "cell": "A22",
+          "value2": "id 46",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B22",
+          "value2": 1.5,
+          "type": "number",
+          "text": "36:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "A23",
+          "value2": "id 47",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B23",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "00:00.0",
+          "numberFormat": "mm:ss.0",
+          "category": "G",
+          "elapsed": "00:00.0"
+        },
+        {
+          "cell": "A24",
+          "value2": "id 50",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B24",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A25",
+          "value2": "id 51",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B25",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A26",
+          "value2": "id 52",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B26",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A27",
+          "value2": "id 53",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B27",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A28",
+          "value2": "id 54",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B28",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A29",
+          "value2": "id 55",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B29",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A30",
+          "value2": "id 56",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B30",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A31",
+          "value2": "id 57",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B31",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A32",
+          "value2": "id 58",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B32",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A33",
+          "value2": "id 71",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B33",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A34",
+          "value2": "id 72",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B34",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m/d/yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "A35",
+          "value2": "id 73",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B35",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "15-Jan-24",
+          "numberFormat": "d-mmm-yy",
+          "category": "D1",
+          "elapsed": "1-Jan-00"
+        },
+        {
+          "cell": "A36",
+          "value2": "id 74",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B36",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "15-Jan",
+          "numberFormat": "d-mmm",
+          "category": "D2",
+          "elapsed": "1-Jan"
+        },
+        {
+          "cell": "A37",
+          "value2": "id 75",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B37",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "Jan-24",
+          "numberFormat": "mmm-yy",
+          "category": "D3",
+          "elapsed": "Jan-00"
+        },
+        {
+          "cell": "A38",
+          "value2": "id 76",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B38",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00",
+          "numberFormat": "h:mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "A39",
+          "value2": "id 77",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B39",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00",
+          "numberFormat": "h:mm:ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A40",
+          "value2": "id 78",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B40",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "1/15/2024 12:00",
+          "numberFormat": "m/d/yyyy h:mm",
+          "category": "D4",
+          "elapsed": "1/1/1900 12:00"
+        },
+        {
+          "cell": "A41",
+          "value2": "id 79",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B41",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "00:00",
+          "numberFormat": "mm:ss",
+          "category": "G",
+          "elapsed": "00:00"
+        },
+        {
+          "cell": "A42",
+          "value2": "id 80",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B42",
+          "value2": 1.5,
+          "type": "number",
+          "text": "36:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "A43",
+          "value2": "id 81",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B43",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "00:00.0",
+          "numberFormat": "mm:ss.0",
+          "category": "G",
+          "elapsed": "00:00.0"
+        },
+        {
+          "cell": "A44",
+          "value2": "id 0",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B44",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A45",
+          "value2": "id 1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B45",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45307",
+          "numberFormat": "0",
+          "category": "F0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "A46",
+          "value2": "id 2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B46",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.50",
+          "numberFormat": "0.00",
+          "category": "F2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "A47",
+          "value2": "id 10",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B47",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "4530650.00%",
+          "numberFormat": "0.00%",
+          "category": "P2",
+          "elapsed": "150.00%"
+        },
+        {
+          "cell": "A48",
+          "value2": "id 11",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B48",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "4.53E+04",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "A49",
+          "value2": "id 37",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B49",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45,307 ",
+          "numberFormat": "#,##0_);(#,##0)",
+          "category": ",0",
+          "elapsed": "2 "
+        },
+        {
+          "cell": "A50",
+          "value2": "id 49",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B50",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.5",
+          "numberFormat": "@",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A51",
+          "value2": "id 59",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B51",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45307",
+          "numberFormat": "0",
+          "category": "F0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "A52",
+          "value2": "id 63",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B52",
+          "value2": 45306.5,
+          "type": "currency",
+          "text": "$45,307 ",
+          "numberFormat": "$#,##0_);($#,##0)",
+          "category": "C0",
+          "elapsed": "$2 "
+        },
+        {
+          "cell": "A53",
+          "value2": "yyyy-mm-dd",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B53",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "A54",
+          "value2": "dd/mm/yyyy",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B54",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "15/01/2024",
+          "numberFormat": "dd/mm/yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "A55",
+          "value2": "d-mmm-yy",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B55",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "15-Jan-24",
+          "numberFormat": "d-mmm-yy",
+          "category": "D1",
+          "elapsed": "1-Jan-00"
+        },
+        {
+          "cell": "A56",
+          "value2": "mmmm d, yyyy",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B56",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "January 15, 2024",
+          "numberFormat": "mmmm d, yyyy",
+          "category": "D4",
+          "elapsed": "January 1, 1900"
+        },
+        {
+          "cell": "A57",
+          "value2": "dddd",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B57",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "Monday",
+          "numberFormat": "dddd",
+          "category": "G",
+          "elapsed": "Sunday"
+        },
+        {
+          "cell": "A58",
+          "value2": "mmm-yy",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B58",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "Jan-24",
+          "numberFormat": "mmm-yy",
+          "category": "D3",
+          "elapsed": "Jan-00"
+        },
+        {
+          "cell": "A59",
+          "value2": "yyyy-mm-dd hh:mm:ss",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B59",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "2024-01-15 12:00:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "A60",
+          "value2": "yyyy-mm-ddThh:mm:ss.000",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B60",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "2024-01-15T12:00:00.000",
+          "numberFormat": "yyyy-mm-ddThh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01T12:00:00.000"
+        },
+        {
+          "cell": "A61",
+          "value2": "h:mm AM/PM",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B61",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00 PM",
+          "numberFormat": "h:mm AM/PM",
+          "category": "D7",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "A62",
+          "value2": "hh:mm:ss.000",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B62",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "12:00:00.000",
+          "numberFormat": "hh:mm:ss.000",
+          "category": "D8",
+          "elapsed": "12:00:00.000"
+        },
+        {
+          "cell": "A63",
+          "value2": "mm:ss",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B63",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "00:00",
+          "numberFormat": "mm:ss",
+          "category": "G",
+          "elapsed": "00:00"
+        },
+        {
+          "cell": "A64",
+          "value2": "[$-409]mmmm d, yyyy;@",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B64",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "January 15, 2024",
+          "numberFormat": "[$-409]mmmm d, yyyy;@",
+          "category": "D2",
+          "elapsed": "January 1, 1900"
+        },
+        {
+          "cell": "A65",
+          "value2": "[$-F800]dddd, mmmm dd, yyyy",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B65",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "Monday, January 15, 2024",
+          "numberFormat": "[$-F800]dddd, mmmm dd, yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "A66",
+          "value2": "yyyy\"年\"m\"月\"d\"日\"",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B66",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "2024年1月15日",
+          "numberFormat": "yyyy\"年\"m\"月\"d\"日\"",
+          "category": "G",
+          "elapsed": "1900年1月1日"
+        },
+        {
+          "cell": "A67",
+          "value2": "e",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B67",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "2024",
+          "numberFormat": "e",
+          "category": "G",
+          "elapsed": "1900"
+        },
+        {
+          "cell": "A68",
+          "value2": "yyyy-mm-dd [h]:mm",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B68",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "2024-01-15 12:00",
+          "numberFormat": "yyyy-mm-dd [h]:mm",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00"
+        },
+        {
+          "cell": "A69",
+          "value2": "0.0 \"d\"",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B69",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.5 d",
+          "numberFormat": "0.0 \"d\"",
+          "category": "F1",
+          "elapsed": "1.5 d"
+        },
+        {
+          "cell": "A70",
+          "value2": "0 \"days\"",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B70",
+          "value2": 3,
+          "type": "number",
+          "text": "3 days",
+          "numberFormat": "0 \"days\"",
+          "category": "F0",
+          "elapsed": "2 days"
+        },
+        {
+          "cell": "A71",
+          "value2": "#,##0 \"h\"",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B71",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45,307 h",
+          "numberFormat": "#,##0 \"h\"",
+          "category": ",0",
+          "elapsed": "2 h"
+        },
+        {
+          "cell": "A72",
+          "value2": "0\\m",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B72",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45307m",
+          "numberFormat": "0\\m",
+          "category": "F0",
+          "elapsed": "2m"
+        },
+        {
+          "cell": "A73",
+          "value2": "\"yyyy\"0",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B73",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "yyyy45307",
+          "numberFormat": "\"yyyy\"0",
+          "category": "F0",
+          "elapsed": "yyyy2"
+        },
+        {
+          "cell": "A74",
+          "value2": "[Red]0.00",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B74",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.50",
+          "numberFormat": "[Red]0.00",
+          "category": "F2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "A75",
+          "value2": "0;yyyy",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B75",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45307",
+          "numberFormat": "0;yyyy",
+          "category": "F0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "A76",
+          "value2": "General",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B76",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A77",
+          "value2": "@",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B77",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306.5",
+          "numberFormat": "@",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A78",
+          "value2": "0.00E+00",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B78",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "4.53E+04",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "A79",
+          "value2": "# ?/?",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B79",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "45306 1/2",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "A80",
+          "value2": "$#,##0.00",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B80",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "$45,306.50",
+          "numberFormat": "\\$#,##0.00",
+          "category": ",2",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "A81",
+          "value2": "0%",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B81",
+          "value2": 45306.5,
+          "type": "number",
+          "text": "4530650%",
+          "numberFormat": "0%",
+          "category": "P0",
+          "elapsed": "150%"
+        },
+        {
+          "cell": "A82",
+          "value2": "[h]:mm:ss",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B82",
+          "value2": 1.5,
+          "type": "number",
+          "text": "36:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "A83",
+          "value2": "[mm]:ss",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B83",
+          "value2": 1.5,
+          "type": "number",
+          "text": "2160:00",
+          "numberFormat": "[mm]:ss",
+          "category": "G",
+          "elapsed": "2160:00"
+        },
+        {
+          "cell": "A84",
+          "value2": "[s]",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B84",
+          "value2": 1.5,
+          "type": "number",
+          "text": "129600",
+          "numberFormat": "[s]",
+          "category": "G",
+          "elapsed": "129600"
+        },
+        {
+          "cell": "A85",
+          "value2": "[h]:mm:ss.000",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B85",
+          "value2": 1.5,
+          "type": "number",
+          "text": "36:00:00.000",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "A86",
+          "value2": "duration 1.5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B86",
+          "value2": 1.5,
+          "type": "number",
+          "text": "36:00:00.000",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "A87",
+          "value2": "duration 0.041666666666666664",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B87",
+          "value2": 0.0416666666666667,
+          "type": "number",
+          "text": "1:00:00.000",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "A88",
+          "value2": "duration 100",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B88",
+          "value2": 100,
+          "type": "number",
+          "text": "2400:00:00.000",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "A89",
+          "value2": "duration -0.5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B89",
+          "value2": -0.5,
+          "type": "number",
+          "text": "###############################################################################################################################################################################################################################################################",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "A90",
+          "value2": "duration 1.1574074074074073E-05",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B90",
+          "value2": 1.15740740740741E-05,
+          "type": "number",
+          "text": "0:00:01.000",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "A91",
+          "value2": "serial 0",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B91",
+          "value2": 0,
+          "type": "date",
+          "text": "1900-01-00 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A92",
+          "value2": "serial 0.5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B92",
+          "value2": 0.5,
+          "type": "date",
+          "text": "1900-01-00 12:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A93",
+          "value2": "serial 1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B93",
+          "value2": 1,
+          "type": "date",
+          "text": "1900-01-01 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A94",
+          "value2": "serial 59",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B94",
+          "value2": 59,
+          "type": "date",
+          "text": "1900-02-28 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A95",
+          "value2": "serial 60",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B95",
+          "value2": 60,
+          "type": "date",
+          "text": "1900-02-29 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A96",
+          "value2": "serial 60.5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B96",
+          "value2": 60.5,
+          "type": "date",
+          "text": "1900-02-29 12:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A97",
+          "value2": "serial 61",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B97",
+          "value2": 61,
+          "type": "date",
+          "text": "1900-03-01 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A98",
+          "value2": "serial 2958465",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B98",
+          "value2": 2958465,
+          "type": "date",
+          "text": "9999-12-31 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A99",
+          "value2": "serial 2958465.99999999",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B99",
+          "value2": 2958465.99999999,
+          "type": "date",
+          "text": "9999-12-31 23:59:59.999",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A100",
+          "value2": "serial 2958466",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B100",
+          "value2": 2958466,
+          "type": "number",
+          "text": "###############################################################################################################################################################################################################################################################",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A101",
+          "value2": "serial -1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B101",
+          "value2": -1,
+          "type": "date",
+          "text": "###############################################################################################################################################################################################################################################################",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A102",
+          "value2": "serial 0.999999999",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B102",
+          "value2": 0.999999999,
+          "type": "date",
+          "text": "1900-01-01 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A103",
+          "value2": "serial 45306.000005787035",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B103",
+          "value2": 45306.000005787,
+          "type": "date",
+          "text": "2024-01-15 00:00:00.500",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A104",
+          "value2": "serial 45306.000000005",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B104",
+          "value2": 45306.000000005,
+          "type": "date",
+          "text": "2024-01-15 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A105",
+          "value2": "serial 45306.99999999",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B105",
+          "value2": 45306.99999999,
+          "type": "date",
+          "text": "2024-01-15 23:59:59.999",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A106",
+          "value2": "serial 1E-10",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B106",
+          "value2": 1E-10,
+          "type": "date",
+          "text": "1900-01-00 00:00:00.000",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A107",
+          "value2": "date and time",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B107",
+          "value2": 45306.5,
+          "type": "date",
+          "text": "2024-01-15 12:00",
+          "numberFormat": "yyyy-mm-dd hh:mm",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00"
+        },
+        {
+          "cell": "A108",
+          "value2": "milliseconds",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B108",
+          "value2": 45306.5242683912,
+          "type": "date",
+          "text": "2024-01-15 12:34:56.789",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "A109",
+          "value2": "day",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B109",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "A110",
+          "value2": "first day",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B110",
+          "value2": 1,
+          "type": "date",
+          "text": "1900-01-01",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "A111",
+          "value2": "after the leap day",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B111",
+          "value2": 61,
+          "type": "date",
+          "text": "1900-03-01",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "A112",
+          "value2": "last day",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B112",
+          "value2": 2958465,
+          "type": "date",
+          "text": "9999-12-31",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        }
+      ]
+    },
+    {
+      "name": "Numbers",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "number 0",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "number 1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "number -1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": -1,
+          "type": "number",
+          "text": "-1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": "number 42",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 42,
+          "type": "number",
+          "text": "42",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A6",
+          "value2": "number 9007199254740992",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": 9007199254740990,
+          "type": "number",
+          "text": "9.0072E+15",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A7",
+          "value2": "number 1000000000000000",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": 1000000000000000,
+          "type": "number",
+          "text": "1E+15",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A8",
+          "value2": "number 12345678901234568",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": 12345678901234600,
+          "type": "number",
+          "text": "1.23457E+16",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A9",
+          "value2": "number 9.223372036854776E+18",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": 9.22337203685478E+18,
+          "type": "number",
+          "text": "9.22337E+18",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A10",
+          "value2": "number -2147483649",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B10",
+          "value2": -2147483649,
+          "type": "number",
+          "text": "-2147483649",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A11",
+          "value2": "number 4294967296",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B11",
+          "value2": 4294967296,
+          "type": "number",
+          "text": "4294967296",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A12",
+          "value2": "number 0.30000000000000004",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B12",
+          "value2": 0.3,
+          "type": "number",
+          "text": "0.3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A13",
+          "value2": "number 0.3333333333333333",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B13",
+          "value2": 0.333333333333333,
+          "type": "number",
+          "text": "0.333333333",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A14",
+          "value2": "number 0.6666666666666666",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B14",
+          "value2": 0.666666666666667,
+          "type": "number",
+          "text": "0.666666667",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A15",
+          "value2": "number 3.0000000000000004",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B15",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A16",
+          "value2": "number 1.0000000000000002",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B16",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A17",
+          "value2": "number 0.1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B17",
+          "value2": 0.1,
+          "type": "number",
+          "text": "0.1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A18",
+          "value2": "number 100.00000000000001",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B18",
+          "value2": 100,
+          "type": "number",
+          "text": "100",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A19",
+          "value2": "number 1234567.8901234567",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B19",
+          "value2": 1234567.89012346,
+          "type": "number",
+          "text": "1234567.89",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A20",
+          "value2": "number 1E-300",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B20",
+          "value2": 1E-300,
+          "type": "number",
+          "text": "1E-300",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A21",
+          "value2": "number 1.7976931348623157E+308",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B21",
+          "value2": "#NULL!",
+          "type": "error",
+          "text": "#NULL!",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A22",
+          "value2": "number 2.2250738585072014E-308",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B22",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A23",
+          "value2": "number 1E+21",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B23",
+          "value2": 1E+21,
+          "type": "number",
+          "text": "1E+21",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A24",
+          "value2": "number 1E-07",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B24",
+          "value2": 1E-07,
+          "type": "number",
+          "text": "0.0000001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A25",
+          "value2": "number 1.5E+20",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B25",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A26",
+          "value2": "number 6.02214076E+23",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B26",
+          "value2": 6.02214076E+23,
+          "type": "number",
+          "text": "6.02214E+23",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A27",
+          "value2": "number -1E-05",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B27",
+          "value2": -1E-05,
+          "type": "number",
+          "text": "-0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A28",
+          "value2": "number 1234560000000",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B28",
+          "value2": 1234560000000,
+          "type": "number",
+          "text": "1.23456E+12",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A29",
+          "value2": "true",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B29",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A30",
+          "value2": "false",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B30",
+          "value2": false,
+          "type": "boolean",
+          "text": "FALSE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A31",
+          "value2": "error #NULL!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B31",
+          "value2": "#NULL!",
+          "type": "error",
+          "text": "#NULL!",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A32",
+          "value2": "error #DIV/0!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B32",
+          "value2": "#DIV/0!",
+          "type": "error",
+          "text": "#DIV/0!",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A33",
+          "value2": "error #VALUE!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B33",
+          "value2": "#VALUE!",
+          "type": "error",
+          "text": "#VALUE!",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A34",
+          "value2": "error #REF!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B34",
+          "value2": "#REF!",
+          "type": "error",
+          "text": "#REF!",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A35",
+          "value2": "error #NAME?",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B35",
+          "value2": "#NAME?",
+          "type": "error",
+          "text": "#NAME?",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A36",
+          "value2": "error #NUM!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B36",
+          "value2": "#NUM!",
+          "type": "error",
+          "text": "#NUM!",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A37",
+          "value2": "error #N/A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B37",
+          "value2": "#N/A",
+          "type": "error",
+          "text": "#N/A",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A38",
+          "value2": "formula NA()",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B38",
+          "value2": "#VALUE!",
+          "type": "error",
+          "text": "#VALUE!",
+          "numberFormat": "General",
+          "formula": "=NA()"
+        },
+        {
+          "cell": "A39",
+          "value2": "formula 1/0",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B39",
+          "value2": "#DIV/0!",
+          "type": "error",
+          "text": "#DIV/0!",
+          "numberFormat": "General",
+          "formula": "=1/0"
+        },
+        {
+          "cell": "A40",
+          "value2": "formula \"a\"+1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B40",
+          "value2": "#VALUE!",
+          "type": "error",
+          "text": "#VALUE!",
+          "numberFormat": "General",
+          "formula": "=\"a\"+1"
+        },
+        {
+          "cell": "A41",
+          "value2": "formula SQRT(-1)",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B41",
+          "value2": "#NUM!",
+          "type": "error",
+          "text": "#NUM!",
+          "numberFormat": "General",
+          "formula": "=SQRT(-1)"
+        },
+        {
+          "cell": "A42",
+          "value2": "formula INDEX(B2:B3,3)",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B42",
+          "value2": "#REF!",
+          "type": "error",
+          "text": "#REF!",
+          "numberFormat": "General",
+          "formula": "=INDEX(B2:B3,3)"
+        },
+        {
+          "cell": "A43",
+          "value2": "formula B2:B3 C2:C3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B43",
+          "value2": "",
+          "type": "empty",
+          "numberFormat": "General",
+          "formula": "=B2:B3 C2:C3",
+          "formula2": "=@B2:B3 C2:C3"
+        },
+        {
+          "cell": "A44",
+          "value2": "formula NOSUCHNAME",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B44",
+          "value2": "#NAME?",
+          "type": "error",
+          "text": "#NAME?",
+          "numberFormat": "General",
+          "formula": "=NOSUCHNAME",
+          "formula2": "=@NOSUCHNAME"
+        },
+        {
+          "cell": "A45",
+          "value2": "formula FILTER(B2:B3,B2:B3>1E+300)",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A46",
+          "value2": "text 00123",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B46",
+          "value2": "00123",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A47",
+          "value2": "text 1E5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B47",
+          "value2": "1E5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A48",
+          "value2": "text TRUE",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B48",
+          "value2": "TRUE",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A49",
+          "value2": "text #N/A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B49",
+          "value2": "#N/A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A50",
+          "value2": "text 2024-01-15",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B50",
+          "value2": "2024-01-15",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A51",
+          "value2": "text 42",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B51",
+          "value2": " 42 ",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A52",
+          "value2": "text 1,234",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B52",
+          "value2": "1,234",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ]
+    },
+    {
+      "name": "Formulas",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B1",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C1",
+          "value2": 100,
+          "type": "number",
+          "text": "100",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D1",
+          "value2": 1000,
+          "type": "number",
+          "text": "1000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E1",
+          "value2": 10000,
+          "type": "number",
+          "text": "10000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "K1",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "L1",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A2",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": 20,
+          "type": "number",
+          "text": "20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": 200,
+          "type": "number",
+          "text": "200",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D2",
+          "value2": 2000,
+          "type": "number",
+          "text": "2000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E2",
+          "value2": 20000,
+          "type": "number",
+          "text": "20000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "K2",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "L2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": 30,
+          "type": "number",
+          "text": "30",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 300,
+          "type": "number",
+          "text": "300",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D3",
+          "value2": 3000,
+          "type": "number",
+          "text": "3000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E3",
+          "value2": 30000,
+          "type": "number",
+          "text": "30000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "K3",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "L3",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B4",
+          "value2": 40,
+          "type": "number",
+          "text": "40",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C4",
+          "value2": 400,
+          "type": "number",
+          "text": "400",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D4",
+          "value2": 4000,
+          "type": "number",
+          "text": "4000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E4",
+          "value2": 40000,
+          "type": "number",
+          "text": "40000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "K4",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "L4",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B5",
+          "value2": 50,
+          "type": "number",
+          "text": "50",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C5",
+          "value2": 500,
+          "type": "number",
+          "text": "500",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D5",
+          "value2": 5000,
+          "type": "number",
+          "text": "5000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E5",
+          "value2": 50000,
+          "type": "number",
+          "text": "50000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "K5",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "L5",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A8",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1*2"
+        },
+        {
+          "cell": "B8",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A$1+A1"
+        },
+        {
+          "cell": "C8",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A$1*$B1"
+        },
+        {
+          "cell": "D8",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM($A$1:A1)"
+        },
+        {
+          "cell": "E8",
+          "value2": 11114,
+          "type": "number",
+          "text": "11114",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(1:1)"
+        },
+        {
+          "cell": "F8",
+          "value2": 31,
+          "type": "number",
+          "text": "31",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(K:K)+A1"
+        },
+        {
+          "cell": "G8",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=LOG10(B1)"
+        },
+        {
+          "cell": "H8",
+          "value2": "A1 small",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(A1>2,\"A1 big\",\"A1 small\")"
+        },
+        {
+          "cell": "I8",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "='Other Sheet'!A1*1"
+        },
+        {
+          "cell": "J8",
+          "value2": 0.5,
+          "type": "number",
+          "text": "0.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1*Rate"
+        },
+        {
+          "cell": "K8",
+          "value2": false,
+          "type": "boolean",
+          "text": "FALSE",
+          "numberFormat": "General",
+          "formula": "=A1>2"
+        },
+        {
+          "cell": "A9",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A2*2"
+        },
+        {
+          "cell": "B9",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A$1+A2"
+        },
+        {
+          "cell": "C9",
+          "value2": 20,
+          "type": "number",
+          "text": "20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A$1*$B2"
+        },
+        {
+          "cell": "D9",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM($A$1:A2)"
+        },
+        {
+          "cell": "E9",
+          "value2": 22227,
+          "type": "number",
+          "text": "22227",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(2:2)"
+        },
+        {
+          "cell": "F9",
+          "value2": 32,
+          "type": "number",
+          "text": "32",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(K:K)+A2"
+        },
+        {
+          "cell": "G9",
+          "value2": 1.30102999566398,
+          "type": "number",
+          "text": "1.301029996",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=LOG10(B2)"
+        },
+        {
+          "cell": "H9",
+          "value2": "A1 small",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(A2>2,\"A1 big\",\"A1 small\")"
+        },
+        {
+          "cell": "I9",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "='Other Sheet'!A2*1"
+        },
+        {
+          "cell": "J9",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A2*Rate"
+        },
+        {
+          "cell": "K9",
+          "value2": false,
+          "type": "boolean",
+          "text": "FALSE",
+          "numberFormat": "General",
+          "formula": "=A2>2"
+        },
+        {
+          "cell": "A10",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A3*2"
+        },
+        {
+          "cell": "B10",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A$1+A3"
+        },
+        {
+          "cell": "C10",
+          "value2": 30,
+          "type": "number",
+          "text": "30",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A$1*$B3"
+        },
+        {
+          "cell": "D10",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM($A$1:A3)"
+        },
+        {
+          "cell": "E10",
+          "value2": 33340,
+          "type": "number",
+          "text": "33340",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(3:3)"
+        },
+        {
+          "cell": "F10",
+          "value2": 33,
+          "type": "number",
+          "text": "33",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(K:K)+A3"
+        },
+        {
+          "cell": "G10",
+          "value2": 1.47712125471966,
+          "type": "number",
+          "text": "1.477121255",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=LOG10(B3)"
+        },
+        {
+          "cell": "H10",
+          "value2": "A1 big",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(A3>2,\"A1 big\",\"A1 small\")"
+        },
+        {
+          "cell": "I10",
+          "value2": 9,
+          "type": "number",
+          "text": "9",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "='Other Sheet'!A3*1"
+        },
+        {
+          "cell": "J10",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A3*Rate"
+        },
+        {
+          "cell": "K10",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General",
+          "formula": "=A3>2"
+        },
+        {
+          "cell": "A11",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A4*2"
+        },
+        {
+          "cell": "B11",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A$1+A4"
+        },
+        {
+          "cell": "C11",
+          "value2": 40,
+          "type": "number",
+          "text": "40",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A$1*$B4"
+        },
+        {
+          "cell": "D11",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM($A$1:A4)"
+        },
+        {
+          "cell": "E11",
+          "value2": 44453,
+          "type": "number",
+          "text": "44453",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(4:4)"
+        },
+        {
+          "cell": "F11",
+          "value2": 34,
+          "type": "number",
+          "text": "34",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(K:K)+A4"
+        },
+        {
+          "cell": "G11",
+          "value2": 1.60205999132796,
+          "type": "number",
+          "text": "1.602059991",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=LOG10(B4)"
+        },
+        {
+          "cell": "H11",
+          "value2": "A1 big",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(A4>2,\"A1 big\",\"A1 small\")"
+        },
+        {
+          "cell": "I11",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "='Other Sheet'!A4*1"
+        },
+        {
+          "cell": "J11",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A4*Rate"
+        },
+        {
+          "cell": "K11",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General",
+          "formula": "=A4>2"
+        },
+        {
+          "cell": "A12",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A5*2"
+        },
+        {
+          "cell": "B12",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A$1+A5"
+        },
+        {
+          "cell": "C12",
+          "value2": 50,
+          "type": "number",
+          "text": "50",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A$1*$B5"
+        },
+        {
+          "cell": "D12",
+          "value2": 15,
+          "type": "number",
+          "text": "15",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM($A$1:A5)"
+        },
+        {
+          "cell": "E12",
+          "value2": 55566,
+          "type": "number",
+          "text": "55566",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(5:5)"
+        },
+        {
+          "cell": "F12",
+          "value2": 35,
+          "type": "number",
+          "text": "35",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(K:K)+A5"
+        },
+        {
+          "cell": "G12",
+          "value2": 1.69897000433602,
+          "type": "number",
+          "text": "1.698970004",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=LOG10(B5)"
+        },
+        {
+          "cell": "H12",
+          "value2": "A1 big",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(A5>2,\"A1 big\",\"A1 small\")"
+        },
+        {
+          "cell": "I12",
+          "value2": 11,
+          "type": "number",
+          "text": "11",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "='Other Sheet'!A5*1"
+        },
+        {
+          "cell": "J12",
+          "value2": 2.5,
+          "type": "number",
+          "text": "2.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A5*Rate"
+        },
+        {
+          "cell": "K12",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General",
+          "formula": "=A5>2"
+        },
+        {
+          "cell": "A14",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1+A$2"
+        },
+        {
+          "cell": "B14",
+          "value2": 30,
+          "type": "number",
+          "text": "30",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=B1+B$2"
+        },
+        {
+          "cell": "C14",
+          "value2": 300,
+          "type": "number",
+          "text": "300",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=C1+C$2"
+        },
+        {
+          "cell": "D14",
+          "value2": 3000,
+          "type": "number",
+          "text": "3000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=D1+D$2"
+        },
+        {
+          "cell": "E14",
+          "value2": 30000,
+          "type": "number",
+          "text": "30000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E1+E$2"
+        },
+        {
+          "cell": "G14",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1:A3*2",
+          "hasArray": true
+        },
+        {
+          "cell": "I14",
+          "value2": "#NAME?",
+          "type": "error",
+          "text": "#NAME?",
+          "numberFormat": "General",
+          "formula": "=XLOOKUP(3,A1:A5,B1:B5)"
+        },
+        {
+          "cell": "A15",
+          "value2": 30,
+          "type": "number",
+          "text": "30",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(K:K)"
+        },
+        {
+          "cell": "B15",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(L:L)"
+        },
+        {
+          "cell": "C15",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(M:M)"
+        },
+        {
+          "cell": "D15",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(N:N)"
+        },
+        {
+          "cell": "E15",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(O:O)"
+        },
+        {
+          "cell": "G15",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1:A3*2",
+          "hasArray": true
+        },
+        {
+          "cell": "A16",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A1*A$1"
+        },
+        {
+          "cell": "B16",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A1*B$1"
+        },
+        {
+          "cell": "C16",
+          "value2": 100,
+          "type": "number",
+          "text": "100",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A1*C$1"
+        },
+        {
+          "cell": "D16",
+          "value2": 1000,
+          "type": "number",
+          "text": "1000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A1*D$1"
+        },
+        {
+          "cell": "E16",
+          "value2": 10000,
+          "type": "number",
+          "text": "10000",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=$A1*E$1"
+        },
+        {
+          "cell": "G16",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1:A3*2",
+          "hasArray": true
+        },
+        {
+          "cell": "A18",
+          "value2": "#REF!",
+          "type": "error",
+          "text": "#REF!",
+          "numberFormat": "General",
+          "formula": "=#REF!*2"
+        },
+        {
+          "cell": "B18",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A1*2"
+        },
+        {
+          "cell": "C18",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=1+\n2"
+        },
+        {
+          "cell": "D18",
+          "value2": "a\nb",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=\"a\"&CHAR(10)&\"b\""
+        },
+        {
+          "cell": "E18",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General",
+          "formula": "=TRUE()"
+        },
+        {
+          "cell": "A20",
+          "value2": "Item",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B20",
+          "value2": "Qty",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C20",
+          "value2": "Price",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D20",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A21",
+          "value2": "apple",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B21",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C21",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A22",
+          "value2": "pear",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B22",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C22",
+          "value2": 0.25,
+          "type": "number",
+          "text": "0.25",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A23",
+          "value2": "plum",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B23",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C23",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    },
+    {
+      "name": "Other Sheet",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A2",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": 9,
+          "type": "number",
+          "text": "9",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": 11,
+          "type": "number",
+          "text": "11",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    }
+  ]
+}

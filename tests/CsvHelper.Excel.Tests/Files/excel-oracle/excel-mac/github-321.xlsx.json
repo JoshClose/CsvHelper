@@ -1,0 +1,65 @@
+{
+  "file": "excel-mac/github-321.xlsx",
+  "date1904": false,
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": 2.04,
+          "type": "number",
+          "text": "2.04",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A2",
+          "value2": 2.04,
+          "type": "number",
+          "text": "2.0",
+          "numberFormat": "0.0",
+          "category": "F1",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": 2.05,
+          "type": "number",
+          "text": "2.05",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": 2.05,
+          "type": "number",
+          "text": "2.1",
+          "numberFormat": "0.0",
+          "category": "F1",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": 2.06,
+          "type": "number",
+          "text": "2.06",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A6",
+          "value2": 2.06,
+          "type": "number",
+          "text": "2.1",
+          "numberFormat": "0.0",
+          "category": "F1",
+          "elapsed": "1.5"
+        }
+      ]
+    }
+  ]
+}

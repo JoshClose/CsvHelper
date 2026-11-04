@@ -47,7 +47,21 @@ public class CorpusTests
 		["miniexcel/basic.xlsx"] = VisibleWorksheets,
 		["spreadcheetah/basic.xlsx"] = Worksheets,
 		["largexlsx/basic.xlsx"] = Worksheets,
+
+		// The typed workbook, as each of its producers writes it.
+		["excel/typed.xlsx"] = TypedSheets,
+		["excel/typed-1904.xlsx"] = TypedSheets,
+		["excel/typed-strict.xlsx"] = TypedSheets,
+		["libreoffice/typed.xlsx"] = TypedSheets,
+		["openpyxl/typed.xlsx"] = TypedSheets,
+		["openpyxl/typed-isodates.xlsx"] = TypedSheets,
+		["xlsxwriter/typed.xlsx"] = TypedSheets,
+		["poi/typed.xlsx"] = TypedSheets,
+		["closedxml/typed.xlsx"] = TypedSheets,
 	};
+
+	/// <summary>The typed workbook's sheets.</summary>
+	private static string[] TypedSheets => ["Dates Visible Worksheet", "Numbers Visible Worksheet", "Formulas Visible Worksheet", "Other Sheet Visible Worksheet"];
 
 	/// <summary>The basic workbook's sheets, as Excel writes them.</summary>
 	private static string[] ExcelSheets => ["Data Visible Worksheet", "Chart Visible Chartsheet", "Hidden Hidden Worksheet", "VeryHidden VeryHidden Worksheet", "Q1 Orders Visible Worksheet", "Bob's Visible Worksheet", "日本語 Visible Worksheet"];
@@ -79,12 +93,12 @@ public class CorpusTests
 
 		Assert.Equal(SheetsByFile[file], workbook.Sheets.Select(s => $"{s.Name} {s.Visibility} {s.Kind}"));
 		Assert.Equal(date1904, workbook.Date1904);
-		Assert.Equal(file == "excel/date1904.xlsx", workbook.Date1904);
+		Assert.Equal(file is "excel/date1904.xlsx" or "excel/typed-1904.xlsx", workbook.Date1904);
 		var options = new ExcelReaderOptions { Csv = new() { HasHeader = false, SkipEmptyLines = false } };
 		foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet))
 		{
 			// Record n is row n, and field c is column c: each field's stored form is the cell's text, or empty. Its text is
-			// the same, except for a boolean, which reads as TRUE or FALSE (Phase 2).
+			// the same, except for a boolean (TRUE or FALSE), a date (ISO 8601) and a duration ([h]:mm:ss): see CellTexts.
 			using var reader = await workbook.OpenReaderAsync(async, sheet, options);
 			var cells = expected[sheet.Name];
 			var rows = 0L;
@@ -99,7 +113,7 @@ public class CorpusTests
 					var cell = new SheetLocation(sheet.Name).Cell(column, rows);
 					var stored = Encoding.UTF8.GetString(reader.GetSpan(column).ToArray());
 					Assert.True(text == stored, $"{cell}: {CellValue.Show(text)} read as {CellValue.Show(stored)}");
-					var expectedText = found && value.Kind == SheetCellKind.Bool ? text switch { "1" => "TRUE", "0" => "FALSE", _ => text } : text;
+					var expectedText = found ? CellTexts.Of(value, date1904) : "";
 					Assert.True(expectedText == reader.GetString(column), $"{cell}: {CellValue.Show(expectedText)} read as {CellValue.Show(reader.GetString(column))}");
 				}
 			}
@@ -161,10 +175,11 @@ public class CorpusTests
 				"28: shared formula|280|",
 				"29: shared formula|290|",
 				"30: shared formula|300|",
-				"31: date|45293|",
-				"32: date and time|45293.127835648149|",
-				"33: time|0.12783564814814816|",
-				"34: custom date|45657|",
+				// Dates read as ISO 8601, from their serials (45293, 45293.127835648149, 0.12783564814814816 and 45657).
+				"31: date|2024-01-02|",
+				"32: date and time|2024-01-02T03:04:05|",
+				"33: time|03:04:05|",
+				"34: custom date|2024-12-31|",
 			],
 			records);
 	}

@@ -22,6 +22,36 @@ public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 	public override string ToString() => recordsPerFill == int.MaxValue ? scan.Name : $"{scan.Name}, {recordsPerFill} record per fill";
 }
 
+/// <summary>
+/// How a sheet's typed cells are read: the workbook's styles and date system, the error cells' policy, and what cells with
+/// a formula read as.
+/// </summary>
+/// <param name="styles">The workbook's styles, or <see langword="null"/> for none.</param>
+/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
+/// <param name="errorCells">How error cells read.</param>
+/// <param name="formulas">What cells with a formula read as.</param>
+internal sealed class CellReading(
+	StyleTable? styles = null, bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue)
+{
+	/// <summary>No styles, the 1900 date system, error cells as text, and formulas as their values.</summary>
+	public static CellReading Default { get; } = new();
+
+	/// <summary>No styles, the 1900 date system, error cells as text, and formulas as text.</summary>
+	public static CellReading FormulaText { get; } = new(formulas: ExcelFormulas.FormulaText);
+
+	/// <summary>The workbook's styles.</summary>
+	public StyleTable Styles => styles ?? StyleTable.Empty;
+
+	/// <summary>Whether the workbook uses the 1904 date system.</summary>
+	public bool Date1904 => date1904;
+
+	/// <summary>How error cells read.</summary>
+	public ExcelErrorCells ErrorCells => errorCells;
+
+	/// <summary>What cells with a formula read as.</summary>
+	public ExcelFormulas Formulas => formulas;
+}
+
 /// <summary>Reads sheets with <see cref="SheetScanner"/> into <see cref="Captured"/> records.</summary>
 internal static class Sheets
 {
@@ -63,14 +93,17 @@ internal static class Sheets
 	/// <param name="strings">The shared strings, or <see langword="null"/> for none.</param>
 	/// <param name="sheetName">The sheet's name.</param>
 	/// <param name="maxSize">The window's size limit.</param>
+	/// <param name="reading">The styles, date system, error policy and formulas, or <see langword="null"/> for <see cref="CellReading.Default"/>.</param>
 	/// <returns>The scanner.</returns>
-	public static SheetScanner Open(string xml, ScanMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20)
+	public static SheetScanner Open(
+		string xml, ScanMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20, CellReading? reading = null)
 	{
 		var bytes = Encoding.UTF8.GetBytes(xml);
 		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
 		var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
+		reading ??= CellReading.Default;
 
-		return new SheetScanner(scanner, sheetName, strings ?? SharedStrings.Empty, StyleTable.Empty, skipEmptyRows, null);
+		return new SheetScanner(scanner, sheetName, strings ?? SharedStrings.Empty, reading.Styles, skipEmptyRows, null, reading.Date1904, reading.ErrorCells, reading.Formulas);
 	}
 
 	/// <summary>Reads a sheet's records, described (<see cref="CapturedRecord.ToString"/>).</summary>
@@ -80,10 +113,12 @@ internal static class Sheets
 	/// <param name="strings">The shared strings, or <see langword="null"/> for none.</param>
 	/// <param name="sheetName">The sheet's name.</param>
 	/// <param name="maxSize">The window's size limit.</param>
+	/// <param name="reading">The styles, date system, error policy and formulas, or <see langword="null"/> for <see cref="CellReading.Default"/>.</param>
 	/// <returns>The records.</returns>
-	public static async Task<List<string>> ReadAsync(string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20)
+	public static async Task<List<string>> ReadAsync(
+		string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20, CellReading? reading = null)
 	{
-		var records = await ReadRecordsAsync(xml, mode, skipEmptyRows, strings, sheetName, maxSize);
+		var records = await ReadRecordsAsync(xml, mode, skipEmptyRows, strings, sheetName, maxSize, reading);
 
 		return [.. records.Select(r => r.ToString())];
 	}
@@ -95,10 +130,12 @@ internal static class Sheets
 	/// <param name="strings">The shared strings, or <see langword="null"/> for none.</param>
 	/// <param name="sheetName">The sheet's name.</param>
 	/// <param name="maxSize">The window's size limit.</param>
+	/// <param name="reading">The styles, date system, error policy and formulas, or <see langword="null"/> for <see cref="CellReading.Default"/>.</param>
 	/// <returns>The records.</returns>
-	public static async Task<List<CapturedRecord>> ReadRecordsAsync(string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20)
+	public static async Task<List<CapturedRecord>> ReadRecordsAsync(
+		string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20, CellReading? reading = null)
 	{
-		using var sheet = Open(xml, mode.Scan, skipEmptyRows, strings, sheetName, maxSize);
+		using var sheet = Open(xml, mode.Scan, skipEmptyRows, strings, sheetName, maxSize, reading);
 		var captured = new Captured(mode.RecordsPerFill);
 		await FillAllAsync(sheet, captured, mode.Scan.Async);
 
@@ -126,19 +163,23 @@ internal static class Sheets
 	}
 
 	/// <summary>
-	/// Reads the first sheet of a package through the package layer, so that gap fields count toward the workbook's
-	/// uncompressed size.
+	/// Reads the first sheet of a package through the package layer, so that gap fields, and shared strings and moved
+	/// shared formulas longer than their cells, count toward the workbook's uncompressed size.
 	/// </summary>
 	/// <param name="package">The package.</param>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="limits">The limits of the read.</param>
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
+	/// <param name="sharedStrings">Whether to load the package's shared strings first, which count toward the total too.</param>
+	/// <param name="formulas">What cells with a formula read as.</param>
 	/// <returns>The records, and the workbook's uncompressed total after them.</returns>
-	public static async Task<(List<CapturedRecord> Records, long Total)> ReadPackageAsync(TestPackage package, bool async, PartLimits limits, bool skipEmptyRows = true)
+	public static async Task<(List<CapturedRecord> Records, long Total)> ReadPackageAsync(
+		TestPackage package, bool async, PartLimits limits, bool skipEmptyRows = true, bool sharedStrings = false, ExcelFormulas formulas = ExcelFormulas.CachedValue)
 	{
 		using var archive = await package.OpenAsync(async);
+		var strings = sharedStrings ? await Packages.Run(async, a => SharedStrings.LoadAsync(archive, "xl/sharedStrings.xml", limits, a, CancellationToken.None)) : SharedStrings.Empty;
 		var stream = await Packages.Run(async, a => archive.OpenPartAsync(PartName, false, limits, a, CancellationToken.None));
-		using var sheet = new SheetScanner(new XmlScanner(new XmlWindow(stream, PartName, limits.MaxPartSize)), "Data", SharedStrings.Empty, StyleTable.Empty, skipEmptyRows, stream);
+		using var sheet = new SheetScanner(new XmlScanner(new XmlWindow(stream, PartName, limits.MaxPartSize)), "Data", strings, StyleTable.Empty, skipEmptyRows, stream, formulas: formulas);
 		var captured = new Captured(int.MaxValue);
 		await FillAllAsync(sheet, captured, async);
 

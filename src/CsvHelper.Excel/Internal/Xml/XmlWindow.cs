@@ -90,6 +90,9 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 	/// <summary>The number of bytes the window can hold before it has to grow.</summary>
 	public int Capacity => capacity;
 
+	/// <summary>The most bytes the window grows to: the part's size limit, or <c>Array.MaxLength</c> when that is less.</summary>
+	public int MaxSize => maxSize;
+
 	/// <summary>Whether the stream has ended: the bytes up to <see cref="End"/> are the last of the part.</summary>
 	public bool IsEof => eof;
 

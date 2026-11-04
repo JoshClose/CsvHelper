@@ -46,23 +46,59 @@ public sealed record ExcelReaderOptions
 
 	/// <summary>
 	/// The most bytes a part held in memory may inflate to (the content types, relationships, workbook, styles and shared
-	/// strings), and the largest single token or cell of a sheet, which is streamed. 256 MiB by default.
+	/// strings), the largest single token or cell of a sheet, which is streamed, and the most a sheet's shared formulas may
+	/// take when formulas read as text (<see cref="ExcelFormulas.FormulaText"/>). 256 MiB by default.
 	/// </summary>
 	public long MaxPartSize { get; init; } = 256L * 1024 * 1024;
 
 	/// <summary>
 	/// The most bytes the workbook may inflate to in all, across every call that reads it, including the copy of a stream
-	/// that can't seek, and counting each empty field that a gap in a sheet adds as one byte. 4 GiB by default.
+	/// that can't seek. It also counts what a sheet's cells give beyond their XML: each empty field that a gap adds as one
+	/// byte, and the bytes a shared string or a moved shared formula has beyond the cell that reads it, so that a short
+	/// cell repeated can't make gigabytes of fields. 4 GiB by default.
 	/// </summary>
 	public long MaxUncompressedSize { get; init; } = 4L * 1024 * 1024 * 1024;
+
+	/// <summary>
+	/// How a cell holding an error value (<c>#N/A</c>, <c>#DIV/0!</c> and the rest) reads: as its text (the default),
+	/// as an empty cell, or failing every read. See <see cref="ExcelErrorCells"/>.
+	/// </summary>
+	public ExcelErrorCells ErrorCells { get; init; } = ExcelErrorCells.Text;
+
+	/// <summary>
+	/// The significant digits that <see cref="decimal"/> and integer targets round a number cell to, half away from zero,
+	/// as Excel displays numbers: 15 by default, so that <c>0.30000000000000004</c> reads as 0.3 and
+	/// <c>3.0000000000000004</c> as 3. From 1 to 28, or <see langword="null"/> to read the stored number exactly.
+	/// </summary>
+	/// <remarks>
+	/// <see cref="double"/> and <see cref="float"/> targets, and text cells, are never rounded. An integer target takes a
+	/// number that is whole after rounding; a 17-digit ID stored as a number reads rounded, as Excel shows it.
+	/// </remarks>
+	public int? SignificantDigits { get; init; } = 15;
+
+	/// <summary>What a cell with a formula reads as: its saved value (the default), or the formula's text. See <see cref="ExcelFormulas"/>.</summary>
+	public ExcelFormulas Formulas { get; init; } = ExcelFormulas.CachedValue;
 
 	/// <summary>The limits as the package layer takes them; the options must be valid (<see cref="Validate"/>).</summary>
 	internal PartLimits Limits => new(MaxPartSize, MaxUncompressedSize);
 
+	/// <summary>The options of a reader's typed cells; the options must be valid (<see cref="Validate"/>).</summary>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
+	/// <returns>The cell options.</returns>
+	internal CsvCellOptions CellOptions(bool date1904) => new()
+	{
+		Date1904 = date1904,
+		SignificantDigits = SignificantDigits,
+		ThrowOnErrorCells = ErrorCells == ExcelErrorCells.Error,
+	};
+
 	/// <summary>Checks the options before a call uses them.</summary>
 	/// <param name="paramName">The name of the parameter the options came from.</param>
 	/// <exception cref="ArgumentException"><see cref="Csv"/> is <see langword="null"/>, or both <see cref="Sheet"/> and <see cref="SheetIndex"/> are set.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">A limit is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// A limit is 0 or less, <see cref="ErrorCells"/> or <see cref="Formulas"/> is not a value of its enum, or
+	/// <see cref="SignificantDigits"/> is not from 1 to 28.
+	/// </exception>
 	internal void Validate(string paramName)
 	{
 		if (Csv is null)
@@ -83,6 +119,21 @@ public sealed record ExcelReaderOptions
 		if (MaxUncompressedSize <= 0)
 		{
 			throw new ArgumentOutOfRangeException(paramName, MaxUncompressedSize, "ExcelReaderOptions.MaxUncompressedSize must be more than 0.");
+		}
+
+		if (ErrorCells is not (ExcelErrorCells.Text or ExcelErrorCells.Null or ExcelErrorCells.Error))
+		{
+			throw new ArgumentOutOfRangeException(paramName, ErrorCells, "ExcelReaderOptions.ErrorCells is not an ExcelErrorCells value.");
+		}
+
+		if (Formulas is not (ExcelFormulas.CachedValue or ExcelFormulas.FormulaText))
+		{
+			throw new ArgumentOutOfRangeException(paramName, Formulas, "ExcelReaderOptions.Formulas is not an ExcelFormulas value.");
+		}
+
+		if (SignificantDigits is < 1 or > 28)
+		{
+			throw new ArgumentOutOfRangeException(paramName, SignificantDigits, "ExcelReaderOptions.SignificantDigits must be from 1 to 28, or null.");
 		}
 	}
 }

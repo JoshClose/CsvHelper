@@ -11,8 +11,10 @@ namespace CsvHelper.Excel.Tests.Corpus;
 /// <summary>
 /// Other readers of the corpus, each giving the cells with a value of every worksheet in <see cref="CellValue"/> form:
 /// the Open XML SDK's raw cells read by CsvHelper.Excel's documented rules, ClosedXML's typed values, and
-/// ExcelDataReader's streaming values. A date or time they give as a date is a <see cref="SheetCellKind.DateNumber"/>
-/// with its serial number.
+/// ExcelDataReader's streaming values. A date or time ClosedXML or ExcelDataReader gives as a <see cref="DateTime"/> is
+/// a <see cref="SheetCellKind.DateNumber"/> with <see cref="CorpusFiles.DateText"/>, and a duration they give as a
+/// <see cref="TimeSpan"/> a <see cref="SheetCellKind.Duration"/> with <see cref="CorpusFiles.DurationText"/>, to compare
+/// with CsvHelper.Excel's conversions (<see cref="CorpusFiles.AsDotNet"/>).
 /// </summary>
 internal static class Oracles
 {
@@ -30,8 +32,9 @@ internal static class Oracles
 	/// expression and phonetic runs left out.
 	/// </summary>
 	/// <param name="file">The workbook, relative to the corpus folder.</param>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system, for the serials of <c>t="d"</c> cells.</param>
 	/// <returns>The cells.</returns>
-	public static SheetCells OpenXmlSdk(string file)
+	public static SheetCells OpenXmlSdk(string file, bool date1904)
 	{
 		using var document = SpreadsheetDocument.Open(CorpusFiles.PathOf(file), false);
 		var workbookPart = document.WorkbookPart!;
@@ -56,7 +59,7 @@ internal static class Oracles
 				foreach (var cell in rowCells)
 				{
 					column = cell.CellReference?.Value is { } reference ? ColumnOf(reference) : column + 1;
-					if (ValueOf(cell, strings) is { } value)
+					if (ValueOf(cell, strings, date1904) is { } value)
 					{
 						cells[(number, column)] = value;
 					}
@@ -73,9 +76,8 @@ internal static class Oracles
 
 	/// <summary>ClosedXML: each used cell's typed value, as <c>IXLCell.Value</c> gives it.</summary>
 	/// <param name="file">The workbook, relative to the corpus folder.</param>
-	/// <param name="date1904">Whether the workbook uses the 1904 date system, to give a date its serial in it.</param>
 	/// <returns>The cells.</returns>
-	public static SheetCells ClosedXml(string file, bool date1904)
+	public static SheetCells ClosedXml(string file)
 	{
 		using var workbook = new XLWorkbook(CorpusFiles.PathOf(file));
 		var result = new SheetCells();
@@ -91,8 +93,8 @@ internal static class Oracles
 					XLDataType.Number => new CellValue(Number(value.GetNumber()), SheetCellKind.Number),
 					XLDataType.Text when value.GetText().Length > 0 => new CellValue(value.GetText(), SheetCellKind.Text),
 					XLDataType.Error => new CellValue(ErrorText(value.GetError()), SheetCellKind.Error),
-					XLDataType.DateTime => new CellValue(Number(Serial(value.GetDateTime(), date1904)), SheetCellKind.DateNumber),
-					XLDataType.TimeSpan => new CellValue(Number(value.GetTimeSpan().TotalDays), SheetCellKind.DateNumber),
+					XLDataType.DateTime => new CellValue(CorpusFiles.DateText(value.GetDateTime()), SheetCellKind.DateNumber),
+					XLDataType.TimeSpan => new CellValue(CorpusFiles.DurationText(value.GetTimeSpan()), SheetCellKind.Duration),
 					_ => null,
 				};
 				if (typed is { } some)
@@ -107,11 +109,27 @@ internal static class Oracles
 		return result;
 	}
 
+	/// <summary>ClosedXML: each formula cell's <c>FormulaA1</c>, with <c>=</c> before it, as text.</summary>
+	/// <param name="file">The workbook, relative to the corpus folder.</param>
+	/// <returns>The formula cells.</returns>
+	public static SheetCells ClosedXmlFormulas(string file)
+	{
+		using var workbook = new XLWorkbook(CorpusFiles.PathOf(file));
+		var result = new SheetCells();
+		foreach (var worksheet in workbook.Worksheets)
+		{
+			result[worksheet.Name] = worksheet.CellsUsed(XLCellsUsedOptions.All)
+				.Where(c => c.HasFormula)
+				.ToDictionary(c => ((long)c.Address.RowNumber, c.Address.ColumnNumber - 1), c => new CellValue("=" + c.FormulaA1, SheetCellKind.Text));
+		}
+
+		return result;
+	}
+
 	/// <summary>ExcelDataReader: each row's values, the rows counted from the first, as its reader returns them.</summary>
 	/// <param name="file">The workbook, relative to the corpus folder.</param>
-	/// <param name="date1904">Whether the workbook uses the 1904 date system, to give a date its serial in it.</param>
 	/// <returns>The cells.</returns>
-	public static SheetCells ExcelDataReader(string file, bool date1904)
+	public static SheetCells ExcelDataReader(string file)
 	{
 		using var stream = File.OpenRead(CorpusFiles.PathOf(file));
 		using var reader = ExcelReaderFactory.CreateReader(stream);
@@ -131,8 +149,8 @@ internal static class Oracles
 						string text when text.Length > 0 => new CellValue(text, SheetCellKind.Text),
 						double number => new CellValue(Number(number), SheetCellKind.Number),
 						bool flag => new CellValue(flag ? "1" : "0", SheetCellKind.Bool),
-						DateTime date => new CellValue(Number(Serial(date, date1904)), SheetCellKind.DateNumber),
-						TimeSpan time => new CellValue(Number(time.TotalDays), SheetCellKind.DateNumber),
+						DateTime date => new CellValue(CorpusFiles.DateText(date), SheetCellKind.DateNumber),
+						TimeSpan time => new CellValue(CorpusFiles.DurationText(time), SheetCellKind.Duration),
 						string => null,
 						var other => new CellValue(Convert.ToString(other, CultureInfo.InvariantCulture) ?? "", SheetCellKind.Text),
 					};
@@ -150,29 +168,6 @@ internal static class Oracles
 		return result;
 	}
 
-	/// <summary>The serial of January 1, 1904 in the 1900 date system: what a 1904 workbook's serials are short of.</summary>
-	private const double Date1904Offset = 1462;
-
-	/// <summary>
-	/// The serial of a date as the workbook stores it. Like Excel, the oracles count 1900 as a leap year, so a .NET date
-	/// from a serial below 61 (March 1, 1900) is a day later than the same .NET date's OLE Automation serial: a time alone,
-	/// serial 0.5, comes back as December 31, 1899, 12:00. The day is taken back here, and a 1904 workbook's serials are
-	/// 1,462 days short of the 1900 system's.
-	/// </summary>
-	/// <param name="date">The date the oracle gives.</param>
-	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
-	/// <returns>The serial.</returns>
-	private static double Serial(DateTime date, bool date1904)
-	{
-		var serial = date.ToOADate();
-		if (date1904)
-		{
-			return serial - Date1904Offset;
-		}
-
-		return serial < 61 ? serial - 1 : serial;
-	}
-
 	/// <summary>A number as CsvHelper.Excel's canonical comparison form: the shortest text that round-trips.</summary>
 	/// <param name="number">The number.</param>
 	/// <returns>The text.</returns>
@@ -181,8 +176,9 @@ internal static class Oracles
 	/// <summary>A cell's value by CsvHelper.Excel's rules, or <see langword="null"/> when it is valueless.</summary>
 	/// <param name="cell">The cell.</param>
 	/// <param name="strings">The shared strings' texts.</param>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
 	/// <returns>The value.</returns>
-	private static CellValue? ValueOf(Cell cell, List<string> strings)
+	private static CellValue? ValueOf(Cell cell, List<string> strings, bool date1904)
 	{
 		var type = cell.DataType?.InnerText ?? "n";
 		var element = cell.ChildElements.FirstOrDefault(e => e is DocumentFormat.OpenXml.Spreadsheet.CellValue || (type == "inlineStr" && e is InlineString));
@@ -209,6 +205,8 @@ internal static class Oracles
 					: new CellValue(trimmed, SheetCellKind.Text);
 			case "e":
 				return text.Length == 0 ? null : new CellValue(text, SheetCellKind.Error);
+			case "d" when IsoSerials.Of(trimmed, date1904) is { } serial:
+				return new CellValue(serial, SheetCellKind.DateNumber);
 			default:
 				return text.Length == 0 ? null : new CellValue(text, SheetCellKind.Text);
 		}

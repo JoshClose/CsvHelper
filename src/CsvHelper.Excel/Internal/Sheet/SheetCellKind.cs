@@ -24,6 +24,9 @@ internal enum SheetCellKind : byte
 
 	/// <summary>No value: an empty field.</summary>
 	Empty = 5,
+
+	/// <summary>A number in invariant form whose number format shows elapsed time, such as <c>[h]:mm</c>.</summary>
+	Duration = 6,
 }
 
 /// <summary>Converts <see cref="SheetCellKind"/> to <see cref="CsvCellKind"/>.</summary>
@@ -39,7 +42,8 @@ internal static class SheetCellKinds
 		(byte)SheetCellKind.DateNumber == (byte)CsvCellKind.DateNumber &&
 		(byte)SheetCellKind.Bool == (byte)CsvCellKind.Bool &&
 		(byte)SheetCellKind.Error == (byte)CsvCellKind.Error &&
-		(byte)SheetCellKind.Empty == (byte)CsvCellKind.Empty ? 1 : 0);
+		(byte)SheetCellKind.Empty == (byte)CsvCellKind.Empty &&
+		(byte)SheetCellKind.Duration == (byte)CsvCellKind.Duration ? 1 : 0);
 
 	/// <summary>The same kind as CsvHelper's.</summary>
 	/// <param name="kind">The kind.</param>

@@ -1,0 +1,40 @@
+{
+  "file": "google/66365.xlsx",
+  "date1904": false,
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Alice",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Alice",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=A1:A2",
+          "hasArray": true
+        },
+        {
+          "cell": "A2",
+          "value2": "Bob",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "#VALUE!",
+          "type": "error",
+          "text": "#VALUE!",
+          "numberFormat": "General",
+          "formula": "=A1:A2",
+          "hasArray": true
+        }
+      ]
+    }
+  ]
+}

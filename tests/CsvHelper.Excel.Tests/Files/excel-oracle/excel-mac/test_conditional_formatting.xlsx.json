@@ -1,0 +1,99 @@
+{
+  "file": "excel-mac/test_conditional_formatting.xlsx",
+  "date1904": false,
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Fooo",
+          "type": "text",
+          "numberFormat": "mm/dd/yyyy"
+        },
+        {
+          "cell": "B1",
+          "value2": "Grain",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F2",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "cell with formula  condition",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUBTOTAL(109,F1:F5)"
+        },
+        {
+          "cell": "F3",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "cell with formula value and > condition",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F4",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F5",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    }
+  ]
+}

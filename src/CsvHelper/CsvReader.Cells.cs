@@ -230,7 +230,11 @@ public sealed partial class CsvReader
 		return CsvCells.Text(utf8, kind, options);
 	}
 
-	/// <summary>The header name of field <paramref name="column"/> of a record source: its text, so that a date names its column <c>2024-01-15</c>.</summary>
+	/// <summary>
+	/// The header name of field <paramref name="column"/> of a record source: its text, so that a date names its column
+	/// <c>2024-01-15</c>. An error cell names its column with its error's text even when the source's error cells fail
+	/// every read (<see cref="CsvCellOptions.ThrowOnErrorCells"/>): that policy is for values, and a header is names.
+	/// </summary>
 	/// <param name="column">The index of the field in the header.</param>
 	/// <returns>The name.</returns>
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -238,7 +242,7 @@ public sealed partial class CsvReader
 	{
 		var utf8 = GetSpan(column);
 
-		return CellString(utf8, column) ?? MakeString(utf8, -1);
+		return CsvCells.Text(utf8, CellKind(column), recordSource!.CellOptions) ?? MakeString(utf8, -1);
 	}
 
 	/// <summary>Copies the text of field <paramref name="index"/> of a record source into <paramref name="destination"/>, for <see cref="GetChars(int, Span{char})"/>.</summary>

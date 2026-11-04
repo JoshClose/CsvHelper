@@ -284,6 +284,9 @@ public class SheetScannerComparisonTests
 					: (trimmed, SheetCellKind.Text);
 			case "e":
 				return text.Length == 0 ? null : (text, SheetCellKind.Error);
+			// A t="d" cell takes its style's kind, as a number does: with no styles, a number.
+			case "d" when Corpus.IsoSerials.Of(trimmed, false) is { } serial:
+				return (serial, SheetCellKind.Number);
 			default:
 				return text.Length == 0 ? null : (text, SheetCellKind.Text);
 		}

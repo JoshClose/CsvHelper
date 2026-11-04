@@ -12,14 +12,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.poi.ss.formula.FormulaParseException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.RichTextString;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.SheetVisibility;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFFormulaEvaluator;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -27,18 +30,23 @@ import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
- * Writes the corpus's Apache POI files from the basic workbook's JSON:
- * {@code java -cp <jars> Corpus.java <spec.json> <Files folder>}.
+ * Writes the corpus's Apache POI files from the basic and typed workbooks' JSON:
+ * {@code java -cp <jars> Corpus.java <basic.json> <typed.json> <Files folder>}.
  *
  * <p>{@code poi/xssf.xlsx} comes from XSSF, which holds the workbook in memory and writes shared strings, and
  * {@code poi/sxssf.xlsx} from SXSSF, its streaming writer, which writes inline strings by default. Each writes what POI
  * can: it can't create a chartsheet or a phonetic run, and SXSSF writes a rich text's runs as plain text. The formulas
- * get their results from POI's own evaluator.</p>
+ * get their results from POI's own evaluator. {@code poi/typed.xlsx} comes from XSSF: built-in format ids, error
+ * constants, formulas and a legacy array, without the dynamic arrays and the table POI can't write. A formula POI's
+ * parser refuses is left out, and one its evaluator can't compute keeps no result.</p>
  */
 public final class Corpus
 {
 	/** The features of the basic workbook's cells that POI writes. */
 	private static final Set<String> FEATURES = Set.of("control", "long", "rich", "formula", "date");
+
+	/** The features of the typed workbook's cells that POI writes. */
+	private static final Set<String> TYPED_FEATURES = Set.of("formatId", "error", "formula", "array", "name", "newer", "date");
 
 	/** Not created: the class only has its entry point. */
 	private Corpus()
@@ -48,13 +56,14 @@ public final class Corpus
 	/**
 	 * Writes both files.
 	 *
-	 * @param args the spec's path and the corpus folder
+	 * @param args the basic workbook's spec, the typed workbook's, and the corpus folder
 	 * @throws IOException when a file can't be read or written
 	 */
 	public static void main(String[] args) throws IOException
 	{
 		var spec = asList(new Json(Files.readString(Path.of(args[0]), StandardCharsets.UTF_8)).read());
-		var folder = Files.createDirectories(Path.of(args[1], "poi"));
+		var typed = asMap(new Json(Files.readString(Path.of(args[1]), StandardCharsets.UTF_8)).read());
+		var folder = Files.createDirectories(Path.of(args[2], "poi"));
 
 		try (var workbook = new XSSFWorkbook())
 		{
@@ -71,6 +80,151 @@ public final class Corpus
 			write(spec, workbook, inner);
 			SXSSFFormulaEvaluator.evaluateAllFormulaCells(workbook, false);
 			save(workbook, folder.resolve("sxssf.xlsx"));
+		}
+
+		try (var workbook = new XSSFWorkbook())
+		{
+			writeTyped(typed, workbook);
+			save(workbook, folder.resolve("typed.xlsx"));
+		}
+	}
+
+	/**
+	 * Writes the typed workbook's sheets and names into a workbook, then evaluates each formula on its own.
+	 *
+	 * @param typed the typed workbook's spec: its sheets and names
+	 * @param workbook the workbook to write
+	 */
+	private static void writeTyped(Map<String, Object> typed, XSSFWorkbook workbook)
+	{
+		workbook.getProperties().getCoreProperties().setCreator("CsvHelper.Excel.Corpus");
+		for (var entry : asMap(typed.get("names")).entrySet())
+		{
+			var name = workbook.createName();
+			name.setNameName(entry.getKey());
+			name.setRefersToFormula((String)entry.getValue());
+		}
+
+		// Every sheet first, so that a formula can refer to one after its own.
+		for (var item : asList(typed.get("sheets")))
+		{
+			workbook.createSheet((String)asMap(item).get("name"));
+		}
+
+		var styles = new HashMap<String, CellStyle>();
+		var formulas = new ArrayList<Cell>();
+		for (var item : asList(typed.get("sheets")))
+		{
+			var sheetSpec = asMap(item);
+			var sheet = workbook.getSheet((String)sheetSpec.get("name"));
+			for (var rowItem : asList(sheetSpec.get("rows")))
+			{
+				var rowSpec = asMap(rowItem);
+				// A row an array formula made already holds its cells, which createRow would replace.
+				var index = ((Double)rowSpec.get("row")).intValue() - 1;
+				var row = sheet.getRow(index) != null ? sheet.getRow(index) : sheet.createRow(index);
+				for (var cellItem : asList(rowSpec.get("cells")))
+				{
+					var cellSpec = asMap(cellItem);
+					var feature = (String)cellSpec.get("feature");
+					if (feature == null || TYPED_FEATURES.contains(feature))
+					{
+						writeTypedCell(workbook, sheet, row, cellSpec, styles, formulas);
+					}
+				}
+			}
+		}
+
+		var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+		for (var cell : formulas)
+		{
+			try
+			{
+				evaluator.evaluateFormulaCell(cell);
+			}
+			catch (RuntimeException e)
+			{
+				System.out.println("  no result for " + cell.getSheet().getSheetName() + "!" + cell.getAddress() + ", which POI can't evaluate: " + e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Writes a cell of the typed workbook: a value, an error constant, a number with its format, or a formula, which is
+	 * left out when POI's parser refuses it.
+	 *
+	 * @param workbook the workbook
+	 * @param sheet the cell's sheet
+	 * @param row the cell's row
+	 * @param spec the cell's spec
+	 * @param styles the styles made so far, by format id or code
+	 * @param formulas the formula cells written so far, to evaluate
+	 */
+	private static void writeTypedCell(Workbook workbook, Sheet sheet, Row row, Map<String, Object> spec, Map<String, CellStyle> styles, List<Cell> formulas)
+	{
+		var cell = row.createCell(CellReference.convertColStringToIndex((String)spec.get("column")));
+		switch ((String)spec.get("type"))
+		{
+			case "Text" -> cell.setCellValue((String)spec.get("text"));
+			case "Number" -> cell.setCellValue((Double)spec.get("number"));
+			case "Bool" -> cell.setCellValue((Boolean)spec.get("bool"));
+			case "Error" -> cell.setCellErrorValue(FormulaError.forString((String)spec.get("text")).getCode());
+			case "Date" -> writeTypedDate(workbook, cell, spec, styles);
+			case "Formula" ->
+			{
+				var formula = (String)spec.get("formula");
+				try
+				{
+					var array = (String)spec.get("array");
+					if (array != null)
+					{
+						sheet.setArrayFormula(formula, CellRangeAddress.valueOf(array));
+					}
+					else
+					{
+						cell.setCellFormula(formula);
+					}
+
+					formulas.add(cell);
+				}
+				catch (FormulaParseException e)
+				{
+					row.removeCell(cell);
+					System.out.println("  left out " + sheet.getSheetName() + "!" + cell.getAddress() + ", which POI can't parse: " + formula);
+				}
+			}
+			default -> throw new IllegalArgumentException("The cell type " + spec.get("type") + " is not one POI writes.");
+		}
+	}
+
+	/**
+	 * Writes a number of the typed workbook with its format, a built-in format id or a code, or a date as a date.
+	 *
+	 * @param workbook the workbook
+	 * @param cell the cell
+	 * @param spec the cell's spec
+	 * @param styles the styles made so far, by format id or code
+	 */
+	private static void writeTypedDate(Workbook workbook, Cell cell, Map<String, Object> spec, Map<String, CellStyle> styles)
+	{
+		var id = (Double)spec.get("formatId");
+		var key = id != null ? "id " + id.intValue() : (String)spec.get("format");
+		var style = styles.computeIfAbsent(key, k ->
+		{
+			var created = workbook.createCellStyle();
+			created.setDataFormat(id != null ? (short)id.intValue() : workbook.getCreationHelper().createDataFormat().getFormat((String)spec.get("format")));
+
+			return created;
+		});
+		cell.setCellStyle(style);
+		var date = (String)spec.get("date");
+		if (date != null)
+		{
+			cell.setCellValue(LocalDateTime.parse(date));
+		}
+		else
+		{
+			cell.setCellValue((Double)spec.get("number"));
 		}
 	}
 

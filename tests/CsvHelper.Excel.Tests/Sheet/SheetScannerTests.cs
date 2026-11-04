@@ -46,7 +46,8 @@ public class SheetScannerTests
 					"4: inline | as v",
 					"5: bool:1 | bool:0 | bool:1 | bool:0 | bool:1 | yes",
 					"6: error:#N/A | error:#DIV/0!",
-					"7: 2024-01-02T03:04:05 | other",
+					// An ISO 8601 date is its serial: 45293 and 11045 seconds.
+					"7: number:45293.12783564815 | other",
 				],
 				await Sheets.ReadAsync(xml, mode, strings: strings));
 		});
@@ -551,5 +552,52 @@ public class SheetScannerTests
 		var e = await Assert.ThrowsAsync<InvalidDataException>(() => Sheets.ReadPackageAsync(far, async, new PartLimits(1 << 20, farSize + 1000), skipEmptyRows: false));
 		Assert.StartsWith("Reading xl/worksheets/sheet1.xml takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
 		Assert.Single((await Sheets.ReadPackageAsync(far, async, new PartLimits(1 << 20, farSize + 1000))).Records);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task CountsSharedStringsLongerThanTheirCellsTowardTheUncompressedSize(bool async)
+	{
+		// A shared string counts the bytes it has beyond its cell's XML up to the end of its value: 100 less 24 here, and
+		// nothing for one shorter than its cell.
+		const string Long = "<c r=\"B1\" t=\"s\"><v>1</v>";
+		var package = TestPackage.Workbook(new TestSheet("Data", xml: Sheets.Worksheet($"<row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c>{Long}</c></row>")))
+			.SharedStrings("<t>short</t>", $"<t>{new string('x', 100)}</t>");
+		var size = package.Text(Sheets.PartName).Length + package.Text("xl/sharedStrings.xml").Length;
+		var beyond = 100 - Long.Length;
+
+		var (records, total) = await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, 1L << 30), sharedStrings: true);
+		Assert.Equal(["short", new string('x', 100)], records.Single().Fields.Select(f => f.Text));
+		Assert.Equal(size + beyond, total);
+
+		await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, size + beyond), sharedStrings: true);
+		var e = await Assert.ThrowsAsync<InvalidDataException>(() => Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, size + beyond - 1), sharedStrings: true));
+		Assert.Equal($"Reading xl/worksheets/sheet1.xml takes the workbook past ExcelReaderOptions.MaxUncompressedSize ({size + beyond - 1} bytes uncompressed).", e.Message);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task CountsMovedFormulasLongerThanTheirCellsTowardTheUncompressedSize(bool async)
+	{
+		// A moved shared formula counts the bytes it has beyond its cell's XML, up to its f. The defining cell's formula is
+		// its own XML, and counts nothing more.
+		const string Follower = "<c r=\"A2\"><f t=\"shared\" si=\"0\"/>";
+		var formula = string.Join("+", Enumerable.Repeat("B1", 31));
+		var package = TestPackage.Workbook(new TestSheet("Data", xml: Sheets.Worksheet(
+			$"<row r=\"1\"><c r=\"A1\"><f t=\"shared\" ref=\"A1:A2\" si=\"0\">{formula}</f></c></row><row r=\"2\">{Follower}</c></row>")));
+		var size = package.Text(Sheets.PartName).Length;
+		var beyond = 1 + formula.Length - Follower.Length;
+
+		var (records, total) = await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, 1L << 30), formulas: ExcelFormulas.FormulaText);
+		Assert.Equal(["=" + formula, "=" + formula.Replace("B1", "B2")], records.Select(r => r.Fields.Single().Text));
+		Assert.Equal(size + beyond, total);
+
+		var e = await Assert.ThrowsAsync<InvalidDataException>(() => Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, size + beyond - 1), formulas: ExcelFormulas.FormulaText));
+		Assert.StartsWith("Reading xl/worksheets/sheet1.xml takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
+
+		// Read as their values, the formulas count nothing.
+		Assert.Equal(size, (await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, 1L << 30))).Total);
 	}
 }

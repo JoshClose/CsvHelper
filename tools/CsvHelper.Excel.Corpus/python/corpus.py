@@ -1,14 +1,18 @@
-"""Writes the corpus's Python files from the basic workbook's JSON: python -I corpus.py <spec.json> <Files folder>.
+"""Writes the corpus's Python files from the basic and typed workbooks' JSON:
+python -I corpus.py <basic.json> <typed.json> <Files folder>.
 
 openpyxl/basic.xlsx, xlsxwriter/basic.xlsx, xlsxwriter/constant_memory.xlsx, and pandas/openpyxl.xlsx and
-pandas/xlsxwriter.xlsx (each engine named, since pandas picks XlsxWriter when it is installed). Each writes what its
-library can: openpyxl can't write a control character (it raises IllegalCharacterError) and writes formulas without
-cached results; XlsxWriter writes the results Excel computes; pandas writes a data frame per sheet.
+pandas/xlsxwriter.xlsx (each engine named, since pandas picks XlsxWriter when it is installed); openpyxl/typed.xlsx,
+openpyxl/typed-isodates.xlsx (with iso_dates, which writes dates as t="d") and xlsxwriter/typed.xlsx. Each writes what
+its library can: openpyxl can't write a control character (it raises IllegalCharacterError), a built-in number format
+id outside its table, a dynamic array or a table's formulas, and writes formulas without cached results; XlsxWriter
+writes the results Excel computes, and no error constants; pandas writes a data frame per sheet.
 """
 
 import datetime
 import json
 import os
+import re
 import sys
 
 import openpyxl
@@ -17,6 +21,8 @@ import xlsxwriter
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
 from openpyxl.chart import BarChart, Reference
+from openpyxl.workbook.defined_name import DefinedName
+from openpyxl.worksheet.formula import ArrayFormula
 
 # The cached results of the basic workbook's formulas, as Excel computes them.
 RESULTS = {"NA()": "#N/A", "1/0": "#DIV/0!", "B3*2": 84, 'A2&"!"': "text!", "B2+1": "#VALUE!"}
@@ -155,6 +161,114 @@ def value(cell):
 	return None
 
 
+def write_typed_openpyxl(typed, folder, name, iso_dates):
+	path = os.path.join(folder, name)
+	workbook = openpyxl.Workbook(iso_dates=iso_dates)
+	workbook.remove(workbook.active)
+	workbook.properties.creator = "CsvHelper.Excel.Corpus"
+	for defined, value in typed["names"].items():
+		workbook.defined_names[defined] = DefinedName(defined, attr_text=value)
+	for sheet in typed["sheets"]:
+		ws = workbook.create_sheet(sheet["name"])
+		for row, row_cells in cells(sheet, {"error", "formula", "array", "name", "newer", "date"}):
+			for cell in row_cells:
+				at = cell["column"] + str(row)
+				target = ws[at]
+				kind = cell["type"]
+				if kind == "Text":
+					# openpyxl would take a text such as "#N/A" for an error.
+					target.value = cell["text"]
+					target.data_type = "s"
+				elif kind in ("Number", "Bool"):
+					target.value = cell["number"] if kind == "Number" else cell["bool"]
+				elif kind == "Error":
+					target.value = cell["text"]
+				elif kind == "Date":
+					target.value = date(cell)
+					target.number_format = cell["format"]
+				elif kind == "Formula":
+					if cell.get("array"):
+						target.value = ArrayFormula(cell["array"], "=" + cell["formula"])
+					else:
+						target.value = "=" + cell["formula"]
+	workbook.save(path)
+	save(path)
+
+
+def write_typed_xlsxwriter(typed, folder):
+	path = os.path.join(folder, "typed.xlsx")
+	workbook = xlsxwriter.Workbook(path, {"use_future_functions": True})
+	workbook.set_properties({"author": "CsvHelper.Excel.Corpus"})
+	for defined, value in typed["names"].items():
+		workbook.define_name(defined, "=" + value)
+	formats = {}
+	for sheet in typed["sheets"]:
+		ws = workbook.add_worksheet(sheet["name"])
+		tables = sheet.get("tables", [])
+		for row, row_cells in cells(sheet, {"formatId", "formula", "array", "spill", "name", "table", "newer", "date"}):
+			for cell in row_cells:
+				at = cell["column"] + str(row)
+				kind = cell["type"]
+				if kind == "Text":
+					ws.write_string(at, cell["text"])
+				elif kind == "Number":
+					ws.write_number(at, cell["number"])
+				elif kind == "Bool":
+					ws.write_boolean(at, cell["bool"])
+				elif kind == "Date":
+					key = cell.get("formatId", cell.get("format"))
+					if key not in formats:
+						formats[key] = workbook.add_format({"num_format": key})
+					if cell.get("date"):
+						ws.write_datetime(at, date(cell), formats[key])
+					else:
+						ws.write_number(at, cell["number"], formats[key])
+				elif kind == "Formula":
+					formula = "=" + cell["formula"]
+					if cell.get("array"):
+						ws.write_array_formula(cell["array"], "{" + formula + "}", None, cell["result"])
+					elif cell.get("spill"):
+						# XlsxWriter has its users write the spill operator as ANCHORARRAY(), as a file stores it.
+						formula = re.sub(r"(\$?[A-Z]+\$?[0-9]+)#", r"ANCHORARRAY(\1)", formula)
+						ws.write_dynamic_array_formula(at + ":" + at, formula, None, cell["result"])
+					elif cell.get("feature") == "table" and any(in_range(at, t["range"]) for t in tables):
+						# add_table writes a table's calculated column.
+						continue
+					else:
+						ws.write_formula(at, formula, None, cell["result"])
+		for table in tables:
+			first, last = table["range"].split(":")
+			header_row = int("".join(c for c in first if c.isdigit()))
+			headers = {}
+			formulas = {}
+			for row, row_cells in cells(sheet, {"table"}):
+				for cell in row_cells:
+					at = cell["column"] + str(row)
+					if not in_range(at, table["range"]):
+						continue
+					if row == header_row:
+						headers[cell["column"]] = cell["text"]
+					elif cell["type"] == "Formula":
+						formulas[cell["column"]] = "=" + cell["formula"]
+			columns = [{"header": headers[c], **({"formula": formulas[c]} if c in formulas else {})} for c in sorted(headers, key=lambda k: (len(k), k))]
+			ws.add_table(table["range"], {"name": table["name"], "columns": columns})
+	workbook.close()
+	save(path)
+
+
+def in_range(at, cells_range):
+	first, last = cells_range.split(":")
+	column, row = split(at)
+	first_column, first_row = split(first)
+	last_column, last_row = split(last)
+	return first_row <= row <= last_row and (len(first_column), first_column) <= (len(column), column) <= (len(last_column), last_column)
+
+
+def split(reference):
+	letters = "".join(c for c in reference if c.isalpha())
+	return letters, int(reference[len(letters):])
+
+
 def folder(root, name):
 	path = os.path.join(root, name)
 	os.makedirs(path, exist_ok=True)
@@ -164,11 +278,16 @@ def folder(root, name):
 def main():
 	with open(sys.argv[1], encoding="utf-8") as file:
 		spec = json.load(file)
-	root = sys.argv[2]
+	with open(sys.argv[2], encoding="utf-8") as file:
+		typed = json.load(file)
+	root = sys.argv[3]
 	write_openpyxl(spec, folder(root, "openpyxl"))
 	write_xlsxwriter(spec, folder(root, "xlsxwriter"), "basic.xlsx", {})
 	write_xlsxwriter(spec, folder(root, "xlsxwriter"), "constant_memory.xlsx", {"constant_memory": True})
 	write_pandas(spec, folder(root, "pandas"))
+	write_typed_openpyxl(typed, folder(root, "openpyxl"), "typed.xlsx", False)
+	write_typed_openpyxl(typed, folder(root, "openpyxl"), "typed-isodates.xlsx", True)
+	write_typed_xlsxwriter(typed, folder(root, "xlsxwriter"))
 
 
 if __name__ == "__main__":

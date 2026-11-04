@@ -19,13 +19,16 @@ internal static class Program
 		Usage: CsvHelper.Excel.Corpus <command> [--files <folder>] [--csv <PackageAssets.csv>] [--java <java.exe or JDK>]
 
 		Commands:
-		  excel          Excel through COM: excel/ (the basic workbook in each format, and .xlsb, encrypted and .xls)
+		  excel          Excel through COM: excel/ (the basic workbook in each format, and .xlsb, encrypted and .xls; the
+		                 typed workbook as .xlsx, in the 1904 date system, and as Strict Open XML)
 		  packageassets  Excel: excel/packageassets-1695.xlsx from NCsvPerf's PackageAssets.csv, every column as text
-		  libreoffice    LibreOffice: libreoffice/, converted from excel/basic.xlsx
+		  libreoffice    LibreOffice: libreoffice/, converted from excel/basic.xlsx and excel/typed.xlsx
 		  python         openpyxl, XlsxWriter and pandas, in a venv outside the repository: openpyxl/, xlsxwriter/, pandas/
 		  poi            Apache POI's XSSF and SXSSF, run by a JDK outside the repository: poi/
 		  dotnet         ClosedXML, the Open XML SDK, EPPlus, MiniExcel, SpreadCheetah and LargeXlsx
 		  downloads      Other projects' test files that downloads.txt pins: google/, excel-mac/
+		  formats        Excel through COM: excel-formats.json, which number formats Excel takes for dates
+		  oracle         Excel through COM: excel-oracle/, what every corpus workbook's cells hold as Excel reads them
 		  spec           The basic workbook's content as JSON, to standard output
 		  check          Only the check, which every command ends with, that no file holds personal information
 		  all            Every command, in order
@@ -86,6 +89,14 @@ internal static class Program
 				Downloads.Write(files, downloads);
 
 				break;
+			case "formats":
+				ExcelFormats.Write(files);
+
+				break;
+			case "oracle":
+				ExcelOracle.Write(files);
+
+				break;
 			case "spec":
 				Console.WriteLine(Basic.ToJson());
 
@@ -100,6 +111,8 @@ internal static class Program
 				PoiProducer.Write(files, java, jdk);
 				DotNetProducers.Write(files);
 				Downloads.Write(files, downloads);
+				ExcelFormats.Write(files);
+				ExcelOracle.Write(files);
 
 				break;
 			default:
@@ -118,16 +131,25 @@ internal static class Program
 		return 0;
 	}
 
-	/// <summary>Converts Excel's basic workbook with LibreOffice's two Excel filters, in a throwaway profile.</summary>
+	/// <summary>
+	/// Converts Excel's basic workbook with LibreOffice's two Excel filters, and its typed workbook with the first, in a
+	/// throwaway profile.
+	/// </summary>
 	/// <param name="files">The corpus folder.</param>
 	[SupportedOSPlatform("windows")]
 	private static void LibreOffice(string files)
 	{
 		var soffice = AppPath("soffice.exe") ?? @"C:\Program Files\LibreOffice\program\soffice.exe";
 		var folder = Directory.CreateDirectory(Path.Combine(files, "libreoffice")).FullName;
-		var source = Path.Combine(files, "excel", "basic.xlsx");
-		foreach (var (filter, name) in new[] { ("Calc MS Excel 2007 XML", "basic.xlsx"), ("Calc Office Open XML", "basic-ooxml.xlsx") })
+		var conversions = new[]
 		{
+			("basic.xlsx", "Calc MS Excel 2007 XML", "basic.xlsx"),
+			("basic.xlsx", "Calc Office Open XML", "basic-ooxml.xlsx"),
+			("typed.xlsx", "Calc MS Excel 2007 XML", "typed.xlsx"),
+		};
+		foreach (var (from, filter, name) in conversions)
+		{
+			var source = Path.Combine(files, "excel", from);
 			var temp = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N"))).FullName;
 			try
 			{
@@ -135,7 +157,7 @@ internal static class Program
 				var output = Path.Combine(temp, "out");
 				Run(soffice, "--headless", "--norestore", $"-env:UserInstallation={profile}", "--convert-to", $"xlsx:{filter}", "--outdir", output, source);
 				var target = Path.Combine(folder, name);
-				File.Copy(Path.Combine(output, "basic.xlsx"), target, true);
+				File.Copy(Path.Combine(output, from), target, true);
 				Console.WriteLine($"  {target}");
 			}
 			finally
@@ -162,15 +184,25 @@ internal static class Program
 		}
 
 		Run(python, "-I", "-m", "pip", "install", "--disable-pip-version-check", "--quiet", "-r", Path.Combine(scripts, "requirements.txt"));
-		var spec = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
+		WithSpecs((basic, typed) => Run(python, "-I", Path.Combine(scripts, "corpus.py"), basic, typed, files));
+	}
+
+	/// <summary>Runs work with the basic and typed workbooks' JSON in temporary files, for the producers outside .NET.</summary>
+	/// <param name="work">Takes the basic workbook's file and the typed workbook's.</param>
+	internal static void WithSpecs(Action<string, string> work)
+	{
+		var basic = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
+		var typed = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
 		try
 		{
-			File.WriteAllText(spec, Basic.ToJson());
-			Run(python, "-I", Path.Combine(scripts, "corpus.py"), spec, files);
+			File.WriteAllText(basic, Basic.ToJson());
+			File.WriteAllText(typed, Typed.ToJson());
+			work(basic, typed);
 		}
 		finally
 		{
-			File.Delete(spec);
+			File.Delete(basic);
+			File.Delete(typed);
 		}
 	}
 

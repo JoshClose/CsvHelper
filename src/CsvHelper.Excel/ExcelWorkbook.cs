@@ -405,7 +405,8 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		SheetScanner scanner;
 		try
 		{
-			scanner = new SheetScanner(new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize)), chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream);
+			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize));
+			scanner = new SheetScanner(xml, chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream, Date1904, settings.ErrorCells, settings.Formulas);
 		}
 		catch
 		{
@@ -416,7 +417,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 		try
 		{
-			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook), settings.Csv);
+			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, settings.CellOptions(Date1904)), settings.Csv);
 		}
 		catch
 		{

@@ -20,11 +20,24 @@ namespace CsvHelper.Excel;
 /// value and kind: a number (<c>n</c>, or no type) is its <c>v</c> without the white space around it, with the kind its
 /// style gives (<see cref="StyleTable.NumberKind"/>); <c>s</c> is the shared string its <c>v</c> indexes; <c>b</c> is
 /// <c>1</c> or <c>0</c> (<c>true</c> and <c>false</c> of any case become those; anything else stays text); <c>e</c> is
-/// an error; <c>inlineStr</c> is the runs of its <c>is</c> joined, or its <c>v</c>; and <c>str</c>, <c>d</c> and any other
+/// an error, or valueless when error cells read as null; <c>d</c> is an ISO 8601 date or duration converted to its serial
+/// number in the workbook's date system (<see cref="IsoDate"/>), with the kind its style gives as a number has, or text
+/// when it isn't one; <c>inlineStr</c> is the runs of its <c>is</c> joined, or its <c>v</c>; and <c>str</c> and any other
 /// type are the text of <c>v</c>. Values are decoded as XML and then for their <c>_xHHHH_</c> escapes; between the two,
 /// a text (a <c>v</c>, or a <c>t</c> of an <c>is</c>) that <c>xml:space="preserve"</c> doesn't apply to, on it or inherited,
 /// loses the white space around it, as Excel trims it. A cell without a <c>v</c> or <c>is</c>, or whose value is empty, is
 /// valueless and adds no field.
+/// </para>
+/// <para>
+/// <b>Formulas.</b> When formulas read as their values, a cell's <c>f</c> is skipped. When they read as text, a cell whose
+/// <c>f</c> has text is a text field of <c>=</c> and the text, decoded as a value is, whatever the cell's type; the rest
+/// of the cell, its value included, is skipped. A shared formula (<c>t="shared"</c>) is defined by the cell whose <c>f</c>
+/// has a <c>ref</c>, with the formula's text, and each other cell of the group (an <c>f</c> with the same <c>si</c> and no
+/// <c>ref</c>, whose own text is ignored, as Excel ignores it) is the defining cell's formula with its relative references
+/// moved by the cell's offset from it (<see cref="FormulaShifter"/>). A cell of a group that no cell before it defines
+/// can't be read. A cell whose <c>f</c> has no text, the cells of a group whose defining cell has none, and the cells of a
+/// data table (<c>t="dataTable"</c>) read their values. The groups are held while the sheet is read
+/// (<see cref="SharedFormulas"/>), within the part's size limit.
 /// </para>
 /// <para>
 /// <b>Placement.</b> A row's number is its <c>r</c>, else the row of its first cell's <c>r</c>, else the row before's plus
@@ -34,7 +47,8 @@ namespace CsvHelper.Excel;
 /// is then padded with empty fields to the field count of the first record with a value. A row without a value is
 /// dropped, or, when empty rows are kept, is a record of one empty field, as is each row missing before a row: record
 /// <c>n</c> is then row <c>n</c>. Each empty field that a gap or the padding adds, and each missing row, counts as one
-/// byte toward the workbook's uncompressed size, so that a few bytes of XML can't make millions of fields unchecked.
+/// byte toward the workbook's uncompressed size, and so do the bytes a shared string or a moved shared formula has beyond
+/// its cell's XML, so that a few bytes of XML can't make millions of fields, or gigabytes of them, unchecked.
 /// </para>
 /// <para>
 /// <b>Fills.</b> A fill writes whole records: it ends after the row that fills the target, or at the end of the rows,
@@ -62,12 +76,19 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <summary>The most characters of a value an error message quotes.</summary>
 	private const int MaxQuoted = 32;
 
+	/// <summary>The room for the text of a serial number: <see cref="FloatFormatter"/> writes at most 24 bytes.</summary>
+	private const int MaxSerialLength = 32;
+
 	private readonly XmlScanner scanner;
 	private readonly SheetLocation location;
 	private readonly SharedStrings strings;
 	private readonly StyleTable styles;
 	private readonly bool skipEmptyRows;
 	private readonly LimitedReadStream? budget;
+	private readonly bool date1904;
+	private readonly bool nullErrors;
+	// The sheet's shared formulas when formulas read as text; null when they read as their values.
+	private readonly SharedFormulas? sharedFormulas;
 	// The text and CDATA tokens of the value of the cell being read, in the window, and their length.
 	private Segment[] segments = new Segment[4];
 	private int segmentCount;
@@ -102,8 +123,13 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <param name="styles">The workbook's styles.</param>
 	/// <param name="skipEmptyRows">Whether a row without a value is dropped, rather than read as a record of one empty field.</param>
 	/// <param name="budget">The part's stream, to count gap fields toward the workbook's uncompressed size; <see langword="null"/> to count nothing.</param>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system, for the serial numbers of <c>t="d"</c> cells.</param>
+	/// <param name="errorCells">How error cells read: as <see cref="ExcelErrorCells.Null"/>, they are valueless.</param>
+	/// <param name="formulas">What cells with a formula read as: as <see cref="ExcelFormulas.FormulaText"/>, their formulas.</param>
 	/// <exception cref="ArgumentNullException">An argument other than <paramref name="budget"/> is <see langword="null"/>.</exception>
-	public SheetScanner(XmlScanner scanner, string sheetName, SharedStrings strings, StyleTable styles, bool skipEmptyRows, LimitedReadStream? budget)
+	public SheetScanner(
+		XmlScanner scanner, string sheetName, SharedStrings strings, StyleTable styles, bool skipEmptyRows, LimitedReadStream? budget,
+		bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue)
 	{
 		ArgumentNullException.ThrowIfNull(scanner);
 		ArgumentNullException.ThrowIfNull(strings);
@@ -114,6 +140,12 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		this.styles = styles;
 		this.skipEmptyRows = skipEmptyRows;
 		this.budget = budget;
+		this.date1904 = date1904;
+		nullErrors = errorCells == ExcelErrorCells.Null;
+		if (formulas == ExcelFormulas.FormulaText)
+		{
+			sharedFormulas = new SharedFormulas(scanner.Window.PartName, scanner.Window.MaxSize);
+		}
 	}
 
 	/// <summary>Where things are in the sheet, for the record source's <c>Locate</c>.</summary>
@@ -202,7 +234,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 	/// <summary>The kind of a cell's type (<c>t</c>), for how its value is read.</summary>
 	/// <param name="type">The type, without white space around it.</param>
-	/// <returns>The kind; <see cref="CellType.Text"/> for <c>str</c>, <c>d</c> and types Excel doesn't have.</returns>
+	/// <returns>The kind; <see cref="CellType.Text"/> for <c>str</c> and types Excel doesn't have.</returns>
 	private static CellType TypeOf(ReadOnlySpan<byte> type)
 	{
 		if (type.Length == 1)
@@ -217,6 +249,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return CellType.Boolean;
 				case (byte)'e':
 					return CellType.Error;
+				case (byte)'d':
+					return CellType.IsoDate;
 			}
 		}
 
@@ -669,6 +703,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		segmentCount = 0;
 		rawLength = 0;
 		var found = false;
+		var formula = CellFormula.None;
+		var group = -1;
 		while (true)
 		{
 			if (!scanner.TryRead())
@@ -706,7 +742,24 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				break;
 			}
 
-			// f (read from Phase 2 on), extLst, and anything else.
+			if (sharedFormulas is not null && scanner.IsStartTag("f"u8))
+			{
+				if (!TryReadFormula(preserves, column, cellStart, out formula, out group))
+				{
+					scanner.Restore(before);
+
+					return Step.More;
+				}
+
+				if (formula != CellFormula.None)
+				{
+					break;
+				}
+
+				continue;
+			}
+
+			// f when formulas read as their values, extLst, and anything else.
 			if (!scanner.IsEmptyElement && !scanner.TrySkipTo(scanner.Depth - 1))
 			{
 				scanner.Restore(before);
@@ -716,14 +769,20 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		}
 
 		lastColumn = column;
-		if (!found)
+		if (formula != CellFormula.None)
+		{
+			AddFormula(target, formula, group, column, cellStart);
+		}
+		else if (found)
+		{
+			AddValue(target, type, style, column, cellStart);
+		}
+		else
 		{
 			cellColumn = -1;
 
 			return Step.Read;
 		}
-
-		AddValue(target, type, style, column, cellStart);
 
 		// The rest of the cell, normally just </c>, is skipped across refills: the value is written.
 		mode = Mode.CellRest;
@@ -848,6 +907,99 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		}
 	}
 
+	/// <summary>
+	/// Reads a cell's <c>f</c>, when formulas read as text, if the window holds all of it: its type, its shared formula's
+	/// group, and its text, as the value being read when the cell reads it.
+	/// </summary>
+	/// <param name="inherited">Whether <c>xml:space="preserve"</c> applies in the cell.</param>
+	/// <param name="column">The cell's column.</param>
+	/// <param name="cellStart">The position of the cell's tag, for errors.</param>
+	/// <param name="formula">What the cell reads: its formula, a group's, or its value (<see cref="CellFormula.None"/>).</param>
+	/// <param name="group">The shared formula's group, for <see cref="CellFormula.Defining"/> and <see cref="CellFormula.Shared"/>.</param>
+	/// <returns>Whether the element's end was read.</returns>
+	/// <exception cref="CsvFormatException">The cell is of a group that no cell before it defines.</exception>
+	/// <exception cref="InvalidDataException">The <c>si</c> is not an index; <see cref="Scan"/> makes it the cell's error.</exception>
+	private bool TryReadFormula(bool inherited, int column, int cellStart, out CellFormula formula, out int group)
+	{
+		formula = CellFormula.None;
+		group = -1;
+		var shared = false;
+		var dataTable = false;
+		var defines = false;
+		var attributes = scanner.Attributes;
+		while (attributes.MoveNext())
+		{
+			if (attributes.IsName("t"u8))
+			{
+				var type = ValueOf(attributes);
+				shared = type.SequenceEqual("shared"u8);
+				dataTable = type.SequenceEqual("dataTable"u8);
+			}
+			else if (attributes.IsName("si"u8))
+			{
+				group = attributes.GetInt32();
+				if (group < 0)
+				{
+					throw attributes.InvalidValue("a shared formula index");
+				}
+			}
+			else if (attributes.IsName("ref"u8))
+			{
+				defines = true;
+			}
+		}
+
+		// A data table's cells hold its results, which they read.
+		if (dataTable)
+		{
+			group = -1;
+
+			return scanner.IsEmptyElement || scanner.TrySkipTo(scanner.Depth - 1);
+		}
+
+		if (!TryReadText(inherited))
+		{
+			return false;
+		}
+
+		if (shared && group >= 0 && !defines)
+		{
+			// Another cell of a group: the defining cell's formula moved here, whatever text the cell's own f has.
+			segmentCount = 0;
+			rawLength = 0;
+			if (!sharedFormulas!.TryFind(group, out var hasFormula))
+			{
+				throw Error(Offset(cellStart), $"it uses shared formula {group}, which no cell before it defines", column, row);
+			}
+
+			formula = hasFormula ? CellFormula.Shared : CellFormula.None;
+
+			return true;
+		}
+
+		if (!shared || group < 0)
+		{
+			group = -1;
+		}
+
+		if (HasText())
+		{
+			formula = group < 0 ? CellFormula.Own : CellFormula.Defining;
+
+			return true;
+		}
+
+		// No formula: the cell reads its value, and so do the other cells of a group it defines.
+		segmentCount = 0;
+		rawLength = 0;
+		if (group >= 0)
+		{
+			sharedFormulas!.Define(group, default, row, column);
+		}
+
+		return true;
+	}
+
 	/// <summary>Adds a text or CDATA token to the value being read.</summary>
 	/// <param name="start">Its content's position in the window.</param>
 	/// <param name="length">Its content's length.</param>
@@ -899,6 +1051,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				}
 
 				AddGap(target, column);
+				ChargeBeyondCell(text.Length, cellStart);
 				target.AddField(text, SheetCellKind.Text);
 
 				break;
@@ -925,9 +1078,22 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 				break;
 			}
-			default:
+			case CellType.IsoDate:
 			{
 				if (!HasText())
+				{
+					return;
+				}
+
+				AddGap(target, column);
+				AddIsoDate(target, style);
+
+				break;
+			}
+			default:
+			{
+				// An error that reads as null is valueless, as a cell without a value is.
+				if (!HasText() || (type == CellType.Error && nullErrors))
 				{
 					return;
 				}
@@ -941,6 +1107,73 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 				break;
 			}
+		}
+
+		fields = column + 1;
+	}
+
+	/// <summary>
+	/// Writes a <c>t="d"</c> cell's value: its serial number when its text is an ISO 8601 date or duration
+	/// (<see cref="IsoDate"/>), with the kind its style gives, as Excel reads it (a date in a date style, a number in
+	/// General); else its text, as Phase 1 reads it.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <param name="style">The cell's style.</param>
+	private void AddIsoDate<TTarget>(TTarget target, int style)
+		where TTarget : struct, IRecordTarget
+	{
+		// The text is decoded and read, then the serial written over it.
+		var span = target.GetFieldSpan(Math.Max(rawLength, MaxSerialLength));
+		var length = Decode(span);
+		if (IsoDate.TryParse(span.Slice(0, length), date1904, out var serial) && FloatFormatter.TryFormat(serial, span, out var written))
+		{
+			target.CommitField(written, styles.NumberKind(style));
+
+			return;
+		}
+
+		// Only references can decode to blank text: an empty field, then, as for text.
+		target.CommitField(length, length == 0 ? SheetCellKind.Empty : SheetCellKind.Text);
+	}
+
+	/// <summary>
+	/// Writes a cell's formula as a text field, after an empty field for each column skipped since the row's last field: its
+	/// own <c>f</c>'s text, which a defining cell also stores for its group, or its group's formula moved to it.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <param name="formula">Where the formula comes from.</param>
+	/// <param name="group">The shared formula's group, for <see cref="CellFormula.Defining"/> and <see cref="CellFormula.Shared"/>.</param>
+	/// <param name="column">The cell's column.</param>
+	/// <param name="cellStart">The position of the cell's tag, for the bytes a moved formula has beyond the cell's XML.</param>
+	/// <exception cref="InvalidDataException">
+	/// The shared formulas pass the part's size limit, or a moved formula takes the workbook past its uncompressed size.
+	/// </exception>
+	private void AddFormula<TTarget>(TTarget target, CellFormula formula, int group, int column, int cellStart)
+		where TTarget : struct, IRecordTarget
+	{
+		AddGap(target, column);
+		if (formula == CellFormula.Shared)
+		{
+			sharedFormulas!.TryGet(group, row, column, out var moved);
+			ChargeBeyondCell(moved.Length, cellStart);
+			target.AddField(moved, SheetCellKind.Text);
+		}
+		else
+		{
+			var span = target.GetFieldSpan(rawLength + 1);
+			span[0] = (byte)'=';
+			var length = Decode(span.Slice(1));
+
+			// Stored as the cell's field is written, so once, even when a refill had the cell read again.
+			if (formula == CellFormula.Defining)
+			{
+				sharedFormulas!.Define(group, span.Slice(1, length), row, column);
+			}
+
+			// Only references can decode to blank text: an empty field, then, as for values.
+			target.CommitField(length == 0 ? 0 : length + 1, length == 0 ? SheetCellKind.Empty : SheetCellKind.Text);
 		}
 
 		fields = column + 1;
@@ -983,6 +1216,16 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			budget?.Charge(count);
 		}
 	}
+
+	/// <summary>
+	/// Counts the bytes a field has beyond its cell's XML (up to where the scanner is, the end of the cell's value) toward
+	/// the workbook's uncompressed size: a shared string or a moved shared formula, which a short cell can repeat. Other
+	/// fields are no longer than their XML, which counted as it was inflated.
+	/// </summary>
+	/// <param name="length">The field's bytes.</param>
+	/// <param name="cellStart">The position of the cell's tag.</param>
+	/// <exception cref="InvalidDataException">The workbook passes its uncompressed size.</exception>
+	private void ChargeBeyondCell(int length, int cellStart) => Charge(length - (scanner.Position - cellStart));
 
 	/// <summary>
 	/// Whether the value being read has text once each of its texts is trimmed as <c>xml:space</c> says: a text kept whole
@@ -1247,8 +1490,27 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		/// <summary><c>e</c>: an error value.</summary>
 		Error,
 
-		/// <summary><c>str</c>, <c>d</c>, and any type Excel doesn't have: the text of <c>v</c>.</summary>
+		/// <summary><c>d</c>: an ISO 8601 date, read as its serial number.</summary>
+		IsoDate,
+
+		/// <summary><c>str</c>, and any type Excel doesn't have: the text of <c>v</c>.</summary>
 		Text,
+	}
+
+	/// <summary>What a cell reads when formulas read as text, from its <c>f</c>.</summary>
+	private enum CellFormula : byte
+	{
+		/// <summary>No formula: its value.</summary>
+		None,
+
+		/// <summary>Its <c>f</c>'s text.</summary>
+		Own,
+
+		/// <summary>Its <c>f</c>'s text, which defines a shared formula's group.</summary>
+		Defining,
+
+		/// <summary>The formula of the group it is in, moved to it.</summary>
+		Shared,
 	}
 
 	/// <summary>A text or CDATA token of a value, in the window.</summary>

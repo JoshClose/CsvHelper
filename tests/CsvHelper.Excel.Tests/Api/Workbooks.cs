@@ -60,9 +60,9 @@ internal static class Workbooks
 			new TestSheet("Hidden", state: "hidden", xml: Sheets.Worksheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>hidden</t></is></c></row>")),
 			new TestSheet("Orders", xml: Sheets.Worksheet(
 				"<row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c><c r=\"B1\" t=\"s\"><v>1</v></c><c r=\"C1\" t=\"s\"><v>2</v></c><c r=\"D1\" t=\"s\"><v>3</v></c><c r=\"E1\" t=\"s\"><v>4</v></c></row>" +
-				"<row r=\"2\"><c r=\"A2\" t=\"s\"><v>5</v></c><c r=\"B2\"><v>3</v></c><c r=\"C2\" s=\"1\"><v>1.5</v></c><c r=\"D2\" t=\"b\"><v>1</v></c><c r=\"E2\" t=\"inlineStr\"><is><t>first</t></is></c></row>" +
-				"<row r=\"3\"><c r=\"A3\" t=\"s\"><v>6</v></c><c r=\"B3\"><v>10</v></c><c r=\"C3\" s=\"1\"><v>0.25</v></c><c r=\"D3\" t=\"b\"><v>0</v></c></row>" +
-				"<row r=\"5\"><c r=\"A5\" t=\"s\"><v>7</v></c><c r=\"B5\"><v>7</v></c><c r=\"C5\" s=\"1\"><v>2</v></c><c r=\"D5\" t=\"b\"><v>1</v></c><c r=\"E5\" t=\"inlineStr\"><is><t>third</t></is></c></row>")),
+				"<row r=\"2\"><c r=\"A2\" t=\"s\"><v>5</v></c><c r=\"B2\"><v>3</v></c><c r=\"C2\"><v>1.5</v></c><c r=\"D2\" t=\"b\"><v>1</v></c><c r=\"E2\" t=\"inlineStr\"><is><t>first</t></is></c></row>" +
+				"<row r=\"3\"><c r=\"A3\" t=\"s\"><v>6</v></c><c r=\"B3\"><v>10</v></c><c r=\"C3\"><v>0.25</v></c><c r=\"D3\" t=\"b\"><v>0</v></c></row>" +
+				"<row r=\"5\"><c r=\"A5\" t=\"s\"><v>7</v></c><c r=\"B5\"><v>7</v></c><c r=\"C5\"><v>2</v></c><c r=\"D5\" t=\"b\"><v>1</v></c><c r=\"E5\" t=\"inlineStr\"><is><t>third</t></is></c></row>")),
 			new TestSheet("Q1 Orders", xml: Sheets.Worksheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>q1</t></is></c></row>")))
 		.SharedStrings("<t>Name</t>", "<t>Quantity</t>", "<t>Price</t>", "<t>Paid</t>", "<t>Note</t>", "<t>apple</t>", "<t>pear</t>", "<t>plum</t>");
 

@@ -70,5 +70,98 @@ internal static class ClosedXmlProducer
 		}
 
 		DotNetProducers.Save(Path.Combine(folder, "basic.xlsx"), path => workbook.SaveAs(path, new SaveOptions { EvaluateFormulasBeforeSaving = true }));
+		WriteTyped(folder);
 	}
+
+	/// <summary>
+	/// ClosedXML 0.105.1: <c>closedxml/typed.xlsx</c>, with built-in format ids, error constants, formulas, a legacy array
+	/// and the defined name, its formulas evaluated before saving; without the dynamic arrays and the table.
+	/// </summary>
+	/// <param name="folder">The producer's folder.</param>
+	private static void WriteTyped(string folder)
+	{
+		using var workbook = new XLWorkbook();
+		workbook.Properties.Author = DotNetProducers.Author;
+		workbook.Properties.LastModifiedBy = DotNetProducers.Author;
+		foreach (var spec in Typed.Sheets)
+		{
+			workbook.Worksheets.Add(spec.Name);
+		}
+
+		foreach (var (name, value) in Typed.Names)
+		{
+			workbook.DefinedNames.Add(name, value);
+		}
+
+		foreach (var spec in Typed.Sheets)
+		{
+			var sheet = workbook.Worksheet(spec.Name);
+			foreach (var (row, cells) in Basic.Rows(spec, "formatId", "error", "formula", "array", "name", "newer", "date"))
+			{
+				foreach (var cell in cells)
+				{
+					var target = sheet.Cell(cell.Reference(row));
+					switch (cell.Type)
+					{
+						case CellType.Text:
+							target.Value = cell.Text;
+
+							break;
+						case CellType.Number:
+							target.Value = cell.Number!.Value;
+
+							break;
+						case CellType.Bool:
+							target.Value = cell.Bool!.Value;
+
+							break;
+						case CellType.Error:
+							target.Value = Error(cell.Text!);
+
+							break;
+						case CellType.Date:
+							target.Value = cell.Date is { } date ? date : cell.Number!.Value;
+							if (cell.FormatId is { } id)
+							{
+								target.Style.NumberFormat.NumberFormatId = id;
+							}
+							else
+							{
+								target.Style.NumberFormat.Format = cell.Format;
+							}
+
+							break;
+						case CellType.Formula:
+							if (cell.Array is { } array)
+							{
+								sheet.Range(array).FormulaArrayA1 = cell.Formula;
+							}
+							else
+							{
+								target.FormulaA1 = cell.Formula;
+							}
+
+							break;
+					}
+				}
+			}
+		}
+
+		DotNetProducers.Save(Path.Combine(folder, "typed.xlsx"), path => workbook.SaveAs(path, new SaveOptions { EvaluateFormulasBeforeSaving = true }));
+	}
+
+	/// <summary>ClosedXML's error value of an error's text.</summary>
+	/// <param name="text">The text, such as <c>#N/A</c>.</param>
+	/// <returns>The error.</returns>
+	private static XLError Error(string text) => text switch
+	{
+		"#NULL!" => XLError.NullValue,
+		"#DIV/0!" => XLError.DivisionByZero,
+		"#VALUE!" => XLError.IncompatibleValue,
+		"#REF!" => XLError.CellReference,
+		"#NAME?" => XLError.NameNotRecognized,
+		"#NUM!" => XLError.NumberInvalid,
+		"#N/A" => XLError.NoValueAvailable,
+		_ => throw new ArgumentException($"{text} is not an error ClosedXML has.", nameof(text)),
+	};
 }

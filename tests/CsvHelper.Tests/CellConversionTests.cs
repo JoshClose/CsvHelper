@@ -402,6 +402,14 @@ public class CellConversionTests
 			Assert.True(data.Read());
 			Assert.Throws<FormatException>(() => data.GetValue(1));
 		}
+
+		// A header cell is a name, not a value: an error there names its column with its text.
+		using (var reader = Rows(cells, new CsvReaderOptions(), new FakeRow(1, Text("Name"), Error("#REF!")), new FakeRow(2, Text("a"), Number("1"))))
+		{
+			Assert.True(reader.Read());
+			Assert.Equal(["Name", "#REF!"], reader.Headers);
+			Assert.Equal("1", reader.GetString("#REF!"));
+		}
 	}
 
 	[Fact]

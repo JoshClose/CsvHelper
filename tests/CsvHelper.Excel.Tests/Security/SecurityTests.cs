@@ -7,7 +7,9 @@ namespace CsvHelper.Excel.Tests.Security;
 /// <summary>
 /// The plan's security cases end to end, through the public API on real zips and deflate streams: inflate bombs, sizes
 /// the zip understates, entries that share one entry's data, gap amplification, huge tokens, deep nesting, external
-/// entities, and references that aren't characters. Each parser's own tests check the same rules part by part.
+/// entities, and references that aren't characters; and Phase 2's: a million shared formula groups, a long formula, a
+/// shared formula that grows past the part limit, a shared string and a shared formula repeated a million times, formulas
+/// nested a million deep, and absurd <c>t="d"</c> texts. Each parser's own tests check the same rules part by part.
 /// </summary>
 public class SecurityTests
 {
@@ -28,6 +30,10 @@ public class SecurityTests
 
 	/// <summary>A worksheet part as <see cref="Sheets.Worksheet"/> writes it, from after its rows.</summary>
 	private static readonly string SheetEnd = Sheets.Worksheet("").Substring(SheetStart.Length);
+
+	/// <summary>A sheet of a million rows, each of a cell that defines a shared formula group of its own, zipped once.</summary>
+	private static readonly Lazy<byte[]> MillionGroups = new(() => Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
+		WriteRows(stream, 1_000_000, n => $"<row r=\"{n}\"><c r=\"A{n}\"><f t=\"shared\" ref=\"A{n}:B{n}\" si=\"{n - 1}\">B1</f><v>1</v></c></row>")).ToArray());
 
 	[Theory]
 	[InlineData(false)]
@@ -347,14 +353,232 @@ public class SecurityTests
 		Assert.Contains($"'{reference}'", e.Message);
 	}
 
+	[Theory]
+	[InlineData(ExcelFormulas.FormulaText, false)]
+	[InlineData(ExcelFormulas.FormulaText, true)]
+	[InlineData(ExcelFormulas.CachedValue, false)]
+	[InlineData(ExcelFormulas.CachedValue, true)]
+	public async Task StopsAMillionSharedFormulaGroupsAtThePartLimit(ExcelFormulas formulas, bool async)
+	{
+		// A million cells that each define a shared formula group of their own. Read as text, the store counts each group's
+		// formula and 64 bytes, 66 MB in all, toward a 4 MB part limit, which stops the reader at about the 63,000th group.
+		// Read as their values, the formulas aren't held, and every row reads.
+		var zip = MillionGroups.Value;
+		var options = NoHeader(maxPartSize: 4L * MiB, formulas: formulas);
+
+		using var workbook = async ? await ExcelWorkbook.OpenAsync(new MemoryStream(zip), options) : ExcelWorkbook.Open(new MemoryStream(zip), options);
+		using var reader = await workbook.OpenReaderAsync(async);
+		var rows = 0;
+		var e = await Record.ExceptionAsync(async () =>
+		{
+			while (async ? await reader.ReadAsync() : reader.Read())
+			{
+				rows++;
+			}
+		});
+
+		if (formulas == ExcelFormulas.CachedValue)
+		{
+			Assert.Null(e);
+			Assert.Equal(1_000_000, rows);
+		}
+		else
+		{
+			Assert.Equal($"The shared formulas of {Sheets.PartName} take more than ExcelReaderOptions.MaxPartSize ({4L * MiB} bytes).", Assert.IsType<InvalidDataException>(e).Message);
+			Assert.InRange(rows, 1, (int)(4L * MiB / 66));
+		}
+	}
+
+	[Theory]
+	[InlineData(ExcelFormulas.FormulaText, false)]
+	[InlineData(ExcelFormulas.FormulaText, true)]
+	[InlineData(ExcelFormulas.CachedValue, false)]
+	[InlineData(ExcelFormulas.CachedValue, true)]
+	public async Task StopsALongFormulaAtThePartLimit(ExcelFormulas formulas, bool async)
+	{
+		// A formula of 64 MB under a 4 MB part limit. A cell is read whole, its f with it, whether the formula is read or
+		// skipped, so the window stops growing at the limit either way.
+		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream => WriteSheet(stream, "<row r=\"1\"><c r=\"A1\"><f>", 64L * MiB, "</f><v>1</v></c></row>", (byte)'1'));
+		var zip = package.ToArray();
+		var input = new ReadTrackingStream(zip);
+		var options = NoHeader(maxPartSize: 4L * MiB, formulas: formulas);
+
+		using var workbook = async ? await ExcelWorkbook.OpenAsync(input, options) : ExcelWorkbook.Open(input, options);
+		input.Forget();
+		using var reader = await workbook.OpenReaderAsync(async);
+		var e = await Assert.ThrowsAsync<InvalidDataException>(() => reader.ReadAllAsync(async));
+		Assert.EndsWith($"the token or cell there is larger than ExcelReaderOptions.MaxPartSize ({4L * MiB} bytes).", e.Message);
+
+		AssertStoppedEarly(zip, input, Sheets.PartName, 4L * MiB);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task StopsASharedFormulaThatGrowsPastThePartLimit(bool async)
+	{
+		// A shared formula of 1 MB, 1:1 repeated, under a 4 MB part limit. Moved a row down, it stays 1 MB and reads. Moved
+		// to the last row it would be 4 MB (1048576:1048576), and the room for it, with the formula the store holds, passes
+		// the limit.
+		var formula = string.Join(",", Enumerable.Repeat("1:1", MiB / 4));
+		var package = Workbooks.Data(
+			$"<row r=\"1\"><c r=\"A1\"><f t=\"shared\" ref=\"A1:A1048576\" si=\"0\">{formula}</f></c></row>" +
+			"<row r=\"2\"><c r=\"A2\"><f t=\"shared\" si=\"0\"/></c></row>" +
+			"<row r=\"1048576\"><c r=\"A1048576\"><f t=\"shared\" si=\"0\"/></c></row>");
+		var options = NoHeader(maxPartSize: 4L * MiB, formulas: ExcelFormulas.FormulaText);
+
+		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		using var reader = await workbook.OpenReaderAsync(async);
+		var records = new List<string>();
+		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
+		{
+			while (async ? await reader.ReadAsync() : reader.Read())
+			{
+				records.Add(reader.GetString(0));
+			}
+		});
+
+		Assert.Equal($"The shared formulas of {Sheets.PartName} take more than ExcelReaderOptions.MaxPartSize ({4L * MiB} bytes).", e.Message);
+		Assert.Equal(["=" + formula, "=" + formula.Replace("1:1", "2:2")], records);
+	}
+
+	[Theory]
+	[InlineData("rows", false)]
+	[InlineData("rows", true)]
+	[InlineData("cells", false)]
+	[InlineData("cells", true)]
+	public async Task CountsARepeatedSharedStringTowardTheLimit(string where, bool async)
+	{
+		// One shared string of a megabyte, read by a million rows (40 MB of XML), or by a row of 16,384 cells: each cell
+		// counts the string's bytes beyond its own XML, so a 16 MB limit stops the reader within 16 of them, rather than after
+		// a terabyte of fields, or a record of 16 GB.
+		var package = Workbooks.Data("").SharedStrings($"<t>{new string('x', MiB)}</t>").SetStreamed(Sheets.PartName, stream =>
+		{
+			if (where == "rows")
+			{
+				WriteRows(stream, 1_000_000, n => $"<row r=\"{n}\"><c r=\"A{n}\" t=\"s\"><v>0</v></c></row>");
+			}
+			else
+			{
+				Write(stream, SheetStart + "<row r=\"1\">");
+				WriteRows(stream, CellReference.MaxColumns, _ => "<c t=\"s\"><v>0</v></c>", false);
+				Write(stream, "</row>" + SheetEnd);
+			}
+		});
+		var options = NoHeader(maxPartSize: 4L * MiB, maxUncompressedSize: 16L * MiB);
+
+		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		using var reader = await workbook.OpenReaderAsync(async);
+		var rows = 0;
+		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
+		{
+			while (async ? await reader.ReadAsync() : reader.Read())
+			{
+				rows++;
+			}
+		});
+
+		Assert.StartsWith($"Reading {Sheets.PartName} takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
+		Assert.InRange(rows, where == "rows" ? 1 : 0, where == "rows" ? 16 : 0);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task CountsARepeatedSharedFormulaTowardTheLimit(bool async)
+	{
+		// A shared formula of a megabyte and a million cells of its group: each moved formula counts its bytes beyond its
+		// cell's XML, so a 16 MB limit stops the reader within 16 of them, rather than after a terabyte of fields and hours
+		// of moving references.
+		var formula = string.Join("+", Enumerable.Repeat("A1", MiB / 3));
+		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
+		{
+			Write(stream, SheetStart + $"<row r=\"1\"><c r=\"B1\"><f t=\"shared\" ref=\"B1:B1000000\" si=\"0\">{formula}</f></c></row>");
+			WriteRows(stream, 999_999, n => $"<row r=\"{n + 1}\"><c r=\"B{n + 1}\"><f t=\"shared\" si=\"0\"/></c></row>", false);
+			Write(stream, SheetEnd);
+		});
+		var options = NoHeader(maxPartSize: 4L * MiB, maxUncompressedSize: 16L * MiB, formulas: ExcelFormulas.FormulaText);
+
+		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		using var reader = await workbook.OpenReaderAsync(async);
+		var rows = 0;
+		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
+		{
+			while (async ? await reader.ReadAsync() : reader.Read())
+			{
+				rows++;
+			}
+		});
+
+		Assert.StartsWith($"Reading {Sheets.PartName} takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
+		Assert.InRange(rows, 1, 16);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task MovesFormulasNestedAMillionDeep(bool async)
+	{
+		// Shared formulas of a million parentheses around a reference, and a million brackets nested around one, and a million
+		// brackets that never close: moved a row down in one pass each, without recursion. A reference in brackets is a
+		// structured reference's text, which doesn't move.
+		const int Depth = 1_000_000;
+		var nested = new string('(', Depth) + "A1" + new string(')', Depth) + "+T[" + new string('[', Depth) + "A1" + new string(']', Depth) + "]+B1";
+		var unclosed = "B1+T" + new string('[', Depth) + "A1";
+		var package = Workbooks.Data(
+			$"<row r=\"1\"><c r=\"C1\"><f t=\"shared\" ref=\"C1:C2\" si=\"0\">{nested}</f></c><c r=\"D1\"><f t=\"shared\" ref=\"D1:D2\" si=\"1\">{unclosed}</f></c></row>" +
+			"<row r=\"2\"><c r=\"C2\"><f t=\"shared\" si=\"0\"/></c><c r=\"D2\"><f t=\"shared\" si=\"1\"/></c></row>");
+		var options = NoHeader(formulas: ExcelFormulas.FormulaText);
+
+		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		using var reader = await workbook.OpenReaderAsync(async);
+		Assert.True(async ? await reader.ReadAsync() : reader.Read());
+		Assert.True(async ? await reader.ReadAsync() : reader.Read());
+		var movedNested = new string('(', Depth) + "A2" + new string(')', Depth) + "+T[" + new string('[', Depth) + "A1" + new string(']', Depth) + "]+B2";
+		Assert.True(reader.GetString(2) == "=" + movedNested, "The nested formula didn't move as expected.");
+		Assert.True(reader.GetString(3) == "=B2+T" + new string('[', Depth) + "A1", "The unclosed formula didn't move as expected.");
+		Assert.False(async ? await reader.ReadAsync() : reader.Read());
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task ReadsAbsurdIsoDatesInOnePass(bool async)
+	{
+		// t="d" texts of a million characters: a year of a million digits, a million digits of a second's fraction (of which
+		// the first 20 count), a duration of a million-digit number of hours and one of a million zeros, and a date in a
+		// million spaces. Each is read in one pass, the dates as dates and the others as text.
+		const int Length = 1_000_000;
+		var year = new string('2', Length) + "-01-02";
+		var fraction = "2024-01-02T03:04:05.5" + new string('0', Length);
+		var hours = "PT" + new string('1', Length) + "H";
+		var zeros = "PT" + new string('0', Length) + "S";
+		var spaced = new string(' ', Length) + "2024-01-02" + new string(' ', Length);
+		var cells = new[] { year, fraction, hours, zeros, spaced }.Select((text, i) => $"<c r=\"{(char)('A' + i)}1\" t=\"d\" s=\"1\"><v>{text}</v></c>");
+		var package = Workbooks.Data($"<row r=\"1\">{string.Concat(cells)}</row>");
+
+		using var workbook = await Workbooks.OpenAsync(package, async, NoHeader());
+		using var reader = await workbook.OpenReaderAsync(async);
+		Assert.True(async ? await reader.ReadAsync() : reader.Read());
+		Assert.True(reader.GetString(0) == year, "The year of a million digits isn't its text.");
+		Assert.Equal(new DateTime(2024, 1, 2, 3, 4, 5, 500), reader.Parse<DateTime>(1));
+		Assert.True(reader.GetString(2) == hours, "The duration of a million-digit number of hours isn't its text.");
+		Assert.True(reader.GetString(3) == zeros, "The duration of a million zeros isn't its text.");
+		Assert.Equal(new DateTime(2024, 1, 2), reader.Parse<DateTime>(4));
+		Assert.False(reader.TryParse<DateTime>(0, out _));
+		Assert.False(reader.TryParse<TimeSpan>(2, out _));
+	}
+
 	/// <summary>The options of a reader with no header, so that every row is a record, and these limits.</summary>
 	/// <param name="maxPartSize">The part limit.</param>
 	/// <param name="maxUncompressedSize">The workbook's limit.</param>
+	/// <param name="formulas">What cells with a formula read as.</param>
 	/// <returns>The options.</returns>
-	private static ExcelReaderOptions NoHeader(long maxPartSize = 256L * MiB, long maxUncompressedSize = 4L << 30) => new()
+	private static ExcelReaderOptions NoHeader(long maxPartSize = 256L * MiB, long maxUncompressedSize = 4L << 30, ExcelFormulas formulas = ExcelFormulas.CachedValue) => new()
 	{
 		MaxPartSize = maxPartSize,
 		MaxUncompressedSize = maxUncompressedSize,
+		Formulas = formulas,
 		Csv = new() { HasHeader = false },
 	};
 

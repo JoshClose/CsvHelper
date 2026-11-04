@@ -23,11 +23,13 @@ internal sealed class SheetRecordSource : CsvRecordSource
 	/// <param name="scanner">The sheet's scanner, which the source owns.</param>
 	/// <param name="workbook">The workbook of the sheet.</param>
 	/// <param name="ownsWorkbook">Whether disposing the source disposes the workbook.</param>
-	public SheetRecordSource(SheetScanner scanner, ExcelWorkbook workbook, bool ownsWorkbook)
+	/// <param name="cellOptions">How the reader converts the sheet's typed cells: the workbook's date system and the reader's options.</param>
+	public SheetRecordSource(SheetScanner scanner, ExcelWorkbook workbook, bool ownsWorkbook, CsvCellOptions cellOptions)
 	{
 		this.scanner = scanner;
 		this.workbook = workbook;
 		this.ownsWorkbook = ownsWorkbook;
+		CellOptions = cellOptions;
 	}
 
 	/// <inheritdoc/>

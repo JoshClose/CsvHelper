@@ -1,0 +1,3529 @@
+{
+  "uiLanguage": 1033,
+  "dateSerial": 45306.5,
+  "durationSerial": 1.5,
+  "codes": [
+    {
+      "code": "m/d/yyyy",
+      "valid": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "durationDate": true,
+      "text": "1/15/2024",
+      "durationText": "1/1/1900"
+    },
+    {
+      "code": "d-mmm-yy",
+      "valid": true,
+      "excelCode": "d-mmm-yy",
+      "category": "D1",
+      "date": true,
+      "durationDate": true,
+      "text": "15-Jan-24",
+      "durationText": "1-Jan-00"
+    },
+    {
+      "code": "d-mmm",
+      "valid": true,
+      "excelCode": "d-mmm",
+      "category": "D2",
+      "date": true,
+      "durationDate": true,
+      "text": "15-Jan",
+      "durationText": "1-Jan"
+    },
+    {
+      "code": "mmm-yy",
+      "valid": true,
+      "excelCode": "mmm-yy",
+      "category": "D3",
+      "date": true,
+      "durationDate": true,
+      "text": "Jan-24",
+      "durationText": "Jan-00"
+    },
+    {
+      "code": "h:mm AM/PM",
+      "valid": true,
+      "excelCode": "h:mm AM/PM",
+      "category": "D7",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00 PM",
+      "durationText": "12:00 PM"
+    },
+    {
+      "code": "h:mm:ss AM/PM",
+      "valid": true,
+      "excelCode": "h:mm:ss AM/PM",
+      "category": "D6",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00:00 PM",
+      "durationText": "12:00:00 PM"
+    },
+    {
+      "code": "h:mm",
+      "valid": true,
+      "excelCode": "h:mm",
+      "category": "D9",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00",
+      "durationText": "12:00"
+    },
+    {
+      "code": "h:mm:ss",
+      "valid": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00:00",
+      "durationText": "12:00:00"
+    },
+    {
+      "code": "m/d/yyyy h:mm",
+      "valid": true,
+      "excelCode": "m/d/yyyy h:mm",
+      "category": "D4",
+      "date": true,
+      "durationDate": true,
+      "text": "1/15/2024 12:00",
+      "durationText": "1/1/1900 12:00"
+    },
+    {
+      "code": "mm:ss",
+      "valid": true,
+      "excelCode": "mm:ss",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "00:00",
+      "durationText": "00:00"
+    },
+    {
+      "code": "mm:ss.0",
+      "valid": true,
+      "excelCode": "mm:ss.0",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "00:00.0",
+      "durationText": "00:00.0"
+    },
+    {
+      "code": "yyyy-mm-dd",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "yyyy-mm-dd hh:mm:ss",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd hh:mm:ss",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15 12:00:00",
+      "durationText": "1900-01-01 12:00:00"
+    },
+    {
+      "code": "yyyy-mm-ddThh:mm:ss.000",
+      "valid": true,
+      "excelCode": "yyyy-mm-ddThh:mm:ss.000",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15T12:00:00.000",
+      "durationText": "1900-01-01T12:00:00.000"
+    },
+    {
+      "code": "dd/mm/yyyy",
+      "valid": true,
+      "excelCode": "dd/mm/yyyy",
+      "category": "D1",
+      "date": true,
+      "durationDate": true,
+      "text": "15/01/2024",
+      "durationText": "01/01/1900"
+    },
+    {
+      "code": "dd.mm.yyyy",
+      "valid": true,
+      "excelCode": "dd.mm.yyyy",
+      "category": "D1",
+      "date": true,
+      "durationDate": true,
+      "text": "15.01.2024",
+      "durationText": "01.01.1900"
+    },
+    {
+      "code": "d. mmmm yyyy",
+      "valid": true,
+      "excelCode": "d. mmmm yyyy",
+      "category": "D1",
+      "date": true,
+      "durationDate": true,
+      "text": "15. January 2024",
+      "durationText": "1. January 1900"
+    },
+    {
+      "code": "dddd, mmmm d, yyyy",
+      "valid": true,
+      "excelCode": "dddd, mmmm d, yyyy",
+      "category": "D2",
+      "date": true,
+      "durationDate": true,
+      "text": "Monday, January 15, 2024",
+      "durationText": "Sunday, January 1, 1900"
+    },
+    {
+      "code": "ddd",
+      "valid": true,
+      "excelCode": "ddd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "Mon",
+      "durationText": "Sun"
+    },
+    {
+      "code": "dddd",
+      "valid": true,
+      "excelCode": "dddd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "Monday",
+      "durationText": "Sunday"
+    },
+    {
+      "code": "mmm",
+      "valid": true,
+      "excelCode": "mmm",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "Jan",
+      "durationText": "Jan"
+    },
+    {
+      "code": "mmmm",
+      "valid": true,
+      "excelCode": "mmmm",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "January",
+      "durationText": "January"
+    },
+    {
+      "code": "mmmmm",
+      "valid": true,
+      "excelCode": "mmmmm",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "J",
+      "durationText": "J"
+    },
+    {
+      "code": "yy",
+      "valid": true,
+      "excelCode": "yy",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "24",
+      "durationText": "00"
+    },
+    {
+      "code": "yyyy",
+      "valid": true,
+      "excelCode": "yyyy",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024",
+      "durationText": "1900"
+    },
+    {
+      "code": "d",
+      "valid": true,
+      "excelCode": "d",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "15",
+      "durationText": "1"
+    },
+    {
+      "code": "dd",
+      "valid": true,
+      "excelCode": "dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "15",
+      "durationText": "01"
+    },
+    {
+      "code": "m",
+      "valid": true,
+      "excelCode": "m",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "1",
+      "durationText": "1"
+    },
+    {
+      "code": "h",
+      "valid": true,
+      "excelCode": "h",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "12",
+      "durationText": "12"
+    },
+    {
+      "code": "hh",
+      "valid": true,
+      "excelCode": "hh",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "12",
+      "durationText": "12"
+    },
+    {
+      "code": "s",
+      "valid": true,
+      "excelCode": "s",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "0",
+      "durationText": "0"
+    },
+    {
+      "code": "ss",
+      "valid": true,
+      "excelCode": "ss",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "00",
+      "durationText": "00"
+    },
+    {
+      "code": "ss.000",
+      "valid": true,
+      "excelCode": "ss.000",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "00.000",
+      "durationText": "00.000"
+    },
+    {
+      "code": "YYYY-MM-DD",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "D/M/YYYY",
+      "valid": true,
+      "excelCode": "d/m/yyyy",
+      "category": "D1",
+      "date": true,
+      "durationDate": true,
+      "text": "15/1/2024",
+      "durationText": "1/1/1900"
+    },
+    {
+      "code": "HH:MM",
+      "valid": true,
+      "excelCode": "hh:mm",
+      "category": "D9",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00",
+      "durationText": "12:00"
+    },
+    {
+      "code": "H:MM:SS",
+      "valid": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00:00",
+      "durationText": "12:00:00"
+    },
+    {
+      "code": "h AM/PM",
+      "valid": true,
+      "excelCode": "h AM/PM",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "12 PM",
+      "durationText": "12 PM"
+    },
+    {
+      "code": "h:mm A/P",
+      "valid": true,
+      "excelCode": "h:mm A/P",
+      "category": "D7",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00 P",
+      "durationText": "12:00 P"
+    },
+    {
+      "code": "h:mm a/p",
+      "valid": true,
+      "excelCode": "h:mm a/p",
+      "category": "D7",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00 p",
+      "durationText": "12:00 p"
+    },
+    {
+      "code": "h:mm am/pm",
+      "valid": true,
+      "excelCode": "h:mm AM/PM",
+      "category": "D7",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00 PM",
+      "durationText": "12:00 PM"
+    },
+    {
+      "code": "am/pm",
+      "valid": true,
+      "excelCode": "AM/PM",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "PM",
+      "durationText": "PM"
+    },
+    {
+      "code": "A/P",
+      "valid": true,
+      "excelCode": "A/P",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "P",
+      "durationText": "P"
+    },
+    {
+      "code": "yyyy-mm-dd;@",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd;@",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "[$-409]mmmm d, yyyy;@",
+      "valid": true,
+      "excelCode": "[$-409]mmmm d, yyyy;@",
+      "category": "D2",
+      "date": true,
+      "durationDate": true,
+      "text": "January 15, 2024",
+      "durationText": "January 1, 1900"
+    },
+    {
+      "code": "[$-409]h:mm:ss AM/PM;@",
+      "valid": true,
+      "excelCode": "[$-409]h:mm:ss AM/PM;@",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00:00 PM",
+      "durationText": "12:00:00 PM"
+    },
+    {
+      "code": "[$-F800]dddd, mmmm dd, yyyy",
+      "valid": true,
+      "excelCode": "[$-F800]dddd, mmmm dd, yyyy",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "Monday, January 15, 2024",
+      "durationText": "Sunday, January 1, 1900"
+    },
+    {
+      "code": "[$-F400]h:mm:ss AM/PM",
+      "valid": true,
+      "excelCode": "[$-F400]h:mm:ss AM/PM",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00:00 PM",
+      "durationText": "12:00:00 PM"
+    },
+    {
+      "code": "[$-x-sysdate]dddd, mmmm dd, yyyy",
+      "valid": true,
+      "excelCode": "[$-F800]dddd, mmmm dd, yyyy",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "Monday, January 15, 2024",
+      "durationText": "Sunday, January 1, 1900"
+    },
+    {
+      "code": "[$-x-systime]h:mm:ss AM/PM",
+      "valid": true,
+      "excelCode": "[$-F400]h:mm:ss AM/PM",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "12:00:00 PM",
+      "durationText": "12:00:00 PM"
+    },
+    {
+      "code": "[$-en-US]d-mmm-yy;@",
+      "valid": true,
+      "excelCode": "[$-409]d-mmm-yy;@",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "15-Jan-24",
+      "durationText": "1-Jan-00"
+    },
+    {
+      "code": "[$-1010409]d/m/yyyy;@",
+      "valid": true,
+      "excelCode": "[$-1010409]d/m/yyyy;@",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "15/1/2024",
+      "durationText": "1/1/1900"
+    },
+    {
+      "code": "[Red]yyyy-mm-dd",
+      "valid": true,
+      "excelCode": "[Red]yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "yyyy-mm-dd;[Red]yyyy-mm-dd",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd;[Red]yyyy-mm-dd",
+      "category": "G-",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "[\u003C1]h:mm;yyyy-mm-dd",
+      "valid": true,
+      "excelCode": "[\u003C1]h:mm;yyyy-mm-dd",
+      "category": "D9",
+      "date": false,
+      "durationDate": false,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "yyyy\\-mm\\-dd",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15",
+      "durationText": "1900-01-01"
+    },
+    {
+      "code": "yyyy\u0022/\u0022mm\u0022/\u0022dd",
+      "valid": true,
+      "excelCode": "yyyy\u0022/\u0022mm\u0022/\u0022dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024/01/15",
+      "durationText": "1900/01/01"
+    },
+    {
+      "code": "\u0022Date: \u0022yyyy-mm-dd",
+      "valid": true,
+      "excelCode": "\u0022Date: \u0022yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "Date: 2024-01-15",
+      "durationText": "Date: 1900-01-01"
+    },
+    {
+      "code": "yyyy-mm-dd \u0022at\u0022 h:mm",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd \u0022at\u0022 h:mm",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15 at 12:00",
+      "durationText": "1900-01-01 at 12:00"
+    },
+    {
+      "code": "mmm d \u0022days\u0022",
+      "valid": true,
+      "excelCode": "mmm d \u0022days\u0022",
+      "category": "D5",
+      "date": true,
+      "durationDate": true,
+      "text": "Jan 15 days",
+      "durationText": "Jan 1 days"
+    },
+    {
+      "code": "d \u0022days\u0022 h:mm",
+      "valid": true,
+      "excelCode": "d \u0022days\u0022 h:mm",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "15 days 12:00",
+      "durationText": "1 days 12:00"
+    },
+    {
+      "code": "e",
+      "valid": true,
+      "excelCode": "e",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "2024",
+      "durationText": "1900"
+    },
+    {
+      "code": "ee",
+      "valid": true,
+      "excelCode": "ee",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "2024",
+      "durationText": "1900"
+    },
+    {
+      "code": "g",
+      "valid": true,
+      "excelCode": "g",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "",
+      "durationText": ""
+    },
+    {
+      "code": "gg",
+      "valid": true,
+      "excelCode": "gg",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "",
+      "durationText": ""
+    },
+    {
+      "code": "ggg",
+      "valid": true,
+      "excelCode": "ggg",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "",
+      "durationText": ""
+    },
+    {
+      "code": "b",
+      "valid": true,
+      "excelCode": "bb",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "67",
+      "durationText": "43"
+    },
+    {
+      "code": "bb",
+      "valid": true,
+      "excelCode": "bb",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "67",
+      "durationText": "43"
+    },
+    {
+      "code": "bbbb",
+      "valid": true,
+      "excelCode": "bbbb",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "2567",
+      "durationText": "2443"
+    },
+    {
+      "code": "e-m-d",
+      "valid": true,
+      "excelCode": "e-m-d",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-1-15",
+      "durationText": "1900-1-1"
+    },
+    {
+      "code": "ggge\u0022\u5E74\u0022m\u0022\u6708\u0022d\u0022\u65E5\u0022",
+      "valid": true,
+      "excelCode": "ggge\u0022\u5E74\u0022m\u0022\u6708\u0022d\u0022\u65E5\u0022",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024\u5E741\u670815\u65E5",
+      "durationText": "1900\u5E741\u67081\u65E5"
+    },
+    {
+      "code": "[$-411]ggge\u0022\u5E74\u0022m\u0022\u6708\u0022d\u0022\u65E5\u0022",
+      "valid": true,
+      "excelCode": "[$-411]ggge\u0022\u5E74\u0022m\u0022\u6708\u0022d\u0022\u65E5\u0022",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "\u4EE4\u548C6\u5E741\u670815\u65E5",
+      "durationText": "\u660E\u6CBB33\u5E741\u67081\u65E5"
+    },
+    {
+      "code": "yyyy\u0022\u5E74\u0022m\u0022\u6708\u0022d\u0022\u65E5\u0022",
+      "valid": true,
+      "excelCode": "yyyy\u0022\u5E74\u0022m\u0022\u6708\u0022d\u0022\u65E5\u0022",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024\u5E741\u670815\u65E5",
+      "durationText": "1900\u5E741\u67081\u65E5"
+    },
+    {
+      "code": "aaa",
+      "valid": true,
+      "excelCode": "aaa",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "Mon",
+      "durationText": "Sun"
+    },
+    {
+      "code": "aaaa",
+      "valid": true,
+      "excelCode": "aaaa",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "Monday",
+      "durationText": "Sunday"
+    },
+    {
+      "code": "0 h",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "0.00 d",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "General d",
+      "valid": true,
+      "excelCode": "General d",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "0.499999803 15",
+      "durationText": "0.5 1"
+    },
+    {
+      "code": "@ yyyy",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "0;yyyy",
+      "valid": true,
+      "excelCode": "0;yyyy",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "[h]:mm:ss",
+      "valid": true,
+      "excelCode": "[h]:mm:ss",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00:00",
+      "durationText": "36:00:00"
+    },
+    {
+      "code": "[h]:mm",
+      "valid": true,
+      "excelCode": "[h]:mm",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00",
+      "durationText": "36:00"
+    },
+    {
+      "code": "[hh]:mm:ss",
+      "valid": true,
+      "excelCode": "[hh]:mm:ss",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00:00",
+      "durationText": "36:00:00"
+    },
+    {
+      "code": "[h]",
+      "valid": true,
+      "excelCode": "[h]",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356",
+      "durationText": "36"
+    },
+    {
+      "code": "[H]:MM",
+      "valid": true,
+      "excelCode": "[h]:mm",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00",
+      "durationText": "36:00"
+    },
+    {
+      "code": "[m]:ss",
+      "valid": true,
+      "excelCode": "[m]:ss",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "65241360:00",
+      "durationText": "2160:00"
+    },
+    {
+      "code": "[mm]:ss",
+      "valid": true,
+      "excelCode": "[mm]:ss",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "65241360:00",
+      "durationText": "2160:00"
+    },
+    {
+      "code": "[mm]:ss.000",
+      "valid": true,
+      "excelCode": "[mm]:ss.000",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "65241360:00.000",
+      "durationText": "2160:00.000"
+    },
+    {
+      "code": "[s]",
+      "valid": true,
+      "excelCode": "[s]",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "3914481600",
+      "durationText": "129600"
+    },
+    {
+      "code": "[ss]",
+      "valid": true,
+      "excelCode": "[ss]",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "3914481600",
+      "durationText": "129600"
+    },
+    {
+      "code": "[ss].00",
+      "valid": true,
+      "excelCode": "[ss].00",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "3914481600.00",
+      "durationText": "129600.00"
+    },
+    {
+      "code": "[h]:mm:ss;@",
+      "valid": true,
+      "excelCode": "[h]:mm:ss;@",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00:00",
+      "durationText": "36:00:00"
+    },
+    {
+      "code": "[h]:mm;-[h]:mm",
+      "valid": true,
+      "excelCode": "[h]:mm;-[h]:mm",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00",
+      "durationText": "36:00"
+    },
+    {
+      "code": "[hhh]:mm",
+      "valid": true,
+      "excelCode": "[hhh]:mm",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00",
+      "durationText": "036:00"
+    },
+    {
+      "code": "[h]\u0022 hours\u0022",
+      "valid": true,
+      "excelCode": "[h]\u0022 hours\u0022",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356 hours",
+      "durationText": "36 hours"
+    },
+    {
+      "code": "[Red][h]:mm",
+      "valid": true,
+      "excelCode": "[Red][h]:mm",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00",
+      "durationText": "36:00"
+    },
+    {
+      "code": "[h]:mm;[Red]-[h]:mm",
+      "valid": true,
+      "excelCode": "[h]:mm;[Red]-[h]:mm",
+      "category": "G-",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00",
+      "durationText": "36:00"
+    },
+    {
+      "code": "[h]:mm:ss.000",
+      "valid": true,
+      "excelCode": "[h]:mm:ss.000",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00:00.000",
+      "durationText": "36:00:00.000"
+    },
+    {
+      "code": "[$-409][h]:mm:ss;@",
+      "valid": true,
+      "excelCode": "[$-409][h]:mm:ss;@",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "1087356:00:00",
+      "durationText": "36:00:00"
+    },
+    {
+      "code": "yyyy-mm-dd [h]:mm",
+      "valid": true,
+      "excelCode": "yyyy-mm-dd [h]:mm",
+      "category": "G",
+      "date": true,
+      "durationDate": true,
+      "text": "2024-01-15 12:00",
+      "durationText": "1900-01-01 12:00"
+    },
+    {
+      "code": "0;[h]:mm",
+      "valid": true,
+      "excelCode": "0;[h]:mm",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "General",
+      "valid": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "general",
+      "valid": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "GENERAL",
+      "valid": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "General;-General",
+      "valid": true,
+      "excelCode": "General;-General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "[Blue]General",
+      "valid": true,
+      "excelCode": "[Blue]General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "0",
+      "valid": true,
+      "excelCode": "0",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "0.00",
+      "valid": true,
+      "excelCode": "0.00",
+      "category": "F2",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50",
+      "durationText": "1.50"
+    },
+    {
+      "code": "#,##0",
+      "valid": true,
+      "excelCode": "#,##0",
+      "category": ",0",
+      "date": false,
+      "durationDate": false,
+      "text": "45,307",
+      "durationText": "2"
+    },
+    {
+      "code": "#,##0.00",
+      "valid": true,
+      "excelCode": "#,##0.00",
+      "category": ",2",
+      "date": false,
+      "durationDate": false,
+      "text": "45,306.50",
+      "durationText": "1.50"
+    },
+    {
+      "code": "0%",
+      "valid": true,
+      "excelCode": "0%",
+      "category": "P0",
+      "date": false,
+      "durationDate": false,
+      "text": "4530650%",
+      "durationText": "150%"
+    },
+    {
+      "code": "0.00%",
+      "valid": true,
+      "excelCode": "0.00%",
+      "category": "P2",
+      "date": false,
+      "durationDate": false,
+      "text": "4530650.00%",
+      "durationText": "150.00%"
+    },
+    {
+      "code": "0.00E\u002B00",
+      "valid": true,
+      "excelCode": "0.00E\u002B00",
+      "category": "S2",
+      "date": false,
+      "durationDate": false,
+      "text": "4.53E\u002B04",
+      "durationText": "1.50E\u002B00"
+    },
+    {
+      "code": "##0.0E\u002B0",
+      "valid": true,
+      "excelCode": "##0.0E\u002B0",
+      "category": "S1",
+      "date": false,
+      "durationDate": false,
+      "text": "45.3E\u002B3",
+      "durationText": "1.5E\u002B0"
+    },
+    {
+      "code": "0.00e\u002B00",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "0.0E-00",
+      "valid": true,
+      "excelCode": "0.0E-00",
+      "category": "S1",
+      "date": false,
+      "durationDate": false,
+      "text": "4.5E04",
+      "durationText": "1.5E00"
+    },
+    {
+      "code": "# ?/?",
+      "valid": true,
+      "excelCode": "# ?/?",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306 1/2",
+      "durationText": "1 1/2"
+    },
+    {
+      "code": "# ??/??",
+      "valid": true,
+      "excelCode": "# ??/??",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306  1/2 ",
+      "durationText": "1  1/2 "
+    },
+    {
+      "code": "@",
+      "valid": true,
+      "excelCode": "@",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "$#,##0.00",
+      "valid": true,
+      "excelCode": "$#,##0.00",
+      "category": "C2",
+      "date": false,
+      "durationDate": false,
+      "text": "$45,306.50",
+      "durationText": "$1.50"
+    },
+    {
+      "code": "$#,##0_);($#,##0)",
+      "valid": true,
+      "excelCode": "$#,##0_);($#,##0)",
+      "category": "C0",
+      "date": false,
+      "durationDate": false,
+      "text": "$45,307 ",
+      "durationText": "$2 "
+    },
+    {
+      "code": "$#,##0.00_);[Red]($#,##0.00)",
+      "valid": true,
+      "excelCode": "$#,##0.00_);[Red]($#,##0.00)",
+      "category": "C2-",
+      "date": false,
+      "durationDate": false,
+      "text": "$45,306.50 ",
+      "durationText": "$1.50 "
+    },
+    {
+      "code": "#,##0_);[Red](#,##0)",
+      "valid": true,
+      "excelCode": "#,##0_);[Red](#,##0)",
+      "category": ",0-",
+      "date": false,
+      "durationDate": false,
+      "text": "45,307 ",
+      "durationText": "2 "
+    },
+    {
+      "code": "_(* #,##0_);_(* (#,##0);_(* \u0022-\u0022_);_(@_)",
+      "valid": true,
+      "excelCode": "_(* #,##0_);_(* (#,##0);_(* \u0022-\u0022_);_(@_)",
+      "category": ",0",
+      "date": false,
+      "durationDate": false,
+      "text": "                                                                                                                                                                                                           45,307 ",
+      "durationText": "                                                                                                                                                                                                                        2 "
+    },
+    {
+      "code": "_(\u0022$\u0022* #,##0.00_);_(\u0022$\u0022* (#,##0.00);_(\u0022$\u0022* \u0022-\u0022??_);_(@_)",
+      "valid": true,
+      "excelCode": "_($* #,##0.00_);_($* (#,##0.00);_($* \u0022-\u0022??_);_(@_)",
+      "category": "C2",
+      "date": false,
+      "durationDate": false,
+      "text": " $                                                                                                                                                                                                 45,306.50 ",
+      "durationText": " $                                                                                                                                                                                                             1.50 "
+    },
+    {
+      "code": "[$\u20AC-2] #,##0.00",
+      "valid": true,
+      "excelCode": "[$\u20AC-2] #,##0.00",
+      "category": ",2",
+      "date": false,
+      "durationDate": false,
+      "text": "\u20AC 45,306.50",
+      "durationText": "\u20AC 1.50"
+    },
+    {
+      "code": "#,##0.00 [$\u20AC-1]",
+      "valid": true,
+      "excelCode": "#,##0.00 [$\u20AC-1]",
+      "category": ",2",
+      "date": false,
+      "durationDate": false,
+      "text": "45,306.50 \u20AC",
+      "durationText": "1.50 \u20AC"
+    },
+    {
+      "code": "[$$-409]#,##0.00",
+      "valid": true,
+      "excelCode": "[$$-409]#,##0.00",
+      "category": ",2",
+      "date": false,
+      "durationDate": false,
+      "text": "$45,306.50",
+      "durationText": "$1.50"
+    },
+    {
+      "code": "[$-409]#,##0.00",
+      "valid": true,
+      "excelCode": "[$-409]#,##0.00",
+      "category": ",2",
+      "date": false,
+      "durationDate": false,
+      "text": "45,306.50",
+      "durationText": "1.50"
+    },
+    {
+      "code": "#,##0 [$USD]",
+      "valid": true,
+      "excelCode": "#,##0 [$USD]",
+      "category": ",0",
+      "date": false,
+      "durationDate": false,
+      "text": "45,307 USD",
+      "durationText": "2 USD"
+    },
+    {
+      "code": "0.0\u0022m\u0022",
+      "valid": true,
+      "excelCode": "0.0\u0022m\u0022",
+      "category": "F1",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5m",
+      "durationText": "1.5m"
+    },
+    {
+      "code": "0.0\\m",
+      "valid": true,
+      "excelCode": "0.0\\m",
+      "category": "F1",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5m",
+      "durationText": "1.5m"
+    },
+    {
+      "code": "0 \u0022days\u0022",
+      "valid": true,
+      "excelCode": "0 \u0022days\u0022",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307 days",
+      "durationText": "2 days"
+    },
+    {
+      "code": "0\u0022h\u0022",
+      "valid": true,
+      "excelCode": "0\u0022h\u0022",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307h",
+      "durationText": "2h"
+    },
+    {
+      "code": "\u0022Date:\u0022 0",
+      "valid": true,
+      "excelCode": "\u0022Date:\u0022 0",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "Date: 45307",
+      "durationText": "Date: 2"
+    },
+    {
+      "code": "0.00 \u0022yrs\u0022",
+      "valid": true,
+      "excelCode": "0.00 \u0022yrs\u0022",
+      "category": "F2",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50 yrs",
+      "durationText": "1.50 yrs"
+    },
+    {
+      "code": "0_m",
+      "valid": true,
+      "excelCode": "0_m",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307 ",
+      "durationText": "2 "
+    },
+    {
+      "code": "0_s",
+      "valid": true,
+      "excelCode": "0_s",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307 ",
+      "durationText": "2 "
+    },
+    {
+      "code": "0*-",
+      "valid": true,
+      "excelCode": "0*-",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307---------------------------------------------------------------------------------------------------------------------",
+      "durationText": "2----------------------------------------------------------------------------------------------------------------------------"
+    },
+    {
+      "code": "* #,##0",
+      "valid": true,
+      "excelCode": "* #,##0",
+      "category": ",0",
+      "date": false,
+      "durationDate": false,
+      "text": "                                                                                                                                                                                                            45,307",
+      "durationText": "                                                                                                                                                                                                                         2"
+    },
+    {
+      "code": "*d0",
+      "valid": true,
+      "excelCode": "*d0",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd45307",
+      "durationText": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd2"
+    },
+    {
+      "code": "\u0022s\u00220",
+      "valid": true,
+      "excelCode": "\u0022s\u00220",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "s45307",
+      "durationText": "s2"
+    },
+    {
+      "code": "\\s0",
+      "valid": true,
+      "excelCode": "\\s0",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "s45307",
+      "durationText": "s2"
+    },
+    {
+      "code": "[\u003E=100]0;0.00",
+      "valid": true,
+      "excelCode": "[\u003E=100]0;0.00",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "1.50"
+    },
+    {
+      "code": "[Red][\u003C0]0;0",
+      "valid": true,
+      "excelCode": "[Red][\u003C0]0;0",
+      "category": "F0-",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "[Color10]0.00",
+      "valid": true,
+      "excelCode": "[Color10]0.00",
+      "category": "F2",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50",
+      "durationText": "1.50"
+    },
+    {
+      "code": "[DBNum1]0",
+      "valid": true,
+      "excelCode": "[DBNum1]0",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "[DBNum1][$-411]General",
+      "valid": true,
+      "excelCode": "[DBNum1][$-411]General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "\u56DB\u4E07\u4E94\u5343\u4E09\u767E\u516D.\u4E94",
+      "durationText": "\u4E00.\u4E94"
+    },
+    {
+      "code": "0;-0;;@",
+      "valid": true,
+      "excelCode": "0;-0;;@",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": ";;;",
+      "valid": true,
+      "excelCode": ";;;",
+      "category": "H",
+      "date": false,
+      "durationDate": false,
+      "text": "",
+      "durationText": ""
+    },
+    {
+      "code": "@\u0022x\u0022",
+      "valid": true,
+      "excelCode": "@\u0022x\u0022",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "\u0022yyyy\u0022",
+      "valid": true,
+      "excelCode": "\u0022yyyy\u0022",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "yyyy",
+      "durationText": "yyyy"
+    },
+    {
+      "code": "\u0022[h]\u00220",
+      "valid": true,
+      "excelCode": "\u0022[h]\u00220",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "[h]45307",
+      "durationText": "[h]2"
+    },
+    {
+      "code": "0.00;[Red]0.00",
+      "valid": true,
+      "excelCode": "0.00;[Red]0.00",
+      "category": "F2-",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50",
+      "durationText": "1.50"
+    },
+    {
+      "code": "0000",
+      "valid": true,
+      "excelCode": "0000",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "0002"
+    },
+    {
+      "code": "00000-0000",
+      "valid": true,
+      "excelCode": "00000-0000",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "00004-5307",
+      "durationText": "00000-0002"
+    },
+    {
+      "code": "[\u003C=9999999]###-####;(###) ###-####",
+      "valid": true,
+      "excelCode": "[\u003C=9999999]###-####;(###) ###-####",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "4-5307",
+      "durationText": "-2"
+    },
+    {
+      "code": "000-00-0000",
+      "valid": true,
+      "excelCode": "000-00-0000",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "000-04-5307",
+      "durationText": "000-00-0002"
+    },
+    {
+      "code": "#,##0.00\u0022 s\u0022",
+      "valid": true,
+      "excelCode": "#,##0.00\u0022 s\u0022",
+      "category": ",2",
+      "date": false,
+      "durationDate": false,
+      "text": "45,306.50 s",
+      "durationText": "1.50 s"
+    },
+    {
+      "code": "0.0 \u0022d\u0022",
+      "valid": true,
+      "excelCode": "0.0 \u0022d\u0022",
+      "category": "F1",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5 d",
+      "durationText": "1.5 d"
+    },
+    {
+      "code": "0.0E\u002B0\u0022 h\u0022",
+      "valid": true,
+      "excelCode": "0.0E\u002B0\u0022 h\u0022",
+      "category": "S1",
+      "date": false,
+      "durationDate": false,
+      "text": "4.5E\u002B4 h",
+      "durationText": "1.5E\u002B0 h"
+    },
+    {
+      "code": "0.00\\ \\d",
+      "valid": true,
+      "excelCode": "0.00 \\d",
+      "category": "F2",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50 d",
+      "durationText": "1.50 d"
+    },
+    {
+      "code": "\u0022h\u00220",
+      "valid": true,
+      "excelCode": "\u0022h\u00220",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "h45307",
+      "durationText": "h2"
+    },
+    {
+      "code": "General\u0022 d\u0022",
+      "valid": true,
+      "excelCode": "General\u0022 d\u0022",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5 d",
+      "durationText": "1.5 d"
+    },
+    {
+      "code": "General \\d",
+      "valid": true,
+      "excelCode": "General \\d",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5 d",
+      "durationText": "1.5 d"
+    },
+    {
+      "code": "0!d",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "0.00;@",
+      "valid": true,
+      "excelCode": "0.00;@",
+      "category": "F2",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50",
+      "durationText": "1.50"
+    },
+    {
+      "code": "#\u0022 \u0022?/2",
+      "valid": true,
+      "excelCode": "#\u0022 \u0022?/2",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306 1/2",
+      "durationText": "1 1/2"
+    },
+    {
+      "code": "?/??",
+      "valid": true,
+      "excelCode": "?/??",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "90613/2 ",
+      "durationText": "3/2 "
+    },
+    {
+      "code": "0.0%;-0.0%;\u0022-\u0022",
+      "valid": true,
+      "excelCode": "0.0%;-0.0%;\u0022-\u0022",
+      "category": "P1",
+      "date": false,
+      "durationDate": false,
+      "text": "4530650.0%",
+      "durationText": "150.0%"
+    },
+    {
+      "code": "0;0;0;\u0022text \u0022@",
+      "valid": true,
+      "excelCode": "0;0;0;\u0022text \u0022@",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "[s]0",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "0[h]",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "[hh0]0",
+      "valid": false,
+      "excelCode": null,
+      "category": null,
+      "date": null,
+      "durationDate": null,
+      "text": null,
+      "durationText": null
+    },
+    {
+      "code": "[Red]0;[Blue]-0",
+      "valid": true,
+      "excelCode": "[Red]0;[Blue]-0",
+      "category": "F0-",
+      "date": false,
+      "durationDate": false,
+      "text": "45307",
+      "durationText": "2"
+    },
+    {
+      "code": "[=0]\u0022zero\u0022;General",
+      "valid": true,
+      "excelCode": "[=0]\u0022zero\u0022;General",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.5",
+      "durationText": "1.5"
+    },
+    {
+      "code": "0.00_);(0.00)",
+      "valid": true,
+      "excelCode": "0.00_);(0.00)",
+      "category": "F2",
+      "date": false,
+      "durationDate": false,
+      "text": "45306.50 ",
+      "durationText": "1.50 "
+    },
+    {
+      "code": "_-* #,##0_-;-* #,##0_-;_-* \u0022-\u0022_-;_-@_-",
+      "valid": true,
+      "excelCode": "_-* #,##0_-;-* #,##0_-;_-* \u0022-\u0022_-;_-@_-",
+      "category": ",0",
+      "date": false,
+      "durationDate": false,
+      "text": "                                                                                                                                                                                                           45,307 ",
+      "durationText": "                                                                                                                                                                                                                        2 "
+    },
+    {
+      "code": "# ?/8",
+      "valid": true,
+      "excelCode": "# ?/8",
+      "category": "G",
+      "date": false,
+      "durationDate": false,
+      "text": "45306 4/8",
+      "durationText": "1 4/8"
+    },
+    {
+      "code": "0 \u0022h\u0022\u0022s\u0022",
+      "valid": true,
+      "excelCode": "0 \u0022h\u0022\u0022s\u0022",
+      "category": "F0",
+      "date": false,
+      "durationDate": false,
+      "text": "45307 hs",
+      "durationText": "2 hs"
+    }
+  ],
+  "cells": [
+    {
+      "name": "id 0",
+      "id": 0,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 1",
+      "id": 1,
+      "code": null,
+      "applied": true,
+      "excelCode": "0",
+      "category": "F0",
+      "date": false,
+      "text": "45307"
+    },
+    {
+      "name": "id 2",
+      "id": 2,
+      "code": null,
+      "applied": true,
+      "excelCode": "0.00",
+      "category": "F2",
+      "date": false,
+      "text": "45306.50"
+    },
+    {
+      "name": "id 3",
+      "id": 3,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0",
+      "category": ",0",
+      "date": false,
+      "text": "45,307"
+    },
+    {
+      "name": "id 4",
+      "id": 4,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0.00",
+      "category": ",2",
+      "date": false,
+      "text": "45,306.50"
+    },
+    {
+      "name": "id 5",
+      "id": 5,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0_);($#,##0)",
+      "category": "C0",
+      "date": false,
+      "text": "$45,307 "
+    },
+    {
+      "name": "id 6",
+      "id": 6,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0_);[Red]($#,##0)",
+      "category": "C0-",
+      "date": false,
+      "text": "$45,307 "
+    },
+    {
+      "name": "id 7",
+      "id": 7,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0.00_);($#,##0.00)",
+      "category": "C2",
+      "date": false,
+      "text": "$45,306.50 "
+    },
+    {
+      "name": "id 8",
+      "id": 8,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0.00_);[Red]($#,##0.00)",
+      "category": "C2-",
+      "date": false,
+      "text": "$45,306.50 "
+    },
+    {
+      "name": "id 9",
+      "id": 9,
+      "code": null,
+      "applied": true,
+      "excelCode": "0%",
+      "category": "P0",
+      "date": false,
+      "text": "4530650%"
+    },
+    {
+      "name": "id 10",
+      "id": 10,
+      "code": null,
+      "applied": true,
+      "excelCode": "0.00%",
+      "category": "P2",
+      "date": false,
+      "text": "4530650.00%"
+    },
+    {
+      "name": "id 11",
+      "id": 11,
+      "code": null,
+      "applied": true,
+      "excelCode": "0.00E\u002B00",
+      "category": "S2",
+      "date": false,
+      "text": "4.53E\u002B04"
+    },
+    {
+      "name": "id 12",
+      "id": 12,
+      "code": null,
+      "applied": true,
+      "excelCode": "# ?/?",
+      "category": "G",
+      "date": false,
+      "text": "45306 1/2"
+    },
+    {
+      "name": "id 13",
+      "id": 13,
+      "code": null,
+      "applied": true,
+      "excelCode": "# ??/??",
+      "category": "G",
+      "date": false,
+      "text": "45306  1/2 "
+    },
+    {
+      "name": "id 14",
+      "id": 14,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 15",
+      "id": 15,
+      "code": null,
+      "applied": true,
+      "excelCode": "d-mmm-yy",
+      "category": "D1",
+      "date": true,
+      "text": "15-Jan-24"
+    },
+    {
+      "name": "id 16",
+      "id": 16,
+      "code": null,
+      "applied": true,
+      "excelCode": "d-mmm",
+      "category": "D2",
+      "date": true,
+      "text": "15-Jan"
+    },
+    {
+      "name": "id 17",
+      "id": 17,
+      "code": null,
+      "applied": true,
+      "excelCode": "mmm-yy",
+      "category": "D3",
+      "date": true,
+      "text": "Jan-24"
+    },
+    {
+      "name": "id 18",
+      "id": 18,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm AM/PM",
+      "category": "D7",
+      "date": false,
+      "text": "12:00 PM"
+    },
+    {
+      "name": "id 19",
+      "id": 19,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss AM/PM",
+      "category": "D6",
+      "date": false,
+      "text": "12:00:00 PM"
+    },
+    {
+      "name": "id 20",
+      "id": 20,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm",
+      "category": "D9",
+      "date": false,
+      "text": "12:00"
+    },
+    {
+      "name": "id 21",
+      "id": 21,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "text": "12:00:00"
+    },
+    {
+      "name": "id 22",
+      "id": 22,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy h:mm",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024 12:00"
+    },
+    {
+      "name": "id 23",
+      "id": 23,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 24",
+      "id": 24,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 25",
+      "id": 25,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 26",
+      "id": 26,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 27",
+      "id": 27,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 28",
+      "id": 28,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 29",
+      "id": 29,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 30",
+      "id": 30,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 31",
+      "id": 31,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 32",
+      "id": 32,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "text": "12:00:00"
+    },
+    {
+      "name": "id 33",
+      "id": 33,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "text": "12:00:00"
+    },
+    {
+      "name": "id 34",
+      "id": 34,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "text": "12:00:00"
+    },
+    {
+      "name": "id 35",
+      "id": 35,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "text": "12:00:00"
+    },
+    {
+      "name": "id 36",
+      "id": 36,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 37",
+      "id": 37,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0_);(#,##0)",
+      "category": ",0",
+      "date": false,
+      "text": "45,307 "
+    },
+    {
+      "name": "id 38",
+      "id": 38,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0_);[Red](#,##0)",
+      "category": ",0-",
+      "date": false,
+      "text": "45,307 "
+    },
+    {
+      "name": "id 39",
+      "id": 39,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0.00_);(#,##0.00)",
+      "category": ",2",
+      "date": false,
+      "text": "45,306.50 "
+    },
+    {
+      "name": "id 40",
+      "id": 40,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0.00_);[Red](#,##0.00)",
+      "category": ",2-",
+      "date": false,
+      "text": "45,306.50 "
+    },
+    {
+      "name": "id 41",
+      "id": 41,
+      "code": null,
+      "applied": true,
+      "excelCode": "_(* #,##0_);_(* (#,##0);_(* \u0022-\u0022_);_(@_)",
+      "category": ",0",
+      "date": false,
+      "text": "                                                                                                                                                                   45,307 "
+    },
+    {
+      "name": "id 42",
+      "id": 42,
+      "code": null,
+      "applied": true,
+      "excelCode": "_($* #,##0_);_($* (#,##0);_($* \u0022-\u0022_);_(@_)",
+      "category": "C0",
+      "date": false,
+      "text": " $                                                                                                                                                               45,307 "
+    },
+    {
+      "name": "id 43",
+      "id": 43,
+      "code": null,
+      "applied": true,
+      "excelCode": "_(* #,##0.00_);_(* (#,##0.00);_(* \u0022-\u0022??_);_(@_)",
+      "category": ",2",
+      "date": false,
+      "text": "                                                                                                                                                             45,306.50 "
+    },
+    {
+      "name": "id 44",
+      "id": 44,
+      "code": null,
+      "applied": true,
+      "excelCode": "_($* #,##0.00_);_($* (#,##0.00);_($* \u0022-\u0022??_);_(@_)",
+      "category": "C2",
+      "date": false,
+      "text": " $                                                                                                                                                          45,306.50 "
+    },
+    {
+      "name": "id 45",
+      "id": 45,
+      "code": null,
+      "applied": true,
+      "excelCode": "mm:ss",
+      "category": "G",
+      "date": false,
+      "text": "00:00"
+    },
+    {
+      "name": "id 46",
+      "id": 46,
+      "code": null,
+      "applied": true,
+      "excelCode": "[h]:mm:ss",
+      "category": "G",
+      "date": false,
+      "text": "1087356:00:00"
+    },
+    {
+      "name": "id 47",
+      "id": 47,
+      "code": null,
+      "applied": true,
+      "excelCode": "mm:ss.0",
+      "category": "G",
+      "date": false,
+      "text": "00:00.0"
+    },
+    {
+      "name": "id 48",
+      "id": 48,
+      "code": null,
+      "applied": true,
+      "excelCode": "##0.0E\u002B0",
+      "category": "S1",
+      "date": false,
+      "text": "45.3E\u002B3"
+    },
+    {
+      "name": "id 49",
+      "id": 49,
+      "code": null,
+      "applied": true,
+      "excelCode": "@",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 50",
+      "id": 50,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 51",
+      "id": 51,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 52",
+      "id": 52,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 53",
+      "id": 53,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 54",
+      "id": 54,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 55",
+      "id": 55,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 56",
+      "id": 56,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 57",
+      "id": 57,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 58",
+      "id": 58,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 59",
+      "id": 59,
+      "code": null,
+      "applied": true,
+      "excelCode": "0",
+      "category": "F0",
+      "date": false,
+      "text": "45307"
+    },
+    {
+      "name": "id 60",
+      "id": 60,
+      "code": null,
+      "applied": true,
+      "excelCode": "0.00",
+      "category": "F2",
+      "date": false,
+      "text": "45306.50"
+    },
+    {
+      "name": "id 61",
+      "id": 61,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0",
+      "category": ",0",
+      "date": false,
+      "text": "45,307"
+    },
+    {
+      "name": "id 62",
+      "id": 62,
+      "code": null,
+      "applied": true,
+      "excelCode": "#,##0.00",
+      "category": ",2",
+      "date": false,
+      "text": "45,306.50"
+    },
+    {
+      "name": "id 63",
+      "id": 63,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0_);($#,##0)",
+      "category": "C0",
+      "date": false,
+      "text": "$45,307 "
+    },
+    {
+      "name": "id 64",
+      "id": 64,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0_);[Red]($#,##0)",
+      "category": "C0-",
+      "date": false,
+      "text": "$45,307 "
+    },
+    {
+      "name": "id 65",
+      "id": 65,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0.00_);($#,##0.00)",
+      "category": "C2",
+      "date": false,
+      "text": "$45,306.50 "
+    },
+    {
+      "name": "id 66",
+      "id": 66,
+      "code": null,
+      "applied": true,
+      "excelCode": "$#,##0.00_);[Red]($#,##0.00)",
+      "category": "C2-",
+      "date": false,
+      "text": "$45,306.50 "
+    },
+    {
+      "name": "id 67",
+      "id": 67,
+      "code": null,
+      "applied": true,
+      "excelCode": "0%",
+      "category": "P0",
+      "date": false,
+      "text": "4530650%"
+    },
+    {
+      "name": "id 68",
+      "id": 68,
+      "code": null,
+      "applied": true,
+      "excelCode": "0.00%",
+      "category": "P2",
+      "date": false,
+      "text": "4530650.00%"
+    },
+    {
+      "name": "id 69",
+      "id": 69,
+      "code": null,
+      "applied": true,
+      "excelCode": "# ?/?",
+      "category": "G",
+      "date": false,
+      "text": "45306 1/2"
+    },
+    {
+      "name": "id 70",
+      "id": 70,
+      "code": null,
+      "applied": true,
+      "excelCode": "# ??/??",
+      "category": "G",
+      "date": false,
+      "text": "45306  1/2 "
+    },
+    {
+      "name": "id 71",
+      "id": 71,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 72",
+      "id": 72,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 73",
+      "id": 73,
+      "code": null,
+      "applied": true,
+      "excelCode": "d-mmm-yy",
+      "category": "D1",
+      "date": true,
+      "text": "15-Jan-24"
+    },
+    {
+      "name": "id 74",
+      "id": 74,
+      "code": null,
+      "applied": true,
+      "excelCode": "d-mmm",
+      "category": "D2",
+      "date": true,
+      "text": "15-Jan"
+    },
+    {
+      "name": "id 75",
+      "id": 75,
+      "code": null,
+      "applied": true,
+      "excelCode": "mmm-yy",
+      "category": "D3",
+      "date": true,
+      "text": "Jan-24"
+    },
+    {
+      "name": "id 76",
+      "id": 76,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm",
+      "category": "D9",
+      "date": false,
+      "text": "12:00"
+    },
+    {
+      "name": "id 77",
+      "id": 77,
+      "code": null,
+      "applied": true,
+      "excelCode": "h:mm:ss",
+      "category": "D8",
+      "date": false,
+      "text": "12:00:00"
+    },
+    {
+      "name": "id 78",
+      "id": 78,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy h:mm",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024 12:00"
+    },
+    {
+      "name": "id 79",
+      "id": 79,
+      "code": null,
+      "applied": true,
+      "excelCode": "mm:ss",
+      "category": "G",
+      "date": false,
+      "text": "00:00"
+    },
+    {
+      "name": "id 80",
+      "id": 80,
+      "code": null,
+      "applied": true,
+      "excelCode": "[h]:mm:ss",
+      "category": "G",
+      "date": false,
+      "text": "1087356:00:00"
+    },
+    {
+      "name": "id 81",
+      "id": 81,
+      "code": null,
+      "applied": true,
+      "excelCode": "mm:ss.0",
+      "category": "G",
+      "date": false,
+      "text": "00:00.0"
+    },
+    {
+      "name": "id 82",
+      "id": 82,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 83",
+      "id": 83,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 84",
+      "id": 84,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 85",
+      "id": 85,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 86",
+      "id": 86,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 87",
+      "id": 87,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 88",
+      "id": 88,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 89",
+      "id": 89,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 90",
+      "id": 90,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 91",
+      "id": 91,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 92",
+      "id": 92,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 93",
+      "id": 93,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 94",
+      "id": 94,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 95",
+      "id": 95,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 96",
+      "id": 96,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 97",
+      "id": 97,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 98",
+      "id": 98,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 99",
+      "id": 99,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 100",
+      "id": 100,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 101",
+      "id": 101,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 102",
+      "id": 102,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 103",
+      "id": 103,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 104",
+      "id": 104,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 105",
+      "id": 105,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 106",
+      "id": 106,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 107",
+      "id": 107,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 108",
+      "id": 108,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 109",
+      "id": 109,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 110",
+      "id": 110,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 111",
+      "id": 111,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 112",
+      "id": 112,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 113",
+      "id": 113,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 114",
+      "id": 114,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 115",
+      "id": 115,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 116",
+      "id": 116,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 117",
+      "id": 117,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 118",
+      "id": 118,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 119",
+      "id": 119,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 120",
+      "id": 120,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 121",
+      "id": 121,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 122",
+      "id": 122,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 123",
+      "id": 123,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 124",
+      "id": 124,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 125",
+      "id": 125,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 126",
+      "id": 126,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 127",
+      "id": 127,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 128",
+      "id": 128,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 129",
+      "id": 129,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 130",
+      "id": 130,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 131",
+      "id": 131,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 132",
+      "id": 132,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 133",
+      "id": 133,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 134",
+      "id": 134,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 135",
+      "id": 135,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 136",
+      "id": 136,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 137",
+      "id": 137,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 138",
+      "id": 138,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 139",
+      "id": 139,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 140",
+      "id": 140,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 141",
+      "id": 141,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 142",
+      "id": 142,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 143",
+      "id": 143,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 144",
+      "id": 144,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 145",
+      "id": 145,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 146",
+      "id": 146,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 147",
+      "id": 147,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 148",
+      "id": 148,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 149",
+      "id": 149,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 150",
+      "id": 150,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 151",
+      "id": 151,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 152",
+      "id": 152,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 153",
+      "id": 153,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 154",
+      "id": 154,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 155",
+      "id": 155,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 156",
+      "id": 156,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 157",
+      "id": 157,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 158",
+      "id": 158,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 159",
+      "id": 159,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 160",
+      "id": 160,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 161",
+      "id": 161,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 162",
+      "id": 162,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "id 163",
+      "id": 163,
+      "code": null,
+      "applied": true,
+      "excelCode": "General",
+      "category": "G",
+      "date": false,
+      "text": "45306.5"
+    },
+    {
+      "name": "custom date",
+      "id": 200,
+      "code": "yyyy-mm-dd",
+      "applied": true,
+      "excelCode": "yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "text": "2024-01-15"
+    },
+    {
+      "name": "custom date, applyNumberFormat=0",
+      "id": 200,
+      "code": "yyyy-mm-dd",
+      "applied": false,
+      "excelCode": "yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "text": "2024-01-15"
+    },
+    {
+      "name": "id 14, applyNumberFormat=0",
+      "id": 14,
+      "code": null,
+      "applied": false,
+      "excelCode": "m/d/yyyy",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024"
+    },
+    {
+      "name": "id 2, applyNumberFormat=0",
+      "id": 2,
+      "code": null,
+      "applied": false,
+      "excelCode": "0.00",
+      "category": "F2",
+      "date": false,
+      "text": "45306.50"
+    },
+    {
+      "name": "id 14 defined as 0.00",
+      "id": 14,
+      "code": "0.00",
+      "applied": true,
+      "excelCode": "0.00",
+      "category": "F2",
+      "date": false,
+      "text": "45306.50"
+    },
+    {
+      "name": "id 2 defined as yyyy-mm-dd",
+      "id": 2,
+      "code": "yyyy-mm-dd",
+      "applied": true,
+      "excelCode": "yyyy-mm-dd",
+      "category": "G",
+      "date": true,
+      "text": "2024-01-15"
+    },
+    {
+      "name": "id 46 defined as 0.00",
+      "id": 46,
+      "code": "0.00",
+      "applied": true,
+      "excelCode": "0.00",
+      "category": "F2",
+      "date": false,
+      "text": "45306.50"
+    },
+    {
+      "name": "id 22, not defined",
+      "id": 22,
+      "code": null,
+      "applied": true,
+      "excelCode": "m/d/yyyy h:mm",
+      "category": "D4",
+      "date": true,
+      "text": "1/15/2024 12:00"
+    }
+  ]
+}

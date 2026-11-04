@@ -12,9 +12,15 @@ namespace CsvHelper.Excel;
 /// in each style. It is immutable once loaded, so the readers of a workbook share it.
 /// </summary>
 /// <remarks>
+/// <para>
 /// A workbook without a styles part has only the General format, as does an <c>s</c> past the cell formats: that cell
-/// gets the first cell format's. For now every style's number kind is <see cref="SheetCellKind.Number"/>; typed reading
-/// makes the date formats <see cref="SheetCellKind.DateNumber"/>.
+/// gets the first cell format's.
+/// </para>
+/// <para>
+/// A style's number kind comes from its format (<see cref="NumberFormats"/>): a code that <c>numFmts</c> defines, even
+/// for a built-in id, as Excel reads it, else the built-in format of the id. A cell format's <c>applyNumberFormat</c>
+/// is ignored, as Excel ignores it.
+/// </para>
 /// </remarks>
 internal sealed class StyleTable
 {
@@ -30,7 +36,18 @@ internal sealed class StyleTable
 		this.numberFormatIds = numberFormatIds;
 		this.formatCodes = formatCodes;
 		numberKinds = new SheetCellKind[numberFormatIds.Length];
-		numberKinds.AsSpan().Fill(SheetCellKind.Number);
+		var kinds = new Dictionary<int, SheetCellKind>();
+		for (var i = 0; i < numberFormatIds.Length; i++)
+		{
+			var id = numberFormatIds[i];
+			if (!kinds.TryGetValue(id, out var kind))
+			{
+				kind = formatCodes.TryGetValue(id, out var code) ? NumberFormats.Classify(code) : NumberFormats.BuiltIn(id);
+				kinds.Add(id, kind);
+			}
+
+			numberKinds[i] = kind;
+		}
 	}
 
 	/// <summary>The styles of a workbook without a styles part: only General.</summary>
@@ -51,7 +68,10 @@ internal sealed class StyleTable
 
 	/// <summary>The kind of a number cell in a style.</summary>
 	/// <param name="style">The cell's <c>s</c>: an index into the cell formats.</param>
-	/// <returns><see cref="SheetCellKind.Number"/>, or (from typed reading) <see cref="SheetCellKind.DateNumber"/> for a date format.</returns>
+	/// <returns>
+	/// <see cref="SheetCellKind.DateNumber"/> for a date or time format, <see cref="SheetCellKind.Duration"/> for elapsed
+	/// time, otherwise <see cref="SheetCellKind.Number"/>.
+	/// </returns>
 	public SheetCellKind NumberKind(int style) => numberKinds.Length == 0 ? SheetCellKind.Number : numberKinds[Clamp(style)];
 
 	/// <summary>Reads a workbook's styles part.</summary>
