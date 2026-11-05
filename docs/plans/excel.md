@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04; see "As built" under Phase 3.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, and step 4 (merged cells) built that day; see "As built" under Phase 3.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -2584,7 +2584,7 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
 
 ### Phase 3: choosing what to read, and messy sheets (L)
 
-Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
+Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, and step 4 built that day; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
 
 Scope, as planned:
 
@@ -2752,7 +2752,7 @@ public sealed class ExcelWorkbook
 - The fill comes first: a top-left cell above or left of the area, or in a hidden row or column, still fills the area's visible cells. Rows the file leaves out inside a merged range are records once they are filled.
 - A range whose top-left cell has no value fills with nothing.
 - **Cost:** `<mergeCells>` comes after `<sheetData>`, so `OpenReader` reads the sheet's part through once to find it, before the reader reads it again. That second inflate counts toward `MaxUncompressedSize`, and the ranges toward `MaxPartSize`. "Benchmark" measures its time.
-- Overlapping ranges, which Excel can't open, throw `CsvFormatException` from `OpenReader`.
+- Overlapping ranges, which Excel can't open, throw `CsvFormatException` from `OpenReader`. (Changed at step 4, from COM checks:) so do the `ref` values Excel can't open: none, empty, with white space around it, with a sheet's name, a list, or a cell outside the grid. A one-cell range inside another overlaps it, as Excel reads it. So does XML that can't be read anywhere in the sheet, which the first read finds.
 
 **Metadata:**
 
@@ -2822,6 +2822,8 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
   - Excel writes a merged range's other cells as empty cells with the top-left cell's style, and the ranges in `<mergeCells>`, after `sheetData` (and after `autoFilter`, before `pageMargins`).
   - A hand-written file with values in a range's other cells opens. `Value2` and `Text` give each cell's own value, while the sheet shows the range as its top-left cell. A range whose top-left cell is empty reads the same way.
   - Excel can't open a file whose ranges overlap, even repairing it. It accepts a one-cell range.
+  - (Added at step 4, with 28 hand-written files opened read-only:) Excel can't open a `mergeCell` without `ref`, or whose `ref` is empty, has white space around it (` A1:B2 `, or a tab by reference), names a sheet (`S!A1:B2`), is a list (`A1:B2 C3:D4`), or names a cell outside the grid (`A1:XFE2`, `A0:B2`). Nor a one-cell range inside another (`B2` or `B2:B2` with `A1:B2`), the same range twice, `mergeCells` before `sheetData`, two `mergeCells`, or `<mergeCells/>`.
+  - It takes lowercase (`a1:b2`), `$`, reversed corners (`B2:A1`), whole columns (`A:B`) and rows (`1:2`), references by entity (`&#65;1:B2`), leading zeros (`A01:B02`), and `A1:XFD1048576`, which it shows as `1:1048576`. It ignores elements inside a `mergeCell`, other elements inside `mergeCells`, and a wrong `count`. Ranges that touch are fine.
 - **Defined names:**
   - A sheet's own name has a `localSheetId`: the sheet's index in tab order, chartsheets counted (a name of the second sheet, after a chartsheet, was 1).
   - Built-in names are `_xlnm.Print_Area`, and `_xlnm._FilterDatabase`, hidden, which COM shows as `Messy!Print_Area`.
@@ -2844,7 +2846,7 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
 - `Internal/Sheet/SheetArea.cs`: what a reader reads: its sheet, its rows and columns, and where its header comes from.
 - `Internal/Sheet/SheetLayout.cs`: fields from columns: the area's bounds, hidden columns and the header's clip, and the field-to-column map that `Locate` uses.
 - `Internal/Sheet/HiddenColumns.cs`: a 16,384-bit set, from `<cols>` and `sheetFormatPr`.
-- `Internal/Sheet/MergedCells.cs`: the ranges, the read that finds them, and the fill state the scanner keeps.
+- `Internal/Sheet/MergedCells.cs`: the ranges, the read that finds them, and the fill state the scanner keeps. (Changed at step 4: the fill state is `Internal/Sheet/MergedFill.cs`.)
 - `Internal/Sheet/HeaderSearch.cs`: the search, with the capturing target it fills and the one-record source its probe readers read.
 - `Internal/Sheet/SheetDimension.cs`: reads `<dimension>` from the start of a sheet's part.
 
@@ -2888,14 +2890,14 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
 
 - **Finding them** (`MergedCells.LoadAsync`, sync or async): a second stream of the sheet's part, with its own `XmlScanner`.
   - It checks the root, skips `sheetData` (`TrySkipTo`, whose skipping of text keeps the window small), reads each `mergeCells/mergeCell/@ref`, and stops after `</mergeCells>`, or at the root's end.
-  - A `ref` that isn't a block throws `CsvFormatException` for the sheet, as its other content does. One-cell ranges are dropped.
-  - Each range counts 16 bytes toward `MaxPartSize`: "The merged cells of xl/worksheets/sheet1.xml take more than ExcelReaderOptions.MaxPartSize (N bytes)."
-  - The ranges are sorted by first row, then column, and a sweep over them finds overlaps: "Sheet Messy can't be read at byte N of xl/worksheets/sheet1.xml: its merged cells A1:B2 and B2:C3 overlap."
+  - A `ref` that isn't a block throws `CsvFormatException` for the sheet, as its other content does. One-cell ranges are dropped. (Changed at step 4: after the overlap check, since Excel refuses a one-cell range inside another; and a `ref` with white space around it is no block either.)
+  - Each range counts 16 bytes toward `MaxPartSize`: "The merged cells of xl/worksheets/sheet1.xml take more than ExcelReaderOptions.MaxPartSize (N bytes)." (Changed at step 4: 20 bytes, its bounds and its place in the order the ranges end.)
+  - The ranges are sorted by first row, then column, and a sweep over them finds overlaps: "Sheet Messy can't be read at byte N of xl/worksheets/sheet1.xml: its merged cells A1:B2 and B2:C3 overlap." (N is the offset of `mergeCells`.)
 - **Filling** (the scanner's `MergedCells` state):
   - Ranges become active at their first row and end after their last, in row order. The active ones are kept by column.
   - When the scanner reads a range's top-left cell, in any row, even one it otherwise skips, it copies the cell's field (bytes and kind) into the state's byte store.
-  - In a row, cells and fills merge in column order. A cell inside an active range, other than its top-left, is skipped unread. Each fill is the top-left cell's field, added at its column's field (through the layout), and counts its bytes toward `MaxUncompressedSize`, as a shared string beyond its cell does (Phase 2's step 8).
-  - A row the file lacks inside an active range with a value is written as a record of its fills. So are rows after the last one the file has, while ranges go on. Each such record counts as a missing row does.
+  - In a row, cells and fills merge in column order. A cell inside an active range, other than its top-left, is skipped unread. Each fill is the top-left cell's field, added at its column's field (through the layout), and counts its bytes toward `MaxUncompressedSize`, as a shared string beyond its cell does (Phase 2's step 8). (Changed at step 4: at least 1 byte, as an empty field does, and the top-left cell's own field is counted as any cell is, not again.)
+  - A row the file lacks inside an active range with a value is written as a record of its fills. So are rows after the last one the file has, while ranges go on. Each such record counts as a missing row does. (Added at step 4: with empty rows kept, the rows between those are empty records, up to the last filled row.)
   - The store holds one field per active range; a range that ends frees its field.
 
 **The header search** (`HeaderSearch.RunAsync`, sync or async):
@@ -3304,6 +3306,100 @@ Filled in step by step; the code is the reference.
   - "rows' hidden state read when not skipping": 9;
   - "no layout for a whole sheet": 14.
 - **Core:** no change. The solution builds with 0 warnings. The new tests on the per-row path (a row's other attributes are tested against `skipHiddenRows`, and `EndRow` tests `rowHidden`) are measured with step 2's at step 8; the per-cell path of a whole sheet that skips nothing is unchanged.
+
+**Step 4, merged cells** (built 2026-11-04, committed 2026-11-05):
+
+- **New files:**
+  - `Internal/Sheet/MergedCells.cs`, as designed: the read that finds the ranges (`LoadAsync` over the package, `ReadAsync` over a part's scanner), Excel's checks, and the ranges sorted by first row and then column, with their order by last row (`Ends`).
+  - `Internal/Sheet/MergedFill.cs`, which the design put in `MergedCells.cs`: the fill state (`MergedFill`), its sets of a bit per field (`FieldBits`), and `MergedCapture`, the `IRecordTarget` that reads a top-left cell into its range's store.
+- **Changed:**
+  - `ExcelReaderOptions.FillMergedCells`, with no checks.
+  - `ExcelWorkbook.OpenReader` finds the ranges first when the option is set, and gives them to the scanner.
+  - `SheetLayout.TryGetFields`: the fields a block of columns becomes, which are consecutive since the fields are the shown columns in order; with hidden columns, through a count of the shown columns before each.
+  - `SheetScanner`:
+    - it takes the ranges, and makes the fill state from the final layout when the rows begin; ranges that fill no field leave none;
+    - `ReadsUnwritten` also reads a row above the area, or hidden, when a range that fills fields starts in it;
+    - in a cell: a range's top-left cell goes to `CaptureCell`; a field that an open range covers goes through `SkipCell`; any other field writes the fills before it first (`AddFills`);
+    - `EndRow` writes the rest of a row's fills;
+    - `FlushGaps` writes a missing row that an open range with a value covers as a record of fills (`WriteFilledRow`), and skips the rest of a gap when no open range has a value; `SetRow` keeps track of gaps with fills on even when empty rows are skipped;
+    - a new mode, `Tail`, when the rows end or a row below the area comes, writes the rows after the last one read that ranges fill, up to the area's last row.
+- **Decisions made while building:**
+  - **As strict as Excel** (a design change, from 28 hand-written files opened in Excel; see "Checked on 2026-11-04"):
+    - A `ref` Excel can't open throws `CsvFormatException` at the `mergeCell`'s byte: "Sheet Data can't be read at byte N of xl/worksheets/sheet1.xml: the attribute ref=\" A1:B2 \" of a mergeCell is not a block of cells, such as A1:B2." Or "... a mergeCell has no ref."
+    - White space around a `ref` is refused before it is parsed, since `AreaReference` trims it.
+    - One-cell ranges take part in the overlap check, then fill nothing.
+  - **Which `mergeCells`:** the first among the root's children, wherever it is; reading stops after it. Excel opens no file with it before `sheetData`, or with two of them.
+  - **The overlap message's byte** is the offset of `mergeCells`. A range's own offset is gone after sorting, and keeping it would cost 8 bytes a range.
+  - **XML errors:** the first read passes over every tag of the sheet. So with the option on, XML that can't be read anywhere in the sheet throws from `OpenReader`, as the sheet's `CsvFormatException` without a cell, rather than from the read that reaches it, with its cell. The pass doesn't read attributes, so an attribute that can't be read is still reported by the reader, with its cell.
+  - **20 bytes a range** toward `MaxPartSize` (the design said 16): its bounds, an `ExcelRange`, and its place in `Ends`.
+  - **Which ranges fill:** those of more than one cell whose rows meet the area's and that have a column that is a field. A range's fields are one run, kept at the run's first field; ranges open at once don't overlap, so neither do their runs.
+  - **A row costs its cells and fills, not its open ranges:**
+    - Ranges open and close by walking the two orders.
+    - Each set of a bit per field (16,384 bits in words of 64, with a summary bit per word) finds the run a field is in (the last run start at or before it) and the next run with a value, in a few word tests.
+    - Ranges whose top-left cell has no value aren't in the set the fills are found in.
+  - **Counting:** each fill counts its bytes toward `MaxUncompressedSize` before it is written, at least 1 as an empty field does. The top-left cell's own field, in its first row, counts as its cell does: its XML, and a shared string's bytes beyond it. A filled missing row counts 1 more, as a missing row does.
+  - **The top-left cell is read wherever it is** (`CaptureCell`): outside the area's columns, in a hidden column, or in a row above the area or hidden, which is then read for it. `CaptureCell` is a copy of `ReadCell`'s value loop, as `SkipCell` is, so that `ReadCell`'s path gains no test; it writes through `MergedCapture`, with the row's field count kept as it was. When the cell's own column is a field, its field is written from the store with the rest of the run.
+  - **Cells a range covers** go through `SkipCell`: with formulas read as text, they still define their shared formulas, and their order is still checked.
+  - **Rows after the file's last row** in the area are records while a range with a value covers them. With empty rows kept, the rows between those are empty records, up to the last filled row, and none after it. A row below the area ends the reading once the filled rows before it are written.
+  - **A sheet that hides the rows it lacks** has no filled missing rows when hidden rows are skipped: they are hidden.
+- **Tests** (66 new per target: 1,358 on net10.0 and net8.0, 1,330 on net48; all passing):
+  - **`MergedCellsTests`** (35), in every scan mode:
+    - Excel's shape, and the order of the ranges' ends;
+    - the 10 references Excel opens and the 9 it can't, from the COM checks, and a `mergeCell` without `ref`;
+    - what Excel ignores, prefixes and the strict namespace, and sheets without ranges;
+    - sorting; 7 overlaps among other ranges (the same range twice, one-cell ranges inside, whole columns and rows); ranges that touch;
+    - stopping after `</mergeCells>`: a one-byte stream delivers exactly up to its end, with broken XML after it;
+    - the limit, at and one past; and XML errors for the sheet.
+  - **`MergedScannerTests`** (18), in every sheet mode:
+    - fills across, down and both, other cells' values dropped, and the same sheet without the option; fills in column order among a row's cells;
+    - top-left cells left of and above the area, and a range past its end, with formulas as text too;
+    - top-left cells in hidden rows and columns, with each option;
+    - top-left cells valueless, absent, or an empty shared string;
+    - missing rows filled before and after the file's last row, with empty rows kept, and in areas; a sheet that hides the rows it lacks; the area's end after filled rows, one record per fill;
+    - ranges that fill nothing: one cell, outside the area, or only in hidden columns;
+    - kinds and formulas, with a shared formula defined in a cell a range covers; whole columns and rows; fields past 64 and at the last two columns; a held record;
+    - errors' cells after fills;
+    - fills counted to the byte (text, empty and shared string top-left cells, filled missing rows), and the limit at and one past.
+  - **`SheetScannerComparisonTests.MatchesTheReferenceWithMergedCells`:** the 100 generated sheets with merged ranges (some of one cell, in lowercase, with `$`, or with their corners reversed), with and without hidden cells and areas, in all 16 modes, with empty rows skipped and kept, against the reference model. The model now reads the sheet as a grid in which each cell of a range has its top-left cell's value; the other tests' generated sheets are unchanged.
+  - **`MergedReadingTests`** (6), sync and async, through the public API:
+    - a report's regions through `GetRecords<T>`, dynamic records, `CsvDataReader`, `Query<T>()`, `ParallelEnumerate`, a whole sheet and `ExcelReader`, and the same without the option;
+    - rows the file lacks, with their lines;
+    - overlapping ranges refused when the reader opens, and read without the option;
+    - errors naming `Report!D7` after a fill, in `GetRecords<T>`, `OnRecordError` and `ParallelEnumerate`;
+    - the second read of the sheet counted: a limit the sheet passes once fails with fills;
+    - a sheet without ranges, read as without the option.
+  - `CellReading` gained `FillMergedCells` and `Merged`; `Sheets` gained `FindMergedCells`, and `ReadPackageAsync` fills and areas.
+- **Mutation check** on net10.0: 32 bugs planned; Claude Code stopped the run after 28 because the machine ran low on memory. All 28 were caught:
+  - "overlaps not checked": 9 failures;
+  - "closed ranges' columns kept by the check": 16;
+  - "white space around a ref taken": 2;
+  - "ranges not sorted": 10;
+  - "reading goes on after the ranges": 1;
+  - "the ranges' limit not counted": 1;
+  - "XML errors not the sheet's": 1;
+  - "a mergeCell without ref skipped": 1;
+  - "covered cells read as themselves": 15;
+  - "ranges never close": 9;
+  - "top-left cells not found": 21;
+  - "rows with top-left cells not read when otherwise skipped": 4;
+  - "no rows filled after the file's last": 11;
+  - "earlier words not searched for a run's start": 1;
+  - "later words not searched for a fill": 1;
+  - "fills written only at the row's end": 15;
+  - "covered cells written": 15;
+  - "missing rows not filled": 13;
+  - "hidden missing rows filled": 2;
+  - "no rows filled after the sheet's rows end": 9;
+  - "no rows filled before a row below the area": 3;
+  - "filled rows past the area": 5;
+  - "rows above the area and hidden ones not read for top-left cells": 4;
+  - "the top-left cell's own fill counted": 4;
+  - "empty fills counted as nothing": 2;
+  - "filled missing rows not counted": 4;
+  - "a captured cell changes the row's fields": 4;
+  - "missing rows not tracked when empty rows are skipped": 6.
+  - Not run yet: "fills from the first field each time" (stopped while it ran; the file was restored and the tests pass), "runs ignore hidden columns", "runs end at the column, not the shown field", and "the option ignored".
+- **Core:** no change. The solution builds with 0 warnings on every target. With the option on, a whole sheet that has ranges is read through `SheetLayout.Sheet`; one without any is read as with the option off, after the first read through it. Step 8 measures both.
 
 ### Phase 4: writer foundation (L)
 

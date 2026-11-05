@@ -34,9 +34,10 @@ public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 /// <param name="held">A record to write before the rows, or <see langword="null"/>.</param>
 /// <param name="skipHiddenRows">Whether hidden rows are no records.</param>
 /// <param name="skipHiddenColumns">Whether hidden columns are no fields.</param>
+/// <param name="fillMergedCells">Whether merged ranges' cells read as their top-left cells: the part is read once first for its ranges.</param>
 internal sealed class CellReading(
 	StyleTable? styles = null, bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue,
-	SheetLayout? layout = null, HeldRecord? held = null, bool skipHiddenRows = false, bool skipHiddenColumns = false)
+	SheetLayout? layout = null, HeldRecord? held = null, bool skipHiddenRows = false, bool skipHiddenColumns = false, bool fillMergedCells = false)
 {
 	/// <summary>The area read, or <see langword="null"/> for the whole sheet.</summary>
 	public SheetLayout? Layout => layout;
@@ -49,6 +50,19 @@ internal sealed class CellReading(
 
 	/// <summary>Whether hidden columns are no fields.</summary>
 	public bool SkipHiddenColumns => skipHiddenColumns;
+
+	/// <summary>Whether merged ranges' cells read as their top-left cells.</summary>
+	public bool FillMergedCells => fillMergedCells;
+
+	/// <summary>Reads with merged cells filled, in an area, with hidden rows and columns skipped as <paramref name="rows"/> and <paramref name="columns"/> say.</summary>
+	/// <param name="area">The area, such as <c>B2:D4</c>, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="rows">Whether hidden rows are no records.</param>
+	/// <param name="columns">Whether hidden columns are no fields.</param>
+	/// <param name="formulas">What cells with a formula read as.</param>
+	/// <param name="held">A record to write before the rows, or <see langword="null"/>.</param>
+	/// <returns>The reading.</returns>
+	public static CellReading Merged(string? area = null, bool rows = false, bool columns = false, ExcelFormulas formulas = ExcelFormulas.CachedValue, HeldRecord? held = null) =>
+		new(formulas: formulas, layout: area is null ? null : SheetLayout.Of(ExcelRange.Parse(area)), held: held, skipHiddenRows: rows, skipHiddenColumns: columns, fillMergedCells: true);
 
 	/// <summary>Reads with hidden rows and columns skipped, as <paramref name="rows"/> and <paramref name="columns"/> say.</summary>
 	/// <param name="rows">Whether hidden rows are no records.</param>
@@ -151,15 +165,30 @@ internal static class Sheets
 		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
 		var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
 		reading ??= CellReading.Default;
+		var merged = reading.FillMergedCells ? FindMergedCells(bytes, mode, sheetName, maxSize) : null;
 		var sheet = new SheetScanner(
 			scanner, sheetName, strings ?? SharedStrings.Empty, reading.Styles, skipEmptyRows, null, reading.Date1904, reading.ErrorCells, reading.Formulas, reading.Layout,
-			reading.SkipHiddenRows, reading.SkipHiddenColumns);
+			reading.SkipHiddenRows, reading.SkipHiddenColumns, merged);
 		if (reading.Held is not null)
 		{
 			sheet.HoldFirstRecord(reading.Held);
 		}
 
 		return sheet;
+	}
+
+	/// <summary>Finds a part's merged ranges, reading it through as <paramref name="mode"/> says, as opening a reader does.</summary>
+	/// <param name="bytes">The part.</param>
+	/// <param name="mode">How to read it.</param>
+	/// <param name="sheetName">The sheet's name.</param>
+	/// <param name="maxSize">The window's size limit, and the ranges'.</param>
+	/// <returns>The ranges, or <see langword="null"/> when the part has none.</returns>
+	public static MergedCells? FindMergedCells(byte[] bytes, ScanMode mode, string sheetName = "Data", long maxSize = 1 << 20)
+	{
+		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
+		using var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
+
+		return SyncOrAsync.Result(MergedCells.ReadAsync(scanner, sheetName, maxSize, false, CancellationToken.None));
 	}
 
 	/// <summary>Reads a sheet's records, described (<see cref="CapturedRecord.ToString"/>).</summary>
@@ -228,14 +257,20 @@ internal static class Sheets
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
 	/// <param name="sharedStrings">Whether to load the package's shared strings first, which count toward the total too.</param>
 	/// <param name="formulas">What cells with a formula read as.</param>
+	/// <param name="fillMergedCells">Whether to find the part's merged ranges first, reading it through, and fill their cells.</param>
+	/// <param name="layout">The area read, or <see langword="null"/> for the whole sheet.</param>
 	/// <returns>The records, and the workbook's uncompressed total after them.</returns>
 	public static async Task<(List<CapturedRecord> Records, long Total)> ReadPackageAsync(
-		TestPackage package, bool async, PartLimits limits, bool skipEmptyRows = true, bool sharedStrings = false, ExcelFormulas formulas = ExcelFormulas.CachedValue)
+		TestPackage package, bool async, PartLimits limits, bool skipEmptyRows = true, bool sharedStrings = false, ExcelFormulas formulas = ExcelFormulas.CachedValue,
+		bool fillMergedCells = false, SheetLayout? layout = null)
 	{
 		using var archive = await package.OpenAsync(async);
 		var strings = sharedStrings ? await Packages.Run(async, a => SharedStrings.LoadAsync(archive, "xl/sharedStrings.xml", limits, a, CancellationToken.None)) : SharedStrings.Empty;
+		var merged = fillMergedCells ? await Packages.Run(async, a => MergedCells.LoadAsync(archive, PartName, "Data", limits, a, CancellationToken.None)) : null;
 		var stream = await Packages.Run(async, a => archive.OpenPartAsync(PartName, false, limits, a, CancellationToken.None));
-		using var sheet = new SheetScanner(new XmlScanner(new XmlWindow(stream, PartName, limits.MaxPartSize)), "Data", strings, StyleTable.Empty, skipEmptyRows, stream, formulas: formulas);
+		using var sheet = new SheetScanner(
+			new XmlScanner(new XmlWindow(stream, PartName, limits.MaxPartSize)), "Data", strings, StyleTable.Empty, skipEmptyRows, stream, formulas: formulas, layout: layout,
+			mergedCells: merged);
 		var captured = new Captured(int.MaxValue);
 		await FillAllAsync(sheet, captured, async);
 

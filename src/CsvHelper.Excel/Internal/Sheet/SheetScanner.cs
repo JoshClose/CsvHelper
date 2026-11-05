@@ -69,6 +69,17 @@ namespace CsvHelper.Excel;
 /// The held first record is written then, through that layout.
 /// </para>
 /// <para>
+/// <b>Merged cells.</b> When merged cells are filled, each cell of a merged range (<see cref="MergedCells"/>) that is a
+/// field reads as the range's top-left cell, whatever it stores, as Excel shows the range (<see cref="MergedFill"/>). The
+/// top-left cell is read into the range's store wherever it is: in a row above the area or hidden (which is then read for
+/// it, as for shared formulas' definitions), outside the area's columns, or in a hidden column. The range's other cells are
+/// passed over as cells outside an area are, and its fields are written in column order among the row's cells. A range
+/// whose top-left cell has no value fills with nothing. A row the file lacks is a record when a range with a value covers
+/// it, unless the sheet hides the rows it lacks, and so are the rows after the file's last row in the area while such a
+/// range goes on. Each fill but the top-left cell's own counts its bytes, or 1 for an empty one, toward the workbook's
+/// uncompressed size, and each such missing row 1, as empty fields and missing rows do.
+/// </para>
+/// <para>
 /// <b>Fills.</b> A fill writes whole records: it ends after the row that fills the target, or at the end of the rows,
 /// and reads the window as often as it needs to in between. A cell is written only once its value is all in the window:
 /// otherwise the scanner goes back to the cell's start, refills (which keeps the cell, and grows the window for one larger
@@ -153,6 +164,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private bool keepsMissingRows;
 	// Whether the rows have begun: the layout is final, and the held record written.
 	private bool rowsBegun;
+	// The sheet's merged ranges when merged cells are filled, until the rows begin and the fill state takes them.
+	private MergedCells? mergedCells;
+	// The fill state of merged cells, from when the rows begin; null when merged cells aren't filled, or none fills a field.
+	private MergedFill? merged;
+	// Whether the rows the file lacks are hidden, when hidden rows are skipped: then no fill makes one a record.
+	private bool missingRowsHidden;
+	// The field from which the record being written has fills still to write.
+	private int fillFrom;
 
 	/// <summary>Creates the scanner of a worksheet part.</summary>
 	/// <param name="scanner">The part's XML, at its start; the sheet scanner owns it, and disposes it.</param>
@@ -167,11 +186,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <param name="layout">The area to read, or <see langword="null"/> for the whole sheet.</param>
 	/// <param name="skipHiddenRows">Whether the rows Excel hides are no records.</param>
 	/// <param name="skipHiddenColumns">Whether the columns Excel hides are no fields.</param>
-	/// <exception cref="ArgumentNullException">An argument other than <paramref name="budget"/> and <paramref name="layout"/> is <see langword="null"/>.</exception>
+	/// <param name="mergedCells">The sheet's merged ranges, to fill their cells with; <see langword="null"/> to fill none.</param>
+	/// <exception cref="ArgumentNullException">
+	/// An argument other than <paramref name="budget"/>, <paramref name="layout"/> and <paramref name="mergedCells"/> is <see langword="null"/>.
+	/// </exception>
 	public SheetScanner(
 		XmlScanner scanner, string sheetName, SharedStrings strings, StyleTable styles, bool skipEmptyRows, LimitedReadStream? budget,
 		bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue, SheetLayout? layout = null,
-		bool skipHiddenRows = false, bool skipHiddenColumns = false)
+		bool skipHiddenRows = false, bool skipHiddenColumns = false, MergedCells? mergedCells = null)
 	{
 		ArgumentNullException.ThrowIfNull(scanner);
 		ArgumentNullException.ThrowIfNull(strings);
@@ -196,8 +218,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			hiddenColumns = new HiddenColumns();
 		}
 
-		// Hidden cells are skipped through a layout: the whole sheet's, when no area is given.
-		this.layout = layout ?? (skipHiddenRows || skipHiddenColumns ? SheetLayout.Sheet : null);
+		// Hidden cells are skipped, and merged cells filled, through a layout: the whole sheet's, when no area is given.
+		this.mergedCells = mergedCells;
+		this.layout = layout ?? (skipHiddenRows || skipHiddenColumns || mergedCells is not null ? SheetLayout.Sheet : null);
 		if (this.layout is not null)
 		{
 			gapNext = Math.Max(this.layout.FirstRow, 1);
@@ -422,6 +445,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					mode = Mode.Row;
 
 					continue;
+				case Mode.Tail:
+					return Tail(target);
 				case Mode.Done:
 					return Step.Done;
 			}
@@ -471,6 +496,12 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		if (hiddenColumns is not null)
 		{
 			layout = layout!.Without(hiddenColumns);
+		}
+
+		if (mergedCells is not null)
+		{
+			merged = MergedFill.Create(mergedCells, layout!);
+			mergedCells = null;
 		}
 
 		if (held is not null)
@@ -533,8 +564,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		if (skipHiddenRows && (zeroHeight || (customHeight && zeroDefaultHeight)))
 		{
-			// The rows the file lacks are hidden, so none of them is a record.
+			// The rows the file lacks are hidden, so none of them is a record, filled or not.
 			keepsMissingRows = false;
+			missingRowsHidden = true;
 		}
 	}
 
@@ -591,27 +623,36 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 	/// <summary>
 	/// Whether a row that is no record (above the area, or hidden) is read on: when formulas read as text, for the shared
-	/// formulas its cells may define, which cells written later use. Nothing of it is written.
+	/// formulas its cells may define, which cells written later use; and when merged cells are filled and a range that
+	/// fills fields starts in it, for the range's top-left cell. Nothing of it is written.
 	/// </summary>
-	/// <returns>Whether the row is read for its shared formulas' definitions.</returns>
+	/// <returns>Whether the row is read for its shared formulas' definitions or its merged ranges' top-left cells.</returns>
 	private bool ReadsUnwritten()
 	{
-		unwritten = sharedFormulas is not null;
+		unwritten = sharedFormulas is not null || (merged is not null && merged.StartsAt(row));
 
 		return unwritten;
 	}
 
 	/// <summary>
 	/// Leaves a row that isn't in the area: one above it is skipped, its cells unread; one below it ends the sheet, so that
-	/// nothing after it is inflated. Nothing of the row has been written.
+	/// nothing after it is inflated, once the rows that merged ranges fill before it are written. Nothing of the row has
+	/// been written.
 	/// </summary>
 	/// <param name="place">Where the row is.</param>
-	/// <returns><see cref="Step.Done"/> below the area; otherwise <see cref="Step.Read"/>.</returns>
+	/// <returns><see cref="Step.Done"/> below the area, or <see cref="Step.Read"/> to write filled rows first; otherwise <see cref="Step.Read"/>.</returns>
 	private Step LeaveRow(RowPlace place)
 	{
 		if (place == RowPlace.Below)
 		{
 			cellColumn = -1;
+			if (merged is not null)
+			{
+				mode = Mode.Tail;
+
+				return Step.Read;
+			}
+
 			mode = Mode.Done;
 
 			return Step.Done;
@@ -739,10 +780,13 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		return End(target);
 	}
 
-	/// <summary>Ends the rows; a sheet without any begins them first, so that the held first record is written.</summary>
+	/// <summary>
+	/// Ends the rows; a sheet without any begins them first, so that the held first record is written. When merged cells
+	/// are filled, the rows that ranges fill after the file's last row are written first (<see cref="Tail"/>).
+	/// </summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="target">Takes the records.</param>
-	/// <returns><see cref="Step.Done"/>.</returns>
+	/// <returns><see cref="Step.Done"/>, or <see cref="Step.Read"/> to write filled rows first.</returns>
 	private Step End<TTarget>(TTarget target)
 		where TTarget : struct, IRecordTarget
 	{
@@ -751,6 +795,42 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		{
 			BeginRows(target);
 		}
+
+		if (merged is not null)
+		{
+			mode = Mode.Tail;
+
+			return Step.Read;
+		}
+
+		return Step.Done;
+	}
+
+	/// <summary>
+	/// Writes the rows after the last one read, up to the area's last, that merged ranges with a value cover, once the rows
+	/// have ended or reached the area's end: as missing rows, filled. The rows between them are written as missing rows are.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <returns><see cref="Step.Full"/> when the target fills first; otherwise <see cref="Step.Done"/>.</returns>
+	private Step Tail<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget
+	{
+		// The fill state is at the last row read, and the ranges closed during the rows written stay closed, so the last
+		// filled row is the same when a fill goes on with them.
+		var last = Math.Min(layout!.LastRow, merged!.LastFilledRow());
+		if (last > lastRow)
+		{
+			// Not up to a row below the area that ended it, whose number set the gap's end.
+			gapNext = Math.Max(gapNext, lastRow + 1);
+			gapEnd = last + 1;
+			if (!FlushGaps(target))
+			{
+				return Step.Full;
+			}
+		}
+
+		mode = Mode.Done;
 
 		return Step.Done;
 	}
@@ -791,6 +871,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		rowHidden = HiddenState.IsHiddenRow(hiding);
 		lastColumn = -1;
 		fields = 0;
+		fillFrom = 0;
 		if (number is not null)
 		{
 			SetRow(number.Value);
@@ -840,7 +921,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		row = number;
 		rowKnown = true;
-		if (keepsMissingRows)
+
+		// With merged cells filled, a missing row can be a record of fills even when empty rows are skipped.
+		if (keepsMissingRows || merged is not null)
 		{
 			gapNext = Math.Max(gapNext, lastRow + 1);
 			gapEnd = number;
@@ -848,8 +931,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
-	/// Writes the empty records of the rows missing before the current one, while the target has room. They come before
-	/// the row's first field, so a fill can end after them.
+	/// Writes the empty records of the rows missing before the current one, while the target has room, or, when merged
+	/// cells are filled, the records of their fills. They come before the row's first field, so a fill can end after them.
 	/// </summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="target">Takes the records.</param>
@@ -869,6 +952,26 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				return false;
 			}
 
+			if (merged is not null)
+			{
+				merged.Advance(gapNext);
+				if (!missingRowsHidden && merged.HasFills)
+				{
+					WriteFilledRow(target);
+					wrote = true;
+
+					continue;
+				}
+
+				if (!keepsMissingRows)
+				{
+					// No range opened in a missing row has a value, so none of the rest is filled.
+					gapNext = gapEnd;
+
+					break;
+				}
+			}
+
 			// Counted before it is written, so that the limit stops a million missing rows at the first past it.
 			Charge(1);
 			target.EndRecord(gapNext++);
@@ -877,6 +980,65 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		// When they fill the target, the row waits for the next fill. A row's fields never wait: nothing is missing then.
 		return !wrote || !target.IsFull;
+	}
+
+	/// <summary>
+	/// Writes a missing row that merged ranges with a value cover, at <see cref="gapNext"/>: a record of their fills, padded
+	/// as a row is, counted as a missing row is. The current row has no fields yet: the missing rows come before them.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the record.</param>
+	private void WriteFilledRow<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget
+	{
+		Charge(1);
+		fields = 0;
+		fillFrom = 0;
+		AddFills(target, int.MaxValue, gapNext);
+		if (width < 0)
+		{
+			width = fields;
+		}
+		else if (fields < width)
+		{
+			AddEmpty(target, width - fields);
+		}
+
+		target.EndRecord(gapNext++);
+		fields = 0;
+		fillFrom = 0;
+	}
+
+	/// <summary>
+	/// Writes the fills of the merged ranges with a value whose runs start from <see cref="fillFrom"/> up to a field, each
+	/// after an empty field for each field skipped since the row's last one: every field of a run is the range's top-left
+	/// cell's field. Each fill but the top-left cell's own counts its bytes, at least 1, toward the uncompressed size first.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the fields.</param>
+	/// <param name="before">The field the runs start before: a field the row writes next, which no run covers, or <see cref="int.MaxValue"/> for the rest.</param>
+	/// <param name="atRow">The row written.</param>
+	/// <exception cref="InvalidDataException">The fills take the workbook past its uncompressed size.</exception>
+	private void AddFills<TTarget>(TTarget target, int before, long atRow)
+		where TTarget : struct, IRecordTarget
+	{
+		var fill = merged!;
+		for (var first = fill.NextFill(fillFrom); first >= 0 && first < before; first = fill.NextFill(fillFrom))
+		{
+			var last = fill.LastField(first);
+			var value = fill.Value(first);
+			var kind = fill.Kind(first);
+			var counted = last - first + 1 - (fill.IsOwnCell(first, atRow) ? 1 : 0);
+			Charge((long)Math.Max(value.Length, 1) * counted);
+			AddGap(target, first);
+			for (var field = first; field <= last; field++)
+			{
+				target.AddField(value, kind);
+			}
+
+			fields = last + 1;
+			fillFrom = last + 1;
+		}
 	}
 
 	/// <summary>Ends a row: pads it and writes its record, or drops it when it has no value and empty rows are skipped.</summary>
@@ -909,6 +1071,13 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			mode = Mode.SheetData;
 
 			return Step.Read;
+		}
+
+		if (merged is not null)
+		{
+			// The fills after the row's last cell, or of a row without cells.
+			merged.Advance(row);
+			AddFills(target, int.MaxValue, row);
 		}
 
 		if (fields > 0)
@@ -1026,6 +1195,30 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			}
 
 			field = unwritten ? -1 : layout.FieldOf(column);
+			if (merged is not null)
+			{
+				merged.Advance(row);
+				if (merged.IsTopLeft(column))
+				{
+					// A merged range's top-left cell, wherever it is: read into the range's store, and written as its fills.
+					return CaptureCell(before, type, style, column, cellStart, preserves);
+				}
+
+				if (field >= 0)
+				{
+					if (merged.Covers(field))
+					{
+						// Another cell of an open range: it reads as the range's top-left cell, so its own value is not decoded.
+						field = -1;
+					}
+					else
+					{
+						// The fills of the fields before it come first.
+						AddFills(target, field, row);
+					}
+				}
+			}
+
 			if (field < 0)
 			{
 				// Outside the area, in a hidden column, or in a row that is no record: the cell is no field, and its value is not decoded.
@@ -1230,6 +1423,126 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				return Step.More;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Reads a merged range's top-left cell into the range's store (<see cref="MergedCapture"/>), as <see cref="ReadCell"/>
+	/// would write it into a record, once the window holds all of its value; nothing of it is written into the target. Its
+	/// value is the range's fills, which the row writes in column order; a cell without one leaves the range without fills.
+	/// </summary>
+	/// <param name="before">The scanner's state before the cell's tag, to read the cell again after a refill.</param>
+	/// <param name="type">The cell's type.</param>
+	/// <param name="style">The cell's style.</param>
+	/// <param name="column">The cell's column.</param>
+	/// <param name="cellStart">The position of the cell's tag, for errors.</param>
+	/// <param name="preserves">Whether <c>xml:space="preserve"</c> applies in the cell.</param>
+	/// <returns>What to do next.</returns>
+	/// <exception cref="CsvFormatException">A shared string index can't be read, or a shared formula's group has no definition.</exception>
+	private Step CaptureCell(XmlScannerState before, CellType type, int style, int column, int cellStart, bool preserves)
+	{
+		if (scanner.IsEmptyElement)
+		{
+			lastColumn = column;
+			cellColumn = -1;
+
+			return Step.Read;
+		}
+
+		segmentCount = 0;
+		rawLength = 0;
+		var found = false;
+		var formula = CellFormula.None;
+		var group = -1;
+		while (true)
+		{
+			if (!scanner.TryRead())
+			{
+				// Nothing of the cell is kept: read it all again once the window holds more.
+				scanner.Restore(before);
+
+				return Step.More;
+			}
+
+			var kind = scanner.Kind;
+			if (kind == XmlTokenKind.EndTag)
+			{
+				// </c>, without a value.
+				break;
+			}
+
+			if (kind != XmlTokenKind.StartTag)
+			{
+				continue;
+			}
+
+			if (scanner.IsStartTag("v"u8) || (type == CellType.InlineString && scanner.IsStartTag("is"u8)))
+			{
+				var whole = scanner.IsStartTag("v"u8) ? TryReadText(preserves) : TryReadInline(preserves);
+				if (!whole)
+				{
+					scanner.Restore(before);
+
+					return Step.More;
+				}
+
+				found = true;
+
+				break;
+			}
+
+			if (sharedFormulas is not null && scanner.IsStartTag("f"u8))
+			{
+				if (!TryReadFormula(preserves, column, cellStart, out formula, out group))
+				{
+					scanner.Restore(before);
+
+					return Step.More;
+				}
+
+				if (formula != CellFormula.None)
+				{
+					break;
+				}
+
+				continue;
+			}
+
+			// f when formulas read as their values, extLst, and anything else.
+			if (!scanner.IsEmptyElement && !scanner.TrySkipTo(scanner.Depth - 1))
+			{
+				scanner.Restore(before);
+
+				return Step.More;
+			}
+		}
+
+		lastColumn = column;
+		if (formula == CellFormula.None && !found)
+		{
+			cellColumn = -1;
+
+			return Step.Read;
+		}
+
+		// Written as a record's field would be, but with no gap before it, and the row's fields as they were.
+		var capture = new MergedCapture(merged!);
+		var rowFields = fields;
+		cellField = -1;
+		if (formula != CellFormula.None)
+		{
+			AddFormula(capture, formula, group, column, cellStart);
+		}
+		else
+		{
+			AddValue(capture, type, style, column, cellStart);
+		}
+
+		fields = rowFields;
+
+		// The rest of the cell, normally just </c>, is skipped across refills: the value is kept.
+		mode = Mode.CellRest;
+
+		return Step.Read;
 	}
 
 	/// <summary>
@@ -1912,6 +2225,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		/// <summary>Skipping an element, to go back to the mode it was skipped in.</summary>
 		Skip,
+
+		/// <summary>After the rows read: writing the rows that merged ranges fill after them, then done.</summary>
+		Tail,
 
 		/// <summary>After the rows: nothing more is read.</summary>
 		Done,

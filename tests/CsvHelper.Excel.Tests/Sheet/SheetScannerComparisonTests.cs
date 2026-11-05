@@ -133,14 +133,51 @@ public class SheetScannerComparisonTests
 		}
 	}
 
+	[Fact]
+	public async Task MatchesTheReferenceWithMergedCells()
+	{
+		var strings = Sheets.Strings(SharedTexts);
+		for (var seed = 0; seed < 100; seed++)
+		{
+			var random = new Random(seed);
+			var hidden = random.Next(2) == 0;
+			var xml = Generate(random, hidden, merged: true);
+			var rows = hidden && random.Next(3) != 0;
+			var columns = hidden && random.Next(3) != 0;
+			SheetLayout? layout = null;
+			if (random.Next(2) == 0)
+			{
+				var firstRow = random.Next(1, 8);
+				var firstColumn = random.Next(0, 4);
+				layout = new SheetLayout(firstRow, random.Next(3) == 0 ? CellReference.MaxRow : firstRow + random.Next(0, 12), firstColumn, random.Next(3) == 0 ? CellReference.MaxColumns - 1 : firstColumn + random.Next(0, 6));
+			}
+
+			foreach (var skipEmptyRows in new[] { true, false })
+			{
+				var expected = Reference(xml, skipEmptyRows, layout, rows, columns, fillMergedCells: true);
+				await Sheets.InEveryModeAsync(async mode =>
+				{
+					var reading = new CellReading(layout: layout, skipHiddenRows: rows, skipHiddenColumns: columns, fillMergedCells: true);
+					var actual = await Sheets.ReadAsync(xml, mode, skipEmptyRows, strings, reading: reading);
+
+					Assert.True(
+						expected.SequenceEqual(actual),
+						$"Seed {seed}, hidden rows {rows}, columns {columns}, area {(layout is null ? "none" : $"rows {layout.FirstRow}-{layout.LastRow} columns {layout.FirstColumn}-{layout.LastColumn}")}, skipping empty rows {skipEmptyRows}:\nexpected {string.Join("\n", expected)}\nactual {string.Join("\n", actual)}\n{xml}");
+				});
+			}
+		}
+	}
+
 	/// <summary>
 	/// Generates a sheet: rows and cells with and without references, every cell type, valueless cells and noise; with
-	/// <paramref name="hidden"/>, also <c>sheetFormatPr</c>, <c>cols</c> and rows in forms that Excel hides and forms it doesn't.
+	/// <paramref name="hidden"/>, also <c>sheetFormatPr</c>, <c>cols</c> and rows in forms that Excel hides and forms it
+	/// doesn't; with <paramref name="merged"/>, merged ranges that don't overlap, some of one cell, after <c>sheetData</c>.
 	/// </summary>
 	/// <param name="random">The source of the choices.</param>
 	/// <param name="hidden">Whether to hide rows and columns; without it, the choices are those of the sheets before hidden cells.</param>
+	/// <param name="merged">Whether to merge cells; without it, the choices are those of the sheets before merged cells.</param>
 	/// <returns>The part's XML.</returns>
-	private static string Generate(Random random, bool hidden = false)
+	private static string Generate(Random random, bool hidden = false, bool merged = false)
 	{
 		var p = random.Next(4) == 0 ? "x:" : "";
 		var ns = random.Next(5) == 0 ? TestPackage.StrictMainNamespace : TestPackage.MainNamespace;
@@ -213,7 +250,37 @@ public class SheetScannerComparisonTests
 			lastRow = row;
 		}
 
-		xml.Append(indent).Append($"</{p}sheetData><{p}pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/></{p}worksheet>");
+		xml.Append(indent).Append($"</{p}sheetData>");
+		if (merged)
+		{
+			// Ranges over the generated rows and past them, written in the forms Excel takes.
+			var ranges = new List<(int FirstRow, int FirstColumn, int LastRow, int LastColumn)>();
+			for (var tries = random.Next(0, 9); tries > 0; tries--)
+			{
+				var top = random.Next(1, 16);
+				var left = random.Next(0, 8);
+				var bottom = top + (random.Next(3) == 0 ? 0 : random.Next(0, 6));
+				var right = left + (random.Next(3) == 0 ? 0 : random.Next(0, 4));
+				if (!ranges.Any(r => r.FirstRow <= bottom && top <= r.LastRow && r.FirstColumn <= right && left <= r.LastColumn))
+				{
+					ranges.Add((top, left, bottom, right));
+				}
+			}
+
+			xml.Append($"<{p}mergeCells count=\"{ranges.Count}\">");
+			foreach (var (top, left, bottom, right) in ranges)
+			{
+				var dollar = random.Next(6) == 0 ? "$" : "";
+				var from = $"{dollar}{CellReference.ColumnName(left)}{dollar}{top}";
+				var to = $"{dollar}{CellReference.ColumnName(right)}{dollar}{bottom}";
+				var text = from == to && random.Next(2) == 0 ? from : random.Next(6) == 0 ? $"{to}:{from}" : $"{from}:{to}";
+				xml.Append($"<{p}mergeCell ref=\"{(random.Next(6) == 0 ? text.ToLowerInvariant() : text)}\"/>");
+			}
+
+			xml.Append($"</{p}mergeCells>");
+		}
+
+		xml.Append($"<{p}pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/></{p}worksheet>");
 
 		return xml.ToString();
 	}
@@ -305,15 +372,19 @@ public class SheetScannerComparisonTests
 	/// area, rows above it are left out, the rows end at the first row below it, cells outside its columns are left out, and
 	/// field 0 is its first column. Skipping hidden rows, a row Excel hides is left out after the missing rows before it,
 	/// and missing rows are left out where the sheet hides them; skipping hidden columns, the fields are the area's shown
-	/// columns. What Excel hides is read with .NET's number parsing, apart from the scanner's.
+	/// columns. What Excel hides is read with .NET's number parsing, apart from the scanner's. Filling merged cells, the
+	/// sheet is a grid in which each cell of a range of more than one cell has its top-left cell's value in the file, and a
+	/// row the file lacks is a record of the values it has, unless the sheet hides it; the records go on to the last row
+	/// that a range with a value fills, when it is after the file's last row.
 	/// </summary>
 	/// <param name="xml">The part.</param>
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
 	/// <param name="area">The area read, or <see langword="null"/> for the whole sheet.</param>
 	/// <param name="skipHiddenRows">Whether hidden rows are left out.</param>
 	/// <param name="skipHiddenColumns">Whether hidden columns are left out.</param>
+	/// <param name="fillMergedCells">Whether merged ranges' cells read as their top-left cells.</param>
 	/// <returns>The records, described as the scanner's are.</returns>
-	private static List<string> Reference(string xml, bool skipEmptyRows, SheetLayout? area = null, bool skipHiddenRows = false, bool skipHiddenColumns = false)
+	private static List<string> Reference(string xml, bool skipEmptyRows, SheetLayout? area = null, bool skipHiddenRows = false, bool skipHiddenColumns = false, bool fillMergedCells = false)
 	{
 		area ??= new SheetLayout(1, CellReference.MaxRow, 0, CellReference.MaxColumns - 1);
 		var document = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
@@ -367,8 +438,10 @@ public class SheetScannerComparisonTests
 			}
 		}
 
+		// The file's rows up to the first below the area, which ends the reading: each row's number, whether it is left out
+		// as hidden, and its cells' values by column (null for a valueless cell).
+		var fileRows = new Dictionary<long, (bool Hidden, Dictionary<int, (string Text, SheetCellKind Kind)?> Cells)>();
 		long lastRow = 0;
-		var width = -1;
 		foreach (var rowElement in sheetData.Elements().Where(e => e.Name.LocalName == "row"))
 		{
 			var cells = rowElement.Elements().Where(e => e.Name.LocalName == "c").ToList();
@@ -380,39 +453,54 @@ public class SheetScannerComparisonTests
 				break;
 			}
 
-			if (row < area.FirstRow)
-			{
-				lastRow = row;
-
-				continue;
-			}
-
-			if (!skipEmptyRows && !missingHidden)
-			{
-				for (var gap = Math.Max(lastRow + 1, area.FirstRow); gap < row; gap++)
-				{
-					records.Add(new CapturedRecord(gap, [("", SheetCellKind.Empty)]));
-				}
-			}
-
-			if (skipHiddenRows && (IsTrue(Attribute(rowElement, "hidden")) || (IsTrue(Attribute(rowElement, "customHeight")) && Zero(Attribute(rowElement, "ht")) == true)))
-			{
-				lastRow = row;
-
-				continue;
-			}
-
-			var fields = new List<(string Text, SheetCellKind Kind)>();
+			var values = new Dictionary<int, (string Text, SheetCellKind Kind)?>();
 			var column = -1;
 			foreach (var cell in cells)
 			{
 				column = Attribute(cell, "r") is { } reference ? ColumnOf(reference) : column + 1;
-				if (!fieldOf.TryGetValue(column, out var field) || ValueOf(cell) is not { } value)
+				values[column] = ValueOf(cell);
+			}
+
+			var hiddenRow = skipHiddenRows && (IsTrue(Attribute(rowElement, "hidden")) || (IsTrue(Attribute(rowElement, "customHeight")) && Zero(Attribute(rowElement, "ht")) == true));
+			fileRows[row] = (hiddenRow, values);
+			lastRow = row;
+		}
+
+		(string Text, SheetCellKind Kind)? FileValue(long row, int column) =>
+			fileRows.TryGetValue(row, out var fileRow) && fileRow.Cells.TryGetValue(column, out var value) ? value : null;
+
+		// The merged ranges of more than one cell, each read as its top-left cell.
+		var merges = fillMergedCells ? Merges(document) : [];
+		(string Text, SheetCellKind Kind)? Value(long row, int column)
+		{
+			foreach (var (firstRow, firstColumn, lastMergedRow, lastColumn) in merges)
+			{
+				if (row >= firstRow && row <= lastMergedRow && column >= firstColumn && column <= lastColumn)
+				{
+					return FileValue(firstRow, firstColumn);
+				}
+			}
+
+			return FileValue(row, column);
+		}
+
+		// A record's fields: each field's value, with empty fields before each, and none after the last.
+		List<(string Text, SheetCellKind Kind)> Fields(long row)
+		{
+			var columns = (fileRows.TryGetValue(row, out var fileRow) ? fileRow.Cells.Keys : Enumerable.Empty<int>())
+				.Concat(merges.Where(m => row >= m.FirstRow && row <= m.LastRow).SelectMany(m => Enumerable.Range(m.FirstColumn, m.LastColumn - m.FirstColumn + 1)))
+				.Where(fieldOf.ContainsKey)
+				.Distinct()
+				.OrderBy(c => c);
+			var fields = new List<(string Text, SheetCellKind Kind)>();
+			foreach (var column in columns)
+			{
+				if (Value(row, column) is not { } value)
 				{
 					continue;
 				}
 
-				while (fields.Count < field)
+				while (fields.Count < fieldOf[column])
 				{
 					fields.Add(("", SheetCellKind.Empty));
 				}
@@ -420,6 +508,32 @@ public class SheetScannerComparisonTests
 				fields.Add(value);
 			}
 
+			return fields;
+		}
+
+		// The last row of a record: the file's last row read, or a later one in the area that a range with a value fills.
+		var end = lastRow;
+		if (!missingHidden)
+		{
+			foreach (var (firstRow, firstColumn, lastMergedRow, lastColumn) in merges)
+			{
+				if (FileValue(firstRow, firstColumn) is not null && Enumerable.Range(firstColumn, lastColumn - firstColumn + 1).Any(fieldOf.ContainsKey))
+				{
+					end = Math.Max(end, Math.Min(lastMergedRow, area.LastRow));
+				}
+			}
+		}
+
+		var width = -1;
+		for (var row = area.FirstRow; row <= end; row++)
+		{
+			// A hidden row is no record, and neither is a missing row that the sheet hides.
+			if (fileRows.TryGetValue(row, out var fileRow) ? fileRow.Hidden : missingHidden)
+			{
+				continue;
+			}
+
+			var fields = Fields(row);
 			if (fields.Count > 0)
 			{
 				width = width < 0 ? fields.Count : width;
@@ -434,11 +548,37 @@ public class SheetScannerComparisonTests
 			{
 				records.Add(new CapturedRecord(row, [("", SheetCellKind.Empty)]));
 			}
-
-			lastRow = row;
 		}
 
 		return [.. records.Select(r => r.ToString())];
+	}
+
+	/// <summary>
+	/// The merged ranges of more than one cell of a sheet, from the references as Excel writes them, in either case, with
+	/// <c>$</c>, and with their corners either way.
+	/// </summary>
+	/// <param name="document">The sheet.</param>
+	/// <returns>The ranges, with 0-based columns.</returns>
+	private static List<(long FirstRow, int FirstColumn, long LastRow, int LastColumn)> Merges(XDocument document)
+	{
+		var refs = document.Root!.Elements().Where(e => e.Name.LocalName == "mergeCells").Take(1)
+			.SelectMany(e => e.Elements().Where(m => m.Name.LocalName == "mergeCell"))
+			.Select(m => Attribute(m, "ref")!.Replace("$", "").ToUpperInvariant().Split(':'));
+		var ranges = new List<(long FirstRow, int FirstColumn, long LastRow, int LastColumn)>();
+		foreach (var corners in refs)
+		{
+			var (from, to) = (corners[0], corners[corners.Length - 1]);
+			var firstRow = Math.Min(RowOf(from), RowOf(to));
+			var lastRow = Math.Max(RowOf(from), RowOf(to));
+			var firstColumn = Math.Min(ColumnOf(from), ColumnOf(to));
+			var lastColumn = Math.Max(ColumnOf(from), ColumnOf(to));
+			if (firstRow != lastRow || firstColumn != lastColumn)
+			{
+				ranges.Add((firstRow, firstColumn, lastRow, lastColumn));
+			}
+		}
+
+		return ranges;
 	}
 
 	/// <summary>A cell's value and kind by its type, or <see langword="null"/> when it is valueless.</summary>

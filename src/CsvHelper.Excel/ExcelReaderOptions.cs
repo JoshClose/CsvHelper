@@ -111,6 +111,30 @@ public sealed record ExcelReaderOptions
 	public bool SkipHiddenColumns { get; init; }
 
 	/// <summary>
+	/// Whether each cell of a merged range reads as the range's top-left cell, value and kind, as Excel shows the range.
+	/// <see langword="false"/> by default: each cell reads what it stores, which for Excel's own files is nothing but in the
+	/// top-left cell.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// A range's other cells read as its top-left cell whatever they store, as Excel shows them. The top-left cell fills
+	/// the range's cells that are read wherever it is: above or left of the <see cref="Range"/>, <see cref="Table"/> or
+	/// <see cref="DefinedName"/> read, or in a hidden row or column. A range whose top-left cell has no value fills with
+	/// nothing. Rows the file leaves out of a range are records once they are filled, so a range merged down rows that only
+	/// its first row stores fills each of them; a row hidden while <see cref="SkipHiddenRows"/> is set is still no record.
+	/// </para>
+	/// <para>
+	/// The ranges (<c>mergeCells</c>) come after a sheet's rows, so opening a reader reads the sheet's part through once to
+	/// find them, before the reader reads it again: the second inflate counts toward <see cref="MaxUncompressedSize"/>, the
+	/// ranges toward <see cref="MaxPartSize"/>, and each filled cell its bytes toward <see cref="MaxUncompressedSize"/>.
+	/// A sheet whose merged cells Excel couldn't open (ranges that overlap, or a reference that is no block of cells)
+	/// throws <see cref="CsvFormatException"/> from opening the reader, as does XML that can't be read anywhere in the
+	/// sheet.
+	/// </para>
+	/// </remarks>
+	public bool FillMergedCells { get; init; }
+
+	/// <summary>
 	/// The options of the readers: <see cref="CsvReaderOptions.HasHeader"/>, <see cref="CsvReaderOptions.SkipEmptyLines"/>,
 	/// trimming, null values, header matching, <see cref="CsvReaderOptions.OnRecordError"/> and the rest apply as for CSV.
 	/// <see cref="CsvReaderOptions.FormatProvider"/>, <see cref="CsvReaderOptions.TrueValues"/> and

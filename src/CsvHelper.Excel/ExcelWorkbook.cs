@@ -445,6 +445,11 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		var limits = settings.Limits;
 		styles ??= await StyleTable.LoadAsync(archive, part.StylesPart, limits, async, cancellationToken).ConfigureAwait(false);
 		strings ??= await SharedStrings.LoadAsync(archive, part.SharedStringsPart, limits, async, cancellationToken).ConfigureAwait(false);
+
+		// Merged ranges come after the rows: a read of the part through finds them, before the reader reads it again.
+		var mergedCells = settings.FillMergedCells
+			? await MergedCells.LoadAsync(archive, partName, chosen.Name, limits, async, cancellationToken).ConfigureAwait(false)
+			: null;
 		var stream = await archive.OpenPartAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
 		SheetScanner scanner;
 		try
@@ -452,7 +457,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize));
 			scanner = new SheetScanner(
 				xml, chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream, Date1904, settings.ErrorCells, settings.Formulas, layout,
-				settings.SkipHiddenRows, settings.SkipHiddenColumns);
+				settings.SkipHiddenRows, settings.SkipHiddenColumns, mergedCells);
 			if (header is not null)
 			{
 				scanner.HoldFirstRecord(header);

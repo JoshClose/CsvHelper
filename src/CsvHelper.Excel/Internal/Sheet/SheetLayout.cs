@@ -1,3 +1,5 @@
+using System;
+
 namespace CsvHelper.Excel;
 
 /// <summary>
@@ -16,6 +18,8 @@ internal sealed class SheetLayout
 	// hidden one), and the column of each field. Null when every column of the area is read.
 	private readonly int[]? fields;
 	private readonly int[]? columns;
+	// With hidden columns: the number of shown columns before each of the area's columns in the map, and after the last.
+	private readonly int[]? shownBefore;
 
 	/// <summary>Creates the layout of an area.</summary>
 	/// <param name="firstRow">The area's first row, from 1.</param>
@@ -39,6 +43,11 @@ internal sealed class SheetLayout
 	{
 		this.fields = fields;
 		this.columns = columns;
+		shownBefore = new int[fields.Length + 1];
+		for (var i = 0; i < fields.Length; i++)
+		{
+			shownBefore[i + 1] = shownBefore[i] + (fields[i] >= 0 ? 1 : 0);
+		}
 	}
 
 	/// <summary>The whole sheet: every row and column.</summary>
@@ -125,6 +134,41 @@ internal sealed class SheetLayout
 		}
 
 		return (uint)offset < (uint)fields.Length ? fields[offset] : -1;
+	}
+
+	/// <summary>
+	/// The fields that a block of columns becomes: since the fields are the area's columns that are read, in order, those
+	/// of the block's columns are consecutive.
+	/// </summary>
+	/// <param name="firstColumn">The block's first column, from 0.</param>
+	/// <param name="lastColumn">The block's last column, from 0, at or after <paramref name="firstColumn"/>.</param>
+	/// <param name="firstField">The first field, when there is one.</param>
+	/// <param name="lastField">The last field, when there is one.</param>
+	/// <returns>Whether any of the block's columns is a field: in the area, and read.</returns>
+	public bool TryGetFields(int firstColumn, int lastColumn, out int firstField, out int lastField)
+	{
+		var first = Math.Max(firstColumn, FirstColumn) - FirstColumn;
+		var last = Math.Min(lastColumn, fields is null ? LastColumn : FirstColumn + fields.Length - 1) - FirstColumn;
+		if (first > last)
+		{
+			firstField = -1;
+			lastField = -1;
+
+			return false;
+		}
+
+		if (shownBefore is null)
+		{
+			firstField = first;
+			lastField = last;
+
+			return true;
+		}
+
+		firstField = shownBefore[first];
+		lastField = shownBefore[last + 1] - 1;
+
+		return lastField >= firstField;
 	}
 
 	/// <summary>The column a field comes from, for locations.</summary>
