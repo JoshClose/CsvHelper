@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -12,6 +13,30 @@ public class SheetScannerComparisonTests
 {
 	/// <summary>The shared strings of the generated sheets.</summary>
 	private static readonly string[] SharedTexts = ["alpha", "", " spaced ", "東京", "x&y"];
+
+	/// <summary>A row's attributes, in forms Excel hides and forms it doesn't.</summary>
+	private static readonly string[] RowForms =
+	[
+		" hidden=\"1\"", " hidden=\"true\"", " hidden=\"&#49;\"", " hidden=\"0\"", " hidden=\" 1 \"", " ht=\"0\" customHeight=\"1\"", " ht=\"0\"",
+		" ht=\"0.0\" customHeight=\"true\"", " ht=\"15\" customHeight=\"1\"", " ht=\"+0\" customHeight=\"1\"", " ht=\"\" customHeight=\"1\"",
+	];
+
+	/// <summary>The row attributes of <c>sheetFormatPr</c>: some hide the rows the file lacks.</summary>
+	private static readonly string[] RowFormats =
+	[
+		" defaultRowHeight=\"15\"", " defaultRowHeight=\"15\" zeroHeight=\"1\"", " defaultRowHeight=\"15\" zeroHeight=\"0\"",
+		" defaultRowHeight=\"0\" customHeight=\"1\"", " defaultRowHeight=\"0\"",
+	];
+
+	/// <summary>The column attribute of <c>sheetFormatPr</c>: some hide the columns no <c>col</c> covers.</summary>
+	private static readonly string[] ColumnFormats = ["", "", " defaultColWidth=\"0\"", " defaultColWidth=\"9\"", " defaultColWidth=\" 0 \""];
+
+	/// <summary>A <c>col</c>'s attributes, in forms Excel hides and forms it doesn't.</summary>
+	private static readonly string[] ColumnForms =
+	[
+		" width=\"9\"", " width=\"9\"", " width=\"9\" hidden=\"1\"", " width=\"0\"", "", " width=\"9\" hidden=\"yes\"", " width=\"abc\"",
+		" width=\"9\" hidden=\"true\"", " width=\"-1\"",
+	];
 
 	/// <summary>The fragments the text of a value is made of.</summary>
 	private static readonly string[] Fragments =
@@ -40,17 +65,106 @@ public class SheetScannerComparisonTests
 		}
 	}
 
-	/// <summary>Generates a sheet: rows and cells with and without references, every cell type, valueless cells and noise.</summary>
+	[Fact]
+	public async Task MatchesTheReferenceInGeneratedAreas()
+	{
+		var strings = Sheets.Strings(SharedTexts);
+		for (var seed = 0; seed < 100; seed++)
+		{
+			var random = new Random(seed);
+			var xml = Generate(random);
+
+			// Areas that start and end anywhere in the generated rows and columns, or past them.
+			var firstRow = random.Next(1, 12);
+			var lastRow = random.Next(4) == 0 ? CellReference.MaxRow : firstRow + random.Next(0, 10);
+			var firstColumn = random.Next(0, 6);
+			var lastColumn = random.Next(4) == 0 ? CellReference.MaxColumns - 1 : firstColumn + random.Next(0, 5);
+			var layout = new SheetLayout(firstRow, lastRow, firstColumn, lastColumn);
+			foreach (var skipEmptyRows in new[] { true, false })
+			{
+				var expected = Reference(xml, skipEmptyRows, layout);
+				await Sheets.InEveryModeAsync(async mode =>
+				{
+					var actual = await Sheets.ReadAsync(xml, mode, skipEmptyRows, strings, reading: new CellReading(layout: layout));
+
+					Assert.True(
+						expected.SequenceEqual(actual),
+						$"Seed {seed}, area rows {firstRow}-{lastRow} columns {firstColumn}-{lastColumn}, skipping empty rows {skipEmptyRows}:\nexpected {string.Join("\n", expected)}\nactual {string.Join("\n", actual)}\n{xml}");
+				});
+			}
+		}
+	}
+
+	[Fact]
+	public async Task MatchesTheReferenceWithHiddenCells()
+	{
+		var strings = Sheets.Strings(SharedTexts);
+		for (var seed = 0; seed < 100; seed++)
+		{
+			var random = new Random(seed);
+			var xml = Generate(random, hidden: true);
+			var (rows, columns) = random.Next(3) switch
+			{
+				0 => (true, false),
+				1 => (false, true),
+				_ => (true, true),
+			};
+			SheetLayout? layout = null;
+			if (random.Next(2) == 0)
+			{
+				var firstRow = random.Next(1, 8);
+				var firstColumn = random.Next(0, 4);
+				layout = new SheetLayout(firstRow, random.Next(3) == 0 ? CellReference.MaxRow : firstRow + random.Next(0, 10), firstColumn, random.Next(3) == 0 ? CellReference.MaxColumns - 1 : firstColumn + random.Next(0, 6));
+			}
+
+			foreach (var skipEmptyRows in new[] { true, false })
+			{
+				var expected = Reference(xml, skipEmptyRows, layout, rows, columns);
+				await Sheets.InEveryModeAsync(async mode =>
+				{
+					var reading = new CellReading(layout: layout, skipHiddenRows: rows, skipHiddenColumns: columns);
+					var actual = await Sheets.ReadAsync(xml, mode, skipEmptyRows, strings, reading: reading);
+
+					Assert.True(
+						expected.SequenceEqual(actual),
+						$"Seed {seed}, hidden rows {rows}, columns {columns}, area {(layout is null ? "none" : $"rows {layout.FirstRow}-{layout.LastRow} columns {layout.FirstColumn}-{layout.LastColumn}")}, skipping empty rows {skipEmptyRows}:\nexpected {string.Join("\n", expected)}\nactual {string.Join("\n", actual)}\n{xml}");
+				});
+			}
+		}
+	}
+
+	/// <summary>
+	/// Generates a sheet: rows and cells with and without references, every cell type, valueless cells and noise; with
+	/// <paramref name="hidden"/>, also <c>sheetFormatPr</c>, <c>cols</c> and rows in forms that Excel hides and forms it doesn't.
+	/// </summary>
 	/// <param name="random">The source of the choices.</param>
+	/// <param name="hidden">Whether to hide rows and columns; without it, the choices are those of the sheets before hidden cells.</param>
 	/// <returns>The part's XML.</returns>
-	private static string Generate(Random random)
+	private static string Generate(Random random, bool hidden = false)
 	{
 		var p = random.Next(4) == 0 ? "x:" : "";
 		var ns = random.Next(5) == 0 ? TestPackage.StrictMainNamespace : TestPackage.MainNamespace;
 		var indent = random.Next(3) == 0 ? "\r\n  " : "";
 		var xml = new StringBuilder(TestPackage.Declaration);
 		xml.Append(p.Length > 0 ? $"<x:worksheet xmlns:x=\"{ns}\">" : $"<worksheet xmlns=\"{ns}\">");
-		xml.Append($"<{p}dimension ref=\"A1:C3\"/><{p}sheetViews><{p}sheetView workbookViewId=\"0\"/></{p}sheetViews><{p}cols><{p}col min=\"1\" max=\"2\" width=\"9\"/></{p}cols>");
+		xml.Append($"<{p}dimension ref=\"A1:C3\"/><{p}sheetViews><{p}sheetView workbookViewId=\"0\"/></{p}sheetViews>");
+		if (hidden)
+		{
+			xml.Append($"<{p}sheetFormatPr{Pick(random, RowFormats)}{Pick(random, ColumnFormats)}/><{p}cols>");
+			for (var cols = random.Next(0, 5); cols >= 0; cols--)
+			{
+				var min = random.Next(1, 9);
+				var max = random.Next(6) == 0 ? CellReference.MaxColumns + random.Next(2) : min + random.Next(0, 4);
+				xml.Append($"<{p}col min=\"{min}\" max=\"{max}\"{Pick(random, ColumnForms)}/>");
+			}
+
+			xml.Append($"</{p}cols>");
+		}
+		else
+		{
+			xml.Append($"<{p}cols><{p}col min=\"1\" max=\"2\" width=\"9\"/></{p}cols>");
+		}
+
 		xml.Append($"<{p}sheetData>");
 		long lastRow = 0;
 		for (var rows = random.Next(0, 12); rows > 0; rows--)
@@ -68,7 +182,8 @@ public class SheetScannerComparisonTests
 
 			var spans = random.Next(3) == 0 ? " spans=\"1:3\"" : "";
 			var rowSpace = random.Next(8) == 0 ? " xml:space=\"preserve\"" : "";
-			xml.Append(rowReference ? $"<{p}row r=\"{row}\"{spans}{rowSpace}" : $"<{p}row{spans}{rowSpace}");
+			var rowHidden = hidden && random.Next(2) == 0 ? Pick(random, RowForms) : "";
+			xml.Append(rowReference ? $"<{p}row r=\"{row}\"{spans}{rowSpace}{rowHidden}" : $"<{p}row{spans}{rowSpace}{rowHidden}");
 			if (cellCount == 0 && random.Next(2) == 0)
 			{
 				xml.Append("/>");
@@ -102,6 +217,12 @@ public class SheetScannerComparisonTests
 
 		return xml.ToString();
 	}
+
+	/// <summary>One of some choices.</summary>
+	/// <param name="random">The source of the choice.</param>
+	/// <param name="choices">The choices.</param>
+	/// <returns>The choice.</returns>
+	private static string Pick(Random random, string[] choices) => choices[random.Next(choices.Length)];
 
 	/// <summary>Generates a cell of a random type, or a valueless one.</summary>
 	/// <param name="random">The source of the choices.</param>
@@ -180,19 +301,70 @@ public class SheetScannerComparisonTests
 	/// <summary>
 	/// The records of a sheet, by the rules: rows numbered by <c>r</c>, else their first cell's, else the row before's
 	/// plus one; cells placed by their references; valueless cells left out; rows padded to the first record with a value;
-	/// rows without a value dropped, or with empty rows kept, a record of one empty field, as each missing row is.
+	/// rows without a value dropped, or with empty rows kept, a record of one empty field, as each missing row is. In an
+	/// area, rows above it are left out, the rows end at the first row below it, cells outside its columns are left out, and
+	/// field 0 is its first column. Skipping hidden rows, a row Excel hides is left out after the missing rows before it,
+	/// and missing rows are left out where the sheet hides them; skipping hidden columns, the fields are the area's shown
+	/// columns. What Excel hides is read with .NET's number parsing, apart from the scanner's.
 	/// </summary>
 	/// <param name="xml">The part.</param>
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
+	/// <param name="area">The area read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="skipHiddenRows">Whether hidden rows are left out.</param>
+	/// <param name="skipHiddenColumns">Whether hidden columns are left out.</param>
 	/// <returns>The records, described as the scanner's are.</returns>
-	private static List<string> Reference(string xml, bool skipEmptyRows)
+	private static List<string> Reference(string xml, bool skipEmptyRows, SheetLayout? area = null, bool skipHiddenRows = false, bool skipHiddenColumns = false)
 	{
+		area ??= new SheetLayout(1, CellReference.MaxRow, 0, CellReference.MaxColumns - 1);
 		var document = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
 		var sheetData = document.Root!.Elements().FirstOrDefault(e => e.Name.LocalName == "sheetData");
 		var records = new List<CapturedRecord>();
 		if (sheetData is null)
 		{
 			return [];
+		}
+
+		// Excel's rules: a boolean is 1 or true; a height or width is a number without white space or a plus sign, empty
+		// being 0; a col's width that is no such number is 0.
+		static bool IsTrue(string? value) => value is "1" or "true";
+		static bool? Zero(string? value) =>
+			value is null ? null
+			: value.Length == 0 ? true
+			: value.Trim() != value || value.StartsWith("+", StringComparison.Ordinal) ? null
+			: double.TryParse(value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var number) ? number == 0
+			: null;
+
+		var format = document.Root!.Elements().FirstOrDefault(e => e.Name.LocalName == "sheetFormatPr");
+		var missingHidden = skipHiddenRows && format is not null
+			&& (IsTrue(Attribute(format, "zeroHeight")) || (IsTrue(Attribute(format, "customHeight")) && Zero(Attribute(format, "defaultRowHeight")) == true));
+		var hidden = new bool[CellReference.MaxColumns];
+		if (skipHiddenColumns)
+		{
+			var hidesUncovered = format is not null && Zero(Attribute(format, "defaultColWidth")) == true;
+			for (var column = 0; column < hidden.Length; column++)
+			{
+				hidden[column] = hidesUncovered;
+			}
+
+			var cols = document.Root!.Elements().Where(e => e.Name.LocalName == "cols").SelectMany(e => e.Elements().Where(c => c.Name.LocalName == "col"));
+			foreach (var col in cols)
+			{
+				var hides = IsTrue(Attribute(col, "hidden")) || Zero(Attribute(col, "width")) != false;
+				for (var column = int.Parse(Attribute(col, "min")!) - 1; column < Math.Min(int.Parse(Attribute(col, "max")!), CellReference.MaxColumns); column++)
+				{
+					hidden[column] = hides;
+				}
+			}
+		}
+
+		// The field of each shown column of the area.
+		var fieldOf = new Dictionary<int, int>();
+		for (var column = area.FirstColumn; column <= area.LastColumn; column++)
+		{
+			if (!hidden[column])
+			{
+				fieldOf[column] = fieldOf.Count;
+			}
 		}
 
 		long lastRow = 0;
@@ -203,12 +375,31 @@ public class SheetScannerComparisonTests
 			var row = Attribute(rowElement, "r") is { } r ? long.Parse(r)
 				: cells.Count > 0 && Attribute(cells[0], "r") is { } first ? RowOf(first)
 				: lastRow + 1;
-			if (!skipEmptyRows)
+			if (row > area.LastRow)
 			{
-				for (var gap = lastRow + 1; gap < row; gap++)
+				break;
+			}
+
+			if (row < area.FirstRow)
+			{
+				lastRow = row;
+
+				continue;
+			}
+
+			if (!skipEmptyRows && !missingHidden)
+			{
+				for (var gap = Math.Max(lastRow + 1, area.FirstRow); gap < row; gap++)
 				{
 					records.Add(new CapturedRecord(gap, [("", SheetCellKind.Empty)]));
 				}
+			}
+
+			if (skipHiddenRows && (IsTrue(Attribute(rowElement, "hidden")) || (IsTrue(Attribute(rowElement, "customHeight")) && Zero(Attribute(rowElement, "ht")) == true)))
+			{
+				lastRow = row;
+
+				continue;
 			}
 
 			var fields = new List<(string Text, SheetCellKind Kind)>();
@@ -216,12 +407,12 @@ public class SheetScannerComparisonTests
 			foreach (var cell in cells)
 			{
 				column = Attribute(cell, "r") is { } reference ? ColumnOf(reference) : column + 1;
-				if (ValueOf(cell) is not { } value)
+				if (!fieldOf.TryGetValue(column, out var field) || ValueOf(cell) is not { } value)
 				{
 					continue;
 				}
 
-				while (fields.Count < column)
+				while (fields.Count < field)
 				{
 					fields.Add(("", SheetCellKind.Empty));
 				}

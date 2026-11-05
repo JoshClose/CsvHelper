@@ -23,16 +23,51 @@ public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 }
 
 /// <summary>
-/// How a sheet's typed cells are read: the workbook's styles and date system, the error cells' policy, and what cells with
-/// a formula read as.
+/// How a sheet's cells are read: the workbook's styles and date system, the error cells' policy, what cells with a formula
+/// read as, the area read, and a record held to write first.
 /// </summary>
 /// <param name="styles">The workbook's styles, or <see langword="null"/> for none.</param>
 /// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
 /// <param name="errorCells">How error cells read.</param>
 /// <param name="formulas">What cells with a formula read as.</param>
+/// <param name="layout">The area read, or <see langword="null"/> for the whole sheet.</param>
+/// <param name="held">A record to write before the rows, or <see langword="null"/>.</param>
+/// <param name="skipHiddenRows">Whether hidden rows are no records.</param>
+/// <param name="skipHiddenColumns">Whether hidden columns are no fields.</param>
 internal sealed class CellReading(
-	StyleTable? styles = null, bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue)
+	StyleTable? styles = null, bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue,
+	SheetLayout? layout = null, HeldRecord? held = null, bool skipHiddenRows = false, bool skipHiddenColumns = false)
 {
+	/// <summary>The area read, or <see langword="null"/> for the whole sheet.</summary>
+	public SheetLayout? Layout => layout;
+
+	/// <summary>A record to write before the rows, or <see langword="null"/>.</summary>
+	public HeldRecord? Held => held;
+
+	/// <summary>Whether hidden rows are no records.</summary>
+	public bool SkipHiddenRows => skipHiddenRows;
+
+	/// <summary>Whether hidden columns are no fields.</summary>
+	public bool SkipHiddenColumns => skipHiddenColumns;
+
+	/// <summary>Reads with hidden rows and columns skipped, as <paramref name="rows"/> and <paramref name="columns"/> say.</summary>
+	/// <param name="rows">Whether hidden rows are no records.</param>
+	/// <param name="columns">Whether hidden columns are no fields.</param>
+	/// <param name="area">The area, such as <c>B2:D4</c>, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="formulas">What cells with a formula read as.</param>
+	/// <param name="held">A record to write before the rows, or <see langword="null"/>.</param>
+	/// <returns>The reading.</returns>
+	public static CellReading Hidden(bool rows, bool columns, string? area = null, ExcelFormulas formulas = ExcelFormulas.CachedValue, HeldRecord? held = null) =>
+		new(formulas: formulas, layout: area is null ? null : SheetLayout.Of(ExcelRange.Parse(area)), held: held, skipHiddenRows: rows, skipHiddenColumns: columns);
+
+	/// <summary>Reads an area of the sheet, with the cells otherwise read by default.</summary>
+	/// <param name="area">The area, such as <c>B2:D4</c>.</param>
+	/// <param name="formulas">What cells with a formula read as.</param>
+	/// <param name="held">A record to write before the rows, or <see langword="null"/>.</param>
+	/// <returns>The reading.</returns>
+	public static CellReading Area(string area, ExcelFormulas formulas = ExcelFormulas.CachedValue, HeldRecord? held = null) =>
+		new(formulas: formulas, layout: SheetLayout.Of(ExcelRange.Parse(area)), held: held);
+
 	/// <summary>No styles, the 1900 date system, error cells as text, and formulas as their values.</summary>
 	public static CellReading Default { get; } = new();
 
@@ -69,6 +104,20 @@ internal static class Sheets
 		$"<sheetData>{rows}</sheetData>" +
 		"<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/></worksheet>";
 
+	/// <summary>A worksheet part as Excel writes one, with this <c>sheetFormatPr</c> and these <c>cols</c>, around these rows.</summary>
+	/// <param name="format">The attributes of <c>sheetFormatPr</c> after <c>defaultRowHeight</c>, such as <c>zeroHeight="1"</c>; when it sets <c>defaultRowHeight</c>, that one alone.</param>
+	/// <param name="cols">The content of <c>cols</c>, or empty for none.</param>
+	/// <param name="rows">The content of <c>sheetData</c>.</param>
+	/// <returns>The part's XML.</returns>
+	public static string Worksheet(string format, string cols, string rows) =>
+		TestPackage.Declaration +
+		$"<worksheet xmlns=\"{TestPackage.MainNamespace}\" xmlns:r=\"{TestPackage.RelationshipsNamespace}\" xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\">" +
+		"<dimension ref=\"A1:C2\"/><sheetViews><sheetView tabSelected=\"1\" workbookViewId=\"0\"><selection activeCell=\"A1\" sqref=\"A1\"/></sheetView></sheetViews>" +
+		$"<sheetFormatPr {(format.Contains("defaultRowHeight") ? format : $"defaultRowHeight=\"14.4\" {format}")} x14ac:dyDescent=\"0.3\"/>" +
+		(cols.Length == 0 ? "" : $"<cols>{cols}</cols>") +
+		$"<sheetData>{rows}</sheetData>" +
+		"<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/></worksheet>";
+
 	/// <summary>Shared strings with these texts.</summary>
 	/// <param name="texts">The texts, plain.</param>
 	/// <returns>The shared strings.</returns>
@@ -102,8 +151,15 @@ internal static class Sheets
 		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
 		var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
 		reading ??= CellReading.Default;
+		var sheet = new SheetScanner(
+			scanner, sheetName, strings ?? SharedStrings.Empty, reading.Styles, skipEmptyRows, null, reading.Date1904, reading.ErrorCells, reading.Formulas, reading.Layout,
+			reading.SkipHiddenRows, reading.SkipHiddenColumns);
+		if (reading.Held is not null)
+		{
+			sheet.HoldFirstRecord(reading.Held);
+		}
 
-		return new SheetScanner(scanner, sheetName, strings ?? SharedStrings.Empty, reading.Styles, skipEmptyRows, null, reading.Date1904, reading.ErrorCells, reading.Formulas);
+		return sheet;
 	}
 
 	/// <summary>Reads a sheet's records, described (<see cref="CapturedRecord.ToString"/>).</summary>

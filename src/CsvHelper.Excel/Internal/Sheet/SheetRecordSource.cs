@@ -51,7 +51,13 @@ internal sealed class SheetRecordSource : CsvRecordSource
 	}
 
 	/// <inheritdoc/>
-	/// <remarks>Field <c>i</c> is column <c>i</c>: Phase 1 reads every sheet from column <c>A</c>.</remarks>
+	/// <remarks>
+	/// A field's column comes from the scanner's layout: field <c>i</c> is column <c>i</c> of a whole sheet, of an area the
+	/// column <c>i</c> after its first, and with hidden columns skipped the <c>i</c>th shown column. The layout is final
+	/// before the first record is written, so before any field is located. A field the area has no column for, and a record
+	/// without a row in the sheet (line 0, such as a table's names when its header row is hidden), are located by their
+	/// row, or not at all.
+	/// </remarks>
 	public override string? Locate(long line, int field)
 	{
 		if (line < 1 || line > CellReference.MaxRow)
@@ -60,8 +66,10 @@ internal sealed class SheetRecordSource : CsvRecordSource
 		}
 
 		var location = scanner.Location;
+		var layout = scanner.Layout;
+		var column = layout is null ? field : layout.ColumnOf(field);
 
-		return (uint)field < CellReference.MaxColumns ? location.Cell(field, line) : location.Row(line);
+		return (uint)column < CellReference.MaxColumns ? location.Cell(column, line) : location.Row(line);
 	}
 
 	/// <summary>Disposes the sheet's stream, and the workbook when the source owns it.</summary>

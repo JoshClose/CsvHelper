@@ -10,15 +10,18 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// An Excel workbook opened to read: an <c>.xlsx</c>, <c>.xlsm</c>, <c>.xltx</c> or <c>.xltm</c> file (or an <c>.xlam</c>),
-/// its sheets, and a <see cref="CsvReader"/> over any of its worksheets, which reads the sheet's rows as records.
+/// its sheets, tables and defined names, and a <see cref="CsvReader"/> over any of its worksheets, or over a range, table or
+/// defined name of one, which reads the rows as records.
 /// </summary>
 /// <remarks>
 /// <para>
 /// <b>Reading.</b> <see cref="OpenReader(ExcelReaderOptions?)"/> returns a plain <see cref="CsvReader"/>: records, dynamic
 /// records, <see cref="CsvDataReader"/> and CsvHelper.Linq work as for CSV. Field <c>i</c> of a record is column <c>i</c>
-/// of its row (<c>A</c> is 0), empty cells are empty fields, and rows are padded to the first record's width. Numbers and
-/// booleans parse with the invariant culture, as they are stored; dates read as their serial numbers until typed
-/// reading. Errors in a sheet name their cell, such as <c>Orders!C14</c>, in <see cref="CsvFormatException.Location"/>.
+/// of its row (<c>A</c> is 0), or of a block of cells that <see cref="ExcelReaderOptions.Range"/>,
+/// <see cref="ExcelReaderOptions.Table"/> or <see cref="ExcelReaderOptions.DefinedName"/> chooses (its first column is 0).
+/// Empty cells are empty fields, and rows are padded to the first record's width. Cells read by their types: numbers,
+/// dates, booleans, errors and text. Errors in a sheet name their cell, such as <c>Orders!C14</c>, in
+/// <see cref="CsvFormatException.Location"/>.
 /// </para>
 /// <para>
 /// <b>Ownership.</b> A reader holds its sheet's stream, not the workbook, and disposing the reader leaves the workbook
@@ -57,6 +60,8 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		this.options = options;
 		this.fromStream = fromStream;
 		Sheets = new ReadOnlyCollection<ExcelSheet>([.. part.Sheets.Select(s => new ExcelSheet(this, s))]);
+		Tables = new ReadOnlyCollection<ExcelTable>([.. Sheets.SelectMany(s => s.Tables)]);
+		DefinedNames = new ReadOnlyCollection<ExcelDefinedName>([.. part.DefinedNames.Select(n => new ExcelDefinedName(Sheets, n))]);
 	}
 
 	/// <summary>
@@ -64,6 +69,15 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <see cref="ExcelSheet.Index"/> is its place here.
 	/// </summary>
 	public IReadOnlyList<ExcelSheet> Sheets { get; }
+
+	/// <summary>Every sheet's tables (Excel tables, or ListObjects): by sheet in tab order, then as each sheet lists them.</summary>
+	public IReadOnlyList<ExcelTable> Tables { get; }
+
+	/// <summary>
+	/// The defined names, the workbook's and its sheets', as the workbook lists them, Excel's built-in and hidden ones
+	/// included (<c>Print_Area</c>, <c>_FilterDatabase</c>).
+	/// </summary>
+	public IReadOnlyList<ExcelDefinedName> DefinedNames { get; }
 
 	/// <summary>
 	/// Whether the workbook uses the 1904 date system, whose serial date 0 is January 1, 1904 rather than the end of 1899:
@@ -142,7 +156,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
 	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentException">The options name no sheet of the workbook, or are not valid.</exception>
+	/// <exception cref="ArgumentException">The options name no sheet, table or defined name of the workbook, or a defined name that is no block of cells, or are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, or a limit is 0 or less.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet, or the workbook has none.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
@@ -155,7 +169,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="sheetName"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentException">The workbook has no sheet of that name (the message lists its sheets), or the options are not valid.</exception>
+	/// <exception cref="ArgumentException">The workbook has no sheet of that name (the message lists its sheets), the options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or they are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
@@ -172,7 +186,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, or a limit of the options is 0 or less.</exception>
-	/// <exception cref="ArgumentException">The options are not valid.</exception>
+	/// <exception cref="ArgumentException">The options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or are not valid.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
 	public CsvReader OpenReader(int sheetIndex, ExcelReaderOptions? options = null) =>
@@ -184,7 +198,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="sheet"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentException">The sheet is another workbook's, or the options are not valid.</exception>
+	/// <exception cref="ArgumentException">The sheet is another workbook's, the options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or they are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
@@ -200,7 +214,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <param name="cancellationToken">Cancels reading the styles and shared strings.</param>
 	/// <returns>A task whose result is the reader.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentException">The options name no sheet of the workbook, or are not valid.</exception>
+	/// <exception cref="ArgumentException">The options name no sheet, table or defined name of the workbook, or a defined name that is no block of cells, or are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, or a limit is 0 or less.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet, or the workbook has none.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
@@ -214,7 +228,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>A task whose result is the reader.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="sheetName"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentException">The workbook has no sheet of that name, or the options are not valid.</exception>
+	/// <exception cref="ArgumentException">The workbook has no sheet of that name, the options choose a sheet of their own, or they are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
@@ -232,7 +246,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>A task whose result is the reader.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, or a limit of the options is 0 or less.</exception>
-	/// <exception cref="ArgumentException">The options are not valid.</exception>
+	/// <exception cref="ArgumentException">The options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or are not valid.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
 	public ValueTask<CsvReader> OpenReaderAsync(int sheetIndex, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default) =>
@@ -245,7 +259,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>A task whose result is the reader.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="sheet"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentException">The sheet is another workbook's, or the options are not valid.</exception>
+	/// <exception cref="ArgumentException">The sheet is another workbook's, the options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or they are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
@@ -321,6 +335,36 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		}
 	}
 
+	/// <summary>
+	/// Reads the used range a worksheet states, for <see cref="ExcelSheet.Dimension"/>: <see langword="null"/> for a sheet
+	/// other than a worksheet, one without a part, or one whose part's start can't be read.
+	/// </summary>
+	/// <param name="sheet">The sheet.</param>
+	/// <returns>The range, or <see langword="null"/>.</returns>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	internal ExcelRange? ReadDimension(WorkbookSheet sheet)
+	{
+		if (sheet.Kind != ExcelSheetKind.Worksheet || sheet.PartName is null)
+		{
+			return null;
+		}
+
+		if (IsDisposed)
+		{
+			throw new ObjectDisposedException(nameof(ExcelWorkbook), "The workbook is disposed.");
+		}
+
+		try
+		{
+			return SyncOrAsync.Result(SheetDimension.ReadAsync(archive, sheet.PartName, options.Limits, false, CancellationToken.None));
+		}
+		catch (Exception e) when (e is InvalidDataException or IOException)
+		{
+			// Reading the sheet says why.
+			return null;
+		}
+	}
+
 	/// <summary>Checks the version of CsvHelper and the options, before an open reads anything.</summary>
 	/// <param name="options">The options, or <see langword="null"/> for the default.</param>
 	/// <returns>The options to use.</returns>
@@ -391,7 +435,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 		var settings = options ?? this.options;
 		settings.Validate(nameof(options));
-		var chosen = Choose(sheetName, sheetIndex, sheet, settings);
+		var (chosen, layout, header) = Target(sheetName, sheetIndex, sheet, settings);
 		if (chosen.Kind != ExcelSheetKind.Worksheet)
 		{
 			throw new NotSupportedException($"The sheet \"{chosen.Name}\" is a {Describe(chosen.Kind)}, and only worksheets have cells to read.");
@@ -406,7 +450,13 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		try
 		{
 			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize));
-			scanner = new SheetScanner(xml, chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream, Date1904, settings.ErrorCells, settings.Formulas);
+			scanner = new SheetScanner(
+				xml, chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream, Date1904, settings.ErrorCells, settings.Formulas, layout,
+				settings.SkipHiddenRows, settings.SkipHiddenColumns);
+			if (header is not null)
+			{
+				scanner.HoldFirstRecord(header);
+			}
 		}
 		catch
 		{
@@ -426,6 +476,139 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 			throw;
 		}
+	}
+
+	/// <summary>
+	/// Chooses what a reader reads: the sheet a table, a defined name or a range with a sheet's name is on, or else the sheet
+	/// chosen as usual (<see cref="Choose"/>); the area of the table's data rows, of the name's block or of the range, or the
+	/// whole sheet; and the record of a table's column names to read as its header.
+	/// </summary>
+	/// <param name="sheetName">The sheet's name, or <see langword="null"/>.</param>
+	/// <param name="sheetIndex">The sheet's index, or <see langword="null"/>.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/>.</param>
+	/// <param name="options">The reader's options, which are valid.</param>
+	/// <returns>The sheet, the area or <see langword="null"/> for the whole sheet, and the header to hold or <see langword="null"/>.</returns>
+	/// <exception cref="ArgumentException">
+	/// A sheet is given with an option that chooses its own, or the options name no sheet, table or defined name of the
+	/// workbook, or a defined name that is no block of cells, or one of several sheets' names without its sheet.
+	/// </exception>
+	/// <exception cref="ArgumentOutOfRangeException">The sheet index is out of range.</exception>
+	private (ExcelSheet Sheet, SheetLayout? Layout, HeldRecord? Header) Target(string? sheetName, int? sheetIndex, ExcelSheet? sheet, ExcelReaderOptions options)
+	{
+		if (options.ChoosesSheet() is { } chooser && (sheet is not null || sheetName is not null || sheetIndex is not null))
+		{
+			var paramName = sheet is not null ? nameof(sheet) : sheetName is not null ? nameof(sheetName) : nameof(sheetIndex);
+
+			throw new ArgumentException($"{chooser}, so no sheet can be given with it.", paramName);
+		}
+
+		if (options.Table is not null)
+		{
+			var table = FindTable(options.Table);
+			var range = table.Range;
+			var layout = new SheetLayout(range.FirstRow + table.HeaderRowCount, range.LastRow - table.TotalsRowCount, range.FirstColumnIndex, range.LastColumnIndex);
+
+			// The names head the table whether its header row shows or not; without that row, the record has none (line 0).
+			var header = options.Csv.HasHeader ? HeldRecord.Names(table.Columns, range.FirstColumnIndex, range.ColumnCount, table.HeaderRowCount > 0 ? range.FirstRow : 0) : null;
+
+			return (table.Sheet, layout, header);
+		}
+
+		if (options.DefinedName is not null)
+		{
+			var name = FindName(options.DefinedName);
+
+			return (name.Sheet!, SheetLayout.Of(name.Range!.Value), null);
+		}
+
+		if (options.Range is not null)
+		{
+			AreaReference.TryParse(options.Range.AsSpan(), out var rangeSheet, out var range);
+			var chosen = rangeSheet is null ? Choose(sheetName, sheetIndex, sheet, options) : Find(rangeSheet, nameof(options));
+
+			return (chosen, SheetLayout.Of(range), null);
+		}
+
+		return (Choose(sheetName, sheetIndex, sheet, options), null, null);
+	}
+
+	/// <summary>Finds a table by name, ignoring case.</summary>
+	/// <param name="name">The name.</param>
+	/// <returns>The table: the first of that name, in <see cref="Tables"/>' order.</returns>
+	/// <exception cref="ArgumentException">The workbook has no table of that name.</exception>
+	private ExcelTable FindTable(string name)
+	{
+		foreach (var table in Tables)
+		{
+			if (string.Equals(table.Name, name, StringComparison.OrdinalIgnoreCase))
+			{
+				return table;
+			}
+		}
+
+		var tables = Tables.Count == 0
+			? "It has no tables."
+			: "Its tables are " + string.Join(", ", Tables.Select(t => $"\"{t.Name}\" ({SheetLocation.Quote(t.Sheet.Name)}!{t.Range})")) + ".";
+
+		throw new ArgumentException($"The workbook has no table named \"{name}\". {tables}", "options");
+	}
+
+	/// <summary>
+	/// Finds a defined name that is a block of cells: <c>Name</c>, the workbook's, or else the one sheet's of that name; or
+	/// <c>Sheet!Name</c>, that sheet's own. Names and sheets are matched ignoring case, and a built-in name's <c>_xlnm.</c>
+	/// prefix is optional.
+	/// </summary>
+	/// <param name="text">The name, with or without a sheet's.</param>
+	/// <returns>The name, whose <see cref="ExcelDefinedName.Sheet"/> and <see cref="ExcelDefinedName.Range"/> are set.</returns>
+	/// <exception cref="ArgumentException">
+	/// The workbook has no such name, several sheets have one of that name and the workbook none, or the name is not a
+	/// block of cells on a worksheet.
+	/// </exception>
+	private ExcelDefinedName FindName(string text)
+	{
+		const string BuiltInPrefix = "_xlnm.";
+		ExcelDefinedName? found = null;
+		if (AreaReference.TrySplitSheet(text.AsSpan(), out var sheetName, out var rest))
+		{
+			var name = rest.ToString();
+			if (name.StartsWith(BuiltInPrefix, StringComparison.OrdinalIgnoreCase))
+			{
+				name = name.Substring(BuiltInPrefix.Length);
+			}
+
+			var matches = DefinedNames.Where(n => string.Equals(n.Name, name, StringComparison.OrdinalIgnoreCase)).ToList();
+			if (sheetName is not null)
+			{
+				found = matches.FirstOrDefault(n => n.Scope is not null && string.Equals(n.Scope.Name, sheetName, StringComparison.OrdinalIgnoreCase));
+			}
+			else
+			{
+				found = matches.FirstOrDefault(n => n.Scope is null);
+				if (found is null)
+				{
+					var sheets = matches.Where(n => n.Scope is not null).ToList();
+					if (sheets.Count > 1)
+					{
+						throw new ArgumentException(
+							$"The defined name \"{name}\" is a name of several sheets: {string.Join(", ", sheets)}. Give one of them, such as {sheets[0]}.", "options");
+					}
+
+					found = sheets.FirstOrDefault();
+				}
+			}
+		}
+
+		if (found is null)
+		{
+			throw new ArgumentException($"The workbook has no defined name \"{text}\".", "options");
+		}
+
+		if (found.Range is null)
+		{
+			throw new ArgumentException($"The defined name \"{found}\" refers to {found.RefersTo}, which is not a block of cells on a worksheet.", "options");
+		}
+
+		return found;
 	}
 
 	/// <summary>Chooses the sheet to read: the one given, else the options', else the first worksheet.</summary>

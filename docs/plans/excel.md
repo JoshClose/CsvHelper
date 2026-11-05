@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04; see "As built" under Phase 3.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -55,12 +55,12 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader =
 }
 ```
 
-- **`ExcelWorkbook`**: `Open(path)` and `Open(stream)`. Exposes `Sheets` (name, index, visibility, kind, dimension), `Tables`, `DefinedNames` and `Date1904`. `OpenReader(...)` takes a sheet name, index, `ExcelSheet`, Table or range, and returns a `CsvReader`. Phase 1's "Public API" has the exact signatures and what each phase adds.
+- **`ExcelWorkbook`**: `Open(path)` and `Open(stream)`. Exposes `Sheets` (name, index, visibility, kind, and from Phase 3 `Dimension` and `Tables`), `Tables`, `DefinedNames` and `Date1904`. `OpenReader(...)` takes a sheet name, index or `ExcelSheet`, and returns a `CsvReader`; a table, a defined name or a range comes through the options. Phase 1's "Public API" has the exact signatures and what each phase adds.
 - **`ExcelReader`**: `FromFile(path)` and `Create(stream)`, and their async forms. One call returns a `CsvReader` that owns its workbook, for the common case of reading one sheet.
 - **`ExcelReaderOptions`**:
-  - `Sheet` (a name) or `SheetIndex`, `Range`, `Table`, `DefinedName`: what to read.
-  - `HeaderRow`: a fixed row, or detect it from `T` (with a scan limit).
-  - `FillMergedCells`, `SkipHiddenRows`, `SkipHiddenColumns`.
+  - `Sheet` (a name) or `SheetIndex`, then `Range`, `Table` or `DefinedName`, each a string: what to read. A `Range` may name its sheet (`'Q1 Orders'!B5:F200`).
+  - `HeaderRow`: an `ExcelHeaderRow`: a fixed row (`At`), or a search of the first rows for `T`'s columns (`Find<T>`) or for names (`Find(names)`), which also clips the columns to the header's.
+  - `FillMergedCells`, `SkipHiddenRows`, `SkipHiddenColumns`, all off by default.
   - `ErrorCells`: Text (default; the error's text, and typed targets fail), Null (an empty cell) or Error (every read of the cell fails, and `GetRecords` routes it to `OnRecordError`; a header cell still names its column, since step 8 of Phase 2).
   - `SignificantDigits`: significant digits for `decimal` and integer targets (default 15; null reads the stored text exactly).
   - `Formulas`: CachedValue (default) or FormulaText (`=` and the formula, with shared formulas moved to each cell).
@@ -263,8 +263,9 @@ Later phases add:
 
 - **Phase 2:** `ErrorCells`, `SignificantDigits`, `Formulas`, and the enums `ExcelErrorCells` and `ExcelFormulas`. Date conversion uses `Date1904`.
 - **Phase 3:**
-  - Options: `Range`, `Table`, `DefinedName`, `HeaderRow`, `FillMergedCells`, `SkipHiddenRows` and `SkipHiddenColumns`.
-  - `ExcelSheet.Dimension` and `ExcelSheet.Tables`; `ExcelWorkbook.Tables` and `ExcelWorkbook.DefinedNames`; reading all sheets.
+  - Options: `Range`, `Table` and `DefinedName` (strings), `HeaderRow` (an `ExcelHeaderRow`: `At`, `Find<T>`, `Find(names)`), `FillMergedCells`, `SkipHiddenRows` and `SkipHiddenColumns`.
+  - `ExcelRange`, `ExcelTable` and `ExcelDefinedName`; `ExcelSheet.Dimension` and `ExcelSheet.Tables`; `ExcelWorkbook.Tables` and `ExcelWorkbook.DefinedNames`.
+  - Reading all sheets is a loop over `Sheets`, one reader per sheet, which this phase's API already allows.
 - **Phase 8:** `Text`.
 - **Later, if `[ExcelSheet]` settings call for it:** an `ExcelReaderOptions.For<T>()` like `CsvReaderOptions.For<T>()`.
 
@@ -462,7 +463,7 @@ Internal/Sheet/
 **Location:**
 
 - **Rows:** the source passes each record's sheet row to `EndRecord`. The reader keeps it per record (Phase 0's line array) and hands it back to `Locate(line, field)`, on `ParallelEnumerate` workers too.
-- **Columns:** a field's column is its index plus the sheet's first column. That is 0 in Phase 1; Phase 3's ranges and hidden-column skipping replace it with a field-to-column map.
+- **Columns:** a field's column is its index plus the sheet's first column. That is 0 in Phase 1; Phase 3's ranges and hidden-column skipping replace it with a field-to-column map (`SheetLayout`).
 - **Format:**
   - `Locate` gives `Orders!C14` for a field and `Orders!14:14` for a whole row (field -1).
   - Sheet names are quoted as Excel quotes them in formulas (`'Q1 Orders'!C14`, `'Bob''s'!A1`). That applies when a name has characters other than letters, digits, `_` and `.`, starts with a digit or a `.`, is `TRUE` or `FALSE`, or reads as a cell reference. That includes R1C1 references and names that start like one (`R2D2`, `C3PO`). Excel 365 was checked through COM; see step 5's "As built".
@@ -2581,7 +2582,11 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
     - The controls' means: Sep 0.983, Sep_MT 0.970, Sylvan 1.003, RecordParser 0.996.
   - So the gate passes. With the fix, `FormattedDatesRead`'s Records is about 2% slower than base, the same way in all 4 pairs, within the ±3% Phase 0 accepted, and it allocates 65% less.
 
-### Phase 3: choosing what to read, and messy sheets (M)
+### Phase 3: choosing what to read, and messy sheets (L)
+
+Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
+
+Scope, as planned:
 
 - **Workbook metadata:**
   - Sheets: the dimension. Name, index, visibility and kind already come in Phase 1.
@@ -2592,9 +2597,713 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
   - A named range.
   - A Table by name, using its header and excluding the totals row.
   - An explicit range like `B5:F200`.
-- **Header-row detection:** scan the first N rows for the required column names of `T` (from `CsvRecordMapper.TryGetMembers<T>`), skip the title and logo rows above them, and clip to the header's columns.
+- **Header-row detection:** scan the first N rows for the required column names of `T` (from `CsvRecordMapper.TryGetMembers<T>`), skip the title and logo rows above them, and clip to the header's columns. (The design probes `T`'s mapper instead; see "Core changes".)
 - **Hidden rows and columns:** skip hidden rows (`<row hidden="1">`) and hidden columns (`<cols>`, which comes before the data). Logical column indexes are remapped.
 - **Merged-cell fill:** fill down and across from the top-left cell. `<mergeCells>` comes *after* `<sheetData>`, so turning this on costs a second inflate pass. Document that cost.
+
+#### Public API
+
+Phase 3 adds seven options, the `ExcelHeaderRow` that one of them takes, and the workbook's metadata: a range type, tables, defined names, and sheets' dimensions. Reading still returns a plain `CsvReader`.
+
+```csharp
+public sealed record ExcelReaderOptions
+{
+	// Phases 1 and 2: Default, Sheet, SheetIndex, Csv, MaxPartSize, MaxUncompressedSize, ErrorCells, SignificantDigits, Formulas.
+
+	public string? Range { get; init; }
+	public string? Table { get; init; }
+	public string? DefinedName { get; init; }
+	public ExcelHeaderRow? HeaderRow { get; init; }
+	public bool SkipHiddenRows { get; init; }
+	public bool SkipHiddenColumns { get; init; }
+	public bool FillMergedCells { get; init; }
+}
+
+public sealed class ExcelHeaderRow
+{
+	public static ExcelHeaderRow At(int row);
+	public static ExcelHeaderRow Find<T>(int maxRows = 20);
+	public static ExcelHeaderRow Find(IEnumerable<string> names, int maxRows = 20);
+
+	public override string ToString();
+}
+
+public readonly struct ExcelRange : IEquatable<ExcelRange>
+{
+	public ExcelRange(int firstRow, int firstColumn, int lastRow, int lastColumn);
+
+	public int FirstRow { get; }
+	public int FirstColumn { get; }
+	public int LastRow { get; }
+	public int LastColumn { get; }
+	public int RowCount { get; }
+	public int ColumnCount { get; }
+
+	public static ExcelRange Parse(string text);
+	public static bool TryParse(string? text, out ExcelRange range);
+
+	public bool Equals(ExcelRange other);
+	public override bool Equals(object? obj);
+	public override int GetHashCode();
+	public override string ToString();
+
+	public static bool operator ==(ExcelRange left, ExcelRange right);
+	public static bool operator !=(ExcelRange left, ExcelRange right);
+}
+
+public sealed class ExcelSheet
+{
+	// Phase 1: Name, Index, Visibility, Kind, ToString.
+
+	public ExcelRange? Dimension { get; }
+	public IReadOnlyList<ExcelTable> Tables { get; }
+}
+
+public sealed class ExcelTable
+{
+	public string Name { get; }
+	public ExcelSheet Sheet { get; }
+	public ExcelRange Range { get; }
+	public int HeaderRowCount { get; }
+	public int TotalsRowCount { get; }
+	public IReadOnlyList<string> Columns { get; }
+
+	public override string ToString();
+}
+
+public sealed class ExcelDefinedName
+{
+	public string Name { get; }
+	public ExcelSheet? Scope { get; }
+	public bool Hidden { get; }
+	public string RefersTo { get; }
+	public ExcelSheet? Sheet { get; }
+	public ExcelRange? Range { get; }
+
+	public override string ToString();
+}
+
+public sealed class ExcelWorkbook
+{
+	// Phase 1: Open, OpenAsync, Sheets, Date1904, OpenReader, OpenReaderAsync, Dispose, DisposeAsync.
+
+	public IReadOnlyList<ExcelTable> Tables { get; }
+	public IReadOnlyList<ExcelDefinedName> DefinedNames { get; }
+}
+```
+
+**What a reader reads.** A reader reads an area of one sheet: the whole sheet, or the area that `Range`, `Table` or `DefinedName` gives.
+
+- **The whole sheet** (none of the three): as in Phases 1 and 2, field `i` is column `i` from `A`, and the first record is the header.
+- **`Range`:** cells in Excel's A1 form.
+  - `B5:F200`, `B5` (one cell), `B:F` (whole columns) and `5:200` (whole rows), with or without `$`, letters of either case, and the corners in either order (`F200:B5`).
+  - A sheet's name in front chooses the sheet, quoted as Excel quotes it: `Orders!B5:F200`, `'Q1 Orders'!B5:F200`. Without one, the range is on the sheet chosen as in Phase 1.
+- **`Table`:** an Excel table by its name, ignoring case. The area is the table's columns and its data rows: those below its header row and above its totals row.
+  - With `HasHeader`, the header record is the table's column names, whether or not its header row shows (decision 6). Without it, the reader reads the data rows alone.
+- **`DefinedName`:** a defined name whose `Range` is set (see "Metadata").
+  - `Data` is the workbook's name `Data`, or else the one sheet's name `Data`. `Messy!Data` is the sheet Messy's own, as Excel's Name Box writes it.
+  - Excel's built-in names go without their `_xlnm.` prefix: `Messy!Print_Area`.
+- **Choosing:**
+  - At most one of the three can be set.
+  - `Table`, `DefinedName` and a `Range` with a sheet's name choose their sheet. A sheet given as well (`OpenReader`'s argument, `Sheet` or `SheetIndex`) throws `ArgumentException`.
+- **In an area:**
+  - Field 0 is the area's first column. Cells outside its columns are not fields, and their values are not decoded.
+  - Rows above the area are skipped. Reading stops after its last row: nothing of the sheet after it is inflated.
+  - The rest is as for a whole sheet: empty rows follow `SkipEmptyLines`, rows are padded to the first record's width, `LineNumber` is the sheet's row and `Location` the cell.
+  - With `SkipEmptyLines = false`, record `n` is the area's row `n`, up to the last row of the area that the file has.
+
+**The header row (`HeaderRow`):**
+
+- **`null`** (the default): the area's first record is the header when `HasHeader`, as before. Nothing is clipped.
+- **`ExcelHeaderRow.At(row)`:** that sheet row is the header, and it must be in the area. Rows of the area above it are skipped, and the columns are clipped to the header's: from its first cell with a value to its last.
+- **`ExcelHeaderRow.Find<T>(maxRows)`:** the header is the first row, of the area's first `maxRows` rows (20 by default), that has every column `T` requires. Rows above it are skipped and the columns clipped, as for `At`.
+  - A row has them when `T`'s mapper finds them there, as `GetRecords<T>` would: `TryValidateHeader<T>` on a reader whose header is that row. So alternate names, nested records, `NormalizeHeaderName` and header matching all apply, and optional members are not required.
+  - `T` needs a mapper (`[CsvRecord]`); otherwise `OpenReader` throws `InvalidOperationException`, as `GetRecords<T>` does.
+  - `Find<dynamic>` takes the first row with a value: dynamic records require no columns.
+- **`ExcelHeaderRow.Find(names, maxRows)`:** the same, for a row that has every name, each matched as `TryGetFieldIndex` matches it: for dynamic records and reading by name. An empty list takes the first row with a value, clipped.
+- **Candidates** are the area's rows with a value, after hidden rows are skipped and merged cells filled (when those options are on). A typed cell counts as its text, as a header name does (a date names its column `2024-01-15`). Rows count by number: the area's first `maxRows` rows, whether the file has them or not.
+- **When:** `OpenReader` (or `OpenReaderAsync`) reads the sheet up to the header row, so a sheet without one fails there.
+- **Not found:**
+  - `OpenReader` throws `KeyNotFoundException`, naming the rows searched and the row that came closest, with what it lacks, as header validation names columns: "No row of Orders!1:20 has the columns that Order requires. The closest, row 4, lacks Order.Total ('Total')."
+  - For `At`, a header row without a value throws `CsvFormatException` naming the row.
+- **Not with:** `Table` (a table's header is its column names), or `Csv.HasHeader = false`. Either throws `ArgumentException`.
+
+**Hidden rows and columns** (`SkipHiddenRows` and `SkipHiddenColumns`, both `false` by default, so hidden cells read as in Phases 1 and 2):
+
+- **A hidden row** (checked through COM, below):
+  - `hidden="1"` or `hidden="true"`;
+  - or `ht="0"` with `customHeight` set (without `customHeight`, Excel ignores the height);
+  - or, in a sheet whose `sheetFormatPr` has `zeroHeight`, a row that the file doesn't have. Excel writes that for "hide every row below", with each visible row in the file, empty or not. (Changed at step 3: so does a `sheetFormatPr` with `customHeight` and a `defaultRowHeight` of 0, as Excel reads it.)
+  - Rows that a filter hides, and rows of a collapsed outline, are hidden rows too, so `SkipHiddenRows` reads what Excel shows.
+  - (Changed at step 3:) Excel also hides a row whose height is too small to show a pixel (0.5 hid a row on the machine checked, 0.74 didn't). That depends on the screen, and is not reproduced.
+- **A hidden column:**
+  - a `<col>` with `hidden` set, or with `width="0"`; (changed at step 3) or without a width, or with one that isn't a number, which Excel reads as 0;
+  - or, when `sheetFormatPr` has `defaultColWidth="0"`, a column that no `<col>` covers.
+  - Where `<col>` ranges overlap, the last one that covers a column decides.
+  - Excel also hides a column so narrow that it rounds to no pixels (below about 0.07 characters in Calibri 11). That depends on the workbook's font, and is not reproduced.
+- **How Excel reads the values** (added at step 3, checked through COM): it decodes references, then reads strictly. A boolean is true only as `1` or `true` (not `TRUE`, ` 1 ` or `yes`). A number has no white space and no `+` (`-0`, `.0`, `0.` and `0e+0` are 0, and so is an empty value). Excel ignores a value it can't read, so it hides nothing, except a column's width, which is then 0.
+- **What skipping does:**
+  - A hidden row is no record, so record `n` is no longer row `n`; `LineNumber` is still the row.
+  - A hidden column is no field: the fields are the area's visible columns, in order. `Location` still names the cell, so field 2 of row 9 is `Messy!E9` when `D` is hidden.
+
+**Merged cells** (`FillMergedCells`, `false` by default):
+
+- Each cell of a merged range reads as its top-left cell, value and kind, whatever it stores itself. That is what Excel shows. Excel's own files have nothing in the other cells, but other producers' can, and Excel's `Value2` gives what they store (decision 14).
+- The fill comes first: a top-left cell above or left of the area, or in a hidden row or column, still fills the area's visible cells. Rows the file leaves out inside a merged range are records once they are filled.
+- A range whose top-left cell has no value fills with nothing.
+- **Cost:** `<mergeCells>` comes after `<sheetData>`, so `OpenReader` reads the sheet's part through once to find it, before the reader reads it again. That second inflate counts toward `MaxUncompressedSize`, and the ranges toward `MaxPartSize`. "Benchmark" measures its time.
+- Overlapping ranges, which Excel can't open, throw `CsvFormatException` from `OpenReader`.
+
+**Metadata:**
+
+- **`ExcelRange`:** a block of cells.
+  - Rows and columns are 1-based, as Excel's `Range.Row` and `Range.Column` number them (`A` is 1).
+  - `ToString()` gives Excel's form: `B5:F200`, `B5`, `B:F` for whole columns, `5:200` for whole rows.
+  - `Parse` and `TryParse` take `Range`'s forms, without a sheet. The constructor and `Parse` throw for a block outside the grid.
+- **`ExcelSheet.Dimension`:** the used range the file states (`<dimension ref>`), which Excel keeps: cells with only formatting count, and an empty sheet is `A1`.
+  - `null` when the sheet states none (the Open XML SDK, SpreadCheetah, LargeXlsx and Google Sheets write none), when it isn't a worksheet, or when the start of its part can't be read; reading the sheet then says why.
+  - It is read on first access, from the start of the sheet's part, and then kept (decision 17). A disposed workbook throws `ObjectDisposedException`, unless it was read before.
+- **`ExcelSheet.Tables`** and **`ExcelWorkbook.Tables`:** the tables, by sheet in tab order, and in each sheet in the order of its relationships.
+- **`ExcelTable`:**
+  - `Name`: the table's `displayName`, which formulas use. COM's `ListObject.Name` gives the part's `name` attribute instead; Excel writes the two alike.
+  - `Range`: the table's `ref`: its header, data and totals rows.
+  - `HeaderRowCount` (1, or 0 when the header row is hidden) and `TotalsRowCount` (0 or 1).
+  - `Columns`: the column names, with `_xHHHH_` escapes decoded.
+  - `ToString()`: its name.
+- **`ExcelDefinedName`:**
+  - `Name`, without `_xlnm.` for Excel's built-in names (`Print_Area`, `_FilterDatabase`).
+  - `Scope`: the sheet whose own name it is (from its `localSheetId`, the sheet's index in tab order, chartsheets counted), or `null` for the workbook's.
+  - `Hidden`, and `RefersTo`: the formula as the file stores it, without `=`.
+  - `Sheet` and `Range`, when `RefersTo` is one block of cells on a worksheet of the workbook:
+    - a sheet's name (as `Range` takes it), `!`, then a cell or a block, with or without `$`, in either case, with white space around it;
+    - a relative reference reads as stored, which is relative to `A1`: Excel stores relative names that way, and shows them so while `A1` is the active cell;
+    - not ranges: constants, formulas, unions (`A1,C3`), intersections, 3-D references (`Sheet1:Sheet3!A1`), other workbooks' (`[1]Sheet1!A1`), `#REF!`, table references (`Sales[Qty]`), and a chartsheet's.
+  - `ToString()`: `Data`, or `Messy!Local` for a sheet's own.
+- **Reading them:** `Open` reads the defined names with the workbook part, and each worksheet's relationships and table parts. `MaxPartSize` bounds each part, and `MaxUncompressedSize` counts them. Only `Dimension` is read later.
+
+**Reading all sheets:** one reader per sheet, as Phase 1 already allows: a loop over `Sheets` that opens each worksheet's reader in turn (decision 19). The docs give the loop, and a test reads every sheet of a workbook that way.
+
+**Messages** (`ArgumentException` unless noted; the parameter is `options`, or the argument that chose the sheet):
+
+- From `Validate`:
+  - "ExcelReaderOptions.Range, ExcelReaderOptions.Table and ExcelReaderOptions.DefinedName can't be set together."
+  - "ExcelReaderOptions.Range, \"B5:\", is not a range of cells, such as B5:F200, B:F or 5:200."
+  - "ExcelReaderOptions.Table chooses its own sheet, so ExcelReaderOptions.Sheet and ExcelReaderOptions.SheetIndex can't be set with it." The same for `DefinedName`, and for a `Range` that names its sheet.
+  - "ExcelReaderOptions.HeaderRow can't be set with ExcelReaderOptions.Table: a table's header is its column names."
+  - "ExcelReaderOptions.HeaderRow needs ExcelReaderOptions.Csv.HasHeader."
+- From `OpenReader`:
+  - "ExcelReaderOptions.Table chooses its own sheet, so no sheet can be given with it." (and for the other two)
+  - "The workbook has no table named \"X\". Its tables are \"Sales\" (Tables!A1:B4), \"NoHeader\" (Tables!D6:E6)." Or "The workbook has no tables."
+  - "The workbook has no defined name \"X\"."
+  - "The defined name \"Data\" is a name of several sheets: Messy!Data, Tables!Data. Give one of them, such as Messy!Data."
+  - "The defined name \"Dyn\" refers to OFFSET(...), which is not a block of cells on a worksheet."
+  - "The header row, 3, is not in the range B5:F200." (`ArgumentOutOfRangeException`)
+- From `ExcelHeaderRow`: "A row is from 1 to 1048576.", and "maxRows must be from 1 to 1048576." (`ArgumentOutOfRangeException`); a null list or name (`ArgumentNullException`, `ArgumentException`).
+
+#### Checked on 2026-11-04
+
+Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch folder. Excel made and saved some of them; the rest were written by hand and opened read-only (`Workbooks.Open` throws when a file needs repairing).
+
+- **Hidden rows:**
+  - A hidden row is `hidden="1"`. Excel also hides `hidden="true"`, and `ht="0"` with `customHeight="1"`. `ht="0"` alone, and `defaultRowHeight="0"`, hide nothing.
+  - Hiding every row below 19 wrote `zeroHeight="1"`, with each of rows 7 to 19 as an empty `<row>`. A hand-written `zeroHeight` sheet shows the rows it has, unless they are hidden, and hides every row it lacks.
+  - A filter wrote `hidden="1"` on the rows it hides (with `filterMode="1"` and an `autoFilter` after `sheetData`). A collapsed group wrote `hidden="1"` and `outlineLevel` on its rows, then `collapsed="1"` on the row after.
+- **Hidden columns:**
+  - Hiding column `D` wrote `<col min="4" max="4" width="0" hidden="1" customWidth="1"/>`. Excel also hides `hidden="true"`, `width="0"` without `hidden` (with or without `customWidth`), and a width that rounds to no pixels (0.0001).
+  - Hiding every column from `H` wrote `<col min="8" max="16384" ... hidden="1"/>` and `defaultColWidth="0"`. A hand-written `defaultColWidth="0"` hides every column that no `<col>` covers.
+  - Of two overlapping `<col>` elements, the later decides for the columns it covers.
+- **Hidden cells' values,** checked again at step 3 with three rounds of hand-written files:
+  - Rows: `hidden` hides as `1`, `true` or `&#49;`; `TRUE`, `True`, ` 1`, `1 `, `true `, `on`, `2`, `-1` and `yes` hide nothing. `customHeight` reads the same way. With `customHeight="1"`, an `ht` of `0`, `0.0`, `-0`, `.0`, `0.`, `0e+0`, `&#48;` or empty hides the row; ` 0`, `0 `, `+0`, `0x0`, `0,0` and `abc` hide nothing; `0.3` to `0.5` and `1e-9` hide it, `0.74`, `0.75` and `1e+0` don't. `customHeight` without `ht` hides nothing, and `hidden="0"` doesn't show a row whose height is 0.
+  - Rows the file lacks: `zeroHeight` as `1`, `true` or `&#49;` hides them, and `0` doesn't; `TRUE`, ` 1` and `yes` make a file Excel can't open. A `defaultRowHeight` of `0`, empty or `0.2` hides them with `customHeight` set (`1` or `true`), and nothing without it or with `customHeight="yes"`; `abc` and ` 0` make a file Excel can't open, and `-1` hides nothing.
+  - Columns: `hidden` reads as a row's does (`yes`, ` 1`, `TRUE` and `2` hide nothing). A `<col>` without `width` (with only `style`, or only `customWidth`) hides its columns, as does a width of `abc`, ` 9 `, `+9`, empty, `-0`, `0.0` or `1e-9`; `-1`, `9.`, `.5e1` and `&#57;` don't.
+  - A `defaultColWidth` of `0`, `0.0`, empty or `0.0001` hides the columns no `<col>` covers; ` 0 `, `abc` and `+0` hide nothing, and `-1` makes a file Excel can't open.
+  - Excel can't open a file whose `<col>` has no `min` or `max`, a `min` of 0 or past 16,384, a `min` after its `max`, a `min` with white space, or a `max` of `2.0`; nor one with `<cols/>`, or with `<cols>` after `sheetData`. It takes a `max` past 16,384 as 16,384, `<col>` elements out of order, and two `<cols>` elements.
+- **Merged cells:**
+  - Excel writes a merged range's other cells as empty cells with the top-left cell's style, and the ranges in `<mergeCells>`, after `sheetData` (and after `autoFilter`, before `pageMargins`).
+  - A hand-written file with values in a range's other cells opens. `Value2` and `Text` give each cell's own value, while the sheet shows the range as its top-left cell. A range whose top-left cell is empty reads the same way.
+  - Excel can't open a file whose ranges overlap, even repairing it. It accepts a one-cell range.
+- **Defined names:**
+  - A sheet's own name has a `localSheetId`: the sheet's index in tab order, chartsheets counted (a name of the second sheet, after a chartsheet, was 1).
+  - Built-in names are `_xlnm.Print_Area`, and `_xlnm._FilterDatabase`, hidden, which COM shows as `Messy!Print_Area`.
+  - A name to a deleted sheet is stored as `#REF!`. A relative name is stored relative to `A1`: `=Messy!B2`, defined with `C3` active, was stored `Messy!B2`, and COM showed it moved by the active cell.
+  - Excel reads hand-written names in lowercase (`s!$a$1`), with their corners reversed, with white space or parentheses around them, and as an intersection (`S!$A$1:$B$2 S!$B$1:$B$3` is `B1:B2`). It can't open a file with a name that has no sheet (`$A$1:$B$2`, as the workbook's or a sheet's), or one that starts with `=`.
+- **Tables:**
+  - A table part (`xl/tables/table1.xml`) is related from its sheet (type `table`) and listed in the sheet's `<tableParts>`, after `sheetData`. To Excel, a relationship without a `<tablePart>` is no table.
+  - With a totals row: `ref="A1:B4" totalsRowCount="1"`, and an `autoFilter` without the totals row. With the header row hidden: `headerRowCount="0"`, a `ref` without that row, the header cells gone from the sheet, and the names only in `tableColumns`.
+  - Excel can't open a table whose header cells differ from its column names: another text, a number for the name `1`, or an empty cell.
+  - Formulas use `displayName`: `=ROWS(Shown)` works and `=ROWS(Internal)` is `#NAME?`. COM's `ListObject.Name` is the `name` attribute and `DisplayName` the other. Excel writes them alike.
+- **Dimensions:** Excel's `<dimension ref>` covers cells with only formatting and the empty rows it writes (`A1:F19`, where the last value was in row 18); an empty sheet is `A1`. In the corpus, the Open XML SDK, SpreadCheetah, LargeXlsx and Google Sheets write none, and ClosedXML, openpyxl and MiniExcel write `A1:A1` for an empty sheet.
+
+#### Internal design
+
+**New files:**
+
+- `ExcelRange.cs`, `ExcelTable.cs`, `ExcelDefinedName.cs` and `ExcelHeaderRow.cs`: the public types.
+- `Internal/Package/TablePart.cs`: a table part's parser.
+- `Internal/Sheet/AreaReference.cs`: parsing `[sheet!]area`, for `Range`, defined names, tables' and merged ranges' `ref`.
+- `Internal/Sheet/SheetArea.cs`: what a reader reads: its sheet, its rows and columns, and where its header comes from.
+- `Internal/Sheet/SheetLayout.cs`: fields from columns: the area's bounds, hidden columns and the header's clip, and the field-to-column map that `Locate` uses.
+- `Internal/Sheet/HiddenColumns.cs`: a 16,384-bit set, from `<cols>` and `sheetFormatPr`.
+- `Internal/Sheet/MergedCells.cs`: the ranges, the read that finds them, and the fill state the scanner keeps.
+- `Internal/Sheet/HeaderSearch.cs`: the search, with the capturing target it fills and the one-record source its probe readers read.
+- `Internal/Sheet/SheetDimension.cs`: reads `<dimension>` from the start of a sheet's part.
+
+**Opening** (`ExcelWorkbook.LoadAsync`):
+
+- **Defined names:** `WorkbookPart` reads `definedNames` too.
+  - Each `definedName` gives its `name`, `localSheetId` and `hidden`, and its text, decoded as a formula's is (`XmlText`, trimmed of XML white space, escapes decoded).
+  - A name without `name`, or a `localSheetId` that isn't a sheet's index, throws `InvalidDataException` naming the attribute, as Phase 1's step 3 made the other attributes strict. Of two names with one name and scope, the first counts.
+- **Tables:** for each worksheet with a part, its relationships part, if it has one, and the part of each `table` relationship that exists.
+  - A table part's root is `table`, by local name, so either namespace and any prefix. `displayName` (else `name`) and `ref` are required; `headerRowCount` defaults to 1 and `totalsRowCount` to 0; `tableColumns/tableColumn/@name` give the names.
+  - A value that isn't one (a `ref` that isn't a block, counts past the `ref`'s rows) throws `InvalidDataException`.
+  - Tables are found from the relationships, not from `<tableParts>`: that comes after `sheetData`, so finding it would inflate every sheet at `Open`. Excel ignores a table relationship that `<tableParts>` doesn't list, and no producer writes one (see "Risks").
+
+**Choosing what to read** (`OpenReader`):
+
+1. `Validate` checks the new options' combinations, and parses `Range`.
+2. The target becomes a `SheetArea`: the sheet; its first and last rows and columns (the whole grid for a sheet); and where its header comes from: the first record (as before), a table's names, or a search (`ExcelHeaderRow`).
+   - A table's area is its `ref` less its header and totals rows. The record of its names gets the header row as its line when the table shows one, else 0, which `Locate` gives no location.
+   - A table without data rows reads its header alone.
+3. With `FillMergedCells`, `MergedCells.LoadAsync` finds the ranges (below).
+4. The scanner is created over the sheet's part, with the area, the hidden-state options and the ranges.
+5. With a `HeaderRow`, `HeaderSearch` runs the scanner up to the header row (below). With a table, the scanner holds the record of its names.
+6. It returns `new CsvReader(source, Csv)`, as before. A failure after the part is opened disposes it.
+
+**The scanner:**
+
+- **The fast path stays.** A whole sheet with nothing skipped or filled has no layout (`null`), and the scanner runs Phase 2's code, with one test of the layout per row and per cell. The QuickRunner A/B under "Benchmark" measures that test.
+- **Before `sheetData`,** the scanner reads `sheetFormatPr` (`zeroHeight`, `defaultColWidth`, and from step 3 `customHeight` and `defaultRowHeight`) and `cols` when hidden rows or columns are skipped, and skips them otherwise, as now. `<cols>` comes before `sheetData` in the schema and in every producer here, so the layout is final before the first row.
+- **Rows:**
+  - A row above the area, or hidden while hidden rows are skipped, or above the header row once the search has found it, is skipped whole (`TrySkipTo`), its cells unread. The exception is a row holding the top-left cell of a merged range that the area needs. (Changed at step 2: with formulas read as text, a row above the area is read for its shared formulas' definitions, and nothing of it is written, so that a group's cells in the area read their formula; see step 2's "As built".)
+  - A row past the area's last row ends the sheet (`Done`), so nothing after it is inflated.
+  - A row without `r` is read up to its first cell's reference, which gives its number, before it is judged.
+  - Missing rows (`SkipEmptyLines = false`) start at the area's first row and leave out hidden ones. In a `zeroHeight` sheet, every missing row is hidden.
+- **Cells:** `SheetLayout.FieldOf(column)` gives the field, or -1 for a column outside the area or hidden. A cell of no field is skipped as the rest of a cell is (`CellRest`), its value not decoded, unless it is a merged range's top-left cell, or (changed at step 2) holds a shared formula's definition while formulas read as text. Gap fields and padding work on fields as they work on columns now; the order checks still use columns.
+- **`SheetLayout`:**
+  - `FieldOf` is `column - firstColumn` within the bounds, or an `int[]` over the area's columns when hidden columns are skipped. `ColumnOf(field)` serves `Locate`.
+  - It is final before the first record is written (the header search narrows it in `OpenReader`), and immutable after, so `ParallelEnumerate`'s workers read it without locks.
+- **A held first record** (a table's names, or the header row the search found, clipped) is written as the first record of the first fill, with its kinds.
+
+**Merged cells:**
+
+- **Finding them** (`MergedCells.LoadAsync`, sync or async): a second stream of the sheet's part, with its own `XmlScanner`.
+  - It checks the root, skips `sheetData` (`TrySkipTo`, whose skipping of text keeps the window small), reads each `mergeCells/mergeCell/@ref`, and stops after `</mergeCells>`, or at the root's end.
+  - A `ref` that isn't a block throws `CsvFormatException` for the sheet, as its other content does. One-cell ranges are dropped.
+  - Each range counts 16 bytes toward `MaxPartSize`: "The merged cells of xl/worksheets/sheet1.xml take more than ExcelReaderOptions.MaxPartSize (N bytes)."
+  - The ranges are sorted by first row, then column, and a sweep over them finds overlaps: "Sheet Messy can't be read at byte N of xl/worksheets/sheet1.xml: its merged cells A1:B2 and B2:C3 overlap."
+- **Filling** (the scanner's `MergedCells` state):
+  - Ranges become active at their first row and end after their last, in row order. The active ones are kept by column.
+  - When the scanner reads a range's top-left cell, in any row, even one it otherwise skips, it copies the cell's field (bytes and kind) into the state's byte store.
+  - In a row, cells and fills merge in column order. A cell inside an active range, other than its top-left, is skipped unread. Each fill is the top-left cell's field, added at its column's field (through the layout), and counts its bytes toward `MaxUncompressedSize`, as a shared string beyond its cell does (Phase 2's step 8).
+  - A row the file lacks inside an active range with a value is written as a record of its fills. So are rows after the last one the file has, while ranges go on. Each such record counts as a missing row does.
+  - The store holds one field per active range; a range that ends frees its field.
+
+**The header search** (`HeaderSearch.RunAsync`, sync or async):
+
+- It fills a capturing target, one row per fill (full after each record), through the scanner's own `Fill` or `FillAsync`, over the area's first `maxRows` rows by number.
+- Each row with a value becomes a probe: a `CsvReader` over a one-record source of its fields and kinds, with the reader's options, so typed cells name their columns as `CaptureHeader` makes them. The probe is asked `TryValidateHeader<T>` (`Find<T>`), or `TryGetFieldIndex` for each name (`Find(names)`).
+- `ExcelHeaderRow` holds that test as a delegate, which `Find<T>` makes. So the options stay non-generic, and nothing is reflected.
+- The first row that passes is the header. The layout's columns narrow to its first and last fields with a value, the row (narrowed) is held for the first fill, and the scanner goes on after it.
+- It keeps the row with the fewest missing columns, for the message. A probe reader is made per candidate, at most `maxRows` of them, each with the reader's buffer.
+- `At(row)` reads up to that row and takes it, without a probe.
+
+**Location:** `SheetRecordSource.Locate` maps a field to its column through the layout. With no layout, the field is the column, as now. The scanner's own errors already name cells by column.
+
+**Dimension:** `SheetDimension.ReadAsync` opens the part, reads the root and its children up to `dimension` (its `ref`) or `sheetData` (none), and closes it: a few KB inflated. `ExcelSheet.Dimension` calls it synchronously on first access, under the workbook's options, and keeps the result. Any exception but `ObjectDisposedException` makes it `null`.
+
+**Validation:** `ExcelReaderOptions.Validate`, which every `Open` and `OpenReader` runs, checks the combinations under "Public API" and parses `Range`. Looking up sheets, tables and names happens in `OpenReader`, which has the workbook.
+
+#### Testing
+
+**Unit tests:**
+
+- **`ExcelRange` and `AreaReference`:** every form (cells, blocks, whole columns and rows, `$`, case, reversed corners, white space, quoted sheet names with `''` in them), round trips through `ToString` over random ranges, and rejections (past `XFD` or row 1,048,576, `A0`, empty parts, unions, 3-D references, `#REF!`, functions, a leading `=`).
+- **`TablePart`:** Excel's shape, a hidden header row, totals, escaped names, the strict namespace and prefixes, missing and invalid attributes, a DOCTYPE, and the part limit.
+- **Defined names in `WorkbookPart`:** every name of the probes above, scopes with a chartsheet first, hidden and built-in names, duplicates, and an invalid `localSheetId`.
+- **`HiddenColumns`:** ranges, overlaps, `defaultColWidth`, `width="0"`, the boolean forms, and invalid `min` and `max`.
+- **`MergedCells`:** finding the ranges (after `sheetData`, with prefixes, and stopping after `</mergeCells>`, checked with a read-tracking stream), sorting, overlaps, and the limit.
+
+**Scanner,** in every one of the 16 sheet modes:
+
+- **Areas:** rows and columns clipped, gap fields from the area's first column, padding, `SkipEmptyLines` both ways, the early stop (a read-tracking stream shows nothing read past the refill that holds the area's last row), and rows without `r`.
+- **Hidden cells:** hidden rows in each form, `zeroHeight` with rows present and missing, and hidden columns in each form, with gaps and padding.
+- **Merged cells:** fills across, down and both; a top-left cell outside the area, in a hidden row or column, or without a value; other cells' values dropped; rows the file lacks, filled; ranges past the last row; one-cell ranges; overlaps; fills counted to the byte.
+- **A held first record:** a table's names, and the header the search found.
+- **Comparison:** the 100 generated sheets of `SheetScannerComparisonTests`, read again with random areas, hidden rows and columns, and merged ranges that don't overlap, against the reference model, which gains the same rules.
+
+**End to end,** sync and async, on net10.0, net8.0 and net48:
+
+- Each target (`Range` with and without a sheet, `Table`, `DefinedName` by both lookups), each `HeaderRow`, and the three switches, through `GetRecords<T>`, dynamic records, `CsvDataReader`, `Query<T>()` and `ParallelEnumerate`, with `Location` checked through the layout, in errors and in `OnRecordError`.
+- Every sheet of a workbook read in a loop.
+- The metadata: `Tables`, `DefinedNames`, and `Dimension` (stated, missing, unreadable, a chartsheet's, a disposed workbook's).
+- The options' validation, and every message.
+
+**Corpus:**
+
+- **A `messy` content set** (`tools/CsvHelper.Excel.Corpus/Messy.cs`), defined once, like `basic` and `typed`:
+  - "Report": a title merged across, a note, an empty row, the header at `B4` with a hidden column, rows with a region merged down them, a merged block, a hidden row, a collapsed group, and a totals line.
+  - "Tables": a table with a totals row, one with its header row hidden, one with a line break in a column name, and one away from `A1`.
+  - "Filtered": a filter that hides rows, and every row below the data and every column right of it hidden (`zeroHeight`, `defaultColWidth="0"`).
+  - A chartsheet before "Tables", so that sheets' names count it.
+  - Defined names: the workbook's `Data`; a sheet's own name, and one of the same name on another sheet; a relative name, a union, a constant, a formula, a 3-D reference, whole columns and whole rows, a name to a sheet that was deleted, a hidden name, a table reference, `Print_Area` and `Print_Titles`.
+- **Its producers:** Excel (`excel/messy.xlsx`, through COM, which builds each feature as a user would); LibreOffice, from Excel's file; openpyxl, XlsxWriter, Apache POI and ClosedXML, each writing what it can. The corpus `README.md` records what each writes.
+- **Excel's answers:** the `oracle` command also records, for every corpus workbook:
+  - each worksheet's hidden rows and columns, within its used range and a margin, and each merged cell's `MergeArea`;
+  - the workbook's names (`Name`, `RefersTo`, the address of `RefersToRange` or none, `Visible`) and tables (`Name`, `DisplayName`, `Range`, `ShowHeaders`, `ShowTotals`, and the column names).
+- **Oracle tests:**
+  - **Excel's answers:** every table, name, hidden row and column, and merged range of every workbook, against the metadata and against reads with each option: skipping hidden cells reads exactly the visible ones, and a filled cell reads its range's top-left cell. Each difference is listed with its reason.
+  - **ClosedXML** (merged ranges, hidden rows and columns, tables, defined names) and **ExcelDataReader** (merged cells, and hidden rows as a height of 0), with their differences listed.
+
+**Security and fuzzing:**
+
+- A merged range `A1:XFD1048576` around a 1 MB top-left value stops at `MaxUncompressedSize` within a few cells.
+- A million merged ranges stop at `MaxPartSize`. A million ranges down a column of rows the file lacks are counted as missing rows are.
+- `<cols>` of a million entries, a million defined names, and a table part of a million columns stay within the limits, in linear time.
+- A header search over a sheet of a million missing rows stops after `maxRows` rows.
+- The fuzzer also varies `Range`, `Table` and `DefinedName` (taken from the workbook's own), `HeaderRow` (`At` a random row, `Find` of a random row's names) and the three switches. Its mutations gain `<cols>`, `<mergeCells>`, `<definedNames>` and table parts.
+
+#### Benchmark
+
+- **No core change,** so no core gate (see "Core changes").
+- **The default path:** a QuickRunner A/B of `ExcelPackageAssetsRead` (both variants) and `ExcelOrdersRead`, CsvHelper.Excel's methods, base against new, measured as Phase 2's step 9 measured the scanner: a baseline worktree of `1cd1a0af` at `Csv\_bench\base`, the machine checked first, each process pinned, and three interleaved pairs. Every method within 1%.
+- **The new paths:** a new class, `ExcelReportRead`, over the PackageAssets data (shared strings) laid out as a report: two title rows (the first merged across), the header at `B4`, a hidden column, a hidden row in every 50, the region of each 100 rows merged down them, and a table over the data. `GetRecords<PackageAsset>` with:
+  - `Range` over the data, the reference; and `Range` over its first 1,000 rows, for the early stop;
+  - `Table`;
+  - `HeaderRow = ExcelHeaderRow.Find<PackageAsset>()`;
+  - `SkipHiddenRows`, and `SkipHiddenColumns`;
+  - `FillMergedCells`; and `FillMergedCells` on the plain PackageAssets workbook, which has no ranges: the second inflate alone.
+  - The generator writes the report in Excel's shape, checked against a file of Excel's as the others are. The existing variants' bytes don't change.
+- One BenchmarkDotNet run, recorded in "As built".
+
+#### Core changes
+
+None. Phase 3 uses what core has:
+
+- the record source, its batch and `CsvCells.Text`, through `InternalsVisibleTo`;
+- the public `TryValidateHeader<T>` and `TryGetFieldIndex`, for the header search.
+
+Considered and avoided:
+
+- **`CsvRecordMapper.TryGetMembers<T>` for the header search,** as the outline said. It describes `T`'s members only when projections are generated, which needs CsvHelper.Linq or `[CsvRecordProjections]`, and it leaves nested records, alternate names, matching and `NormalizeHeaderName` to the caller. Probing the mapper covers all of it, for every mapper.
+- **A header search in core,** such as a hook before the header is captured: the source finds the header itself.
+- **A public record-source API:** still not wanted (architecture decision 3).
+
+If building turns up a need, it is flagged first and gated, as Phase 2's were.
+
+#### Decisions
+
+Each comes with a recommendation.
+
+1. **Where targets are given.** Recommended: options (`Range`, `Table` and `DefinedName`, as strings), so that `ExcelReader`'s one call reads them too, and no new `OpenReader` overloads. Alternative: overloads taking an `ExcelTable`, an `ExcelDefinedName`, or a sheet and an `ExcelRange` (six more methods with the async forms).
+2. **A target with a sheet.** Recommended: `Table`, `DefinedName` and a `Range` that names its sheet choose their sheet, and a sheet given too throws, even the same one. Alternative: accept a sheet that agrees.
+3. **A sheet's name in `Range`.** Recommended: accepted, as Excel's Name Box and formulas write ranges (`'Q1 Orders'!B5:F200`). Alternative: cells only, with the sheet from `Sheet`.
+4. **Looking up a defined name.** Recommended: the workbook's name, else the only sheet's name of that name (an error lists them when several sheets have one); `Sheet!Name` for a sheet's own; built-in names without `_xlnm.`, as Excel shows them. Alternative: workbook names only, with sheets' names reached through `DefinedNames`.
+5. **Which names are ranges.** Recommended: one block on a worksheet, with relative references as stored (relative to `A1`), in the forms Excel tolerates (case, reversed corners, white space). Not ranges: unions, intersections, 3-D and other workbooks' references, `#REF!`, constants and formulas. Alternatives: compute intersections and parentheses, as Excel does; resolve table references (`Sales[Qty]`) to a table's columns, later if asked.
+6. **A table's header.** Recommended: the table's column names, always, with `HasHeader`. Excel opens no file whose header cells differ from them, so the two agree wherever Excel reads; the names also head a table whose header row is hidden, which has no header cells. Alternative: the header row's cells, and no header when the row is hidden.
+7. **A table's name.** Recommended: `displayName`, which formulas use, for `ExcelTable.Name` and for `Table`. Alternative: match the `name` attribute too, which COM's `ListObject.Name` gives; Excel writes them alike.
+8. **Width in an area.** Recommended: Phase 1's rule, unchanged: rows are padded to the first record's width, which is now at most the area's. A table's header has every column, so its rows have its width. Alternative: pad every row to the area's width (`B5:F200` always 5 fields), as Excel's CSV export of a range would; whole rows would then be 16,384 fields.
+9. **Rows in an area.** Recommended: reading stops after the area's last row, and with `SkipEmptyLines = false` the rows after the file's last row in the area are not padded on (`B:F` would otherwise be 1,048,576 records). Alternative: pad them on when the area's last row isn't the sheet's.
+10. **The header search.** Recommended: `ExcelHeaderRow`, with `At`, `Find<T>` and `Find(names)`, probing `T`'s mapper (`TryValidateHeader<T>`) so that every mapper works, and 20 rows by default. Alternatives: `TryGetMembers<T>` (needs projections; see "Core changes"); a predicate over a row's texts; another default.
+11. **When the header is searched.** Recommended: in `OpenReader`, which then fails with `KeyNotFoundException`, as header validation does, before any record is read. Alternative: at the first read, keeping `OpenReader` from reading the sheet (it reads merged ranges there anyway).
+12. **Clipping.** Recommended: a header from `HeaderRow` clips the columns to its first and last values; without `HeaderRow`, nothing clips, so field `i` stays column `i` (Phase 1's decision 8). Alternative: clip by default, which would change Phases 1 and 2's reads.
+13. **What is hidden.** Recommended: every form Excel hides (`hidden` in either form, `ht="0"` with `customHeight`, the rows a `zeroHeight` sheet lacks, `width="0"`, `defaultColWidth="0"`, and the last `<col>` deciding), with skipping off by default: hidden data is still data, and a filter's hidden rows would vanish. Alternatives: `hidden` alone; skipping on by default.
+14. **Merged ranges' other cells.** Recommended: they read as the top-left cell whatever they store, as Excel shows the range. Alternative: fill only the empty ones, as `Value2` gives a cell's own value.
+15. **Overlapping merged ranges.** Recommended: `CsvFormatException` from `OpenReader`, since Excel can't open such a file. Alternative: the first range wins.
+16. **Finding merged ranges.** Recommended: a second read of the sheet's part in `OpenReader`, counted toward the limits, with its cost measured and documented. Phase 9 can make the skip over `sheetData` cheaper (a raw search for its end tag). No alternative avoids reading the sheet twice, since the ranges come last.
+17. **`Dimension`.** Recommended: read on first access, kept, and `null` when the sheet states none or its start can't be read. Alternatives: read every worksheet's at `Open` (an entry opened per sheet), or leave dimensions out.
+18. **Tables and names at `Open`.** Recommended: both read at `Open` (names with the workbook part; tables from each worksheet's relationships, small parts), and tables found from relationships rather than `<tableParts>`. Alternative: read them on first use.
+19. **Reading all sheets.** Recommended: nothing new: a reader per sheet in a loop, documented and tested. Alternatives: an `ExcelWorkbook.Worksheets` list, or an `OpenReaders()` that opens each worksheet's reader in turn and disposes the one before.
+20. **`ExcelRange`.** Recommended: a `readonly struct` with 1-based rows and columns, as Excel numbers them. Alternative: 0-based columns, as CsvHelper counts fields.
+21. **The corpus.** Recommended: a new `messy` content set, and the `oracle` command extended to the new structures for every workbook, as Phase 2 did for typed cells.
+
+#### Risks
+
+- **The scanner's speed:** the new tests sit on the per-row and per-cell path. The A/B measures them; if one costs, the whole-sheet path becomes a method of its own, as Phase 0 kept the writer's.
+- **The scanner's complexity:** areas, hidden cells, fills, filled missing rows and a held first record all meet in placement. The comparison test's reference model is the check.
+- **Merged cells cost a second inflate,** and memory for one field per active range, within the limits.
+- **Table relationships without a `<tablePart>`** read as tables where Excel has none. No producer writes one.
+- **The header search with a lax `T`:** a type with few required columns can match a title row. `Find(names)` and `At` are the remedies, and the docs say so.
+- **Tiny column widths** that Excel shows as hidden are not hidden here, since the threshold depends on the font. (Added at step 3:) the same goes for tiny row heights, whose threshold depends on the screen.
+- **Relative names** read relative to `A1`, which is what Excel stores, but not what it shows while another cell is active.
+
+#### Order of work
+
+Each step is reviewable on its own and gets committed when you ask.
+
+1. **Ranges and metadata (M):**
+   - `ExcelRange` and `AreaReference`; defined names; table parts at `Open`.
+   - `ExcelTable`, `ExcelDefinedName`, `ExcelWorkbook.Tables` and `DefinedNames`, `ExcelSheet.Tables` and `Dimension`.
+   - Their tests.
+2. **Areas (M):**
+   - `Range`, `Table` and `DefinedName`, their validation and resolution.
+   - `SheetLayout`; the scanner's rows and columns, the early stop and the held first record; `Locate`.
+   - The scanner and end-to-end tests, the comparison's areas, and the loop over every sheet.
+3. **Hidden rows and columns (S):** `sheetFormatPr` and `cols`, `HiddenColumns`, the layout's map, and the two options.
+4. **Merged cells (M):** `MergedCells`, the read that finds the ranges, the fill, and `FillMergedCells`.
+5. **Header row (M):** `ExcelHeaderRow`, `HeaderSearch` and the clip.
+6. **Corpus and oracles (M):** the `messy` content and its producers, the `oracle` command's new answers for every workbook, and the oracle tests.
+7. **Security and fuzzing (S).**
+8. **Benchmarks (M):** the A/B of the default path; the report layout and its cross-check; `ExcelReportRead`; a run.
+9. **"As built" (S).**
+
+#### Gate
+
+- Every target (a sheet, `Range`, `Table`, `DefinedName`, and every sheet in turn), every `HeaderRow` and the three switches work through `GetRecords<T>`, dynamic records, `CsvDataReader`, `Query<T>()` and `ParallelEnumerate`, sync and async, on net10.0, net8.0 and net48, with errors naming the right cell.
+- The metadata agrees with Excel's answers on every corpus workbook (tables, names and their ranges, hidden rows and columns, merged ranges), each difference documented.
+- Reads with the switches on agree with Excel's answers: the visible cells, and each filled cell as its range's top-left cell.
+- ClosedXML and ExcelDataReader agree, each difference documented.
+- The security and fuzz tests pass, the new options included.
+- Nothing in core changes; if something must, it is flagged, approved and passes Phase 0's gate.
+- The default path costs nothing measurable (every A/B method within 1%), and the new paths' numbers are recorded, the second inflate's among them.
+- CI's pack check still passes.
+
+#### Changes elsewhere
+
+Applied at approval (2026-11-04):
+
+- **Status** (top of the plan): Phase 3's design approved.
+- **API sketch:**
+  - `ExcelReaderOptions`: `Range`, `Table` and `DefinedName` are strings (a `Range` may name its sheet); `HeaderRow` is an `ExcelHeaderRow` (`At`, `Find<T>`, `Find(names)`).
+  - `ExcelWorkbook` gains `Tables` and `DefinedNames`, and `ExcelSheet` `Dimension` and `Tables`. `OpenReader` takes a sheet; a table, a name or a range come through the options.
+- **Phase 1's "Public API":** the "Later phases add" line for Phase 3 gets these names. Its "Location" says the field-to-column map is `SheetLayout`.
+- **Feature coverage:** "All sheets" notes Phase 1's loop.
+- **Testing:** the `messy` content; Excel's answers gain tables, names, hidden rows and columns, and merged ranges.
+- **Defaults:** hidden rows and columns are read; merged cells aren't filled; no header search and no clipping unless asked.
+- **Risks:** "Merged-cell fill needs a second inflate pass" points at Phase 3's measurement.
+- **Phase 9:** a cheaper skip over `sheetData` for finding merged ranges.
+
+#### As built
+
+Filled in step by step; the code is the reference.
+
+**Step 1, ranges and metadata** (built 2026-11-04, committed with steps 1 to 3 that day):
+
+- **New files:**
+  - Public: `ExcelRange.cs`, `ExcelTable.cs` and `ExcelDefinedName.cs`.
+  - `Internal/Sheet/AreaReference.cs`, `Internal/Package/TablePart.cs` and `Internal/Sheet/SheetDimension.cs`.
+- **Changed:**
+  - `WorkbookPart` reads `definedNames` (into the new `WorkbookName`), checks them, then reads each worksheet's tables into `WorkbookSheet.Tables`.
+  - `XmlElements.ReadTextAsync` reads an element's text through its end tag.
+  - `ExcelSheet` gained `Tables` and `Dimension`, and `ExcelWorkbook` `Tables`, `DefinedNames` and the internal `ReadDimension`.
+- **Decisions made while building:**
+  - **`ExcelRange` stores its rows and columns from 0,** so that its default value is a block, `A1`, rather than an invalid one.
+    - The constructor wants each first row or column at or before its last, and throws `ArgumentOutOfRangeException` naming the parameter. `Parse` puts reversed corners in order.
+    - `Parse` throws `FormatException`: "\"B5:\" is not a range of cells, such as B5:F200, B:F or 5:200."
+    - A leading zero in a row (`A01`) is accepted, as Excel's formulas accept it. The whole sheet's text is `1:1048576`, as Excel's addresses write it.
+  - **An unquoted sheet name** is everything before the first `!`, without `' [ ] : , ( ) " # =` or white space. So `Q1 Orders!A1`, which Excel would quote, is not a block, and neither is `#REF!$A$1`.
+  - **Defined names:**
+    - A name's text is decoded as XML, trimmed of XML white space, then decoded for its escapes, as a cell's formula is. Elements in it are skipped, and a comment splits its text without ending it.
+    - An empty `name` is rejected as a missing one.
+    - `localSheetId` is checked once the part is read, since the sheets must be known, so its message has no byte offset: "The defined name \"X\" of xl/workbook.xml has the localSheetId 2, which is not a sheet's index: its sheets are 0 to 1."
+    - A name's scope can be a chartsheet, since `localSheetId` counts them; `ToString` then names it (`Chart!OfChart`).
+    - The `_xlnm.` prefix is matched ignoring case.
+  - **Tables:**
+    - An empty `displayName` falls back to `name`, as a missing one does.
+    - A relationship of type `table` (by its last segment, so the strict URI too) whose part exists names a table. External targets, missing parts and other types are skipped, even when they point at a table part.
+    - A sheet's relationships part that can't be read stops `Open`, as every part it reads does.
+    - A `tableColumn` without a `name` throws. How many names a table has against its `ref`'s columns is not checked here; step 2 decides how a table's header uses them.
+  - **`Dimension`:**
+    - `InvalidDataException` and `IOException` from reading the sheet's start make it `null`.
+    - A sheet that isn't a worksheet, or has no part, is `null` without reading anything, even after the workbook is disposed.
+    - A worksheet's dimension not read before the workbook is disposed throws `ObjectDisposedException`: "The workbook is disposed."
+  - Until step 2 adds `Range` and `Table` to the options, the new types' docs name them as text rather than links.
+- **Tests** (168 new per target: 1,201 on net10.0 and net8.0, 1,173 on net48; all passing):
+  - **`ExcelRangeTests`:** 24 forms, 34 rejections, the constructor's checks, the default, equality, and 5,000 random blocks round-tripped through their text, in both cases.
+  - **`AreaReferenceTests`:** 21 blocks with and without sheets (Excel's forms from the probes among them), 24 that aren't one block, and UTF-8.
+  - **`TablePartTests`:** Excel's two tables from the probe (totals, a hidden header row), every sheet's tables in relationship order, names and escaped column names, the strict namespace and prefixes, relationships that are no table's, 9 invalid tables, broken parts, and the part limit exactly at and one past.
+  - **`DefinedNamesTests`:** Excel's 16 names from the probe, decoding (entities, CDATA, a comment, escapes, white space, an element inside), the first of a name in a scope, prefixed strict names, and 7 invalid names.
+  - **`MetadataTests`**, through the public API: tables and names with their blocks; finding a block's sheet as Excel does (case, quotes, chartsheets, missing sheets, no sheet, scopes on chartsheets); the corpus's tables and names (Excel's typed workbooks, LibreOffice's and XlsxWriter's have the table `Orders`, `Formulas!A20:D23`; every other workbook none); dimensions in each form; a dimension read once from the start of a 1.5 MB sheet under a 1 MB limit, and kept after disposal; sheets without parts; and a table part's limit at `Open`.
+  - `TestPackage` gained `Table`, `Relate` and `DefinedNames`.
+- **Mutation check** on net10.0, 16 bugs planted one at a time, all caught:
+  - "reversed corners not put in order": 5 failures;
+  - "3-D references read as a sheet's": 1;
+  - "built-in names keep `_xlnm.`": 4;
+  - "a name's sheet matched with case": 2;
+  - "a chartsheet's block is a range": 2;
+  - "names repeated in a scope kept": 2;
+  - "`localSheetId` not checked against the sheets": 1;
+  - "a name's text not trimmed": 2;
+  - "only the last text token of a name kept": 2;
+  - "a table's name over its display name": 2;
+  - "column names' escapes not decoded": 4;
+  - "header and totals rows not checked": 2;
+  - "every relationship's part read as a table": 46, the corpus's among them, whose drawing parts don't read as tables;
+  - "the dimension read past `sheetData`": 2;
+  - "the dimension not kept": 2;
+  - "whole columns before whole rows in text": 6.
+- **Core:** no change. The solution builds with 0 warnings.
+
+**Step 2, areas** (built 2026-11-04, committed with steps 1 to 3 that day):
+
+- **New files:** `Internal/Sheet/SheetLayout.cs` (with `RowPlace`: above, in or below an area) and `Internal/Sheet/HeldRecord.cs`, the first record the scanner writes before the rows. The design had no file for the latter.
+- **Changed:**
+  - `ExcelReaderOptions`: `Range`, `Table` and `DefinedName`, their checks in `Validate`, and the internal `ChoosesSheet`.
+  - `ExcelWorkbook`: `Target` turns the options into a sheet, a layout and a held record; `FindTable` and `FindName` look tables and names up.
+  - `SheetScanner`:
+    - it takes a layout and holds a first record;
+    - `LeaveRow` skips a row above the area or ends the sheet at one below it;
+    - `SkipCell` passes over a cell that is no field;
+    - fields are placed by the cell's field (`cellField`) rather than its column;
+    - `EndRow` returns a `Step`, since a row without cells can end the sheet.
+  - `SheetRecordSource.Locate` maps fields to columns through the layout.
+  - `AreaReference.TrySplitSheet`, split out of `TryParse`, so that defined names use the same rules for a sheet's name.
+- **Decisions made while building:**
+  - **Shared formulas defined outside the area** (a design change):
+    - With formulas read as text, a group's cells in the area would throw if the group's defining cell were above or left of the area and skipped unread: "it uses shared formula 0, which no cell before it defines". A column of formulas filled down from row 2 does that for any range below row 2.
+    - So, with formulas read as text, rows above the area and cells outside its columns are read for their shared formulas' definitions alone. Their values aren't decoded, and nothing of them is written.
+    - With cached values, they are skipped unread, as designed. Step 4's merged ranges' top-left cells will use the same path.
+  - **Order checks outside the area:** every row's number is still checked, those above the area included. Cells are checked in the rows of the area, outside its columns too; the cells of rows above it aren't read, so their order isn't checked.
+  - **A table's header record** has one field per column of its `ref`. A column without a name gets an empty one, and names past the `ref`'s columns are left out.
+    - Its line is the header row, or 0 when the header row is hidden: `LineNumber` is 0 for it, and it has no location.
+    - A table without data rows is an area whose last row is above its first, and reads its header alone.
+  - **Looking up a defined name:**
+    - The `_xlnm.` prefix is optional, in any case.
+    - A sheet's name in front follows `Range`'s rules: quoted when Excel would quote it.
+    - A name whose sheet can't be read (an unclosed quote) is "no defined name".
+    - The message for a name of several sheets lists them as `ExcelDefinedName.ToString` writes them.
+  - **A sheet given with an option that chooses its own:**
+    - Given to `OpenReader`, it throws `ArgumentException` naming that argument (`sheetName`, `sheetIndex` or `sheet`).
+    - Given as `Sheet` or `SheetIndex`, `Validate` throws, at `Open` too.
+  - **Messages** as designed. A workbook without tables ends the table message with "It has no tables.", as the sheets' message ends.
+  - `ExcelWorkbook`'s remarks no longer say that dates read as serials, which hasn't been so since Phase 2.
+- **Tests** (33 new per target: 1,234 on net10.0 and net8.0, 1,206 on net48; all passing):
+  - **`AreaScannerTests`** (10), in every sheet mode:
+    - rows and columns, whole rows and columns, areas past the data;
+    - fields from the area's first column, with gaps and padding;
+    - missing rows only in the area, and none after the file's last row in it;
+    - rows without `r`;
+    - nothing read after the first row below the area, which a one-byte stream shows stopping at that row's tag;
+    - an area without rows;
+    - the held record (the width it sets, empty names, line 0);
+    - cells outside the area left undecoded;
+    - errors naming their cells, with order checked outside the area;
+    - shared formulas defined above and left of the area.
+  - **`SheetScannerComparisonTests.MatchesTheReferenceInGeneratedAreas`:** the 100 generated sheets, each with a random area, in all 16 modes with empty rows skipped and kept, against the reference model, which gained the areas' rules.
+  - **`AreaReadingTests`** (11), sync and async, through the public API:
+    - ranges, with and without a sheet, and whole columns and rows; a range's empty rows kept, with their lines;
+    - tables: totals excluded, a hidden header row, without `HasHeader`, dynamic records, `CsvDataReader`, `Query<T>()`, headers fitted to the columns, and the header's line;
+    - defined names, by every lookup;
+    - every error of choosing, and every check of the options at `Open` and at `OpenReader`;
+    - errors naming their cells through the layout, in `GetRecords<T>`, `OnRecordError` and `ParallelEnumerate`;
+    - `ExcelReader` with a table; every sheet read in a loop; a range read under a limit its sheet passes.
+  - `CellReading` takes a layout and a held record, and `Sheets.Open` passes them.
+- **Mutation check** on net10.0, 19 bugs planted one at a time, all caught:
+  - "rows above the area read": 20 failures;
+  - "rows below the area skipped, not the end": 3, the early stop's tests;
+  - "fields not counted from the area's first column": 15;
+  - "missing rows from the last row above, not the area's first": 3;
+  - "the held record not written": 10;
+  - "the held record sets no width": 1;
+  - "a table's totals row read": 4;
+  - "a table's header row read as data": 8;
+  - "a table's names not fitted to its columns": 3;
+  - "a hidden header row given the table's first row": 2 (with the header's line, which the first run had no test for);
+  - "a sheet's name preferred to the workbook's": 6;
+  - "a name of several sheets not reported": 2;
+  - "locations ignore the layout": 2;
+  - "an option that chooses its sheet allowed with `Sheet`": 2;
+  - "a sheet argument allowed with a table": 2;
+  - "a range's sheet ignored": 4;
+  - "definitions outside the area's columns not read": 1;
+  - "rows above the area not read for definitions": 1;
+  - "cells outside the area written": 17.
+- **Core:** no change. The solution builds with 0 warnings. The scanner's new tests on the per-row and per-cell path are measured at step 8.
+
+**Step 3, hidden rows and columns** (built 2026-11-04, committed with steps 1 to 3 that day):
+
+- **New files:**
+  - `Internal/Sheet/HiddenColumns.cs`, as designed: two sets of 16,384 bits, the columns a `<col>` covers and those it hides, so that the last `<col>` over a column decides, and a default for the rest. A `<col>` over many columns fills whole words, so a million `<col min="1" max="16384">` cost a million short fills, not a loop over every column.
+  - `Internal/Sheet/HiddenState.cs`, which the design had no file for: how Excel reads the attributes that hide rows and columns (below), and `RowHiding`, the flags of a row's attributes.
+- **Changed:**
+  - `ExcelReaderOptions`: `SkipHiddenRows` and `SkipHiddenColumns`, with no checks: any value is valid.
+  - `SheetScanner`:
+    - it takes the two options;
+    - before `sheetData`, it reads `sheetFormatPr` (`ReadFormat`) and `cols`, one `<col>` tag at a time across refills (a new `Cols` mode, `ReadColumn`);
+    - a row's `hidden`, `ht` and `customHeight` are read with its `r`;
+    - `SkipRow`, split out of `LeaveRow`, skips a hidden row as one above the area;
+    - `BeginRows`, at `sheetData` or at the end of a sheet without one, makes the layout final and writes the held record;
+    - `SetRow` writes missing rows only while `keepsMissingRows` holds, which is false when empty rows are skipped or the sheet hides the rows it lacks.
+  - `SheetLayout`:
+    - `Without(HiddenColumns)` gives a layout whose fields are the area's shown columns, through a map from columns to fields and one back;
+    - `SheetLayout.Sheet` is the whole sheet's layout;
+    - `Width` counts the fields.
+  - `HeldRecord`: each field has its column, and `WriteTo` leaves out the fields of columns the layout doesn't read, and returns how many it wrote.
+  - `ExcelWorkbook` passes the options, and the table's first column to its header record.
+- **Decisions made while building:**
+  - **What is hidden, as Excel reads it** (a design change, from three more rounds of COM checks; see "Checked on 2026-11-04"):
+    - Excel decodes a value's references, then reads it strictly. A boolean is true only as `1` or `true`. A number has no white space and no `+`, and an empty one is 0.
+    - A value Excel can't read hides nothing, and isn't an error, since Excel opens the file. A column's width is the exception: without one, or with one that isn't a number, Excel reads it as 0, so the column is hidden. The design had only `width="0"`.
+    - A `sheetFormatPr` with `customHeight` and a `defaultRowHeight` of 0 hides the rows a sheet lacks, as `zeroHeight` does. The design had only `zeroHeight`.
+    - Heights and widths too small to show a pixel, which Excel hides depending on the screen or the font, are not hidden here (see "Risks").
+  - **Files Excel can't open:**
+    - A `<col>` without `min` or `max`, with a `min` outside 1 to 16,384, a `max` that isn't an integer, or a `max` before its `min`, throws `CsvFormatException` for the sheet, with the byte. Examples:
+      - "Sheet Data can't be read at byte N of xl/worksheets/sheet1.xml: a col has no min." (N is the `<col>` tag's offset, or the wrong value's.)
+      - "... the attribute min=\"0\" is not a column's number (1 to 16384)."
+      - "... a col's max, 2, is before its min, 3."
+    - A `max` past 16,384 is 16,384, as Excel takes it.
+    - Other values Excel won't open read as the rest do: an unreadable `zeroHeight` hides nothing, and `<cols/>` hides nothing.
+    - `<cols>` after `sheetData` is never reached, as the scanner stops at `</sheetData>`.
+  - **Only when asked:** with both options off, `sheetFormatPr`, `cols` and rows' hidden attributes are skipped as before, so nothing new can fail, and the default path has no layout.
+  - **A whole sheet read with either option** has a layout, `SheetLayout.Sheet`, so hidden rows and columns take the area's paths.
+  - **The map** runs from the area's first column to its last shown one: a sheet whose columns are hidden from `H` maps 7 columns, not 16,384.
+  - **The held record is written when the rows begin**, once `cols` is read, rather than at the start of the first fill, so that a table's header leaves out the names of its hidden columns. Its width is then its shown columns'.
+  - **A hidden row** is no record once the missing rows before it are written, so record `n` is no longer row `n`, and `LineNumber` is still the row. A row without `r` is judged at its first cell, which gives its number, or at its end when it has no cells. With formulas read as text, it is read for its shared formulas' definitions, as a row above an area is since step 2, and a hidden column's cells go through `SkipCell`, which reads them.
+  - **Missing rows in a sheet that hides them** are no records, from the first row on. Rows the file has show unless they are hidden, and an empty one is still a record when empty rows are kept.
+- **Tests** (58 new per target: 1,292 on net10.0 and net8.0, 1,264 on net48; all passing):
+  - **`HiddenScannerTests`** (11), in every sheet mode:
+    - every row form of the COM checks, hidden and shown, against Excel's answer, with either option or none;
+    - missing rows around hidden rows, with and without `r`, with and without cells, and in an area;
+    - the rows a sheet lacks, under each form that hides them and each that doesn't;
+    - every column form, against Excel's answer;
+    - `defaultColWidth`'s forms, and Excel's shape for columns hidden from `H`;
+    - overlapping, out-of-order, clamped and repeated `<cols>`, and a `<col>` with content;
+    - gaps and padding over the shown columns, and in areas;
+    - hidden cells left undecoded;
+    - a part as Excel writes it with a filter, a collapsed group, a hidden column, columns hidden from `H` and rows hidden below 9;
+    - the six `<col>` errors with their bytes, and no error with the option off;
+    - shared formulas defined in a hidden row (with and without `r`) and a hidden column;
+    - a held record without its hidden columns' names, with rows and without.
+  - **`HiddenColumnsTests`:** the bits against a model over 200 seeds of random `<col>` ranges (within a word, across words, at their edges, over the whole sheet), the default, the layout's map for a sheet, an area and no shown column, and 34 numbers as Excel reads them.
+  - **`SheetScannerComparisonTests.MatchesTheReferenceWithHiddenCells`:**
+    - the generated sheets gain `sheetFormatPr`, `<cols>` and rows' attributes in forms Excel hides and forms it doesn't;
+    - they are read with either option or both, with and without a random area, in all 16 modes, with empty rows skipped and kept;
+    - the reference model gained the rules, reading numbers with .NET's parsing rather than the scanner's.
+    - The other generated sheets are unchanged: the generator draws nothing new for them.
+  - **`HiddenReadingTests`** (4), sync and async, through the public API:
+    - hidden rows with their lines, and the rows a sheet lacks;
+    - hidden columns through dynamic records, a range and a sheet;
+    - a table's shown cells through `GetRecords<T>`, `CsvDataReader`, `Query<T>()`, `ParallelEnumerate` and `ExcelReader`;
+    - errors naming `Report!E4` for a field 3 or 2 whose column is `E`, in `GetRecords<T>`, `OnRecordError` and `ParallelEnumerate`.
+  - `CellReading` takes the two options (`CellReading.Hidden`), and `Sheets.Worksheet` has a form with `sheetFormatPr` and `cols`.
+- **Mutation check** on net10.0, 27 bugs planted one at a time, all caught:
+  - "a row's `hidden` ignored": 13 failures;
+  - "a height of 0 hides without `customHeight`": 2;
+  - "booleans read with white space and in capitals": 3;
+  - "references not decoded": 4;
+  - "a plus sign read": 5;
+  - "an empty value not 0": 6;
+  - "exponents not read": 8;
+  - "a col's width that is no number shows it": 2;
+  - "a col without a width shows it": 2;
+  - "a later col can't show a column": 4;
+  - "a col's middle words not set": 2;
+  - "a default width of 0 ignored": 2;
+  - "`zeroHeight` ignored": 5;
+  - "a custom default height of 0 ignored": 2;
+  - "missing rows hidden when only columns are skipped": at first only the comparison test; with an assertion added for it, 2;
+  - "a hidden row without `r` read": 3;
+  - "a hidden row without cells written": 2;
+  - "hidden rows not read for shared formulas": 1;
+  - "`cols` not read": 14;
+  - "`min` not checked": 1;
+  - "`max` not clamped": 2;
+  - "the layout keeps hidden columns": 13;
+  - "the held record keeps hidden columns' names": 5;
+  - "locations ignore the hidden columns": 3;
+  - "fields ignore the hidden columns": 16;
+  - "rows' hidden state read when not skipping": 9;
+  - "no layout for a whole sheet": 14.
+- **Core:** no change. The solution builds with 0 warnings. The new tests on the per-row path (a row's other attributes are tested against `skipHiddenRows`, and `EndRow` tests `rowHidden`) are measured with step 2's at step 8; the per-cell path of a whole sheet that skips nothing is unchanged.
 
 ### Phase 4: writer foundation (L)
 
@@ -2697,6 +3406,7 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
   - Then a pigz-style experiment: deflate chunks in parallel and concatenate them after a sync flush.
   - Keep each piece only if it wins on the benchmark machine. The compress flattener showed that a faster stage doesn't always move the end-to-end numbers.
 - **Memory:** profile workbooks with huge shared-string tables.
+- **Finding merged ranges** (Phase 3): a cheaper skip over `sheetData` for the read that finds `<mergeCells>`, such as a raw search for its end tag, if Phase 3's measurement shows the second inflate costing much.
 
 ### Phase 10: other formats (XL)
 
@@ -2717,7 +3427,7 @@ Every feature from the brainstorm, and where it lands.
 | Read benchmarks vs ExcelDataReader, Sylvan, MiniExcel | 1 (baseline), 9 |
 | Sheet by name or index | 1 |
 | The sheet list: name, index, visibility, kind | 1 |
-| All sheets, and sheet dimensions | 3 |
+| All sheets (a reader per sheet in a loop, which Phase 1 allows), and sheet dimensions | 1, 3 |
 | Named ranges | 3 |
 | Excel Tables by name | 3 |
 | Header-row detection | 3 |
@@ -2765,8 +3475,8 @@ Testing runs through every phase.
   - `tools/CsvHelper.Excel.Corpus` makes them from one definition of the content. It drives Excel through COM, LibreOffice and Python by command line, and the .NET producers directly.
   - It runs on demand; the tests only read the committed files.
   - Phase 1's "Testing" has the files, the producer versions and how each is made.
-  - Content sets: `basic` (Phase 1) and `typed` (Phase 2: dates, numbers, formulas).
-- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand.
+  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas) and `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names).
+- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand. From Phase 3 the answers also hold each workbook's tables and defined names, and each sheet's hidden rows and columns and merged ranges.
 - **Oracles** (test-only dependencies):
   - The Open XML SDK (DocumentFormat.OpenXml 3.5.1), for raw cell structure and, from Phase 4, `OpenXmlValidator`.
   - ClosedXML 0.105.1 and ExcelDataReader 3.9.0.
@@ -2787,7 +3497,7 @@ Testing runs through every phase.
 - **Hot-path cost of the hooks.** Phase 0's gate exists for this.
 - **Lockstep releases.** Internal hooks mean every core release must ship a matching CsvHelper.Excel. Core, CsvHelper.Linq and CsvHelper.Excel are always released together (settled 2026-11-03).
 - **Producer tolerance.** Excel accepts things the spec doesn't promise, and other producers rely on that. The corpus is the defense.
-- **Merged-cell fill** needs a second inflate pass.
+- **Merged-cell fill** needs a second inflate pass. Phase 3's benchmark measures it.
 - **Shared-strings memory** on huge workbooks.
 - **Zip edge cases:** Zip64 for sheets over 4 GB, non-seekable streams, and `ZipArchive`'s synchronous central directory on older targets.
 - **Renderer scope creep** in Phase 8.
@@ -2821,4 +3531,6 @@ Chosen during planning, and still open to change:
 - `MaxPartSize` is 256 MiB and `MaxUncompressedSize` 4 GiB, with no compression-ratio check (Phase 1).
 - The default sheet is the first worksheet in tab order, hidden ones included (Phase 1).
 - A sheet reader applies `SkipEmptyLines` itself, and with it off emits every row, so record n is row n (Phase 1).
-- Rows with a value are padded to the first record's width (Phase 1).
+- Rows with a value are padded to the first record's width (Phase 1), within a range's columns (Phase 3).
+- Hidden rows and columns are read, and merged cells aren't filled (Phase 3).
+- No header search and no clipping unless `HeaderRow` asks: field `i` is column `i` of the sheet or range (Phase 3).

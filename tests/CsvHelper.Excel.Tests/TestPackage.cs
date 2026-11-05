@@ -170,6 +170,53 @@ internal sealed class TestPackage
 		return Set("xl/sharedStrings.xml", xml);
 	}
 
+	/// <summary>The content type of a table part.</summary>
+	public const string TableContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml";
+
+	/// <summary>
+	/// Adds a table part to a worksheet as Excel does: <c>xl/tables/tableN.xml</c> (numbered across the package), a
+	/// <c>table</c> relationship from the sheet's relationships part (made when the sheet has none), and its content type.
+	/// The sheet's <c>tableParts</c> is not written: the reader finds tables from the relationships.
+	/// </summary>
+	/// <param name="sheetPart">The worksheet's part, such as <c>xl/worksheets/sheet1.xml</c>.</param>
+	/// <param name="xml">The table part's XML.</param>
+	/// <returns>The package.</returns>
+	public TestPackage Table(string sheetPart, string xml)
+	{
+		var number = entries.Count(e => e.Name.StartsWith("xl/tables/", StringComparison.Ordinal)) + 1;
+		Set($"xl/tables/table{number}.xml", xml);
+		Replace("[Content_Types].xml", "</Types>", $"<Override PartName=\"/xl/tables/table{number}.xml\" ContentType=\"{TableContentType}\"/></Types>");
+
+		return Relate(sheetPart, RelationshipType("table"), $"../tables/table{number}.xml");
+	}
+
+	/// <summary>Adds a relationship from a part, making its relationships part when it has none.</summary>
+	/// <param name="sourcePart">The part, such as <c>xl/worksheets/sheet1.xml</c>.</param>
+	/// <param name="type">The relationship's type URI.</param>
+	/// <param name="target">The target, relative to the part's folder, or a URI for an external target.</param>
+	/// <param name="external">Whether the target is outside the package.</param>
+	/// <returns>The package.</returns>
+	public TestPackage Relate(string sourcePart, string type, string target, bool external = false)
+	{
+		var slash = sourcePart.LastIndexOf('/');
+		var relationships = sourcePart.Substring(0, slash + 1) + "_rels/" + sourcePart.Substring(slash + 1) + ".rels";
+		if (!entries.Any(e => e.Name == relationships))
+		{
+			Set(relationships, Declaration + $"<Relationships xmlns=\"{PackageRelationshipsNamespace}\"></Relationships>");
+		}
+
+		var id = Text(relationships).Split(["<Relationship "], StringSplitOptions.None).Length;
+		var mode = external ? " TargetMode=\"External\"" : "";
+
+		return Replace(relationships, "</Relationships>", $"<Relationship Id=\"rId{id}\" Type=\"{type}\" Target=\"{target}\"{mode}/></Relationships>");
+	}
+
+	/// <summary>Adds defined names to the workbook part, before <c>calcPr</c>, as Excel places them.</summary>
+	/// <param name="names">The <c>definedName</c> elements.</param>
+	/// <returns>The package.</returns>
+	public TestPackage DefinedNames(params string[] names) =>
+		Replace("xl/workbook.xml", "<calcPr", "<definedNames>" + string.Concat(names) + "</definedNames><calcPr");
+
 	/// <summary>Sets an entry to XML text, encoded as UTF-8 without a byte order mark: replaces the entry of that exact name, or adds one.</summary>
 	/// <param name="name">The entry's name, exactly as it goes in the zip.</param>
 	/// <param name="xml">The XML.</param>

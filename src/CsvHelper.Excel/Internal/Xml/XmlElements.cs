@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -83,6 +84,60 @@ internal static class XmlElements
 		scanner.Dispose();
 
 		return default;
+	}
+
+	/// <summary>
+	/// Reads the text of the element whose start tag was just read, up to and including its end tag: its text and CDATA,
+	/// decoded as XML (<see cref="XmlScanner.DecodeContent"/>) and joined; elements in it are skipped with their text. The
+	/// <c>_xHHHH_</c> escapes and white space are left to the caller.
+	/// </summary>
+	/// <param name="scanner">The scanner, at a start tag.</param>
+	/// <param name="async">Whether to read the part's stream asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task whose result is the text, as UTF-8; empty for an empty element.</returns>
+	/// <exception cref="System.IO.InvalidDataException">The XML can't be read.</exception>
+	public static async ValueTask<byte[]> ReadTextAsync(this XmlScanner scanner, bool async, CancellationToken cancellationToken)
+	{
+		if (scanner.Kind != XmlTokenKind.StartTag || scanner.IsEmptyElement)
+		{
+			return [];
+		}
+
+		var depth = scanner.Depth;
+		var text = new byte[64];
+		var length = 0;
+		while (await scanner.ReadAsync(async, cancellationToken).ConfigureAwait(false))
+		{
+			switch (scanner.Kind)
+			{
+				case XmlTokenKind.Text:
+				case XmlTokenKind.CData:
+					if (text.Length - length < scanner.Content.Length)
+					{
+						Array.Resize(ref text, Math.Max(text.Length * 2, length + scanner.Content.Length));
+					}
+
+					length += scanner.DecodeContent(text.AsSpan(length));
+
+					break;
+				case XmlTokenKind.StartTag:
+					await scanner.SkipElementAsync(async, cancellationToken).ConfigureAwait(false);
+
+					break;
+				case XmlTokenKind.EndTag:
+					if (scanner.Depth < depth)
+					{
+						Array.Resize(ref text, length);
+
+						return text;
+					}
+
+					break;
+			}
+		}
+
+		// The scanner throws first, at the end of a part inside an element.
+		throw scanner.Error("it ends inside an element");
 	}
 
 	/// <summary>Skips the content and end tag of the element whose start tag was just read; nothing for an empty element.</summary>

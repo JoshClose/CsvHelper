@@ -51,6 +51,24 @@ namespace CsvHelper.Excel;
 /// its cell's XML, so that a few bytes of XML can't make millions of fields, or gigabytes of them, unchecked.
 /// </para>
 /// <para>
+/// <b>Areas.</b> A scanner of an area (<see cref="SheetLayout"/>) reads only its rows and columns: field 0 is its first
+/// column, a cell outside its columns is no field and its value is not decoded, a row above it is skipped whole, and the
+/// first row below it ends the sheet, so nothing after it is inflated. When formulas read as text, rows above the area and
+/// cells outside its columns are read for their shared formulas' definitions only, so that the cells of a group in the area
+/// read their formula wherever the group's defining cell is. Missing rows are written from the area's first row,
+/// and none after the last row the file has in it. A held first record (<see cref="HoldFirstRecord"/>), such as a table's
+/// column names, comes before the rows, and its width is the width the rows are padded to.
+/// </para>
+/// <para>
+/// <b>Hidden rows and columns.</b> When hidden rows are skipped, a row that Excel hides (<see cref="HiddenState"/>) is no
+/// record: once the missing rows before it are written, it is skipped whole, or, when formulas read as text, read for its
+/// shared formulas' definitions only, as a row above an area is. In a sheet that hides the rows it lacks, missing rows are
+/// no records either. When hidden columns are skipped, <c>sheetFormatPr</c> and <c>cols</c>, which come before
+/// <c>sheetData</c>, are read, and when the rows begin the layout (of the area, or of the whole sheet) leaves the hidden
+/// columns out: their cells are no fields, as cells outside an area are, and the fields are the shown columns in order.
+/// The held first record is written then, through that layout.
+/// </para>
+/// <para>
 /// <b>Fills.</b> A fill writes whole records: it ends after the row that fills the target, or at the end of the rows,
 /// and reads the window as often as it needs to in between. A cell is written only once its value is all in the window:
 /// otherwise the scanner goes back to the cell's start, refills (which keeps the cell, and grows the window for one larger
@@ -115,6 +133,26 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private long gapNext = 1;
 	private long gapEnd = 1;
 	private Exception? fault;
+	// The area read, or null for the whole sheet, where field i is column i; final once the rows begin.
+	private SheetLayout? layout;
+	// The record to write before the rows, when they begin; null once it is written.
+	private HeldRecord? held;
+	// The field of the cell being read.
+	private int cellField;
+	// Whether the row being read is above the area or hidden, and read only for shared formulas' definitions: nothing of it is written.
+	private bool unwritten;
+	// Room to decode a shared formula's definition in a cell that is no field.
+	private byte[]? unwrittenRoom;
+	// Whether hidden rows are skipped: a row's hidden state is then read, and a hidden row is no record.
+	private readonly bool skipHiddenRows;
+	// The sheet's hidden columns, read before the rows, when hidden columns are skipped; null otherwise.
+	private readonly HiddenColumns? hiddenColumns;
+	// Whether the row being read is hidden, when hidden rows are skipped.
+	private bool rowHidden;
+	// Whether the rows the file lacks are written as empty records: with empty rows kept, unless the sheet hides them.
+	private bool keepsMissingRows;
+	// Whether the rows have begun: the layout is final, and the held record written.
+	private bool rowsBegun;
 
 	/// <summary>Creates the scanner of a worksheet part.</summary>
 	/// <param name="scanner">The part's XML, at its start; the sheet scanner owns it, and disposes it.</param>
@@ -126,10 +164,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <param name="date1904">Whether the workbook uses the 1904 date system, for the serial numbers of <c>t="d"</c> cells.</param>
 	/// <param name="errorCells">How error cells read: as <see cref="ExcelErrorCells.Null"/>, they are valueless.</param>
 	/// <param name="formulas">What cells with a formula read as: as <see cref="ExcelFormulas.FormulaText"/>, their formulas.</param>
-	/// <exception cref="ArgumentNullException">An argument other than <paramref name="budget"/> is <see langword="null"/>.</exception>
+	/// <param name="layout">The area to read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="skipHiddenRows">Whether the rows Excel hides are no records.</param>
+	/// <param name="skipHiddenColumns">Whether the columns Excel hides are no fields.</param>
+	/// <exception cref="ArgumentNullException">An argument other than <paramref name="budget"/> and <paramref name="layout"/> is <see langword="null"/>.</exception>
 	public SheetScanner(
 		XmlScanner scanner, string sheetName, SharedStrings strings, StyleTable styles, bool skipEmptyRows, LimitedReadStream? budget,
-		bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue)
+		bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue, SheetLayout? layout = null,
+		bool skipHiddenRows = false, bool skipHiddenColumns = false)
 	{
 		ArgumentNullException.ThrowIfNull(scanner);
 		ArgumentNullException.ThrowIfNull(strings);
@@ -146,10 +188,31 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		{
 			sharedFormulas = new SharedFormulas(scanner.Window.PartName, scanner.Window.MaxSize);
 		}
+
+		this.skipHiddenRows = skipHiddenRows;
+		keepsMissingRows = !skipEmptyRows;
+		if (skipHiddenColumns)
+		{
+			hiddenColumns = new HiddenColumns();
+		}
+
+		// Hidden cells are skipped through a layout: the whole sheet's, when no area is given.
+		this.layout = layout ?? (skipHiddenRows || skipHiddenColumns ? SheetLayout.Sheet : null);
+		if (this.layout is not null)
+		{
+			gapNext = Math.Max(this.layout.FirstRow, 1);
+		}
 	}
 
 	/// <summary>Where things are in the sheet, for the record source's <c>Locate</c>.</summary>
 	public SheetLocation Location => location;
+
+	/// <summary>The area read, or <see langword="null"/> for the whole sheet, where field <c>i</c> is column <c>i</c>.</summary>
+	public SheetLayout? Layout => layout;
+
+	/// <summary>Holds a record to write before the rows, when they begin, such as a table's column names.</summary>
+	/// <param name="record">The record.</param>
+	public void HoldFirstRecord(HeldRecord record) => held = record;
 
 	/// <summary>The part's name.</summary>
 	public string PartName => scanner.Window.PartName;
@@ -381,7 +444,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			{
 				XmlTokenKind.StartTag => StartTag(target, before),
 				XmlTokenKind.EndTag => EndTag(target),
-				XmlTokenKind.End => End(),
+				XmlTokenKind.End => End(target),
 				_ => Step.Read,
 			};
 			if (step != Step.Read)
@@ -389,6 +452,187 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				return step;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Begins the rows, at <c>sheetData</c>, or at the end of a sheet without rows: the layout leaves out the hidden columns
+	/// read before them, and the held first record is written through it.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <returns>
+	/// <see cref="Step.Full"/> when the held record fills the target; <see cref="Step.Done"/> when the sheet has no rows;
+	/// otherwise <see cref="Step.Read"/>.
+	/// </returns>
+	private Step BeginRows<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget
+	{
+		rowsBegun = true;
+		if (hiddenColumns is not null)
+		{
+			layout = layout!.Without(hiddenColumns);
+		}
+
+		if (held is not null)
+		{
+			WriteHeld(target);
+			if (target.IsFull)
+			{
+				return Step.Full;
+			}
+		}
+
+		return mode == Mode.Done ? Step.Done : Step.Read;
+	}
+
+	/// <summary>Writes the held first record, whose fields set the width the rows after it are padded to.</summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the record.</param>
+	private void WriteHeld<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget
+	{
+		var record = held!;
+		held = null;
+		var written = record.WriteTo(target, layout);
+		if (width < 0 && written > 0)
+		{
+			width = written;
+		}
+	}
+
+	/// <summary>
+	/// Reads <c>sheetFormatPr</c>, when hidden rows or columns are skipped: whether the rows the file lacks are hidden
+	/// (<c>zeroHeight</c>, or a custom default height of 0), and whether the columns that no <c>col</c> covers are (a
+	/// default width of 0), as Excel reads them (<see cref="HiddenState"/>).
+	/// </summary>
+	private void ReadFormat()
+	{
+		var zeroHeight = false;
+		var customHeight = false;
+		var zeroDefaultHeight = false;
+		var attributes = scanner.Attributes;
+		while (attributes.MoveNext())
+		{
+			if (attributes.IsName("zeroHeight"u8))
+			{
+				zeroHeight = HiddenState.IsTrue(attributes);
+			}
+			else if (attributes.IsName("customHeight"u8))
+			{
+				customHeight = HiddenState.IsTrue(attributes);
+			}
+			else if (attributes.IsName("defaultRowHeight"u8))
+			{
+				zeroDefaultHeight = HiddenState.ZeroOf(attributes) == true;
+			}
+			else if (hiddenColumns is not null && attributes.IsName("defaultColWidth"u8))
+			{
+				hiddenColumns.HidesUncovered = HiddenState.ZeroOf(attributes) == true;
+			}
+		}
+
+		if (skipHiddenRows && (zeroHeight || (customHeight && zeroDefaultHeight)))
+		{
+			// The rows the file lacks are hidden, so none of them is a record.
+			keepsMissingRows = false;
+		}
+	}
+
+	/// <summary>
+	/// Reads a <c>col</c> of <c>cols</c>, when hidden columns are skipped: the columns from its <c>min</c> to its <c>max</c>,
+	/// which it hides when its <c>hidden</c> is true, or its <c>width</c> is 0, missing or no number, as Excel reads them
+	/// (<see cref="HiddenState"/>). A <c>max</c> past the last column is the last, as Excel takes it.
+	/// </summary>
+	/// <exception cref="CsvFormatException">The <c>col</c> has no <c>min</c> or <c>max</c>, or its <c>max</c> is before its <c>min</c>: Excel opens no such file.</exception>
+	/// <exception cref="InvalidDataException">Its <c>min</c> or <c>max</c> is no column's number; <see cref="Scan"/> makes it the sheet's error.</exception>
+	private void ReadColumn()
+	{
+		int? min = null;
+		int? max = null;
+		var hides = false;
+		var shown = false;
+		var attributes = scanner.Attributes;
+		while (attributes.MoveNext())
+		{
+			if (attributes.IsName("min"u8))
+			{
+				min = attributes.GetInt32();
+				if (min < 1 || min > CellReference.MaxColumns)
+				{
+					throw attributes.InvalidValue($"a column's number (1 to {CellReference.MaxColumns})");
+				}
+			}
+			else if (attributes.IsName("max"u8))
+			{
+				max = attributes.GetInt32();
+			}
+			else if (attributes.IsName("hidden"u8))
+			{
+				hides = HiddenState.IsTrue(attributes);
+			}
+			else if (attributes.IsName("width"u8))
+			{
+				shown = HiddenState.ZeroOf(attributes) == false;
+			}
+		}
+
+		if (min is null || max is null)
+		{
+			throw Error(TokenOffset, $"a col has no {(min is null ? "min" : "max")}", -1, 0);
+		}
+
+		if (max < min)
+		{
+			throw Error(TokenOffset, $"a col's max, {max}, is before its min, {min}", -1, 0);
+		}
+
+		hiddenColumns!.Set(min.Value - 1, Math.Min(max.Value, CellReference.MaxColumns) - 1, hides || !shown);
+	}
+
+	/// <summary>
+	/// Whether a row that is no record (above the area, or hidden) is read on: when formulas read as text, for the shared
+	/// formulas its cells may define, which cells written later use. Nothing of it is written.
+	/// </summary>
+	/// <returns>Whether the row is read for its shared formulas' definitions.</returns>
+	private bool ReadsUnwritten()
+	{
+		unwritten = sharedFormulas is not null;
+
+		return unwritten;
+	}
+
+	/// <summary>
+	/// Leaves a row that isn't in the area: one above it is skipped, its cells unread; one below it ends the sheet, so that
+	/// nothing after it is inflated. Nothing of the row has been written.
+	/// </summary>
+	/// <param name="place">Where the row is.</param>
+	/// <returns><see cref="Step.Done"/> below the area; otherwise <see cref="Step.Read"/>.</returns>
+	private Step LeaveRow(RowPlace place)
+	{
+		if (place == RowPlace.Below)
+		{
+			cellColumn = -1;
+			mode = Mode.Done;
+
+			return Step.Done;
+		}
+
+		return SkipRow();
+	}
+
+	/// <summary>Skips the rest of a row that is no record (above the area, or hidden), its cells unread. Nothing of it has been written.</summary>
+	/// <returns><see cref="Step.Read"/>.</returns>
+	private Step SkipRow()
+	{
+		cellColumn = -1;
+		lastRow = row;
+
+		// Past the row's end tag, from its start tag, a cell in it, or after an empty row (where nothing is left to skip).
+		resume = Mode.SheetData;
+		skipDepth = RowDepth - 1;
+		mode = Mode.Skip;
+
+		return Step.Read;
 	}
 
 	/// <summary>Handles a start tag: the root, <c>sheetData</c>, a row or a cell, or an element to skip.</summary>
@@ -418,7 +662,30 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					dataPreserves = scanner.SpaceOf() ?? rootPreserves;
 					mode = scanner.IsEmptyElement ? Mode.Done : Mode.SheetData;
 
-					return mode == Mode.Done ? Step.Done : Step.Read;
+					return BeginRows(target);
+				}
+
+				if (hiddenColumns is not null && scanner.IsStartTag("cols"u8))
+				{
+					// Its col elements are read one tag at a time, across refills.
+					if (!scanner.IsEmptyElement)
+					{
+						mode = Mode.Cols;
+					}
+
+					return Step.Read;
+				}
+
+				if ((skipHiddenRows || hiddenColumns is not null) && scanner.IsStartTag("sheetFormatPr"u8))
+				{
+					ReadFormat();
+				}
+
+				break;
+			case Mode.Cols:
+				if (scanner.IsStartTag("col"u8))
+				{
+					ReadColumn();
 				}
 
 				break;
@@ -438,7 +705,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				break;
 		}
 
-		// sheetPr, cols and the rest before sheetData; extLst in a row; anything else.
+		// sheetPr, cols and the rest before sheetData; extLst in a row; the content of a col; anything else.
 		if (!scanner.IsEmptyElement)
 		{
 			resume = mode;
@@ -449,7 +716,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		return Step.Read;
 	}
 
-	/// <summary>Handles an end tag: of a row, of <c>sheetData</c>, or of a root without one.</summary>
+	/// <summary>Handles an end tag: of a row, of <c>cols</c>, of <c>sheetData</c>, or of a root without one.</summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="target">Takes the records.</param>
 	/// <returns>What to do next.</returns>
@@ -458,18 +725,32 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	{
 		if (mode == Mode.Row)
 		{
-			return EndRow(target) ? Step.Full : Step.Read;
+			return EndRow(target);
+		}
+
+		if (mode == Mode.Cols)
+		{
+			mode = Mode.Worksheet;
+
+			return Step.Read;
 		}
 
 		// </sheetData>, after which nothing is read, or the root's end tag when it has no sheetData.
-		return End();
+		return End(target);
 	}
 
-	/// <summary>Ends the rows.</summary>
+	/// <summary>Ends the rows; a sheet without any begins them first, so that the held first record is written.</summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
 	/// <returns><see cref="Step.Done"/>.</returns>
-	private Step End()
+	private Step End<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget
 	{
 		mode = Mode.Done;
+		if (!rowsBegun)
+		{
+			BeginRows(target);
+		}
 
 		return Step.Done;
 	}
@@ -484,6 +765,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	{
 		int? number = null;
 		bool? space = null;
+		var hiding = RowHiding.None;
 		var attributes = scanner.Attributes;
 		while (attributes.MoveNext())
 		{
@@ -495,17 +777,28 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			{
 				space = XmlScanner.SpaceValue(attributes.Value);
 			}
+			else if (skipHiddenRows)
+			{
+				hiding |= HiddenState.RowFlagOf(attributes);
+			}
 		}
 
 		rowPreserves = space ?? dataPreserves;
 
 		mode = Mode.Row;
 		rowKnown = false;
+		unwritten = false;
+		rowHidden = HiddenState.IsHiddenRow(hiding);
 		lastColumn = -1;
 		fields = 0;
 		if (number is not null)
 		{
 			SetRow(number.Value);
+			if (layout is not null && layout.Place(row) is var place && place != RowPlace.In && (place == RowPlace.Below || !ReadsUnwritten()))
+			{
+				return LeaveRow(place);
+			}
+
 			if (!FlushGaps(target))
 			{
 				// The row waits for the next fill, after the empty records before it.
@@ -514,11 +807,17 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 				return Step.Full;
 			}
+
+			// Once the missing rows before it are written: a hidden row is no record.
+			if (rowHidden && !ReadsUnwritten())
+			{
+				return SkipRow();
+			}
 		}
 
 		if (scanner.IsEmptyElement)
 		{
-			return EndRow(target) ? Step.Full : Step.Read;
+			return EndRow(target);
 		}
 
 		return Step.Read;
@@ -541,7 +840,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		row = number;
 		rowKnown = true;
-		if (!skipEmptyRows)
+		if (keepsMissingRows)
 		{
 			gapNext = Math.Max(gapNext, lastRow + 1);
 			gapEnd = number;
@@ -583,13 +882,33 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <summary>Ends a row: pads it and writes its record, or drops it when it has no value and empty rows are skipped.</summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="target">Takes the records.</param>
-	/// <returns>Whether the target is full, so the fill ends.</returns>
-	private bool EndRow<TTarget>(TTarget target)
+	/// <returns>
+	/// <see cref="Step.Full"/> when the target is full, so the fill ends; <see cref="Step.Done"/> for a row below the area;
+	/// otherwise <see cref="Step.Read"/>.
+	/// </returns>
+	private Step EndRow<TTarget>(TTarget target)
 		where TTarget : struct, IRecordTarget
 	{
 		if (!rowKnown)
 		{
 			SetRow(lastRow + 1);
+			if (layout is not null && layout.Place(row) is var place && place != RowPlace.In)
+			{
+				// A row without cells, whose number came from the row before: nothing of it is left to skip.
+				return LeaveRow(place);
+			}
+		}
+
+		if (unwritten || rowHidden)
+		{
+			// A row that is no record: above the area or hidden, read for its shared formulas' definitions, or hidden
+			// without cells (with them, it was skipped at its start or its first cell).
+			unwritten = false;
+			lastRow = row;
+			cellColumn = -1;
+			mode = Mode.SheetData;
+
+			return Step.Read;
 		}
 
 		if (fields > 0)
@@ -614,7 +933,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		cellColumn = -1;
 		mode = Mode.SheetData;
 
-		return target.IsFull;
+		return target.IsFull ? Step.Full : Step.Read;
 	}
 
 	/// <summary>Reads a cell: its reference, type and style, and its value once the window holds all of it.</summary>
@@ -682,6 +1001,11 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		if (!rowKnown)
 		{
 			SetRow(hasReference ? referenceRow : lastRow + 1);
+			if (layout is not null && layout.Place(row) is var place && place != RowPlace.In && (place == RowPlace.Below || !ReadsUnwritten()))
+			{
+				// The row's first cell gave its number: nothing of the row has been written.
+				return LeaveRow(place);
+			}
 		}
 
 		// Also when the cell is read again after the missing rows before it filled a fill: the rest of them come first.
@@ -692,6 +1016,24 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			return Step.Full;
 		}
 
+		var field = column;
+		if (layout is not null)
+		{
+			// A hidden row without r, once its first cell gave its number and the missing rows before it are written.
+			if (rowHidden && !unwritten && !ReadsUnwritten())
+			{
+				return SkipRow();
+			}
+
+			field = unwritten ? -1 : layout.FieldOf(column);
+			if (field < 0)
+			{
+				// Outside the area, in a hidden column, or in a row that is no record: the cell is no field, and its value is not decoded.
+				return SkipCell(before, column, cellStart, preserves);
+			}
+		}
+
+		cellField = field;
 		if (scanner.IsEmptyElement)
 		{
 			lastColumn = column;
@@ -788,6 +1130,106 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		mode = Mode.CellRest;
 
 		return Step.Read;
+	}
+
+	/// <summary>
+	/// Passes over a cell that is no field: outside the area's columns, or in a row above it. Its value is not decoded.
+	/// When formulas read as text, a shared formula's definition in it is read and kept, so that the group's cells in the
+	/// area read their formula; otherwise the rest of the cell is skipped unread.
+	/// </summary>
+	/// <param name="before">The scanner's state before the cell's tag, to read the cell again after a refill.</param>
+	/// <param name="column">The cell's column.</param>
+	/// <param name="cellStart">The position of the cell's tag, for errors.</param>
+	/// <param name="preserves">Whether <c>xml:space="preserve"</c> applies in the cell.</param>
+	/// <returns>What to do next.</returns>
+	/// <exception cref="CsvFormatException">The cell is of a shared formula's group that no cell before it defines.</exception>
+	private Step SkipCell(XmlScannerState before, int column, int cellStart, bool preserves)
+	{
+		if (scanner.IsEmptyElement)
+		{
+			lastColumn = column;
+			cellColumn = -1;
+
+			return Step.Read;
+		}
+
+		if (sharedFormulas is null)
+		{
+			lastColumn = column;
+			mode = Mode.CellRest;
+
+			return Step.Read;
+		}
+
+		segmentCount = 0;
+		rawLength = 0;
+		while (true)
+		{
+			if (!scanner.TryRead())
+			{
+				// Nothing of the cell is kept: read it all again once the window holds more.
+				scanner.Restore(before);
+
+				return Step.More;
+			}
+
+			var kind = scanner.Kind;
+			if (kind == XmlTokenKind.EndTag)
+			{
+				// </c>, without a formula.
+				lastColumn = column;
+				cellColumn = -1;
+
+				return Step.Read;
+			}
+
+			if (kind != XmlTokenKind.StartTag)
+			{
+				continue;
+			}
+
+			if (scanner.IsStartTag("f"u8))
+			{
+				if (!TryReadFormula(preserves, column, cellStart, out var formula, out var group))
+				{
+					scanner.Restore(before);
+
+					return Step.More;
+				}
+
+				if (formula == CellFormula.Defining)
+				{
+					if (unwrittenRoom is null || unwrittenRoom.Length < rawLength)
+					{
+						unwrittenRoom = new byte[Math.Max(rawLength, 256)];
+					}
+
+					sharedFormulas.Define(group, unwrittenRoom.AsSpan(0, Decode(unwrittenRoom)), row, column);
+				}
+
+				lastColumn = column;
+				mode = Mode.CellRest;
+
+				return Step.Read;
+			}
+
+			if (scanner.IsStartTag("v"u8) || scanner.IsStartTag("is"u8))
+			{
+				// A value: a cell's formula comes before it, as ReadCell reads them.
+				lastColumn = column;
+				mode = Mode.CellRest;
+
+				return Step.Read;
+			}
+
+			// extLst, and anything else.
+			if (!scanner.IsEmptyElement && !scanner.TrySkipTo(scanner.Depth - 1))
+			{
+				scanner.Restore(before);
+
+				return Step.More;
+			}
+		}
 	}
 
 	/// <summary>
@@ -1050,7 +1492,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return;
 				}
 
-				AddGap(target, column);
+				AddGap(target, cellField);
 				ChargeBeyondCell(text.Length, cellStart);
 				target.AddField(text, SheetCellKind.Text);
 
@@ -1064,7 +1506,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return;
 				}
 
-				AddGap(target, column);
+				AddGap(target, cellField);
 				var span = target.GetFieldSpan(rawLength);
 				var length = XmlText.TrimWhitespace(span.Slice(0, Decode(span)));
 				var kind = type == CellType.Number ? styles.NumberKind(style) : SheetCellKind.Bool;
@@ -1085,7 +1527,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return;
 				}
 
-				AddGap(target, column);
+				AddGap(target, cellField);
 				AddIsoDate(target, style);
 
 				break;
@@ -1098,7 +1540,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return;
 				}
 
-				AddGap(target, column);
+				AddGap(target, cellField);
 				var span = target.GetFieldSpan(rawLength);
 				var length = Decode(span);
 
@@ -1109,7 +1551,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			}
 		}
 
-		fields = column + 1;
+		fields = cellField + 1;
 	}
 
 	/// <summary>
@@ -1153,7 +1595,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private void AddFormula<TTarget>(TTarget target, CellFormula formula, int group, int column, int cellStart)
 		where TTarget : struct, IRecordTarget
 	{
-		AddGap(target, column);
+		AddGap(target, cellField);
 		if (formula == CellFormula.Shared)
 		{
 			sharedFormulas!.TryGet(group, row, column, out var moved);
@@ -1176,19 +1618,19 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			target.CommitField(length == 0 ? 0 : length + 1, length == 0 ? SheetCellKind.Empty : SheetCellKind.Text);
 		}
 
-		fields = column + 1;
+		fields = cellField + 1;
 	}
 
-	/// <summary>Adds an empty field for each column skipped since the row's last field.</summary>
+	/// <summary>Adds an empty field for each field skipped since the row's last one: the columns between them.</summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="target">Takes the records.</param>
-	/// <param name="column">The column of the field that follows them.</param>
-	private void AddGap<TTarget>(TTarget target, int column)
+	/// <param name="field">The field that follows them.</param>
+	private void AddGap<TTarget>(TTarget target, int field)
 		where TTarget : struct, IRecordTarget
 	{
-		if (column > fields)
+		if (field > fields)
 		{
-			AddEmpty(target, column - fields);
+			AddEmpty(target, field - fields);
 		}
 	}
 
@@ -1455,6 +1897,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		/// <summary>In the root, before <c>sheetData</c>.</summary>
 		Worksheet,
+
+		/// <summary>In <c>cols</c>, reading its <c>col</c> elements.</summary>
+		Cols,
 
 		/// <summary>In <c>sheetData</c>, between rows.</summary>
 		SheetData,
