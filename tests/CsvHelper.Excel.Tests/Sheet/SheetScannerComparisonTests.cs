@@ -168,6 +168,86 @@ public class SheetScannerComparisonTests
 		}
 	}
 
+	[Fact]
+	public async Task MatchesTheReferenceWithAHeaderRow()
+	{
+		var strings = Sheets.Strings(SharedTexts);
+		var found = 0;
+		for (var seed = 0; seed < 100; seed++)
+		{
+			var random = new Random(seed);
+			var hidden = random.Next(2) == 0;
+			var merged = random.Next(2) == 0;
+			var xml = Generate(random, hidden, merged);
+			var rows = hidden && random.Next(3) != 0;
+			var columns = hidden && random.Next(3) != 0;
+			SheetLayout? layout = null;
+			if (random.Next(2) == 0)
+			{
+				var firstRow = random.Next(1, 8);
+				var firstColumn = random.Next(0, 4);
+				layout = new SheetLayout(firstRow, random.Next(3) == 0 ? CellReference.MaxRow : firstRow + random.Next(0, 12), firstColumn, random.Next(3) == 0 ? CellReference.MaxColumns - 1 : firstColumn + random.Next(0, 6));
+			}
+
+			// A row given in the area, mostly one with a value, or a search for the texts of a row the search can read,
+			// cased otherwise or with a name no row has, now and then.
+			var area = layout ?? SheetLayout.Sheet;
+			var maxRows = random.Next(3) == 0 ? 20 : random.Next(1, 12);
+			var searched = new SheetLayout(area.FirstRow, Math.Min(area.LastRow, area.FirstRow + maxRows - 1), area.FirstColumn, area.LastColumn);
+			ExcelHeaderRow headerRow;
+			string[] names = [];
+			var given = 0;
+			if (random.Next(3) == 0)
+			{
+				var valued = ReferenceRecords(xml, true, searched, false, columns, merged).Records;
+				given = valued.Count > 0 && random.Next(4) != 0
+					? (int)valued[random.Next(valued.Count)].Row
+					: (int)Math.Min(area.LastRow, area.FirstRow + random.Next(0, 12));
+				headerRow = ExcelHeaderRow.At(given);
+			}
+			else
+			{
+				var texts = ReferenceRecords(xml, true, searched, rows, columns, merged).Records
+					.SelectMany(r => r.Fields.Where(f => f.Kind == SheetCellKind.Text && f.Text.Trim().Length > 0).Select(f => f.Text))
+					.ToList();
+				names = [.. Enumerable.Range(0, texts.Count == 0 ? 0 : random.Next(1, 4)).Select(_ => texts[random.Next(texts.Count)])];
+				names = random.Next(4) switch
+				{
+					0 => [.. names, "no such name"],
+					1 => [.. names.Select(n => " " + n.ToUpperInvariant())],
+					_ => names,
+				};
+				headerRow = ExcelHeaderRow.Find(names, maxRows);
+			}
+
+			foreach (var skipEmptyRows in new[] { true, false })
+			{
+				var expected = ReferenceAfterHeader(xml, skipEmptyRows, layout, rows, columns, merged, given, names, maxRows);
+				found += expected[0].Contains(':') ? 1 : 0;
+				await Sheets.InEveryModeAsync(async mode =>
+				{
+					var reading = new CellReading(layout: layout, skipHiddenRows: rows, skipHiddenColumns: columns, fillMergedCells: merged);
+					List<string> actual;
+					try
+					{
+						actual = await Sheets.ReadAfterHeaderAsync(xml, mode, headerRow, skipEmptyRows, strings, reading);
+					}
+					catch (Exception e) when (e is KeyNotFoundException or CsvFormatException)
+					{
+						actual = [e.GetType().Name];
+					}
+
+					Assert.True(
+						expected.SequenceEqual(actual),
+						$"Seed {seed}, {headerRow}, hidden rows {rows}, columns {columns}, merged {merged}, area {(layout is null ? "none" : $"rows {layout.FirstRow}-{layout.LastRow} columns {layout.FirstColumn}-{layout.LastColumn}")}, skipping empty rows {skipEmptyRows}:\nexpected {string.Join("\n", expected)}\nactual {string.Join("\n", actual)}\n{xml}");
+				});
+			}
+		}
+
+		// About half the reads have a header to find, so that the reads after it are compared too.
+		Assert.InRange(found, 80, 200);
+	}
+
 	/// <summary>
 	/// Generates a sheet: rows and cells with and without references, every cell type, valueless cells and noise; with
 	/// <paramref name="hidden"/>, also <c>sheetFormatPr</c>, <c>cols</c> and rows in forms that Excel hides and forms it
@@ -384,15 +464,84 @@ public class SheetScannerComparisonTests
 	/// <param name="skipHiddenColumns">Whether hidden columns are left out.</param>
 	/// <param name="fillMergedCells">Whether merged ranges' cells read as their top-left cells.</param>
 	/// <returns>The records, described as the scanner's are.</returns>
-	private static List<string> Reference(string xml, bool skipEmptyRows, SheetLayout? area = null, bool skipHiddenRows = false, bool skipHiddenColumns = false, bool fillMergedCells = false)
+	private static List<string> Reference(string xml, bool skipEmptyRows, SheetLayout? area = null, bool skipHiddenRows = false, bool skipHiddenColumns = false, bool fillMergedCells = false) =>
+		[.. ReferenceRecords(xml, skipEmptyRows, area, skipHiddenRows, skipHiddenColumns, fillMergedCells).Records.Select(r => r.ToString())];
+
+	/// <summary>
+	/// The records of a sheet after its header row, by the rules of <see cref="Reference"/> and the header search's: the
+	/// search reads the rows the header can be in, without the rows that have no value (and with the hidden ones, for a
+	/// row given); the header is the row given, or the first whose texts have every name, matched as
+	/// <see cref="CsvReader.TryGetFieldIndex(string, out int)"/> matches them (exactly, or ignoring case and the white space
+	/// around them); then the rows after it are read in its columns, from its first with a value to its last, after it.
+	/// </summary>
+	/// <param name="xml">The part.</param>
+	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
+	/// <param name="area">The area read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="skipHiddenRows">Whether hidden rows are left out.</param>
+	/// <param name="skipHiddenColumns">Whether hidden columns are left out.</param>
+	/// <param name="fillMergedCells">Whether merged ranges' cells read as their top-left cells.</param>
+	/// <param name="row">The row given, or 0 for a search.</param>
+	/// <param name="names">The names a search wants.</param>
+	/// <param name="maxRows">The rows a search tries.</param>
+	/// <returns>The records, described as the scanner's are; or the name of the exception when there is no header.</returns>
+	private static List<string> ReferenceAfterHeader(
+		string xml, bool skipEmptyRows, SheetLayout? area, bool skipHiddenRows, bool skipHiddenColumns, bool fillMergedCells, int row, string[] names, int maxRows)
+	{
+		area ??= SheetLayout.Sheet;
+		var searched = row > 0
+			? new SheetLayout(row, row, area.FirstColumn, area.LastColumn)
+			: new SheetLayout(area.FirstRow, Math.Min(area.LastRow, area.FirstRow + maxRows - 1), area.FirstColumn, area.LastColumn);
+		var (candidates, columns) = ReferenceRecords(xml, true, searched, skipHiddenRows && row == 0, skipHiddenColumns, fillMergedCells);
+		var header = candidates.FirstOrDefault(r => r.Fields.Any(f => f.Kind != SheetCellKind.Empty) && (row > 0 || HasNames(r, names)));
+		if (header is null)
+		{
+			return [row > 0 ? nameof(CsvFormatException) : nameof(KeyNotFoundException)];
+		}
+
+		var first = header.Fields.FindIndex(f => f.Kind != SheetCellKind.Empty);
+		var last = header.Fields.FindLastIndex(f => f.Kind != SheetCellKind.Empty);
+		var after = new SheetLayout(header.Row + 1, area.LastRow, columns[first], columns[last]);
+		var held = new CapturedRecord(header.Row, header.Fields.GetRange(first, last - first + 1));
+
+		return [.. ReferenceRecords(xml, skipEmptyRows, after, skipHiddenRows, skipHiddenColumns, fillMergedCells, held).Records.Select(r => r.ToString())];
+	}
+
+	/// <summary>Whether a record, as a header, has every name: as a reader names its columns, matched as <c>TryGetFieldIndex</c> matches.</summary>
+	/// <param name="record">The record.</param>
+	/// <param name="names">The names.</param>
+	/// <returns>Whether it has them.</returns>
+	private static bool HasNames(CapturedRecord record, string[] names)
+	{
+		var texts = record.Fields.Select(HeaderText).ToList();
+
+		return names.All(n => texts.Contains(n) || texts.Any(t => string.Equals(t.Trim(), n.Trim(), StringComparison.OrdinalIgnoreCase)));
+	}
+
+	/// <summary>The name a field gives its column in a header: its text, or for a boolean <c>TRUE</c> or <c>FALSE</c>.</summary>
+	/// <param name="field">The field.</param>
+	/// <returns>The name.</returns>
+	private static string HeaderText((string Text, SheetCellKind Kind) field) =>
+		field.Kind == SheetCellKind.Bool ? (field.Text == "1" ? "TRUE" : "FALSE") : field.Text;
+
+	/// <summary>The records of a sheet by the rules of <see cref="Reference"/>, after a held record, and the area's shown columns.</summary>
+	/// <param name="xml">The part.</param>
+	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
+	/// <param name="area">The area read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="skipHiddenRows">Whether hidden rows are left out.</param>
+	/// <param name="skipHiddenColumns">Whether hidden columns are left out.</param>
+	/// <param name="fillMergedCells">Whether merged ranges' cells read as their top-left cells.</param>
+	/// <param name="held">A record before the rows, whose width the rows are padded to; or <see langword="null"/>.</param>
+	/// <returns>The records, and the column of each field.</returns>
+	private static (List<CapturedRecord> Records, List<int> Columns) ReferenceRecords(
+		string xml, bool skipEmptyRows, SheetLayout? area, bool skipHiddenRows, bool skipHiddenColumns, bool fillMergedCells, CapturedRecord? held = null)
 	{
 		area ??= new SheetLayout(1, CellReference.MaxRow, 0, CellReference.MaxColumns - 1);
 		var document = XDocument.Parse(xml, LoadOptions.PreserveWhitespace);
 		var sheetData = document.Root!.Elements().FirstOrDefault(e => e.Name.LocalName == "sheetData");
 		var records = new List<CapturedRecord>();
-		if (sheetData is null)
+		if (held is not null)
 		{
-			return [];
+			records.Add(held);
 		}
 
 		// Excel's rules: a boolean is 1 or true; a height or width is a number without white space or a plus sign, empty
@@ -436,6 +585,12 @@ public class SheetScannerComparisonTests
 			{
 				fieldOf[column] = fieldOf.Count;
 			}
+		}
+
+		var shown = fieldOf.OrderBy(p => p.Value).Select(p => p.Key).ToList();
+		if (sheetData is null)
+		{
+			return (records, shown);
 		}
 
 		// The file's rows up to the first below the area, which ends the reading: each row's number, whether it is left out
@@ -524,7 +679,7 @@ public class SheetScannerComparisonTests
 			}
 		}
 
-		var width = -1;
+		var width = held?.Fields.Count ?? -1;
 		for (var row = area.FirstRow; row <= end; row++)
 		{
 			// A hidden row is no record, and neither is a missing row that the sheet hides.
@@ -550,7 +705,7 @@ public class SheetScannerComparisonTests
 			}
 		}
 
-		return [.. records.Select(r => r.ToString())];
+		return (records, shown);
 	}
 
 	/// <summary>

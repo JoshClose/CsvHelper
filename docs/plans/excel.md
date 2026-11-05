@@ -2584,7 +2584,7 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
 
 ### Phase 3: choosing what to read, and messy sheets (L)
 
-Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, and step 4 built that day; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
+Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, step 4 built that day and committed on 2026-11-05, and step 5 built on 2026-11-05; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. Step 5 changed how the header is found: a scanner of its own reads the rows the header can be in, over a second stream of the sheet's part, and the reader's scanner then reads the rows after it, rather than one scanner pausing after the header row and narrowing its columns; a row given (`At`) is the header even when hidden. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
 
 Scope, as planned:
 
@@ -2715,14 +2715,14 @@ public sealed class ExcelWorkbook
 **The header row (`HeaderRow`):**
 
 - **`null`** (the default): the area's first record is the header when `HasHeader`, as before. Nothing is clipped.
-- **`ExcelHeaderRow.At(row)`:** that sheet row is the header, and it must be in the area. Rows of the area above it are skipped, and the columns are clipped to the header's: from its first cell with a value to its last.
+- **`ExcelHeaderRow.At(row)`:** that sheet row is the header, and it must be in the area. Rows of the area above it are skipped, and the columns are clipped to the header's: from its first cell with a value to its last. (Added at step 5:) The row is the header even when it is hidden and hidden rows are skipped: it is named.
 - **`ExcelHeaderRow.Find<T>(maxRows)`:** the header is the first row, of the area's first `maxRows` rows (20 by default), that has every column `T` requires. Rows above it are skipped and the columns clipped, as for `At`.
   - A row has them when `T`'s mapper finds them there, as `GetRecords<T>` would: `TryValidateHeader<T>` on a reader whose header is that row. So alternate names, nested records, `NormalizeHeaderName` and header matching all apply, and optional members are not required.
   - `T` needs a mapper (`[CsvRecord]`); otherwise `OpenReader` throws `InvalidOperationException`, as `GetRecords<T>` does.
   - `Find<dynamic>` takes the first row with a value: dynamic records require no columns.
 - **`ExcelHeaderRow.Find(names, maxRows)`:** the same, for a row that has every name, each matched as `TryGetFieldIndex` matches it: for dynamic records and reading by name. An empty list takes the first row with a value, clipped.
 - **Candidates** are the area's rows with a value, after hidden rows are skipped and merged cells filled (when those options are on). A typed cell counts as its text, as a header name does (a date names its column `2024-01-15`). Rows count by number: the area's first `maxRows` rows, whether the file has them or not.
-- **When:** `OpenReader` (or `OpenReaderAsync`) reads the sheet up to the header row, so a sheet without one fails there.
+- **When:** `OpenReader` (or `OpenReaderAsync`) reads the sheet up to the header row, so a sheet without one fails there. (Changed at step 5:) It reads them with a scanner of its own, before the reader reads them again, so they are inflated twice, and the search's read counts toward `MaxUncompressedSize`.
 - **Not found:**
   - `OpenReader` throws `KeyNotFoundException`, naming the rows searched and the row that came closest, with what it lacks, as header validation names columns: "No row of Orders!1:20 has the columns that Order requires. The closest, row 4, lacks Order.Total ('Total')."
   - For `At`, a header row without a value throws `CsvFormatException` naming the row.
@@ -2908,6 +2908,7 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
 - The first row that passes is the header. The layout's columns narrow to its first and last fields with a value, the row (narrowed) is held for the first fill, and the scanner goes on after it.
 - It keeps the row with the fewest missing columns, for the message. A probe reader is made per candidate, at most `maxRows` of them, each with the reader's buffer.
 - `At(row)` reads up to that row and takes it, without a probe.
+- (Changed at step 5:) The search has a scanner of its own, over a second stream of the part, whose area is the rows it tries (or the row given) in the area's columns, so it stops at the first row after them. Once it has the header, the reader's scanner is created over the rows after it, in its columns, holding it as its first record, as a table's names are held. So the reader's scanner never changes its layout, width or merged-cell state once it has begun; the rows up to the header are read twice. See step 5's "As built".
 
 **Location:** `SheetRecordSource.Locate` maps a field to its column through the layout. With no layout, the field is the column, as now. The scanner's own errors already name cells by column.
 
@@ -3400,6 +3401,89 @@ Filled in step by step; the code is the reference.
   - "missing rows not tracked when empty rows are skipped": 6.
   - Not run yet: "fills from the first field each time" (stopped while it ran; the file was restored and the tests pass), "runs ignore hidden columns", "runs end at the column, not the shown field", and "the option ignored".
 - **Core:** no change. The solution builds with 0 warnings on every target. With the option on, a whole sheet that has ranges is read through `SheetLayout.Sheet`; one without any is read as with the option off, after the first read through it. Step 8 measures both.
+
+**Step 5, header row** (built 2026-11-05):
+
+- **New files:**
+  - `ExcelHeaderRow.cs`, as designed: `At`, `Find<T>`, `Find(names)` and `ToString`, with the test each search makes held as a delegate.
+  - `Internal/Sheet/HeaderSearch.cs`: `SearchArea` (the rows a search reads), `RunAsync` (the search), and in it the one-record capture (`CapturedRow`, `RowCapture`) and the probe readers' source (`HeaderProbe`).
+- **Changed:**
+  - `ExcelReaderOptions.HeaderRow`, and its two checks in `Validate`. `Range`'s docs say that `HeaderRow` can move its header.
+  - `ExcelWorkbook`:
+    - `OpenReader` checks a row given against the area before it reads anything, finds the header (`FindHeaderAsync`) once the styles, shared strings and merged ranges are loaded, then opens the reader's scanner over the area the search gives, holding the header;
+    - `OpenScannerAsync` opens a scanner of the part, for both;
+    - the docs of the eight `OpenReader` overloads list `KeyNotFoundException`, `InvalidOperationException`, the header row's `ArgumentOutOfRangeException`, and `CsvFormatException`, which step 4's merged cells already threw from them undocumented.
+  - `HeldRecord.Row`: a record of a row's cells, one per column from a first one.
+- **Decisions made while building:**
+  - **A scanner of its own** (a design change):
+    - The design paused the reader's scanner after the header row, narrowed its layout to the header's columns, and held the row for its next fill. The scanner would then have changed its layout, its width and its merged-cell state after the rows had begun, and `MergedFill` keeps its open ranges by field, so narrowing would have re-keyed them mid-sheet.
+    - Instead, the search opens a second stream of the sheet's part, with a scanner whose area is the rows it tries (`SearchArea`: the row given, or the area's first `maxRows` rows), in the area's columns, with the reader's options. It skips rows without a value, and writes one record per fill.
+    - Once it has the header, the reader's scanner is created over the area's rows after it, from its first column with a value to its last, holding it as a table's names are held. Rows above that area are skipped, or read for shared formulas' definitions and merged ranges' top-left cells, as since steps 2 to 4, so the scanner itself is unchanged.
+    - The cost: the part is inflated twice up to the header row, and to the end of the 64 KB window that holds it. That counts toward `MaxUncompressedSize`, and a search that reads every row reads the sheet twice. Step 8 measures it.
+  - **The search reads no row after those it tries:** its area ends at the last of them, so the next row ends its read. A row whose XML can't be read just after them doesn't fail it, and a million rows the file lacks cost nothing.
+  - **A row given is the header even when hidden** and hidden rows are skipped, since it is named: its search reads hidden rows. A row given outside the area throws `ArgumentOutOfRangeException` before anything is read.
+  - **A value** is a field whose kind isn't empty. The clip takes the header's first and last such fields, so it also drops the padding the search's scanner adds (a title merged across three columns pads a two-field header row to three). A hidden column between the header's fields gets an empty placeholder, which the reader's layout leaves out.
+  - **Probes:**
+    - Each is a `CsvReader` over a one-record source, with the reader's options and cell options, so a date names its column in the workbook's date system.
+    - Each is disposed after its test, which returns its buffer to the pool.
+    - `Find<dynamic>` needs no case of its own: core's dynamic mapper requires no columns, so the first row with a value passes.
+    - When no row tried has a value, a probe of an empty header tells whether any column is wanted, and throws `InvalidOperationException` for a type without a mapper, as a row's probe would have.
+  - **Messages** as designed, with these forms:
+    - The rows tried are named as a block in the area's columns: `Messy!1:20` for a sheet, `Data!B2:F21` for a range.
+    - Names are quoted as core quotes header names: "No row of Data!1:20 has the columns 'Name', 'Total'. The closest, row 4, lacks 'Total'."
+    - A type's columns are named as core names them: "... has the columns that AreaOrderWithTotal requires. The closest, row 4, lacks AreaOrderWithTotal.Total ('Total')."
+    - Without values: "No row of Messy!B1:E3 has the columns that AreaOrder requires: none of them has a value.", or "No row of Messy!F1:F9 has a value." when no column is wanted.
+    - A row given without a value: "The header row, Messy!3:3, has no value.", a `CsvFormatException` whose `Location` is the row.
+  - **`ExcelHeaderRow`:**
+    - `ToString` gives the code that makes it: `ExcelHeaderRow.At(4)`, `ExcelHeaderRow.Find<AreaOrder>(20)`, `ExcelHeaderRow.Find(["Name", "Unit Price"], 20)`.
+    - `Find(names)` copies the names; a null name throws `ArgumentException`.
+    - It has no value equality, so `ExcelReaderOptions` compares it by reference.
+- **Tests** (29 new per target: 1,387 on net10.0 and net8.0, 1,359 on net48; all passing):
+  - **`HeaderSearchTests`** (11), in every sheet mode, through `Sheets.ReadAfterHeaderAsync`, which runs the search and the read after it as `OpenReader` does:
+    - names found below a title, ignoring case and white space; the same row given; no names; ranges;
+    - the clip, with a gap in the header, notes either side and empty rows kept;
+    - rows tried by number, the closest row, and the rows named in ranges;
+    - sheets without values, a row given without one, on a sheet whose name is quoted, and a row whose one cell is a space by reference (a record of an empty field, without a value);
+    - a row given outside the area, and the rows each search reads;
+    - hidden rows and columns, a hidden row given, and a hidden first column;
+    - merged cells filled into the header row, and not filled;
+    - typed header cells (numbers, booleans, errors in each policy);
+    - a shared formula defined above the header;
+    - the reader's `NormalizeHeaderName` in the probes;
+    - no row read after those tried, and a million rows the file lacks.
+  - **`SheetScannerComparisonTests.MatchesTheReferenceWithAHeaderRow`:** the 100 generated sheets, with and without hidden cells, merged ranges and areas, given a row (mostly one with a value) or a search for a row's texts (sometimes cased otherwise, or with a name no row has), in all 16 modes, with empty rows skipped and kept, against the reference model. The model gained the search: it tries the rows its own rules read and matches names as `TryGetFieldIndex` does. About half the reads find a header; the rest compare their exceptions.
+  - **`HeaderReadingTests`** (17), sync and async, through the public API:
+    - `Find<T>` in a range, `Find(names)` on a whole sheet, `At`, a defined name and `Find<dynamic>`, through `GetRecords<T>`, dynamic records, `CsvDataReader`, `Query<T>()`, `ParallelEnumerate` and `ExcelReader`;
+    - a date in the header naming its column, in both date systems;
+    - a hidden row of other names above the header, skipped or not, and given;
+    - errors naming `Messy!C6` after the clip, in `GetRecords<T>`, `OnRecordError` and `ParallelEnumerate`;
+    - every message when no row will do, a type without a mapper (with and without values), a row given without a value or outside the range, and the workbook read on after them;
+    - the options' checks at `Open` and at `OpenReader`;
+    - `ExcelHeaderRow`'s checks, texts and copy of the names;
+    - the search's read counted: under a limit the sheet passes once, a search that reads every row to find its header fails, and one that finds it in the first row doesn't.
+  - `CellReading.With` gives a reading of another area, held record and hidden rows' choice; `Sheets.ReadAfterHeaderAsync` runs the search and the read after it.
+- **Mutation check** on net10.0, 20 bugs planted one at a time. 17 were caught by the first run; the other 3 were caught once tests were added for them (marked "after"):
+  - "rows tried not bounded by `maxRows`": 7 failures;
+  - "a row given outside the area taken": 3;
+  - "rows without a value tried": 1 after a row whose one cell is a space by reference (none at first);
+  - "the closest is the last of those that lack fewest": 4;
+  - "without values, the columns wanted not asked": 3;
+  - "empty fields before the header's first value kept": 7;
+  - "empty fields after the header's last value kept": 2;
+  - "the header's first column from its field, hidden columns ignored": 1;
+  - "the reader reads the header row again": 22;
+  - "the header's kinds lost": 7;
+  - "probes convert typed cells with the default options": 2, the 1904 date system's;
+  - "a search's fill takes every record": 22;
+  - "a hidden row given skipped": 2 after the public API's hidden-row test (none at first: the scanner tests choose the search's hidden rows in their own helper);
+  - "the search reads hidden rows": 2 after the same test;
+  - "the header found not held": 24;
+  - "`HeaderRow` allowed with `Table`": 2;
+  - "`HeaderRow` allowed without `HasHeader`": 2;
+  - "`Find<T>` asks for no columns": 6;
+  - "`maxRows` past the sheet's rows taken": 1;
+  - "a null name taken": 1.
+- **Core:** no change. The solution builds with 0 warnings on every target. The reader's scanner is unchanged, so the default path is too; step 8 measures the search's second read.
 
 ### Phase 4: writer foundation (L)
 

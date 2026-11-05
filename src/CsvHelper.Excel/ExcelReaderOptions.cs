@@ -44,8 +44,8 @@ public sealed record ExcelReaderOptions
 	/// <remarks>
 	/// Field 0 is the block's first column, and cells outside its columns are no fields. Rows above it are skipped, and
 	/// reading stops after its last row, so nothing of the sheet after it is inflated. The block's first record is the
-	/// header when <see cref="CsvReaderOptions.HasHeader"/> is set. At most one of <see cref="Range"/>, <see cref="Table"/>
-	/// and <see cref="DefinedName"/> can be set.
+	/// header when <see cref="CsvReaderOptions.HasHeader"/> is set, unless <see cref="HeaderRow"/> says where it is. At most
+	/// one of <see cref="Range"/>, <see cref="Table"/> and <see cref="DefinedName"/> can be set.
 	/// </remarks>
 	public string? Range { get; init; }
 
@@ -71,6 +71,31 @@ public sealed record ExcelReaderOptions
 	/// such as <c>Orders!Print_Area</c>. Names are matched ignoring case, as Excel matches them.
 	/// </remarks>
 	public string? DefinedName { get; init; }
+
+	/// <summary>
+	/// Where the header row is, when it isn't the first row read: a row by its number (<see cref="ExcelHeaderRow.At"/>), or
+	/// the first row, of the first rows read, that has every column a record type requires
+	/// (<see cref="ExcelHeaderRow.Find{T}(int)"/>) or every one of some names
+	/// (<see cref="ExcelHeaderRow.Find(System.Collections.Generic.IEnumerable{string}, int)"/>). <see langword="null"/> by
+	/// default: the first record read is the header, and no column is clipped.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Rows above the header row are skipped, and the columns are clipped to the header's: from its first cell with a value
+	/// to its last. So a report's title, logo and notes above its header, and notes beside its data, are not read, and
+	/// field 0 is the header's first column. It works on the whole sheet, a <see cref="Range"/> or a
+	/// <see cref="DefinedName"/>, after hidden rows and columns are skipped and merged cells filled when those options are
+	/// set; a typed cell names its column as its text, as any header's does.
+	/// </para>
+	/// <para>
+	/// Opening the reader reads the sheet's rows up to the header row with a scanner of its own, before the reader reads
+	/// them again, so that a sheet without one fails there, with <see cref="System.Collections.Generic.KeyNotFoundException"/>
+	/// naming the rows tried and the row that came closest. That read counts toward <see cref="MaxUncompressedSize"/>.
+	/// It can't be set with <see cref="Table"/>, whose header is its column names, nor without
+	/// <see cref="CsvReaderOptions.HasHeader"/>.
+	/// </para>
+	/// </remarks>
+	public ExcelHeaderRow? HeaderRow { get; init; }
 
 	/// <summary>
 	/// Whether the rows Excel hides are skipped, so that the reader reads the rows Excel shows. <see langword="false"/> by
@@ -212,7 +237,8 @@ public sealed record ExcelReaderOptions
 	/// <exception cref="ArgumentException">
 	/// <see cref="Csv"/> is <see langword="null"/>; both <see cref="Sheet"/> and <see cref="SheetIndex"/> are set; more than
 	/// one of <see cref="Range"/>, <see cref="Table"/> and <see cref="DefinedName"/> is set; <see cref="Range"/> is not a
-	/// block of cells; or one that chooses its sheet is set with <see cref="Sheet"/> or <see cref="SheetIndex"/>.
+	/// block of cells; one that chooses its sheet is set with <see cref="Sheet"/> or <see cref="SheetIndex"/>; or
+	/// <see cref="HeaderRow"/> is set with <see cref="Table"/>, or without <see cref="CsvReaderOptions.HasHeader"/>.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
 	/// A limit is 0 or less, <see cref="ErrorCells"/> or <see cref="Formulas"/> is not a value of its enum, or
@@ -244,6 +270,16 @@ public sealed record ExcelReaderOptions
 		if ((Sheet is not null || SheetIndex is not null) && ChoosesSheet(rangeSheet) is { } chooser)
 		{
 			throw new ArgumentException($"{chooser}, so ExcelReaderOptions.Sheet and ExcelReaderOptions.SheetIndex can't be set with it.", paramName);
+		}
+
+		if (HeaderRow is not null && Table is not null)
+		{
+			throw new ArgumentException("ExcelReaderOptions.HeaderRow can't be set with ExcelReaderOptions.Table: a table's header is its column names.", paramName);
+		}
+
+		if (HeaderRow is not null && !Csv.HasHeader)
+		{
+			throw new ArgumentException("ExcelReaderOptions.HeaderRow needs ExcelReaderOptions.Csv.HasHeader.", paramName);
 		}
 
 		if (MaxPartSize <= 0)

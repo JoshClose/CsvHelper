@@ -18,8 +18,9 @@ namespace CsvHelper.Excel;
 /// <b>Reading.</b> <see cref="OpenReader(ExcelReaderOptions?)"/> returns a plain <see cref="CsvReader"/>: records, dynamic
 /// records, <see cref="CsvDataReader"/> and CsvHelper.Linq work as for CSV. Field <c>i</c> of a record is column <c>i</c>
 /// of its row (<c>A</c> is 0), or of a block of cells that <see cref="ExcelReaderOptions.Range"/>,
-/// <see cref="ExcelReaderOptions.Table"/> or <see cref="ExcelReaderOptions.DefinedName"/> chooses (its first column is 0).
-/// Empty cells are empty fields, and rows are padded to the first record's width. Cells read by their types: numbers,
+/// <see cref="ExcelReaderOptions.Table"/> or <see cref="ExcelReaderOptions.DefinedName"/> chooses (its first column is 0),
+/// or of the columns of a header row below a report's title (<see cref="ExcelReaderOptions.HeaderRow"/>). Empty cells are
+/// empty fields, and rows are padded to the first record's width. Cells read by their types: numbers,
 /// dates, booleans, errors and text. Errors in a sheet name their cell, such as <c>Orders!C14</c>, in
 /// <see cref="CsvFormatException.Location"/>.
 /// </para>
@@ -157,9 +158,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentException">The options name no sheet, table or defined name of the workbook, or a defined name that is no block of cells, or are not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, or a limit is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, a limit is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet, or the workbook has none.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public CsvReader OpenReader(ExcelReaderOptions? options = null) =>
 		SyncOrAsync.Result(OpenReaderCoreAsync(null, null, null, options, false, false, CancellationToken.None));
 
@@ -170,9 +174,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="sheetName"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentException">The workbook has no sheet of that name (the message lists its sheets), the options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or they are not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public CsvReader OpenReader(string sheetName, ExcelReaderOptions? options = null)
 	{
 		ArgumentNullException.ThrowIfNull(sheetName);
@@ -185,10 +192,13 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <param name="options">The reader's options, in place of the workbook's; <see langword="null"/> for the workbook's.</param>
 	/// <returns>The reader, which holds the sheet's stream until it is disposed.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, or a limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, a limit of the options is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="ArgumentException">The options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or are not valid.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public CsvReader OpenReader(int sheetIndex, ExcelReaderOptions? options = null) =>
 		SyncOrAsync.Result(OpenReaderCoreAsync(null, sheetIndex, null, options, false, false, CancellationToken.None));
 
@@ -199,9 +209,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="sheet"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentException">The sheet is another workbook's, the options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or they are not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public CsvReader OpenReader(ExcelSheet sheet, ExcelReaderOptions? options = null)
 	{
 		ArgumentNullException.ThrowIfNull(sheet);
@@ -215,9 +228,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <returns>A task whose result is the reader.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentException">The options name no sheet, table or defined name of the workbook, or a defined name that is no block of cells, or are not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, or a limit is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">The options' sheet index is out of range, a limit is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet, or the workbook has none.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public ValueTask<CsvReader> OpenReaderAsync(ExcelReaderOptions? options = null, CancellationToken cancellationToken = default) =>
 		OpenReaderCoreAsync(null, null, null, options, false, true, cancellationToken);
 
@@ -229,9 +245,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="sheetName"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentException">The workbook has no sheet of that name, the options choose a sheet of their own, or they are not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public ValueTask<CsvReader> OpenReaderAsync(string sheetName, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(sheetName);
@@ -245,10 +264,13 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <param name="cancellationToken">Cancels reading the styles and shared strings.</param>
 	/// <returns>A task whose result is the reader.</returns>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
-	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, or a limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="sheetIndex"/> is out of range, a limit of the options is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="ArgumentException">The options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or are not valid.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public ValueTask<CsvReader> OpenReaderAsync(int sheetIndex, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default) =>
 		OpenReaderCoreAsync(null, sheetIndex, null, options, false, true, cancellationToken);
 
@@ -260,9 +282,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="sheet"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
 	/// <exception cref="ArgumentException">The sheet is another workbook's, the options choose a sheet of their own (a table, a defined name, or a range that names its sheet), or they are not valid.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">A limit of the options is 0 or less, or the header row they give (<see cref="ExcelHeaderRow.At"/>) is not in the range or defined name read.</exception>
 	/// <exception cref="NotSupportedException">The sheet is not a worksheet.</exception>
 	/// <exception cref="InvalidDataException">The sheet's part is missing, or the styles or shared strings can't be read or pass a limit.</exception>
+	/// <exception cref="CsvFormatException">The sheet's merged cells can't be read (<see cref="ExcelReaderOptions.FillMergedCells"/>), or its rows up to the header row can't be read, or the header row given has no value (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="KeyNotFoundException">No row tried has the header row's columns (<see cref="ExcelReaderOptions.HeaderRow"/>).</exception>
+	/// <exception cref="InvalidOperationException">The header row's record type has no mapper (<see cref="ExcelHeaderRow.Find{T}(int)"/>).</exception>
 	public ValueTask<CsvReader> OpenReaderAsync(ExcelSheet sheet, ExcelReaderOptions? options = null, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(sheet);
@@ -441,6 +466,9 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 			throw new NotSupportedException($"The sheet \"{chosen.Name}\" is a {Describe(chosen.Kind)}, and only worksheets have cells to read.");
 		}
 
+		// The rows a header search reads, checked before anything is read: a row given must be in the area.
+		var headerRow = settings.HeaderRow;
+		var searchArea = headerRow is null ? null : HeaderSearch.SearchArea(headerRow, layout ?? SheetLayout.Sheet);
 		var partName = chosen.Part.PartName ?? throw new InvalidDataException($"The sheet \"{chosen.Name}\" can't be read: {chosen.Part.Problem}.");
 		var limits = settings.Limits;
 		styles ??= await StyleTable.LoadAsync(archive, part.StylesPart, limits, async, cancellationToken).ConfigureAwait(false);
@@ -450,24 +478,17 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		var mergedCells = settings.FillMergedCells
 			? await MergedCells.LoadAsync(archive, partName, chosen.Name, limits, async, cancellationToken).ConfigureAwait(false)
 			: null;
-		var stream = await archive.OpenPartAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
-		SheetScanner scanner;
-		try
+		if (headerRow is not null)
 		{
-			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize));
-			scanner = new SheetScanner(
-				xml, chosen.Name, strings, styles, settings.Csv.SkipEmptyLines, stream, Date1904, settings.ErrorCells, settings.Formulas, layout,
-				settings.SkipHiddenRows, settings.SkipHiddenColumns, mergedCells);
-			if (header is not null)
-			{
-				scanner.HoldFirstRecord(header);
-			}
+			(layout, header) = await FindHeaderAsync(partName, chosen.Name, settings, headerRow, searchArea!, layout ?? SheetLayout.Sheet, mergedCells, async, cancellationToken)
+				.ConfigureAwait(false);
 		}
-		catch
-		{
-			stream.Dispose();
 
-			throw;
+		var scanner = await OpenScannerAsync(partName, chosen.Name, settings, layout, settings.Csv.SkipEmptyLines, settings.SkipHiddenRows, mergedCells, async, cancellationToken)
+			.ConfigureAwait(false);
+		if (header is not null)
+		{
+			scanner.HoldFirstRecord(header);
 		}
 
 		try
@@ -480,6 +501,80 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 			scanner.Dispose();
 
 			throw;
+		}
+	}
+
+	/// <summary>Opens a scanner of a worksheet's part, with a reader's options; when that fails, the part's stream is disposed.</summary>
+	/// <param name="partName">The sheet's part.</param>
+	/// <param name="sheetName">The sheet's name, for locations.</param>
+	/// <param name="options">The reader's options.</param>
+	/// <param name="layout">The area read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
+	/// <param name="skipHiddenRows">Whether hidden rows are no records.</param>
+	/// <param name="mergedCells">The sheet's merged ranges, to fill their cells with; <see langword="null"/> to fill none.</param>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task whose result is the scanner, which owns the part's stream.</returns>
+	private async ValueTask<SheetScanner> OpenScannerAsync(
+		string partName, string sheetName, ExcelReaderOptions options, SheetLayout? layout, bool skipEmptyRows, bool skipHiddenRows, MergedCells? mergedCells, bool async,
+		CancellationToken cancellationToken)
+	{
+		var limits = options.Limits;
+		var stream = await archive.OpenPartAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
+		try
+		{
+			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize));
+
+			return new SheetScanner(
+				xml, sheetName, strings!, styles!, skipEmptyRows, stream, Date1904, options.ErrorCells, options.Formulas, layout, skipHiddenRows, options.SkipHiddenColumns,
+				mergedCells);
+		}
+		catch
+		{
+			stream.Dispose();
+
+			throw;
+		}
+	}
+
+	/// <summary>
+	/// Finds the header row that the options ask for (<see cref="ExcelReaderOptions.HeaderRow"/>), with a scanner of its own
+	/// over the rows it can be in, which reads the sheet's part from its start again (<see cref="HeaderSearch"/>).
+	/// </summary>
+	/// <param name="partName">The sheet's part.</param>
+	/// <param name="sheetName">The sheet's name, for locations.</param>
+	/// <param name="options">The reader's options.</param>
+	/// <param name="headerRow">The header row asked for.</param>
+	/// <param name="searchArea">The rows the search reads, in the area's columns (<see cref="HeaderSearch.SearchArea"/>).</param>
+	/// <param name="area">The area read.</param>
+	/// <param name="mergedCells">The sheet's merged ranges, to fill their cells with; <see langword="null"/> to fill none.</param>
+	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task whose result is what the reader reads (the rows after the header, in its columns) and the header to hold.</returns>
+	/// <exception cref="KeyNotFoundException">No row searched has the columns asked for.</exception>
+	/// <exception cref="CsvFormatException">The row given has no value, or the sheet's content up to the header row can't be read.</exception>
+	/// <exception cref="InvalidOperationException">The search's record type has no mapper.</exception>
+	private async ValueTask<(SheetLayout Layout, HeldRecord Header)> FindHeaderAsync(
+		string partName, string sheetName, ExcelReaderOptions options, ExcelHeaderRow headerRow, SheetLayout searchArea, SheetLayout area, MergedCells? mergedCells,
+		bool async, CancellationToken cancellationToken)
+	{
+		// Rows without a value are no candidates; a row given is the header even when hidden, as it is named.
+		var search = await OpenScannerAsync(partName, sheetName, options, searchArea, true, options.SkipHiddenRows && headerRow.Row == 0, mergedCells, async, cancellationToken)
+			.ConfigureAwait(false);
+		try
+		{
+			return await HeaderSearch.RunAsync(search, headerRow, area, options, Date1904, async, cancellationToken).ConfigureAwait(false);
+		}
+		finally
+		{
+			if (async)
+			{
+				await search.DisposeAsync().ConfigureAwait(false);
+			}
+			else
+			{
+				search.Dispose();
+			}
 		}
 	}
 

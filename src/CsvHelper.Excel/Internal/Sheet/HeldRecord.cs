@@ -6,8 +6,9 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// A record the sheet scanner writes before the rows it reads, once its layout is final: a table's column names as its
-/// header record, which the sheet may not show at all. Each field has its column, so that the fields of columns the
-/// layout doesn't read are left out, as their cells are.
+/// header record, which the sheet may not show at all, or the header row that <see cref="HeaderSearch"/> found above the
+/// rows read. Each field has its column, so that the fields of columns the layout doesn't read are left out, as their
+/// cells are.
 /// </summary>
 internal sealed class HeldRecord
 {
@@ -56,6 +57,14 @@ internal sealed class HeldRecord
 
 		return new HeldRecord(values, kinds, firstColumn, line);
 	}
+
+	/// <summary>A record of a row's cells, one field per column from a first one: such as the header row a search found.</summary>
+	/// <param name="values">Each field's value, as UTF-8.</param>
+	/// <param name="kinds">Each field's kind.</param>
+	/// <param name="firstColumn">The column of the first field, from 0; the others follow it.</param>
+	/// <param name="line">The record's row in the sheet.</param>
+	/// <returns>The record.</returns>
+	public static HeldRecord Row(byte[][] values, SheetCellKind[] kinds, int firstColumn, long line) => new(values, kinds, firstColumn, line);
 
 	/// <summary>Writes the record into a target, and ends it: the fields of the columns the layout reads, in order.</summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>

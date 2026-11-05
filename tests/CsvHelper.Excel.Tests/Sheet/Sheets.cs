@@ -99,6 +99,14 @@ internal sealed class CellReading(
 
 	/// <summary>What cells with a formula read as.</summary>
 	public ExcelFormulas Formulas => formulas;
+
+	/// <summary>The same reading of another area, with another held record and another choice for hidden rows.</summary>
+	/// <param name="area">The area read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="record">A record to write before the rows, or <see langword="null"/>.</param>
+	/// <param name="rows">Whether hidden rows are no records.</param>
+	/// <returns>The reading.</returns>
+	public CellReading With(SheetLayout? area, HeldRecord? record, bool rows) =>
+		new(styles, date1904, errorCells, formulas, area, record, rows, skipHiddenColumns, fillMergedCells);
 }
 
 /// <summary>Reads sheets with <see cref="SheetScanner"/> into <see cref="Captured"/> records.</summary>
@@ -225,6 +233,38 @@ internal static class Sheets
 		await FillAllAsync(sheet, captured, mode.Scan.Async);
 
 		return captured.Records;
+	}
+
+	/// <summary>
+	/// Reads a sheet's records after its header row, as opening a reader with <see cref="ExcelReaderOptions.HeaderRow"/>
+	/// does: a scanner of the rows the header can be in finds it (<see cref="HeaderSearch"/>), then a scanner of the rows
+	/// after it, in its columns, reads them with the header first.
+	/// </summary>
+	/// <param name="xml">The part.</param>
+	/// <param name="mode">How to read it.</param>
+	/// <param name="headerRow">The header row asked for.</param>
+	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
+	/// <param name="strings">The shared strings, or <see langword="null"/> for none.</param>
+	/// <param name="reading">The styles, date system, error policy, formulas, area and hidden and merged cells, or <see langword="null"/> for <see cref="CellReading.Default"/>.</param>
+	/// <param name="csv">The reader's options, which the search's probes read with; <see langword="null"/> for the defaults.</param>
+	/// <param name="sheetName">The sheet's name.</param>
+	/// <returns>The records, described (<see cref="CapturedRecord.ToString"/>).</returns>
+	public static async Task<List<string>> ReadAfterHeaderAsync(
+		string xml, SheetMode mode, ExcelHeaderRow headerRow, bool skipEmptyRows = true, SharedStrings? strings = null, CellReading? reading = null,
+		CsvReaderOptions? csv = null, string sheetName = "Data")
+	{
+		reading ??= CellReading.Default;
+		var area = reading.Layout ?? SheetLayout.Sheet;
+		var searching = reading.With(HeaderSearch.SearchArea(headerRow, area), null, reading.SkipHiddenRows && headerRow.Row == 0);
+		SheetLayout layout;
+		HeldRecord held;
+		using (var search = Open(xml, mode.Scan, true, strings, sheetName, reading: searching))
+		{
+			var options = new ExcelReaderOptions { ErrorCells = reading.ErrorCells, Formulas = reading.Formulas, Csv = csv ?? CsvReaderOptions.Default };
+			(layout, held) = await HeaderSearch.RunAsync(search, headerRow, area, options, reading.Date1904, mode.Scan.Async, CancellationToken.None);
+		}
+
+		return await ReadAsync(xml, mode, skipEmptyRows, strings, sheetName, reading: reading.With(layout, held, reading.SkipHiddenRows));
 	}
 
 	/// <summary>Fills until the sheet has no more records, checking each fill.</summary>
