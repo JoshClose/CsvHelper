@@ -93,11 +93,11 @@ public class ExcelAnswersTests
 	public const string Refused = "openpyxl/messy.xlsx";
 
 	/// <summary>
-	/// The workbooks that have Excel's answers: all but the benchmarks' cross-checks, of 42,000 and 12,000 cells, and the
-	/// one Excel refuses (<see cref="Refused"/>).
+	/// The workbooks that have Excel's answers: all but the benchmarks' cross-checks, of 42,000, 12,000 and 6,800 cells, and
+	/// the one Excel refuses (<see cref="Refused"/>).
 	/// </summary>
 	public static IEnumerable<object[]> AnsweredWorkbooks =>
-		CorpusFiles.WorkbookData.Where(w => (string)w[0] is not "excel/packageassets-1695.xlsx" and not "excel/orders-1000.xlsx" and not Refused);
+		CorpusFiles.WorkbookData.Where(w => (string)w[0] is not "excel/packageassets-1695.xlsx" and not "excel/orders-1000.xlsx" and not "excel/packageassets-report-250.xlsx" and not Refused);
 
 	[Fact]
 	public void AnswersForEveryWorkbook()

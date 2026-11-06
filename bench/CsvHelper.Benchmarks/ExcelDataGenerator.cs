@@ -7,7 +7,8 @@ namespace CsvHelper.Benchmarks;
 
 /// <summary>
 /// The Excel read benchmarks' data, as CSV text and as workbooks: NCsvPerf's package assets data
-/// (<c>Data/PackageAssets.csv</c>, see <c>Data/README.md</c>), and the orders of <see cref="ExcelOrders"/>.
+/// (<c>Data/PackageAssets.csv</c>, see <c>Data/README.md</c>), plain and laid out as a report (<see cref="ExcelReport"/>),
+/// and the orders of <see cref="ExcelOrders"/>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -103,6 +104,15 @@ public static class ExcelDataGenerator
 		Cached(
 			$"packageassets-{rows}-{strings.ToString().ToLowerInvariant()}-",
 			stream => ExcelTextWorkbook.Write(stream, SheetName, PackageAssetRecords(rows), strings, CompressionLevel.Optimal));
+
+	/// <summary>
+	/// Returns the header and data rows laid out as a report (see <see cref="ExcelReport"/>), from the cache or written
+	/// into it.
+	/// </summary>
+	/// <param name="rows">The number of data rows.</param>
+	/// <returns>The workbook's bytes.</returns>
+	public static byte[] PackageAssetsReport(int rows) =>
+		Cached($"packageassets-report-{rows}-", stream => ExcelReportWorkbook.Write(stream, PackageAssetRecords(rows), CompressionLevel.Optimal));
 
 	/// <summary>Returns the orders as the cells hold them, as CSV text with a header, written by CsvHelper.</summary>
 	/// <param name="rows">The number of orders.</param>

@@ -19,6 +19,7 @@ public class CorpusTests
 		["excel/template.xltx"] = ExcelSheets,
 		["excel/packageassets-1695.xlsx"] = ["PackageAssets Visible Worksheet"],
 		["excel/orders-1000.xlsx"] = ["Orders Visible Worksheet"],
+		["excel/packageassets-report-250.xlsx"] = ["Report Visible Worksheet"],
 
 		// Apache POI's test files from Google Sheets and Excel for Mac (see downloads.txt), each with sheets of its own.
 		["excel-mac/github-321.xlsx"] = ["Sheet1 Visible Worksheet"],

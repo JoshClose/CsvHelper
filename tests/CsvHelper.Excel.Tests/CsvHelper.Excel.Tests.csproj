@@ -52,9 +52,12 @@
 		<None Include="Files\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
-	<!-- The benchmarks' workbook writer and NCsvPerf's data, for the test that checks the writer against Excel's file. -->
+	<!-- The benchmarks' workbook writers of text and of the report, and NCsvPerf's data, for the tests that check the writers
+	     against Excel's files. -->
 	<ItemGroup>
 		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelTextWorkbook.cs" Link="Bench\ExcelTextWorkbook.cs" />
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelReport.cs" Link="Bench\ExcelReport.cs" />
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelReportWorkbook.cs" Link="Bench\ExcelReportWorkbook.cs" />
 		<None Include="..\..\bench\CsvHelper.Benchmarks\Data\PackageAssets.csv" Link="Bench\PackageAssets.csv" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 

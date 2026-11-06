@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Text;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
@@ -940,7 +941,27 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// Whether the row can go on in this fill: <see langword="false"/> when the target is full before they are all written,
 	/// or after them.
 	/// </returns>
+	/// <remarks>
+	/// Every row and every cell asks, and almost always no row is missing, so the test is inlined into its callers and the
+	/// writing is a method of its own (<see cref="WriteGaps"/>). As one method, it outgrew the JIT's inlining limit of 100
+	/// bytes of IL when merged cells' fills came in, and a whole sheet's reading paid a call per cell (Phase 3's step 8).
+	/// </remarks>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private bool FlushGaps<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget =>
+		gapNext >= gapEnd || WriteGaps(target);
+
+	/// <summary>
+	/// Writes the rows missing before the current one, for <see cref="FlushGaps"/>, when at least one is: empty records, or
+	/// records of fills.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <returns>
+	/// Whether the row can go on in this fill: <see langword="false"/> when the target is full before they are all written,
+	/// or after them.
+	/// </returns>
+	private bool WriteGaps<TTarget>(TTarget target)
 		where TTarget : struct, IRecordTarget
 	{
 		var wrote = false;

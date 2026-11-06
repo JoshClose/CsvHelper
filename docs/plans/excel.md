@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, and steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05; see "As built" under Phase 3.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06; see "As built" under Phase 3.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -2584,7 +2584,7 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
 
 ### Phase 3: choosing what to read, and messy sheets (L)
 
-Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, step 4 built that day and committed on 2026-11-05, and steps 5 to 7 built and committed on 2026-11-05; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. Step 5 changed how the header is found: a scanner of its own reads the rows the header can be in, over a second stream of the sheet's part, and the reader's scanner then reads the rows after it, rather than one scanner pausing after the header row and narrowing its columns; a row given (`At`) is the header even when hidden. Step 6 asked Excel about every corpus workbook's structures over the whole grid rather than a window, and found that Excel opens no workbook with a name of a chartsheet, which openpyxl writes (CsvHelper.Excel still reads such a name, as the review decided; see step 6's "As built"). Step 7 found that each defined name searched every sheet for the sheet of its block, so that opening took the names times the sheets, and made it one lookup. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
+Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, step 4 built that day and committed on 2026-11-05, steps 5 to 7 built and committed on 2026-11-05, and step 8 built on 2026-11-05 and committed on 2026-11-06 with the review's fix; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. Step 5 changed how the header is found: a scanner of its own reads the rows the header can be in, over a second stream of the sheet's part, and the reader's scanner then reads the rows after it, rather than one scanner pausing after the header row and narrowing its columns; a row given (`At`) is the header even when hidden. Step 6 asked Excel about every corpus workbook's structures over the whole grid rather than a window, and found that Excel opens no workbook with a name of a chartsheet, which openpyxl writes (CsvHelper.Excel still reads such a name, as the review decided; see step 6's "As built"). Step 7 found that each defined name searched every sheet for the sheet of its block, so that opening took the names times the sheets, and made it one lookup. Step 8 put the report benchmark's regions outside its table, since Excel merges no cells in a table. Its A/B of the default path found two methods 1–2% slower; a bisect placed the cost in the scanner without a change to undo. The review took the one candidate, splitting `FlushGaps` so that its test inlines again, and BenchmarkDotNet pairs put both methods within the noise, Shared Rows on one clean pair (see step 8's "As built"). It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
 
 Scope, as planned:
 
@@ -2836,6 +2836,8 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
   - Excel can't open a table whose header cells differ from its column names: another text, a number for the name `1`, or an empty cell.
   - Formulas use `displayName`: `=ROWS(Shown)` works and `=ROWS(Internal)` is `#NAME?`. COM's `ListObject.Name` is the `name` attribute and `DisplayName` the other. Excel writes them alike.
   - (Added at step 6:) Turning on a table's totals row (`ShowTotals`) inserts cells in the table's columns, moving the cells below it down. Excel shows a structured reference to the table a cell is in without the table's name: `Sales[Qty]` in Sales' totals row shows as `[Qty]`.
+  - (Added at step 8, building the report benchmark's workbook:) Excel merges no cells in a table: `Range.Merge` over two of a table's cells fails with `0x800A03EC`, and `ListObjects.Add` over merged cells unmerges them, without a word when alerts are off. Making a table widens each column whose header doesn't fit beside its filter button (22 of the package assets data's 25), and a table over cells with a number format gets a differential format of it (`<dxf><numFmt numFmtId="30" formatCode="@"/></dxf>` for text) for its header row (`headerRowDxfId`) and for each such column (`dataDxfId`, numbered from the last column).
+  - (Added at step 8:) Excel writes every cell of a range given a format, an empty one as a cell with only its style, and gives the cells of a merged range a cell format of their own, a copy of the one they had, which it writes on each cell the range covers. A new workbook's page margins are 0.7, 0.75 and 0.3 inches, where a CSV opened in Excel has 0.75, 1 and 0.5.
 - **Dimensions:** Excel's `<dimension ref>` covers cells with only formatting and the empty rows it writes (`A1:F19`, where the last value was in row 18); an empty sheet is `A1`. In the corpus, the Open XML SDK, SpreadCheetah, LargeXlsx and Google Sheets write none, and ClosedXML, openpyxl and MiniExcel write `A1:A1` for an empty sheet.
 
 #### Internal design
@@ -2978,6 +2980,7 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
   - `SkipHiddenRows`, and `SkipHiddenColumns`;
   - `FillMergedCells`; and `FillMergedCells` on the plain PackageAssets workbook, which has no ranges: the second inflate alone.
   - The generator writes the report in Excel's shape, checked against a file of Excel's as the others are. The existing variants' bytes don't change.
+  - (Changed at step 8, from COM checks:) the table is over the hidden column and the data, not the regions: Excel merges no cells in a table, and unmerges them when it makes a table over merged cells. So `Table` reads one column fewer than `Range`.
 - One BenchmarkDotNet run, recorded in "As built".
 
 #### Core changes
@@ -3587,6 +3590,152 @@ Filled in step by step; the code is the reference.
   - "the header's last field placed a column late" (an index out of range): 28; the fuzzer alone caught it too;
   - "a table's names not fitted to its columns": none. It is equivalent: the held record's `WriteTo` leaves out the fields past the layout's columns, so the header is the same, and only the million names' bytes are held until the reader opens.
 - **Core:** no change. The solution builds with 0 warnings.
+
+**Step 8, benchmarks** (built 2026-11-05, the review's fix on 2026-11-06, committed 2026-11-06):
+
+- **New files:**
+  - `bench/CsvHelper.Benchmarks/ExcelReport.cs`: the report's layout and content. The test project and the corpus tool link it, as they link `ExcelOrders.cs`, so it has its own `using`s (the tool has no implicit ones).
+  - `bench/CsvHelper.Benchmarks/ExcelReportWorkbook.cs`: the writer, built on `ExcelTextWorkbook`'s helpers. `ExcelTextWorkbook.cs` is unchanged.
+  - `bench/CsvHelper.Benchmarks/ExcelReportBenchmarks.cs`: `ExcelReportRead`.
+  - `tests/CsvHelper.Excel.Tests/Bench/ExcelReportWorkbookTests.cs`: the cross-check.
+  - `tests/CsvHelper.Excel.Tests/Files/excel/packageassets-report-250.xlsx`, by the corpus tool's new `report` command.
+- **Changed:** `ExcelDataGenerator.PackageAssetsReport`, cached as `packageassets-report-<rows>-<hash>.xlsx`; the bench project's embedded generator sources; the test project's and the tool's links; `CorpusTests`' sheets; `MetadataTests`, for the report's table; the workbooks without Excel's answers (`ExcelAnswersTests.AnsweredWorkbooks`, `ExcelOracle.LeftOut`); the corpus README and the benchmark data's.
+- **The report** (`ExcelReport`), with the layout designed:
+  - row 1, the title `NuGet package assets` in `B1`, merged across `B1:AB1`; row 2, `From NCsvPerf's PackageAssets.csv`; row 3 empty;
+  - row 4, the header from `B4`: `Region`, `Key`, then the 25 names;
+  - from row 5, a row per data row: in column `B` the region, in the first of each 100 rows (North, East, South and West in turn), merged down them; in column `C`, the hidden one, the key, the row's number from 1 as a number in General; then the fields, as text;
+  - every 50th data row hidden (rows 54, 104, and so on);
+  - the table `Assets` over `C4` to the last row.
+  - **The regions are outside the table** (a design change, checked through COM): Excel merges no cells in a table, and a table made over merged cells unmerges them (see "Checked on 2026-11-04"). So `Table` reads the key and the fields, 26 columns, where `Range` reads 27.
+  - The header row, the regions and the fields have the text format, as every cell of the plain workbook has; the key and the titles are in General.
+  - A million rows make 10,000 regions and 20,000 hidden rows: 90.5 MB, with 965 MB of sheet XML (the plain workbook's is 714 MB) and 152 KB of shared strings.
+- **Excel's shape,** from the file the `report` command has Excel save, which the writer copies (also under "Checked on 2026-11-04"):
+  - Every cell of the formatted block is in the file, an empty field as `<c r="K5" s="1"/>`. The plain workbook, which Excel made from the CSV, has no cell for one.
+  - Merging gave the title's cells a new cell format, 2 (a copy of General), and the regions' 3 (a copy of the text format), and wrote each cell a range covers as an empty cell in it.
+  - Making the table widened the 22 columns whose header doesn't fit beside the filter button (`ScanTimestamp` to 16.36328125, `RoundTripTargetFrameworkMoniker` to 32.54296875). It added a differential format of the text format for the header row and for each of the 25 text columns, numbered from the last column; the key's column, in General, has none.
+  - The hidden column is `<col min="3" max="3" width="0" hidden="1" customWidth="1"/>`, first of the `cols`. A hidden row has `hidden="1"` after its `spans`, which are `2:28` on every row.
+  - The page margins are a new workbook's (0.7, 0.75, 0.3), not those of the CSV-opened file. The merged ranges are in the order they were made, and `tableParts` comes last.
+  - The table part's revision ids (`xr:uid`, `xr3:uid`) are random, so the writer writes none.
+- **The writer refuses** (`NotSupportedException`) what Excel's shape isn't known for: another header (its widths are Excel's for these names), no data row (a table needs one), a row of another width, and a last region of one row (Excel doesn't merge one cell).
+- **The corpus file,** `excel/packageassets-report-250.xlsx` (43 KB): NCsvPerf's first 250 lines, which give three regions (the last of 50 rows) and 5 hidden rows, rather than all 1,695 lines. The corpus tool's privacy check passes; its creator, last author and company are empty, and it records no path. It joins `CorpusTests`' list, and, like the other two cross-checks, has no answers from Excel (6,800 cells). `MetadataTests` checks its table.
+- **Cross-check** (`ExcelReportWorkbookTests`, 21 tests per target):
+  - Against Excel's file, byte for byte: the entries in Excel's order and the content types, without the theme and document properties; the sheet from its `dimension` on; `sharedStrings.xml`; the sheet's relationships; the `cellXfs`, `dxfs` and `tableStyles`; and the table part without Excel's revision ids.
+  - Each of the benchmark's reads, sync and async, of both files, gives the records and the header expected: `Range`, its first 100 rows, `Table`, a header search for the 25 names, and the three switches.
+  - ExcelDataReader reads the two files alike. The Open XML SDK finds no error in 250 rows or in 1,000.
+  - At 1,000 rows, the layout is the benchmark's: 10 regions, 20 hidden rows, 980 records with them skipped, and each region's fill. The four refusals.
+- **The existing variants' bytes:** the generator's sources changed, so its hash did, and the cached workbooks were written again. Every entry of the three, by SHA-256, is as before.
+- **`ExcelReportRead`** (`ExcelReportBenchmarks.cs`), as designed, in two categories. The method names say the read, since all are CsvHelper.Excel's:
+  - Report: `Range` (`B4:AB1000004`, the baseline), `RangeFirstRows` (`B4:AB1004`), `Table`, `HeaderSearch` (`Find<PackageAsset>()` over the whole sheet), `SkipHiddenRows`, `SkipHiddenColumns` and `FillMergedCells`, each over the `Range`.
+  - Plain: `Plain` (the plain shared-strings workbook, as `ExcelPackageAssetsRead.CsvHelper_Records` reads it, the baseline) and `PlainFillMergedCells`.
+- **Equal work:** in `verify`, every read of the million rows gives the plain workbook's records (hash `A46BD7E4C52574F1`), `RangeFirstRows` 1,000 records and `SkipHiddenRows` 980,000. So QuickRunner marks the Report category's results as differing, as it must. The other two classes agree as at Phase 2's step 9, on the new build.
+- **The default path, base against new** (2026-11-05, 20:40–21:22): QuickRunner, CsvHelper.Excel's methods in `ExcelOrdersRead` and in `ExcelPackageAssetsRead` (both variants), base the `1cd1a0af` worktree at `Csv\_bench\base`, new the working tree as of `073e0b9a`. Both builds' bench code and core are the same. Their bytes weren't: the worktree's checkout has CRLF line ends (`core.autocrlf`), so base's embedded generator sources hashed otherwise, and each side wrote its own cached workbooks with the same generator, in setups that aren't timed. Three interleaved pairs (base, new; new, base; base, new), each process pinned to CCD0 and QuickRunner pinning core 4. The machine: paged pool 2.45 GB and 43 GB free throughout. In `verify`, new's reads agree with every library's.
+  - Something used about one core from 21:20:31 to the end of the last run, over its inline Strings and Records (CPU 7% against 4–5%), so those two are left out. Its other methods ran before.
+  - The best median of each side's three runs, in ms, and new/base per pair:
+
+| Method | Pair 1 | Pair 2 | Pair 3 | Base | New | New/base |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Orders Records | 0.995 | 1.019 | 1.022 | 2,304.9 | 2,353.1 | 1.021 |
+| Orders Values | 1.001 | 1.004 | 1.029 | 2,225.6 | 2,248.3 | 1.010 |
+| Shared Rows | 1.010 | 1.010 | 1.023 | 2,980.1 | 3,017.0 | 1.012 |
+| Shared Strings | 1.003 | 0.992 | 1.020 | 3,071.5 | 3,078.6 | 1.002 |
+| Shared Records | 1.009 | 1.002 | 1.018 | 3,733.7 | 3,761.8 | 1.008 |
+| Inline Rows | 1.016 | 0.991 | 1.009 | 3,449.8 | 3,419.3 | 0.991 |
+| Inline Strings | 1.019 | 0.994 | (disturbed) | 3,496.2 | 3,517.4 | 1.006 |
+| Inline Records | 1.009 | 0.982 | (disturbed) | 4,201.4 | 4,185.3 | 0.996 |
+
+  - **Two methods are outside 1%:** `ExcelOrdersRead.CsvHelper_Records`, +2.1%, slower in all three pairs bar the first, and shared Rows, +1.2%, slower in every pair. Orders Values is at the edge (+1.0%). The inline variant and the other shared methods are within 1%.
+- **Why** (2026-11-05, 21:25–23:20): the JIT check of Phase 2, then a bisect of scratch copies, each measured against base and new in rotated QuickRunner rounds of `ExcelOrdersRead.CsvHelper_Records` (the largest effect, about 47 s a process), each process pinned as above. The scratch copies are `git archive` exports in the session's scratchpad; nothing in the repository changed.
+  - **The JIT check** (`DOTNET_JitDisasmSummary`, then `DOTNET_JitDisasm` of every `SheetScanner` method, in QuickRunner's process). The scanner's Tier-1 code grew from 20,819 to 22,519 bytes over its hot methods: `TryScan` 1,590 to 1,959 (IL 226 to 239), `StartTag` 721 to 932, `EndTag` 992 to 1,193, `StartRow` 799 to 1,015, `EndRow` 953 to 1,147, `ReadCell` 3,542 to 3,847 (one inlinee with PGO data and three single-block inlinees fewer). Two findings in it:
+    - `FlushGaps`, which `ReadCell` calls for every cell and `StartRow` for every row, was 98 bytes of IL in base, inlined into both. Step 4's fills made it 183, past the JIT's 100, so new calls it, almost always to find no missing row.
+    - Methods whose IL didn't change grew too (`AddSegment` 112 to 124 bytes), because their fields moved. The runtime puts reference fields first, and Phase 3's six (`layout`, `held`, `unwrittenRoom`, `hiddenColumns`, `mergedCells`, `merged`) moved every value field 0x30 later: `lastRow`, `gapNext`, `gapEnd`, `segmentCount`, `rawLength`, `lastColumn`, `fields`, `cellColumn` and `mode` passed 0x7F, so each access takes a 4-byte displacement where base's took 1 (field offsets read through a `DynamicMethod`). A struct field, holding references or not, goes after the primitive fields (checked the same way).
+  - **The bisect,** each variant's median of its rounds' medians over base's in the same rounds:
+
+| Variant | What it is | Rounds | Variant/base | New/base in those rounds |
+| --- | --- | ---: | ---: | ---: |
+| ctl | base's code, with unused fields that give its fields new's offsets | 6 | 1.001 | 1.028 |
+| fix | new's code, with Phase 3's six references in one struct field: base's offsets | 6 | 1.032 | 1.028 |
+| split | new, with `FlushGaps` an inlined test of `gapNext < gapEnd` and the rest a method of its own | 8 | 1.015 | 1.020 |
+| strip | new, without the per-row and per-cell additions of steps 2 to 5 in `StartRow`, `ReadCell`, `EndRow`, `SetRow` and `FlushGaps` (areas don't work in it) | 8 | 1.022 | 1.021 |
+| bscan | new's tree with base's `SheetScanner.cs` (new's constructor parameters, refused when set) | 8 | 1.004 | 1.021 |
+| enum | new, with the modes `Cols` and `Tail` after `Done`, so the others have base's values | 6 | 1.014 | 1.010 |
+| strip2 | strip, with the tag dispatch too as in base (`TryScan`'s `Tail`, `StartTag`'s `cols` and `sheetFormatPr`, `EndTag`'s `cols`, `End`, `BeginRows`) and the modes as in base | 6 | 1.016 | 1.010 |
+
+  - **What it shows:**
+    - The cost is in `SheetScanner.cs`: base's scanner in new's tree (bscan) reads as fast as base.
+    - It isn't the field layout (ctl is level with base, fix with new), nor mainly `FlushGaps` (split recovers half a percent at most, within the noise), nor the per-row and per-cell tests that a whole sheet runs (strip), nor the modes' values (enum), nor the dispatch (strip2).
+    - strip2's hot methods compile to 20,937 bytes, within 0.6% of base's and with base's IL sizes but for `AddValue`'s (692 against 672: it reads `cellField` where it had a `column` argument). Yet it reads 1.6% slower than base, while new's 8% more code reads 1.0–2.1% slower. So the time doesn't follow the code. What is left looks like the code's placement, which Phase 2's step 9 also met: QuickRunner sessions differed by about 2% for identical code.
+    - The noise of these rounds is as large as the effect: 1–2% between sessions for the same build (new/base came out 1.010 to 1.028 in the five sets), and single rounds disturbed by up to 18% (new's in round 4 of the ctl set, with the CPU above the others'; rounds 6 to 8 of the strip set, with the CPU at up to 20% and 6 GB less free memory, which something else took). One base round read about 5% faster than any other.
+  - **Decided at review** (2026-11-06, the recommendation): take the `FlushGaps` split, then measure the two methods in BenchmarkDotNet pairs, as Phase 2 re-gated `FormattedDatesRead`, and accept them if they're within the noise. The other options were to accept the cost as measured, or to keep base's scanner for a whole sheet that skips and fills nothing, as the design's "Risks" proposed: bscan shows that this works, but it means two scanners to keep in step, and strip2, about what a path specialized within one scanner would compile to, recovers nothing.
+  - **The fix** (a library change, not core): `FlushGaps` is now the test alone, inlined into its callers (`[MethodImpl(MethodImplOptions.AggressiveInlining)]`), and the writing is `WriteGaps`, the old body, called only when a row is missing. A remark says why. In QuickRunner's process, `ReadCell` and `StartRow` no longer call `FlushGaps`, only `WriteGaps` on the path of missing rows, and `ReadCell` has base's 54 inlinees with PGO data again. All tests pass (1,791, 1,791 and 1,763), and the solution builds with 0 warnings.
+  - **Its mutation check,** three bugs planted one at a time:
+    - "the test never writes missing rows": 282 failures;
+    - "the test stops the row when no row is missing": the suite hangs, since a reader then asks for the same cell forever; stopped after 588 s, with 614 failures;
+    - "the test calls `WriteGaps` when `gapNext` equals `gapEnd`": none, as expected: `WriteGaps` then writes nothing and returns true, an equivalent mutant.
+  - **The pairs** (2026-11-06): BenchmarkDotNet as in the new paths' run below, of the two methods and of `ExcelOrdersRead.Sylvan_Records`, a control that doesn't use CsvHelper.Excel; the runs base, new, new, base, base, new, new, base, so four pairs, each parent pinned to CCD0. The results are under `_bench\results\phase3\step8`, in `bdn-pairs` and `bdn-pairs2`.
+    - Another project's tests ran on the machine through both sets, their test hosts using up to five cores, and they weren't ours to stop. So a pair counts only when both its runs' standard deviations are under 2% of their means.
+    - The first set (00:39–01:12): test hosts throughout, the CPU's mean 7.5–28% a run, the control 2,272–3,426 ms. One pair is clean.
+    - The second (04:30–05:02), started after two minutes under 6% without a test host: runs 1 to 4 mostly quiet (mean 6.4–8.5%, the other project's helper processes coming and going), its tests back in run 6 (mean 18.8%), and run 8 above 10% throughout. The paged pool was 1.55–1.62 GB and 31–36 GB free.
+    - New/base of the clean pairs, against the default path's A/B before the fix:
+
+| Method | Clean pairs | A/B before the fix |
+| --- | --- | ---: |
+| Orders Records | 1.008 (first set), 0.978, 0.989 | 1.021 |
+| Shared Rows | 1.012 | 1.012 |
+| Inline Rows | none | 1.009 |
+| Sylvan Records (control) | 1.007 | |
+
+    - **What it shows:** Orders Records is within the noise: its three clean pairs are within 2%, two of them faster than base. Shared Rows has one clean pair, 1.2% slower, as the A/B found before the fix, so the pairs don't show the fix changing it, as the bisect's split variant didn't. With the noise at 1–2% between sessions, it is within it too, and so accepted as decided, on one clean pair. A quiet machine could measure it again.
+- **The new paths' run** (2026-11-05, 23:29–23:41):
+  - Tools: BenchmarkDotNet 0.15.8, .NET 10.0.13 (x64, x86-64-v4). Job: `BenchConfig`'s, with core 4 pinned, 4 warmups and 12 iterations; the parent pinned to CCD0. Filter `CsvHelper.Benchmarks.ExcelReportRead.*`: 9 benchmarks in 12 minutes.
+  - The machine before: paged pool 2.49 GB, 38.0 GB free; after, 2.60 GB and 36.0 GB. The CPU was above 6% only at the start (BenchmarkDotNet's build, up to 24%) and in a few setups between benchmarks (up to 14%).
+  - Standard deviations were at most 2.4% of the mean (`Table`), the others 0.6–1.4%. MB/s is of the same data as CSV, 305 MB.
+
+| Read | Mean | Ratio | MB/s | Allocated |
+| --- | ---: | ---: | ---: | ---: |
+| Report: `Range` (baseline) | 4,347.9 ms | | 70 | 1,135.4 MB |
+| `RangeFirstRows` (1,000 rows) | 4.18 ms | 1,040x faster | | 1.28 MB |
+| `Table` | 4,431.4 ms | 1.019x slower | 69 | 1,135.4 MB |
+| `HeaderSearch` | 4,408.4 ms | 1.014x slower | 69 | 1,135.4 MB |
+| `SkipHiddenRows` | 4,335.3 ms | 1.003x faster | 70 | 1,113.1 MB |
+| `SkipHiddenColumns` | 4,404.7 ms | 1.013x slower | 69 | 1,135.4 MB |
+| `FillMergedCells` | 6,269.9 ms | 1.442x slower | 49 | 1,136.8 MB |
+| Plain: `Plain` (baseline) | 3,497.7 ms | | 87 | 1,135.4 MB |
+| `PlainFillMergedCells` | 4,679.7 ms | 1.34x slower | 65 | 1,135.4 MB |
+
+  - **What the numbers say:**
+    - **The second read is what filling merged cells costs.** On the plain workbook, which has no ranges, finding none takes 1.18 s, a third of the read. That is 714 MB of sheet XML through the XML scanner's skip at about 600 MB/s, where inflating alone runs at 5.3–5.6 GB/s (Phase 1's step 9). On the report, the first read of its 965 MB takes about 1.6 s at the same rate, and the 10,000 ranges' fills and covered cells about 0.3 s more: +44% in all. Phase 9's cheaper skip over `sheetData` (a raw search for its end tag) is where to win it back.
+    - **The early stop works:** the first 1,000 of the million rows read in 4.2 ms, opening the workbook and loading its shared strings included.
+    - **The rest cost little:** `Table` +1.9% (the noisiest, ±2.4%), the header search +1.4% (the rows up to the header read twice, and a probe per row with a value), and hidden columns +1.3% (`cols` read, and a field looked up per cell). Skipping the hidden rows saves about what reading each row's hiding costs: 0.3% faster, with 2% fewer records allocated.
+    - **The report itself** reads 24% slower than the plain workbook through `Range` (4.35 s against 3.50 s), for 35% more sheet XML: every empty field is a cell, and there are the regions' and keys' columns.
+    - `Plain`, 3,498 ms, agrees with Phase 1's run of the same read (3,511 ms).
+- **Tests:** 29 new per target (the cross-check's 21, and the new corpus file in the corpus tests): 1,791 on net10.0 and net8.0, 1,763 on net48; all passing.
+- **Mutation check** on net10.0: 27 bugs planted one at a time, the suite run for each, and each file restored and checked against its SHA-256 (and, after the run, every planted line found back as it was). All 27 were caught. 24 are in the writer and the layout; 15 of those are caught only by the byte-for-byte comparison with Excel's file, which is why the cross-check has it:
+  - "covered region cells in the text format": 1 failure;
+  - "the title's last covered cell left out": 1;
+  - "hidden rows not marked": 5;
+  - "hidden after the row's `dyDescent`": 3;
+  - "regions merged a row short": 5;
+  - "every 50th row from the 49th hidden": 5;
+  - "the hidden column without its width of 0": 1;
+  - "a widened column's width rounded": 1;
+  - "a widened column left at the default width": 1;
+  - "the keys in the text format": 1;
+  - "empty fields have no cell": 1;
+  - "differential formats numbered from the first column": 1;
+  - "the header row's differential format not referenced": 1;
+  - "the second title's row spans only its cell": 1;
+  - "regions named in their second row": 16;
+  - "the page margins of a CSV opened in Excel": 1;
+  - "the table over the regions too": 5;
+  - "merged regions in the text format's own cell format": 1;
+  - "no content type for the table": 3, the validator's among them;
+  - "the table's relationship relative to the workbook": 5;
+  - "one differential format short": 3;
+  - "the title merged to the column before the last": 3;
+  - "the second title in the text format": 1;
+  - "the merged ranges counted without the title's": 1.
+  - Three are in the cross-check itself, each making it fail against the right writer, to show that the comparison it weakens is made: "filled regions expected unfilled": 2; "`xr3` revision ids kept": 1; "the left-out content types compared": 1.
+- **Core:** no change. The solution builds with 0 warnings. Results, logs and scripts' output are in `Csv\_bench\results\phase3\step8` (`ab`, `jit`, `layout`, `flushgaps`, `strip`, `bscan`, `dispatch`, `bdn`, and the cache's entry hashes before and after).
 
 ### Phase 4: writer foundation (L)
 

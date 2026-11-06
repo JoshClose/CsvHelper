@@ -30,6 +30,11 @@
 		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
 	</ItemGroup>
 
+	<!-- The report benchmark's layout, which the report command builds in Excel. -->
+	<ItemGroup>
+		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelReport.cs" Link="Bench\ExcelReport.cs" />
+	</ItemGroup>
+
 	<!-- Patched versions of packages the producers bring in with known vulnerabilities (EPPlus 4.5.3.3's System.Drawing.Common
 	     4.7.0, and the cryptography packages 10.0.10). The tool only writes workbooks of its own content. -->
 	<ItemGroup>

@@ -212,6 +212,95 @@ internal static class ExcelProducer
 	}
 
 	/// <summary>
+	/// Writes <c>excel/packageassets-report-250.xlsx</c>: NCsvPerf's first 250 lines laid out as the report benchmark's
+	/// report (<see cref="ExcelReport"/>), built in Excel as a user would: the text format on the header, the regions and the
+	/// fields; the titles and the cells in one assignment of the range's values each; the title's and each region's merge;
+	/// the table; then the keys' column and every 50th data row hidden. It cross-checks the benchmark's
+	/// <c>ExcelReportWorkbook</c>.
+	/// </summary>
+	/// <param name="files">The corpus folder.</param>
+	/// <param name="csv">The path of <c>PackageAssets.csv</c>.</param>
+	public static void WriteReport(string files, string csv)
+	{
+		const int Rows = 250;
+
+		var folder = Directory.CreateDirectory(Path.Combine(files, "excel")).FullName;
+		var lines = File.ReadLines(csv).Take(Rows).Select(line => line.Split(',')).ToList();
+		var records = new List<string[]> { ExcelReport.Fields.Select(f => f.Name).ToArray() };
+		records.AddRange(lines);
+		ExcelReport.Check(records);
+
+		// The header and the data rows, from column B: an empty field, and a region's cells below its first, are no value.
+		var values = new object?[Rows + 1, ExcelReport.Columns];
+		values[0, 0] = ExcelReport.RegionHeader;
+		values[0, 1] = ExcelReport.KeyHeader;
+		for (var f = 0; f < ExcelReport.Fields.Length; f++)
+		{
+			values[0, f + 2] = ExcelReport.Fields[f].Name;
+		}
+
+		for (var i = 0; i < Rows; i++)
+		{
+			values[i + 1, 0] = ExcelReport.RegionOf(i);
+			values[i + 1, 1] = (double)(i + 1);
+			for (var f = 0; f < ExcelReport.Fields.Length; f++)
+			{
+				var field = lines[i][f];
+				values[i + 1, f + 2] = field.Length == 0 ? null : field;
+			}
+		}
+
+		var header = ExcelReport.HeaderRow;
+		var lastRow = ExcelReport.RowOf(Rows - 1);
+		var first = ExcelReport.FirstColumn;
+		var key = ExcelReport.KeyColumn;
+		var last = ExcelReport.LastColumn;
+		Run(excel =>
+		{
+			var workbook = excel.Workbooks.Add();
+			try
+			{
+				var sheet = workbook.Worksheets[1];
+				sheet.Name = ExcelReport.SheetName;
+				sheet.Range[ExcelReport.Block(first, header, last, header)].NumberFormat = "@";
+				sheet.Range[ExcelReport.Block(first, header + 1, first, lastRow)].NumberFormat = "@";
+				sheet.Range[ExcelReport.Block(key + 1, header + 1, last, lastRow)].NumberFormat = "@";
+				sheet.Cells[1, first].Value2 = ExcelReport.Title;
+				sheet.Cells[2, first].Value2 = ExcelReport.Subtitle;
+				sheet.Range[ExcelReport.Area(Rows)].Value2 = values;
+
+				sheet.Range[ExcelReport.TitleArea()].Merge();
+				foreach (var (firstRow, lastRegionRow) in ExcelReport.RegionRanges(Rows))
+				{
+					sheet.Range[ExcelReport.Block(first, firstRow, first, lastRegionRow)].Merge();
+				}
+
+				var list = sheet.ListObjects.Add(SourceType: SourceRange, Source: sheet.Range[ExcelReport.TableArea(Rows)], XlListObjectHasHeaders: Yes);
+				list.Name = ExcelReport.TableName;
+
+				sheet.Columns[key].Hidden = true;
+				for (var i = 0; i < Rows; i++)
+				{
+					if (ExcelReport.IsHidden(i))
+					{
+						sheet.Rows[ExcelReport.RowOf(i)].Hidden = true;
+					}
+				}
+
+				sheet.Activate();
+				sheet.Range["A1"].Select();
+				SaveAs(workbook, Path.Combine(folder, $"packageassets-report-{Rows}.xlsx"), Xlsx, null);
+			}
+			finally
+			{
+				workbook.Close(false);
+			}
+
+			CopyPending();
+		});
+	}
+
+	/// <summary>
 	/// Starts Excel, runs <paramref name="work"/>, and quits Excel whatever happens. Excel stays running while any of its
 	/// objects is referenced, so every object the work used is released (collected) before Excel quits.
 	/// </summary>

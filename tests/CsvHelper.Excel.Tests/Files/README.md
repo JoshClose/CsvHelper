@@ -6,7 +6,7 @@ Workbooks written by real producers, for the corpus and oracle tests in `tests/C
 dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 ```
 
-`excel`, `packageassets`, `orders`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, `formats` asks Excel about number formats and `oracle` about every workbook's cells (below), and `check` only checks them.
+`excel`, `packageassets`, `orders`, `report`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, `formats` asks Excel about number formats and `oracle` about every workbook's cells (below), and `check` only checks them.
 
 ## Excel's answers
 
@@ -28,7 +28,7 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 
 ## Excel's reading of the corpus
 
-`excel-oracle/<file>.json` (written 2026-11-03 by `oracle`, and again on 2026-11-05 with the structures below, every cell's answer unchanged) records how Excel 365 reads each corpus workbook, every one but `excel/encrypted.xlsx` and the benchmarks' cross-checks, `excel/packageassets-1695.xlsx` and `excel/orders-1000.xlsx`. `Corpus/ExcelAnswersTests.cs` compares CsvHelper.Excel's reading with it, cell by cell, and `Corpus/StructureAnswersTests.cs` its tables, names, hidden rows and columns, merged ranges and the reads that skip and fill them.
+`excel-oracle/<file>.json` (written 2026-11-03 by `oracle`, and again on 2026-11-05 with the structures below, every cell's answer unchanged) records how Excel 365 reads each corpus workbook, every one but `excel/encrypted.xlsx` and the benchmarks' cross-checks, `excel/packageassets-1695.xlsx`, `excel/orders-1000.xlsx` and `excel/packageassets-report-250.xlsx`. `Corpus/ExcelAnswersTests.cs` compares CsvHelper.Excel's reading with it, cell by cell, and `Corpus/StructureAnswersTests.cs` its tables, names, hidden rows and columns, merged ranges and the reads that skip and fill them.
 
 - **How:** Excel opens each workbook read-only, with calculation manual, so that it shows the values the file stores rather than computing its own, and with macros disabled. Columns are widened in memory, so that a number's text isn't `####` for want of room.
 - **What:** for each cell of each worksheet's used range that has a value or a formula:
@@ -110,6 +110,7 @@ The files are public, and producers record personal data: Excel recorded the Off
 | `excel/binary.xlsb`, `encrypted.xlsx` (password `secret`), `legacy.xls` | Excel, the same way | file formats 50, 51 with a password, and 56: the formats CsvHelper.Excel rejects |
 | `excel/packageassets-1695.xlsx` | Excel | NCsvPerf's `PackageAssets.csv` opened with `Workbooks.OpenText`, every column as text, and saved. See "Downloads" for the CSV's source. |
 | `excel/orders-1000.xlsx` | Excel | The typed benchmark's first 1,000 orders (`bench/CsvHelper.Benchmarks/ExcelOrders.cs`, which the tool links), entered in one assignment of `Range.Value2`: numbers, booleans, text, and dates as serials in `yyyy-mm-dd hh:mm:ss`. The text columns' formats are cleared after, since Excel gives text such as the Guid `54e5160b-...` the scientific format as it would when typed. `Bench/ExcelTypedWorkbookTests.cs` checks the benchmark's writer against it. |
+| `excel/packageassets-report-250.xlsx` | Excel | NCsvPerf's first 250 lines laid out as the report benchmark's report (`bench/CsvHelper.Benchmarks/ExcelReport.cs`, which the tool links), built as a user would: the text format on the header, the regions and the fields, the cells in one assignment of `Range.Value2`, a title merged across, the regions merged down each 100 rows, a table over the keys and the fields (Excel merges no cells in a table), and the keys' column and every 50th data row hidden. Making the table widened the columns whose header doesn't fit beside its filter button. `Bench/ExcelReportWorkbookTests.cs` checks the benchmark's writer against it. |
 | `libreoffice/basic.xlsx`, `basic-ooxml.xlsx` | LibreOffice 26.8.2.2 | `soffice --headless --convert-to` from `excel/basic.xlsx`, with the "Calc MS Excel 2007 XML" and "Calc Office Open XML" filters, in a throwaway profile |
 | `openpyxl/basic.xlsx` | openpyxl 3.1.5, Python 3.14.10 | `python/corpus.py`, in a venv outside the repository with the versions of `python/requirements.txt`, run with `-I` |
 | `xlsxwriter/basic.xlsx`, `constant_memory.xlsx` | XlsxWriter 3.3.1 | the same script; the second with `constant_memory` |
@@ -187,7 +188,7 @@ These are the shapes the corpus covers; the oracle tests check every cell.
 ## Downloads
 
 - **`google/` and `excel-mac/`:** from [apache/poi](https://github.com/apache/poi)'s `test-data/spreadsheet`, commit `81ab52621cb3ecaf9cb96a5a92edcb2e5fd60408` (2026-11-02), unchanged; `tools/CsvHelper.Excel.Corpus/downloads.txt` has each URL and SHA-256. Apache License 2.0, whose text is in the repository's `LICENSE.txt`, and POI's NOTICE: "Apache POI. Copyright 2003-2026 The Apache Software Foundation. This product includes software developed at The Apache Software Foundation (https://www.apache.org/)."
-- **`excel/packageassets-1695.xlsx`:** made from `NCsvPerf/TestData/PackageAssets.csv` in [joelverhagen/NCsvPerf](https://github.com/joelverhagen/NCsvPerf), commit `c7bff62e601eb1e2ce97c95a5b54ef94eff4b6ab`: 1,695 records of 25 fields, no header. The repository keeps a copy, which the tool reads, in `bench/CsvHelper.Benchmarks/Data`. MIT License, copyright 2020 Joel Verhagen; its text is in `LICENSE-NCsvPerf.txt` here, as the license asks of copies.
+- **`excel/packageassets-1695.xlsx`** and **`excel/packageassets-report-250.xlsx`:** made from `NCsvPerf/TestData/PackageAssets.csv` in [joelverhagen/NCsvPerf](https://github.com/joelverhagen/NCsvPerf), commit `c7bff62e601eb1e2ce97c95a5b54ef94eff4b6ab`: 1,695 records of 25 fields, no header. The repository keeps a copy, which the tool reads, in `bench/CsvHelper.Benchmarks/Data`. MIT License, copyright 2020 Joel Verhagen; its text is in `LICENSE-NCsvPerf.txt` here, as the license asks of copies.
 
 ## Not here yet
 

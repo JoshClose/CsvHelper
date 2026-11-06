@@ -1,3 +1,4 @@
+using CsvHelper.Benchmarks;
 using CsvHelper.Excel.Tests.Corpus;
 using CsvHelper.Excel.Tests.Package;
 using CsvHelper.Excel.Tests.Sheet;
@@ -125,8 +126,15 @@ public class MetadataTests
 			Assert.Equal(["Rate | - | shown | 0.5 | - -"], workbook.DefinedNames.Select(Describe));
 		}
 
+		// The report benchmark's cross-check has its table over the keys and the fields, and no names.
+		using (var report = async ? await ExcelWorkbook.OpenAsync(CorpusFiles.PathOf("excel/packageassets-report-250.xlsx")) : ExcelWorkbook.Open(CorpusFiles.PathOf("excel/packageassets-report-250.xlsx")))
+		{
+			Assert.Equal(["Assets Report C4:AB254 1 0 Key|" + string.Join("|", ExcelReport.Fields.Select(f => f.Name))], report.Tables.Select(Describe));
+			Assert.Empty(report.DefinedNames);
+		}
+
 		// The messy workbooks' tables and names are compared with Excel's answers (StructureAnswersTests).
-		foreach (var file in CorpusFiles.Workbooks.Where(f => (!f.Contains("typed") || f.StartsWith("openpyxl/", StringComparison.Ordinal) || f.StartsWith("poi/", StringComparison.Ordinal)) && !f.Contains("messy")))
+		foreach (var file in CorpusFiles.Workbooks.Where(f => (!f.Contains("typed") || f.StartsWith("openpyxl/", StringComparison.Ordinal) || f.StartsWith("poi/", StringComparison.Ordinal)) && !f.Contains("messy") && !f.Contains("report")))
 		{
 			using var workbook = async ? await ExcelWorkbook.OpenAsync(CorpusFiles.PathOf(file)) : ExcelWorkbook.Open(CorpusFiles.PathOf(file));
 

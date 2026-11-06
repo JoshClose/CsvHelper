@@ -47,7 +47,7 @@
 
 	<!-- The source of the workbook generators and their data, whose hash keys the cache: a change to it writes the workbooks again. -->
 	<ItemGroup>
-		<EmbeddedResource Include="ExcelDataGenerator.cs;ExcelTextWorkbook.cs;ExcelTypedWorkbook.cs;ExcelOrders.cs;OrderRecord.cs" LogicalName="ExcelGenerator/%(Filename)%(Extension)" />
+		<EmbeddedResource Include="ExcelDataGenerator.cs;ExcelTextWorkbook.cs;ExcelTypedWorkbook.cs;ExcelOrders.cs;OrderRecord.cs;ExcelReport.cs;ExcelReportWorkbook.cs" LogicalName="ExcelGenerator/%(Filename)%(Extension)" />
 	</ItemGroup>
 
 </Project>
