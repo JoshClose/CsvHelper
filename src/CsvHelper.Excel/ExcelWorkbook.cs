@@ -62,7 +62,20 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		this.fromStream = fromStream;
 		Sheets = new ReadOnlyCollection<ExcelSheet>([.. part.Sheets.Select(s => new ExcelSheet(this, s))]);
 		Tables = new ReadOnlyCollection<ExcelTable>([.. Sheets.SelectMany(s => s.Tables)]);
-		DefinedNames = new ReadOnlyCollection<ExcelDefinedName>([.. part.DefinedNames.Select(n => new ExcelDefinedName(Sheets, n))]);
+
+		// Each name finds its block's sheet in one lookup, not a search of every sheet: a million names in a workbook of
+		// 100,000 sheets would otherwise take minutes to open.
+		var worksheets = new Dictionary<string, ExcelSheet>(StringComparer.OrdinalIgnoreCase);
+		foreach (var sheet in Sheets)
+		{
+			// The first of a name, as a search in tab order finds it.
+			if (sheet.Kind == ExcelSheetKind.Worksheet && !worksheets.ContainsKey(sheet.Name))
+			{
+				worksheets[sheet.Name] = sheet;
+			}
+		}
+
+		DefinedNames = new ReadOnlyCollection<ExcelDefinedName>([.. part.DefinedNames.Select(n => new ExcelDefinedName(Sheets, worksheets, n))]);
 	}
 
 	/// <summary>

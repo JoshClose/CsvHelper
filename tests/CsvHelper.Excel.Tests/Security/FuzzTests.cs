@@ -1,5 +1,7 @@
 using System.IO.Compression;
+using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using CsvHelper.Excel.Tests.Api;
 using CsvHelper.Excel.Tests.Corpus;
 using CsvHelper.Excel.Tests.Sheet;
@@ -63,14 +65,18 @@ public partial class FuzzRecord
 
 /// <summary>
 /// Seeded mutation fuzzing, as the plan's "Fuzzing" describes: workbooks from synthetic packages and from the corpus,
-/// mutated in an XML part or in their zip bytes, each read through the public API to the end of every worksheet, with
-/// formulas read as values or as text, each policy for error cells, and several significant digits. A seed reads its
-/// fields as strings, as typed values (where <c>TryParse</c> and <c>Parse</c> must agree), or as typed records. Each input
-/// must finish within five seconds, and either read or throw <see cref="InvalidDataException"/>,
-/// <see cref="CsvFormatException"/> or <see cref="NotSupportedException"/>; a field may only fail to parse, with
-/// <see cref="FormatException"/> or <see cref="OverflowException"/>, and an error cell fail to read when error cells fail
-/// every read. <c>CSVHELPER_EXCEL_FUZZ_INPUTS</c> sets the number of inputs, and <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the
-/// first seed, so that a failure can be replayed alone.
+/// mutated in an XML part (their cells, and their columns, merged ranges, defined names and tables) or in their zip bytes,
+/// each read through the public API to the end of every worksheet, with formulas read as values or as text, each policy
+/// for error cells, and several significant digits. Two seeds in three also read an area of each sheet, or one of the
+/// workbook's own tables, defined names or a block of a sheet named with it, with a header row given or found among the
+/// area's rows, skipping hidden rows and columns and filling merged cells. A seed reads its fields as strings, as typed
+/// values (where <c>TryParse</c> and <c>Parse</c> must agree), or as typed records. Each input must finish within five
+/// seconds, and either read or throw <see cref="InvalidDataException"/>, <see cref="CsvFormatException"/> or
+/// <see cref="NotSupportedException"/>; a field may only fail to parse, with <see cref="FormatException"/> or
+/// <see cref="OverflowException"/>, and an error cell fail to read when error cells fail every read. What a seed reads
+/// comes from the workbook, so choosing it never fails: a table, a name or a sheet it has, and a header row it has.
+/// <c>CSVHELPER_EXCEL_FUZZ_INPUTS</c> sets the number of inputs, and <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the first seed, so
+/// that a failure can be replayed alone.
 /// </summary>
 /// <param name="output">Shows how the inputs ended.</param>
 public class FuzzTests(ITestOutputHelper output)
@@ -103,6 +109,12 @@ public class FuzzTests(ITestOutputHelper output)
 		"$", "[", "]", "{", "}", "(", ")", "!", ":", "#", "#REF!", "A1", "$A$1", "XFD1048576", "1048576:1048576", "A:XFD", "'Q1 Orders'!",
 		"_xlfn.", "P", "T", "PT36H0M0.000S", "P1DT12H", "9999-12-31T23:59:59.999", "1899-12-31", "1900-02-29", "1904-01-01", "24:00",
 		".99999999999999999999", "Z",
+		"<cols>", "</cols>", "<col/>", "<col min=\"1\" max=\"16384\" hidden=\"1\"/>", "<col min=\"2\" max=\"3\" width=\"0\"/>", " min=\"0\"", " max=\"16385\"",
+		" hidden=\"1\"", " hidden=\"true\"", " ht=\"0\"", " customHeight=\"1\"", " zeroHeight=\"1\"", " defaultColWidth=\"0\"", " defaultRowHeight=\"0\"",
+		" width=\"0\"", " width=\"\"", "<mergeCells>", "</mergeCells>", "<mergeCell ref=\"A1:B2\"/>", "<mergeCell ref=\"A1:XFD1048576\"/>",
+		"<mergeCell ref=\"B2\"/>", "<mergeCell/>", "<definedNames>", "</definedNames>", "<definedName name=\"N\">Data!$A$1:$B$3</definedName>",
+		" localSheetId=\"0\"", " localSheetId=\"1\"", "_xlnm.", "Print_Area", "<tableColumns count=\"1\">", "</tableColumns>",
+		"<tableColumn id=\"1\" name=\"X\"/>", " headerRowCount=\"0\"", " totalsRowCount=\"1\"", " ref=\"A1:XFD1048576\"", " displayName=\"T\"",
 	];
 
 	/// <summary>Values the XML mutations put in place of a run of digits.</summary>
@@ -110,6 +122,9 @@ public class FuzzTests(ITestOutputHelper output)
 	[
 		"0", "-1", "1048577", "2147483648", "99999999999999999999", "1E+308", "1E+309", "4.9E-324", "-0", "NaN", "60", "2958466", "",
 	];
+
+	/// <summary>Names the structure mutations give a table's columns: plain, empty, with white space, an escape, one alike in case.</summary>
+	private static readonly string[] ColumnNames = ["X", "", " Name ", "_x000a_", "name", "Total", "&amp;"];
 
 	/// <summary>The significant digits a seed reads numbers to.</summary>
 	private static readonly int?[] Digits = [15, 17, null, 1, 28];
@@ -130,18 +145,52 @@ public class FuzzTests(ITestOutputHelper output)
 		Records,
 	}
 
+	/// <summary>What a seed reads besides every worksheet whole.</summary>
+	private enum AreaMode
+	{
+		/// <summary>Every worksheet whole, and nothing else.</summary>
+		Sheet,
+
+		/// <summary>A random block of each worksheet, as a range without a sheet.</summary>
+		Range,
+
+		/// <summary>Every worksheet whole, then one of the workbook's tables.</summary>
+		Table,
+
+		/// <summary>Every worksheet whole, then one of the workbook's defined names that is a block of cells.</summary>
+		DefinedName,
+
+		/// <summary>Every worksheet whole, then a random block of one of them, as a range with the sheet's name.</summary>
+		SheetRange,
+	}
+
+	/// <summary>How a seed gives the header row, when it reads a header.</summary>
+	private enum HeaderMode
+	{
+		/// <summary>The area's first record, as without Phase 3.</summary>
+		None,
+
+		/// <summary>A row of the area with a value, given (<see cref="ExcelHeaderRow.At"/>).</summary>
+		At,
+
+		/// <summary>A search for the texts of a row of the area with a value (<see cref="ExcelHeaderRow.Find(IEnumerable{string}, int)"/>).</summary>
+		Find,
+	}
+
 	[Fact]
 	public async Task ReadsOrRejectsEveryMutatedWorkbook()
 	{
 		var inputs = Setting("CSVHELPER_EXCEL_FUZZ_INPUTS", DefaultInputs);
 		var first = Setting("CSVHELPER_EXCEL_FUZZ_SEED", 1);
 		var outcomes = new SortedDictionary<string, int>(StringComparer.Ordinal);
+		var reads = new SortedDictionary<string, int>(StringComparer.Ordinal);
 		var failures = new List<string>();
 		for (var seed = first; seed < first + inputs && failures.Count < 5; seed++)
 		{
-			var input = Mutate(seed);
 			var settings = Settings.Of(seed);
-			var run = Task.Run(() => ReadAsync(input.Zip, settings));
+			var input = Mutate(seed, settings.Area);
+			var events = new List<string>();
+			var run = Task.Run(() => ReadAsync(input.Zip, settings, events));
 			using (var stop = new CancellationTokenSource())
 			{
 				var finished = await Task.WhenAny(run, Task.Delay(TimeLimit, stop.Token));
@@ -157,8 +206,11 @@ public class FuzzTests(ITestOutputHelper output)
 
 			try
 			{
-				var outcome = $"{settings.Mode}: {await run}";
-				outcomes[outcome] = outcomes.TryGetValue(outcome, out var count) ? count + 1 : 1;
+				Count(outcomes, $"{settings.Mode}: {await run}");
+				foreach (var read in events)
+				{
+					Count(reads, read);
+				}
 			}
 			catch (Exception e)
 			{
@@ -172,16 +224,30 @@ public class FuzzTests(ITestOutputHelper output)
 			output.WriteLine($"  {pair.Key}: {pair.Value}");
 		}
 
+		output.WriteLine("Their reads of areas and header rows:");
+		foreach (var pair in reads)
+		{
+			output.WriteLine($"  {pair.Key}: {pair.Value}");
+		}
+
 		Assert.True(failures.Count == 0, string.Join("\n\n", failures) + "\n\nReplay one with CSVHELPER_EXCEL_FUZZ_SEED=<seed> and CSVHELPER_EXCEL_FUZZ_INPUTS=1.");
 	}
 
-	/// <summary>Reads a workbook to the end of each worksheet, under small limits.</summary>
+	/// <summary>
+	/// Reads a workbook to the end of each worksheet, or of an area of each, and then, as the seed says, one of its tables,
+	/// defined names or blocks of a sheet, under small limits.
+	/// </summary>
 	/// <param name="zip">The workbook's bytes.</param>
 	/// <param name="settings">How to read it.</param>
-	/// <returns>How it ended: <c>read</c>, or the expected exception that ended it (or that the first sheet to fail threw).</returns>
-	private static async Task<string> ReadAsync(byte[] zip, Settings settings)
+	/// <param name="events">Takes how each read of an area or with a header row ended, for the run's tally.</param>
+	/// <returns>
+	/// How it ended: <c>read</c>, or the expected exception that ended it (or that the first sheet to fail threw, or the
+	/// workbook's table, name or block).
+	/// </returns>
+	private static async Task<string> ReadAsync(byte[] zip, Settings settings, List<string> events)
 	{
 		var async = settings.Async;
+		var choices = new Random(settings.Choices);
 		try
 		{
 			using var workbook = async ? await ExcelWorkbook.OpenAsync(new MemoryStream(zip), settings.Options) : ExcelWorkbook.Open(new MemoryStream(zip), settings.Options);
@@ -190,18 +256,43 @@ public class FuzzTests(ITestOutputHelper output)
 			{
 				try
 				{
-					if (settings.Mode == ReadMode.Records)
+					var options = settings.Options;
+					var firstRow = 1;
+					if (settings.Area == AreaMode.Range)
 					{
-						await ReadRecordsAsync(workbook, sheet, settings);
+						var block = RandomBlock(choices);
+						options = options with { Range = block.ToString() };
+						firstRow = block.FirstRow;
 					}
-					else
-					{
-						await ReadFieldsAsync(workbook, sheet, settings);
-					}
+
+					options = await WithHeaderAsync(workbook, sheet, options, firstRow, settings, choices);
+					await TallyAsync(events, settings, options, ReadAreaAsync(workbook, sheet, options, settings));
 				}
 				catch (Exception e) when (IsExpected(e))
 				{
 					outcome = outcome == "read" ? "a sheet threw " + e.GetType().Name : outcome;
+				}
+			}
+
+			if (settings.Area is AreaMode.Table or AreaMode.DefinedName or AreaMode.SheetRange)
+			{
+				if (Target(workbook, settings, choices) is not { } chosen)
+				{
+					events.Add($"{settings.Area}: none in the workbook");
+
+					return outcome;
+				}
+
+				try
+				{
+					// A table's header is its column names, so it takes no header row.
+					var (target, targetFirstRow) = chosen;
+					var options = target.Table is null ? await WithHeaderAsync(workbook, null, target, targetFirstRow, settings, choices) : target;
+					await TallyAsync(events, settings, options, ReadAreaAsync(workbook, null, options, settings));
+				}
+				catch (Exception e) when (IsExpected(e))
+				{
+					outcome = outcome == "read" ? $"the {settings.Area} threw {e.GetType().Name}" : outcome;
 				}
 			}
 
@@ -214,17 +305,227 @@ public class FuzzTests(ITestOutputHelper output)
 	}
 
 	/// <summary>
-	/// Reads a sheet's fields as strings, and in <see cref="ReadMode.Fields"/> the fields of its first records as typed
+	/// Waits for a read, and notes how it ended when it read an area or had a header row given: its area (a range, a
+	/// table, a defined name, or a range with a sheet's name) and its header row, read or with the exception it threw.
+	/// </summary>
+	/// <param name="events">Takes the notes.</param>
+	/// <param name="settings">How the seed reads.</param>
+	/// <param name="options">The read's options.</param>
+	/// <param name="read">The read.</param>
+	/// <returns>A task that completes when the read does, and fails as it does.</returns>
+	private static async Task TallyAsync(List<string> events, Settings settings, ExcelReaderOptions options, Task read)
+	{
+		var area = options.Table is not null ? "Table" : options.DefinedName is not null ? "DefinedName" : options.Range is null ? null : options.Range.IndexOf('!') >= 0 ? "SheetRange" : "Range";
+		var header = options.HeaderRow is null ? null : $"header row {settings.Header}";
+		try
+		{
+			await read;
+		}
+		catch (Exception e) when (IsExpected(e))
+		{
+			Note(events, area, header, "threw " + e.GetType().Name);
+
+			throw;
+		}
+
+		Note(events, area, header, "read");
+	}
+
+	/// <summary>Notes how a read of an area, or with a header row, ended.</summary>
+	/// <param name="events">Takes the notes.</param>
+	/// <param name="area">The area, or <see langword="null"/> for a whole sheet.</param>
+	/// <param name="header">The header row, or <see langword="null"/> for none given.</param>
+	/// <param name="result">How the read ended.</param>
+	private static void Note(List<string> events, string? area, string? header, string result)
+	{
+		if (area is not null)
+		{
+			events.Add($"{area}: {result}");
+		}
+
+		if (header is not null)
+		{
+			events.Add($"{header}: {result}");
+		}
+	}
+
+	/// <summary>Adds one to a key's count.</summary>
+	/// <param name="counts">The counts.</param>
+	/// <param name="key">The key.</param>
+	private static void Count(SortedDictionary<string, int> counts, string key) => counts[key] = counts.TryGetValue(key, out var count) ? count + 1 : 1;
+
+	/// <summary>
+	/// The options that read one of the workbook's own tables, defined names or blocks of a sheet, as the seed's area says:
+	/// a table by its name, a defined name that is a block of cells by the text that finds it, or a random block of a
+	/// worksheet with the sheet's name, quoted as Excel quotes it.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="settings">How the seed reads.</param>
+	/// <param name="choices">The seed's numbers for what it reads.</param>
+	/// <returns>The options and the area's first row; <see langword="null"/> when the seed reads none, or the workbook has none.</returns>
+	private static (ExcelReaderOptions Options, int FirstRow)? Target(ExcelWorkbook workbook, Settings settings, Random choices)
+	{
+		switch (settings.Area)
+		{
+			case AreaMode.Table when workbook.Tables.Count > 0:
+				var table = workbook.Tables[choices.Next(workbook.Tables.Count)];
+
+				return (settings.Options with { Table = table.Name }, table.Range.FirstRow + table.HeaderRowCount);
+			case AreaMode.DefinedName:
+				var names = workbook.DefinedNames.Where(n => n.Range is not null && IsFoundByItsText(workbook, n)).ToList();
+				if (names.Count == 0)
+				{
+					return null;
+				}
+
+				var name = names[choices.Next(names.Count)];
+
+				return (settings.Options with { DefinedName = name.ToString() }, name.Range!.Value.FirstRow);
+			case AreaMode.SheetRange:
+				var sheets = workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet).ToList();
+				if (sheets.Count == 0)
+				{
+					return null;
+				}
+
+				var sheet = sheets[choices.Next(sheets.Count)];
+				var block = RandomBlock(choices);
+
+				return (settings.Options with { Range = SheetLocation.Quote(sheet.Name) + "!" + block }, block.FirstRow);
+			default:
+				return null;
+		}
+	}
+
+	/// <summary>
+	/// Whether a defined name is the one its text (<see cref="ExcelDefinedName.ToString"/>) finds: no name before it has its
+	/// name in its scope, as Excel's own names never do, but a workbook can hold a built-in name and a name of one's own
+	/// alike once the built-in one's <c>_xlnm.</c> is gone, or two sheets whose names differ only in case.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="name">The name.</param>
+	/// <returns>Whether its text finds it.</returns>
+	private static bool IsFoundByItsText(ExcelWorkbook workbook, ExcelDefinedName name) =>
+		ReferenceEquals(name, workbook.DefinedNames.First(n => string.Equals(n.Name, name.Name, StringComparison.OrdinalIgnoreCase) && (n.Scope is null
+			? name.Scope is null
+			: name.Scope is not null && string.Equals(n.Scope.Name, name.Scope.Name, StringComparison.OrdinalIgnoreCase))));
+
+	/// <summary>A random block near a sheet's start: a few cells, whole columns or whole rows.</summary>
+	/// <param name="choices">The seed's numbers for what it reads.</param>
+	/// <returns>The block.</returns>
+	private static ExcelRange RandomBlock(Random choices)
+	{
+		var firstRow = choices.Next(3) == 0 ? 1 : choices.Next(1, 30);
+		var lastRow = firstRow + choices.Next(40);
+		var firstColumn = choices.Next(3) == 0 ? 1 : choices.Next(1, 8);
+		var lastColumn = firstColumn + choices.Next(8);
+
+		return choices.Next(6) switch
+		{
+			0 => new ExcelRange(1, firstColumn, CellReference.MaxRow, lastColumn),
+			1 => new ExcelRange(firstRow, 1, lastRow, CellReference.MaxColumns),
+			2 => new ExcelRange(firstRow, firstColumn, firstRow, firstColumn),
+			_ => new ExcelRange(firstRow, firstColumn, lastRow, lastColumn),
+		};
+	}
+
+	/// <summary>
+	/// The options with the header row the seed gives, when it reads a header: a row of the area with a value, given or
+	/// searched for by its texts within as many rows as reach it, or a few more. The rows are the area's first 32 with a
+	/// value, read as the reader would read them without a header; when there are none, or they can't be read, there is no
+	/// header row to give.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/> when the options choose it.</param>
+	/// <param name="options">The options.</param>
+	/// <param name="firstRow">The area's first row.</param>
+	/// <param name="settings">How the seed reads.</param>
+	/// <param name="choices">The seed's numbers for what it reads.</param>
+	/// <returns>A task whose result is the options, with a header row or not.</returns>
+	private static async Task<ExcelReaderOptions> WithHeaderAsync(ExcelWorkbook workbook, ExcelSheet? sheet, ExcelReaderOptions options, int firstRow, Settings settings, Random choices)
+	{
+		if (settings.Header == HeaderMode.None)
+		{
+			return options;
+		}
+
+		var async = settings.Async;
+		var rows = new List<(long Line, List<string> Texts)>();
+		try
+		{
+			var plain = options with { Csv = options.Csv with { HasHeader = false, SkipEmptyLines = true, TrackLineNumbers = true } };
+			using var reader = sheet is null ? await workbook.OpenReaderAsync(async, plain) : await workbook.OpenReaderAsync(async, sheet, plain);
+			while (rows.Count < 32 && (async ? await reader.ReadAsync() : reader.Read()))
+			{
+				var texts = new List<string>();
+				for (var i = 0; i < reader.FieldCount; i++)
+				{
+					try
+					{
+						if (reader.GetString(i) is { Length: > 0 } text)
+						{
+							texts.Add(text);
+						}
+					}
+					catch (FormatException e) when (options.ErrorCells == ExcelErrorCells.Error && e is not CsvFormatException)
+					{
+						// An error cell, which names its column with the error's text; the other texts find the row.
+					}
+				}
+
+				rows.Add((reader.LineNumber, texts));
+			}
+		}
+		catch (Exception e) when (IsExpected(e))
+		{
+			// The read with a header fails as this one did, or later.
+			return options;
+		}
+
+		if (rows.Count == 0)
+		{
+			return options;
+		}
+
+		var (line, names) = rows[choices.Next(rows.Count)];
+		var headerRow = settings.Header == HeaderMode.At
+			? ExcelHeaderRow.At((int)line)
+			: ExcelHeaderRow.Find(names, (int)Math.Min(line - firstRow + 1 + choices.Next(3), CellReference.MaxRow));
+
+		return options with { HeaderRow = headerRow };
+	}
+
+	/// <summary>Reads an area: its fields, or its records, as the seed says.</summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/> when the options choose it.</param>
+	/// <param name="options">The options.</param>
+	/// <param name="settings">How the seed reads.</param>
+	/// <returns>A task that completes when the area is read.</returns>
+	private static Task ReadAreaAsync(ExcelWorkbook workbook, ExcelSheet? sheet, ExcelReaderOptions options, Settings settings) =>
+		settings.Mode == ReadMode.Records ? ReadRecordsAsync(workbook, sheet, options, settings) : ReadFieldsAsync(workbook, sheet, options, settings);
+
+	/// <summary>Opens a reader of a sheet, or of what the options choose.</summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/> when the options choose it.</param>
+	/// <param name="options">The options.</param>
+	/// <param name="async">Whether to open it asynchronously.</param>
+	/// <returns>A task whose result is the reader.</returns>
+	private static async Task<CsvReader> OpenAsync(ExcelWorkbook workbook, ExcelSheet? sheet, ExcelReaderOptions options, bool async) =>
+		sheet is null ? await workbook.OpenReaderAsync(async, options) : await workbook.OpenReaderAsync(async, sheet, options);
+
+	/// <summary>
+	/// Reads an area's fields as strings, and in <see cref="ReadMode.Fields"/> the fields of its first records as typed
 	/// values too.
 	/// </summary>
 	/// <param name="workbook">The workbook.</param>
-	/// <param name="sheet">The sheet.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/> when the options choose it.</param>
+	/// <param name="options">The options.</param>
 	/// <param name="settings">How to read it.</param>
-	/// <returns>A task that completes when the sheet is read.</returns>
-	private static async Task ReadFieldsAsync(ExcelWorkbook workbook, ExcelSheet sheet, Settings settings)
+	/// <returns>A task that completes when the area is read.</returns>
+	private static async Task ReadFieldsAsync(ExcelWorkbook workbook, ExcelSheet? sheet, ExcelReaderOptions options, Settings settings)
 	{
 		var async = settings.Async;
-		using var reader = await workbook.OpenReaderAsync(async, sheet);
+		using var reader = await OpenAsync(workbook, sheet, options, async);
 		var records = 0;
 		while (async ? await reader.ReadAsync() : reader.Read())
 		{
@@ -242,20 +543,21 @@ public class FuzzTests(ITestOutputHelper output)
 	}
 
 	/// <summary>
-	/// Reads a sheet's records as <see cref="FuzzRecord"/>s. A record that can't be read goes to <c>OnRecordError</c>,
+	/// Reads an area's records as <see cref="FuzzRecord"/>s. A record that can't be read goes to <c>OnRecordError</c>,
 	/// which skips it; why it can't must be a field that doesn't parse.
 	/// </summary>
 	/// <param name="workbook">The workbook.</param>
-	/// <param name="sheet">The sheet.</param>
+	/// <param name="sheet">The sheet, or <see langword="null"/> when the options choose it.</param>
+	/// <param name="area">The options.</param>
 	/// <param name="settings">How to read it.</param>
-	/// <returns>A task that completes when the sheet is read.</returns>
+	/// <returns>A task that completes when the area is read.</returns>
 	/// <exception cref="InvalidOperationException">A record failed for another reason.</exception>
-	private static async Task ReadRecordsAsync(ExcelWorkbook workbook, ExcelSheet sheet, Settings settings)
+	private static async Task ReadRecordsAsync(ExcelWorkbook workbook, ExcelSheet? sheet, ExcelReaderOptions area, Settings settings)
 	{
 		var errors = new List<CsvRecordError>();
-		var options = settings.Options with
+		var options = area with
 		{
-			Csv = settings.Options.Csv with
+			Csv = area.Csv with
 			{
 				OnRecordError = error =>
 				{
@@ -265,7 +567,7 @@ public class FuzzTests(ITestOutputHelper output)
 				},
 			},
 		};
-		using var reader = await workbook.OpenReaderAsync(settings.Async, sheet, options);
+		using var reader = await OpenAsync(workbook, sheet, options, settings.Async);
 		if (settings.Async)
 		{
 			await foreach (var record in reader.GetRecordsAsync<FuzzRecord>())
@@ -379,26 +681,52 @@ public class FuzzTests(ITestOutputHelper output)
 	/// <returns>Whether it is.</returns>
 	private static bool IsExpected(Exception e) => e is InvalidDataException or CsvFormatException or NotSupportedException;
 
-	/// <summary>Makes the input of a seed: a source workbook, mutated in one XML part or in its zip bytes.</summary>
+	/// <summary>
+	/// Makes the input of a seed: a source workbook, mutated in one XML part or in its zip bytes. A seed that reads a table
+	/// or a defined name starts, one time in two, from a workbook that has one, since most have none.
+	/// </summary>
 	/// <param name="seed">The seed.</param>
+	/// <param name="area">What the seed reads besides every worksheet whole.</param>
 	/// <returns>The input.</returns>
-	private static Input Mutate(int seed)
+	private static Input Mutate(int seed, AreaMode area)
 	{
 		var random = new Random(seed);
 		var sources = Sources.Value;
-		var source = sources[random.Next(sources.Count)];
+		var having = area switch
+		{
+			AreaMode.Table => sources.Where(s => s.HasTables).ToList(),
+			AreaMode.DefinedName => sources.Where(s => s.HasDefinedNames).ToList(),
+			_ => sources,
+		};
+		var pool = having.Count > 0 && having.Count < sources.Count && random.Next(2) == 0 ? having : sources;
+		var source = pool[random.Next(pool.Count)];
 		var steps = new List<string>();
 		byte[] zip;
 		if (random.Next(3) < 2)
 		{
-			// Mostly the parts the scanner reads: sheets and shared strings, then the package's parts.
+			// Mostly the parts the scanner reads (sheets, then shared strings), then the workbook part with its defined names
+			// and the table parts, then any of the package's parts.
 			var parts = source.Entries.Select((e, i) => (e.Name, Index: i)).Where(e => e.Name.EndsWith(".xml", StringComparison.Ordinal) || e.Name.EndsWith(".rels", StringComparison.Ordinal)).ToList();
-			var sheets = parts.Where(p => p.Name.Contains("worksheets/") || p.Name.Contains("sharedStrings")).ToList();
-			var (name, index) = sheets.Count > 0 && random.Next(4) > 0 ? sheets[random.Next(sheets.Count)] : parts[random.Next(parts.Count)];
+			var groups = new[]
+			{
+				parts.Where(p => p.Name.Contains("worksheets/")).ToList(),
+				parts.Where(p => p.Name.Contains("sharedStrings")).ToList(),
+				parts.Where(p => p.Name.EndsWith("/workbook.xml", StringComparison.Ordinal)).ToList(),
+				parts.Where(p => p.Name.Contains("tables/")).ToList(),
+			};
+			var group = random.Next(8) switch
+			{
+				0 or 1 or 2 or 3 => groups[0],
+				4 => groups[1],
+				5 => groups[2],
+				6 => groups[3],
+				_ => parts,
+			};
+			var (name, index) = group.Count > 0 ? group[random.Next(group.Count)] : parts[random.Next(parts.Count)];
 			var data = source.Entries[index].Data;
 			for (var n = random.Next(1, 5); n > 0; n--)
 			{
-				data = MutateXml(random, data, steps);
+				data = MutateXml(random, name, data, steps, source);
 			}
 
 			var entries = source.Entries.ToList();
@@ -423,14 +751,20 @@ public class FuzzTests(ITestOutputHelper output)
 
 	/// <summary>Applies one mutation to an XML part's bytes.</summary>
 	/// <param name="random">The seed's random numbers.</param>
+	/// <param name="name">The part's name, for the structures a worksheet, the workbook part or a table part has.</param>
 	/// <param name="data">The part.</param>
 	/// <param name="steps">Takes a description of the mutation.</param>
+	/// <param name="source">The workbook, for its sheets' names.</param>
 	/// <returns>The mutated part.</returns>
-	private static byte[] MutateXml(Random random, byte[] data, List<string> steps)
+	private static byte[] MutateXml(Random random, string name, byte[] data, List<string> steps, Source source)
 	{
 		var at = random.Next(data.Length + 1);
-		switch (random.Next(7))
+		switch (random.Next(8))
 		{
+			case 6 when Structure(random, name, data, source) is var (place, replaced, markup) && place >= 0:
+				steps.Add($"structure {Show(markup.Length > 120 ? markup.Substring(0, 120) + "..." : markup)} at {place}{(replaced > 0 ? $" for {replaced}" : "")}");
+
+				return Replace(data, place, replaced, Encoding.UTF8.GetBytes(markup));
 			case 0 when data.Length > 0:
 				at = Math.Min(at, data.Length - 1);
 				var bit = random.Next(8);
@@ -483,6 +817,194 @@ public class FuzzTests(ITestOutputHelper output)
 
 				return data.Length == 0 ? [value] : Replace(data, at, 1, [value]);
 		}
+	}
+
+	/// <summary>
+	/// Markup of a structure that Phase 3 reads, and where in the part the schema puts it: in a worksheet, <c>cols</c>
+	/// before <c>sheetData</c>, <c>mergeCells</c> after it, or an attribute that hides on a row or on <c>sheetFormatPr</c>;
+	/// in the workbook part, <c>definedNames</c> after <c>sheets</c>, naming its sheets; in a table part, a count or a
+	/// <c>ref</c> for the table's, or a column. Their blocks are near a sheet's start or at the grid's edges, in the forms
+	/// Excel takes and some it doesn't.
+	/// </summary>
+	/// <param name="random">The seed's random numbers.</param>
+	/// <param name="name">The part's name.</param>
+	/// <param name="data">The part.</param>
+	/// <param name="source">The workbook, for its sheets' names.</param>
+	/// <returns>Where the markup goes and how many bytes it replaces there; a start of -1 when the part has no place for one.</returns>
+	private static (int Start, int Replaced, string Markup) Structure(Random random, string name, byte[] data, Source source)
+	{
+		if (name.Contains("worksheets/"))
+		{
+			return random.Next(4) switch
+			{
+				0 => (After(data, "</sheetData>"u8), 0, MergeCells(random)),
+				1 => (data.AsSpan().IndexOf("<sheetData"u8), 0, Cols(random)),
+				2 => (AfterAny(random, data, "<row"u8), 0, random.Next(3) switch { 0 => " hidden=\"1\"", 1 => " hidden=\"true\"", _ => " ht=\"0\" customHeight=\"1\"" }),
+				_ => (After(data, "<sheetFormatPr"u8), 0, random.Next(3) switch { 0 => " zeroHeight=\"1\"", 1 => " defaultColWidth=\"0\"", _ => " customHeight=\"1\"" }),
+			};
+		}
+
+		if (name.EndsWith("/workbook.xml", StringComparison.Ordinal))
+		{
+			return (After(data, "</sheets>"u8), 0, DefinedNames(random, source.SheetNames));
+		}
+
+		if (name.Contains("tables/"))
+		{
+			var table = data.AsSpan().IndexOf("<table"u8);
+			switch (random.Next(3))
+			{
+				case 0 when table >= 0:
+					return (table + "<table".Length, 0, $" {(random.Next(2) == 0 ? "headerRowCount" : "totalsRowCount")}=\"{random.Next(3)}\"");
+				case 1 when table >= 0 && data.AsSpan(table).IndexOf(" ref=\""u8) is var reference && reference >= 0:
+					var start = table + reference + " ref=\"".Length;
+					var end = data.AsSpan(start).IndexOf((byte)'"');
+
+					return (start, end < 0 ? 0 : end, RandomRef(random));
+				default:
+					var columns = data.AsSpan().IndexOf("<tableColumns"u8);
+					var close = columns < 0 ? -1 : data.AsSpan(columns).IndexOf((byte)'>');
+
+					return (close < 0 ? -1 : columns + close + 1, 0, $"<tableColumn id=\"{random.Next(1, 99)}\" name=\"{ColumnNames[random.Next(ColumnNames.Length)]}\"/>");
+			}
+		}
+
+		return (-1, 0, "");
+	}
+
+	/// <summary>The offset after the first occurrence of some bytes.</summary>
+	/// <param name="data">The bytes searched.</param>
+	/// <param name="value">The bytes to find.</param>
+	/// <returns>The offset; -1 when they don't occur.</returns>
+	private static int After(byte[] data, ReadOnlySpan<byte> value)
+	{
+		var found = data.AsSpan().IndexOf(value);
+
+		return found < 0 ? -1 : found + value.Length;
+	}
+
+	/// <summary>The offset after a random occurrence of some bytes.</summary>
+	/// <param name="random">The seed's random numbers.</param>
+	/// <param name="data">The bytes searched.</param>
+	/// <param name="value">The bytes to find.</param>
+	/// <returns>The offset; -1 when they don't occur.</returns>
+	private static int AfterAny(Random random, byte[] data, ReadOnlySpan<byte> value)
+	{
+		var offsets = new List<int>();
+		for (var at = data.AsSpan().IndexOf(value); at >= 0;)
+		{
+			offsets.Add(at + value.Length);
+			var next = data.AsSpan(at + value.Length).IndexOf(value);
+			at = next < 0 ? -1 : at + value.Length + next;
+		}
+
+		return offsets.Count == 0 ? -1 : offsets[random.Next(offsets.Count)];
+	}
+
+	/// <summary>A <c>mergeCells</c> of one to four ranges, mostly in rows apart so that they don't overlap, now and then any block.</summary>
+	/// <param name="random">The seed's random numbers.</param>
+	/// <returns>The markup.</returns>
+	private static string MergeCells(Random random)
+	{
+		var count = random.Next(1, 5);
+		var ranges = Enumerable.Range(0, count).Select(i =>
+		{
+			if (random.Next(6) == 0)
+			{
+				return RandomRef(random);
+			}
+
+			var firstRow = 1 + (i * 6) + random.Next(3);
+			var firstColumn = random.Next(1, 7);
+
+			return new ExcelRange(firstRow, firstColumn, firstRow + random.Next(3), firstColumn + random.Next(3)).ToString();
+		});
+
+		return $"<mergeCells count=\"{count}\">" + string.Concat(ranges.Select(r => $"<mergeCell ref=\"{r}\"/>")) + "</mergeCells>";
+	}
+
+	/// <summary>A <c>cols</c> of one to three columns' blocks, each hidden, of no width, or shown.</summary>
+	/// <param name="random">The seed's random numbers.</param>
+	/// <returns>The markup.</returns>
+	private static string Cols(Random random)
+	{
+		var cols = Enumerable.Range(0, random.Next(1, 4)).Select(_ =>
+		{
+			var min = random.Next(1, 11);
+			var max = random.Next(5) == 0 ? CellReference.MaxColumns : min + random.Next(6);
+			var look = random.Next(4) switch { 0 => " hidden=\"1\"", 1 => " width=\"0\" customWidth=\"1\"", 2 => "", _ => " width=\"9\"" };
+
+			return $"<col min=\"{min}\" max=\"{max}\"{look}/>";
+		});
+
+		return "<cols>" + string.Concat(cols) + "</cols>";
+	}
+
+	/// <summary>
+	/// A <c>definedNames</c> of one to four names of the workbook's sheets' blocks, the workbook's own or a sheet's (now and
+	/// then of no sheet there is), hidden or not, and now and then a name that isn't a block.
+	/// </summary>
+	/// <param name="random">The seed's random numbers.</param>
+	/// <param name="sheets">The workbook's sheets' names.</param>
+	/// <returns>The markup.</returns>
+	private static string DefinedNames(Random random, IReadOnlyList<string> sheets)
+	{
+		var names = Enumerable.Range(0, random.Next(1, 5)).Select(i =>
+		{
+			var sheet = sheets.Count == 0 ? "Data" : sheets[random.Next(sheets.Count)];
+			var scope = random.Next(3) == 0 ? $" localSheetId=\"{random.Next(sheets.Count + 1)}\"" : "";
+			var hidden = random.Next(4) == 0 ? " hidden=\"1\"" : "";
+			var refersTo = random.Next(5) switch
+			{
+				0 => random.Next(3) switch { 0 => "#REF!$A$1", 1 => "OFFSET(A1,0,0,2,2)", _ => SheetLocation.Quote(sheet) + "!$A$1," + SheetLocation.Quote(sheet) + "!$C$3" },
+				_ => SheetLocation.Quote(sheet) + "!" + RandomRef(random),
+			};
+
+			return $"<definedName name=\"{(random.Next(4) == 0 ? "_xlnm.Print_Area" : $"Fz{i}")}\"{scope}{hidden}>{Sheets.Escape(refersTo)}</definedName>";
+		});
+
+		return "<definedNames>" + string.Concat(names) + "</definedNames>";
+	}
+
+	/// <summary>
+	/// A block's text: a few cells near the start, whole columns or rows, the whole grid, or one cell, with <c>$</c>, in
+	/// lowercase or with its corners reversed now and then, and now and then one Excel can't open.
+	/// </summary>
+	/// <param name="random">The seed's random numbers.</param>
+	/// <returns>The text.</returns>
+	private static string RandomRef(Random random)
+	{
+		var firstRow = random.Next(1, 30);
+		var firstColumn = random.Next(1, 8);
+		var range = random.Next(8) switch
+		{
+			0 => new ExcelRange(1, firstColumn, CellReference.MaxRow, firstColumn + random.Next(3)),
+			1 => new ExcelRange(firstRow, 1, firstRow + random.Next(3), CellReference.MaxColumns),
+			2 => new ExcelRange(1, 1, CellReference.MaxRow, CellReference.MaxColumns),
+			3 => new ExcelRange(firstRow, firstColumn, firstRow, firstColumn),
+			_ => new ExcelRange(firstRow, firstColumn, firstRow + random.Next(5), firstColumn + random.Next(5)),
+		};
+		var text = range.ToString();
+
+		return random.Next(8) switch
+		{
+			0 => text.ToLowerInvariant(),
+			1 => string.Join(":", Enumerable.Reverse(text.Split(':'))),
+			2 => string.Join(":", text.Split(':').Select(Absolute)),
+			3 => random.Next(3) switch { 0 => "A0:B2", 1 => "A1:XFE2", _ => "A1:B2 C3:D4" },
+			_ => text,
+		};
+	}
+
+	/// <summary>A corner of a block, or a column or row of one, with <c>$</c> before its column and its row.</summary>
+	/// <param name="corner">The corner, such as <c>B5</c>, <c>B</c> or <c>5</c>.</param>
+	/// <returns>The corner, such as <c>$B$5</c>.</returns>
+	private static string Absolute(string corner)
+	{
+		var letters = string.Concat(corner.TakeWhile(char.IsLetter));
+		var digits = corner.Substring(letters.Length);
+
+		return (letters.Length > 0 ? "$" + letters : "") + (digits.Length > 0 ? "$" + digits : "");
 	}
 
 	/// <summary>Applies one mutation to a zip's bytes: in a header, anywhere, or at its end.</summary>
@@ -619,7 +1141,7 @@ public class FuzzTests(ITestOutputHelper output)
 	/// <returns>The text to show.</returns>
 	private static string Show(string text) => "\"" + string.Concat(text.Select(c => c < ' ' || c == '\uFEFF' ? $"\\u{(int)c:X4}" : c.ToString())) + "\"";
 
-	/// <summary>A workbook an input starts from: its zip, and its entries' inflated bytes in order.</summary>
+	/// <summary>A workbook an input starts from: its zip, its entries' inflated bytes in order, and its sheets' names.</summary>
 	/// <param name="name">Where it comes from.</param>
 	/// <param name="zip">The zip's bytes.</param>
 	/// <param name="entries">The entries.</param>
@@ -633,6 +1155,20 @@ public class FuzzTests(ITestOutputHelper output)
 
 		/// <summary>The entries, in the zip's order.</summary>
 		public List<(string Name, byte[] Data)> Entries { get; } = entries;
+
+		/// <summary>Whether it has a table part.</summary>
+		public bool HasTables { get; } = entries.Any(e => e.Name.Contains("tables/"));
+
+		/// <summary>Whether its workbook part has a defined name of a sheet's cells: one whose text has a <c>!</c>.</summary>
+		public bool HasDefinedNames { get; } = entries.Any(e =>
+			e.Name.EndsWith("/workbook.xml", StringComparison.Ordinal) && Regex.IsMatch(Encoding.UTF8.GetString(e.Data), @"<(?:\w+:)?definedName\b[^>]*>[^<]*![^<]*<"));
+
+		/// <summary>The names of its sheets, from its workbook part's <c>sheet</c> elements, for the defined names the mutations write.</summary>
+		public IReadOnlyList<string> SheetNames { get; } = entries
+			.Where(e => e.Name.EndsWith("/workbook.xml", StringComparison.Ordinal))
+			.SelectMany(e => Regex.Matches(Encoding.UTF8.GetString(e.Data), "<(?:\\w+:)?sheet\\b[^>]*?\\bname=\"([^\"]*)\"").Cast<Match>())
+			.Select(m => WebUtility.HtmlDecode(m.Groups[1].Value))
+			.ToList();
 
 		/// <summary>Reads a workbook's entries.</summary>
 		/// <param name="name">Where it comes from.</param>
@@ -672,12 +1208,16 @@ public class FuzzTests(ITestOutputHelper output)
 
 	/// <summary>
 	/// How a seed reads its input: synchronously or not, with which CSV options (alternating with the seed, as before), and
-	/// with which formulas, error cells, significant digits and reading (chosen by numbers of the seed's own).
+	/// with which formulas, error cells, significant digits and reading (chosen by numbers of the seed's own); and, two
+	/// seeds in three, which area, header row and switches, with a seed for the choices that depend on the workbook.
 	/// </summary>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="options">The options, under small limits.</param>
 	/// <param name="mode">How to read the fields.</param>
-	private sealed class Settings(bool async, ExcelReaderOptions options, ReadMode mode)
+	/// <param name="area">What to read besides every worksheet whole.</param>
+	/// <param name="header">How to give the header row.</param>
+	/// <param name="choices">The seed of the choices made once the workbook is open.</param>
+	private sealed class Settings(bool async, ExcelReaderOptions options, ReadMode mode, AreaMode area, HeaderMode header, int choices)
 	{
 		/// <summary>Whether to read asynchronously.</summary>
 		public bool Async { get; } = async;
@@ -687,6 +1227,15 @@ public class FuzzTests(ITestOutputHelper output)
 
 		/// <summary>How to read the fields.</summary>
 		public ReadMode Mode { get; } = mode;
+
+		/// <summary>What to read besides every worksheet whole.</summary>
+		public AreaMode Area { get; } = area;
+
+		/// <summary>How to give the header row.</summary>
+		public HeaderMode Header { get; } = header;
+
+		/// <summary>The seed of the choices made once the workbook is open: the block, the table or name, the header row.</summary>
+		public int Choices { get; } = choices;
 
 		/// <summary>The settings of a seed.</summary>
 		/// <param name="seed">The seed.</param>
@@ -703,8 +1252,19 @@ public class FuzzTests(ITestOutputHelper output)
 				SignificantDigits = Digits[random.Next(Digits.Length)],
 				Csv = new() { HasHeader = seed % 3 != 0, SkipEmptyLines = seed % 5 != 0, TrimWhitespace = seed % 7 == 0 },
 			};
+			var mode = (ReadMode)random.Next(3);
 
-			return new Settings(seed % 2 == 1, options, (ReadMode)random.Next(3));
+			// Drawn after the earlier settings, which stay as they were for a seed; one seed in three reads as before Phase 3.
+			var area = AreaMode.Sheet;
+			var header = HeaderMode.None;
+			if (random.Next(3) > 0)
+			{
+				area = (AreaMode)random.Next(5);
+				header = options.Csv.HasHeader ? (HeaderMode)random.Next(3) : HeaderMode.None;
+				options = options with { SkipHiddenRows = random.Next(2) == 0, SkipHiddenColumns = random.Next(2) == 0, FillMergedCells = random.Next(2) == 0 };
+			}
+
+			return new Settings(seed % 2 == 1, options, mode, area, header, random.Next());
 		}
 
 		/// <summary>
@@ -729,6 +1289,8 @@ public class FuzzTests(ITestOutputHelper output)
 		/// <inheritdoc/>
 		public override string ToString() =>
 			$"{(Async ? "async" : "sync")}, {Mode}, formulas {Options.Formulas}, error cells {Options.ErrorCells}, digits {Options.SignificantDigits?.ToString() ?? "null"}, " +
-			$"header {Options.Csv.HasHeader}, skip empty {Options.Csv.SkipEmptyLines}, trim {Options.Csv.TrimWhitespace}";
+			$"header {Options.Csv.HasHeader}, skip empty {Options.Csv.SkipEmptyLines}, trim {Options.Csv.TrimWhitespace}, area {Area}, header row {Header}, " +
+			$"hidden rows {(Options.SkipHiddenRows ? "skipped" : "read")}, hidden columns {(Options.SkipHiddenColumns ? "skipped" : "read")}, " +
+			$"merged cells {(Options.FillMergedCells ? "filled" : "not filled")}";
 	}
 }

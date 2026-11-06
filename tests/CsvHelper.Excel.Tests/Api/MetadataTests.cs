@@ -76,7 +76,11 @@ public class MetadataTests
 	[InlineData(true)]
 	public async Task FindsTheSheetOfABlockAsExcelDoes(bool async)
 	{
-		var package = TestPackage.Workbook(new TestSheet("Chart", type: "chartsheet"), new TestSheet("Data"), new TestSheet("Q1 &amp; Orders"))
+		// Twin and TWIN differ only in case, which Excel doesn't allow, so a name of either is the first's, as a search in tab
+		// order finds it; Plot is a chartsheet before the worksheet PLOT, so a name of plot is the worksheet's.
+		var package = TestPackage.Workbook(
+				new TestSheet("Chart", type: "chartsheet"), new TestSheet("Data"), new TestSheet("Q1 &amp; Orders"), new TestSheet("Twin"), new TestSheet("TWIN"),
+				new TestSheet("Plot", type: "chartsheet"), new TestSheet("PLOT"))
 			.DefinedNames(
 				"<definedName name=\"Lower\">data!$a$1:$b$2</definedName>",
 				"<definedName name=\"Quoted\">'Q1 &amp; Orders'!$C$3</definedName>",
@@ -85,7 +89,9 @@ public class MetadataTests
 				"<definedName name=\"OfChart\" localSheetId=\"0\">Data!$A$1</definedName>",
 				"<definedName name=\"OfQuoted\" localSheetId=\"2\">Data!$A$1</definedName>",
 				"<definedName name=\"NoSheet\">$A$1:$B$2</definedName>",
-				"<definedName name=\"_XLNM.Print_Titles\" localSheetId=\"1\">Data!$1:$1</definedName>");
+				"<definedName name=\"_XLNM.Print_Titles\" localSheetId=\"1\">Data!$1:$1</definedName>",
+				"<definedName name=\"OfTwin\">TWIN!$A$1</definedName>",
+				"<definedName name=\"OfPlot\">plot!$B$2</definedName>");
 
 		using var workbook = await Workbooks.OpenAsync(package, async);
 
@@ -99,8 +105,11 @@ public class MetadataTests
 				"'Q1 & Orders'!OfQuoted | Q1 & Orders | shown | Data!$A$1 | Data A1",
 				"NoSheet | - | shown | $A$1:$B$2 | - -",
 				"Data!Print_Titles | Data | shown | Data!$1:$1 | Data 1:1",
+				"OfTwin | - | shown | TWIN!$A$1 | Twin A1",
+				"OfPlot | - | shown | plot!$B$2 | PLOT B2",
 			],
 			workbook.DefinedNames.Select(Describe));
+		Assert.Same(workbook.Sheets[3], workbook.DefinedNames[8].Sheet);
 	}
 
 	[Theory]

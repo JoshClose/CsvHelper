@@ -27,25 +27,18 @@ public sealed class ExcelDefinedName
 
 	/// <summary>Creates the name.</summary>
 	/// <param name="sheets">The workbook's sheets, in tab order.</param>
+	/// <param name="worksheets">The workbook's worksheets by name, ignoring case: the first of each name in tab order.</param>
 	/// <param name="name">The name, as the workbook part lists it.</param>
-	internal ExcelDefinedName(IReadOnlyList<ExcelSheet> sheets, WorkbookName name)
+	internal ExcelDefinedName(IReadOnlyList<ExcelSheet> sheets, IReadOnlyDictionary<string, ExcelSheet> worksheets, WorkbookName name)
 	{
 		Name = name.Name.StartsWith(BuiltInPrefix, StringComparison.OrdinalIgnoreCase) ? name.Name.Substring(BuiltInPrefix.Length) : name.Name;
 		Scope = name.LocalSheetId is int index ? sheets[index] : null;
 		Hidden = name.Hidden;
 		RefersTo = name.Text;
-		if (AreaReference.TryParse(RefersTo.AsSpan(), out var sheetName, out var range) && sheetName is not null)
+		if (AreaReference.TryParse(RefersTo.AsSpan(), out var sheetName, out var range) && sheetName is not null && worksheets.TryGetValue(sheetName, out var sheet))
 		{
-			foreach (var sheet in sheets)
-			{
-				if (sheet.Kind == ExcelSheetKind.Worksheet && string.Equals(sheet.Name, sheetName, StringComparison.OrdinalIgnoreCase))
-				{
-					Sheet = sheet;
-					Range = range;
-
-					break;
-				}
-			}
+			Sheet = sheet;
+			Range = range;
 		}
 	}
 
