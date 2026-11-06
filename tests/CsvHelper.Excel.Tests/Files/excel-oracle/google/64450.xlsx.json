@@ -4,6 +4,9 @@
   "sheets": [
     {
       "name": "Hoja 1",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -129,6 +132,9 @@
     },
     {
       "name": "Hoja 2",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -333,5 +339,7 @@
         }
       ]
     }
-  ]
+  ],
+  "names": [],
+  "tables": []
 }

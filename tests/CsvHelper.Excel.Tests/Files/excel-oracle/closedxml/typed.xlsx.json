@@ -7,6 +7,9 @@
   "sheets": [
     {
       "name": "Dates",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -1689,6 +1692,9 @@
     },
     {
       "name": "Numbers",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -2415,6 +2421,9 @@
     },
     {
       "name": "Formulas",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -3590,6 +3599,9 @@
     },
     {
       "name": "Other Sheet",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -3638,5 +3650,23 @@
         }
       ]
     }
-  ]
+  ],
+  "names": [
+    {
+      "name": "_xlfn.SINGLE",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "_xlfn.XLOOKUP",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "Rate",
+      "refersTo": "=0.5",
+      "visible": true
+    }
+  ],
+  "tables": []
 }

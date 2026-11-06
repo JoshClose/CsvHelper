@@ -64,6 +64,15 @@ internal static class ExcelProducer
 	/// <summary><c>xlYes</c>, for a table whose first row is its headers.</summary>
 	private const int Yes = 1;
 
+	/// <summary><c>xlTotalsCalculationNone</c>: a table column with nothing in its totals row.</summary>
+	private const int TotalsNone = 0;
+
+	/// <summary><c>xlTotalsCalculationSum</c>: a table column summed in its totals row (<c>SUBTOTAL(109,...)</c>).</summary>
+	private const int TotalsSum = 1;
+
+	/// <summary>The grid's last row.</summary>
+	private const int LastRow = 1048576;
+
 	/// <summary>The SCODE of an error value as COM passes it: <c>0x800A0000</c> and Excel's code (2042 for <c>#N/A</c>).</summary>
 	private const uint ErrorScode = 0x800A0000;
 
@@ -97,6 +106,7 @@ internal static class ExcelProducer
 			SaveTyped(excel, Path.Combine(folder, "typed.xlsx"), Xlsx);
 			SaveTyped(excel, Path.Combine(folder, "typed-1904.xlsx"), Xlsx, date1904: true);
 			SaveTyped(excel, Path.Combine(folder, "typed-strict.xlsx"), StrictXlsx);
+			SaveMessy(excel, Path.Combine(folder, "messy.xlsx"));
 		});
 	}
 
@@ -296,6 +306,190 @@ internal static class ExcelProducer
 		}
 
 		CopyPending();
+	}
+
+	/// <summary>Builds the messy workbook in a new workbook and saves it.</summary>
+	/// <param name="excel">Excel.</param>
+	/// <param name="path">Where to save it.</param>
+	private static void SaveMessy(dynamic excel, string path)
+	{
+		var workbook = excel.Workbooks.Add();
+		try
+		{
+			BuildMessy(workbook);
+			SaveAs(workbook, path, Xlsx, null);
+		}
+		finally
+		{
+			workbook.Close(false);
+		}
+
+		CopyPending();
+	}
+
+	/// <summary>
+	/// Builds the messy workbook as a user would: each worksheet's values, its merged ranges, its tables (the totals row
+	/// and a hidden header row made by Excel), its hidden columns and rows, its collapsed groups, its filter and the rows
+	/// and columns hidden to the sheet's end; then the chartsheet, and the defined names, with a sheet made and deleted
+	/// for the name to a deleted sheet, and Report's A1 active, which a relative name is relative to.
+	/// </summary>
+	/// <param name="workbook">The workbook, with one sheet.</param>
+	private static void BuildMessy(dynamic workbook)
+	{
+		var worksheets = Messy.Sheets.Where(s => s.Kind == "worksheet").ToList();
+		var previous = workbook.Worksheets[1];
+		previous.Name = worksheets[0].Name;
+		foreach (var name in worksheets.Skip(1).Select(s => s.Name).Concat(Messy.Names.Select(n => n.DeletedSheet).OfType<string>().Distinct()))
+		{
+			var added = workbook.Worksheets.Add(After: previous);
+			added.Name = name;
+			previous = added;
+		}
+
+		foreach (var spec in worksheets)
+		{
+			var sheet = workbook.Worksheets[spec.Name];
+
+			// Each table's cells, then the table, then the rest: a totals row inserts cells in its table's columns, which
+			// would move the cells below it. The totals row is Excel's to make, and a hidden header row's names go in the
+			// row above the data until it is hidden.
+			var cells = spec.Rows.SelectMany(r => r.Cells.Select(c => (Row: r.Row, Cell: c))).ToList();
+			foreach (var table in spec.Tables)
+			{
+				var corners = Messy.Corners(table.Range);
+				var data = corners.LastRow - (table.TotalsLabel is not null ? 1 : 0);
+				foreach (var (row, cell) in cells.Where(c => c.Row >= corners.FirstRow && c.Row <= data && Messy.InColumns(table.Range, c.Cell.Column)))
+				{
+					WriteCell(sheet, row, cell);
+				}
+
+				for (var i = 0; table.HideHeader == true && i < table.Columns!.Length; i++)
+				{
+					sheet.Cells[corners.FirstRow - 1, corners.FirstColumn + i].Value2 = table.Columns[i];
+				}
+
+				var first = table.HideHeader == true ? corners.FirstRow - 1 : corners.FirstRow;
+				var source = sheet.Range[sheet.Cells[first, corners.FirstColumn], sheet.Cells[data, corners.LastColumn]];
+				var list = sheet.ListObjects.Add(SourceType: SourceRange, Source: source, XlListObjectHasHeaders: Yes);
+				list.Name = table.Name;
+				if (table.TotalsLabel is not null)
+				{
+					// Excel labels the first column "Total" and sums the last; the sum moves to the column the spec names.
+					list.ShowTotals = true;
+					var columns = (int)list.ListColumns.Count;
+					for (var i = 2; i <= columns; i++)
+					{
+						var column = list.ListColumns[i];
+						column.TotalsCalculation = (string)column.Name == table.TotalsSum ? TotalsSum : TotalsNone;
+					}
+
+					if ((string)list.TotalsRowRange.Cells[1, 1].Value2 != table.TotalsLabel)
+					{
+						list.TotalsRowRange.Cells[1, 1].Value2 = table.TotalsLabel;
+					}
+				}
+
+				if (table.HideHeader == true)
+				{
+					list.ShowHeaders = false;
+				}
+			}
+
+			foreach (var (row, cell) in cells.Where(c => !spec.Tables.Any(t => Messy.InTable(t, c.Row, c.Cell.Column))))
+			{
+				WriteCell(sheet, row, cell);
+			}
+
+			foreach (var merge in spec.Merges ?? [])
+			{
+				sheet.Range[merge].Merge();
+			}
+
+			foreach (var column in spec.HiddenColumns ?? [])
+			{
+				sheet.Columns[column].Hidden = true;
+			}
+
+			foreach (var row in spec.HiddenRows ?? [])
+			{
+				sheet.Rows[row].Hidden = true;
+			}
+
+			if (spec.Groups is { Length: > 0 } groups)
+			{
+				foreach (var group in groups)
+				{
+					sheet.Rows[$"{group.First}:{group.Last}"].Group();
+				}
+
+				sheet.Outline.ShowLevels(RowLevels: 1);
+			}
+
+			if (spec.Filter is { } filter)
+			{
+				sheet.Range[filter.Range].AutoFilter(Field: filter.Column, Criteria1: "<>" + filter.Hides);
+			}
+
+			if (spec.HideRowsFrom is { } fromRow)
+			{
+				sheet.Rows[$"{fromRow}:{LastRow}"].Hidden = true;
+			}
+
+			if (spec.HideColumnsFrom is { } fromColumn)
+			{
+				sheet.Columns[$"{fromColumn}:XFD"].Hidden = true;
+			}
+		}
+
+		// The chartsheet, in its place in tab order.
+		var chartIndex = Messy.Sheets.ToList().FindIndex(s => s.Kind == "chartsheet");
+		var chartSpec = Messy.Sheets[chartIndex];
+		var chart = workbook.Charts.Add(After: workbook.Sheets[chartIndex]);
+		chart.ChartType = ColumnChart;
+		var chartData = chartSpec.Chart!.Split('!');
+		chart.SetSourceData(workbook.Worksheets[chartData[0]].Range[chartData[1]]);
+		chart.Name = chartSpec.Name;
+
+		// The names, with the first sheet's A1 active: a relative name is stored relative to it.
+		var report = workbook.Worksheets[worksheets[0].Name];
+		report.Activate();
+		report.Range["A1"].Select();
+		foreach (var name in Messy.Names)
+		{
+			var refersTo = "=" + (name.DeletedSheet is { } gone ? gone + "!$A$1" : name.RefersTo);
+			var added = name.Sheet is null
+				? workbook.Names.Add(Name: name.Name, RefersTo: refersTo)
+				: workbook.Worksheets[name.Sheet].Names.Add(Name: name.Name, RefersTo: refersTo);
+			if (name.Hidden == true)
+			{
+				added.Visible = false;
+			}
+		}
+
+		foreach (var gone in Messy.Names.Select(n => n.DeletedSheet).OfType<string>().Distinct())
+		{
+			workbook.Worksheets[gone].Delete();
+		}
+
+		report.Activate();
+		report.Range["A1"].Select();
+	}
+
+	/// <summary>Writes a cell of the messy workbook: its formula, or its value.</summary>
+	/// <param name="sheet">The worksheet.</param>
+	/// <param name="row">The cell's row.</param>
+	/// <param name="cell">The cell.</param>
+	private static void WriteCell(dynamic sheet, int row, CellSpec cell)
+	{
+		var range = sheet.Range[cell.Reference(row)];
+		if (cell.Type == CellType.Formula)
+		{
+			range.Formula = "=" + cell.Formula;
+		}
+		else
+		{
+			WriteValue(range, cell);
+		}
 	}
 
 	/// <summary>

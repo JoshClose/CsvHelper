@@ -4,6 +4,9 @@
   "sheets": [
     {
       "name": "Data",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -476,6 +479,9 @@
     },
     {
       "name": "Hidden",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -487,6 +493,9 @@
     },
     {
       "name": "VeryHidden",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -498,6 +507,9 @@
     },
     {
       "name": "Q1 Orders",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -653,6 +665,9 @@
     },
     {
       "name": "Bob's",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -664,6 +679,9 @@
     },
     {
       "name": "日本語",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -682,5 +700,7 @@
         }
       ]
     }
-  ]
+  ],
+  "names": [],
+  "tables": []
 }

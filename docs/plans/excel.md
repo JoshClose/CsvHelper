@@ -2584,7 +2584,7 @@ Allocated per operation, in BenchmarkDotNet's MB, Records / Values: Sylvan 248 /
 
 ### Phase 3: choosing what to read, and messy sheets (L)
 
-Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, step 4 built that day and committed on 2026-11-05, and step 5 built on 2026-11-05; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. Step 5 changed how the header is found: a scanner of its own reads the rows the header can be in, over a second stream of the sheet's part, and the reader's scanner then reads the rows after it, rather than one scanner pausing after the header row and narrowing its columns; a row given (`At`) is the header even when hidden. It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
+Status: the detailed design below was written and approved on 2026-11-04, with every recommendation accepted. "Changes elsewhere" was applied to the rest of the plan at approval. Steps 1 to 3 were built and committed on 2026-11-04, step 4 built that day and committed on 2026-11-05, step 5 built and committed on 2026-11-05, and step 6 built that day; "As built", at the end of this phase, records them. Step 2 changed one rule of the design: with formulas read as text, rows above an area and cells outside its columns are read for their shared formulas' definitions. Step 3 widened what is hidden to match Excel, checked through COM again: a `<col>` without a width, or with one that isn't a number, hides its columns, and a custom default row height of 0 hides the rows a sheet lacks. Step 4 made merged cells as strict as Excel, checked through COM: a `ref` Excel can't open throws, and one-cell ranges count in the overlap check before they are dropped. Step 5 changed how the header is found: a scanner of its own reads the rows the header can be in, over a second stream of the sheet's part, and the reader's scanner then reads the rows after it, rather than one scanner pausing after the header row and narrowing its columns; a row given (`At`) is the header even when hidden. Step 6 asked Excel about every corpus workbook's structures over the whole grid rather than a window, and found that Excel opens no workbook with a name of a chartsheet, which openpyxl writes (CsvHelper.Excel still reads such a name, as the review decided; see step 6's "As built"). It makes the phase L rather than M: besides the outline, it covers the other ways Excel marks rows and columns hidden, rows the file leaves out of a merged range, Excel's answers for the new structures, a `messy` corpus set, and a benchmark of the new paths. The Excel behavior it relies on was checked through COM on 2026-11-04 (see "Checked on 2026-11-04").
 
 Scope, as planned:
 
@@ -2829,11 +2829,13 @@ Excel 365 (16.0 build 20527) through COM, with probe workbooks in a scratch fold
   - Built-in names are `_xlnm.Print_Area`, and `_xlnm._FilterDatabase`, hidden, which COM shows as `Messy!Print_Area`.
   - A name to a deleted sheet is stored as `#REF!`. A relative name is stored relative to `A1`: `=Messy!B2`, defined with `C3` active, was stored `Messy!B2`, and COM showed it moved by the active cell.
   - Excel reads hand-written names in lowercase (`s!$a$1`), with their corners reversed, with white space or parentheses around them, and as an intersection (`S!$A$1:$B$2 S!$B$1:$B$3` is `B1:B2`). It can't open a file with a name that has no sheet (`$A$1:$B$2`, as the workbook's or a sheet's), or one that starts with `=`.
+  - (Added at step 6, with the corpus and variants of openpyxl's file:) Excel can't open a file with a name whose `localSheetId` is a chartsheet's, even by repairing it, whatever the name refers to. It stores a name to a deleted sheet as `#REF!`, which COM shows as `=#REF!#REF!`. `RefersToRange` gives a range for a union (two areas), an `OFFSET` formula and a table reference (`Sales[Qty]` is the column's data cells). COM's `Names` also lists a hidden `_xlfn.X` name of `#NAME?` for each newer function a formula stores with its prefix, which the file doesn't store.
 - **Tables:**
   - A table part (`xl/tables/table1.xml`) is related from its sheet (type `table`) and listed in the sheet's `<tableParts>`, after `sheetData`. To Excel, a relationship without a `<tablePart>` is no table.
   - With a totals row: `ref="A1:B4" totalsRowCount="1"`, and an `autoFilter` without the totals row. With the header row hidden: `headerRowCount="0"`, a `ref` without that row, the header cells gone from the sheet, and the names only in `tableColumns`.
   - Excel can't open a table whose header cells differ from its column names: another text, a number for the name `1`, or an empty cell.
   - Formulas use `displayName`: `=ROWS(Shown)` works and `=ROWS(Internal)` is `#NAME?`. COM's `ListObject.Name` is the `name` attribute and `DisplayName` the other. Excel writes them alike.
+  - (Added at step 6:) Turning on a table's totals row (`ShowTotals`) inserts cells in the table's columns, moving the cells below it down. Excel shows a structured reference to the table a cell is in without the table's name: `Sales[Qty]` in Sales' totals row shows as `[Qty]`.
 - **Dimensions:** Excel's `<dimension ref>` covers cells with only formatting and the empty rows it writes (`A1:F19`, where the last value was in row 18); an empty sheet is `A1`. In the corpus, the Open XML SDK, SpreadCheetah, LargeXlsx and Google Sheets write none, and ClosedXML, openpyxl and MiniExcel write `A1:A1` for an empty sheet.
 
 #### Internal design
@@ -3402,7 +3404,7 @@ Filled in step by step; the code is the reference.
   - Not run yet: "fills from the first field each time" (stopped while it ran; the file was restored and the tests pass), "runs ignore hidden columns", "runs end at the column, not the shown field", and "the option ignored".
 - **Core:** no change. The solution builds with 0 warnings on every target. With the option on, a whole sheet that has ranges is read through `SheetLayout.Sheet`; one without any is read as with the option off, after the first read through it. Step 8 measures both.
 
-**Step 5, header row** (built 2026-11-05):
+**Step 5, header row** (built and committed 2026-11-05):
 
 - **New files:**
   - `ExcelHeaderRow.cs`, as designed: `At`, `Find<T>`, `Find(names)` and `ToString`, with the test each search makes held as a delegate.
@@ -3484,6 +3486,60 @@ Filled in step by step; the code is the reference.
   - "`maxRows` past the sheet's rows taken": 1;
   - "a null name taken": 1.
 - **Core:** no change. The solution builds with 0 warnings on every target. The reader's scanner is unchanged, so the default path is too; step 8 measures the search's second read.
+
+**Step 6, corpus and oracles** (built 2026-11-05):
+
+- **The `messy` content** (`tools/CsvHelper.Excel.Corpus/Messy.cs`), defined once, as designed, with two additions; the corpus `README.md` describes it:
+  - "Report", the chartsheet "Chart" before "Tables", "Tables" and "Filtered", with the names the design lists. The names add an `OFFSET` range (`Dynamic`), which Excel's `RefersToRange` evaluates.
+  - (A design change:) "Filtered" has an empty row 6 inside its data. Excel writes it as an empty row, which it shows; XlsxWriter, openpyxl and POI leave it out, and `zeroHeight` then hides it. Without it no corpus file lacked a row under `zeroHeight`, so nothing checked that rule against Excel.
+  - The spec's sheets gained merged ranges, hidden rows and columns, collapsed groups, a filter, rows and columns hidden to the grid's end and a chartsheet's data; its tables gained a hidden header row (with the names it then has in no cell) and a totals row's label and sum; a `NameSpec` lists the names. They're nullable, so the basic and typed workbooks' JSON doesn't change.
+- **Its producers,** six files of 7 to 19 KB, written by the `excel`, `libreoffice`, `python`, `poi` and `dotnet` commands. Those commands write the basic and typed files again too; those were put back from git, so their committed bytes stand.
+  - Excel (`excel/messy.xlsx`) builds it as a user would. Turning on a table's totals row inserts cells in the table's columns, which moved Away's column C down a row, so the producer writes each table's cells and makes the table before writing the rest; ClosedXML does the same, and its producer does too.
+  - LibreOffice converts Excel's file. openpyxl, XlsxWriter, POI's XSSF and ClosedXML each write what they can: POI has no filter criteria in its schemas and no way to hide a name, XlsxWriter none to hide a name, ClosedXML none to write `zeroHeight`, and neither POI nor ClosedXML writes a chartsheet. The README's "What the producers write" lists what each wrote.
+  - **openpyxl's file is one Excel can't open,** even by repairing it. openpyxl numbers a sheet's own names by worksheet, without the chartsheet, so Tables' `Local` is written with the chartsheet's index. COM checks of variants of the file showed that Excel opens no workbook with a name of a chartsheet, whatever it refers to (see "Checked on 2026-11-04"). ClosedXML throws on it too. CsvHelper.Excel reads it, with that name as the chartsheet's, as step 1 decided, and as the review kept it (below).
+- **The `oracle` command** (`ExcelOracle.cs`) also answers, for every workbook, as designed, with these changes:
+  - Hidden rows and columns cover the whole grid, not the used range and a margin: `SpecialCells(xlCellTypeVisible)` over every cell gives the shown rows and columns in one call per sheet, whatever hides them. They and the merged ranges are read before the columns are widened, which would show hidden ones.
+  - Names also give the sheet of `RefersToRange`, with A1 of the first visible worksheet active, since a relative name is relative to the active cell.
+  - A workbook Excel can't open even by repairing it is answered as `refused`, and the command goes on.
+  - Just after opening `google/64450.xlsx`, Excel answers "the application is busy" (`RPC_E_SERVERCALL_RETRYLATER`) while it builds the pivot table's cells. A first version took any COM failure of `SpecialCells` for "no visible cell", and once answered that the sheet hid everything. Now busy calls are made again (every 100 ms, up to a minute), only Excel's own failure (`0x800A03EC`) means "no visible cell" or "no range", and a sheet without a visible cell must hide its first row or column, or the command fails. Two runs after the fix gave identical files.
+  - The 39 answer files are 2.2 MB. Every cell's answer in the 33 files of 2026-11-03 is unchanged; the command only added the new answers.
+- **Excel's answers found** (recorded under "Checked on 2026-11-04"): the chartsheet names; `#REF!` shown as `#REF!#REF!`; `RefersToRange` for unions, `OFFSET` and table references; the hidden `_xlfn.X` names COM adds; a totals row's inserted cells; and a structured reference to a cell's own table shown without the table's name.
+- **`StructureAnswersTests`** (new), over the 38 answered workbooks (the benchmarks' two and openpyxl's refused one have no answers):
+  - **Tables:** `Tables` against `ListObjects` (sheet, `DisplayName`, `Range`, `ShowHeaders`, `ShowTotals`, columns): they agree in every workbook, and every table's `Name` and `DisplayName` are alike.
+  - **Names:** `DefinedNames` against `Names` (the name as `ToString` writes it, hidden, `RefersTo`, the range's sheet and address). Excel's added `_xlfn.` names are left out, each checked to be hidden and `#NAME?`. 20 names differ, each listed with one of five reasons: `Union`, `Dynamic` and `TableRef` have a range to Excel and none to CsvHelper.Excel (decision 5), and `Deleted` is `#REF!` (or LibreOffice's `#ref!`) shown as `#REF!#REF!`, in each of the five messy files Excel opens.
+  - **Merged ranges:** `MergedCells` against each cell's `MergeArea`: they agree in every sheet.
+  - **Hidden rows and columns:** the rows a read that keeps empty rows gives, less those a read that skips hidden rows gives, of 1 to the file's last row, and the columns a read's layout leaves out, over the whole grid, against Excel's: they agree in every sheet. Rows past the file's last row aren't compared: no read can say whether they're hidden.
+  - **Reads with the switches,** sync and async, through the public API, with empty rows kept: hidden rows and columns skipped, merged cells filled, and all three. Field `i` must be the `i`-th column Excel shows and each line a row Excel shows, in order; each field must be the cell Excel shows (each cell of a merged range as its top-left cell, or nothing when that has none), and every such cell must be read. They agree in every sheet of every workbook.
+- **`OracleTests`** gained the structures of ClosedXML (merged ranges, hidden rows and columns, tables, defined names) and ExcelDataReader (merged ranges, and hidden rows as a `RowHeight` of 0), against CsvHelper.Excel's, each difference listed:
+  - ClosedXML, 27 in the five messy files it opens: it shows the columns of a `<col>` that runs to XFD (Filtered's D:XFD); it keeps `_xlnm.` on `_FilterDatabase`; it reads the print area and titles into its page setup, not its names; and it shows the row 6 that XlsxWriter's and POI's files lack under `zeroHeight`.
+  - ExcelDataReader, 6 in four files: it reads a row as hidden only from `hidden="1"`, not the `hidden="true"` that POI and LibreOffice write, and shows the rows a `zeroHeight` sheet lacks.
+  - Merged ranges agree with both everywhere, and tables and names with ClosedXML outside the messy files.
+- **Changed tests:**
+  - `ExcelAnswers` reads the new answers (`ExcelSheetStructure`, `ExcelNameAnswer`, `ExcelTableAnswer`) and `refused`. `ExcelAnswersTests` checks that only `openpyxl/messy.xlsx` is refused, and lists `Tables!B5` of three messy files: Excel shows `SUBTOTAL(109,Sales[Qty])` as `SUBTOTAL(109,[Qty])`, as XlsxWriter and ClosedXML store it. ClosedXML's `FormulaA1` gives the same, listed in `OracleTests`, and ClosedXML's rejection of openpyxl's messy file joins its list.
+  - `CorpusFiles` gained `Structures` (CsvHelper.Excel's hidden rows and columns and merged ranges, through its own layers), `Tables`, `TableText` and `NameText`; `Oracles` gained `ClosedXmlStructure`, `ExcelDataReaderStructure` and `OracleStructure`.
+  - `CorpusTests` lists the six files' sheets, and `MetadataTests` leaves the messy files to these tests.
+- **Tests:** 351 new per target: 1,738 on net10.0 and net8.0, 1,710 on net48; all passing. The LibreOffice tests ran here, the messy files among them.
+- **Mutation check** on net10.0: the step adds no library code, so 17 bugs were planted one at a time in steps 1 to 5's, to see whether the corpus and its oracles catch them. Each file was restored and checked against its SHA-256. Failures, with the corpus tests' (`Corpus.*`) among them:
+  - "booleans read only as 1, not true": 17 failures, 10 of the corpus (POI's and LibreOffice's `hidden="true"`);
+  - "a row's hidden ignored": 46, 26 of the corpus;
+  - "no row hidden": 46, 26;
+  - "`zeroHeight` ignored": 18, 10, all from Filtered's row 6, which the content gained for it;
+  - "a col's hidden ignored": 20, 14;
+  - "a col's middle words not hidden": 7, 5 (D:XFD spans 256 words);
+  - "a table's totals row count ignored": 23, 10;
+  - "a table's header row count ignored": 20, 10;
+  - "column names' escapes not decoded": 8, 4 (`First_x000a_line`);
+  - "a table's name over its display name": 2, none of the corpus: Excel and every producer write the two alike, so only `TablePartTests` tells them apart;
+  - "a name's hidden ignored": 15, 8;
+  - "built-in names keep `_xlnm.`": 16, 10;
+  - "every sheet's name the first sheet's": 18, 10;
+  - "merged ranges not kept": 75, 26;
+  - "ranges close before their last row": 32, 10;
+  - "a range's run ends at its first field": 29, 10;
+  - "a top-left cell's value never marked as one": 33, 10.
+- **Decided at review** (2026-11-05, the recommendation):
+  - **A name of a chartsheet,** which Excel refuses and openpyxl writes whenever a sheet with its own names comes after a chartsheet, is left as it is: the cells read as Excel would read them, and the name's scope is what the file says. The alternative was to throw `InvalidDataException` at `Open`, as for a `localSheetId` that isn't a sheet's index, which would have made such openpyxl files unreadable.
+- **Core:** no change. The solution builds with 0 warnings.
 
 ### Phase 4: writer foundation (L)
 

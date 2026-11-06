@@ -1,6 +1,6 @@
 # CsvHelper.Excel's test corpus
 
-Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, and the orders on 2026-11-04; the four from Apache POI's test data are under "Downloads".
+Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, the orders on 2026-11-04, and the messy workbooks, with Excel's answers about every workbook's tables, names, hidden rows and columns and merged ranges, on 2026-11-05; the four from Apache POI's test data are under "Downloads".
 
 ```
 dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
@@ -28,7 +28,7 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 
 ## Excel's reading of the corpus
 
-`excel-oracle/<file>.json` (written 2026-11-03 by `oracle`) records how Excel 365 reads each corpus workbook, every one but `excel/encrypted.xlsx` and the benchmarks' cross-checks, `excel/packageassets-1695.xlsx` and `excel/orders-1000.xlsx`. `Corpus/ExcelAnswersTests.cs` compares CsvHelper.Excel's reading with it, cell by cell.
+`excel-oracle/<file>.json` (written 2026-11-03 by `oracle`, and again on 2026-11-05 with the structures below, every cell's answer unchanged) records how Excel 365 reads each corpus workbook, every one but `excel/encrypted.xlsx` and the benchmarks' cross-checks, `excel/packageassets-1695.xlsx` and `excel/orders-1000.xlsx`. `Corpus/ExcelAnswersTests.cs` compares CsvHelper.Excel's reading with it, cell by cell, and `Corpus/StructureAnswersTests.cs` its tables, names, hidden rows and columns, merged ranges and the reads that skip and fill them.
 
 - **How:** Excel opens each workbook read-only, with calculation manual, so that it shows the values the file stores rather than computing its own, and with macros disabled. Columns are widened in memory, so that a number's text isn't `####` for want of room.
 - **What:** for each cell of each worksheet's used range that has a value or a formula:
@@ -38,7 +38,15 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
   - `numberFormat`;
   - for numbers, `category` (`CELL("format")`) and `elapsed` (the format's text of a day and a half), which tell a time and an elapsed time from a number, as in `excel-formats.json`;
   - `formula` as Excel shows it, `formula2` when that differs, `hasArray` and `hasSpill`.
+- **Structures** (added 2026-11-05), for each worksheet, read before the columns are widened, which would show hidden ones:
+  - `hiddenRows` and `hiddenColumns`: the runs Excel hides over the whole grid (`8:8`, `D:XFD`), from `SpecialCells(xlCellTypeVisible)` over every cell, so whatever hides them (a filter, a collapsed group, a height or width of 0, `zeroHeight`, `defaultColWidth`) counts as Excel reads it;
+  - `merged`: each cell's `MergeArea`, once per range, in the order of their top-left cells.
+- **Names and tables** (added 2026-11-05), for the workbook:
+  - `names`: each of COM's `Names`, with `Name` (`Report!Local` for a sheet's own), `RefersTo`, the sheet and address of `RefersToRange` when Excel has a range for it, and `Visible`. A1 of the first visible worksheet is made active first, since a relative name is relative to the active cell. Excel lists a hidden `_xlfn.X` name of `#NAME?` for each newer function a formula stores with its prefix, which no file stores.
+  - `tables`: each worksheet's `ListObjects`, with `Name`, `DisplayName`, the address of `Range`, `ShowHeaders`, `ShowTotals` and the column names.
 - **Repairs:** a workbook Excel opens only by repairing it is answered as repaired, with the records of Excel's repair log under `repaired` (the log's summary, which names the file's full path, is left out). Only `closedxml/typed.xlsx` needs it.
+- **Refused:** a workbook Excel can't open even by repairing it is answered with `refused` alone. Only `openpyxl/messy.xlsx` (see "What the producers write").
+- **A busy Excel:** just after opening `google/64450.xlsx`, Excel answers `SpecialCells` with "the application is busy" (`RPC_E_SERVERCALL_RETRYLATER`) while it builds the pivot table's cells; the command asks again until it answers. Only Excel's own failure of a call (`0x800A03EC`) counts as "no visible cell" or "no range", and a sheet without a visible cell must hide its first row or column.
 
 ## The typed workbook
 
@@ -52,6 +60,16 @@ Defined once in `tools/CsvHelper.Excel.Corpus/Typed.cs`, which `spec` doesn't pr
   - a reference copied off the grid (`#REF!*2`), a formula with a line break, and one with a line break in its result;
   - the table `Orders` with a calculated column (`[@Qty]*[@Price]`) and a total over it.
 - **"Other Sheet":** the cells the formulas refer to by a quoted sheet name.
+
+## The messy workbook
+
+Defined once in `tools/CsvHelper.Excel.Corpus/Messy.cs`, handed to the Python and Java scripts as JSON. A report laid out for people, and every structure Phase 3 reads: merged cells, hidden rows and columns, tables and defined names. Each producer writes what it can.
+
+- **Sheets, in tab order:** "Report", "Chart" (a chartsheet, before "Tables" so that sheets' indexes count it), "Tables" and "Filtered".
+- **"Report":** a title merged across B1:G1, a note, an empty row, the header at B4 with column D (Code) hidden, regions merged down column B (B5:B7, B8:B10, B11:B12, B13:B14), a block merged over C11:D12 into the hidden column, row 8 hidden (the top-left cell of South's region), rows 13 and 14 in a collapsed group, and a totals line of `SUM` formulas.
+- **"Tables":** Sales (A1:C5) with a totals row that labels its first column and sums Qty; NoHeader (E3:F4) with its header row hidden, its names only in the table part; Wrapped (H1:I3) with a line break in a column name; and Away (C8:D10).
+- **"Filtered":** A1:C10 under a filter that hides kind `b`, with row 6 empty; every row from 11 hidden (`zeroHeight`) and every column from D. Excel writes the empty row 6, which it shows; a producer that leaves the row out hides it, since `zeroHeight` hides the rows a sheet lacks.
+- **Defined names:** the workbook's `Data`; `Local` as the own name of Report and of Tables; a relative name (`Report!B5`), a union, a constant, a formula, an `OFFSET` range, a 3-D reference, whole columns and whole rows, a name to a deleted sheet (Excel makes a sheet, names its cell and deletes it), a hidden name, a table reference (`Sales[Qty]`), and Report's print area and print titles. The filter adds Filtered's `_FilterDatabase` where the producer writes one.
 
 ## The basic workbook
 
@@ -111,6 +129,11 @@ The files are public, and producers record personal data: Excel recorded the Off
 | `xlsxwriter/typed.xlsx` | XlsxWriter 3.3.1 | `python/corpus.py`, with `use_future_functions`, the formulas' results given, and the table by `add_table` |
 | `poi/typed.xlsx` | Apache POI 6.0.0 | `java/Corpus.java` with XSSF, each formula evaluated on its own |
 | `closedxml/typed.xlsx` | ClosedXML 0.105.1 | the tool, with formulas evaluated before saving |
+| `excel/messy.xlsx` | Excel 365 | COM automation builds the messy workbook as a user would: each table's cells and then the table (`ListObjects.Add`, then `ShowTotals` and `ShowHeaders`), the other cells, `Merge`, hidden columns and rows, `Group` and `Outline.ShowLevels`, `AutoFilter`, rows and columns hidden to the grid's end, the chartsheet, and the names (`Names.Add`, a worksheet's own for its names) with Report's A1 active; file format 51 |
+| `libreoffice/messy.xlsx` | LibreOffice 26.8.2.2 | converted from `excel/messy.xlsx` with "Calc MS Excel 2007 XML" |
+| `openpyxl/messy.xlsx`, `xlsxwriter/messy.xlsx` | openpyxl 3.1.5, XlsxWriter 3.3.1 | `python/corpus.py` |
+| `poi/messy.xlsx` | Apache POI 6.0.0 | `java/Corpus.java` with XSSF |
+| `closedxml/messy.xlsx` | ClosedXML 0.105.1 | the tool, with formulas evaluated before saving |
 
 ## What the producers write
 
@@ -148,6 +171,17 @@ These are the shapes the corpus covers; the oracle tests check every cell.
   - **ClosedXML** wrote `NA()`'s result `#N/A` as a number, without `t="e"`, which Excel repairs to `#VALUE!` (in the basic workbook it writes `t="e"`), and writes the format id 0 it was given as a format with an empty code. ClosedXML can't open any typed workbook: it rejects serial 60 in a date format (in the 1904 system too), a number past the largest double, and the `t="d"` texts of openpyxl and Excel's Strict files.
   - **COM:** a date handed to Excel through COM before March 1900 lands a day off (1900-01-01 as serial 2), and with its milliseconds rounded to the second: the cells hold what Excel was handed.
   - **openpyxl** writes no value in an array formula's other cells, and can't set a built-in format id outside its table, a dynamic array or a table's formulas. **LibreOffice** writes error literals and `ANCHORARRAY` in lowercase (`#ref!`). **POI** can't parse an undefined name (`NOSUCHNAME`), so that cell is left out.
+- **Messy workbooks:**
+  - **Excel:**
+    - Turning on a table's totals row inserts cells in the table's columns, moving the cells below it down (Away's column C moved a row), so the producer makes each table before writing the cells below it. ClosedXML does the same.
+    - It writes a name to a deleted sheet as `#REF!`, which COM shows as `=#REF!#REF!`; a hidden header row as `headerRowCount="0"`, a `ref` without it and no header cells; a line break in a column name as `_x000a_`; and a merged range's other cells as empty cells with the top-left cell's style.
+    - "Filtered" gets `zeroHeight`, `defaultColWidth="0"`, `<col>` widths for A:C and a hidden `<col>` for D:XFD, and its empty row 6 as an empty `<row>`.
+    - Excel opens no workbook with a name whose `localSheetId` is a chartsheet's, even by repairing it: a constant, another name and another target were all refused (checked through COM with variants of openpyxl's file).
+  - **openpyxl** numbers a sheet's own names by worksheet, without the chartsheet before them: it writes Tables' `Local` as `localSheetId="1"`, the chartsheet's, and Filtered's `_FilterDatabase` as Tables'. Excel refuses the file, and ClosedXML throws ("There isn't a worksheet associated with that position"); CsvHelper.Excel reads the names as the chartsheet's and Tables', as the file says. It writes no cells under a merged range but the first, quotes the sheet in the print area and titles (`'Report'!$4:$4`), and leaves out the empty row 6, which `zeroHeight` hides.
+  - **XlsxWriter** writes no cells under a merged range but the first (`merge_range` without a format), the totals formula as `SUBTOTAL(109,[Qty])`, as Excel shows it, a line break in a column name as `&#xA;`, and `hide_unused_rows` as `zeroHeight`, leaving out row 6. `define_name` can't hide a name, so `Secret` is left out.
+  - **POI:** its schemas (`poi-ooxml-lite`) have no filter criteria, so it writes the filter's range and the rows it hides. Its names can't be hidden, so `Secret` is left out. On saving, it names the columns of a table without a header row after the table's first row (`ann`, `7`), whatever names it was given. It writes booleans as `true` (`hidden="true"`), and leaves out row 6, which `zeroHeight` hides.
+  - **ClosedXML** has no way to write `zeroHeight`, so Filtered shows its rows from 11 and the row 6 it leaves out. It writes `collapsed` on a collapsed group's rows rather than the row after, the print titles without `$` (`Report!4:4`), the totals formula as `SUBTOTAL(109,[Qty])`, and every column to XFD in Filtered's rows (`spans="1:16384"`).
+  - **LibreOffice** keeps the chartsheet as a worksheet with a chart, writes `#ref!` in lowercase, lists the tables in another order, puts the totals row inside the Sales filter's range, and writes booleans as `true`.
 - **Phonetic runs:** the Open XML SDK and ClosedXML write `<rPh>`. Excel can't here: without the Japanese editing language it ignores phonetic readings set through COM. POI has no way to write one.
 
 ## Downloads

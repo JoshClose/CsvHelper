@@ -4,6 +4,9 @@
   "sheets": [
     {
       "name": "Dates",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -1686,6 +1689,9 @@
     },
     {
       "name": "Numbers",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -2371,6 +2377,9 @@
     },
     {
       "name": "Formulas",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -3608,6 +3617,9 @@
     },
     {
       "name": "Other Sheet",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -3654,6 +3666,54 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ]
+    }
+  ],
+  "names": [
+    {
+      "name": "_xlfn._xlws.FILTER",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "_xlfn.ANCHORARRAY",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "_xlfn.SEQUENCE",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "_xlfn.SINGLE",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "_xlfn.XLOOKUP",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "Rate",
+      "refersTo": "=0.5",
+      "visible": true
+    }
+  ],
+  "tables": [
+    {
+      "sheet": "Formulas",
+      "name": "Orders",
+      "displayName": "Orders",
+      "range": "A20:D23",
+      "showHeaders": true,
+      "showTotals": false,
+      "columns": [
+        "Item",
+        "Qty",
+        "Price",
+        "Total"
       ]
     }
   ]

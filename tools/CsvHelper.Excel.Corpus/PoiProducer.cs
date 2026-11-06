@@ -29,7 +29,7 @@ internal static class PoiProducer
 		var jars = Jars(Path.Combine(scripts, "jars.txt"), Path.Combine(home, "jars"));
 
 		// The source launcher compiles Corpus.java in memory, so nothing is written beside it.
-		Program.WithSpecs((basic, typed) => Program.Run(program, "-cp", string.Join(Path.PathSeparator, jars), Path.Combine(scripts, "Corpus.java"), basic, typed, files));
+		Program.WithSpecs((basic, typed, messy) => Program.Run(program, "-cp", string.Join(Path.PathSeparator, jars), Path.Combine(scripts, "Corpus.java"), basic, typed, messy, files));
 	}
 
 	/// <summary>Finds the <c>java.exe</c> to run: the one given, or the newest JDK unpacked into the tool's folder.</summary>

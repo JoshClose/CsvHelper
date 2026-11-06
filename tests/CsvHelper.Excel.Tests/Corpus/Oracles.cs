@@ -9,6 +9,36 @@ using Cell = DocumentFormat.OpenXml.Spreadsheet.Cell;
 namespace CsvHelper.Excel.Tests.Corpus;
 
 /// <summary>
+/// An oracle's reading of a workbook's structures: each worksheet's merged ranges, hidden rows (of the rows asked about)
+/// and hidden columns, its tables and its defined names; <see langword="null"/> or missing for what the oracle doesn't read.
+/// </summary>
+/// <param name="tables">The tables, as <see cref="CorpusFiles.TableText"/> writes them, or <see langword="null"/>.</param>
+/// <param name="names">The defined names, as <see cref="CorpusFiles.NameText"/> writes them, by name, or <see langword="null"/>.</param>
+internal sealed class OracleStructure(List<string>? tables, Dictionary<string, string>? names)
+{
+	/// <summary>Each worksheet's merged ranges, as <see cref="Ordered"/> gives them.</summary>
+	public Dictionary<string, List<string>> Merged { get; } = [];
+
+	/// <summary>Each worksheet's hidden rows, of those asked about.</summary>
+	public Dictionary<string, HashSet<long>> HiddenRows { get; } = [];
+
+	/// <summary>Whether each column, from 0, is hidden, by worksheet; missing when the oracle doesn't read columns.</summary>
+	public Dictionary<string, bool[]> HiddenColumns { get; } = [];
+
+	/// <summary>The tables, in order, or <see langword="null"/>.</summary>
+	public List<string>? Tables => tables;
+
+	/// <summary>The defined names, by name, or <see langword="null"/>.</summary>
+	public Dictionary<string, string>? Names => names;
+
+	/// <summary>Ranges of cells in <see cref="ExcelRange"/>'s form, by first row and then first column.</summary>
+	/// <param name="ranges">The ranges, in A1 form.</param>
+	/// <returns>The ranges.</returns>
+	public static List<string> Ordered(IEnumerable<string> ranges) =>
+		[.. ranges.Select(ExcelRange.Parse).OrderBy(r => r.FirstRow).ThenBy(r => r.FirstColumn).Select(r => r.ToString())];
+}
+
+/// <summary>
 /// Other readers of the corpus, each giving the cells with a value of every worksheet in <see cref="CellValue"/> form:
 /// the Open XML SDK's raw cells read by CsvHelper.Excel's documented rules, ClosedXML's typed values, and
 /// ExcelDataReader's streaming values. A date or time ClosedXML or ExcelDataReader gives as a <see cref="DateTime"/> is
@@ -166,6 +196,95 @@ internal static class Oracles
 		while (reader.NextResult());
 
 		return result;
+	}
+
+	/// <summary>
+	/// ClosedXML's structures: each worksheet's merged ranges (<c>MergedRanges</c>), its hidden rows of 1 to the row given
+	/// (<c>Row(r).IsHidden</c>) and hidden columns (<c>Column(c).IsHidden</c>), its tables, and the workbook's and each
+	/// worksheet's defined names.
+	/// </summary>
+	/// <param name="file">The workbook, relative to the corpus folder.</param>
+	/// <param name="lastRows">The last row to ask about, by worksheet.</param>
+	/// <returns>The structures.</returns>
+	public static OracleStructure ClosedXmlStructure(string file, IReadOnlyDictionary<string, long> lastRows)
+	{
+		using var workbook = new XLWorkbook(CorpusFiles.PathOf(file));
+		var result = new OracleStructure(tables: [], names: []);
+		foreach (var worksheet in workbook.Worksheets)
+		{
+			var name = worksheet.Name;
+			result.Merged[name] = OracleStructure.Ordered(worksheet.MergedRanges.Select(r => r.RangeAddress.ToString()!));
+			var last = lastRows.TryGetValue(name, out var row) ? row : 0;
+			result.HiddenRows[name] = [.. Enumerable.Range(1, (int)last).Where(r => worksheet.Row(r).IsHidden).Select(r => (long)r)];
+			result.HiddenColumns[name] = [.. Enumerable.Range(1, XLHelper.MaxColumnNumber).Select(c => worksheet.Column(c).IsHidden)];
+			result.Tables!.AddRange(worksheet.Tables.Select(t =>
+				CorpusFiles.TableText(name, t.Name, t.RangeAddress.ToString()!, t.ShowHeaderRow ? 1 : 0, t.ShowTotalsRow ? 1 : 0, t.Fields.Select(f => f.Name))));
+			foreach (var defined in worksheet.DefinedNames)
+			{
+				result.Names![new SheetLocation(name).QuotedName + "!" + defined.Name] = NameText(defined);
+			}
+		}
+
+		foreach (var defined in workbook.DefinedNames)
+		{
+			result.Names![defined.Name] = NameText(defined);
+		}
+
+		result.Tables!.Sort(StringComparer.Ordinal);
+
+		return result;
+	}
+
+	/// <summary>
+	/// ExcelDataReader's structures: each worksheet's merged ranges (<c>MergeCells</c>), and its hidden rows as rows whose
+	/// <c>RowHeight</c> is 0, the rows counted from the first as its reader returns them. It has no hidden columns, tables
+	/// or names.
+	/// </summary>
+	/// <param name="file">The workbook, relative to the corpus folder.</param>
+	/// <returns>The structures.</returns>
+	public static OracleStructure ExcelDataReaderStructure(string file)
+	{
+		using var stream = File.OpenRead(CorpusFiles.PathOf(file));
+		using var reader = ExcelReaderFactory.CreateReader(stream);
+		var result = new OracleStructure(tables: null, names: null);
+		do
+		{
+			result.Merged[reader.Name] = OracleStructure.Ordered((reader.MergeCells ?? []).Select(m => $"{ColumnName(m.FromColumn)}{m.FromRow + 1}:{ColumnName(m.ToColumn)}{m.ToRow + 1}"));
+			var hidden = new HashSet<long>();
+			long row = 0;
+			while (reader.Read())
+			{
+				row++;
+				if (reader.RowHeight == 0)
+				{
+					hidden.Add(row);
+				}
+			}
+
+			result.HiddenRows[reader.Name] = hidden;
+		}
+		while (reader.NextResult());
+
+		return result;
+	}
+
+	/// <summary>A ClosedXML defined name, as <see cref="CorpusFiles.NameText"/> writes CsvHelper.Excel's.</summary>
+	/// <param name="name">The name.</param>
+	/// <returns>The description.</returns>
+	private static string NameText(IXLDefinedName name) => $"{(name.Visible ? "shown" : "hidden")} ={name.RefersTo}";
+
+	/// <summary>A 0-based column's letters.</summary>
+	/// <param name="column">The column.</param>
+	/// <returns>The letters, such as <c>B</c>.</returns>
+	private static string ColumnName(int column)
+	{
+		var name = "";
+		for (column++; column > 0; column = (column - 1) / 26)
+		{
+			name = (char)('A' + (column - 1) % 26) + name;
+		}
+
+		return name;
 	}
 
 	/// <summary>A number as CsvHelper.Excel's canonical comparison form: the shortest text that round-trips.</summary>

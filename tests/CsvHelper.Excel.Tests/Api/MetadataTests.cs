@@ -116,7 +116,8 @@ public class MetadataTests
 			Assert.Equal(["Rate | - | shown | 0.5 | - -"], workbook.DefinedNames.Select(Describe));
 		}
 
-		foreach (var file in CorpusFiles.Workbooks.Where(f => !f.Contains("typed") || f.StartsWith("openpyxl/", StringComparison.Ordinal) || f.StartsWith("poi/", StringComparison.Ordinal)))
+		// The messy workbooks' tables and names are compared with Excel's answers (StructureAnswersTests).
+		foreach (var file in CorpusFiles.Workbooks.Where(f => (!f.Contains("typed") || f.StartsWith("openpyxl/", StringComparison.Ordinal) || f.StartsWith("poi/", StringComparison.Ordinal)) && !f.Contains("messy")))
 		{
 			using var workbook = async ? await ExcelWorkbook.OpenAsync(CorpusFiles.PathOf(file)) : ExcelWorkbook.Open(CorpusFiles.PathOf(file));
 

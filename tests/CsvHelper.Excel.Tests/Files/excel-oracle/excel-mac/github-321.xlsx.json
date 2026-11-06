@@ -4,6 +4,9 @@
   "sheets": [
     {
       "name": "Sheet1",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
       "cells": [
         {
           "cell": "A1",
@@ -61,5 +64,7 @@
         }
       ]
     }
-  ]
+  ],
+  "names": [],
+  "tables": []
 }

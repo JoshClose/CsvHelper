@@ -1,0 +1,1099 @@
+{
+  "file": "closedxml/messy.xlsx",
+  "date1904": false,
+  "sheets": [
+    {
+      "name": "Report",
+      "hiddenRows": [
+        "8:8",
+        "13:14"
+      ],
+      "hiddenColumns": [
+        "D:D"
+      ],
+      "merged": [
+        "B1:G1",
+        "B5:B7",
+        "B8:B10",
+        "B11:B12",
+        "C11:D12",
+        "B13:B14"
+      ],
+      "cells": [
+        {
+          "cell": "B1",
+          "value2": "Sales report",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "Units in boxes, prices in dollars",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "Region",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C4",
+          "value2": "Product",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D4",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E4",
+          "value2": "Units",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F4",
+          "value2": "Price",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G4",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "North",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C5",
+          "value2": "apple",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D5",
+          "value2": "A-1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E5",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F5",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G5",
+          "value2": 15,
+          "type": "number",
+          "text": "15",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E5*F5"
+        },
+        {
+          "cell": "C6",
+          "value2": "pear",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D6",
+          "value2": "P-2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E6",
+          "value2": 20,
+          "type": "number",
+          "text": "20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F6",
+          "value2": 0.25,
+          "type": "number",
+          "text": "0.25",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G6",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E6*F6"
+        },
+        {
+          "cell": "C7",
+          "value2": "plum",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D7",
+          "value2": "M-3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E7",
+          "value2": 30,
+          "type": "number",
+          "text": "30",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F7",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G7",
+          "value2": 60,
+          "type": "number",
+          "text": "60",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E7*F7"
+        },
+        {
+          "cell": "B8",
+          "value2": "South",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C8",
+          "value2": "apple",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D8",
+          "value2": "A-1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E8",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F8",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G8",
+          "value2": 7.5,
+          "type": "number",
+          "text": "7.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E8*F8"
+        },
+        {
+          "cell": "C9",
+          "value2": "pear",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D9",
+          "value2": "P-2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E9",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F9",
+          "value2": 0.25,
+          "type": "number",
+          "text": "0.25",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G9",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E9*F9"
+        },
+        {
+          "cell": "C10",
+          "value2": "plum",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D10",
+          "value2": "M-3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E10",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F10",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G10",
+          "value2": 14,
+          "type": "number",
+          "text": "14",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E10*F10"
+        },
+        {
+          "cell": "B11",
+          "value2": "West",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C11",
+          "value2": "mixed",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E11",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F11",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G11",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E11*F11"
+        },
+        {
+          "cell": "E12",
+          "value2": 9,
+          "type": "number",
+          "text": "9",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F12",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G12",
+          "value2": 9,
+          "type": "number",
+          "text": "9",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E12*F12"
+        },
+        {
+          "cell": "B13",
+          "value2": "East",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C13",
+          "value2": "apple",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D13",
+          "value2": "A-1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E13",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F13",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G13",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E13*F13"
+        },
+        {
+          "cell": "C14",
+          "value2": "pear",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D14",
+          "value2": "P-2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E14",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F14",
+          "value2": 0.25,
+          "type": "number",
+          "text": "0.25",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G14",
+          "value2": 0.5,
+          "type": "number",
+          "text": "0.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=E14*F14"
+        },
+        {
+          "cell": "B15",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E15",
+          "value2": 98,
+          "type": "number",
+          "text": "98",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(E5:E14)"
+        },
+        {
+          "cell": "G15",
+          "value2": 122,
+          "type": "number",
+          "text": "122",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(G5:G14)"
+        }
+      ]
+    },
+    {
+      "name": "Tables",
+      "hiddenRows": [],
+      "hiddenColumns": [],
+      "merged": [],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Item",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Qty",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Price",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "First\nline",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "apple",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "H2",
+          "value2": "x",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "pear",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 0.25,
+          "type": "number",
+          "text": "0.25",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E3",
+          "value2": "ann",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F3",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "H3",
+          "value2": "y",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I3",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "plum",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C4",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E4",
+          "value2": "bob",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F4",
+          "value2": 9,
+          "type": "number",
+          "text": "9",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 20,
+          "type": "number",
+          "text": "20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUBTOTAL(109,[Qty])"
+        },
+        {
+          "cell": "C8",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D8",
+          "value2": "Count",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C9",
+          "value2": "k1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D9",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C10",
+          "value2": "k2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D10",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    },
+    {
+      "name": "Filtered",
+      "hiddenRows": [
+        "3:3",
+        "5:5",
+        "8:8",
+        "10:10"
+      ],
+      "hiddenColumns": [
+        "D:XFD"
+      ],
+      "merged": [],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Kind",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Amount",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "one",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "two",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C3",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "three",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C4",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "four",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C5",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A7",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": "five",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C7",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A8",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": "six",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C8",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A9",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": "seven",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C9",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A10",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B10",
+          "value2": "eight",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C10",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    }
+  ],
+  "names": [
+    {
+      "name": "Filtered!_FilterDatabase",
+      "refersTo": "=Filtered!$A$1:$C$10",
+      "sheet": "Filtered",
+      "range": "A1:C10",
+      "visible": false
+    },
+    {
+      "name": "Columns",
+      "refersTo": "=Report!$B:$G",
+      "sheet": "Report",
+      "range": "B:G",
+      "visible": true
+    },
+    {
+      "name": "Constant",
+      "refersTo": "=42",
+      "visible": true
+    },
+    {
+      "name": "Data",
+      "refersTo": "=Report!$B$4:$G$15",
+      "sheet": "Report",
+      "range": "B4:G15",
+      "visible": true
+    },
+    {
+      "name": "Deleted",
+      "refersTo": "=#REF!#REF!",
+      "visible": true
+    },
+    {
+      "name": "Dynamic",
+      "refersTo": "=OFFSET(Report!$B$5,0,0,3,1)",
+      "sheet": "Report",
+      "range": "B5:B7",
+      "visible": true
+    },
+    {
+      "name": "Formula",
+      "refersTo": "=SUM(Report!$E$5:$E$14)",
+      "visible": true
+    },
+    {
+      "name": "Report!Local",
+      "refersTo": "=Report!$B$5:$B$7",
+      "sheet": "Report",
+      "range": "B5:B7",
+      "visible": true
+    },
+    {
+      "name": "Tables!Local",
+      "refersTo": "=Tables!$A$1:$C$4",
+      "sheet": "Tables",
+      "range": "A1:C4",
+      "visible": true
+    },
+    {
+      "name": "Report!Print_Area",
+      "refersTo": "=Report!$B$1:$G$15",
+      "sheet": "Report",
+      "range": "B1:G15",
+      "visible": true
+    },
+    {
+      "name": "Report!Print_Titles",
+      "refersTo": "=Report!4:4",
+      "sheet": "Report",
+      "range": "4:4",
+      "visible": true
+    },
+    {
+      "name": "Relative",
+      "refersTo": "=Report!B5",
+      "sheet": "Report",
+      "range": "B5",
+      "visible": true
+    },
+    {
+      "name": "Rows",
+      "refersTo": "=Report!$4:$15",
+      "sheet": "Report",
+      "range": "4:15",
+      "visible": true
+    },
+    {
+      "name": "Secret",
+      "refersTo": "=Report!$B$2",
+      "sheet": "Report",
+      "range": "B2",
+      "visible": false
+    },
+    {
+      "name": "TableRef",
+      "refersTo": "=Sales[Qty]",
+      "sheet": "Tables",
+      "range": "B2:B4",
+      "visible": true
+    },
+    {
+      "name": "ThreeD",
+      "refersTo": "=Tables:Filtered!$A$1",
+      "visible": true
+    },
+    {
+      "name": "Union",
+      "refersTo": "=Report!$B$5,Report!$B$8",
+      "sheet": "Report",
+      "range": "B5,B8",
+      "visible": true
+    }
+  ],
+  "tables": [
+    {
+      "sheet": "Tables",
+      "name": "Sales",
+      "displayName": "Sales",
+      "range": "A1:C5",
+      "showHeaders": true,
+      "showTotals": true,
+      "columns": [
+        "Item",
+        "Qty",
+        "Price"
+      ]
+    },
+    {
+      "sheet": "Tables",
+      "name": "NoHeader",
+      "displayName": "NoHeader",
+      "range": "E3:F4",
+      "showHeaders": false,
+      "showTotals": false,
+      "columns": [
+        "Name",
+        "Score"
+      ]
+    },
+    {
+      "sheet": "Tables",
+      "name": "Wrapped",
+      "displayName": "Wrapped",
+      "range": "H1:I3",
+      "showHeaders": true,
+      "showTotals": false,
+      "columns": [
+        "First\nline",
+        "Value"
+      ]
+    },
+    {
+      "sheet": "Tables",
+      "name": "Away",
+      "displayName": "Away",
+      "range": "C8:D10",
+      "showHeaders": true,
+      "showTotals": false,
+      "columns": [
+        "Code",
+        "Count"
+      ]
+    }
+  ]
+}

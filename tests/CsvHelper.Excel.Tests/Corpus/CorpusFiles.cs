@@ -55,6 +55,26 @@ internal sealed class SheetCells : Dictionary<string, Dictionary<(long Row, int 
 {
 }
 
+/// <summary>A worksheet's hidden rows and columns and merged ranges, as CsvHelper.Excel reads them.</summary>
+/// <param name="lastRow">The last row the file has: the rows that a read can say are hidden or shown are 1 to it.</param>
+/// <param name="hiddenRows">The hidden rows, of 1 to <paramref name="lastRow"/>.</param>
+/// <param name="hiddenColumns">Whether each column, from 0, is hidden.</param>
+/// <param name="merged">The merged ranges of more than one cell, such as <c>B1:G1</c>, in the order they are filled.</param>
+internal sealed class SheetStructure(long lastRow, HashSet<long> hiddenRows, bool[] hiddenColumns, IReadOnlyList<string> merged)
+{
+	/// <summary>The last row the file has.</summary>
+	public long LastRow => lastRow;
+
+	/// <summary>The hidden rows, of 1 to <see cref="LastRow"/>.</summary>
+	public HashSet<long> HiddenRows => hiddenRows;
+
+	/// <summary>Whether each column, from 0, is hidden.</summary>
+	public bool[] HiddenColumns => hiddenColumns;
+
+	/// <summary>The merged ranges of more than one cell, in the order they are filled.</summary>
+	public IReadOnlyList<string> Merged => merged;
+}
+
 /// <summary>The committed corpus (<c>Files/</c>, see its <c>README.md</c>), and reading its workbooks with CsvHelper.Excel.</summary>
 internal static class CorpusFiles
 {
@@ -118,6 +138,76 @@ internal static class CorpusFiles
 
 		return result;
 	}
+
+	/// <summary>
+	/// Reads every worksheet's hidden rows and columns and merged ranges with CsvHelper.Excel's own layers: the rows a read
+	/// that keeps empty rows gives, less those a read that skips hidden rows gives; the columns the layout of a read that
+	/// skips hidden columns leaves out; and the ranges <see cref="MergedCells"/> finds.
+	/// </summary>
+	/// <param name="file">The workbook, relative to <see cref="Folder"/>.</param>
+	/// <returns>Each worksheet's structure, by name.</returns>
+	public static Dictionary<string, SheetStructure> Structures(string file)
+	{
+		using var archive = SyncOrAsync.Result(PackageArchive.OpenAsync(PathOf(file), Packages.Limits, false, CancellationToken.None));
+		var workbook = SyncOrAsync.Result(WorkbookPart.LoadAsync(archive, Packages.Limits, false, CancellationToken.None));
+		var styles = SyncOrAsync.Result(StyleTable.LoadAsync(archive, workbook.StylesPart, Packages.Limits, false, CancellationToken.None));
+		var strings = SyncOrAsync.Result(SharedStrings.LoadAsync(archive, workbook.SharedStringsPart, Packages.Limits, false, CancellationToken.None));
+		var result = new Dictionary<string, SheetStructure>();
+		foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet && s.PartName is not null))
+		{
+			List<CapturedRecord> Records(bool skipHidden, out SheetLayout? layout)
+			{
+				var stream = SyncOrAsync.Result(archive.OpenPartAsync(sheet.PartName!, false, Packages.Limits, false, CancellationToken.None));
+				var xml = new XmlScanner(new XmlWindow(stream, sheet.PartName!, Packages.Limits.MaxPartSize));
+				using var scanner = new SheetScanner(
+					xml, sheet.Name, strings, styles, false, stream, workbook.Date1904, layout: skipHidden ? SheetLayout.Sheet : null, skipHiddenRows: skipHidden,
+					skipHiddenColumns: skipHidden);
+				var captured = new Captured(int.MaxValue);
+				Sheets.FillAllAsync(scanner, captured, false).GetAwaiter().GetResult();
+				layout = scanner.Layout;
+
+				return captured.Records;
+			}
+
+			var all = Records(false, out _);
+			var shownRows = new HashSet<long>(Records(true, out var shown).Select(r => r.Row));
+			var lastRow = all.Count == 0 ? 0 : all[all.Count - 1].Row;
+			var hiddenRows = new HashSet<long>(Enumerable.Range(1, (int)lastRow).Select(r => (long)r).Where(r => !shownRows.Contains(r)));
+			var hiddenColumns = Enumerable.Repeat(true, CellReference.MaxColumns).ToArray();
+			for (var field = 0; field < shown!.Width; field++)
+			{
+				hiddenColumns[shown.ColumnOf(field)] = false;
+			}
+
+			var merged = SyncOrAsync.Result(MergedCells.LoadAsync(archive, sheet.PartName!, sheet.Name, Packages.Limits, false, CancellationToken.None));
+			var ranges = merged?.Ranges.Where(r => r.RowCount > 1 || r.ColumnCount > 1).Select(r => r.ToString()) ?? [];
+			result[sheet.Name] = new SheetStructure(lastRow, hiddenRows, hiddenColumns, [.. ranges]);
+		}
+
+		return result;
+	}
+
+	/// <summary>A workbook's tables as CsvHelper.Excel reads them, each as <see cref="TableText"/> writes it, in order.</summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <returns>The tables.</returns>
+	public static List<string> Tables(ExcelWorkbook workbook) =>
+		[.. workbook.Tables.Select(t => TableText(t.Sheet.Name, t.Name, t.Range.ToString(), t.HeaderRowCount, t.TotalsRowCount, t.Columns)).OrderBy(t => t, StringComparer.Ordinal)];
+
+	/// <summary>A table, as the oracle tests compare it.</summary>
+	/// <param name="sheet">Its sheet's name.</param>
+	/// <param name="name">Its name.</param>
+	/// <param name="range">Its range's text.</param>
+	/// <param name="headerRows">Its header rows.</param>
+	/// <param name="totalsRows">Its totals rows.</param>
+	/// <param name="columns">Its column names.</param>
+	/// <returns>The description, such as <c>Tables!Sales A1:C5 header 1 totals 1 Item|Qty|Price</c>.</returns>
+	public static string TableText(string sheet, string name, string range, int headerRows, int totalsRows, IEnumerable<string> columns) =>
+		$"{sheet}!{name} {range} header {headerRows} totals {totalsRows} {CellValue.Show(string.Join("|", columns))}";
+
+	/// <summary>A defined name, as the oracle tests compare it: whether it is hidden, and what it refers to.</summary>
+	/// <param name="name">The name.</param>
+	/// <returns>The description, such as <c>shown =Report!$B$4:$G$15</c>.</returns>
+	public static string NameText(ExcelDefinedName name) => $"{(name.Hidden ? "hidden" : "shown")} ={name.RefersTo}";
 
 	/// <summary>Describes the differences between two readings of a workbook, one line per cell, ordered.</summary>
 	/// <param name="ours">CsvHelper.Excel's cells.</param>

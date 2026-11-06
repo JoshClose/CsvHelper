@@ -20,17 +20,18 @@ internal static class Program
 
 		Commands:
 		  excel          Excel through COM: excel/ (the basic workbook in each format, and .xlsb, encrypted and .xls; the
-		                 typed workbook as .xlsx, in the 1904 date system, and as Strict Open XML)
+		                 typed workbook as .xlsx, in the 1904 date system, and as Strict Open XML; the messy workbook)
 		  packageassets  Excel: excel/packageassets-1695.xlsx from NCsvPerf's PackageAssets.csv, every column as text
 		  orders         Excel: excel/orders-1000.xlsx, the typed benchmark's first 1,000 orders entered with their types
-		  libreoffice    LibreOffice: libreoffice/, converted from excel/basic.xlsx and excel/typed.xlsx
+		  libreoffice    LibreOffice: libreoffice/, converted from excel/basic.xlsx, typed.xlsx and messy.xlsx
 		  python         openpyxl, XlsxWriter and pandas, in a venv outside the repository: openpyxl/, xlsxwriter/, pandas/
 		  poi            Apache POI's XSSF and SXSSF, run by a JDK outside the repository: poi/
 		  dotnet         ClosedXML, the Open XML SDK, EPPlus, MiniExcel, SpreadCheetah and LargeXlsx
 		  downloads      Other projects' test files that downloads.txt pins: google/, excel-mac/
 		  formats        Excel through COM: excel-formats.json, which number formats Excel takes for dates
 		  oracle         Excel through COM: excel-oracle/, what every corpus workbook's cells hold as Excel reads them
-		  spec           The basic workbook's content as JSON, to standard output
+		  spec           The basic workbook's content as JSON, to standard output (the typed and messy workbooks' go to
+		                 the Python and Java producers through temporary files)
 		  check          Only the check, which every command ends with, that no file holds personal information
 		  all            Every command, in order
 
@@ -138,8 +139,8 @@ internal static class Program
 	}
 
 	/// <summary>
-	/// Converts Excel's basic workbook with LibreOffice's two Excel filters, and its typed workbook with the first, in a
-	/// throwaway profile.
+	/// Converts Excel's basic workbook with LibreOffice's two Excel filters, and its typed and messy workbooks with the
+	/// first, in a throwaway profile.
 	/// </summary>
 	/// <param name="files">The corpus folder.</param>
 	[SupportedOSPlatform("windows")]
@@ -152,6 +153,7 @@ internal static class Program
 			("basic.xlsx", "Calc MS Excel 2007 XML", "basic.xlsx"),
 			("basic.xlsx", "Calc Office Open XML", "basic-ooxml.xlsx"),
 			("typed.xlsx", "Calc MS Excel 2007 XML", "typed.xlsx"),
+			("messy.xlsx", "Calc MS Excel 2007 XML", "messy.xlsx"),
 		};
 		foreach (var (from, filter, name) in conversions)
 		{
@@ -175,7 +177,7 @@ internal static class Program
 
 	/// <summary>
 	/// Writes the Python producers' files: a venv outside the repository with the exact versions of
-	/// <c>requirements.txt</c>, and <c>corpus.py</c> run in isolated mode over the basic workbook's JSON.
+	/// <c>requirements.txt</c>, and <c>corpus.py</c> run in isolated mode over the basic, typed and messy workbooks' JSON.
 	/// </summary>
 	/// <param name="files">The corpus folder.</param>
 	/// <param name="scripts">The folder of <c>requirements.txt</c> and <c>corpus.py</c>.</param>
@@ -190,25 +192,28 @@ internal static class Program
 		}
 
 		Run(python, "-I", "-m", "pip", "install", "--disable-pip-version-check", "--quiet", "-r", Path.Combine(scripts, "requirements.txt"));
-		WithSpecs((basic, typed) => Run(python, "-I", Path.Combine(scripts, "corpus.py"), basic, typed, files));
+		WithSpecs((basic, typed, messy) => Run(python, "-I", Path.Combine(scripts, "corpus.py"), basic, typed, messy, files));
 	}
 
-	/// <summary>Runs work with the basic and typed workbooks' JSON in temporary files, for the producers outside .NET.</summary>
-	/// <param name="work">Takes the basic workbook's file and the typed workbook's.</param>
-	internal static void WithSpecs(Action<string, string> work)
+	/// <summary>Runs work with the basic, typed and messy workbooks' JSON in temporary files, for the producers outside .NET.</summary>
+	/// <param name="work">Takes the basic workbook's file, the typed workbook's and the messy workbook's.</param>
+	internal static void WithSpecs(Action<string, string, string> work)
 	{
 		var basic = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
 		var typed = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
+		var messy = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N") + ".json");
 		try
 		{
 			File.WriteAllText(basic, Basic.ToJson());
 			File.WriteAllText(typed, Typed.ToJson());
-			work(basic, typed);
+			File.WriteAllText(messy, Messy.ToJson());
+			work(basic, typed, messy);
 		}
 		finally
 		{
 			File.Delete(basic);
 			File.Delete(typed);
+			File.Delete(messy);
 		}
 	}
 

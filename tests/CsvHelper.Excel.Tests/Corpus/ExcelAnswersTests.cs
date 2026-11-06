@@ -46,6 +46,8 @@ public class ExcelAnswersTests
 
 	private const string LowercaseFormulas = "LibreOffice writes error literals and ANCHORARRAY in lowercase (#ref!, _xlfn.anchorarray), which Excel shows in capitals";
 
+	private const string OwnTable = "Excel shows a structured reference to the table the cell is in without the table's name: Sales[Qty] in Sales' totals row as [Qty], which XlsxWriter and ClosedXML store";
+
 	/// <summary>The cells where Excel reads the corpus otherwise, and why. A cell of <c>Sheet!</c> alone stands for every cell of the sheet.</summary>
 	private static readonly (string File, string Cell, string Reason)[] Differences =
 	[
@@ -79,16 +81,29 @@ public class ExcelAnswersTests
 		("xlsxwriter/typed.xlsx", "Dates!B100", PastTheLastDay),
 		("xlsxwriter/typed.xlsx", "Numbers!B21", Overflow),
 		("xlsxwriter/typed.xlsx", "Numbers!B22", Subnormal),
+		.. new[] { "excel/messy.xlsx", "libreoffice/messy.xlsx", "poi/messy.xlsx" }.Select(f => (f, "Tables!B5", OwnTable)),
 	];
 
 	/// <summary>The workbooks that have Excel's answers: all but the benchmarks' cross-checks, of 42,000 and 12,000 cells.</summary>
+	/// <summary>
+	/// The workbook Excel can't open, even by repairing it: openpyxl 3.1.5 numbers a sheet's own names by worksheet, without
+	/// the chartsheet before them, so Tables' Local is written as the chartsheet's, and Excel opens no workbook with a name
+	/// of a chartsheet.
+	/// </summary>
+	public const string Refused = "openpyxl/messy.xlsx";
+
+	/// <summary>
+	/// The workbooks that have Excel's answers: all but the benchmarks' cross-checks, of 42,000 and 12,000 cells, and the
+	/// one Excel refuses (<see cref="Refused"/>).
+	/// </summary>
 	public static IEnumerable<object[]> AnsweredWorkbooks =>
-		CorpusFiles.WorkbookData.Where(w => (string)w[0] is not "excel/packageassets-1695.xlsx" and not "excel/orders-1000.xlsx");
+		CorpusFiles.WorkbookData.Where(w => (string)w[0] is not "excel/packageassets-1695.xlsx" and not "excel/orders-1000.xlsx" and not Refused);
 
 	[Fact]
 	public void AnswersForEveryWorkbook()
 	{
-		Assert.All(AnsweredWorkbooks, w => Assert.NotNull(ExcelAnswers.Load((string)w[0])));
+		Assert.All(AnsweredWorkbooks, w => Assert.False(ExcelAnswers.Load((string)w[0])!.Refused));
+		Assert.True(ExcelAnswers.Load(Refused)!.Refused);
 
 		// Excel opened every workbook as it is, but ClosedXML's typed one, whose NA() result it repaired.
 		Assert.Equal(

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using ClosedXML.Excel;
 
 namespace CsvHelper.Excel.Corpus;
@@ -71,6 +72,158 @@ internal static class ClosedXmlProducer
 
 		DotNetProducers.Save(Path.Combine(folder, "basic.xlsx"), path => workbook.SaveAs(path, new SaveOptions { EvaluateFormulasBeforeSaving = true }));
 		WriteTyped(folder);
+		WriteMessy(folder);
+	}
+
+	/// <summary>
+	/// ClosedXML 0.105.1: <c>closedxml/messy.xlsx</c>, with merged ranges, hidden rows and columns, a collapsed group, the
+	/// tables (ClosedXML makes the totals row, and hides the header row), the filter, which ClosedXML applies, the columns
+	/// from D hidden, and the defined names it takes, its formulas evaluated before saving. It writes no chartsheet, and
+	/// has no way to hide the rows a sheet lacks (<c>zeroHeight</c>).
+	/// </summary>
+	/// <param name="folder">The producer's folder.</param>
+	private static void WriteMessy(string folder)
+	{
+		using var workbook = new XLWorkbook();
+		workbook.Properties.Author = DotNetProducers.Author;
+		workbook.Properties.LastModifiedBy = DotNetProducers.Author;
+		foreach (var spec in Messy.Sheets.Where(s => s.Kind == "worksheet"))
+		{
+			var sheet = workbook.Worksheets.Add(spec.Name);
+
+			// Each table's cells, then the table, then the rest: as in Excel, a totals row inserts cells in its table's columns,
+			// which would move the cells below it. ClosedXML writes the totals row.
+			var cells = Basic.Rows(spec, "formula", "table").SelectMany(r => r.Cells.Select(c => (r.Row, Cell: c))).ToList();
+			foreach (var table in spec.Tables)
+			{
+				var corners = Messy.Corners(table.Range);
+				var first = table.HideHeader == true ? corners.FirstRow - 1 : corners.FirstRow;
+				var data = corners.LastRow - (table.TotalsLabel is not null ? 1 : 0);
+				foreach (var (row, cell) in cells.Where(c => c.Row >= corners.FirstRow && c.Row <= data && Messy.InColumns(table.Range, c.Cell.Column)))
+				{
+					WriteMessyCell(sheet, row, cell);
+				}
+
+				for (var i = 0; table.HideHeader == true && i < table.Columns!.Length; i++)
+				{
+					sheet.Cell(first, corners.FirstColumn + i).Value = table.Columns[i];
+				}
+
+				var created = sheet.Range(first, corners.FirstColumn, data, corners.LastColumn).CreateTable(table.Name);
+				if (table.TotalsLabel is not null)
+				{
+					created.ShowTotalsRow = true;
+					created.Field(0).TotalsRowLabel = table.TotalsLabel;
+					created.Field(table.TotalsSum!).TotalsRowFunction = XLTotalsRowFunction.Sum;
+				}
+
+				if (table.HideHeader == true)
+				{
+					created.ShowHeaderRow = false;
+				}
+			}
+
+			foreach (var (row, cell) in cells.Where(c => !spec.Tables.Any(t => Messy.InTable(t, c.Row, c.Cell.Column))))
+			{
+				WriteMessyCell(sheet, row, cell);
+			}
+
+			foreach (var merge in spec.Merges ?? [])
+			{
+				sheet.Range(merge).Merge();
+			}
+
+			foreach (var column in spec.HiddenColumns ?? [])
+			{
+				sheet.Column(column).Hide();
+			}
+
+			foreach (var row in spec.HiddenRows ?? [])
+			{
+				sheet.Row(row).Hide();
+			}
+
+			foreach (var group in spec.Groups ?? [])
+			{
+				var rows = sheet.Rows(group.First, group.Last);
+				rows.Group();
+				rows.Collapse();
+			}
+
+			if (spec.Filter is { } filter)
+			{
+				sheet.Range(filter.Range).SetAutoFilter().Column(filter.Column).NotEqualTo(filter.Hides);
+			}
+
+			if (spec.HideColumnsFrom is { } fromColumn)
+			{
+				sheet.Columns(Basic.ColumnIndex(fromColumn), XLHelper.MaxColumnNumber).Hide();
+			}
+
+			if (spec.HideRowsFrom is not null)
+			{
+				Console.WriteLine($"  {spec.Name} hides no rows past its data: ClosedXML can't write zeroHeight");
+			}
+		}
+
+		foreach (var name in Messy.Names)
+		{
+			var scope = name.Sheet is null ? null : workbook.Worksheet(name.Sheet);
+			var area = name.RefersTo[(name.RefersTo.IndexOf('!', StringComparison.Ordinal) + 1)..].Replace("$", "", StringComparison.Ordinal);
+			if (name.Name == "Print_Area")
+			{
+				scope!.PageSetup.PrintAreas.Add(area);
+
+				continue;
+			}
+
+			if (name.Name == "Print_Titles")
+			{
+				var rows = area.Split(':');
+				scope!.PageSetup.SetRowsToRepeatAtTop(int.Parse(rows[0], System.Globalization.CultureInfo.InvariantCulture), int.Parse(rows[1], System.Globalization.CultureInfo.InvariantCulture));
+
+				continue;
+			}
+
+			try
+			{
+				var added = scope is null ? workbook.DefinedNames.Add(name.Name, name.RefersTo) : scope.DefinedNames.Add(name.Name, name.RefersTo);
+				if (name.Hidden == true)
+				{
+					added.Visible = false;
+				}
+			}
+			catch (ArgumentException e)
+			{
+				Console.WriteLine($"  left out the name {name.Name}, which ClosedXML doesn't take: {name.RefersTo} ({e.Message})");
+			}
+		}
+
+		DotNetProducers.Save(Path.Combine(folder, "messy.xlsx"), path => workbook.SaveAs(path, new SaveOptions { EvaluateFormulasBeforeSaving = true }));
+	}
+
+	/// <summary>Writes a cell of the messy workbook: its text, number or formula.</summary>
+	/// <param name="sheet">The worksheet.</param>
+	/// <param name="row">The cell's row.</param>
+	/// <param name="cell">The cell.</param>
+	private static void WriteMessyCell(IXLWorksheet sheet, int row, CellSpec cell)
+	{
+		var target = sheet.Cell(cell.Reference(row));
+		switch (cell.Type)
+		{
+			case CellType.Text:
+				target.Value = cell.Text;
+
+				break;
+			case CellType.Number:
+				target.Value = cell.Number!.Value;
+
+				break;
+			case CellType.Formula:
+				target.FormulaA1 = cell.Formula;
+
+				break;
+		}
 	}
 
 	/// <summary>

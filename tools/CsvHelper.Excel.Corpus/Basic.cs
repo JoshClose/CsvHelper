@@ -174,6 +174,97 @@ internal sealed class SheetSpec
 	/// <summary>The sheet's tables; their cells are in the rows.</summary>
 	[JsonPropertyName("tables")]
 	public TableSpec[] Tables { get; init; } = [];
+
+	/// <summary>The messy workbook's merged ranges, such as <c>B1:G1</c>, each with its value in its top-left cell alone.</summary>
+	[JsonPropertyName("merges")]
+	public string[]? Merges { get; init; }
+
+	/// <summary>The messy workbook's hidden rows, by number.</summary>
+	[JsonPropertyName("hiddenRows")]
+	public int[]? HiddenRows { get; init; }
+
+	/// <summary>The messy workbook's hidden columns, by letters.</summary>
+	[JsonPropertyName("hiddenColumns")]
+	public string[]? HiddenColumns { get; init; }
+
+	/// <summary>The messy workbook's outline groups of rows, each collapsed, which hides its rows.</summary>
+	[JsonPropertyName("groups")]
+	public GroupSpec[]? Groups { get; init; }
+
+	/// <summary>The messy workbook's filter, which hides the rows whose value in its column is the one it leaves out.</summary>
+	[JsonPropertyName("filter")]
+	public FilterSpec? Filter { get; init; }
+
+	/// <summary>The first of the rows the messy workbook hides to the sheet's end (<c>zeroHeight</c>), or <see langword="null"/>.</summary>
+	[JsonPropertyName("hideRowsFrom")]
+	public int? HideRowsFrom { get; init; }
+
+	/// <summary>The first of the columns the messy workbook hides to the sheet's end, by letters, or <see langword="null"/>.</summary>
+	[JsonPropertyName("hideColumnsFrom")]
+	public string? HideColumnsFrom { get; init; }
+
+	/// <summary>A chartsheet's data, such as <c>Report!E4:E7</c>; <see langword="null"/> for the basic workbook's, of Q1 Orders' quantities.</summary>
+	[JsonPropertyName("chart")]
+	public string? Chart { get; init; }
+}
+
+/// <summary>An outline group of rows, collapsed: its rows are hidden, and the row after it is marked collapsed.</summary>
+internal sealed class GroupSpec
+{
+	/// <summary>The group's first row.</summary>
+	[JsonPropertyName("first")]
+	public int First { get; init; }
+
+	/// <summary>The group's last row.</summary>
+	[JsonPropertyName("last")]
+	public int Last { get; init; }
+}
+
+/// <summary>An autofilter over a range, which hides the rows whose value in one column is the text it leaves out.</summary>
+internal sealed class FilterSpec
+{
+	/// <summary>The range, its first row the header, such as <c>A1:C9</c>.</summary>
+	[JsonPropertyName("range")]
+	public string Range { get; init; } = "";
+
+	/// <summary>The filtered column, 1-based within the range.</summary>
+	[JsonPropertyName("column")]
+	public int Column { get; init; }
+
+	/// <summary>The text whose rows the filter hides.</summary>
+	[JsonPropertyName("hides")]
+	public string Hides { get; init; } = "";
+
+	/// <summary>The rows the filter hides, which producers without a filter engine hide themselves.</summary>
+	[JsonPropertyName("hiddenRows")]
+	public int[] HiddenRows { get; init; } = [];
+}
+
+/// <summary>A defined name of the messy workbook.</summary>
+internal sealed class NameSpec
+{
+	/// <summary>The name, without the <c>_xlnm.</c> of a built-in one (<c>Print_Area</c>).</summary>
+	[JsonPropertyName("name")]
+	public string Name { get; init; } = "";
+
+	/// <summary>The sheet whose own name it is, or <see langword="null"/> for the workbook's.</summary>
+	[JsonPropertyName("sheet")]
+	public string? Sheet { get; init; }
+
+	/// <summary>What it refers to, as the file stores it, without <c>=</c>.</summary>
+	[JsonPropertyName("refersTo")]
+	public string RefersTo { get; init; } = "";
+
+	/// <summary>Whether the name is hidden.</summary>
+	[JsonPropertyName("hidden")]
+	public bool? Hidden { get; init; }
+
+	/// <summary>
+	/// The sheet a name to a deleted sheet referred to, which Excel creates, names and deletes, so that it stores
+	/// <c>#REF!</c>; the other producers write <see cref="RefersTo"/> as it is.
+	/// </summary>
+	[JsonPropertyName("deletedSheet")]
+	public string? DeletedSheet { get; init; }
 }
 
 /// <summary>A range Excel fills from its first cell.</summary>
@@ -207,9 +298,34 @@ internal sealed class TableSpec
 	[JsonPropertyName("name")]
 	public string Name { get; init; } = "";
 
-	/// <summary>The table's range, headers included, such as <c>A20:D23</c>.</summary>
+	/// <summary>
+	/// The table's range as the file stores it, such as <c>A20:D23</c>: its header row (unless hidden), data rows and
+	/// totals row.
+	/// </summary>
 	[JsonPropertyName("range")]
 	public string Range { get; init; } = "";
+
+	/// <summary>
+	/// Whether the table's header row is hidden: its names are then only <see cref="Columns"/>, and the range starts at its
+	/// data. Excel writes the names in the row above the range, makes the table, and hides its header row.
+	/// </summary>
+	[JsonPropertyName("hideHeader")]
+	public bool? HideHeader { get; init; }
+
+	/// <summary>The column names of a table whose header row is hidden, which no cell holds.</summary>
+	[JsonPropertyName("columns")]
+	public string[]? Columns { get; init; }
+
+	/// <summary>
+	/// The label of the totals row in the table's first column, when it has one: the range's last row, whose cells are in
+	/// the rows. Excel makes the row itself.
+	/// </summary>
+	[JsonPropertyName("totalsLabel")]
+	public string? TotalsLabel { get; init; }
+
+	/// <summary>The column the totals row sums, by name (<c>SUBTOTAL(109,...)</c>), when it has one.</summary>
+	[JsonPropertyName("totalsSum")]
+	public string? TotalsSum { get; init; }
 }
 
 /// <summary>

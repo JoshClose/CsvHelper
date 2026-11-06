@@ -44,6 +44,21 @@ public class OracleTests
 
 	private const string ArrayFormulas = "ClosedXML repeats a legacy array formula in each of its cells; CsvHelper.Excel reads the other cells' values, which the file gives them (decision 16)";
 
+	private const string ColumnsToTheEnd = "ClosedXML shows the columns of a col that runs to the grid's last column (D:XFD, hidden); Excel hides them";
+
+	private const string BuiltInPrefix = "ClosedXML keeps a built-in name's _xlnm. prefix (_xlnm._FilterDatabase); CsvHelper.Excel leaves it out, as Excel shows it";
+
+	private const string PageSetupNames = "ClosedXML reads the print area and print titles into its page setup, not its defined names";
+
+	private const string ZeroHeight = "the oracle shows the rows a zeroHeight sheet lacks (Filtered's empty row 6, which the producer leaves out); Excel hides them";
+
+	private const string HiddenTrue ="ExcelDataReader reads a row as hidden (a RowHeight of 0) from hidden=\"1\" alone; POI and LibreOffice write hidden=\"true\", which Excel hides";
+
+	/// <summary>The messy workbooks but openpyxl's, which ClosedXML and Excel can't open.</summary>
+	private static readonly string[] MessyFiles = ["closedxml/messy.xlsx", "excel/messy.xlsx", "libreoffice/messy.xlsx", "poi/messy.xlsx", "xlsxwriter/messy.xlsx"];
+
+	private const string OwnTable ="ClosedXML gives a structured reference to the table the cell is in without the table's name, as Excel shows it: Sales[Qty] in Sales' totals row as [Qty]";
+
 	private const string ComputedResults = "LibreOffice computes a formula's result itself, and shows its own error for FILTER of nothing (Err:533)";
 
 	/// <summary>LibreOffice doesn't decode the escapes of a <c>str</c> value.</summary>
@@ -104,8 +119,9 @@ public class OracleTests
 	/// <summary>
 	/// The workbooks ClosedXML 0.105.1 can't open, with the exception it throws: its Strict t="d" parser, which takes
 	/// neither Excel's 17 digits of fraction nor openpyxl's dates without a fraction; serial 60 in a date format, which it
-	/// rejects in the 1904 date system too; and a number past the largest double, from the producers that write 15 or 16
-	/// digits. CsvHelper.Excel reads each.
+	/// rejects in the 1904 date system too; a number past the largest double, from the producers that write 15 or 16
+	/// digits; and openpyxl's messy workbook, which gives a name of Tables the chartsheet's index
+	/// (<see cref="ExcelAnswersTests.Refused"/>), where ClosedXML finds no worksheet. CsvHelper.Excel reads each.
 	/// </summary>
 	private static readonly Dictionary<string, string> ClosedXmlRejects = new()
 	{
@@ -119,12 +135,14 @@ public class OracleTests
 		["closedxml/typed.xlsx"] = "System.ArgumentException",
 		["openpyxl/typed.xlsx"] = "System.ArgumentException",
 		["xlsxwriter/typed.xlsx"] = "System.ArgumentException",
+		["openpyxl/messy.xlsx"] = "System.ArgumentException",
 	};
 
 	/// <summary>The formula cells where ClosedXML's <c>FormulaA1</c> differs from the formula read as text, and why.</summary>
 	private static readonly (string File, string Cell, string Reason)[] ClosedXmlFormulaDifferences =
 	[
 		("google/66365.xlsx", "Sheet1!B2", ArrayFormulas),
+		.. new[] { "excel/messy.xlsx", "libreoffice/messy.xlsx", "poi/messy.xlsx" }.Select(f => (f, "Tables!B5", OwnTable)),
 	];
 
 	/// <summary>The typed workbooks' "Dates" cells where ExcelDataReader's formats, serial 60, the limits and negatives differ, for every producer.</summary>
@@ -169,6 +187,32 @@ public class OracleTests
 		("excel/typed-strict.xlsx", "Dates!B91", DateCompatibility),
 		("excel/typed-strict.xlsx", "Dates!B100", PastTheLastDay),
 		("excel/typed-strict.xlsx", "Dates!B101", NegativeSerials),
+	];
+
+	/// <summary>The structures where ClosedXML reads the corpus otherwise, and why.</summary>
+	private static readonly (string File, string Cell, string Reason)[] ClosedXmlStructureDifferences =
+	[
+		("poi/messy.xlsx", "Filtered rows", ZeroHeight),
+		("xlsxwriter/messy.xlsx", "Filtered rows", ZeroHeight),
+		.. MessyFiles.SelectMany(f => new[]
+		{
+			(f, "Filtered columns", ColumnsToTheEnd),
+			(f, "name Filtered!_FilterDatabase", BuiltInPrefix),
+			(f, "name Filtered!_xlnm._FilterDatabase", BuiltInPrefix),
+			(f, "name Report!Print_Area", PageSetupNames),
+			(f, "name Report!Print_Titles", PageSetupNames),
+		}),
+	];
+
+	/// <summary>The structures where ExcelDataReader reads the corpus otherwise, and why.</summary>
+	private static readonly (string File, string Cell, string Reason)[] ExcelDataReaderStructureDifferences =
+	[
+		("libreoffice/messy.xlsx", "Report rows", HiddenTrue),
+		("libreoffice/messy.xlsx", "Filtered rows", HiddenTrue),
+		("poi/messy.xlsx", "Report rows", HiddenTrue),
+		("poi/messy.xlsx", "Filtered rows", HiddenTrue + "; and " + ZeroHeight),
+		("openpyxl/messy.xlsx", "Filtered rows", ZeroHeight),
+		("xlsxwriter/messy.xlsx", "Filtered rows", ZeroHeight),
 	];
 
 	/// <summary>The text cells LibreOffice exports otherwise (shown text, with <c>--convert-to csv</c>), and why.</summary>
@@ -240,6 +284,30 @@ public class OracleTests
 		AssertDifferences(file, ExcelDataReaderDifferences, CorpusFiles.Differences(ours, excelDataReader, ours.Keys.Intersect(excelDataReader.Keys)));
 	}
 
+	[Theory]
+	[MemberData(nameof(CorpusFiles.WorkbookData), MemberType = typeof(CorpusFiles))]
+	public void MatchesClosedXmlsStructures(string file)
+	{
+		// MatchesClosedXmlsValues checks the exceptions of the workbooks ClosedXML can't open.
+		var ours = CorpusFiles.Structures(file);
+		var lastRows = ours.ToDictionary(s => s.Key, s => s.Value.LastRow);
+		if (ClosedXmlRejects.ContainsKey(file) || RejectsThePackage(file, () => Oracles.ClosedXmlStructure(file, lastRows)))
+		{
+			return;
+		}
+
+		using var workbook = ExcelWorkbook.Open(CorpusFiles.PathOf(file));
+		AssertDifferences(file, ClosedXmlStructureDifferences, StructureDifferences(workbook, ours, Oracles.ClosedXmlStructure(file, lastRows)));
+	}
+
+	[Theory]
+	[MemberData(nameof(CorpusFiles.WorkbookData), MemberType = typeof(CorpusFiles))]
+	public void MatchesExcelDataReadersStructures(string file)
+	{
+		using var workbook = ExcelWorkbook.Open(CorpusFiles.PathOf(file));
+		AssertDifferences(file, ExcelDataReaderStructureDifferences, StructureDifferences(workbook, CorpusFiles.Structures(file), Oracles.ExcelDataReaderStructure(file)));
+	}
+
 	[LibreOfficeTheory]
 	[MemberData(nameof(CorpusFiles.WorkbookData), MemberType = typeof(CorpusFiles))]
 	public void MatchesLibreOfficesTextCells(string file)
@@ -298,6 +366,84 @@ public class OracleTests
 		Assert.Equal(expected, e.GetType().FullName);
 
 		return true;
+	}
+
+	/// <summary>
+	/// The differences between CsvHelper.Excel's structures and an oracle's, one line each, its key first: each worksheet's
+	/// merged ranges, hidden rows (of 1 to the file's last row) and hidden columns, and each table and defined name, where
+	/// the oracle reads them.
+	/// </summary>
+	/// <param name="workbook">The workbook, for its tables and names.</param>
+	/// <param name="ours">CsvHelper.Excel's structures of its worksheets.</param>
+	/// <param name="theirs">The oracle's.</param>
+	/// <returns>The differences, such as <c>Report rows: ours [8, 13-14], theirs [8]</c>.</returns>
+	private static List<string> StructureDifferences(ExcelWorkbook workbook, Dictionary<string, SheetStructure> ours, OracleStructure theirs)
+	{
+		static string Runs(IEnumerable<long> numbers)
+		{
+			var runs = new List<string>();
+			foreach (var number in numbers.OrderBy(n => n))
+			{
+				if (runs.Count > 0 && runs[runs.Count - 1].Split('-') is var last && long.Parse(last[last.Length - 1], System.Globalization.CultureInfo.InvariantCulture) == number - 1)
+				{
+					runs[runs.Count - 1] = last[0] + "-" + number;
+				}
+				else
+				{
+					runs.Add(number.ToString(System.Globalization.CultureInfo.InvariantCulture));
+				}
+			}
+
+			return "[" + string.Join(", ", runs) + "]";
+		}
+
+		var differences = new List<string>();
+		foreach (var pair in ours.Where(s => theirs.Merged.ContainsKey(s.Key)))
+		{
+			var (sheet, mine) = (pair.Key, pair.Value);
+			if (!mine.Merged.SequenceEqual(theirs.Merged[sheet]))
+			{
+				differences.Add($"{sheet} merged: ours [{string.Join(", ", mine.Merged)}], theirs [{string.Join(", ", theirs.Merged[sheet])}]");
+			}
+
+			var theirRows = theirs.HiddenRows[sheet].Where(r => r <= mine.LastRow);
+			if (!mine.HiddenRows.SetEquals(theirRows))
+			{
+				differences.Add($"{sheet} rows: ours {Runs(mine.HiddenRows)}, theirs {Runs(theirRows)}");
+			}
+
+			if (theirs.HiddenColumns.TryGetValue(sheet, out var columns) && !mine.HiddenColumns.SequenceEqual(columns))
+			{
+				differences.Add(
+					$"{sheet} columns: ours {Runs(Enumerable.Range(1, mine.HiddenColumns.Length).Where(c => mine.HiddenColumns[c - 1]).Select(c => (long)c))}, " +
+					$"theirs {Runs(Enumerable.Range(1, columns.Length).Where(c => columns[c - 1]).Select(c => (long)c))}");
+			}
+		}
+
+		if (theirs.Tables is { } tables)
+		{
+			var mine = CorpusFiles.Tables(workbook);
+			foreach (var table in mine.Except(tables).Concat(tables.Except(mine)).Select(t => t.Substring(0, t.IndexOf(' '))).Distinct().OrderBy(t => t, StringComparer.Ordinal))
+			{
+				differences.Add($"table {table}: ours {mine.FirstOrDefault(t => t.StartsWith(table + " ", StringComparison.Ordinal)) ?? "(none)"}, theirs {tables.FirstOrDefault(t => t.StartsWith(table + " ", StringComparison.Ordinal)) ?? "(none)"}");
+			}
+		}
+
+		if (theirs.Names is { } names)
+		{
+			var mine = workbook.DefinedNames.ToDictionary(n => n.ToString(), CorpusFiles.NameText);
+			foreach (var name in mine.Keys.Union(names.Keys).OrderBy(n => n, StringComparer.Ordinal))
+			{
+				var ourText = mine.TryGetValue(name, out var a) ? a : "(none)";
+				var theirText = names.TryGetValue(name, out var b) ? b : "(none)";
+				if (ourText != theirText)
+				{
+					differences.Add($"name {name}: ours {ourText}, theirs {theirText}");
+				}
+			}
+		}
+
+		return differences;
 	}
 
 	/// <summary>Checks that an oracle differs from CsvHelper.Excel in exactly the cells listed for a file.</summary>

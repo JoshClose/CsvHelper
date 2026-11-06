@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.FormulaParseException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -22,23 +23,27 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.SheetVisibility;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFFormulaEvaluator;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STTotalsRowFunction;
 
 /**
- * Writes the corpus's Apache POI files from the basic and typed workbooks' JSON:
- * {@code java -cp <jars> Corpus.java <basic.json> <typed.json> <Files folder>}.
+ * Writes the corpus's Apache POI files from the basic, typed and messy workbooks' JSON:
+ * {@code java -cp <jars> Corpus.java <basic.json> <typed.json> <messy.json> <Files folder>}.
  *
  * <p>{@code poi/xssf.xlsx} comes from XSSF, which holds the workbook in memory and writes shared strings, and
  * {@code poi/sxssf.xlsx} from SXSSF, its streaming writer, which writes inline strings by default. Each writes what POI
  * can: it can't create a chartsheet or a phonetic run, and SXSSF writes a rich text's runs as plain text. The formulas
  * get their results from POI's own evaluator. {@code poi/typed.xlsx} comes from XSSF: built-in format ids, error
  * constants, formulas and a legacy array, without the dynamic arrays and the table POI can't write. A formula POI's
- * parser refuses is left out, and one its evaluator can't compute keeps no result.</p>
+ * parser refuses is left out, and one its evaluator can't compute keeps no result. {@code poi/messy.xlsx} comes from
+ * XSSF too: see {@link #writeMessy}.</p>
  */
 public final class Corpus
 {
@@ -56,14 +61,15 @@ public final class Corpus
 	/**
 	 * Writes both files.
 	 *
-	 * @param args the basic workbook's spec, the typed workbook's, and the corpus folder
+	 * @param args the basic workbook's spec, the typed workbook's, the messy workbook's, and the corpus folder
 	 * @throws IOException when a file can't be read or written
 	 */
 	public static void main(String[] args) throws IOException
 	{
 		var spec = asList(new Json(Files.readString(Path.of(args[0]), StandardCharsets.UTF_8)).read());
 		var typed = asMap(new Json(Files.readString(Path.of(args[1]), StandardCharsets.UTF_8)).read());
-		var folder = Files.createDirectories(Path.of(args[2], "poi"));
+		var messy = asMap(new Json(Files.readString(Path.of(args[2]), StandardCharsets.UTF_8)).read());
+		var folder = Files.createDirectories(Path.of(args[3], "poi"));
 
 		try (var workbook = new XSSFWorkbook())
 		{
@@ -87,6 +93,260 @@ public final class Corpus
 			writeTyped(typed, workbook);
 			save(workbook, folder.resolve("typed.xlsx"));
 		}
+
+		try (var workbook = new XSSFWorkbook())
+		{
+			writeMessy(messy, workbook);
+			save(workbook, folder.resolve("messy.xlsx"));
+		}
+	}
+
+	/**
+	 * Writes the messy workbook's worksheets and names with XSSF: merged ranges, hidden rows and columns, a collapsed group,
+	 * the tables (a totals row and a hidden header row through their {@code CTTable}), the filter's range with the rows it
+	 * hides (POI's schemas have no filter criteria), {@code zeroHeight} and the columns from D hidden (through the
+	 * worksheet's XML beans), the print area and titles, and every other name but the hidden one, which POI's names can't
+	 * mark. POI can't create a chartsheet. Each formula is evaluated on its own.
+	 *
+	 * @param messy the messy workbook's spec: its sheets and names
+	 * @param workbook the workbook to write
+	 */
+	private static void writeMessy(Map<String, Object> messy, XSSFWorkbook workbook)
+	{
+		workbook.getProperties().getCoreProperties().setCreator("CsvHelper.Excel.Corpus");
+		var worksheets = new ArrayList<Map<String, Object>>();
+		for (var item : asList(messy.get("sheets")))
+		{
+			var sheetSpec = asMap(item);
+			if ("worksheet".equals(sheetSpec.get("kind")))
+			{
+				worksheets.add(sheetSpec);
+				workbook.createSheet((String)sheetSpec.get("name"));
+			}
+		}
+
+		// Formulas after the tables, since a structured reference needs its table.
+		var formulas = new ArrayList<Map.Entry<Cell, String>>();
+		for (var sheetSpec : worksheets)
+		{
+			var sheet = workbook.getSheet((String)sheetSpec.get("name"));
+			for (var rowItem : asList(sheetSpec.get("rows")))
+			{
+				var rowSpec = asMap(rowItem);
+				var row = sheet.createRow(((Double)rowSpec.get("row")).intValue() - 1);
+				for (var cellItem : asList(rowSpec.get("cells")))
+				{
+					var cellSpec = asMap(cellItem);
+					var cell = row.createCell(CellReference.convertColStringToIndex((String)cellSpec.get("column")));
+					switch ((String)cellSpec.get("type"))
+					{
+						case "Text" -> cell.setCellValue((String)cellSpec.get("text"));
+						case "Number" -> cell.setCellValue((Double)cellSpec.get("number"));
+						case "Formula" -> formulas.add(Map.entry(cell, (String)cellSpec.get("formula")));
+						default -> throw new IllegalArgumentException("The cell type " + cellSpec.get("type") + " is not one of the messy workbook's.");
+					}
+				}
+			}
+
+			for (var merge : listOf(sheetSpec.get("merges")))
+			{
+				sheet.addMergedRegion(CellRangeAddress.valueOf((String)merge));
+			}
+
+			for (var tableItem : listOf(sheetSpec.get("tables")))
+			{
+				writeTable(sheetSpec, sheet, asMap(tableItem));
+			}
+
+			for (var column : listOf(sheetSpec.get("hiddenColumns")))
+			{
+				sheet.setColumnHidden(CellReference.convertColStringToIndex((String)column), true);
+			}
+
+			for (var row : listOf(sheetSpec.get("hiddenRows")))
+			{
+				sheet.getRow(((Double)row).intValue() - 1).setZeroHeight(true);
+			}
+
+			for (var groupItem : listOf(sheetSpec.get("groups")))
+			{
+				var group = asMap(groupItem);
+				var first = ((Double)group.get("first")).intValue() - 1;
+				sheet.groupRow(first, ((Double)group.get("last")).intValue() - 1);
+				sheet.setRowGroupCollapsed(first, true);
+			}
+
+			if (sheetSpec.get("filter") != null)
+			{
+				var filter = asMap(sheetSpec.get("filter"));
+				sheet.setAutoFilter(CellRangeAddress.valueOf((String)filter.get("range")));
+				for (var row : asList(filter.get("hiddenRows")))
+				{
+					sheet.getRow(((Double)row).intValue() - 1).setZeroHeight(true);
+				}
+			}
+
+			var worksheet = sheet.getCTWorksheet();
+			if (sheetSpec.get("hideRowsFrom") != null)
+			{
+				(worksheet.isSetSheetFormatPr() ? worksheet.getSheetFormatPr() : worksheet.addNewSheetFormatPr()).setZeroHeight(true);
+			}
+
+			if (sheetSpec.get("hideColumnsFrom") != null)
+			{
+				var cols = worksheet.sizeOfColsArray() > 0 ? worksheet.getColsArray(0) : worksheet.addNewCols();
+				var col = cols.addNewCol();
+				col.setMin(CellReference.convertColStringToIndex((String)sheetSpec.get("hideColumnsFrom")) + 1);
+				col.setMax(16384);
+				col.setHidden(true);
+			}
+		}
+
+		for (var formula : formulas)
+		{
+			formula.getKey().setCellFormula(formula.getValue());
+		}
+
+		var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+		for (var formula : formulas)
+		{
+			var cell = formula.getKey();
+			try
+			{
+				evaluator.evaluateFormulaCell(cell);
+			}
+			catch (RuntimeException e)
+			{
+				System.out.println("  no result for " + cell.getSheet().getSheetName() + "!" + cell.getAddress() + ", which POI can't evaluate: " + e.getMessage());
+			}
+		}
+
+		for (var nameItem : asList(messy.get("names")))
+		{
+			writeName(workbook, asMap(nameItem));
+		}
+	}
+
+	/**
+	 * Writes a table of the messy workbook: its columns named from its header cells, or from the spec when its header row
+	 * is hidden, and its totals row's label and sum.
+	 *
+	 * @param sheetSpec the table's sheet's spec
+	 * @param sheet the table's sheet
+	 * @param spec the table's spec
+	 */
+	private static void writeTable(Map<String, Object> sheetSpec, XSSFSheet sheet, Map<String, Object> spec)
+	{
+		var range = (String)spec.get("range");
+		var table = sheet.createTable(new AreaReference(range, SpreadsheetVersion.EXCEL2007));
+		table.setName((String)spec.get("name"));
+		table.setDisplayName((String)spec.get("name"));
+		var ct = table.getCTTable();
+		var columns = ct.getTableColumns().getTableColumnArray();
+		var area = CellRangeAddress.valueOf(range);
+		if (Boolean.TRUE.equals(spec.get("hideHeader")))
+		{
+			ct.setHeaderRowCount(0);
+			if (ct.isSetAutoFilter())
+			{
+				ct.unsetAutoFilter();
+			}
+
+			var names = asList(spec.get("columns"));
+			for (var i = 0; i < columns.length; i++)
+			{
+				columns[i].setName((String)names.get(i));
+			}
+		}
+		else
+		{
+			var header = sheet.getRow(area.getFirstRow());
+			for (var i = 0; i < columns.length; i++)
+			{
+				columns[i].setName(header.getCell(area.getFirstColumn() + i).getStringCellValue());
+			}
+		}
+
+		if (spec.get("totalsLabel") != null)
+		{
+			ct.setTotalsRowCount(1);
+			columns[0].setTotalsRowLabel((String)spec.get("totalsLabel"));
+			for (var column : columns)
+			{
+				if (column.getName().equals(spec.get("totalsSum")))
+				{
+					column.setTotalsRowFunction(STTotalsRowFunction.SUM);
+				}
+			}
+
+			if (ct.isSetAutoFilter())
+			{
+				var data = new CellRangeAddress(area.getFirstRow(), area.getLastRow() - 1, area.getFirstColumn(), area.getLastColumn());
+				ct.getAutoFilter().setRef(data.formatAsString());
+			}
+		}
+	}
+
+	/**
+	 * Writes a defined name of the messy workbook: the print area and titles through POI's own calls, a hidden name not at
+	 * all, and any other as a name, which is left out when POI's parser refuses its formula.
+	 *
+	 * @param workbook the workbook
+	 * @param spec the name's spec
+	 */
+	private static void writeName(XSSFWorkbook workbook, Map<String, Object> spec)
+	{
+		var nameName = (String)spec.get("name");
+		var refersTo = (String)spec.get("refersTo");
+		var sheetName = (String)spec.get("sheet");
+		if (Boolean.TRUE.equals(spec.get("hidden")))
+		{
+			System.out.println("  left out the hidden name " + nameName + ": POI's names can't be hidden");
+
+			return;
+		}
+
+		if ("Print_Area".equals(nameName))
+		{
+			workbook.setPrintArea(workbook.getSheetIndex(sheetName), refersTo.substring(refersTo.indexOf('!') + 1));
+
+			return;
+		}
+
+		if ("Print_Titles".equals(nameName))
+		{
+			workbook.getSheet(sheetName).setRepeatingRows(CellRangeAddress.valueOf(refersTo.substring(refersTo.indexOf('!') + 1)));
+
+			return;
+		}
+
+		var name = workbook.createName();
+		name.setNameName(nameName);
+		if (sheetName != null)
+		{
+			name.setSheetIndex(workbook.getSheetIndex(sheetName));
+		}
+
+		try
+		{
+			name.setRefersToFormula(refersTo);
+		}
+		catch (RuntimeException e)
+		{
+			workbook.removeName(name);
+			System.out.println("  left out the name " + nameName + ", which POI can't parse: " + refersTo + " (" + e.getMessage() + ")");
+		}
+	}
+
+	/**
+	 * A JSON value as an array, or an empty one for a missing value.
+	 *
+	 * @param value the value, or null
+	 * @return the array
+	 */
+	private static List<Object> listOf(Object value)
+	{
+		return value == null ? List.of() : asList(value);
 	}
 
 	/**

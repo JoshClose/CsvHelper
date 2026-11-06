@@ -59,7 +59,18 @@ public class CorpusTests
 		["xlsxwriter/typed.xlsx"] = TypedSheets,
 		["poi/typed.xlsx"] = TypedSheets,
 		["closedxml/typed.xlsx"] = TypedSheets,
+
+		// The messy workbook: POI and ClosedXML write no chartsheet, and LibreOffice keeps it as a worksheet with a chart.
+		["excel/messy.xlsx"] = MessySheets,
+		["libreoffice/messy.xlsx"] = [.. MessySheets.Select(s => s.Replace("Chart Visible Chartsheet", "Chart Visible Worksheet"))],
+		["openpyxl/messy.xlsx"] = MessySheets,
+		["xlsxwriter/messy.xlsx"] = MessySheets,
+		["poi/messy.xlsx"] = [.. MessySheets.Where(s => !s.EndsWith("Chartsheet", StringComparison.Ordinal))],
+		["closedxml/messy.xlsx"] = [.. MessySheets.Where(s => !s.EndsWith("Chartsheet", StringComparison.Ordinal))],
 	};
+
+	/// <summary>The messy workbook's sheets, as Excel writes them.</summary>
+	private static string[] MessySheets => ["Report Visible Worksheet", "Chart Visible Chartsheet", "Tables Visible Worksheet", "Filtered Visible Worksheet"];
 
 	/// <summary>The typed workbook's sheets.</summary>
 	private static string[] TypedSheets => ["Dates Visible Worksheet", "Numbers Visible Worksheet", "Formulas Visible Worksheet", "Other Sheet Visible Worksheet"];
