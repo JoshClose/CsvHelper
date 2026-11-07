@@ -37,6 +37,14 @@ namespace CsvHelper.Excel;
 /// show <c>########</c> and get none.
 /// </para>
 /// <para>
+/// A sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string)"/> knows its columns' members' formats and cultures
+/// (<see cref="MemberFormats"/>), by the header record's names, or, without a header, by the names that the record
+/// writer writes in its header. A number of a column whose member has a <see cref="CsvCultureAttribute"/> is read with
+/// that culture; a date or time with a <see cref="CsvFormatAttribute"/> is read back with its format
+/// (<see cref="DateFormat"/>), and is a date cell in that format translated to Excel's when it formats to the same text
+/// again, and a text cell otherwise. A duration with a format other than .NET's default is a text cell.
+/// </para>
+/// <para>
 /// A record past the sheet's last row follows <see cref="ExcelWriterOptions.RowLimit"/>. Its first field finds it, through
 /// the field limit that <see cref="EndRecord"/> lowers to 0 once the sheet is full, so that the test of the column limit
 /// is the only one per field. With <see cref="ExcelRowLimit.NewSheet"/>, the full sheet's end goes into the buffer, and the
@@ -71,6 +79,8 @@ internal sealed class SheetSink : CsvCellSink
 	private readonly ExcelWriterOptions options;
 	// The writer's culture's signs and separator, or null for the invariant ones.
 	private readonly NumberCulture? culture;
+	// The formats of the record type's members, until the header's names say which columns they are for.
+	private readonly MemberFormats? members;
 	// The row of the first data record, whose cells set the columns' widths.
 	private readonly long firstDataRow;
 	// The rows a sheet holds: Excel's last row's number, or fewer in tests.
@@ -85,6 +95,9 @@ internal sealed class SheetSink : CsvCellSink
 	// Each column's last type, and the kind of cell it makes.
 	private Type?[] columnTypes = new Type?[16];
 	private CellKind[] columnKinds = new CellKind[16];
+	// Each column's member's format and culture, once known; and the header record's names while it is written, to know them.
+	private ColumnFormat?[]? columnFormats;
+	private List<string>? header;
 	// The part of the sheet being written, and its entry once a flush opened it.
 	private string partName;
 	private Stream? entry;
@@ -131,7 +144,13 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="styles">The workbook's cell formats.</param>
 	/// <param name="options">The workbook's options.</param>
 	/// <param name="maxRows">The rows a sheet holds before <see cref="ExcelWriterOptions.RowLimit"/> applies: at least 2.</param>
-	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows)
+	/// <param name="members">The formats of the record type's members, or <see langword="null"/> for none.</param>
+	/// <param name="headerNames">
+	/// Without <see cref="CsvWriterOptions.HasHeader"/>, the names the record writer writes in its header, which say which
+	/// member each column is; or <see langword="null"/>. With a header, the header record's names say.
+	/// </param>
+	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows,
+		MemberFormats? members, IReadOnlyList<string>? headerNames)
 	{
 		this.workbook = workbook;
 		this.package = package;
@@ -145,6 +164,18 @@ internal sealed class SheetSink : CsvCellSink
 		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
+		if (members is not null)
+		{
+			if (options.Csv.HasHeader)
+			{
+				this.members = members;
+				header = [];
+			}
+			else if (headerNames is not null)
+			{
+				columnFormats = members.Columns(headerNames, options.Csv.FormatProvider);
+			}
+		}
 	}
 
 	/// <summary>The name of the sheet being written (a new one's, after <see cref="ExcelRowLimit.NewSheet"/>), and how messages name its cells.</summary>
@@ -170,6 +201,8 @@ internal sealed class SheetSink : CsvCellSink
 			OnLimit(at);
 		}
 
+		// The header record's names, which say which member each column is.
+		header?.Add(Encoding.UTF8.GetString(utf8.ToArray()));
 		if (utf8.IsEmpty)
 		{
 			return;
@@ -247,6 +280,12 @@ internal sealed class SheetSink : CsvCellSink
 			headerNumberLikeText = recordNumberLikeText;
 		}
 
+		if (header is not null)
+		{
+			columnFormats = members!.Columns(header, options.Csv.FormatProvider);
+			header = null;
+		}
+
 		numberLikeText |= recordNumberLikeText;
 		recordNumberLikeText = false;
 		if (strings is not null)
@@ -280,6 +319,7 @@ internal sealed class SheetSink : CsvCellSink
 		column = 0;
 		recordReferences = 0;
 		recordNumberLikeText = false;
+		header?.Clear();
 		if (MeasuringWidths)
 		{
 			widths.Clear();
@@ -443,6 +483,11 @@ internal sealed class SheetSink : CsvCellSink
 		fieldLimit = CellReference.MaxColumns;
 	}
 
+	/// <summary>The format and culture of a column's member, once the columns' members are known.</summary>
+	/// <param name="at">The column.</param>
+	/// <returns>Them, or <see langword="null"/> when the column's member has neither, or isn't known.</returns>
+	private ColumnFormat? FormatOf(int at) => columnFormats is { } formats && at < formats.Length ? formats[at] : null;
+
 	/// <summary>The kind of cell a field of a type makes in a column, from the column's last type when it is the same.</summary>
 	/// <param name="at">The column.</param>
 	/// <param name="type">The field's type.</param>
@@ -485,8 +530,9 @@ internal sealed class SheetSink : CsvCellSink
 	}
 
 	/// <summary>
-	/// Writes a number cell, when the text is a number in .NET's default form, in the invariant culture or the writer's:
-	/// its invariant text goes into <c>v</c>. Other text, such as a format's, is a text cell.
+	/// Writes a number cell, when the text is a number in .NET's default form, in the invariant culture or the writer's (or
+	/// the column's member's <see cref="CsvCultureAttribute"/>): its invariant text goes into <c>v</c>. Other text, such as
+	/// a format's, is a text cell.
 	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
@@ -498,7 +544,8 @@ internal sealed class SheetSink : CsvCellSink
 	private void WriteNumber(ReadOnlySpan<byte> text, int at, bool exact)
 	{
 		Span<byte> invariant = stackalloc byte[DotNetText.MaxNumberLength];
-		var length = DotNetText.ToInvariantNumber(text, culture, invariant, out var significant);
+		var numbers = FormatOf(at) is { HasCulture: true } column ? column.Numbers : culture;
+		var length = DotNetText.ToInvariantNumber(text, numbers, invariant, out var significant);
 		if (length < 0)
 		{
 			WriteText(text, at);
@@ -525,11 +572,21 @@ internal sealed class SheetSink : CsvCellSink
 		output.Append("</v></c>"u8);
 	}
 
-	/// <summary>Writes a date cell from a <see cref="DateTime"/>'s <c>"O"</c> text: its clock time, whatever its kind.</summary>
+	/// <summary>
+	/// Writes a date cell from a <see cref="DateTime"/>'s <c>"O"</c> text: its clock time, whatever its kind; or from its
+	/// member's format's text.
+	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
 	private void WriteDateTime(ReadOnlySpan<byte> text, int at)
 	{
+		if (FormatOf(at) is { HasDateFormat: true } column)
+		{
+			WriteFormatted(text, at, column, CellKind.DateTime);
+
+			return;
+		}
+
 		if (!DotNetText.TryDateTime(text, out var ticks, out _))
 		{
 			WriteText(text, at);
@@ -542,12 +599,27 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// Writes a cell from a <see cref="DateTimeOffset"/>'s <c>"O"</c> text, as <see cref="ExcelWriterOptions.DateTimeOffsets"/>
-	/// says: its text, or a date cell of its time in UTC or of its clock time.
+	/// says: its text, or a date cell of its time in UTC or of its clock time. The text of its member's format shows a clock
+	/// time, without its offset, so it is a date cell only with <see cref="ExcelDateTimeOffsets.ClockTime"/>.
 	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
 	private void WriteDateTimeOffset(ReadOnlySpan<byte> text, int at)
 	{
+		if (options.DateTimeOffsets != ExcelDateTimeOffsets.Text && FormatOf(at) is { HasDateFormat: true } column)
+		{
+			if (options.DateTimeOffsets == ExcelDateTimeOffsets.ClockTime)
+			{
+				WriteFormatted(text, at, column, CellKind.DateTimeOffset);
+			}
+			else
+			{
+				WriteText(text, at);
+			}
+
+			return;
+		}
+
 		if (options.DateTimeOffsets == ExcelDateTimeOffsets.Text || !DotNetText.TryDateTime(text, out var ticks, out var offset))
 		{
 			WriteText(text, at);
@@ -580,11 +652,18 @@ internal sealed class SheetSink : CsvCellSink
 		WriteSerial(at, milliseconds, format, format == FixedFormat.DateTimeMilliseconds ? ColumnWidths.DateTimeMilliseconds : ColumnWidths.DateTime);
 	}
 
-	/// <summary>Writes a date cell from a <c>DateOnly</c>'s <c>"O"</c> text, in <c>yyyy-mm-dd</c>.</summary>
+	/// <summary>Writes a date cell from a <c>DateOnly</c>'s <c>"O"</c> text, in <c>yyyy-mm-dd</c>, or from its member's format's text.</summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
 	private void WriteDate(ReadOnlySpan<byte> text, int at)
 	{
+		if (FormatOf(at) is { HasDateFormat: true } column)
+		{
+			WriteFormatted(text, at, column, CellKind.DateOnly);
+
+			return;
+		}
+
 		if (!DotNetText.TryDate(text, out var ticks))
 		{
 			WriteText(text, at);
@@ -603,11 +682,21 @@ internal sealed class SheetSink : CsvCellSink
 		WriteSerial(at, milliseconds, FixedFormat.Date, ColumnWidths.Date);
 	}
 
-	/// <summary>Writes a time cell from a <c>TimeOnly</c>'s <c>"O"</c> text, in <c>hh:mm:ss</c>, with <c>.000</c> when it has milliseconds.</summary>
+	/// <summary>
+	/// Writes a time cell from a <c>TimeOnly</c>'s <c>"O"</c> text, in <c>hh:mm:ss</c>, with <c>.000</c> when it has
+	/// milliseconds; or from its member's format's text.
+	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
 	private void WriteTime(ReadOnlySpan<byte> text, int at)
 	{
+		if (FormatOf(at) is { HasDateFormat: true } column)
+		{
+			WriteFormatted(text, at, column, CellKind.TimeOnly);
+
+			return;
+		}
+
 		if (!DotNetText.TryTime(text, out var ticks))
 		{
 			WriteText(text, at);
@@ -622,13 +711,14 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// Writes a duration cell from a <see cref="TimeSpan"/>'s <c>"c"</c> text: its days, in <c>[h]:mm:ss</c>, with
-	/// <c>.000</c> when it has milliseconds. Its column's width is its own text's.
+	/// <c>.000</c> when it has milliseconds. Its column's width is its own text's. A duration in its member's format, other
+	/// than <c>c</c>, is a text cell, even when its text looks like <c>c</c>'s (<c>hh\:mm\:ss</c> drops the days).
 	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
 	private void WriteDuration(ReadOnlySpan<byte> text, int at)
 	{
-		if (!DotNetText.TryDuration(text, out var ticks))
+		if (FormatOf(at) is { HasDurationFormat: true } || !DotNetText.TryDuration(text, out var ticks))
 		{
 			WriteText(text, at);
 
@@ -669,16 +759,52 @@ internal sealed class SheetSink : CsvCellSink
 		WriteText(text, at);
 	}
 
+	/// <summary>
+	/// Writes a date or time cell from the text of its member's format, when Excel can show the format and the text reads
+	/// back as a value that formats to the same text; otherwise a text cell. A date before 1900-01-01 follows
+	/// <see cref="ExcelWriterOptions.OutOfRangeDates"/>.
+	/// </summary>
+	/// <param name="text">The field's text.</param>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="column">The column's format.</param>
+	/// <param name="kind">The kind of value.</param>
+	/// <exception cref="InvalidOperationException">The date is before 1900-01-01, and the options say to throw.</exception>
+	private void WriteFormatted(ReadOnlySpan<byte> text, int at, ColumnFormat column, CellKind kind)
+	{
+		if (column.Translation(kind) is not { } format || !format.TryRead(text, out var milliseconds))
+		{
+			WriteText(text, at);
+
+			return;
+		}
+
+		if (milliseconds < 0)
+		{
+			WriteOutOfRange(text, at, duration: false);
+
+			return;
+		}
+
+		WriteSerial(at, milliseconds, column.Style(styles), MeasuringWidths ? format.Width : 0);
+	}
+
 	/// <summary>Writes a number cell of a serial, in one of the writer's formats, and notes its column's width.</summary>
 	/// <param name="at">The cell's column.</param>
 	/// <param name="milliseconds">The serial, in milliseconds.</param>
 	/// <param name="format">The cell's number format.</param>
 	/// <param name="width">The width its column needs, or 0 for none.</param>
-	private void WriteSerial(int at, long milliseconds, FixedFormat format, double width)
+	private void WriteSerial(int at, long milliseconds, FixedFormat format, double width) => WriteSerial(at, milliseconds, styles.IndexOf(format), width);
+
+	/// <summary>Writes a number cell of a serial, in a cell format, and notes its column's width.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="milliseconds">The serial, in milliseconds.</param>
+	/// <param name="style">The cell format's index.</param>
+	/// <param name="width">The width its column needs, or 0 for none.</param>
+	private void WriteSerial(int at, long milliseconds, int style, double width)
 	{
 		StartCell(at);
 		output.Append(" s=\""u8);
-		output.AppendNumber(styles.IndexOf(format));
+		output.AppendNumber(style);
 		output.Append("\"><v>"u8);
 		output.AppendDouble(Serial.Days(milliseconds));
 		output.Append("</v></c>"u8);

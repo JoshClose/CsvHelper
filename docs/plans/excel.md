@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) is next.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -3888,7 +3888,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 4: writer foundation (L)
 
-Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) is next. It changes some of the scope as planned, each change noted there: a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case.
+Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) was built, approved and committed 2026-11-07: it translates dates' and times' formats only, since `[CsvFormat]` doesn't apply to numbers in CsvHelper, and a number's `[CsvCulture]` is read instead; the user left numbers' formats out of Phase 4, as recommended (see step 4's "As built"). It changes some of the scope as planned, each change noted there: numbers' formats aren't translated; a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case.
 
 Scope, as planned:
 
@@ -3908,7 +3908,7 @@ Scope, as planned:
 - **.NET format → Excel number format:**
   - The formats come from Excel settings (`[ExcelColumn(Format)]`, `Columns`) and from `[CsvFormat]` on `T`'s members, read by reflection. A format string passed to `WriteField` does not reach the sink (Phase 0): such a field arrives as its formatted text. (Phase 4 reads `[CsvFormat]` and `[CsvCulture]`; the Excel settings come with Phase 5's `[ExcelColumn]` and `ExcelSheetOptions`.)
   - Precision: a number written with a format arrives rounded to it (`N2` → 2 decimals), and that is the value the cell stores. A column whose format should only change the display uses Excel's `Format` setting rather than `[CsvFormat]`, so its values arrive unformatted. Document this in the guide.
-  - Custom numeric formats (`0.00`, `#,##0`, `0%`) mostly map one-to-one.
+  - Custom numeric formats (`0.00`, `#,##0`, `0%`) mostly map one-to-one. (Not built: `[CsvFormat]` doesn't apply to numbers in CsvHelper, so no number arrives in a format, and the user left numbers' formats out of Phase 4; see step 4's "As built".)
   - Map the standard formats (`N2`, `F2`, `P1`, `C`) and date tokens (`MM` → `mm` for months). Excel reads `mm` as minutes only next to an hour or second token, so a .NET `mm` anywhere else is untranslatable.
   - Anything untranslatable is written as a text cell with the formatted value, which matches CSV output.
 - **Quirk handling:**
@@ -4088,7 +4088,7 @@ public static class ExcelWriterExtensions
   - At most 32,767 UTF-16 code units: Excel opens no file with a longer cell, inline or shared. A longer field throws `InvalidOperationException` naming the cell, and the record is discarded (decision 18).
   - Excel flags text that looks like a number (`00123`, `1.5`, `1E5`) with a warning triangle. When a text cell starts like a number (a digit, a sign or a `.`), the sheet gets `<ignoredErrors>` with `numberStoredAsText` over the cells it wrote (decision 19).
   - Text that would be a formula or an error elsewhere (`=1+1`, `#N/A`, `TRUE`) is only text: Excel never evaluates a text cell.
-- **Formatted values** (decisions 15 and 16): a number or date whose member's format is known is read back with that format and the member's culture. It is a typed cell, in that format translated to Excel's, only when the value it reads as formats to the same text again; otherwise it is a text cell, as in CSV. So a cell holds what its text shows (`N2` rounds to two decimals, `yyyy-MM` drops the day), never another value. See "Formats".
+- **Formatted values** (decisions 15 and 16): a number or date whose member's format is known is read back with that format and the member's culture. It is a typed cell, in that format translated to Excel's, only when the value it reads as formats to the same text again; otherwise it is a text cell, as in CSV. So a cell holds what its text shows (`N2` rounds to two decimals, `yyyy-MM` drops the day), never another value. See "Formats". (As built at step 4: dates and times only; a number's member gives its `[CsvCulture]` alone, since `[CsvFormat]` doesn't apply to numbers.)
 
 **Rows and cells:**
 
@@ -4139,7 +4139,7 @@ public static class ExcelWriterExtensions
   - The names are the header record's. Without a header, they are the names that `T`'s record writer's `WriteHeader` writes into a capturing sink.
   - A member whose name matches no column, and every member of a type mapped by `[CsvRecordMap]` (whose attributes are on its map), gets no format.
 - **Translation:** a .NET format becomes an Excel format code when Excel can show the same text.
-  - **Numbers:**
+  - **Numbers** (not built, and left out of Phase 4 by the user on 2026-11-07: `[CsvFormat]` doesn't apply to numbers in CsvHelper, so no number arrives in a format; see step 4's "As built"):
     - `F`, `N`, `D`, `E`, `P` and `C`, with their precision and the culture's patterns; `C` with the culture's symbol (`[$€-407]`).
     - Custom formats: `0`, `#`, `.`, `,` (grouping and scaling), `%`, `‰`, `E+` and `E-`, up to three sections, and literals, quoted.
     - Not translated: `X`, `R`, and lowercase exponents (`e+`), which Excel refuses.
@@ -4305,7 +4305,7 @@ Internal/Writing/
 
 - **Text:** random fields, UTF-8 and UTF-16, of control characters, surrogates, invalid sequences, near escapes and lengths around 32,767, written and read back the same (U+FFFD for what was invalid), each file passing `OpenXmlValidator`.
 - **Names:** random names: each accepted one opens in CsvHelper.Excel and passes the validator, and each refused one throws `ArgumentException`.
-- **Formats:** random .NET numeric and date formats and values. The translator gives no code or one that `FormatCheck` passes, and reading back never keeps a value whose text differs.
+- **Formats:** random .NET numeric and date formats and values (date and time formats only, since step 4 translates no numbers' formats). The translator gives no code or one that `FormatCheck` passes, and reading back never keeps a value whose text differs.
 - **Formulas:** `FormulaCheck` throws nothing but `ArgumentException`.
 - **Memory:** with `Inline` strings, a sheet of 32,767-character cells streams in a bounded buffer. A million distinct shared strings take the arena's size and no more.
 
@@ -4354,7 +4354,7 @@ Each comes with a recommendation.
 13. **`DateTimeOffset`.** Recommended: `Text` (the default), `Utc` or `ClockTime`, the time at its own offset. Alternative: the sketch's `Local`, which in .NET means the machine's time zone, not the value's.
 14. **Widths.** Recommended: the first data record's typed cells set their columns' widths, so that dates don't show as `########`. Alternative: no widths until Phase 5's auto-fit.
 15. **Known formats.** Recommended: from `[CsvFormat]` and `[CsvCulture]` by reflection, for `WriteSheet<T>` and `AddSheet<T>`, matched to columns by header name; a formatted value is typed only when it formats back to its own text. Alternatives: never typed (formatted values as text, as the sketch's fallback); formats from the generator, a core change.
-16. **What is translated.** Recommended: the standard and custom numeric formats and date formats Excel can show the same, with a locale tag for names in other cultures; `TimeSpan`'s default only; the rest text. Alternative: numbers only, with formatted dates as text.
+16. **What is translated.** Recommended: the standard and custom numeric formats and date formats Excel can show the same, with a locale tag for names in other cultures; `TimeSpan`'s default only; the rest text. Alternative: numbers only, with formatted dates as text. (At step 4, dates and times only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4 on 2026-11-07.)
 17. **Formulas.** Recommended: no cached value, since Excel and LibreOffice compute formulas on open; a check of what Excel refuses (length, brackets, quotes, an operator at the end); `_xlfn.` prefixes as given. Alternatives: cached values, handed to the sink beside the text (a thread-static set while the value formats); a table of the functions that need the prefix, added by the writer.
 18. **Cells past 32,767 characters.** Recommended: throw, since Excel opens no such file. Alternative: an option to cut them to 32,767.
 19. **Numbers stored as text.** Recommended: `ignoredErrors` over the written cells when a text cell starts like a number. Alternatives: never; always.
@@ -4759,9 +4759,125 @@ Filled in step by step; the code is the reference.
   - New sheets are named as Excel names copies.
   - The row limit's message drops "The record is discarded", as step 1's do.
 
+**Step 4, formats** (built, approved and committed 2026-11-07):
+
+- **New files:**
+  - `Internal/Writing/`:
+    - `FormatTranslator.cs`: a .NET date and time format, standard or custom, in a culture, to an Excel code, or none;
+    - `DateFormat.cs`: a translation: its code, the reading back of a field's text, and the width of the format's widest text;
+    - `FormatCheck.cs`: whether Excel opens a format code, and why not;
+    - `MemberFormats.cs`: a record type's `[CsvFormat]` and `[CsvCulture]` by reflection, cached per type, and `MemberFormat`, a member's entry;
+    - `ColumnFormat.cs`: a column's member's format and culture in one sheet, with its translation and cell format, made when first used;
+    - `HeaderCapture.cs`: the cell sink that keeps the names a record writer's `WriteHeader` writes.
+  - `Polyfills/TrimmingAttributes.cs` (`!NET` only): `DynamicallyAccessedMembers` and `UnconditionalSuppressMessage`, which the netstandard and .NET Framework builds lack. Core uses its annotations only under `NET`.
+- **Changed:**
+  - `ExcelWorkbookWriter` gains `AddSheet<T>`, and `WriteSheet<T>` and both `WriteSheetAsync<T>` go through it. Their `T` is annotated `[DynamicallyAccessedMembers(Members)]`, as the design has it: public and non-public properties, fields and constructors.
+  - `SheetSink` keeps the header record's names, finds each column's `ColumnFormat`, reads numbers with the member's culture, and dates and times with the member's format.
+  - The project file's comment on trimming: reflection now reads the members of the types `AddSheet<T>` is given.
+- **Decision: numbers' formats aren't translated, since `[CsvFormat]` doesn't apply to numbers.**
+  - CsvHelper's generator writes a member's `[CsvFormat]` only for types with a `ParseExact`: `DateTime`, `DateTimeOffset`, `TimeSpan`, `DateOnly`, `TimeOnly` and other types that have one. On an `int`, a `decimal` or a `double` it warns (CSVH010, "has [CsvFormat], which does not apply"), and the record writer writes the default text (`RecordParser.FormatValue`; `RecordGeneratorTests.WarnsAboutAttributesThatDoNotApply` checks `[CsvFormat("x")] public int X`).
+  - So the design's numeric translation (`F`, `N`, `D`, `E`, `P` and `C`, and custom numeric formats) has no source: no record writer writes a number in a format the sink could know, and a format passed to `WriteField` by hand doesn't reach the sink (Phase 0). It isn't built.
+  - What reaches the sink is a number member's `[CsvCulture]` alone: its default text in that culture (`1234,5`). The sink reads it with that culture's signs and separator (step 2's `NumberCulture`), so it is a number cell. Step 2's open case, `1234.5` from an invariant `[CsvCulture("")]` under a de-DE writer, is a number now.
+  - Translating numbers would need a core change that lets the record writer write a number in its `[CsvFormat]` (reading it back needs no format, since a number cell is a number), which would have to pass Phase 0's gate.
+  - Decided at review, 2026-11-07: the user left it out of Phase 4, as recommended. The alternatives were to build the numeric translator now, unused until such a change, or to make that core change. Phase 5's `[ExcelColumn(Format)]` and `Columns` are how a number gets a format, and step 6's fuzzing covers date and time formats only.
+  - The step's other decisions, below, stand as built.
+- **What is translated,** dates and times as designed, with these decisions:
+  - **Standard formats** become the culture's patterns: `f`, `g` and `G` as .NET composes them (a date pattern, a space and a time pattern, checked against .NET's own text in 11 cultures); `R`, `s` and `u` the invariant culture's. `O` is read without a format, as before. Not translated: `U`, which depends on the machine's time zone, and `M`, which has no year. A `DateOnly`'s `R` is `ddd, dd MMM yyyy` and a `TimeOnly`'s `HH:mm:ss`.
+  - **Every kind reads back through `DateTime`,** with the pattern: a `DateOnly`'s and a `TimeOnly`'s patterns format a `DateTime` the same, so the netstandard builds read them too.
+  - **Separators and other text are quoted** (`dd"."mm"."yyyy`), so that Excel shows the culture's whatever its own locale. Excel reads `m` as minutes after `h` with quoted text between (checked: `hh":"mm`, `hh" "mm` and `hh"x"mm` show `10:30`, `10 30` and `10x30`), and `mmm` as a month even beside an hour (`hh mmm` shows `10 Jan`).
+  - **Locale tags:** names get their culture's id (`[$-407]`), and English names too, as `[$-409]` for the invariant culture (the design tagged names other than English only; untagged, a German Excel would show German names). `AM/PM` without names gets `[$-409]`, since Excel shows it in the tag's locale (`[$-411]` gives 午前). A culture without a Windows id (0x1000, 0xC00 or 0x1400, or a `DateTimeFormatInfo` as the provider) gets `[$-409]` when its names are the invariant culture's, and isn't translated otherwise: Excel shows `[$-1000]` names in English.
+  - **`t` is `A/P` without a tag,** since Excel shows a tagged `A/P` as the whole designator (checked: `[$-409]hh":"mm" "A/P` shows `10:30 AM`). So `t` isn't translated beside names or `tt`.
+  - **Month names .NET writes in the genitive** (with a day of the month, where the culture's genitive names differ: ICU's de-DE `MMM`, pl-PL's and ru-RU's `MMMM`) aren't translated: Excel shows the nominative (checked: `[$-419]d mmmm yyyy` shows `15 Январь 2024` and `[$-415]` `15 styczeń 2024`, where .NET writes `15 января 2024` and `15 stycznia 2024`).
+  - **A date without a year** (`dd MMMM`, `dddd`) isn't translated: its text reads back in the current year, not the value's.
+  - **Two tokens of one letter side by side** (`%H%H`, `dddd%d`) aren't translated: Excel reads them as one (`hh`).
+  - The rest as designed: eras, offsets, `F`, four or more fraction digits, `y`, `yyy` and five or more, a 12-hour hour without `tt` or a 24-hour one with it, other designators, a month where Excel reads minutes and minutes where it reads a month, `f` not after `s.` or `ss.`, and calendars other than the Gregorian.
+- **Reading back:** `DateTime.TryParseExact` with the pattern, then `ToString` must give the same text (names in another case, `jan 2024`, parse but format otherwise). A format without a date holds the time of day, a serial below 1. A date before 1900-01-01 follows `OutOfRangeDates`, and the message quotes the formatted text: "Cell Data!B2 holds 31.12.1899, before 1900-01-01, Excel's first date (ExcelWriterOptions.OutOfRangeDates is Throw)."
+- **Widths** are the widest text over 84 sample dates (every month, seven days in a row, at 11:58:58.888), rather than the first value's text, so that a column of `MMMM` fits September after May. The evening isn't sampled: `AM` is wider than `PM` in Calibri, and Excel shows no other designators.
+- **What a member's format does,** by kind:
+  - `DateTime`, `DateOnly`, `TimeOnly`: a format other than `O` or empty is translated; a format that isn't, or a text that doesn't read back, is a text cell. So is .NET's default text in such a column (written by hand): only the member's format reads it.
+  - `DateTimeOffset`: a format's text shows a clock time without its offset, so it is a date cell only with `ClockTime`; `Text` and `Utc` make text cells.
+  - `TimeSpan`: a format other than `c`, `t` or `T` is a text cell, even when its text is in `c`'s layout (`hh\:mm\:ss` drops the days).
+  - Numbers: a `[CsvCulture]`'s signs; a column whose member has a format but no culture reads numbers with the writer's.
+- **`MemberFormats`** finds the members as the generator does (`RecordParser`):
+  - `[CsvRecord]` types only;
+  - the constructor marked `[CsvConstructor]`, else the visible parameterless one, else the one visible constructor with the most parameters, not a copy constructor; its parameters by their own names (`when` for a property `When`), with the attributes of the property or field they set as a fallback;
+  - then the properties and fields of the type and its base types, the derived type's first and a hidden member once, unless `[CsvIgnoreBase]`: accessible from the type (a base type's private ones aren't), visible or with `[CsvColumn]`, not `[CsvIgnore]`, not set by the constructor, and settable (a property's setter visible or with `[CsvColumn]`; a field neither `readonly` nor `const`);
+  - a member with `[CsvConverter]` has no format, and a record type behind one isn't read;
+  - nested records (`[CsvRecord]` types, nullable structs included) after their prefixes, which add up;
+  - a collection's columns from `Index` to `EndIndex`, and an indexed member at its index; the others by name, ordinally, and `NameIndex`;
+  - a culture that doesn't exist leaves its member out (its record writer throws anyway).
+  - Not seen: an assembly's `[assembly: CsvConverter]` of a nested record type. A member it converts is read as nested, and gets its members' formats under prefixed names its one column doesn't have.
+- **The columns' names:** with `HasHeader`, the header record's (the first sheet's; `NewSheet`'s sheets keep its formats); without, `HeaderCapture`'s, none when `T` has no record writer or one that can't be created (writing its records throws then, as before).
+- **Trimming:** `MemberFormats` reads base types and nested record types, which `T`'s annotation doesn't reach. Those reads are suppressed (IL2067, IL2072, IL2075) with the reason: the generated record writer reads those members, so the trimmer keeps them. The build's trim and AOT analysis gives no warning.
+- **Checked through COM** (Excel 365, build 20527, at 144 DPI); the probes, scripts and answers are in `Csv\_bench\results\phase4\step4`:
+  - **Format codes,** each in a workbook written by hand (`make_probes.py`, `answers.txt` to `answers4.txt`): these became `FormatCheck`'s grammar.
+    - Excel opens `0 €`, `0 £`, `0 ¤`, `0°`, `0‰` (without scaling), a no-break space, `0 |`, `0 &`, `0 ^~{}`, `0 5`, `0""`, `0";"`, `[Color56]`, `[red]`, `[$€]`, `[$-7]`, `[$-40c]`, `[$-12345678]`, `[DBNum1]` and `[DBNum2]`, `[mm]:ss`, `[ss]`, `0;;0`, `@ @`, `0.0.0`, `general`, `General" x"`, `0.0E+0`, `##0.0E-0`, `dd.mm.yyyy`, `mmm d, yyyy`, `YYYY-MM-DD` (as lower case), `aaa` and `aaaa` (weekdays), `bbbb` (the Buddhist year), `ggge`, `yyyy e`, `[$-411]e-m-d`, `ss.0`, `hh:mm.000`, `dd.0` and `mm.00`.
+    - It refuses `0\`, `0_` and `0*` at the end, `0:00`, `[Color0]`, `[Color57]`, `[ > 100]`, `[hm]`, `[foo]`, `0.00E00`, `E+0`, `0.00E+`, a date letter beside a digit placeholder (`0 g`, `0 y`, `0 e`, `0 h`, `0 s`), `dd @`, `dd %`, `dd ?`, `yyyy #`, `0 @`, `General 0`, `[Red0`, `ss.0000` and five sections.
+    - It opens these as other codes, which the check refuses: `aa` (as `\a\a`), `0 A/P`, `[$-ZZZ]0` (as `[$]0`), `[>abc]0` (as `[>0]0;General`) and `[$-123456789]0`. The check also refuses `[DBNum3]` and a backtick, which Excel opens as they are: forms that weren't in the first rounds, and that no translation needs. Phase 5 can accept them.
+  - **Display,** of codes the translator gives (`display-wide` in `answers2.txt`, and `answers4.txt`): quoted separators, `T`, `ss.000`, `\"`, the German, French, Japanese, Russian and Polish names, `AM/PM` untagged and under `[$-409]`, `[$-407]`, `[$-40C]`, `[$-411]` and `[$-809]`, and `A/P` with and without a tag, as above.
+  - **Written by the built library** (`make_probeapp.py`, `written-answers.txt`, `written-compare-excel.txt`): 136 formatted columns, of 105 `DateTime` formats (14 standard formats in five cultures, 23 custom ones, and 12 custom ones in six cultures), 13 `DateOnly`, 13 `TimeOnly` and 5 `DateTimeOffset` with `ClockTime`, each with three values. Excel opens both workbooks. 404 of the 408 cells show .NET's text, 367 of them typed (the others are formats that aren't translated, as text), and none shows `########`. The 4: ja-JP's `MMM` (Excel's `[$-411]mmm` shows `1`, .NET writes `1月`), three times, and de-DE's March (Excel `Mrz`, ICU `Mär`). Step 5's oracle lists such differences.
+- **LibreOffice 26.8** opens both, and exports 402 of the 408 as .NET writes them (`written-compare-lo.txt`): it shows `A/P` in lower case, and `AM/PM` under `[$-407]` as `vorm.` and `nachm.`.
+- **The oracles:** ClosedXML reads formatted dates as `DateTime`, and a time of day as a `TimeSpan`; ExcelDataReader reads them as `DateTime`, a time of day on 1899-12-31.
+- **.NET Framework's culture data** (Windows' own, where .NET has ICU's): ja-JP's long date has no day name, de-DE has no designators (so nothing with `tt` is translated there) and its abbreviated genitives are its nominatives, and en-GB has `AM` and `PM` rather than `am` and `pm`. The tests expect each runtime's data.
+- **Tests** (276 new on net10.0 and net8.0, 274 on net48: 2,640 on net10.0 and net8.0 and 2,600 on net48, all passing), in `tests/CsvHelper.Excel.Tests/Writing`, with `IsExternalInit.cs` for net48's positional record:
+  - **`FormatCheckTests`:** the 83 codes Excel opened and the 32 it refused, with each reason; the forms it opens as other codes, and conditions not checked, refused; the 255-character limit; quotes, escapes and brackets skipped; the messages.
+  - **`FormatTranslatorTests`:**
+    - the standard formats in the invariant culture, en-US, de-DE, fr-FR and ja-JP, read back;
+    - 64 custom formats, translated or not;
+    - separators, locale tags and names Excel shows otherwise, each kind's standard formats;
+    - every code passing `FormatCheck` and classified as a date by Phase 2's `NumberFormats.Classify`, over 8 cultures;
+    - reading back: what each text shows, 1900's first days, texts the format doesn't give, two-digit years;
+    - 300 random values for each of 17 formats that translates, in each of the five cultures (10 to 17 of them per culture);
+    - the widest text's width.
+  - **`MemberFormatsTests`:** each test type's columns checked against its record writer's own CSV fields (every formatted column holds its member's format's text) and its entries: names, `[CsvColumn]` names, private, internal, ignored, read-only and converted members, `NameIndex` with a gap, nested records one and two deep with a nullable struct, a positional record, constructors (a copy constructor, a parameterless one, `[CsvConstructor]`), base types and `[CsvIgnoreBase]`, indexed collections, a mapped type, header names written by hand, the cache, and `HeaderCapture`.
+  - **`FormattedCellsTests`**, sync and async:
+    - `WriteSheet<T>` of every kind: the cells' XML, the styles, the widths, and the validator;
+    - read back by `GetRecords<T>` through the members' formats, and by ClosedXML and ExcelDataReader;
+    - without a header; with a header written by hand, by its names; a text the member's format doesn't read; `AddSheet` without `T`;
+    - each `DateTimeOffsets` choice, `OutOfRangeDates` both ways, cultures' numbers both ways, `NewSheet`'s sheets, .NET's newer types;
+    - .NET's default formats (`O`, empty, `c`, `t`) and a custom duration in `c`'s layout, a number in a date member's column, and an asynchronous sequence.
+  - Every workbook these tests write passes `OpenXmlValidator`.
+- **Mutation check** on net10.0: 138 bugs planted one at a time, each file restored and checked by SHA-256 (the driver, `mutate.py`, and its results, `mutations.jsonl` and `mutations-rerun.jsonl`, are in `Csv\_bench\results\phase4\step4`). 134 were caught by the first run. Of the other four, three are caught after a test was added for each, and one can't be:
+  - "a month where Excel reads minutes" (`Part.Month when !minutes` without its guard): the tests' cases, `HH:MM` and `MM:ss`, have no year, so the rule for dates without a year refused them first. `yyyy HH:MM` and `yyyy MM:ss` were added.
+  - "`[CsvIgnoreBase]` ignored": the base type's members got entries, under names its header doesn't have, so its columns were right. The test checks its entries now.
+  - "members read without `[CsvColumn]`": a property needs a setter that is visible or has `[CsvColumn]` anyway, so only a private field shows it, and no test type had one. `NamedFormats` has one now.
+  - "`Color0` allowed" (the number's bound lowered to 0) is equivalent: a color's number can't start with `0`, so `Color0` is refused either way.
+  - The checks:
+    - the length limit off by one 1, five sections 2, an unclosed quote 1 and bracket 1 taken as closed at the end, a trailing escape 3;
+    - fraction zeros after any zero 11, zeros after a point not fractions 21, an exponent's digits not counted 3;
+    - in dates, `#` 2, `0` 6, four fraction digits 3, `%` 1, `@` 1 allowed; `:` in numbers 1; `@` 1 and `General` 1 with digit placeholders;
+    - an exponent without digits after 2, in lower case 1, before any digit 1, without its sign 1, an era's dash taken for one 1;
+    - `General` 5, `AM/PM` 8 and `A/P` 2 not tokens, `aa` a token 1, `b` not a date letter 1, elapsed time of mixed letters 1;
+    - colors by case 1, `Color57` 1, a condition without its number 2, its point without digits 1, text after it 1, a locale of nine hex digits 1, its hex unchecked 1;
+    - a backtick 1 and letters past ASCII 1 allowed, a quote's end read as another quote 85.
+  - The translator:
+    - `R` in the culture's formats 3 and names 1, `f` without its time 6, `g` with the long time 16, `u` as `s` 6, a `DateOnly`'s `R` with a time 3, a `TimeOnly`'s without seconds 1, any calendar 1;
+    - `%%` read 1, `%` keeping its letter's run 1, a quote's escape not read 1, an unclosed quote read 1, an escape at the end not refused 2, runs counted as one 81;
+    - the time separator as the date's 27, the date separator as `/` 1;
+    - a date without a year 12, a 12-hour hour without its designator 1, a 24-hour one with one 1, any designators 1, `t` beside names 2, `AM/PM` without a locale 7, `t` as `AM/PM` 1;
+    - the fraction's point kept 4, adjacent letters merged 3, a fraction after minutes 1 or any text 2;
+    - minutes only before seconds 26 or after hours 1, a month where Excel reads minutes 2 after the test, minutes where it reads a month 2, one neighbor only 45;
+    - `yyy` as `yyyy` 2, `HHH` as `hh` 2, `sss` as `ss` 1, abbreviated months 5 and days 5 as full;
+    - genitives ignored 1 or compared the other way 2, the invariant culture's own id 11, names without a culture tagged 0 1 or taken as English 1, a quote in text not escaped 1.
+  - `DateFormat`: text not formatted again 1, a time of day as a date 21, one month 1 or one day 1 sampled.
+  - `ColumnFormat`: `O` 2, `c` 8 and `t` 2 read as formats, an empty format kept 2, the culture's numbers dropped 9, every member with a culture 1, the culture ignored for dates 11.
+  - `MemberFormats`:
+    - types without `[CsvRecord]` read 1, constructor parameters skipped 1 or without their properties' attributes 1, base types skipped 1, `[CsvIgnoreBase]` ignored 1 after the test;
+    - private base members 1, protected members 1, members without `[CsvColumn]` 1 after the test, ignored members 1, constructor-set members 1, private setters 1 and read-only fields 1 read; converted members' records read 1;
+    - nested prefixes dropped 2, outer prefixes dropped 1, nullable structs not unwrapped 1, collections as one column 1, a collection's last column dropped 1;
+    - `NameIndex` ignored 1, names ignoring case 1, the first of a name always 1, the copy constructor taken 1, the parameterless constructor not first 1, `[CsvConstructor]` ignored 1.
+  - `HeaderCapture`: captured names dropped 10, a missing record writer throwing 1.
+  - The sink:
+    - header names dropped 19, formats not found at the header's end 19, names from a header without one 21;
+    - numbers in the writer's culture 11, formatted dates by the default path 15, formatted `DateOnly` 2 and `TimeOnly` 2 as text;
+    - a formatted offset typed with `Utc` 1, an offset's format ignored 1, durations' formats ignored 2;
+    - a formatted date before 1900 written 2, text that doesn't read back typed 2, formatted dates' widths dropped 2, the translation's style dropped 10, the last column's format dropped 5.
+  - The workbook writer: `WriteSheet` 8, `WriteSheetAsync` 6 and an asynchronous sequence 1 without `T`'s formats, no names without a header 2, no member formats 21.
+- **Core:** no change. The solution builds with 0 warnings on every target.
+
 ### Phase 5: presentation (M)
 
-- **Attributes and options:** `[ExcelColumn]`, `[ExcelSheet]` and `ExcelSheetOptions.Columns` for formats, widths, wrap and hidden columns. `[ExcelColumn(Format)]` and `Columns`' `Format` give Excel's format codes directly, for display only, beside Phase 4's formats from `[CsvFormat]`, and Phase 4's `FormatCheck` checks them.
+- **Attributes and options:** `[ExcelColumn]`, `[ExcelSheet]` and `ExcelSheetOptions.Columns` for formats, widths, wrap and hidden columns. `[ExcelColumn(Format)]` and `Columns`' `Format` give Excel's format codes directly, for display only, beside Phase 4's formats from `[CsvFormat]`, and Phase 4's `FormatCheck` checks them. They are how a number gets a format, since `[CsvFormat]` doesn't apply to numbers (Phase 4's step 4).
 - **Auto-fit:** `<cols>` comes before the rows, so auto-fit buffers the first N rows to estimate widths, then writes them. It widens Phase 4's widths, which cover the first data record's typed cells, to every column over the first N rows. Without auto-fit, widths come from attributes, options and Phase 4's typed columns only.
 - **Header and view:**
   - Bold header style (Phase 4 writes the header as plain text cells).
@@ -4863,7 +4979,7 @@ Every feature from the brainstorm, and where it lands.
 | Streaming writes with inline strings, shared strings optional | 4 |
 | New sheet at the row limit | 4 |
 | Several sheets in one workbook | 4 |
-| Number format and width per column | 4 (format translation and typed columns' widths), 5 |
+| Number format and width per column | 4 (dates' and times' format translation, and typed columns' widths), 5 |
 | Bold header, frozen header row, autofilter | 5 |
 | Wrapped text, hyperlinks | 0 (`WriteField(Uri)`), 5 |
 | Styled Excel Table output | 5 |

@@ -39,7 +39,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">
-		<!-- No reflection and no code generated at run time, which the analyzers check. -->
+		<!-- No code generated at run time, and reflection only over the members of the record types AddSheet<T> is given,
+		     which T's annotation keeps; the analyzers check both. -->
 		<IsAotCompatible>true</IsAotCompatible>
 		<IsTrimmable>true</IsTrimmable>
 	</PropertyGroup>
