@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again. See "As built" under Phase 3, which opens with a summary.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) is next.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -67,14 +67,16 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader =
   - `Text`: Raw (default) or Formatted (Phase 8).
   - `MaxUncompressedSize`, `MaxPartSize`: zip-bomb limits. Phase 1's "Public API" says what each bounds.
   - `Csv`: a composed `CsvReaderOptions` for `FormatProvider`, header matching, `OnRecordError`, null values, trimming and the rest. CSV-only settings (separator, quoting, comments) are ignored.
-- **`ExcelWorkbookWriter`**: `ToFile(path)` and `ToStream(stream)`. `WriteSheet(name, records)` writes a whole sheet. `AddSheet(name, options)` returns a `CsvWriter` for manual or mixed writing.
+- **`ExcelWorkbookWriter`**: `ToFile(path)` and `Create(stream)` (Phase 4's name for the sketch's `ToStream`). `WriteSheet(name, records)` writes a whole sheet. `AddSheet(name)` and `AddSheet<T>(name)` return a `CsvWriter` for manual or mixed writing, the second with `T`'s formats; `AddSheet(name, options)` comes with Phase 5's `ExcelSheetOptions`. Phase 4's "Public API" has the exact signatures.
 - **`ExcelWriterOptions`**:
   - `Strings`: Inline (default) or Shared.
-  - `CompressionLevel`.
+  - `CompressionLevel`: `Fastest` by default, as Excel's own files are deflated.
   - `RowLimit`: Throw (default) or NewSheet (continues on a new sheet with the header repeated).
   - `LongNumbers`: Text (default), Number (lossy) or Throw.
-  - `DateTimeOffsets`: Text (ISO 8601, default), Utc or Local.
-  - `Csv`: a composed `CsvWriterOptions`. CSV-only settings (separator, quoting, fixed width, comments) are ignored or rejected. Injection protection is unnecessary, because text cells are never evaluated.
+  - `DateTimeOffsets`: Text (ISO 8601, default), Utc or ClockTime (the time at its own offset).
+  - `OutOfRangeDates`: Text (default) or Throw, for dates before 1900 and negative durations.
+  - `Csv`: a composed `CsvWriterOptions`. CSV-only settings (separator, quoting, fixed width, comments) are ignored. Injection protection is unnecessary, because text cells are never evaluated.
+- **`ExcelFormula`**: a formula, written as a formula cell without a cached value (Excel and LibreOffice compute it on open), through a member of that type or `WriteFormula`.
 - **`ExcelSheetOptions`**: `FreezeHeader`, `BoldHeader`, `AutoFilter`, `Table` (name, style), `AutoFit` (rows to sample), `Columns` (per header name: `Width`, `Format`, `Wrap`, `Hidden`).
 - **Attributes**: `[ExcelColumn(Width, Format, Wrap, Hidden)]` on members, `[ExcelSheet(Name, FreezeHeader, AutoFilter, Table)]` on the class.
 
@@ -3215,7 +3217,7 @@ Filled in step by step; the code is the reference.
   - **The default path:** six of eight methods within 1% before the split. After it, Orders Records is within the noise, and shared Rows is +1.2% on one clean pair (see "The gate").
   - **Defined names:** a million after 100,000 sheets open in about a second, where they took 6 minutes before step 7's fix.
 - **Left open:**
-  - **Measuring the default path again**, which the user chose not to wait for in calling the phase complete. That needs a quiet machine and a new baseline worktree of `1cd1a0af` at `Csv\_bench\base`, since step 8's was removed. Proposed, not done:
+  - **Measuring the default path again**, which the user chose not to wait for in calling the phase complete, and carried into Phase 9's list on 2026-11-06. That needs a quiet machine and a new baseline worktree of `1cd1a0af` at `Csv\_bench\base`, since step 8's was removed. Proposed, not done:
     - BenchmarkDotNet pairs of all eight methods, with the Sylvan control, interleaved and pinned as at step 8, counting clean pairs only;
     - the worktree checked out with LF line ends, so that both sides' generator sources hash alike and share the cached workbooks.
   - **Step 4's four mutants that weren't run**, left when the run was stopped for low memory, and not run since: "fills from the first field each time", "runs ignore hidden columns", "runs end at the column, not the shown field", and "the option ignored".
@@ -3886,21 +3888,25 @@ Filled in step by step; the code is the reference.
 
 ### Phase 4: writer foundation (L)
 
+Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; see "As built". Step 3 (formulas and limits) is next. It changes some of the scope as planned, each change noted there: a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case.
+
+Scope, as planned:
+
 - **Package and sheets:**
   - Sheets stream into zip entries one at a time, because `ZipArchive` allows one open entry in create mode.
   - Styles, workbook, relationships and content types are written last, once all number formats and sheet names are known.
   - A style registry hands out `s` indexes as formats first appear.
 - **Cell sink** (fields arrive as CSV text plus type; see Phase 0's "As built"):
-  - Number cells: the invariant text of a number type is already `<v>` text (the CSV path formats it with `FloatFormatter`/`Utf8Formatter`), so it is copied as is. A number written with a format or a culture is parsed back with the writer's provider or, failing that, written as a text cell.
+  - Number cells: the invariant text of a number type is already `<v>` text (the CSV path formats it with `FloatFormatter`/`Utf8Formatter`), so it is copied as is. A number written with a format or a culture is parsed back with the writer's provider or, failing that, written as a text cell. (The design reads it back with its member's format and culture when `[CsvFormat]` gives them, and keeps it only when it formats to the same text; see "What a field becomes".)
   - Strings are written inline by default (shared strings are an option), with `xml:space="preserve"` when needed.
-  - Booleans are written as `t="b"`. Dates are parsed from their `"O"` text and written as serial numbers with a date style; a date written with a format arrives as that text, and becomes a text cell. An empty field is an empty cell.
-  - The first record is the header when `HasHeader` is set: header styles, frozen rows, autofilter and tables apply to it, and `Columns` options match its names.
-  - Other types arrive with their type: `Uri` becomes a link, and `ExcelFormula` (through its converter or `WriteField(object)`) a formula.
+  - Booleans are written as `t="b"`. Dates are parsed from their `"O"` text and written as serial numbers with a date style; a date written with a format arrives as that text, and becomes a text cell. (The design makes it a date cell when its member's format is known and translatable.) An empty field is an empty cell.
+  - The first record is the header when `HasHeader` is set: header styles, frozen rows, autofilter and tables apply to it, and `Columns` options match its names. (Those are Phase 5's; Phase 4 writes the header as text cells.)
+  - Other types arrive with their type: `Uri` becomes a link, and `ExcelFormula` (through its converter or `WriteField(object)`) a formula. (Links are Phase 5's: Phase 4 writes a `Uri`'s text. `ExcelFormula` needs no converter: it is formattable.)
 - **Formulas:**
-  - An `ExcelFormula` value type (formula text plus an optional cached value), written through a built-in converter.
+  - An `ExcelFormula` value type (formula text plus an optional cached value), written through a built-in converter. (The design has no cached value: Excel and LibreOffice compute formulas on open; see "Formulas" and decision 17.)
   - A `WriteFormula` extension for manual writing.
 - **.NET format → Excel number format:**
-  - The formats come from Excel settings (`[ExcelColumn(Format)]`, `Columns`) and from `[CsvFormat]` on `T`'s members, read by reflection. A format string passed to `WriteField` does not reach the sink (Phase 0): such a field arrives as its formatted text.
+  - The formats come from Excel settings (`[ExcelColumn(Format)]`, `Columns`) and from `[CsvFormat]` on `T`'s members, read by reflection. A format string passed to `WriteField` does not reach the sink (Phase 0): such a field arrives as its formatted text. (Phase 4 reads `[CsvFormat]` and `[CsvCulture]`; the Excel settings come with Phase 5's `[ExcelColumn]` and `ExcelSheetOptions`.)
   - Precision: a number written with a format arrives rounded to it (`N2` → 2 decimals), and that is the value the cell stores. A column whose format should only change the display uses Excel's `Format` setting rather than `[CsvFormat]`, so its values arrive unformatted. Document this in the guide.
   - Custom numeric formats (`0.00`, `#,##0`, `0%`) mostly map one-to-one.
   - Map the standard formats (`N2`, `F2`, `P1`, `C`) and date tokens (`MM` → `mm` for months). Excel reads `mm` as minutes only next to an hour or second token, so a .NET `mm` anywhere else is untranslatable.
@@ -3909,9 +3915,9 @@ Filled in step by step; the code is the reference.
   - Numbers beyond 15 significant digits follow `LongNumbers` (text by default), so IDs and card numbers don't silently change.
   - Numeric-looking strings stay text (ZIP codes, phone numbers, leading zeros), and `<ignoredErrors numberStoredAsText>` hides Excel's warning triangles.
   - The 32,767-character cell limit.
-  - Sheet names: at most 31 characters, none of `: \ / ? * [ ]`, no leading or trailing apostrophe, unique ignoring case, and not `History`.
+  - Sheet names: at most 31 characters, none of `: \ / ? * [ ]`, no leading or trailing apostrophe, unique ignoring case, and not `History`. (Excel opens a sheet named `History`, and compares names more widely than by case; see "Sheet names".)
   - Control characters are written as `_xHHHH_`, and a literal `_x` that looks like an escape as `_x005F_`.
-  - Dates before 1900 can't be serial numbers, so they follow a policy: text or throw.
+  - Dates before 1900 can't be serial numbers, so they follow a policy: text or throw. (Negative durations too: `OutOfRangeDates`.)
   - `DateTimeOffset` follows `DateTimeOffsets`.
   - Row and column limits (1,048,576 × 16,384) throw by default. `RowLimit.NewSheet` continues on a new sheet with the header repeated.
 - **Multiple sheets** through `WriteSheet` and `AddSheet`, plus async writes through the entry stream.
@@ -3921,15 +3927,711 @@ Filled in step by step; the code is the reference.
   - Files open in Excel and LibreOffice without a repair prompt.
   - Files round-trip through our reader, ClosedXML and ExcelDataReader.
 
+#### Public API
+
+Phase 4 adds a workbook writer, its options and their enums, and a formula type. A sheet is written through a plain `CsvWriter`.
+
+```csharp
+public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
+{
+	public static ExcelWorkbookWriter ToFile(string path, ExcelWriterOptions? options = null, FileOptions fileOptions = FileOptions.None);
+	public static ExcelWorkbookWriter Create(Stream stream, ExcelWriterOptions? options = null, bool leaveOpen = false);
+
+	public ExcelWriterOptions Options { get; }
+	public IReadOnlyList<string> SheetNames { get; }
+
+	public void WriteSheet<[DynamicallyAccessedMembers(Members)] T>(string name, IEnumerable<T> records);
+	public ValueTask WriteSheetAsync<[DynamicallyAccessedMembers(Members)] T>(string name, IEnumerable<T> records, CancellationToken cancellationToken = default);
+	public ValueTask WriteSheetAsync<[DynamicallyAccessedMembers(Members)] T>(string name, IAsyncEnumerable<T> records, CancellationToken cancellationToken = default);
+
+	public CsvWriter AddSheet(string name);
+	public CsvWriter AddSheet<[DynamicallyAccessedMembers(Members)] T>(string name);
+
+	public void Dispose();
+	public ValueTask DisposeAsync();
+}
+
+public sealed record ExcelWriterOptions
+{
+	public static ExcelWriterOptions Default { get; } = new();
+
+	public CsvWriterOptions Csv { get; init; } = CsvWriterOptions.Default;
+	public ExcelStrings Strings { get; init; }                                      // Inline
+	public CompressionLevel CompressionLevel { get; init; } = CompressionLevel.Fastest;
+	public ExcelRowLimit RowLimit { get; init; }                                    // Throw
+	public ExcelLongNumbers LongNumbers { get; init; }                              // Text
+	public ExcelDateTimeOffsets DateTimeOffsets { get; init; }                      // Text
+	public ExcelOutOfRangeDates OutOfRangeDates { get; init; }                      // Text
+}
+
+public enum ExcelStrings { Inline, Shared }
+public enum ExcelRowLimit { Throw, NewSheet }
+public enum ExcelLongNumbers { Text, Number, Throw }
+public enum ExcelDateTimeOffsets { Text, Utc, ClockTime }
+public enum ExcelOutOfRangeDates { Text, Throw }
+
+public readonly struct ExcelFormula : IEquatable<ExcelFormula>, IFormattable	// and on .NET ISpanFormattable, IUtf8SpanFormattable, ISpanParsable<ExcelFormula>
+{
+	public ExcelFormula(string formula);
+
+	public string Formula { get; }
+
+	public static ExcelFormula Parse(string text, IFormatProvider? provider = null);
+	public static bool TryParse(string? text, IFormatProvider? provider, out ExcelFormula formula);
+
+	public bool Equals(ExcelFormula other);
+	public override bool Equals(object? obj);
+	public override int GetHashCode();
+	public override string ToString();
+	public string ToString(string? format, IFormatProvider? formatProvider);
+
+	public static bool operator ==(ExcelFormula left, ExcelFormula right);
+	public static bool operator !=(ExcelFormula left, ExcelFormula right);
+}
+
+public sealed class ExcelFormulaConverter : ICsvConverter<ExcelFormula>
+{
+	public ExcelFormula Read(CsvReader reader, int index);
+	public void Write(CsvWriter writer, ExcelFormula value);
+}
+
+public static class ExcelWriterExtensions
+{
+	public static void WriteFormula(this CsvWriter writer, string formula);
+}
+```
+
+`Members` is what reading `[CsvFormat]` needs: public and non-public properties, fields and constructors.
+
+**Writing a workbook:**
+
+- `ToFile` creates or overwrites the file, which other processes can read while it is written, as `CsvWriter.ToFile` does. `Create` writes to a stream from its position; it need not seek.
+- Sheets are written in turn, in tab order (decision 1):
+  - `WriteSheet` writes one whole: the header and every record, as `CsvWriter.WriteRecords` writes them, then completes it.
+  - `AddSheet` returns a `CsvWriter` for the sheet, for `WriteRecords`, `WriteRecord`, `WriteField` and dynamic records; disposing it completes the sheet. `AddSheet<T>` is the same, with `T`'s formats (see "Formats").
+  - Adding a sheet while another's writer is open throws `InvalidOperationException` (decision 2).
+- Disposing the workbook writer:
+  - completes an open sheet with the records it ended (a later write to that sheet's `CsvWriter` throws `ObjectDisposedException`);
+  - writes the workbook's other parts and closes the package;
+  - gives a workbook with no sheet one empty sheet, `Sheet1`, since Excel opens no workbook without one (decision 4).
+- A failed record (a converter's exception, a limit) is discarded, as `CsvWriter` discards one. The sheet keeps the records before it, and the workbook can still be completed into a file Excel opens. An exception from the stream leaves the file incomplete.
+- `SheetNames`: the names given so far, the open sheet's included, with those that `RowLimit.NewSheet` adds.
+- Async: `WriteSheetAsync`, `CsvWriter`'s async methods and `DisposeAsync` write through the entry streams asynchronously. Before .NET 10, closing an entry and the package writes synchronously (see "Risks").
+- A workbook writer is not thread-safe, as `CsvWriter` isn't. `ParallelWriteRecords` throws `NotSupportedException` on a sheet's writer, as Phase 0 built it, until Phase 9.
+
+**Options:**
+
+- `Csv` applies as for any cell sink (Phase 0's "As built"):
+  - These apply: `HasHeader`, `ValidateFieldCount`, `FormatProvider` and `BufferSize`.
+  - These don't, and aren't rejected (decision 24): `Mode`, `Separator`, `Quoting`, `ShouldQuote`, `Escape`, `FieldWidths`, `NullValue`, `TrueValue` and `FalseValue`, `NewLine`, `Injection` (text cells are never evaluated) and `WriteByteOrderMark`.
+  - `CommentPrefix`: `WriteComment` throws `NotSupportedException`, as Phase 0 built it.
+  - `[CsvOptions]` on `T` applies through `Csv = CsvWriterOptions.For<T>()`, as for CSV.
+- `Strings`:
+  - `Inline` (the default): each text cell holds its string (`t="inlineStr"`), and nothing is kept between rows.
+  - `Shared`: each distinct string once, in `xl/sharedStrings.xml`, written at the end. The table holds every distinct string until the workbook is disposed.
+- `CompressionLevel`: `Fastest` by default, the "super fast" deflate that Excel's own entries are flagged with (decision 22).
+- `RowLimit`, `LongNumbers`, `DateTimeOffsets` and `OutOfRangeDates`: below.
+- `ToFile` and `Create` validate the options: a value outside an enum throws `ArgumentOutOfRangeException`, and a null `Csv` `ArgumentNullException`.
+
+**Sheet names** (decision 5; checked through COM, below):
+
+- 1 to 31 UTF-16 code units.
+- None of `\ / ? * [ ] :`, no apostrophe first or last, and no control characters (U+0000 to U+001F and U+007F to U+009F). Excel opens names with control characters, written by reference or as `_xHHHH_`, but its tabs can't take them, so the writer is stricter.
+- Unique as Excel compares them:
+  - Excel refuses names that differ in case, ASCII or not (`Äpfel` and `äpfel`, `straße` and `STRASSE`, `σ` and `ς`, `K` and the Kelvin sign), or by Unicode equivalence (`é` composed and decomposed, `ﬁ` and `fi`).
+  - It opens names that differ in width (`A`, `Ａ`), in kana (`ｶ`, `カ`, `あ`, `ア`), in accents (`e`, `é`), in dots (`I`, `ı`, `i`, `İ`), or by a zero-width space.
+  - The writer's key is a name's NFKC form, with `ß` and `ẞ` as `ss`, upper-cased invariantly. It agrees with every pair checked but the compatibility forms (`A` and `Ａ` are one name to it), where it is stricter.
+- Anything else is allowed: `History`, `TRUE`, `A1`, `R1C1`, `123`, spaces at either end, and `= + ! # $ % & ; , " <`, all of which Excel opens (decision 5).
+- An invalid name throws `ArgumentException` from `WriteSheet` and `AddSheet`.
+- Names are written escaped for XML, with `_x005F_` before text that reads as an escape (`_xHHHH_`), since Excel decodes escapes in sheet names too.
+
+**What a field becomes.** The sink gets each field's text and type (Phase 0):
+
+| Field | Its text | Cell |
+| --- | --- | --- |
+| Text: `string`, spans, `char`, `Guid`, enums, `Uri`, any other type | as written | a string; empty: no cell |
+| `bool` | `True`, `False` | `t="b"`, `1` or `0` |
+| Integers (`sbyte` to `ulong`, `Int128`, `UInt128`) and `decimal` | invariant digits | a number; past 15 significant digits, `LongNumbers` |
+| `double`, `float`, `Half` | invariant, shortest round trip | a number; `NaN` and the infinities: text |
+| `DateTime` | `"O"` | the serial of its clock time, in a date format by what it holds |
+| `DateOnly` | `yyyy-MM-dd` | a serial, `yyyy-mm-dd` |
+| `TimeOnly` | `"O"` | a fraction of a day, `hh:mm:ss` |
+| `TimeSpan` | `"c"` | days, `[h]:mm:ss` |
+| `DateTimeOffset` | `"O"` | as `DateTimeOffsets` says |
+| `ExcelFormula` | `=` and the formula | a formula, without a cached value |
+| null | empty | no cell |
+
+- **Numbers:**
+  - The default invariant text is copied into `<v>` as it is. It is the shortest text that reads back as the value, Excel reads every form .NET writes (`1E-05`, `1.5E+20`, `0.10`, 17 digits, `-0`), and it keeps all 17 digits.
+  - Other text, a culture's or a format's, is read back. With its member's format known, see "Formatted values". Without one, it is read with the writer's provider, strictly: a sign, digits without leading zeros, the decimal separator and an exponent, nothing else (decision 8). That keeps `1234,5` (de-DE) a number, and keeps `1,234.50` (`N2`) and `0042` (`D4`) text, whose look a number cell would lose.
+  - `NaN`, `Infinity` and `-Infinity` are text cells, since Excel can't open them as numbers (decision 9).
+  - **Long numbers** (decision 10): an integer or `decimal` with more than 15 significant digits is a text cell (`Text`, the default), a number that Excel rounds to its 15 digits (`Number`), or throws (`Throw`). Leading zeros and the zeros that end the digits don't count, so `10000000000000000000` has one significant digit. Doubles are numbers whatever their digits: the cell stores the same double.
+  - Subnormal doubles are written as they are. Excel reads them as 0; LibreOffice and CsvHelper.Excel keep them.
+- **Dates and times** (decisions 11 to 13; serials in the 1900 system):
+  - `DateTime`: its clock time, whatever its `Kind` (the offset in a local time's `"O"` text is dropped). 1900-01-01 is day 1, and from 1900-03-01 the serial is one more, past Excel's 1900-02-29, as Phase 2 reads it.
+  - Each value is rounded to the millisecond, as Excel shows it and Phase 2 reads it, so a write and a read give the same `DateTime` to the millisecond.
+  - The format is by what each value holds: `yyyy-mm-dd` at midnight, `yyyy-mm-dd hh:mm:ss` with a time in whole seconds, and `yyyy-mm-dd hh:mm:ss.000` otherwise.
+  - `DateOnly`: `yyyy-mm-dd`. `TimeOnly`: `hh:mm:ss`, or `hh:mm:ss.000` with milliseconds.
+  - `TimeSpan`: its days (`TotalDays`), as `[h]:mm:ss`, with `.000` when it has milliseconds. Phase 2 reads that as a duration.
+  - `OutOfRangeDates`: a date before 1900-01-01, or a negative `TimeSpan`, which Excel shows as `########`, is a text cell (`Text`, the default) or throws (`Throw`).
+  - `DateTimeOffsets`: `Text` (the default) writes the `"O"` text as a text cell; `Utc` writes the serial of `UtcDateTime`; `ClockTime` writes the serial of `DateTime`, the time at its own offset.
+- **Booleans:** `t="b"`, `1` or `0`. A `[CsvBooleanValues]` member arrives as its text, a string, and is text.
+- **Text:**
+  - Escaped as Excel writes text:
+    - `&`, `<` and `>` as entities;
+    - tab and LF as they are;
+    - CR as `_x000D_`, since a literal one reads as LF in Excel and LibreOffice;
+    - the other control characters, U+FFFE and U+FFFF, as `_xHHHH_`;
+    - `_x005F_` before text that reads as an escape (`_x0041_`, with hex digits of either case).
+  - `xml:space="preserve"` when the text starts or ends with a space, tab or LF.
+  - Invalid UTF-8 (which only `WriteField(ReadOnlySpan<byte>)` can pass) becomes U+FFFD, as invalid UTF-16 does in core.
+  - At most 32,767 UTF-16 code units: Excel opens no file with a longer cell, inline or shared. A longer field throws `InvalidOperationException` naming the cell, and the record is discarded (decision 18).
+  - Excel flags text that looks like a number (`00123`, `1.5`, `1E5`) with a warning triangle. When a text cell starts like a number (a digit, a sign or a `.`), the sheet gets `<ignoredErrors>` with `numberStoredAsText` over the cells it wrote (decision 19).
+  - Text that would be a formula or an error elsewhere (`=1+1`, `#N/A`, `TRUE`) is only text: Excel never evaluates a text cell.
+- **Formatted values** (decisions 15 and 16): a number or date whose member's format is known is read back with that format and the member's culture. It is a typed cell, in that format translated to Excel's, only when the value it reads as formats to the same text again; otherwise it is a text cell, as in CSV. So a cell holds what its text shows (`N2` rounds to two decimals, `yyyy-MM` drops the day), never another value. See "Formats".
+
+**Rows and cells:**
+
+- Record `n` (from 0) is row `n + 1`, so the header, when `HasHeader`, is row 1. Field `i` is column `i` from `A`.
+- Every row and cell has its `r`, as Excel writes them. A record without a value has no `<row>`, and an empty field no `<c>`.
+- No `dimension` and no `spans`: both need rows the sink hasn't seen (decision 23).
+- **Limits:**
+  - A record past row 1,048,576 follows `RowLimit`. `Throw` (the default) throws `InvalidOperationException` and discards it.
+  - `NewSheet` completes the sheet and goes on in a new one, `Orders (2)`, then `Orders (3)` and so on, the name shortened to fit 31 code units and made unique, with the header repeated (decision 20).
+  - A field past column 16,384 (`XFD`) throws, and the record is discarded.
+- The header is text cells. Phase 5 makes it bold.
+
+**Column widths** (decision 14):
+
+- Excel shows a number its column can't fit in its format as `########`, and at the default width that is every date. That includes `1/15/2024` in the built-in short date, in Calibri 11 and in Aptos Narrow 11 (checked).
+- So the sink holds the records up to the first data record (the one after the header) before it writes `<cols>`, which comes before the rows.
+  - Each of that record's cells in a number format other than General gets a width that fits its text, when that is wider than the default.
+  - Dates and times in the default formats get the widths Excel's AutoFit gives them (below). Other formats' widths come from the cell's text, through a table of Calibri 11's character widths measured through COM. (As built, every width comes from the table, for 96 DPI: the AutoFit widths below were measured at 144 DPI, and are about 4.5% too narrow at 96 DPI. See step 2's "As built".)
+  - A `DateTime` column gets the width of the format with seconds, even when its first value is a date alone. A `TimeSpan` column's width is its first value's text.
+- Text, and numbers in General, never show `########`, and get no width. Phase 5's auto-fit widens this to every column, over its first N rows.
+
+**Formulas** (decision 17):
+
+- `ExcelFormula` holds a formula, given with or without its `=`. `Formula` is without it, and `ToString` gives `=` and the formula, which is what a CSV writer writes (as text, so `Injection` applies to it there).
+- The constructor checks what makes Excel refuse a file (checked):
+  - at most 8,192 characters;
+  - outside string literals and quoted sheet names, parentheses, brackets and braces that are balanced;
+  - string literals that are closed;
+  - no operator at the end.
+- Other formulas that Excel can't parse also make the file unopenable, and the docs say so. A formula that Excel parses but can't compute (an unknown function, a missing sheet) opens, as `#NAME?` or `#REF!`.
+- The cell is `<f>` alone, without a cached value:
+  - Excel computes it on open.
+  - LibreOffice computes a formula without a cached value, and shows a cached one as it is, even one that is stale.
+  - Readers that don't compute read the cell as empty: CsvHelper.Excel with `Formulas = CachedValue`, and ExcelDataReader. With `Formulas = FormulaText`, CsvHelper.Excel reads `=` and the formula.
+- Functions newer than Excel 2007 are stored with a prefix (`_xlfn.XLOOKUP`), and Excel reads one without it as `#NAME?`. A formula is written as given, so it must have the prefix.
+- **Writing:** a member of type `ExcelFormula` is written by the generated record writer as a formattable value (`IUtf8SpanFormattable`, and `IFormattable` on the netstandard and .NET Framework builds), with no converter. `writer.WriteFormula("SUM(A1:A3)")` writes one by hand.
+- **Reading:** `ExcelFormula` parses `=` and a formula, which `Formulas = FormulaText` reads; other text throws `FormatException`. It is `ISpanParsable<ExcelFormula>` on .NET, for the generated mapper. On targets without `ISpanParsable`, a member needs `[CsvConverter(typeof(ExcelFormulaConverter))]`.
+- `default(ExcelFormula)` writes an empty cell.
+
+**Formats** (decisions 15 and 16):
+
+- **Where they come from:**
+  - `[CsvFormat]` (its first format, the one the record writer writes) and `[CsvCulture]` on `T`'s members, read by reflection, for `WriteSheet<T>` and `AddSheet<T>`.
+  - `AddSheet(name)` has no `T`: its formatted values are read back with the writer's provider, as above.
+  - Phase 5 adds `[ExcelColumn(Format)]` and `ExcelSheetOptions.Columns`, which give Excel's format codes directly, for display only.
+- **Which column a member's format is for:**
+  - A member's column is found by its header name: its `[CsvColumn]` name or its own, after the prefixes of the records it is nested in, and the `NameIndex`th column of that name.
+  - The names are the header record's. Without a header, they are the names that `T`'s record writer's `WriteHeader` writes into a capturing sink.
+  - A member whose name matches no column, and every member of a type mapped by `[CsvRecordMap]` (whose attributes are on its map), gets no format.
+- **Translation:** a .NET format becomes an Excel format code when Excel can show the same text.
+  - **Numbers:**
+    - `F`, `N`, `D`, `E`, `P` and `C`, with their precision and the culture's patterns; `C` with the culture's symbol (`[$€-407]`).
+    - Custom formats: `0`, `#`, `.`, `,` (grouping and scaling), `%`, `‰`, `E+` and `E-`, up to three sections, and literals, quoted.
+    - Not translated: `X`, `R`, and lowercase exponents (`e+`), which Excel refuses.
+  - **Dates and times:**
+    - The standard formats, as the culture's patterns, and then the custom tokens: `d` to `dddd`; `M` to `MMMM` (as `m` to `mmmm`); `yy` and `yyyy`; `H` and `HH`; `h` and `hh` with `tt`; `m`, `mm`, `s` and `ss`; `f` to `fff` (as `.0` to `.000`); `tt` and `t` when the culture's designators are `AM` and `PM`; the culture's separators; and literals.
+    - Names (`MMM`, `dddd`) in a culture other than English get its locale (`[$-40C]`).
+    - Not translated: `K` and `z` to `zzz` (offsets); `F`; `ffff` and more (Excel refuses four digits); `y` and `yyy`; `g`; a 12-hour `h` without `tt`; and a month token where Excel would read minutes, next to an hour or a second.
+  - **`TimeSpan`:** its default text only. Custom `TimeSpan` formats stay text.
+  - Whatever isn't translated stays text.
+- **Reading back:** the text is parsed with the format and the culture: dates with `ParseExact`, and numbers with the culture's number styles once the format's literals, percent and per-mille signs and scaling are taken off. Then the value is formatted again with both, and only the same text keeps it.
+- **Checked against Excel:** every code the translator gives must pass `FormatCheck`, which refuses what Excel refused (below). The corpus asks Excel how it shows each translated format (see "Testing").
+
+**Package** (decision 3):
+
+- Each sheet streams into its entry, `xl/worksheets/sheetN.xml`, as it is written.
+- At the end come `xl/sharedStrings.xml` (with `Shared` strings), `xl/styles.xml`, `xl/workbook.xml`, `xl/_rels/workbook.xml.rels`, `_rels/.rels` and `[Content_Types].xml`. Excel and LibreOffice open that order (checked).
+- There is no theme, no document properties (so no author and no dates), no views, no `dimension` and no `calcPr`: Excel opens without them.
+- Every entry is dated 1980-01-01, as Excel dates its entries, so a workbook's bytes depend only on what is written.
+- Styles: Excel's minimal style sheet in Calibri 11 (decision 6), with a cell format for each number format used, in the order of first use, and custom formats from `numFmtId` 164.
+
+**Messages** (`ArgumentException` for names and formulas, `InvalidOperationException` for the rest):
+
+- "Sheet names are 1 to 31 characters long, and \"Quarterly results 2024 (final draft)\" has 36."
+- "A sheet name can't have \\, /, ?, *, [, ] or :, and \"Q1/Q2\" has /."
+- "A sheet name can't start or end with an apostrophe: \"'Totals\"."
+- "A sheet name can't have control characters, and \"a\\tb\" has U+0009."
+- "The workbook already has the sheet \"Data\", which Excel takes \"data\" to be."
+- "The sheet \"Raw\" is still being written: dispose its CsvWriter before adding a sheet. A workbook is written one sheet at a time."
+- "Cell Orders!C14 has 40,000 characters, and Excel opens no cell of more than 32,767. The record is discarded."
+- "The sheet Orders is full at row 1,048,576, Excel's last. Set ExcelWriterOptions.RowLimit to NewSheet to go on in a new sheet. The record is discarded."
+- "Record 5 has a field in column XFE, past XFD, Excel's last column. The record is discarded."
+- "Cell Orders!B7 holds 12345678901234567890, which has 20 significant digits, and Excel keeps 15 (ExcelWriterOptions.LongNumbers is Throw). The record is discarded."
+- "Cell Orders!D3 holds 1899-06-01, before 1900-01-01, Excel's first date (ExcelWriterOptions.OutOfRangeDates is Throw). The record is discarded."
+- "The formula \"SUM(A1:A3\" has a parenthesis that isn't closed, and Excel opens no workbook with it."
+- "A formula is at most 8,192 characters long, and this one has 9,000."
+
+**Changes to reading:** `WorkbookPart` decodes `_xHHHH_` in sheet names, as Excel does (checked), so that a sheet the writer names `a_x0041_b` reads back with that name (decision 25). This is CsvHelper.Excel's code, not core's.
+
+#### Checked on 2026-11-06
+
+Excel 365 (16.0 build 20527) through COM, with probe workbooks written by hand and opened read-only (`Workbooks.Open` throws for a file Excel can't open), and some converted to CSV with LibreOffice 26.8. The probes, their scripts and the answers are in `Csv\_bench\results\phase4\design`.
+
+- **Package:**
+  - Excel and LibreOffice open the parts in a streaming writer's order: the sheet first, `[Content_Types].xml` last.
+  - Both open a package with no styles part, rows and cells without `r`, and an empty `sheetData`, and one without `dimension`, views, theme, `calcPr` or document properties.
+  - Excel's own files date every entry 1980-01-01 and flag its deflate as "super fast".
+- **Numbers in `<v>`:**
+  - Excel opens `1E-05`, `1.5E+20`, `0.10`, `1234.50`, 17-digit texts (and reads `0.30000000000000004` and `1.0000000000000002` exactly), `1.7976931348623157E+308`, `-0` (as 0), `1e5`, `.5`, `5.` and ` 5 `. `9007199254740993` reads as the nearest double.
+  - It can't open `NaN`, `Infinity`, `+5`, `0x10` or `1,5`.
+  - It reads subnormals (`4.9406564584124654E-324`, `2.2250738585072009E-308`) as 0. LibreOffice keeps them.
+- **Text:**
+  - A tab and an LF are kept as they are. A literal CR reads as LF in Excel and in LibreOffice (XML's line ends), so CR must be `_x000D_`.
+  - Control characters as `_xHHHH_` read back, while a character reference to one (`&#1;`) makes a file Excel can't open. `_xFFFE_` reads as U+FFFE.
+  - `_x005F_` escapes an underscore whether its hex digits are upper or lower case. `_X0041_` (capital X) and `_x0041` (no closing `_`) are literal.
+  - Spaces, tabs and LFs at either end need `xml:space="preserve"`. An emoji takes two code units.
+  - The limit is 32,767 UTF-16 code units, in an inline string or a shared one: 32,767 opens, and 32,768 doesn't, counting an emoji as two.
+  - With `numberStoredAsText` in `ignoredErrors`, over the used range or the whole grid, `00123`, `1.5` and `1E5` aren't flagged. A date's text (`2024-01-15`) and `TRUE` aren't flagged either way. `=1+1` and `#N/A` in text cells stay text.
+- **Dates and widths:**
+  - At the default width every date shows `########`: the built-in short date (`1/15/2024`) and short date and time, `yyyy-mm-dd`, and the formats with times. `hh:mm:ss` fits.
+  - The widths Excel's AutoFit stores, in Calibri 11: `yyyy-mm-dd` 10.09, `yyyy-mm-dd hh:mm` 15.18, `yyyy-mm-dd hh:mm:ss` 17.82, `yyyy-mm-dd hh:mm:ss.000` 21.45, `m/d/yyyy` 9.45, `m/d/yyyy h:mm` 14.54, `hh:mm:ss` 7.91. In Aptos Narrow 11 they are within 0.1.
+- **Formulas:**
+  - Excel computes a formula without a cached value on open, and recomputes one with a stale cached value, with or without `fullCalcOnLoad`. LibreOffice computes the first and shows the stale value of the second.
+  - Excel can't open a file with a formula it can't parse (`SUM(`, `A1+`), or with one longer than 8,192 characters (8,192 opens).
+  - It reads `=A1` (with its `=`) as `A1`, and lowercase as uppercase. An unknown function is `#NAME?`, as is `XLOOKUP` without its `_xlfn.` prefix; a missing sheet is `#REF!`.
+- **Number format codes:**
+  - Excel can't open a file whose format has an unclosed quote or bracket, five sections, a lowercase `e+`, four digits of a second's fraction, letters that aren't quoted (`0.00 kg`), or an unknown color (`[Purple]`).
+  - It opens `‰`, `[$-409]`, `[$€-407]`, conditions, fractions, `*` fills, `[Color10]`, `@`, and an empty code (as General). It cuts a code longer than 255 characters to 255.
+- **Sheet names:**
+  - 31 UTF-16 code units open, and 32 don't, counting an emoji as two.
+  - Excel can't open a name with `\ / ? * [ ] :`, an empty name, or one that starts or ends with an apostrophe.
+  - It opens `History`, ` `, ` a`, `a `, `123`, `TRUE`, `A1`, `R1C1`, `=a`, `+a`, and names with `!`, `#`, `$`, `%`, `&`, `;`, `,`, `"` and `<`. It opens a tab, an LF or U+0001 in a name, by character reference or as `_x0001_`, which it decodes.
+  - It can't open two names that differ in case (`Data`, `data`; `Äpfel`, `äpfel`), nor `straße` and `STRASSE`, `ﬁ` and `fi`, `σ` and `ς`, `K` and the Kelvin sign, or `é` composed and decomposed.
+  - It opens `A` and `Ａ`, `e` and `é`, `ｶ` and `カ`, `あ` and `ア`, `I` and `ı`, `i` and `İ`, and `ab` beside `ab` with a zero-width space between its letters.
+- **Rows:** row 1,048,576 opens, and 1,048,577 doesn't.
+
+#### Internal design
+
+**New files:**
+
+```
+ExcelWorkbookWriter.cs, ExcelWriterOptions.cs (with the five enums), ExcelFormula.cs, ExcelFormulaConverter.cs, ExcelWriterExtensions.cs
+Internal/Writing/
+  PackageWriter.cs      the ZipArchive in create mode: one entry at a time, the parts at the end, entries dated 1980-01-01
+  PackageParts.cs       the content types, relationships, workbook and styles, written at the end
+  SheetSink.cs          the CsvCellSink: rows and cells, the held records, the limits, flushes and completion
+  XmlOutput.cs          the UTF-8 buffer a sheet's XML goes into: escaped text, numbers and references
+  CellValue.cs          a field's text and type to a cell: its kind, its value and its format (as built: CellKind.cs and CellKinds.cs)
+  DotNetText.cs         .NET's own texts read back: "O" dates and times, "c" durations, invariant numbers (and NumberCulture.cs, a culture's signs)
+  Serial.cs             dates and times to serials, in the 1900 system
+  StyleRegistry.cs      number format codes to cell format indexes
+  SharedStringTable.cs  Strings = Shared: each distinct UTF-8 string once
+  SheetNames.cs         a name's checks and its comparison key
+  ColumnWidths.cs       widths from text, with Calibri 11's character widths
+  FormatTranslator.cs   a .NET format and culture to an Excel code, and its text read back
+  FormatCheck.cs        whether Excel opens a format code
+  FormulaCheck.cs       the formula checks
+  MemberFormats.cs      T's [CsvFormat] and [CsvCulture], by header name
+  HeaderCapture.cs      a sink that keeps the names a record writer's WriteHeader writes
+```
+
+**The sink** (`SheetSink`):
+
+- **Fields:** `WriteField(utf8, type)` counts the column, checks its limit, and finds the field's cell kind from its type. Each column keeps the last type it saw and that type's kind, so that a column of one type costs one reference comparison per field. The kind writes the cell into the record's part of the buffer. Types are matched by reference to `typeof`, and `DateOnly` and `TimeOnly` by name on the netstandard builds, as core does.
+- **Records:** a record's first cell with a value writes `<row r="n">` before it. `EndRecord` closes the row, if it has one, and asks for a flush once the buffer passes 64 KB. `DiscardRecord` moves the buffer back to the record's start. Shared strings and styles it added stay; Excel ignores unused ones.
+- **Flushes:** the writer calls `Flush` or `FlushAsync`, as its caller is sync or async, which writes the buffer to the entry stream.
+- **Held records:** nothing is flushed until the first data record ends (or the sheet does). Then the sheet's start, `<cols>` and `<sheetData>` are written, and the held rows after them.
+- **Completing:** `</sheetData>`, Excel's default `pageMargins`, `ignoredErrors` when a text cell needs it, and `</worksheet>`. Then the buffer is flushed, and the entry is closed, so that the workbook can open the next.
+- **`NewSheet`:** at row 1,048,577 the sink completes its entry, opens the next sheet's, and writes the held header row (whose cells' `r` are row 1 in every sheet) and `<cols>` again.
+
+**Values:**
+
+- `CellValue` maps a type to a kind once per type: Text, Bool, Integer, Decimal, Float, DateTime, DateOnly, TimeOnly, TimeSpan, DateTimeOffset or Formula.
+- **Numbers:** the invariant number grammar (`-?(0|[1-9][0-9]*)(\.[0-9]+)?(E[+-]?[0-9]+)?`) decides, without parsing, that text is the default and goes into `<v>` as it is. The significant digits of integers and decimals are counted over the same bytes. Other text is parsed, strictly, with the writer's provider (or the member's format, below) and written with core's `FloatFormatter`, or as the integer's or decimal's invariant text.
+- **Dates:** `DotNetText` reads .NET's fixed `"O"` layouts (`yyyy-MM-ddTHH:mm:ss.fffffff` with nothing, `Z` or an offset; `yyyy-MM-dd`; `HH:mm:ss.fffffff`) and `"c"` (`[-][d.]hh:mm:ss[.fffffff]`) by position. `Serial` turns ticks into milliseconds since 1899-12-30 (less one day before 1900-03-01), which a `double` holds exactly, and divides once by 86,400,000.
+- **Text:** `XmlOutput` finds the bytes that need escaping (`&`, `<`, `>`, `_`, the control bytes, and U+FFFE and U+FFFF's `EF BF`) with one `IndexOfAny`, and copies the runs between them. A sink can't tell a field of `WriteField(ReadOnlySpan<byte>)`, whose UTF-8 core doesn't check, from other text (both are `string`), so every text field is checked for valid UTF-8: with `Utf8.IsValid` on .NET, and a loop of its own on the other builds.
+- **Shared strings:** a dictionary keyed by UTF-8 bytes, over a byte arena like the reader's, gives each string its index.
+- **Styles:** `StyleRegistry` gives each format code a cell format index, 0 for General, in the order of first use.
+
+**Formats:**
+
+- `MemberFormats.For<T>()` reads, once per type, the members with `[CsvFormat]` or `[CsvCulture]`: properties and fields, the base types' included, and the primary constructor's parameters (matched to properties by name), with their header names as "Formats" gives them. It is cached per type.
+- `HeaderCapture` is a `CsvCellSink` that keeps the fields of its first record, for a `CsvWriter` created over it (core's internal constructor) to which `CsvRecordWriter.Create<T>().WriteHeader` writes.
+- `FormatTranslator.Translate(format, type, culture)` tokenizes a .NET format once per column and gives an Excel code (or none) and a reader of its text. It is cached per column.
+- `FormatCheck` refuses what Excel refused (unbalanced quotes and brackets, more than four sections, lowercase `e+`, four or more fraction digits of seconds, letters that aren't quoted or tokens, unknown colors) and codes past 255 characters.
+
+**Package:**
+
+- `PackageWriter` holds the `ZipArchive` (`ZipArchiveMode.Create`, entry names in UTF-8, as the reader opens them), creates each entry with the options' level and the fixed date, and on .NET 10 uses its async entry and disposal methods.
+- `PackageParts` writes the fixed XML around the lists: sheet names, relationship ids (`rId1` on for the sheets, then the styles and the shared strings), content type overrides, number formats and cell formats.
+
+**Changes to reading:** `WorkbookPart.ReadSheet` decodes the name's `_xHHHH_` escapes (`XmlText.DecodeEscapes`) after its XML.
+
+#### Testing
+
+**Unit tests:**
+
+- **`SheetNames`:** every name under "Checked on 2026-11-06", accepted and refused, the comparison key's cases, and the escapes it writes.
+- **`XmlOutput`:** every control character, CR, U+FFFE and U+FFFF, `_x` texts in both cases and their near misses, entities, `preserve`, each form of invalid UTF-8, and the 32,767 limit with surrogate pairs across it.
+- **`DotNetText` and `Serial`:** `"O"` texts of each `Kind`, `DateOnly`, `TimeOnly`, `"c"` durations (negative, with days, with fractions), 1900-01-01 to 1900-03-01, the rounding to milliseconds, and random dates through Phase 2's conversion and back.
+- **Numbers:** the invariant grammar, cultures' texts, leading zeros, long numbers' significant digits, `NaN` and the infinities.
+- **`FormatTranslator`:** each standard format and custom token, in the invariant culture, en-US, de-DE, fr-FR and ja-JP; what isn't translated; and reading back. Every code it gives passes `FormatCheck`, and Phase 2's `NumberFormats.Classify` finds it the right kind: a date format a date, a duration's a duration, a number's a number.
+- **`FormatCheck`** and **`FormulaCheck`:** each refusal and acceptance checked through COM, and brackets inside string literals and quoted sheet names.
+- **`MemberFormats`:** its names checked against the record writer's own header for every test type: `[CsvColumn]` names, nested records' prefixes, `NameIndex`, constructor parameters and base types.
+- **`StyleRegistry`** and **`SharedStringTable`.**
+
+**End to end,** sync and async, on net10.0, net8.0 and net48:
+
+- `WriteSheet<T>` from `IEnumerable<T>` and `IAsyncEnumerable<T>`; `AddSheet` and `AddSheet<T>` with `WriteRecords`, `WriteRecord` and `WriteField`; dynamic records; `HasHeader` both ways; several sheets; an empty workbook; `ToFile`; a stream that can't seek.
+- Each row of "What a field becomes", read back by CsvHelper.Excel's reader to the same values, through `GetRecords<T>`, dynamic records and `CsvDataReader`, with each option: `Strings`, `LongNumbers`, `DateTimeOffsets`, `OutOfRangeDates` and `RowLimit`. An internal row limit lets `NewSheet` be tested without a million rows; one test writes 1,048,577 rows.
+- Errors: every message, the discarded record, a sheet completed after a failure, an open sheet at `Dispose`, and `ObjectDisposedException` after.
+- Every file these tests write passes `OpenXmlValidator`, and ClosedXML and ExcelDataReader read it to the same values, with their differences listed.
+
+**Round trips:** a seeded property test writes random records of every type (random values, and strings of every class of character) and reads them back, equal by the rules above: dates to the millisecond, long numbers as text that parses back, and so on. A few thousand records per run.
+
+**Corpus and Excel's answers** (decision 26):
+
+- **A `written` content set** (`tools/CsvHelper.Excel.Corpus/Written.cs`, linked into the tests): workbooks that CsvHelper.Excel writes. They hold every type of the table and its edge values, formatted members in several cultures, formulas, long and escaped text, `Shared` strings, `NewSheet`, and names Excel accepts.
+- **The corpus tool's `written` command** writes them, opens each in Excel through COM, and records Excel's answers in `Files/excel-written/*.json`: whether it opened; each sheet's name and column widths; and each cell's `Value2`, type, `Text`, `NumberFormat` and `Formula`. With them goes the SHA-256 of the workbook Excel read.
+- **The tests** write the same workbooks again. A workbook whose SHA-256 differs from its answers' fails with "run the corpus tool's written command", since the writer changed. Otherwise they compare Excel's answers with what was written: values and types exactly, and each formatted cell's `Text` with .NET's text of its value (the translation's oracle). Each difference is listed with its reason.
+- **LibreOffice:** a test converts the written workbooks to CSV (`soffice --convert-to csv`) and compares. It is skipped where `soffice` is missing, and CI installs LibreOffice for it (decision 27).
+
+**Security and fuzzing:**
+
+- **Text:** random fields, UTF-8 and UTF-16, of control characters, surrogates, invalid sequences, near escapes and lengths around 32,767, written and read back the same (U+FFFD for what was invalid), each file passing `OpenXmlValidator`.
+- **Names:** random names: each accepted one opens in CsvHelper.Excel and passes the validator, and each refused one throws `ArgumentException`.
+- **Formats:** random .NET numeric and date formats and values. The translator gives no code or one that `FormatCheck` passes, and reading back never keeps a value whose text differs.
+- **Formulas:** `FormulaCheck` throws nothing but `ArgumentException`.
+- **Memory:** with `Inline` strings, a sheet of 32,767-character cells streams in a bounded buffer. A million distinct shared strings take the arena's size and no more.
+
+#### Benchmark
+
+- **No core change,** so no core gate (see "Core changes").
+- **Two classes** over the benchmarks' existing data:
+  - `ExcelPackageAssetsWrite`: the PackageAssets data, a million rows of text and its header.
+  - `ExcelOrdersWrite`: a million `OrderRecord`s, of dates, numbers, booleans and text.
+- **Writers:**
+  - CsvHelper.Excel with `Inline` and `Shared` strings at `Fastest`, and `Inline` at `Optimal`;
+  - SpreadCheetah 1.28.0, LargeXlsx 2.0.2 and MiniExcel 1.46.0, the versions the corpus uses;
+  - CsvHelper's CSV writer, as the reference.
+  - Each writes to a stream that counts and drops its bytes. The file sizes are recorded too.
+- One BenchmarkDotNet run, recorded in "As built". Phase 4 sets no speed target; Phase 9 tunes.
+- The benchmarks' own `ExcelStrings` enum gives way to the library's.
+
+#### Core changes
+
+None. Phase 4 uses what core has: the internal `CsvWriter(CsvCellSink, CsvWriterOptions)` constructor and `CsvCellSink`, and `FloatFormatter`, through `InternalsVisibleTo`; and the public `CsvRecordWriter.Create<T>().WriteHeader`.
+
+Considered and avoided:
+
+- **Telling the sink `T` from `WriteRecords<T>`,** through a hook in core's record methods. It would add IL to them, which Phase 0 found costly; `AddSheet<T>` gives the sink `T` instead.
+- **Typed values or format strings reaching the sink:** Phase 0's gate turned typed hooks down. Reading the text back keeps core as it is.
+- **Columns' formats from the generator** (metadata on `CsvRecordWriter<T>`): architecture decision 5 keeps the generator as it is in v1. Reflection by header name finds them instead.
+
+If building turns up a need, it is flagged first and gated, as Phase 2's were.
+
+#### Decisions
+
+Each comes with a recommendation.
+
+1. **The entry points.** Recommended: `ExcelWorkbookWriter.ToFile` and `Create` (named as `CsvWriter.Create` and `ExcelReader.Create`, rather than the sketch's `ToStream`), `WriteSheet<T>` and `WriteSheetAsync<T>`, `AddSheet` and `AddSheet<T>`. No one-call writer like `ExcelReader`: writing a workbook is already two lines. Alternatives: an `ExcelWriter.ToFile(path)` that returns the one sheet's `CsvWriter`; `ToStream`.
+2. **Sheets at a time.** Recommended: one, as `ZipArchive` writes one entry at a time; adding a sheet while another is open throws. Alternative: keep each open sheet in a temporary file and copy it in when it completes.
+3. **The package's order.** Recommended: sheets as they are written, the other parts at the end, `[Content_Types].xml` last, which Excel and LibreOffice open; no theme, document properties, views or `dimension`. Alternative: Excel's order, which needs every sheet held in a temporary file until the end.
+4. **A workbook without sheets.** Recommended: `Dispose` writes one empty sheet, `Sheet1`. Alternative: throw from `Dispose`.
+5. **Sheet names.** Recommended: Excel's rules for files, as checked, but stricter where its tabs are (no control characters) and where Unicode's compatibility forms are (one key for all targets). `History` is allowed, since Excel opens it. Alternatives: Excel's rules exactly, control characters included; also refuse `History`, as Excel's own tab does.
+6. **The font.** Recommended: Calibri 11, which every Excel since 2007 has and which LibreOffice replaces with Carlito, of the same widths, so that the widths fit everywhere. Alternative: Aptos Narrow 11, Excel 365's default since 2023, which older Excel replaces with a font of other widths.
+7. **Strings.** Recommended: `Inline` by default, as the sketch has it: nothing is kept between rows. `Shared` makes smaller files at the cost of memory. Alternative: `Shared` by default, as Excel writes them.
+8. **Numbers' other text.** Recommended: the default invariant text copied as it is; any other text read strictly with the writer's provider, with leading zeros and grouping kept as text. Alternative: every text but the default as text.
+9. **`NaN` and the infinities.** Recommended: text cells, since Excel can't open them as numbers, and CsvHelper.Excel reads them back. Alternative: `#NUM!` error cells.
+10. **Long numbers.** Recommended: as the sketch has it: more than 15 significant digits in an integer or `decimal` follows `LongNumbers`, `Text` by default; doubles are always numbers.
+11. **Dates.** Recommended: serials of the clock time, rounded to the millisecond, each in an ISO-like format by what it holds (a date, seconds, milliseconds). Alternatives: Excel's built-in short date and time (14 and 22), which show in the reader's own locale; one format per column, from its first value.
+12. **Out-of-range dates.** Recommended: dates before 1900-01-01 and negative durations both follow `OutOfRangeDates`: `Text` by default, or `Throw`. Alternative: the sketch's two choices for dates alone, and negative durations as numbers Excel shows as `########`.
+13. **`DateTimeOffset`.** Recommended: `Text` (the default), `Utc` or `ClockTime`, the time at its own offset. Alternative: the sketch's `Local`, which in .NET means the machine's time zone, not the value's.
+14. **Widths.** Recommended: the first data record's typed cells set their columns' widths, so that dates don't show as `########`. Alternative: no widths until Phase 5's auto-fit.
+15. **Known formats.** Recommended: from `[CsvFormat]` and `[CsvCulture]` by reflection, for `WriteSheet<T>` and `AddSheet<T>`, matched to columns by header name; a formatted value is typed only when it formats back to its own text. Alternatives: never typed (formatted values as text, as the sketch's fallback); formats from the generator, a core change.
+16. **What is translated.** Recommended: the standard and custom numeric formats and date formats Excel can show the same, with a locale tag for names in other cultures; `TimeSpan`'s default only; the rest text. Alternative: numbers only, with formatted dates as text.
+17. **Formulas.** Recommended: no cached value, since Excel and LibreOffice compute formulas on open; a check of what Excel refuses (length, brackets, quotes, an operator at the end); `_xlfn.` prefixes as given. Alternatives: cached values, handed to the sink beside the text (a thread-static set while the value formats); a table of the functions that need the prefix, added by the writer.
+18. **Cells past 32,767 characters.** Recommended: throw, since Excel opens no such file. Alternative: an option to cut them to 32,767.
+19. **Numbers stored as text.** Recommended: `ignoredErrors` over the written cells when a text cell starts like a number. Alternatives: never; always.
+20. **`RowLimit.NewSheet`.** Recommended: `Orders (2)`, `Orders (3)` and so on, as Excel names copies, shortened to 31 code units, with the header and widths repeated.
+21. **What waits for Phase 5.** Recommended: a `Uri` is its text, the header is plain, and there is no `ExcelSheetOptions` yet. Alternative: links in Phase 4, as the sketch had them.
+22. **Compression.** Recommended: `Fastest` by default, as Excel's own files are deflated; the benchmark measures `Optimal` beside it. Alternative: `Optimal`, `ZipArchive`'s default.
+23. **Rows and cells.** Recommended: `r` on each, as Excel writes them; no `dimension` and no `spans`, which a stream can't know. Alternative: no `r`, which Excel and LibreOffice open, to save bytes (Phase 9, which the parallel writer needs anyway).
+24. **CSV settings.** Recommended: those that don't apply are ignored, as Phase 1's reader ignores them. Alternative: reject them with `ArgumentException`.
+25. **Sheet names' escapes on read.** Recommended: decode them, as Excel does, so that names round-trip.
+26. **The corpus.** Recommended: a `written` content set, with Excel's answers pinned to each workbook's SHA-256, and Excel's `Text` as the translation's oracle. Alternative: Excel checked by hand at the end of the phase.
+27. **LibreOffice in CI.** Recommended: as the plan's "Testing" says, CI installs LibreOffice for the written workbooks' test, a few minutes per run. Alternative: keep it a local test, skipped without `soffice`.
+
+#### Risks
+
+- **Synchronous I/O before .NET 10:** closing an entry and the package writes synchronously, so a stream that forbids synchronous I/O, such as ASP.NET Core's response body, throws. The docs say to write to a file or a buffer there; Phase 9's own zip writer removes it.
+- **Zip64** for a sheet past 4 GB on a stream that can't seek: `ZipArchive`'s support differs between targets. A test of a 4 GB sheet runs on demand.
+- **A format for the wrong column,** when a header name matches another member's (a converter's or a map's): the value reads back by another format, and is kept only if it formats to the same text. Otherwise it is text.
+- **The translation's fidelity:** Excel shows some formats differently from .NET (its own locale's separators, its names). The oracle lists each difference.
+- **Formulas Excel can't parse,** past what the check catches, make a file it can't open.
+- **Shared strings' memory** with `Strings = Shared`.
+- **Widths** are measured for one font, at 100% zoom.
+- **Reflection under trimming:** `T`'s members are annotated. A nested record's members are kept by the generated record writer that reads them, and reading their attributes is suppressed with that reason; the build's trim analysis checks it.
+- **Speed** is unmeasured until step 7.
+
+#### Order of work
+
+Each step is reviewable on its own and gets committed when you ask.
+
+1. **Package and text (M):**
+   - `ExcelWorkbookWriter`, `ExcelWriterOptions` (`Csv`, `Strings`, `CompressionLevel`), `PackageWriter` and `PackageParts`.
+   - `SheetSink` with text cells, `XmlOutput`'s escaping, the 32,767 limit, `SheetNames` and the reader's decoding of names; one sheet at a time, the empty workbook, async.
+   - Their tests, round trips through CsvHelper.Excel's reader, `OpenXmlValidator`, ClosedXML and ExcelDataReader.
+2. **Typed cells (M):** numbers, booleans, `LongNumbers`, `NaN`, dates, times and durations, `DateTimeOffsets`, `OutOfRangeDates`, `StyleRegistry`, `ColumnWidths` (with Calibri 11's character widths measured through COM), and `numberStoredAsText`.
+3. **Formulas and limits (S):** `ExcelFormula`, its parsing and converter, `WriteFormula`, `FormulaCheck`, the row and column limits, and `RowLimit.NewSheet`.
+4. **Formats (M):** `FormatTranslator`, `FormatCheck`, `MemberFormats`, `HeaderCapture` and `AddSheet<T>`.
+5. **Corpus and oracles (M):** the `written` content set, the corpus tool's `written` command and Excel's answers, the translation's oracle, and the LibreOffice test with its CI step.
+6. **Security and fuzzing (S).**
+7. **Benchmarks (M):** `ExcelPackageAssetsWrite` and `ExcelOrdersWrite`; a run.
+8. **"As built" (S).**
+
+#### Gate
+
+- Every way of writing works on net10.0, net8.0 and net48, sync and async, with errors naming the right cell: `WriteSheet<T>` from `IEnumerable<T>` and `IAsyncEnumerable<T>`; `AddSheet`'s and `AddSheet<T>`'s `CsvWriter` with `WriteRecords`, `WriteRecord` and `WriteField`; dynamic records; several sheets.
+- Every file the tests write passes `OpenXmlValidator`.
+- Every workbook of the `written` set opens in Excel and LibreOffice without a repair prompt. Excel's answers agree with what was written: values and types, and formatted cells' text with .NET's, each difference documented.
+- Written files read back the same through CsvHelper.Excel's reader, ClosedXML and ExcelDataReader, each difference documented.
+- The security and fuzz tests pass.
+- Nothing in core changes; if something must, it is flagged, approved and passes Phase 0's gate.
+- The write benchmark's numbers are recorded.
+- CI's pack check still passes, and so does its LibreOffice test.
+
+#### Changes elsewhere
+
+Applied at approval, 2026-11-06:
+
+- **Status** (top of the plan): Phase 4's design approved.
+- **API sketch:**
+  - `ExcelWorkbookWriter.ToFile` and `Create` (for the sketch's `ToStream`), and `AddSheet<T>`; `ExcelSheetOptions` and `AddSheet(name, options)` come with Phase 5.
+  - `ExcelWriterOptions` gains `OutOfRangeDates`; `DateTimeOffsets` is `Text`, `Utc` or `ClockTime`; `CompressionLevel` is `Fastest` by default.
+  - `ExcelFormula` holds no cached value.
+- **Phase 5:**
+  - Hyperlinks from `Uri` members (Phase 4 writes their text).
+  - `[ExcelColumn(Format)]` and `ExcelSheetOptions.Columns` as sources of formats, checked by Phase 4's `FormatCheck`.
+  - Auto-fit widens Phase 4's widths of typed columns to every column, over the first N rows.
+  - The bold header.
+- **Phase 9:** "Our own zip writer" also removes the synchronous writes before .NET 10.
+- **Feature coverage:** "Number format and width per column" is 4 (format translation and typed columns' widths) and 5; "Writing formulas" is 4, without cached values.
+- **Testing:** Excel's answers for written workbooks (the `written` content set), and LibreOffice in CI.
+- **Defaults:** strings inline; Calibri 11; `CompressionLevel.Fastest`; dates in ISO-like formats by what they hold; formulas without cached values; long numbers, and dates before 1900, as text; `History` allowed as a sheet name.
+- **Risks:** "Zip edge cases" gains synchronous I/O before .NET 10.
+
+#### As built
+
+Filled in step by step; the code is the reference.
+
+**Step 1, package and text** (built and approved 2026-11-06, committed with step 2):
+
+- **New files:**
+  - Public: `ExcelWorkbookWriter.cs` (`ToFile`, `Create`, `Options`, `SheetNames`, `WriteSheet<T>`, the two `WriteSheetAsync<T>`, `AddSheet`, `Dispose`, `DisposeAsync`), `ExcelWriterOptions.cs` (`Default`, `Csv`, `Strings`, `CompressionLevel`) and `ExcelStrings.cs`.
+  - `Internal/Writing/`:
+    - `PackageWriter.cs`: the `ZipArchive` in create mode, an entry per part, dated 1980-01-01, opened and closed sync or async (`OpenAsync` and `DisposeAsync` on .NET 10);
+    - `PackageParts.cs`: the declaration, the parts after the sheets (shared strings streamed in 64 KB pieces), and the sheets' part names;
+    - `SheetSink.cs`: the `CsvCellSink`, with text cells, the 32,767 limit and the column limit;
+    - `XmlOutput.cs`: the pooled buffer, text escaping (`AppendText`), UTF-8 checks and lengths;
+    - `SharedStringTable.cs`: an arena and an open-addressing table keyed by each string's escaped XML;
+    - `SheetNames.cs`: the checks and the key;
+    - `InvariantUpper.cs` (`!NET` only): see below.
+- **Changed:**
+  - `WorkbookPart.ReadSheet` decodes `_xHHHH_` in sheet names after their XML (decision 25).
+  - The benchmarks' own `ExcelStrings` enum is gone and `ExcelTextWorkbook` and `ExcelDataGenerator` use the library's. This was step 7's plan, but it had to come now: in the tests' `CsvHelper.Excel.Tests.Bench` namespace, `ExcelStrings` now resolves to the library's. The generator's cache key changes with its source, so the cached benchmark workbooks are written again on the next run.
+- **Decisions made while building:**
+  - **The record methods discard a failed record, and the sink's messages don't say they do.**
+    - Core discards the record when `WriteRecords`, `WriteRecord` or a dynamic record fails, but not when a field written by hand throws: the record stays open, as for CSV.
+    - So the messages end without "The record is discarded" (for example "Cell Notes!B3 has 32,768 characters, and Excel opens no cell of more than 32,767.").
+    - A field that throws leaves no cell. Its column still counts, as the writer's field count does.
+  - **The column limit came with this step,** not step 3, since a field past `XFD` would otherwise get a reference Excel can't read: "Record 1 has a field in column XFE, past XFD, Excel's last column." The row limit and `NewSheet` stay with step 3.
+  - **A null `Csv` throws `ArgumentException`,** as the reader's options do, rather than the design's `ArgumentNullException`. `ExcelWriterOptions.Validate` also calls `CsvWriterOptions.Validate`, so a bad CSV option fails at `ToFile` or `Create` rather than at the first sheet. `CompressionLevel` is checked against the values of the target (`SmallestSize` exists on .NET only).
+  - **The enums are in files of their own,** as the reader's are, not in `ExcelWriterOptions.cs`.
+  - **Sheet names can't have lone surrogates** (a rule the design didn't list), since a name is written as UTF-8.
+  - **U+007F to U+009F are written as they are in text:** XML allows them, and Excel reads them (checked through COM: `a`, U+007F, U+0080, U+0085 or U+009F, `b`). Only the C0 controls but tab and LF are escapes. Names still refuse them.
+  - **.NET Framework:**
+    - Its `ToUpperInvariant` lacks 216 of .NET's mappings, among them final sigma to capital sigma, µ, ſ and Georgian Mtavruli. They were found by comparing the two over every UTF-16 code unit, in Windows PowerShell 5.1 (.NET Framework 4.8.1) and pwsh 7 (.NET 10.0.14). `InvariantUpper` adds them on the netstandard and .NET Framework builds, so the key is the same on every target and `σας` and `ΣΑΣ` are one name there too.
+    - Its `ZipArchive` reads the position of a stream that can't seek, which such streams can't tell. `PackageWriter` wraps one in a stream that counts what it writes (`CountingStream`), as .NET's zip does itself.
+    - Its UTF-8 decoder replaces some invalid sequences with fewer U+FFFDs: `ED A0 80` gives two, where .NET gives three. Invalid UTF-8 becomes U+FFFD as the runtime decodes it, and the test expects each runtime's own result.
+  - **`ToFile`'s stream has a 64 KiB buffer,** where `CsvWriter.ToFile` has none, since the zip writes its headers in small pieces.
+  - **The parts are written as designed:**
+    - `<sheetData>` is written even when empty, and Excel's default `pageMargins` (0.7, 0.75, 0.3) follow it.
+    - The styles are Excel's minimal style sheet in Calibri 11, without a theme's color or scheme.
+    - The shared strings' `count` is the cells of the records kept. Strings that a discarded record added stay in the table.
+- **Checked through COM and LibreOffice** (probes written with the built library, in the session's scratchpad):
+  - Excel opens a workbook of the escape-heavy texts (in two columns of a sheet named `Text`, inline and shared), six sheets named `Q&A <1>`, `"Quoted"`, `a_x0041_b`, `History`, 日本 and ` spaced `, and an empty workbook. It reads every cell and name as written: CR, CR LF, the controls, `_x0041_` and its near misses, U+FFFE and U+FFFF, the emoji and the 32,767-character cell. `a_x0041_b` is written `a_x005F_x0041_b`, which Excel decodes. Excel flags `00123` and `1.5` as numbers stored as text, which step 2's `ignoredErrors` hides.
+  - LibreOffice opens all three. It reads each cell as written but CR LF, which it gives as LF. It stops exporting at `Q&A <1>`, whose CSV file name Windows refuses.
+- **The oracles' differences** (listed in the tests):
+  - ClosedXML reads an inline string without decoding its escapes, and with LF as CR LF; it reads shared strings as written.
+  - Neither ClosedXML nor ExcelDataReader decodes the escapes of sheet names, which Excel does.
+  - ExcelDataReader reads every text as written.
+- **Tests** (193 new on net10.0 and net8.0, 192 on net48: 1,984 on net10.0 and net8.0 and 1,955 on net48, all passing), in `tests/CsvHelper.Excel.Tests/Writing` with `Written.cs`'s helpers (write sync or async, read back with CsvHelper.Excel, the validator, ClosedXML and ExcelDataReader):
+  - **`XmlOutputTests`:**
+    - each escape as Excel writes it, read back with the reader's own decoding;
+    - every C0 control;
+    - U+007F to U+009F as they are;
+    - `"` in attributes;
+    - 20,000 random texts of underscores, hex digits, controls and the rest, read back as written;
+    - invalid UTF-8 of each kind;
+    - 50,000 random byte strings against .NET's strict decoder, with the UTF-16 length of the valid ones;
+    - `preserve`, and growth past the buffer.
+  - **`SheetNamesTests`:** the names Excel opened and refused, with each message; lone surrogates; the pairs Excel takes to be the same, and those it tells apart; and the compatibility forms the key joins.
+  - **`SharedStringTableTests`:** first-seen order, and 100,000 strings through the table's growth.
+  - **`WorkbookWriterTests`**, sync and async, with inline and shared strings where they matter:
+    - `WriteSheet<T>`, `WriteSheetAsync<T>` from both sequences, `AddSheet` with `WriteRecords`, `WriteRecord` and fields by hand, dynamic records, `HasHeader` off, sheets in tab order with `SheetNames`;
+    - the tricky texts read back by all three readers, the XML of the escapes, invalid UTF-8;
+    - 32,767 code units with an emoji at the end, and one past it: the message, the record discarded, and the workbook still complete;
+    - the column limit, gaps for records without a value, a 20,000-row sheet, a record flushed in the middle and kept, one flushed in the middle and discarded, one discarded for its field count;
+    - the empty workbook's `Sheet1`, an open sheet completed by `Dispose` (and `ObjectDisposedException` after), the parts' order and dates, the same bytes twice, each compression level;
+    - names that need escapes read back, a stream that can't seek, `ToFile` (overwriting, readable while written, closed after), `leaveOpen`;
+    - the errors: an open sheet, names Excel takes to be the same, after `Dispose`, comments, a type without a record writer (its sheet still completed), and the options' checks.
+  - **`WorkbookPartTests.DecodesEscapesInSheetNames`:** `a_x0041_b`, `_x005F_x0041_`, `_X0041_`, `a_x0009_b`, `_x0041` and an escaped surrogate pair.
+  - Every workbook these tests write passes `OpenXmlValidator`.
+- **Mutation check** on net10.0, 34 bugs planted one at a time, each file restored and checked by SHA-256. 33 were caught by the first run. The other, "escape-like ignores the closing `_`", is caught after a test was added for it. It escaped `_x0041a` needlessly, which still reads back the same, so only the XML shows it.
+  - XML text: `&amp;` 12, `&lt;` 7, `&quot;` 3, `_` never escaped 14, U+FFFE and U+FFFF 6, the escape's high digit 10, the closing `_` 2 after the test, lowercase hex 5, LF not preserved 5, CR written as it is 10, `RemoveFirst` keeping a byte 65, the UTF-16 length as the byte length 13, UTF-8 never invalid 18.
+  - The sink: an empty field writing a cell 6, the cell limit off by one 4, the column limit off by one 2, the row not advanced 53, a discard keeping its cells 10, a flush writing a partial record 2 (the test added before the run), references not counted 2, the wrong shared index 14.
+  - The table: matching by hash alone 3, rehashing to slot 0 1.
+  - The workbook writer: an open sheet not refused 1, duplicates found by name 1, no empty sheet 4, the open sheet not cleared 16.
+  - The parts: the styles' `rId` clashing 44, the sheet name not escaped as an attribute 2.
+  - Names: a trailing apostrophe allowed 1, no normalization 4, C1 controls allowed 3.
+  - The reader: names not decoded 4. Entries not dated: 4.
+- **Core:** no change. The solution builds with 0 warnings on every target.
+- **Review** (2026-11-06): `ValidateFieldCount` stays on by default, as for CSV, so a sheet written by hand with records of different lengths turns it off (the recommendation).
+
+**Step 2, typed cells** (built, approved and committed 2026-11-06):
+
+- **New files:**
+  - Public: `ExcelLongNumbers.cs`, `ExcelDateTimeOffsets.cs` and `ExcelOutOfRangeDates.cs`, the three enums of the options this step adds.
+  - `Internal/Writing/`:
+    - `CellKind.cs` and `CellKinds.cs`: the design's `CellValue.cs`, renamed, since the tests already have a `CellValue` type, which `CsvHelper.Excel.CellValue` would have hidden in their namespace. `CellKinds.Of` maps a type, or a nullable of it, to its kind, by reference, and by name on the netstandard and .NET Framework builds for `DateOnly`, `TimeOnly`, `Half`, `Int128` and `UInt128`;
+    - `DotNetText.cs`: `"O"` dates and times, `"c"` durations and numbers, read by position;
+    - `NumberCulture.cs`: a culture's signs and decimal separator as UTF-8, to read its numbers back as invariant text;
+    - `Serial.cs`: dates, times and durations to serials, through whole milliseconds;
+    - `StyleRegistry.cs`: format codes to cell formats, with the writer's own seven formats (`FixedFormat`);
+    - `ColumnWidths.cs`: widths from text, with Calibri 11's table.
+- **Changed:**
+  - `ExcelWriterOptions` gains `LongNumbers`, `DateTimeOffsets` and `OutOfRangeDates` (each `Text` by default), checked by `Validate`.
+  - `SheetSink` writes typed cells, holds the records up to the first data record for `<cols>`, and writes `ignoredErrors`.
+  - `PackageParts` writes the registry's `numFmts` and `cellXfs`; `XmlOutput` gains `AppendDouble` (core's `FloatFormatter`); `AddSheet`'s docs describe the typed cells.
+- **What a field becomes,** as designed:
+  - Integers, `decimal`, `double`, `float` and `Half` are number cells of their invariant text, copied into `<v>` (`0.10`, `1E-05`, `1.5E+20`, `-0`, `5E-324`). `NaN` and the infinities are text cells.
+  - `bool` is `t="b"`, `1` or `0`. A sink's writer writes `True` and `False` whatever `TrueValue` and `FalseValue` say, so they don't apply.
+  - `DateTime` is the serial of its clock time, in `yyyy-mm-dd`, `yyyy-mm-dd hh:mm:ss` or `yyyy-mm-dd hh:mm:ss.000` by what it holds. `DateOnly` is `yyyy-mm-dd`, `TimeOnly` `hh:mm:ss` or `hh:mm:ss.000`, and `TimeSpan` `[h]:mm:ss` or `[h]:mm:ss.000`.
+  - A text in another layout, such as a format's (`yyyy-MM-dd`, `g`, `N2`), is a text cell.
+- **Decisions made while building:**
+  - **Widths are computed for 96 DPI, all from the table,** rather than the design's AutoFit widths for the default formats.
+    - The design's numbers (`yyyy-mm-dd` 10.09, with seconds 17.82, with milliseconds 21.45) were measured on this machine, which runs at 144 DPI (150%). They are about 4.5% too narrow at 96 DPI.
+    - A column's unit is a digit's width rounded to whole pixels: 7 at 96 DPI, where Calibri's digit is 7.5 pixels, and 11 at 144 DPI, where it is 11.25. So text takes more units at 96 DPI than at 120 or 144 DPI, and a width that fits at 96 DPI fits at those too. Only 144 DPI was checked.
+    - The table was measured through COM: an auto-fit text cell of 10 copies and one of 30 copies of each of 140 characters (ASCII, the signs and letters of numbers and dates in common cultures, and Chinese, Japanese and Korean date characters). The difference between the two widths, in points, gives each character's width; two thirds of it is the width at 96 DPI.
+    - Number cells in a format were measured too: a literal format showing `abcdefghij` or `WWWWWWWWWW` auto-fits to the same width as that text in a text cell, so the table holds for them.
+    - A width is the text's pixels, rounded up, plus Excel's 5 pixels of padding, in 256ths of a 7-pixel digit, rounded up. A column gets one only when that is more than the default column's 61 pixels.
+    - So `yyyy-mm-dd` is 10.71 (`10.71484375`), with seconds 18.71, with milliseconds 22.57, and `hh:mm:ss.000` 12.14. `hh:mm:ss`, and `[h]:mm:ss` under 100 hours, fit the default column.
+    - Characters the table lacks are taken as wide as `W`, the widest letter. Chinese, Japanese and Korean characters are 15 pixels, as measured, and so is a surrogate pair.
+  - **Widths come from the first data record only,** as designed, so a later value that needs more shows `########`. Checked through COM:
+    - a `DateTime` column whose first value is a date at midnight (given the width in seconds) shows `########` for a later value with milliseconds;
+    - a `TimeOnly` column whose first value is in whole seconds shows `########` for `23:59:59.999`;
+    - so does `TimeSpan.MaxValue` under a shorter first duration.
+    - Phase 5's auto-fit over the first N rows narrows this.
+  - **Built-in ids:** a code that is one of Excel's built-in formats in every locale gets its id, as Excel saves it: 1 to 4, 9 to 13, 46 (`[h]:mm:ss`), 48 and 49. Other codes get ids from 164. So the plain duration is 46, which Phase 2's reader, ClosedXML and ExcelDataReader all take for a duration. Ids 14 to 22 show in the reader's locale, so a code like theirs stays custom.
+  - **The writer's culture:**
+    - A culture's number is read with its own signs and decimal separator, and only those: `-1234,5` (de-DE) is a number.
+    - Invariant text written under such a culture stays text: `1.234` could be de-DE grouping, and `1234.5` from an invariant `[CsvCulture]` waits for step 4.
+    - A culture whose signs and separator are the invariant ones (en-US) is read with the invariant grammar.
+    - The signs may be longer than one character (sv-SE's U+2212, ar-SA's letter mark). Random doubles in six cultures, de-DE, fr-FR, sv-SE, ar-SA, fa-IR and en-US, read back to the value that culture's text parses to.
+  - **Significant digits** run from the first digit that isn't 0 to the last one, so `12345678901234567890` has 19. `LongNumbers = Number` writes the number's text as it is, which Excel reads as the nearest double: `12345678901234567` reads as 12345678901234568, and Phase 2 reads 15 digits of it.
+  - **The ends of the range:**
+    - A `DateTime` within half a millisecond of 10000-01-01 is 9999-12-31 23:59:59.999, the last millisecond Excel shows.
+    - A `TimeOnly` within half a millisecond of midnight is 23:59:59.999, since a time of day can't be 24:00.
+    - A negative duration of less than half a millisecond is 0, and a date half a millisecond before 1900-01-01 rounds to it.
+  - **Out of range,** with `Text`: the cell is the field's text as written, `1899-12-31T00:00:00.0000000` or `-01:00:00`. With `Throw`, the messages quote that text and drop "The record is discarded", as in step 1:
+    - "Cell Old!A2 holds 1899-12-31T00:00:00.0000000, before 1900-01-01, Excel's first date (ExcelWriterOptions.OutOfRangeDates is Throw)."
+    - "Cell Old!B2 holds -00:00:00.0005000, a negative duration, which Excel shows as ######## (ExcelWriterOptions.OutOfRangeDates is Throw)."
+    - "Cell Orders!D3 holds 1234567890123456789, which has 19 significant digits, and Excel keeps 15 (ExcelWriterOptions.LongNumbers is Throw)."
+  - **`DateTimeOffsets`:** `Utc` is the clock time less the offset, and `ClockTime` the clock time. Either reads back with offset 0.
+  - **`numberStoredAsText`** is one `ignoredError` over `A1` to the last column and row of the records kept, when one of their text cells starts with a digit, a sign or a point. A discarded record's text counts for nothing. Excel's own check (`Errors(3)`) is ignored for every such cell.
+  - **Column types** are cached per column, as designed. A column whose type changes from field to field (`WriteField(object)`) gets each field's kind.
+- **Checked through COM** (Excel 365 at 144 DPI), with four probe workbooks written by the built library (`s2-typed` with inline and with shared strings, `s2-options` and `s2-clock`, in the session's scratchpad). Excel opens all four, and reads:
+  - every typed cell as its value, in its format: `2024-01-15 10:30:00`, `2024-12-31 23:59:59.999`, `1900-01-01` (serial 1), `1900-02-28` (59), `1900-03-01 00:00:00.001`, `9999-12-31 23:59:59`, `23:59:59.999`, `36:00:00`, `24000:00:00.005`, `TRUE` and `FALSE`, `0.30000000000000004`, `1E-05`, `1.7976931348623157E+308`;
+  - subnormal doubles as 0, as designed;
+  - text where designed: `NaN`, `Infinity`, the long integer `12345678901234567`, `decimal.MaxValue`, `DateTimeOffset`s as text, dates before 1900 and the negative duration;
+  - the `Utc` and `ClockTime` offsets as `2024-01-15 08:30:00` and `10:30:00`;
+  - de-DE's `-1234,5` and `1,5E+20` as numbers, with its `N2` and `D4` texts as text.
+  - Every first data record's value shows in its column. Numbers in General at the default width show in scientific notation (`1.23E+16`), never `########`.
+- **LibreOffice 26.8** opens all four and reads the same values, but:
+  - serials before 61 are a day earlier there, since its 1900 system has no 1900-02-29 (1900-01-01 shows as 1899-12-31);
+  - it shows `#FMT` for `TimeSpan.MaxValue` in `[h]:mm:ss.000`;
+  - it keeps subnormal doubles.
+- **The oracles** read each typed cell as its type: ClosedXML as `Number`, `Boolean`, `DateTime` and `TimeSpan` (a duration), ExcelDataReader as `Double`, `Boolean`, `DateTime` and `TimeSpan`. Their only differences are step 1's.
+- **Tests** (217 new on net10.0 and net8.0, 210 on net48: 2,201 on net10.0 and net8.0 and 2,165 on net48, all passing):
+  - **`DotNetTextTests`:**
+    - `"O"` texts of each `DateTimeKind` and of offsets from −14:00 to +14:00;
+    - 20,000 random dates, times and offsets as .NET formats them;
+    - 20,000 random durations, with `MinValue` and `MaxValue`;
+    - texts in other layouts, refused;
+    - the invariant grammar and its significant digits;
+    - cultures' numbers, signs of several characters, what de-DE doesn't write, and 20,000 random doubles in six cultures.
+  - **`SerialTests`:** Excel's serials of 1900's first days, the rounding, the ends of the range, and 20,000 random dates written and read back to the millisecond.
+  - **`StyleRegistryTests`:** the order of first use, built-in and custom ids, the XML, and the writer's seven formats as Phase 2's `NumberFormats` classifies them.
+  - **`ColumnWidthsTests`:**
+    - the widths of the writer's formats;
+    - about 5% wider than Excel's 144-DPI auto-fit;
+    - the default column's edge;
+    - characters the table lacks, wide characters and surrogate pairs.
+  - **`TypedCellsTests`**, sync and async:
+    - every type through the record writer, read back by `GetRecords`, dynamic records and `CsvDataReader`, and by ClosedXML and ExcelDataReader, with the cells' XML and the styles part;
+    - .NET's newer types;
+    - each choice of `LongNumbers`, `DateTimeOffsets` and `OutOfRangeDates`, and the messages;
+    - `NaN`, the infinities, `-0` and subnormals;
+    - de-DE's numbers and the texts of formats and other types;
+    - a column's type changing;
+    - the widths of each kind, from the record after the header (not from a header's typed cells), without a discarded record's;
+    - records held until the widths are known;
+    - `ignoredErrors` over the used range, but not for a discarded record;
+    - `CellKinds` for every type;
+    - the options' checks.
+  - Every workbook these tests write passes `OpenXmlValidator`.
+- **Mutation check** on net10.0: 57 bugs planted one at a time, each file restored and checked by SHA-256. 55 were caught by the first run. The other two are caught after a test was added for each:
+  - "widths from every row" measured the header's cells too. The test that discarded the first data record cleared the header's widths with it, so a test with a typed header and no discard was added (`GivesTheHeadersCellsNoWidths`).
+  - "a discard keeps the flag" left a discarded record's number-like text to be counted. The test ended after the discard, so no record committed it; it now writes one more record.
+  - .NET's texts:
+    - the offset's sign 3, `Z` refused 2, any day to 31 3, the time's fraction dropped 21;
+    - the duration's days dropped 10, its sign dropped 4, past the range 1, hour 24 allowed 2;
+    - leading zeros allowed 4, an exponent without digits 2, every digit significant 8, text past 128 bytes read 1.
+  - The culture: the separator not translated 6, the exponent's minus not read 3, every culture taken as invariant 8.
+  - Serials: no 1900-02-29 11, half rounded down 4, past the last millisecond 1, a time of 24:00 1, half a negative millisecond kept 2, 1899-12-31 allowed 5.
+  - Styles: General by case 1, one index for every fixed format 18, custom ids clashing 3, no built-in 46 5, the `cellXfs` count off by one 4, codes not escaped 1.
+  - Widths: pixels rounded down 9, the default's width written 1, 256ths rounded down 8, a surrogate pair counted twice 1, wide characters as wide as `W` 1.
+  - Kinds: nullables not unwrapped 1, `decimal` as a double 2, `Half` as text 4.
+  - The sink:
+    - `False` as text 7, 15 digits taken as too long 8, doubles' digits counted 5;
+    - UTC the wrong way 3, the offsets' text option 11;
+    - seconds decided by the minute 1, a date's width for a date and time 5;
+    - widths from every held row 1 after the test, the header always assumed 1, a discard keeping its widths 1, the start written before the widths 1;
+    - a point not taken as starting a number 1, a discard keeping the flag 1 after the test;
+    - the used range from the last record's column 6, or from row 1 6;
+    - a column's first type cached for good 13, times always whole 2, negative durations as numbers 3, a duration's minutes not taken modulo 60 3;
+    - `col` numbered from 0 7, out-of-range values never throwing 5.
+  - The options: `OutOfRangeDates` unchecked 1.
+- **Core:** no change. The solution builds with 0 warnings on every target.
+- **Review** (2026-11-06), the recommendations:
+  - The widths for 96 DPI, from the table, are accepted in place of the design's AutoFit widths.
+  - Widths stay the first data record's, so a later value that needs more shows `########` until Phase 5's auto-fit, rather than every `DateTime` and `TimeOnly` column getting the width of milliseconds.
+
 ### Phase 5: presentation (M)
 
-- **Attributes and options:** `[ExcelColumn]`, `[ExcelSheet]` and `ExcelSheetOptions.Columns` for formats, widths, wrap and hidden columns.
-- **Auto-fit:** `<cols>` comes before the rows, so auto-fit buffers the first N rows to estimate widths, then writes them. Without auto-fit, widths come from attributes and options only, and nothing is buffered.
+- **Attributes and options:** `[ExcelColumn]`, `[ExcelSheet]` and `ExcelSheetOptions.Columns` for formats, widths, wrap and hidden columns. `[ExcelColumn(Format)]` and `Columns`' `Format` give Excel's format codes directly, for display only, beside Phase 4's formats from `[CsvFormat]`, and Phase 4's `FormatCheck` checks them.
+- **Auto-fit:** `<cols>` comes before the rows, so auto-fit buffers the first N rows to estimate widths, then writes them. It widens Phase 4's widths, which cover the first data record's typed cells, to every column over the first N rows. Without auto-fit, widths come from attributes, options and Phase 4's typed columns only.
 - **Header and view:**
-  - Bold header style.
+  - Bold header style (Phase 4 writes the header as plain text cells).
   - Frozen header row (`<sheetViews>`, before the rows).
   - Autofilter, written after the rows once the range is known.
-- **Hyperlinks** from `Uri` members, collected while streaming and written after the rows with their relationships.
+- **Hyperlinks** from `Uri` members, collected while streaming and written after the rows with their relationships. Phase 4 writes a `Uri`'s text.
 - **Merged cells** on the sheet writer (e.g. a title row above the header), written after the rows.
 - **Excel Table output:** a table part with a style, row banding and filter buttons.
 - **Column default styles** (`<col style>`), so formats also apply to cells users add later.
@@ -3981,11 +4683,16 @@ Filled in step by step; the code is the reference.
   - Generate cell XML in parallel through `ParallelWriteRecords`. Until then, a writer with a cell sink throws `NotSupportedException` for the parallel methods.
   - The style registry must be thread-safe.
   - Omitting `r` attributes means workers don't need absolute row numbers. Verify that every reader we test against accepts that first.
-- **Our own zip writer:** async I/O, Zip64, data descriptors and CRC32.
+- **Our own zip writer:** async I/O, Zip64, data descriptors and CRC32. It also removes the synchronous writes that `ZipArchive` makes before .NET 10 when an entry or the package closes (Phase 4's "Risks").
   - Then a pigz-style experiment: deflate chunks in parallel and concatenate them after a sync flush.
   - Keep each piece only if it wins on the benchmark machine. The compress flattener showed that a faster stage doesn't always move the end-to-end numbers.
 - **Memory:** profile workbooks with huge shared-string tables.
 - **Finding merged ranges** (Phase 3): a cheaper skip over `sheetData` for the read that finds `<mergeCells>`, such as a raw search for its end tag. Phase 3's step 8 measured that read at a third of a plain sheet's time: 1.18 s for 714 MB of sheet XML through the XML scanner's skip, at about 600 MB/s, where inflating alone runs at 5.3–5.6 GB/s.
+- **Measuring Phase 3's default path again** (Phase 3's "Left open", added 2026-11-06):
+  - Phase 3's gate wanted every A/B method of the default path within 1%. Shared Rows had one clean pair, at +1.2%, inline Rows none, and five of the eight methods weren't measured after step 8's `FlushGaps` split. Phase 3 was called complete with that item as it stood.
+  - BenchmarkDotNet pairs of all eight CsvHelper.Excel methods of `ExcelPackageAssetsRead` and `ExcelOrdersRead`, with the Sylvan control: base `1cd1a0af` (Phase 2's end) against `f382244b` (Phase 3's end), on a quiet machine, interleaved and pinned, counting a pair only when both runs' standard deviations are under 2% of their means.
+  - The base is a worktree at `Csv\_bench\base`, checked out with LF line ends, so that both sides' generator sources hash alike and share the cached workbooks.
+  - Before Phase 9's own scanner changes, so that they are measured from a known start.
 
 ### Phase 10: other formats (XL)
 
@@ -4016,11 +4723,11 @@ Every feature from the brainstorm, and where it lands.
 | Error-cell policy | 2 |
 | Errors that name the cell | 0, 1 |
 | Typed cells on write | 4 |
-| Writing formulas | 4 |
+| Writing formulas | 4, without cached values |
 | Streaming writes with inline strings, shared strings optional | 4 |
 | New sheet at the row limit | 4 |
 | Several sheets in one workbook | 4 |
-| Number format and width per column | 4 (format translation), 5 |
+| Number format and width per column | 4 (format translation and typed columns' widths), 5 |
 | Bold header, frozen header row, autofilter | 5 |
 | Wrapped text, hyperlinks | 0 (`WriteField(Uri)`), 5 |
 | Styled Excel Table output | 5 |
@@ -4054,12 +4761,12 @@ Testing runs through every phase.
   - `tools/CsvHelper.Excel.Corpus` makes them from one definition of the content. It drives Excel through COM, LibreOffice and Python by command line, and the .NET producers directly.
   - It runs on demand; the tests only read the committed files.
   - Phase 1's "Testing" has the files, the producer versions and how each is made.
-  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas) and `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names).
-- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand. From Phase 3 the answers also hold each workbook's tables and defined names, and each sheet's hidden rows and columns and merged ranges.
+  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas), `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names) and `written` (Phase 4: workbooks CsvHelper.Excel writes).
+- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand. From Phase 3 the answers also hold each workbook's tables and defined names, and each sheet's hidden rows and columns and merged ranges. From Phase 4 they cover the written workbooks too, pinned to each workbook's SHA-256, with Excel's text of each formatted cell as the oracle of the format translation.
 - **Oracles** (test-only dependencies):
   - The Open XML SDK (DocumentFormat.OpenXml 3.5.1), for raw cell structure and, from Phase 4, `OpenXmlValidator`.
   - ClosedXML 0.105.1 and ExcelDataReader 3.9.0.
-  - LibreOffice `--headless --convert-to csv`: a local test, skipped when `soffice` is missing, until Phase 4 puts it in CI.
+  - LibreOffice `--headless --convert-to csv`: a test skipped when `soffice` is missing. From Phase 4, CI installs LibreOffice and runs it over the written workbooks.
 - **Round-trip property tests:** random records → write → read → equal.
 - **Fuzzing:**
   - Malformed zip and XML input must fail with an expected exception, and never hang or exhaust memory.
@@ -4078,7 +4785,7 @@ Testing runs through every phase.
 - **Producer tolerance.** Excel accepts things the spec doesn't promise, and other producers rely on that. The corpus is the defense.
 - **Merged-cell fill** needs a second inflate pass. Phase 3's benchmark measured it: +34% on a sheet without ranges, and +44% on the report (step 8). Phase 9 can make it cheaper.
 - **Shared-strings memory** on huge workbooks.
-- **Zip edge cases:** Zip64 for sheets over 4 GB, non-seekable streams, and `ZipArchive`'s synchronous central directory on older targets.
+- **Zip edge cases:** Zip64 for sheets over 4 GB, non-seekable streams, and `ZipArchive`'s synchronous central directory on older targets. Before .NET 10, closing an entry and the package writes synchronously, so a stream that forbids synchronous I/O throws (Phase 4); Phase 9's own zip writer removes it.
 - **Renderer scope creep** in Phase 8.
 
 ## Out of scope
@@ -4106,6 +4813,11 @@ Chosen during planning, and still open to change:
 - `DateTimeOffset` is written as ISO 8601 text.
 - Row and column limits throw.
 - Strings are written inline.
+- Workbooks are written in Calibri 11, deflated at `CompressionLevel.Fastest` (Phase 4).
+- Dates are written in ISO-like formats by what each value holds: a date, seconds or milliseconds (Phase 4).
+- Formulas are written without cached values (Phase 4).
+- Long numbers, dates before 1900 and negative durations are written as text (Phase 4).
+- `History` is allowed as a sheet name (Phase 4).
 - Excel attributes are read by reflection.
 - `MaxPartSize` is 256 MiB and `MaxUncompressedSize` 4 GiB, with no compression-ratio check (Phase 1).
 - The default sheet is the first worksheet in tab order, hidden ones included (Phase 1).

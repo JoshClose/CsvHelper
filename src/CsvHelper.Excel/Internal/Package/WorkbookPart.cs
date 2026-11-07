@@ -391,7 +391,11 @@ internal sealed class WorkbookPart
 		{
 			if (attributes.IsName("name"u8))
 			{
-				name = attributes.DecodeValue();
+				// Excel decodes the _xHHHH_ escapes of a sheet's name, as of a cell's text (checked on 2026-11-06), and
+				// writes a name such as a_x0041_b as a_x005F_x0041_b.
+				var decoded = new byte[attributes.Value.Length];
+				var length = XmlText.DecodeEscapes(decoded.AsSpan(0, attributes.DecodeValue(decoded)));
+				name = Encoding.UTF8.GetString(decoded, 0, length);
 			}
 			else if (attributes.IsName("id"u8))
 			{

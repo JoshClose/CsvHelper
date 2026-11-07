@@ -57,6 +57,19 @@ public class WorkbookPartTests
 	}
 
 	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task DecodesEscapesInSheetNames(bool async)
+	{
+		// Excel decodes the _xHHHH_ escapes of sheet names, as of text (checked through COM on 2026-11-06).
+		var package = TestPackage.Workbook("a_x0041_b", "_x005F_x0041_", "_X0041_", "a_x0009_b", "_x0041", "_xD83D__xDE00_");
+
+		var workbook = await package.LoadWorkbookAsync(async);
+
+		Assert.Equal(["aAb", "_x0041_", "_X0041_", "a\tb", "_x0041", char.ConvertFromUtf32(0x1F600)], workbook.Sheets.Select(s => s.Name));
+	}
+
+	[Theory]
 	[InlineData("1", true)]
 	[InlineData("0", false)]
 	[InlineData("true", true)]

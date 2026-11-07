@@ -1,18 +1,9 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using CsvHelper.Excel;
 
 namespace CsvHelper.Benchmarks;
-
-/// <summary>Where the text cells of a workbook that <see cref="ExcelTextWorkbook"/> writes hold their strings.</summary>
-public enum ExcelStrings
-{
-	/// <summary>In the shared-strings table, as Excel writes them: each cell holds the index of its string (<c>t="s"</c>).</summary>
-	Shared,
-
-	/// <summary>In the cells themselves (<c>t="inlineStr"</c>), as streaming writers often write them.</summary>
-	Inline,
-}
 
 /// <summary>
 /// Writes rows of text as a workbook of one sheet, in the shape Excel saves a CSV file that it opened with every column as
