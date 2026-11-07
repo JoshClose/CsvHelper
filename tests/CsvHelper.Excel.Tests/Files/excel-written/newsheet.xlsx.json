@@ -1,0 +1,354 @@
+{
+  "file": "newsheet.xlsx",
+  "description": "RowLimit = NewSheet, a sheet's rows limited to 3 (the header and two records), with shared strings",
+  "sha256": "34c0bbb54bfabd49b99c3a7eac27cd40c0b08c357078b64e973141fcd3eb2d86",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "sheets": [
+    {
+      "name": "Orders",
+      "widths": [
+        8.09,
+        18.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "n0",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "2024-01-15 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "A3",
+          "value2": "n1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 45307.4375,
+          "type": "date",
+          "text": "2024-01-16 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        }
+      ]
+    },
+    {
+      "name": "Orders (2)",
+      "widths": [
+        8.09,
+        18.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "n2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 45308.4375,
+          "type": "date",
+          "text": "2024-01-17 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "A3",
+          "value2": "n3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 45309.4375,
+          "type": "date",
+          "text": "2024-01-18 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        }
+      ]
+    },
+    {
+      "name": "Orders (3)",
+      "widths": [
+        8.09,
+        18.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "n4",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 45310.4375,
+          "type": "date",
+          "text": "2024-01-19 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "C2",
+          "value2": "00123",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "n5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 45311.4375,
+          "type": "date",
+          "text": "2024-01-20 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        }
+      ]
+    },
+    {
+      "name": "Orders (4)",
+      "widths": [
+        8.09,
+        18.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "n6",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 45312.4375,
+          "type": "date",
+          "text": "2024-01-21 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        }
+      ]
+    },
+    {
+      "name": "abcdefghijklmnopqrstuvwxyz12345",
+      "widths": [
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Shows",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "t1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 21,
+          "type": "number",
+          "text": "21",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=ROW()*10+1"
+        },
+        {
+          "cell": "C2",
+          "value2": "21",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "t2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 32,
+          "type": "number",
+          "text": "32",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=ROW()*10+2"
+        },
+        {
+          "cell": "C3",
+          "value2": "32",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ]
+    },
+    {
+      "name": "abcdefghijklmnopqrstuvwxyz1 (2)",
+      "widths": [
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Shows",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "t3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 23,
+          "type": "number",
+          "text": "23",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=ROW()*10+3"
+        },
+        {
+          "cell": "C2",
+          "value2": "23",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ]
+    }
+  ]
+}

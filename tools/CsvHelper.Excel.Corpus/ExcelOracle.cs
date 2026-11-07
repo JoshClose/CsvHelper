@@ -211,7 +211,7 @@ internal static class ExcelOracle
 	/// </summary>
 	/// <param name="since">When the repair started.</param>
 	/// <returns>The records.</returns>
-	private static List<string> RepairRecords(DateTime since)
+	internal static List<string> RepairRecords(DateTime since)
 	{
 		var log = new DirectoryInfo(Path.GetTempPath()).EnumerateFiles("error*.xml")
 			.Where(f => f.LastWriteTime >= since)
@@ -498,7 +498,7 @@ internal static class ExcelOracle
 	/// <param name="sheet">The cell's worksheet, which evaluates formulas about it.</param>
 	/// <param name="cell">The cell.</param>
 	/// <param name="value2">Its <c>Value2</c>.</param>
-	private static void WriteCell(Utf8JsonWriter json, dynamic sheet, dynamic cell, object value2)
+	internal static void WriteCell(Utf8JsonWriter json, dynamic sheet, dynamic cell, object value2)
 	{
 		var address = ((string)cell.Address).Replace("$", "", StringComparison.Ordinal);
 		json.WriteStartObject();
@@ -599,7 +599,7 @@ internal static class ExcelOracle
 	/// <param name="rows">The range's rows.</param>
 	/// <param name="columns">The range's columns.</param>
 	/// <returns>The grid.</returns>
-	private static object?[,] Grid(object? values, int rows, int columns)
+	internal static object?[,] Grid(object? values, int rows, int columns)
 	{
 		var grid = new object?[rows, columns];
 		if (values is Array array)

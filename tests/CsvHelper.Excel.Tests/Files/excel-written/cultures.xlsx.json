@@ -1,0 +1,2691 @@
+{
+  "file": "cultures.xlsx",
+  "description": "[CsvFormat] and [CsvCulture] in en-US, de-DE, fr-FR, ja-JP and other cultures: standard and custom date formats, DateOnly, TimeOnly, offsets with DateTimeOffsets = ClockTime, and numbers",
+  "sha256": "21d15a2cddc18e8472a4fb83159f948ed0f8fb963df2800ce2d0a36536f06825",
+  "cultures": [
+    "ar-SA",
+    "de-DE",
+    "en-GB",
+    "en-US",
+    "fa-IR",
+    "fr-FR",
+    "ja-JP",
+    "pl-PL",
+    "ru-RU",
+    "sv-SE"
+  ],
+  "cultureData": "3751ce771a135e8b16355426d03483e2c6b473e25e205e99c4cd96892ea51203",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "sheets": [
+    {
+      "name": "Standard",
+      "widths": [
+        10.55,
+        29.18,
+        38.18,
+        40.91,
+        19.36,
+        22.09,
+        8.64,
+        11.36,
+        14.64,
+        9.91,
+        29.09,
+        34.55,
+        37.18,
+        15.18,
+        17.91,
+        8.09,
+        8.09,
+        14.64,
+        10.55,
+        26.36,
+        31.82,
+        34.55,
+        15.82,
+        18.55,
+        8.09,
+        8.09,
+        14.55,
+        10.55,
+        21.55,
+        26.91,
+        29.64,
+        15.82,
+        18.55,
+        8.09,
+        8.09,
+        10.82
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "UsShortDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "UsLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "UsFull",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "UsFullLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "UsGeneral",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "UsGeneralLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "UsShortTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "UsLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "UsYearMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "J1",
+          "value2": "GermanShortDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K1",
+          "value2": "GermanLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L1",
+          "value2": "GermanFull",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M1",
+          "value2": "GermanFullLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N1",
+          "value2": "GermanGeneral",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "O1",
+          "value2": "GermanGeneralLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "P1",
+          "value2": "GermanShortTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "Q1",
+          "value2": "GermanLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "R1",
+          "value2": "GermanYearMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "S1",
+          "value2": "FrenchShortDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "T1",
+          "value2": "FrenchLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "U1",
+          "value2": "FrenchFull",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "V1",
+          "value2": "FrenchFullLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "W1",
+          "value2": "FrenchGeneral",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "X1",
+          "value2": "FrenchGeneralLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "Y1",
+          "value2": "FrenchShortTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "Z1",
+          "value2": "FrenchLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AA1",
+          "value2": "FrenchYearMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AB1",
+          "value2": "JapaneseShortDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AC1",
+          "value2": "JapaneseLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AD1",
+          "value2": "JapaneseFull",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AE1",
+          "value2": "JapaneseFullLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AF1",
+          "value2": "JapaneseGeneral",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AG1",
+          "value2": "JapaneseGeneralLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AH1",
+          "value2": "JapaneseShortTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AI1",
+          "value2": "JapaneseLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "AJ1",
+          "value2": "JapaneseYearMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 45306,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m\"/\"d\"/\"yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306,
+          "type": "date",
+          "text": "Monday, January 15, 2024",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "C2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "Monday, January 15, 2024 10:30 AM",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy\" \"h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900 12:00 PM"
+        },
+        {
+          "cell": "D2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "Monday, January 15, 2024 10:30:05 AM",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy\" \"h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900 12:00:00 PM"
+        },
+        {
+          "cell": "E2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "1/15/2024 10:30 AM",
+          "numberFormat": "[$-409]m\"/\"d\"/\"yyyy\" \"h\":\"mm\" \"AM/PM",
+          "category": "D2",
+          "elapsed": "1/1/1900 12:00 PM"
+        },
+        {
+          "cell": "F2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "1/15/2024 10:30:05 AM",
+          "numberFormat": "[$-409]m\"/\"d\"/\"yyyy\" \"h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "D2",
+          "elapsed": "1/1/1900 12:00:00 PM"
+        },
+        {
+          "cell": "G2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30 AM",
+          "numberFormat": "[$-409]h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "H2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05 AM",
+          "numberFormat": "[$-409]h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "I2",
+          "value2": 45292,
+          "type": "date",
+          "text": "January 2024",
+          "numberFormat": "[$-409]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "January 1900"
+        },
+        {
+          "cell": "J2",
+          "value2": 45306,
+          "type": "date",
+          "text": "15.01.2024",
+          "numberFormat": "dd\".\"mm\".\"yyyy",
+          "category": "D1",
+          "elapsed": "01.01.1900"
+        },
+        {
+          "cell": "K2",
+          "value2": 45306,
+          "type": "date",
+          "text": "Montag, 15. Januar 2024",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900"
+        },
+        {
+          "cell": "L2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "Montag, 15. Januar 2024 10:30",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy\" \"hh\":\"mm",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900 12:00"
+        },
+        {
+          "cell": "M2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "Montag, 15. Januar 2024 10:30:05",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900 12:00:00"
+        },
+        {
+          "cell": "N2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "15.01.2024 10:30",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "O2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "15.01.2024 10:30:05",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00:00"
+        },
+        {
+          "cell": "P2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Q2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "R2",
+          "value2": 45292,
+          "type": "date",
+          "text": "Januar 2024",
+          "numberFormat": "[$-407]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Januar 1900"
+        },
+        {
+          "cell": "S2",
+          "value2": 45306,
+          "type": "date",
+          "text": "15/01/2024",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "T2",
+          "value2": 45306,
+          "type": "date",
+          "text": "lundi 15 janvier 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "U2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "lundi 15 janvier 2024 10:30",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy\" \"hh\":\"mm",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900 12:00"
+        },
+        {
+          "cell": "V2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "lundi 15 janvier 2024 10:30:05",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900 12:00:00"
+        },
+        {
+          "cell": "W2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "15/01/2024 10:30",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "X2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "15/01/2024 10:30:05",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00:00"
+        },
+        {
+          "cell": "Y2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Z2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "AA2",
+          "value2": 45292,
+          "type": "date",
+          "text": "janvier 2024",
+          "numberFormat": "[$-40C]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "janvier 1900"
+        },
+        {
+          "cell": "AB2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024/01/15",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd",
+          "category": "G",
+          "elapsed": "1900/01/01"
+        },
+        {
+          "cell": "AC2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024年1月15日月曜日",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日"
+        },
+        {
+          "cell": "AD2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "2024年1月15日月曜日 10:30",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd\" \"h\":\"mm",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日 12:00"
+        },
+        {
+          "cell": "AE2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "2024年1月15日月曜日 10:30:05",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd\" \"h\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日 12:00:00"
+        },
+        {
+          "cell": "AF2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "2024/01/15 10:30",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd\" \"h\":\"mm",
+          "category": "G",
+          "elapsed": "1900/01/01 12:00"
+        },
+        {
+          "cell": "AG2",
+          "value2": 45306.43755787037,
+          "type": "date",
+          "text": "2024/01/15 10:30:05",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd\" \"h\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "1900/01/01 12:00:00"
+        },
+        {
+          "cell": "AH2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30",
+          "numberFormat": "h\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "AI2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "AJ2",
+          "value2": 45292,
+          "type": "date",
+          "text": "2024年1月",
+          "numberFormat": "yyyy\"年\"m\"月\"",
+          "category": "G",
+          "elapsed": "1900年1月"
+        },
+        {
+          "cell": "A3",
+          "value2": 45360,
+          "type": "date",
+          "text": "3/9/2024",
+          "numberFormat": "m\"/\"d\"/\"yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "B3",
+          "value2": 45360,
+          "type": "date",
+          "text": "Saturday, March 9, 2024",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "C3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "Saturday, March 9, 2024 10:05 PM",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy\" \"h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900 12:00 PM"
+        },
+        {
+          "cell": "D3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "Saturday, March 9, 2024 10:05:09 PM",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy\" \"h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900 12:00:00 PM"
+        },
+        {
+          "cell": "E3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "3/9/2024 10:05 PM",
+          "numberFormat": "[$-409]m\"/\"d\"/\"yyyy\" \"h\":\"mm\" \"AM/PM",
+          "category": "D2",
+          "elapsed": "1/1/1900 12:00 PM"
+        },
+        {
+          "cell": "F3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "3/9/2024 10:05:09 PM",
+          "numberFormat": "[$-409]m\"/\"d\"/\"yyyy\" \"h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "D2",
+          "elapsed": "1/1/1900 12:00:00 PM"
+        },
+        {
+          "cell": "G3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "10:05 PM",
+          "numberFormat": "[$-409]h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "H3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "10:05:09 PM",
+          "numberFormat": "[$-409]h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "I3",
+          "value2": 45352,
+          "type": "date",
+          "text": "March 2024",
+          "numberFormat": "[$-409]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "January 1900"
+        },
+        {
+          "cell": "J3",
+          "value2": 45360,
+          "type": "date",
+          "text": "09.03.2024",
+          "numberFormat": "dd\".\"mm\".\"yyyy",
+          "category": "D1",
+          "elapsed": "01.01.1900"
+        },
+        {
+          "cell": "K3",
+          "value2": 45360,
+          "type": "date",
+          "text": "Samstag, 9. März 2024",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900"
+        },
+        {
+          "cell": "L3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "Samstag, 9. März 2024 22:05",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy\" \"hh\":\"mm",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900 12:00"
+        },
+        {
+          "cell": "M3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "Samstag, 9. März 2024 22:05:09",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900 12:00:00"
+        },
+        {
+          "cell": "N3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "09.03.2024 22:05",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "O3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "09.03.2024 22:05:09",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00:00"
+        },
+        {
+          "cell": "P3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "22:05",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Q3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "R3",
+          "value2": 45352,
+          "type": "date",
+          "text": "März 2024",
+          "numberFormat": "[$-407]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Januar 1900"
+        },
+        {
+          "cell": "S3",
+          "value2": 45360,
+          "type": "date",
+          "text": "09/03/2024",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "T3",
+          "value2": 45360,
+          "type": "date",
+          "text": "samedi 9 mars 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "U3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "samedi 9 mars 2024 22:05",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy\" \"hh\":\"mm",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900 12:00"
+        },
+        {
+          "cell": "V3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "samedi 9 mars 2024 22:05:09",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900 12:00:00"
+        },
+        {
+          "cell": "W3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "09/03/2024 22:05",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "X3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "09/03/2024 22:05:09",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00:00"
+        },
+        {
+          "cell": "Y3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "22:05",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Z3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "AA3",
+          "value2": 45352,
+          "type": "date",
+          "text": "mars 2024",
+          "numberFormat": "[$-40C]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "janvier 1900"
+        },
+        {
+          "cell": "AB3",
+          "value2": 45360,
+          "type": "date",
+          "text": "2024/03/09",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd",
+          "category": "G",
+          "elapsed": "1900/01/01"
+        },
+        {
+          "cell": "AC3",
+          "value2": 45360,
+          "type": "date",
+          "text": "2024年3月9日土曜日",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日"
+        },
+        {
+          "cell": "AD3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "2024年3月9日土曜日 22:05",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd\" \"h\":\"mm",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日 12:00"
+        },
+        {
+          "cell": "AE3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "2024年3月9日土曜日 22:05:09",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd\" \"h\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日 12:00:00"
+        },
+        {
+          "cell": "AF3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "2024/03/09 22:05",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd\" \"h\":\"mm",
+          "category": "G",
+          "elapsed": "1900/01/01 12:00"
+        },
+        {
+          "cell": "AG3",
+          "value2": 45360.92024305555,
+          "type": "date",
+          "text": "2024/03/09 22:05:09",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd\" \"h\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "1900/01/01 12:00:00"
+        },
+        {
+          "cell": "AH3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "22:05",
+          "numberFormat": "h\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "AI3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "AJ3",
+          "value2": 45352,
+          "type": "date",
+          "text": "2024年3月",
+          "numberFormat": "yyyy\"年\"m\"月\"",
+          "category": "G",
+          "elapsed": "1900年1月"
+        },
+        {
+          "cell": "A4",
+          "value2": 45560,
+          "type": "date",
+          "text": "9/25/2024",
+          "numberFormat": "m\"/\"d\"/\"yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "B4",
+          "value2": 45560,
+          "type": "date",
+          "text": "Wednesday, September 25, 2024",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "C4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "Wednesday, September 25, 2024 11:58 PM",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy\" \"h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900 12:00 PM"
+        },
+        {
+          "cell": "D4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "Wednesday, September 25, 2024 11:58:58 PM",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy\" \"h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900 12:00:00 PM"
+        },
+        {
+          "cell": "E4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "9/25/2024 11:58 PM",
+          "numberFormat": "[$-409]m\"/\"d\"/\"yyyy\" \"h\":\"mm\" \"AM/PM",
+          "category": "D2",
+          "elapsed": "1/1/1900 12:00 PM"
+        },
+        {
+          "cell": "F4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "9/25/2024 11:58:58 PM",
+          "numberFormat": "[$-409]m\"/\"d\"/\"yyyy\" \"h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "D2",
+          "elapsed": "1/1/1900 12:00:00 PM"
+        },
+        {
+          "cell": "G4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "11:58 PM",
+          "numberFormat": "[$-409]h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "H4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "11:58:58 PM",
+          "numberFormat": "[$-409]h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "I4",
+          "value2": 45536,
+          "type": "date",
+          "text": "September 2024",
+          "numberFormat": "[$-409]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "January 1900"
+        },
+        {
+          "cell": "J4",
+          "value2": 45560,
+          "type": "date",
+          "text": "25.09.2024",
+          "numberFormat": "dd\".\"mm\".\"yyyy",
+          "category": "D1",
+          "elapsed": "01.01.1900"
+        },
+        {
+          "cell": "K4",
+          "value2": 45560,
+          "type": "date",
+          "text": "Mittwoch, 25. September 2024",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900"
+        },
+        {
+          "cell": "L4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "Mittwoch, 25. September 2024 23:58",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy\" \"hh\":\"mm",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900 12:00"
+        },
+        {
+          "cell": "M4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "Mittwoch, 25. September 2024 23:58:58",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900 12:00:00"
+        },
+        {
+          "cell": "N4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "25.09.2024 23:58",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "O4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "25.09.2024 23:58:58",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00:00"
+        },
+        {
+          "cell": "P4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "23:58",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Q4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "R4",
+          "value2": 45536,
+          "type": "date",
+          "text": "September 2024",
+          "numberFormat": "[$-407]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Januar 1900"
+        },
+        {
+          "cell": "S4",
+          "value2": 45560,
+          "type": "date",
+          "text": "25/09/2024",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "T4",
+          "value2": 45560,
+          "type": "date",
+          "text": "mercredi 25 septembre 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "U4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "mercredi 25 septembre 2024 23:58",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy\" \"hh\":\"mm",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900 12:00"
+        },
+        {
+          "cell": "V4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "mercredi 25 septembre 2024 23:58:58",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900 12:00:00"
+        },
+        {
+          "cell": "W4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "25/09/2024 23:58",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "X4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "25/09/2024 23:58:58",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy\" \"hh\":\"mm\":\"ss",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00:00"
+        },
+        {
+          "cell": "Y4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "23:58",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Z4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "AA4",
+          "value2": 45536,
+          "type": "date",
+          "text": "septembre 2024",
+          "numberFormat": "[$-40C]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "janvier 1900"
+        },
+        {
+          "cell": "AB4",
+          "value2": 45560,
+          "type": "date",
+          "text": "2024/09/25",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd",
+          "category": "G",
+          "elapsed": "1900/01/01"
+        },
+        {
+          "cell": "AC4",
+          "value2": 45560,
+          "type": "date",
+          "text": "2024年9月25日水曜日",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日"
+        },
+        {
+          "cell": "AD4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "2024年9月25日水曜日 23:58",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd\" \"h\":\"mm",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日 12:00"
+        },
+        {
+          "cell": "AE4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "2024年9月25日水曜日 23:58:58",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd\" \"h\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日 12:00:00"
+        },
+        {
+          "cell": "AF4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "2024/09/25 23:58",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd\" \"h\":\"mm",
+          "category": "G",
+          "elapsed": "1900/01/01 12:00"
+        },
+        {
+          "cell": "AG4",
+          "value2": 45560.99928240741,
+          "type": "date",
+          "text": "2024/09/25 23:58:58",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd\" \"h\":\"mm\":\"ss",
+          "category": "G",
+          "elapsed": "1900/01/01 12:00:00"
+        },
+        {
+          "cell": "AH4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "23:58",
+          "numberFormat": "h\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "AI4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "AJ4",
+          "value2": 45536,
+          "type": "date",
+          "text": "2024年9月",
+          "numberFormat": "yyyy\"年\"m\"月\"",
+          "category": "G",
+          "elapsed": "1900年1月"
+        }
+      ]
+    },
+    {
+      "name": "Custom",
+      "widths": [
+        8.64,
+        26.36,
+        17.18,
+        20.91,
+        15.18,
+        16.09,
+        28.18,
+        10.09,
+        11.36,
+        8.09,
+        8.09,
+        14.64,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "GermanAbbreviated",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "FrenchNames",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "FrenchAbbreviated",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "GermanDesignator",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "GermanDateTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "PolishMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "BritishNames",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "SwedishSlashes",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "JapaneseAbbreviated",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "J1",
+          "value2": "PolishGenitive",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K1",
+          "value2": "GermanDayAbbreviated",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L1",
+          "value2": "GermanMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M1",
+          "value2": "RussianGenitive",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N1",
+          "value2": "FrenchDay",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 45292,
+          "type": "date",
+          "text": "Jan 2024",
+          "numberFormat": "[$-407]mmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Jan 1900"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306,
+          "type": "date",
+          "text": "lundi 15 janvier 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "C2",
+          "value2": 45306,
+          "type": "date",
+          "text": "lun. 15 janv. 2024",
+          "numberFormat": "[$-40C]ddd\" \"d\" \"mmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dim. 1 janv. 1900"
+        },
+        {
+          "cell": "D2",
+          "value2": 45292.416666666664,
+          "type": "date",
+          "text": "Januar 2024 10 AM",
+          "numberFormat": "[$-407]mmmm\" \"yyyy\" \"h\" \"AM/PM",
+          "category": "D1",
+          "elapsed": "Januar 1900 12 PM"
+        },
+        {
+          "cell": "E2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "15.01.2024 10:30",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "F2",
+          "value2": 45292,
+          "type": "date",
+          "text": "styczeń 2024",
+          "numberFormat": "[$-415]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "styczeń 1900"
+        },
+        {
+          "cell": "G2",
+          "value2": 45306,
+          "type": "date",
+          "text": "Monday 15 January 2024",
+          "numberFormat": "[$-809]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday 1 January 1900"
+        },
+        {
+          "cell": "H2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy\"-\"mm\"-\"dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "I2",
+          "value2": 45292,
+          "type": "date",
+          "text": "1 2024年",
+          "numberFormat": "[$-411]mmm\" \"yyyy\"年\"",
+          "category": "D1",
+          "elapsed": "1 1900年"
+        },
+        {
+          "cell": "J2",
+          "value2": "15 stycznia 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K2",
+          "value2": "15. Jan. 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L2",
+          "value2": 45292,
+          "type": "date",
+          "text": "Januar 2024",
+          "numberFormat": "[$-407]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Januar 1900"
+        },
+        {
+          "cell": "M2",
+          "value2": "15 января 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N2",
+          "value2": "lundi",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": 45352,
+          "type": "date",
+          "text": "Mrz 2024",
+          "numberFormat": "[$-407]mmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Jan 1900"
+        },
+        {
+          "cell": "B3",
+          "value2": 45360,
+          "type": "date",
+          "text": "samedi 9 mars 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "C3",
+          "value2": 45360,
+          "type": "date",
+          "text": "sam. 9 mars 2024",
+          "numberFormat": "[$-40C]ddd\" \"d\" \"mmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dim. 1 janv. 1900"
+        },
+        {
+          "cell": "D3",
+          "value2": 45352.916666666664,
+          "type": "date",
+          "text": "März 2024 10 PM",
+          "numberFormat": "[$-407]mmmm\" \"yyyy\" \"h\" \"AM/PM",
+          "category": "D1",
+          "elapsed": "Januar 1900 12 PM"
+        },
+        {
+          "cell": "E3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "09.03.2024 22:05",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "F3",
+          "value2": 45352,
+          "type": "date",
+          "text": "marzec 2024",
+          "numberFormat": "[$-415]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "styczeń 1900"
+        },
+        {
+          "cell": "G3",
+          "value2": 45360,
+          "type": "date",
+          "text": "Saturday 9 March 2024",
+          "numberFormat": "[$-809]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday 1 January 1900"
+        },
+        {
+          "cell": "H3",
+          "value2": 45360,
+          "type": "date",
+          "text": "2024-03-09",
+          "numberFormat": "yyyy\"-\"mm\"-\"dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "I3",
+          "value2": 45352,
+          "type": "date",
+          "text": "3 2024年",
+          "numberFormat": "[$-411]mmm\" \"yyyy\"年\"",
+          "category": "D1",
+          "elapsed": "1 1900年"
+        },
+        {
+          "cell": "J3",
+          "value2": "9 marca 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K3",
+          "value2": "09. März 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L3",
+          "value2": 45352,
+          "type": "date",
+          "text": "März 2024",
+          "numberFormat": "[$-407]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Januar 1900"
+        },
+        {
+          "cell": "M3",
+          "value2": "9 марта 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N3",
+          "value2": "samedi",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": 45536,
+          "type": "date",
+          "text": "Sep 2024",
+          "numberFormat": "[$-407]mmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Jan 1900"
+        },
+        {
+          "cell": "B4",
+          "value2": 45560,
+          "type": "date",
+          "text": "mercredi 25 septembre 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "C4",
+          "value2": 45560,
+          "type": "date",
+          "text": "mer. 25 sept. 2024",
+          "numberFormat": "[$-40C]ddd\" \"d\" \"mmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dim. 1 janv. 1900"
+        },
+        {
+          "cell": "D4",
+          "value2": 45536.958333333336,
+          "type": "date",
+          "text": "September 2024 11 PM",
+          "numberFormat": "[$-407]mmmm\" \"yyyy\" \"h\" \"AM/PM",
+          "category": "D1",
+          "elapsed": "Januar 1900 12 PM"
+        },
+        {
+          "cell": "E4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "25.09.2024 23:58",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "F4",
+          "value2": 45536,
+          "type": "date",
+          "text": "wrzesień 2024",
+          "numberFormat": "[$-415]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "styczeń 1900"
+        },
+        {
+          "cell": "G4",
+          "value2": 45560,
+          "type": "date",
+          "text": "Wednesday 25 September 2024",
+          "numberFormat": "[$-809]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday 1 January 1900"
+        },
+        {
+          "cell": "H4",
+          "value2": 45560,
+          "type": "date",
+          "text": "2024-09-25",
+          "numberFormat": "yyyy\"-\"mm\"-\"dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "I4",
+          "value2": 45536,
+          "type": "date",
+          "text": "9 2024年",
+          "numberFormat": "[$-411]mmm\" \"yyyy\"年\"",
+          "category": "D1",
+          "elapsed": "1 1900年"
+        },
+        {
+          "cell": "J4",
+          "value2": "25 września 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K4",
+          "value2": "25. Sept. 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L4",
+          "value2": 45536,
+          "type": "date",
+          "text": "September 2024",
+          "numberFormat": "[$-407]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "Januar 1900"
+        },
+        {
+          "cell": "M4",
+          "value2": "25 сентября 2024",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N4",
+          "value2": "mercredi",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ]
+    },
+    {
+      "name": "Kinds",
+      "widths": [
+        10.55,
+        29.18,
+        9.91,
+        29.09,
+        10.55,
+        26.36,
+        14.55,
+        10.55,
+        21.55,
+        8.64,
+        11.36,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        15.18,
+        26.36,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "UsDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "UsLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "GermanDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "GermanLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "FrenchDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "FrenchLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "FrenchMonth",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "JapaneseDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "JapaneseLongDate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "J1",
+          "value2": "UsTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K1",
+          "value2": "UsLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L1",
+          "value2": "GermanTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M1",
+          "value2": "GermanLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N1",
+          "value2": "FrenchTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "O1",
+          "value2": "FrenchLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "P1",
+          "value2": "JapaneseTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "Q1",
+          "value2": "JapaneseLongTime",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "R1",
+          "value2": "GermanOffset",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "S1",
+          "value2": "FrenchOffset",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "T1",
+          "value2": "JapaneseOffset",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 45306,
+          "type": "date",
+          "text": "1/15/2024",
+          "numberFormat": "m\"/\"d\"/\"yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306,
+          "type": "date",
+          "text": "Monday, January 15, 2024",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "C2",
+          "value2": 45306,
+          "type": "date",
+          "text": "15.01.2024",
+          "numberFormat": "dd\".\"mm\".\"yyyy",
+          "category": "D1",
+          "elapsed": "01.01.1900"
+        },
+        {
+          "cell": "D2",
+          "value2": 45306,
+          "type": "date",
+          "text": "Montag, 15. Januar 2024",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900"
+        },
+        {
+          "cell": "E2",
+          "value2": 45306,
+          "type": "date",
+          "text": "15/01/2024",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "F2",
+          "value2": 45306,
+          "type": "date",
+          "text": "lundi 15 janvier 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "G2",
+          "value2": 45292,
+          "type": "date",
+          "text": "janvier 2024",
+          "numberFormat": "[$-40C]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "janvier 1900"
+        },
+        {
+          "cell": "H2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024/01/15",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd",
+          "category": "G",
+          "elapsed": "1900/01/01"
+        },
+        {
+          "cell": "I2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024年1月15日月曜日",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日"
+        },
+        {
+          "cell": "J2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30 AM",
+          "numberFormat": "[$-409]h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "K2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05 AM",
+          "numberFormat": "[$-409]h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "L2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "M2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "N2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "O2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "P2",
+          "value2": 0.4375,
+          "type": "number",
+          "text": "10:30",
+          "numberFormat": "h\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Q2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "R2",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "15.01.2024 10:30",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "S2",
+          "value2": 45306,
+          "type": "date",
+          "text": "lundi 15 janvier 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "T2",
+          "value2": 0.43755787037037036,
+          "type": "number",
+          "text": "10:30:05",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A3",
+          "value2": 45360,
+          "type": "date",
+          "text": "3/9/2024",
+          "numberFormat": "m\"/\"d\"/\"yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "B3",
+          "value2": 45360,
+          "type": "date",
+          "text": "Saturday, March 9, 2024",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "C3",
+          "value2": 45360,
+          "type": "date",
+          "text": "09.03.2024",
+          "numberFormat": "dd\".\"mm\".\"yyyy",
+          "category": "D1",
+          "elapsed": "01.01.1900"
+        },
+        {
+          "cell": "D3",
+          "value2": 45360,
+          "type": "date",
+          "text": "Samstag, 9. März 2024",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900"
+        },
+        {
+          "cell": "E3",
+          "value2": 45360,
+          "type": "date",
+          "text": "09/03/2024",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "F3",
+          "value2": 45360,
+          "type": "date",
+          "text": "samedi 9 mars 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "G3",
+          "value2": 45352,
+          "type": "date",
+          "text": "mars 2024",
+          "numberFormat": "[$-40C]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "janvier 1900"
+        },
+        {
+          "cell": "H3",
+          "value2": 45360,
+          "type": "date",
+          "text": "2024/03/09",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd",
+          "category": "G",
+          "elapsed": "1900/01/01"
+        },
+        {
+          "cell": "I3",
+          "value2": 45360,
+          "type": "date",
+          "text": "2024年3月9日土曜日",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日"
+        },
+        {
+          "cell": "J3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "10:05 PM",
+          "numberFormat": "[$-409]h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "K3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "10:05:09 PM",
+          "numberFormat": "[$-409]h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "L3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "22:05",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "M3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "N3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "22:05",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "O3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "P3",
+          "value2": 0.9201388888888888,
+          "type": "number",
+          "text": "22:05",
+          "numberFormat": "h\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Q3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "R3",
+          "value2": 45360.92013888889,
+          "type": "date",
+          "text": "09.03.2024 22:05",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "S3",
+          "value2": 45360,
+          "type": "date",
+          "text": "samedi 9 mars 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "T3",
+          "value2": 0.9202430555555555,
+          "type": "number",
+          "text": "22:05:09",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "A4",
+          "value2": 45560,
+          "type": "date",
+          "text": "9/25/2024",
+          "numberFormat": "m\"/\"d\"/\"yyyy",
+          "category": "D4",
+          "elapsed": "1/1/1900"
+        },
+        {
+          "cell": "B4",
+          "value2": 45560,
+          "type": "date",
+          "text": "Wednesday, September 25, 2024",
+          "numberFormat": "[$-409]dddd\", \"mmmm\" \"d\", \"yyyy",
+          "category": "G",
+          "elapsed": "Sunday, January 1, 1900"
+        },
+        {
+          "cell": "C4",
+          "value2": 45560,
+          "type": "date",
+          "text": "25.09.2024",
+          "numberFormat": "dd\".\"mm\".\"yyyy",
+          "category": "D1",
+          "elapsed": "01.01.1900"
+        },
+        {
+          "cell": "D4",
+          "value2": 45560,
+          "type": "date",
+          "text": "Mittwoch, 25. September 2024",
+          "numberFormat": "[$-407]dddd\", \"d\". \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "Sonntag, 1. Januar 1900"
+        },
+        {
+          "cell": "E4",
+          "value2": 45560,
+          "type": "date",
+          "text": "25/09/2024",
+          "numberFormat": "dd\"/\"mm\"/\"yyyy",
+          "category": "D1",
+          "elapsed": "01/01/1900"
+        },
+        {
+          "cell": "F4",
+          "value2": 45560,
+          "type": "date",
+          "text": "mercredi 25 septembre 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "G4",
+          "value2": 45536,
+          "type": "date",
+          "text": "septembre 2024",
+          "numberFormat": "[$-40C]mmmm\" \"yyyy",
+          "category": "D1",
+          "elapsed": "janvier 1900"
+        },
+        {
+          "cell": "H4",
+          "value2": 45560,
+          "type": "date",
+          "text": "2024/09/25",
+          "numberFormat": "yyyy\"/\"mm\"/\"dd",
+          "category": "G",
+          "elapsed": "1900/01/01"
+        },
+        {
+          "cell": "I4",
+          "value2": 45560,
+          "type": "date",
+          "text": "2024年9月25日水曜日",
+          "numberFormat": "[$-411]yyyy\"年\"m\"月\"d\"日\"dddd",
+          "category": "G",
+          "elapsed": "1900年1月1日日曜日"
+        },
+        {
+          "cell": "J4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "11:58 PM",
+          "numberFormat": "[$-409]h\":\"mm\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00 PM"
+        },
+        {
+          "cell": "K4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "11:58:58 PM",
+          "numberFormat": "[$-409]h\":\"mm\":\"ss\" \"AM/PM",
+          "category": "G",
+          "elapsed": "12:00:00 PM"
+        },
+        {
+          "cell": "L4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "23:58",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "M4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "N4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "23:58",
+          "numberFormat": "hh\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "O4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "hh\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "P4",
+          "value2": 0.9986111111111111,
+          "type": "number",
+          "text": "23:58",
+          "numberFormat": "h\":\"mm",
+          "category": "D9",
+          "elapsed": "12:00"
+        },
+        {
+          "cell": "Q4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        },
+        {
+          "cell": "R4",
+          "value2": 45560.998611111114,
+          "type": "date",
+          "text": "25.09.2024 23:58",
+          "numberFormat": "dd\".\"mm\".\"yyyy\" \"hh\":\"mm",
+          "category": "D1",
+          "elapsed": "01.01.1900 12:00"
+        },
+        {
+          "cell": "S4",
+          "value2": 45560,
+          "type": "date",
+          "text": "mercredi 25 septembre 2024",
+          "numberFormat": "[$-40C]dddd\" \"d\" \"mmmm\" \"yyyy",
+          "category": "G",
+          "elapsed": "dimanche 1 janvier 1900"
+        },
+        {
+          "cell": "T4",
+          "value2": 0.9992824074074074,
+          "type": "number",
+          "text": "23:58:58",
+          "numberFormat": "h\":\"mm\":\"ss",
+          "category": "D8",
+          "elapsed": "12:00:00"
+        }
+      ]
+    },
+    {
+      "name": "Numbers",
+      "widths": [
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "German",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "GermanDouble",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "French",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "Swedish",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "Arabic",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "Persian",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "Invariant",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "GermanLong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "negative",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "H2",
+          "value2": -1234.5,
+          "type": "number",
+          "text": "-1234.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "I2",
+          "value2": -1234567,
+          "type": "number",
+          "text": "-1234567",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "large",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 1234567890.25,
+          "type": "number",
+          "text": "1.23E+09",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D3",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E3",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F3",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G3",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "H3",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "I3",
+          "value2": 123456789012345,
+          "type": "number",
+          "text": "1.23E+14",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "small",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 0.001,
+          "type": "number",
+          "text": "0.001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C4",
+          "value2": 1E-05,
+          "type": "number",
+          "text": "0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D4",
+          "value2": -1E-05,
+          "type": "number",
+          "text": "-0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E4",
+          "value2": -1E-05,
+          "type": "number",
+          "text": "-0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "F4",
+          "value2": 1E-05,
+          "type": "number",
+          "text": "0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "G4",
+          "value2": -1E-05,
+          "type": "number",
+          "text": "-0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "H4",
+          "value2": 1E-05,
+          "type": "number",
+          "text": "0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "I4",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    }
+  ]
+}

@@ -52,6 +52,12 @@
 		<None Include="Files\**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
+	<!-- The written content set, whose workbooks the tests write again and compare with Excel's answers in
+	     Files/excel-written. -->
+	<ItemGroup>
+		<Compile Include="..\..\tools\CsvHelper.Excel.Corpus\Written.cs" Link="Corpus\WrittenSet.cs" />
+	</ItemGroup>
+
 	<!-- The benchmarks' workbook writers of text and of the report, and NCsvPerf's data, for the tests that check the writers
 	     against Excel's files. -->
 	<ItemGroup>

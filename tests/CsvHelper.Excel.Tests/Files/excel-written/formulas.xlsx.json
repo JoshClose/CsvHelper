@@ -1,0 +1,572 @@
+{
+  "file": "formulas.xlsx",
+  "description": "formulas written by hand and by a record writer, each beside the text Excel shows for it",
+  "sha256": "dd858907d371a52256ef0835f5ea3edfc97331c12b96bed538e5124bf2ed31c6",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "sheets": [
+    {
+      "name": "Calc",
+      "widths": [
+        8.09,
+        8.09,
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "B",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Formula",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "Shows",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "a sum",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D2",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=B2+C2"
+        },
+        {
+          "cell": "E2",
+          "value2": "5",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "given with =",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D3",
+          "value2": 35,
+          "type": "number",
+          "text": "35",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=B3*C3"
+        },
+        {
+          "cell": "E3",
+          "value2": "35",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "a condition",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D4",
+          "value2": "big",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(B2>1,\"big\",\"small\")"
+        },
+        {
+          "cell": "E4",
+          "value2": "big",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": "escapes and entities",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D5",
+          "value2": "a_x0041_b<&>",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=\"a_x0041_b\"&\"<&>\""
+        },
+        {
+          "cell": "E5",
+          "value2": "a_x0041_b<&>",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A6",
+          "value2": "line breaks",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D6",
+          "value2": "x\r\ny",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=IF(B2>0,\n  \"x\r\ny\",\n  2)"
+        },
+        {
+          "cell": "E6",
+          "value2": "x\r\ny",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A7",
+          "value2": "control characters",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D7",
+          "value2": "a\u0001b\uFFFE",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=\"a\u0001b\"&\"\uFFFE\""
+        },
+        {
+          "cell": "E7",
+          "value2": "a\u0001b\uFFFE",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A8",
+          "value2": "a newer function",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D8",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=XLOOKUP(2,B2:B3,C2:C3)"
+        },
+        {
+          "cell": "E8",
+          "value2": "3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A9",
+          "value2": "its own sheet",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D9",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(Calc!B2:B3)"
+        },
+        {
+          "cell": "E9",
+          "value2": "7",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A10",
+          "value2": "a quoted sheet",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D10",
+          "value2": "quoted!",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "='Q1 Data'!A1&\"!\""
+        },
+        {
+          "cell": "E10",
+          "value2": "quoted!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A11",
+          "value2": "an emoji",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D11",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=LEN(\"\uD83D\uDE00\")"
+        },
+        {
+          "cell": "E11",
+          "value2": "1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A12",
+          "value2": "not ASCII",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D12",
+          "value2": "日本é",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=\"日本\"&\"é\""
+        },
+        {
+          "cell": "E12",
+          "value2": "日本é",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A13",
+          "value2": "an array constant",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D13",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM({1,2;3,4})"
+        },
+        {
+          "cell": "E13",
+          "value2": "10",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A14",
+          "value2": "an unknown function",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D14",
+          "value2": "#NAME?",
+          "type": "error",
+          "text": "#NAME?",
+          "numberFormat": "General",
+          "formula": "=NOSUCHFUNC(1)",
+          "formula2": "=@NOSUCHFUNC(1)"
+        },
+        {
+          "cell": "E14",
+          "value2": "#NAME?",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A15",
+          "value2": "a missing sheet",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D15",
+          "value2": "#REF!",
+          "type": "error",
+          "text": "#REF!",
+          "numberFormat": "General",
+          "formula": "=Nope!A1"
+        },
+        {
+          "cell": "E15",
+          "value2": "#REF!",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A16",
+          "value2": "a percent",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D16",
+          "value2": 0.02,
+          "type": "number",
+          "text": "0.02",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=B2%"
+        },
+        {
+          "cell": "E16",
+          "value2": "0.02",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A17",
+          "value2": "an empty argument",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D17",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(1,)"
+        },
+        {
+          "cell": "E17",
+          "value2": "1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A18",
+          "value2": "text that looks like a number",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D18",
+          "value2": "00123",
+          "type": "text",
+          "numberFormat": "General",
+          "formula": "=\"00123\""
+        },
+        {
+          "cell": "E18",
+          "value2": "00123",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ]
+    },
+    {
+      "name": "Q1 Data",
+      "widths": [
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "quoted",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ]
+    },
+    {
+      "name": "Records",
+      "widths": [
+        8.09,
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "B",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Shows",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A2+B2"
+        },
+        {
+          "cell": "D2",
+          "value2": "3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 14,
+          "type": "number",
+          "text": "14",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=SUM(A3:B3)*2"
+        },
+        {
+          "cell": "D3",
+          "value2": "14",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B4",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ]
+    }
+  ]
+}

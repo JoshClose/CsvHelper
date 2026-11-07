@@ -22,12 +22,18 @@
 		<PackageReference Include="SpreadCheetah" Version="1.28.0" />
 	</ItemGroup>
 
-	<!-- The typed benchmark's orders, which the orders command enters in Excel. OrderRecord's [CsvRecord] is CsvHelper's;
-	     without the generator, it does nothing here. -->
+	<!-- The typed benchmark's orders, which the orders command enters in Excel. -->
 	<ItemGroup>
 		<Compile Include="..\..\bench\CsvHelper.Benchmarks\OrderRecord.cs" Link="Bench\OrderRecord.cs" />
 		<Compile Include="..\..\bench\CsvHelper.Benchmarks\ExcelOrders.cs" Link="Bench\ExcelOrders.cs" />
 		<ProjectReference Include="..\..\src\CsvHelper\CsvHelper.csproj" />
+	</ItemGroup>
+
+	<!-- CsvHelper.Excel, which the written command writes the workbooks of Written.cs with, and the [CsvRecord] generator
+	     for their record types (and OrderRecord's). -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\CsvHelper.Excel\CsvHelper.Excel.csproj" />
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
 	<!-- The report benchmark's layout, which the report command builds in Excel. -->

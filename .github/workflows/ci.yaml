@@ -21,6 +21,19 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
+      - name: Install LibreOffice
+        # For CsvHelper.Excel's tests that convert workbooks with LibreOffice (tests/CsvHelper.Excel.Tests/Corpus/LibreOffice.cs),
+        # which are skipped without it: the version their differences were checked with, from The Document Foundation's
+        # archive, checked against the SHA-256 it publishes.
+        run: |
+          $ProgressPreference = "SilentlyContinue"
+          $msi = Join-Path $env:RUNNER_TEMP "LibreOffice_26.8.2.2_Win_x86-64.msi"
+          Invoke-WebRequest "https://downloadarchive.documentfoundation.org/libreoffice/old/26.8.2.2/win/x86_64/LibreOffice_26.8.2.2_Win_x86-64.msi" -OutFile $msi
+          $hash = (Get-FileHash $msi -Algorithm SHA256).Hash
+          if ($hash -ne "FF4B911403B67EE9E6249F820F9782C44BB32C94FDAA45B0DA53A8E419E5307A") { throw "LibreOffice's installer has SHA-256 $hash." }
+          $install = Start-Process msiexec.exe -ArgumentList "/i", "`"$msi`"", "/qn", "/norestart" -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "msiexec exited with $($install.ExitCode)." }
+          "LibreOffice " + (Get-Item "C:\Program Files\LibreOffice\program\soffice.exe").VersionInfo.ProductVersion
       - name: Test
         run: dotnet test --configuration Release --no-restore --no-build
       - name: Check CsvHelper.Excel Package

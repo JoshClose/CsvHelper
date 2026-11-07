@@ -32,6 +32,8 @@ internal static class Program
 		  downloads      Other projects' test files that downloads.txt pins: google/, excel-mac/
 		  formats        Excel through COM: excel-formats.json, which number formats Excel takes for dates
 		  oracle         Excel through COM: excel-oracle/, what every corpus workbook's cells hold as Excel reads them
+		  written        Excel through COM: excel-written/, what Excel reads in each workbook CsvHelper.Excel writes
+		                 (Written.cs), with each workbook's SHA-256
 		  spec           The basic workbook's content as JSON, to standard output (the typed and messy workbooks' go to
 		                 the Python and Java producers through temporary files)
 		  check          Only the check, which every command ends with, that no file holds personal information
@@ -109,6 +111,10 @@ internal static class Program
 				ExcelOracle.Write(files);
 
 				break;
+			case "written":
+				ExcelWritten.Write(files);
+
+				break;
 			case "spec":
 				Console.WriteLine(Basic.ToJson());
 
@@ -127,6 +133,7 @@ internal static class Program
 				Downloads.Write(files, downloads);
 				ExcelFormats.Write(files);
 				ExcelOracle.Write(files);
+				ExcelWritten.Write(files);
 
 				break;
 			default:

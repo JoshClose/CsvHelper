@@ -227,7 +227,7 @@ public class ExcelAnswersTests
 	/// </summary>
 	/// <param name="formula">The formula, or <see langword="null"/>.</param>
 	/// <returns>The formula as Excel shows it.</returns>
-	private static string? Shown(string? formula)
+	internal static string? Shown(string? formula)
 	{
 		if (formula is null)
 		{

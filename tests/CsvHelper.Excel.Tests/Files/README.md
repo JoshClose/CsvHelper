@@ -1,12 +1,12 @@
 # CsvHelper.Excel's test corpus
 
-Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, the orders on 2026-11-04, and the messy workbooks, with Excel's answers about every workbook's tables, names, hidden rows and columns and merged ranges, on 2026-11-05; the four from Apache POI's test data are under "Downloads".
+Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, the orders on 2026-11-04, and the messy workbooks, with Excel's answers about every workbook's tables, names, hidden rows and columns and merged ranges, on 2026-11-05; the four from Apache POI's test data are under "Downloads". Excel's answers about the workbooks CsvHelper.Excel writes, which aren't kept here, were written on 2026-11-07.
 
 ```
 dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 ```
 
-`excel`, `packageassets`, `orders`, `report`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, `formats` asks Excel about number formats and `oracle` about every workbook's cells (below), and `check` only checks them.
+`excel`, `packageassets`, `orders`, `report`, `libreoffice`, `python`, `poi` and `dotnet` write one producer's files each, `downloads` fetches the files `downloads.txt` pins, `formats` asks Excel about number formats, `oracle` about every workbook's cells and `written` about the workbooks CsvHelper.Excel writes (below), and `check` only checks them.
 
 ## Excel's answers
 
@@ -47,6 +47,40 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 - **Repairs:** a workbook Excel opens only by repairing it is answered as repaired, with the records of Excel's repair log under `repaired` (the log's summary, which names the file's full path, is left out). Only `closedxml/typed.xlsx` needs it.
 - **Refused:** a workbook Excel can't open even by repairing it is answered with `refused` alone. Only `openpyxl/messy.xlsx` (see "What the producers write").
 - **A busy Excel:** just after opening `google/64450.xlsx`, Excel answers `SpecialCells` with "the application is busy" (`RPC_E_SERVERCALL_RETRYLATER`) while it builds the pivot table's cells; the command asks again until it answers. Only Excel's own failure of a call (`0x800A03EC`) counts as "no visible cell" or "no range", and a sheet without a visible cell must hide its first row or column.
+
+## Excel's reading of written workbooks
+
+`excel-written/<name>.json` (written 2026-11-07 by `written`, Excel 365 16.0 build 20527 at 144 DPI) records what Excel reads in each workbook of the `written` content set: workbooks CsvHelper.Excel writes. `Corpus/WrittenAnswersTests.cs` writes each again and compares.
+
+- **The set:** defined once in `tools/CsvHelper.Excel.Corpus/Written.cs`, which the tests link. Nothing in it depends on the machine: no time zone, no current culture, no clock.
+  - `types.xlsx`: every type of Phase 4's "What a field becomes" that .NET Framework has, at its edges (integers to their limits, 15 and 16 significant digits, 17-digit doubles, subnormals, `NaN` and the infinities; dates around 1900-02-29, Excel's last millisecond, before 1900, each `Kind`, half a millisecond; durations, negative ones, offsets as text; booleans, characters, Guids, enums, URIs), and a column whose first value is narrower than a later one.
+  - `types-net.xlsx` (.NET only): `DateOnly`, `TimeOnly`, `Half`, `Int128` and `UInt128`, and dates' and times' formats in the invariant culture.
+  - `options.xlsx`: `LongNumbers = Number` and `DateTimeOffsets = Utc`.
+  - `text.xlsx` and `text-shared.xlsx`: texts that need escaping (CR, CR LF, every C0 control, `_x0041_` and its near misses, U+FFFE, U+FFFF, a lone surrogate, invalid UTF-8), spaces at the ends, numbers stored as text, and a cell of 32,767 code units, with inline and with shared strings.
+  - `formulas.xlsx`: formulas written by hand and by a record writer, each with the text Excel should show beside it in a `Shows` column.
+  - `names.xlsx`: 18 sheet names Excel opens, among them `Q&A <1>`, `"Quoted"`, `a_x0041_b`, `History`, `TRUE`, `A1`, `=a`, a zero-width space, a full-width letter and 31 code units with an emoji.
+  - `newsheet.xlsx`: `RowLimit = NewSheet` with three rows a sheet (the writer's internal limit, set by reflection), and shared strings.
+  - `formats.xlsx`: `[CsvFormat]` dates, times, offsets (with `DateTimeOffsets = ClockTime`) and durations in the invariant culture: 13 standard formats and 36 custom ones, translated or not, and a formatted date before 1900.
+  - `cultures.xlsx` (.NET only): `[CsvFormat]` and `[CsvCulture]` in en-US, de-DE, fr-FR, ja-JP, pl-PL, en-GB, sv-SE, ru-RU: standard and custom formats, `DateOnly`, `TimeOnly`, offsets, and numbers in ar-SA, fa-IR and others.
+- **How:** the command writes each workbook into a temporary folder and Excel opens it read-only, with calculation automatic, since the writer's formulas have no cached values, and with macros disabled. The columns keep the widths written, so that a value its column is too narrow for shows as `########`. No workbook is kept: the tests write them again.
+- **What:** for each workbook:
+  - `sha256`: the SHA-256 of its parts, each entry's name and inflated bytes with their lengths, in the package's order. The file's own bytes differ between runtimes, since deflate does (zlib-ng on .NET 9 and later, zlib on .NET 8, .NET Framework's own).
+  - `cultures` and `cultureData`, for `cultures.xlsx` alone: the cultures it reads, and a fingerprint of their data as the runtime had it (patterns, separators, designators, names, numbers' signs).
+  - `dpi`: the screen's, which Excel's column widths depend on.
+  - `os`: the system the workbooks were written on, whose ICU .NET reads culture data from on Windows. There a fingerprint that differs from `cultureData` fails rather than skips, so that a change to the fingerprint can't leave `cultures.xlsx` uncompared everywhere.
+  - `refused` or `repaired`, as for `excel-oracle` (no workbook needed either).
+  - for each worksheet, its `name`, the `widths` (`ColumnWidth`) of the columns to the used range's last, and its `cells` as in `excel-oracle`.
+- **The tests:**
+  - Each workbook written again, synchronously and asynchronously, must have the parts Excel read; otherwise the writer or the set changed, and the message says to run `written` again. On .NET Framework the eight workbooks it has are the same parts as on .NET. On a runtime whose culture data isn't the fingerprint's (another ICU), `cultures.xlsx` isn't compared, and the tests say so in their output.
+  - Every cell Excel read is compared with what the set wrote, by rules of the test's own from each value and its column's format and culture: values and types exactly; the text Excel shows of every value in a member's format, against .NET's text of it (the translation's oracle), and of the writer's own date, time and duration formats; booleans' and formulas' text. A formatted value is a typed cell when its format is one Excel shows the same (the test lists those it can't, by Phase 4's rules) and its text reads back, from 1900-01-01, to the same text; otherwise it is text.
+  - Each cell's number format against the code written, and each column's width against the width written, as Excel converts it at the answers' DPI.
+  - LibreOffice, where installed (CI installs it), shows each cell as Excel does: text by its whole text, numbers in General by value, the rest by the text shown. `names.xlsx`, whose sheet names can't all be file names, is converted to `.xlsx` and read back instead.
+- **What Excel showed:** all ten opened as they are. Of 210 formatted cells in `cultures.xlsx`, 198 are typed, and of 161 in `formats.xlsx`, 125; the others are formats that aren't translated, two weekdays (`ddd MMMM yyyy`) that aren't the 1st's, so their text reads back as no date, and the date before 1900. Excel shows the text .NET writes but in these cells:
+  - ja-JP's abbreviated month (`[$-411]mmm`) as its number alone (`1`, where .NET writes `1月`);
+  - ICU's de-DE March, `Mär`, as `Mrz`;
+  - a subnormal double as 0;
+  - a later value wider than its column's first, as `########` (decision 14), which `types.xlsx` holds on purpose, as does `formats.xlsx`, whose first value of a column is text (before 1900), so that the column gets no width.
+- **LibreOffice 26.8.2.2** shows Excel's text but: serials before 61 a day earlier (its 1900 system has no 1900-02-29); a CR in text with an LF as LF; `_xHHHH_` in formulas undecoded; a missing sheet as `#NAME?`; a percent's result as `2.00%`; `A/P` in lower case; `AM/PM` under `[$-407]` as `vorm.` and `nachm.`; `#FMT` for `TimeSpan.MaxValue`; a value its column is too narrow for; and ja-JP's and de-DE's months as .NET writes them.
 
 ## The typed workbook
 
