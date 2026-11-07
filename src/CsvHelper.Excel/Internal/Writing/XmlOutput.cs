@@ -121,7 +121,8 @@ internal sealed class XmlOutput : IDisposable
 	/// Appends text as Excel writes it in a <c>t</c> element or an attribute value: <c>&amp;</c>, <c>&lt;</c> and
 	/// <c>&gt;</c> as entities, <c>"</c> as <c>&amp;quot;</c> when <paramref name="attribute"/> is set; CR, the other control
 	/// characters but tab and LF, U+FFFE and U+FFFF as <c>_xHHHH_</c> escapes; and <c>_x005F_</c> (an escaped <c>_</c>) for
-	/// an <c>_</c> that starts text that reads as an escape, so that it reads back as written. Tab and LF are written as
+	/// an <c>_</c> that starts text that reads as an escape, so that it reads back as written: <c>_x0041_</c>, and
+	/// <c>_x0041</c> before a character written as an escape, whose <c>_</c> would close it. Tab and LF are written as
 	/// they are.
 	/// </summary>
 	/// <remarks>
@@ -162,7 +163,7 @@ internal sealed class XmlOutput : IDisposable
 					break;
 				case (byte)'_':
 					// The '_' itself becomes the escape of a '_', and what follows it stays literal.
-					Append(IsEscapeLike(text.Slice(i)) ? "_x005F_"u8 : "_"u8);
+					Append(ReadsAsEscape(text.Slice(i)) ? "_x005F_"u8 : "_"u8);
 					break;
 				case 0xEF:
 					if (i + 2 < text.Length && text[i + 1] == 0xBF && text[i + 2] is 0xBE or 0xBF)
@@ -298,6 +299,27 @@ internal sealed class XmlOutput : IDisposable
 #endif
 	}
 
+	/// <summary>
+	/// The number of UTF-16 code units of valid UTF-8 text as <see cref="AppendText"/> writes it, its entities read: each
+	/// <c>_xHHHH_</c> escape takes 7 for the one character it stands for. The schema's limits count them (a sheet's name
+	/// has at most 31), while Excel's count the characters.
+	/// </summary>
+	/// <param name="text">The text, which must be valid UTF-8 (<see cref="IsValidUtf8"/>).</param>
+	/// <returns>The number of code units.</returns>
+	public static int WrittenLength(ReadOnlySpan<byte> text)
+	{
+		var units = Utf16Length(text);
+		for (var i = 0; i < text.Length; i++)
+		{
+			if ((text[i] == (byte)'_' && ReadsAsEscape(text.Slice(i))) || IsWrittenAsEscape(text.Slice(i)))
+			{
+				units += 6;
+			}
+		}
+
+		return units;
+	}
+
 	/// <summary>Invalid UTF-8 made valid, as .NET decodes it: each invalid sequence becomes U+FFFD.</summary>
 	/// <param name="text">The text.</param>
 	/// <returns>The valid text.</returns>
@@ -309,9 +331,25 @@ internal sealed class XmlOutput : IDisposable
 	/// </summary>
 	/// <param name="text">The text, from an <c>_</c>.</param>
 	/// <returns>Whether it starts with an escape's form.</returns>
-	public static bool IsEscapeLike(ReadOnlySpan<byte> text)
+	public static bool IsEscapeLike(ReadOnlySpan<byte> text) => text.Length >= 7 && HasEscapeStart(text) && text[6] == (byte)'_';
+
+	/// <summary>
+	/// Whether text, from an <c>_</c>, reads as an escape once <see cref="AppendText"/> writes it: it starts with an
+	/// escape's form (<see cref="IsEscapeLike"/>), or with <c>_x</c> and four hexadecimal digits before a character that
+	/// is written as an escape, whose own <c>_</c> would close them. <c>_x0041</c> before U+0000 would be
+	/// <c>_x0041_x0000_</c>, which reads as <c>A</c> and <c>x0000_</c>.
+	/// </summary>
+	/// <param name="text">The text, from an <c>_</c>.</param>
+	/// <returns>Whether its <c>_</c> must be written as <c>_x005F_</c>.</returns>
+	private static bool ReadsAsEscape(ReadOnlySpan<byte> text) =>
+		text.Length >= 7 && HasEscapeStart(text) && (text[6] == (byte)'_' || IsWrittenAsEscape(text.Slice(6)));
+
+	/// <summary>Whether text starts with <c>_x</c> and four hexadecimal digits, of either case.</summary>
+	/// <param name="text">The text, at least 6 bytes long.</param>
+	/// <returns>Whether it does.</returns>
+	private static bool HasEscapeStart(ReadOnlySpan<byte> text)
 	{
-		if (text.Length < 7 || text[0] != (byte)'_' || text[1] != (byte)'x' || text[6] != (byte)'_')
+		if (text[0] != (byte)'_' || text[1] != (byte)'x')
 		{
 			return false;
 		}
@@ -326,6 +364,15 @@ internal sealed class XmlOutput : IDisposable
 
 		return true;
 	}
+
+	/// <summary>
+	/// Whether text starts with a character that <see cref="AppendText"/> writes as an <c>_xHHHH_</c> escape: a control
+	/// character other than tab and LF, U+FFFE or U+FFFF.
+	/// </summary>
+	/// <param name="text">The text, which isn't empty.</param>
+	/// <returns>Whether it does.</returns>
+	private static bool IsWrittenAsEscape(ReadOnlySpan<byte> text) =>
+		(text[0] < 0x20 && text[0] is not ((byte)'\t' or (byte)'\n')) || (text.Length >= 3 && text[0] == 0xEF && text[1] == 0xBF && text[2] is 0xBE or 0xBF);
 
 	/// <summary>Whether text starts or ends with what Excel trims from text without <c>xml:space="preserve"</c>.</summary>
 	/// <param name="text">The text.</param>

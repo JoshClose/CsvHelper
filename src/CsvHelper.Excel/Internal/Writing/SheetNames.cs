@@ -15,6 +15,12 @@ namespace CsvHelper.Excel;
 /// spaces at either end, and <c>= + ! # $ % &amp; ; , " &lt;</c>, all of which Excel opens.
 /// </para>
 /// <para>
+/// The 31 are counted as the workbook part writes the name, too, where an <c>_</c> that would start an escape is
+/// <c>_x005F_</c>, and U+FFFE and U+FFFF are <c>_xFFFE_</c> and <c>_xFFFF_</c>, 7 code units each: the schema limits the
+/// attribute so, and the Open XML SDK's validator with it. Excel counts the characters, and opens a name of 31 with such
+/// escapes (checked on 2026-11-07), so the writer is stricter there too.
+/// </para>
+/// <para>
 /// Excel refuses two names that differ in case, ASCII or not (<c>Äpfel</c> and <c>äpfel</c>, <c>straße</c> and
 /// <c>STRASSE</c>, <c>σ</c> and <c>ς</c>, <c>K</c> and the Kelvin sign), or by Unicode equivalence (<c>é</c> composed and
 /// decomposed, <c>ﬁ</c> and <c>fi</c>). It opens names that differ in width (<c>A</c>, <c>Ａ</c>), in kana, in accents, in
@@ -69,16 +75,32 @@ internal static class SheetNames
 				throw new ArgumentException($"A sheet name can't have a lone surrogate, and \"{Shown(name)}\" has U+{(int)c:X4}.", paramName);
 			}
 		}
+
+		var written = WrittenLength(name);
+		if (written > MaxLength)
+		{
+			throw new ArgumentException(
+				$"A sheet name is at most {MaxLength} characters long as the workbook writes it, and \"{Shown(name)}\" is {written}: an _ before x and four hexadecimal digits is written _x005F_, and U+FFFE and U+FFFF _xFFFE_ and _xFFFF_.",
+				paramName);
+		}
 	}
 
 	/// <summary>
 	/// The key of a name, which names Excel takes to be the same share: its NFKC form (Unicode's compatibility
-	/// composition), with <c>ß</c> and <c>ẞ</c> as <c>ss</c>, upper-cased in the invariant culture as .NET does it (on .NET
-	/// Framework, with the mappings it lacks: <c>InvariantUpper</c>).
+	/// composition; around the non-characters the normalization refuses), with <c>ß</c> and <c>ẞ</c> as <c>ss</c>,
+	/// upper-cased in the invariant culture as .NET does it (on .NET Framework, with the mappings it lacks:
+	/// <c>InvariantUpper</c>); and that again, as Unicode's caseless match does, since each step can undo the other's:
+	/// <c>I</c> and U+0307 compose to <c>İ</c>, while <c>i</c> and U+0307, which Excel takes to be the same name (checked on
+	/// 2026-11-07), don't compose until they are upper-cased.
 	/// </summary>
 	/// <param name="name">The name, which <see cref="Check"/> accepted.</param>
 	/// <returns>The key, compared ordinally.</returns>
-	public static string Key(string name)
+	public static string Key(string name) => Upper(Normalized(Upper(Normalized(name))));
+
+	/// <summary>A name's NFKC form, with <c>ß</c> and <c>ẞ</c> as <c>ss</c>.</summary>
+	/// <param name="name">The name, which has no lone surrogates.</param>
+	/// <returns>The normalized name.</returns>
+	private static string Normalized(string name)
 	{
 		string normal;
 		try
@@ -90,14 +112,26 @@ internal static class SheetNames
 			// Globalization's invariant mode without normalization: names are then compared by case alone.
 			normal = name;
 		}
+		catch (ArgumentException)
+		{
+			// The normalization refuses non-characters: U+FFFE on .NET, and every one on .NET Framework (U+FFFF, U+FDD0).
+			normal = NormalizeAround(name);
+		}
 
 		normal = normal.Replace("\u00DF", "ss").Replace("\u1E9E", "ss");
+
+		return normal;
+	}
+
+	/// <summary>A name upper-cased in the invariant culture, as .NET does it.</summary>
+	/// <param name="name">The name.</param>
+	/// <returns>The name in upper case.</returns>
+	private static string Upper(string name)
+	{
 #if NET
-
-		return normal.ToUpperInvariant();
+		return name.ToUpperInvariant();
 #else
-
-		return InvariantUpper.ToUpper(normal);
+		return InvariantUpper.ToUpper(name);
 #endif
 	}
 
@@ -137,8 +171,8 @@ internal static class SheetNames
 
 	/// <summary>
 	/// The name of a sheet's copy, as Excel names it: the stem, then a space and the number in parentheses, with the stem
-	/// cut to fit 31 code units (<c>abcdefghijklmnopqrstuvwxyz1 (2)</c> for a name of 31 letters and digits), but not
-	/// between a surrogate pair's halves.
+	/// cut to fit 31 code units (<c>abcdefghijklmnopqrstuvwxyz1 (2)</c> for a name of 31 letters and digits), as written
+	/// (see <see cref="Check"/>), but not between a surrogate pair's halves.
 	/// </summary>
 	/// <param name="stem">The stem (<see cref="CopyStem"/>).</param>
 	/// <param name="number">The copy's number.</param>
@@ -152,8 +186,56 @@ internal static class SheetNames
 			stem = stem.Substring(0, char.IsHighSurrogate(stem[room - 1]) ? room - 1 : room);
 		}
 
+		// Its escapes take more as written (see Check), so it is cut a character at a time until it fits.
+		while (WrittenLength(stem + suffix) > MaxLength)
+		{
+			var cut = stem.Length - 1;
+			stem = stem.Substring(0, cut > 0 && char.IsLowSurrogate(stem[cut]) ? cut - 1 : cut);
+		}
+
 		return stem + suffix;
 	}
+
+	/// <summary>
+	/// A name's NFKC form around its non-characters (U+FDD0 to U+FDEF, and the last two code points of each plane), which
+	/// the normalization refuses (U+FFFE on .NET, every one on .NET Framework; checked on 2026-11-07): they compose with
+	/// nothing and nothing reorders across them, so each run between them is normalized alone, and they are kept as they
+	/// are, as .NET's normalization keeps those it takes.
+	/// </summary>
+	/// <param name="name">The name, which has no lone surrogates.</param>
+	/// <returns>The NFKC form.</returns>
+	private static string NormalizeAround(string name)
+	{
+		var normal = new StringBuilder(name.Length);
+		var start = 0;
+		for (var i = 0; i < name.Length; i++)
+		{
+			var pair = char.IsHighSurrogate(name[i]) && i + 1 < name.Length;
+			var code = pair ? char.ConvertToUtf32(name[i], name[i + 1]) : name[i];
+			if (code is >= 0xFDD0 and <= 0xFDEF || (code & 0xFFFE) == 0xFFFE)
+			{
+				normal.Append(name.Substring(start, i - start).Normalize(NormalizationForm.FormKC));
+				normal.Append(name, i, pair ? 2 : 1);
+				start = i + (pair ? 2 : 1);
+			}
+
+			if (pair)
+			{
+				i++;
+			}
+		}
+
+		normal.Append(name.Substring(start).Normalize(NormalizationForm.FormKC));
+
+		return normal.ToString();
+	}
+
+	/// <summary>The code units a name takes as the workbook part writes it (<see cref="XmlOutput.WrittenLength"/>).</summary>
+	/// <param name="name">The name, which has no lone surrogates.</param>
+	/// <returns>The code units.</returns>
+	private static int WrittenLength(string name) => name.IndexOf('_') < 0 && name.IndexOf((char)0xFFFE) < 0 && name.IndexOf((char)0xFFFF) < 0
+		? name.Length
+		: XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(name));
 
 	/// <summary>A name for a message, with its control characters as escapes, such as <c>a\tb</c>.</summary>
 	/// <param name="name">The name.</param>

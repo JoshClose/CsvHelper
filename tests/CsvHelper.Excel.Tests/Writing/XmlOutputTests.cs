@@ -26,6 +26,15 @@ public class XmlOutputTests
 		yield return ["_x0041_x0042_", "_x005F_x0041_x005F_x0042_"];
 		yield return ["_x005F_", "_x005F_x005F_"];
 		yield return ["_X0041_", "_X0041_"];
+		yield return ["_x0041\r", "_x005F_x0041_x000D_"];
+		yield return ["_x00e9" + Text(1) + "b", "_x005F_x00e9_x0001_b"];
+		yield return ["_x0041" + Text(0xFFFE), "_x005F_x0041_xFFFE_"];
+		yield return ["a_x0041" + Text(0xFFFF), "a_x005F_x0041_xFFFF_"];
+		yield return ["_x0041\t", "_x0041\t"];
+		yield return ["_x0041\n", "_x0041\n"];
+		yield return ["_x004\r", "_x004_x000D_"];
+		yield return ["_X0041\r", "_X0041_x000D_"];
+		yield return ["_x0041" + Text(0xFFFD), "_x0041" + Text(0xFFFD)];
 		yield return ["_x0041", "_x0041"];
 		yield return ["_x0041a", "_x0041a"];
 		yield return ["_x0041a_", "_x0041a_"];
@@ -65,6 +74,30 @@ public class XmlOutputTests
 		Assert.Equal(text, Escaped(text, attribute: false));
 	}
 
+	[Theory]
+	[InlineData("abc", 3)]
+	[InlineData("_x0041_", 13)]
+	[InlineData("_x0041", 6)]
+	[InlineData("_x0041\r", 19)]
+	[InlineData("a&b<c>\"d", 8)]
+	[InlineData("\t\n", 2)]
+	[InlineData("a\rb", 9)]
+	public void CountsTextAsWritten(string text, int length)
+	{
+		// The text as AppendText writes it, once XML's entities are read.
+		Assert.Equal(length, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(text)));
+		Assert.Equal(length, System.Net.WebUtility.HtmlDecode(Escaped(text, attribute: true)).Length);
+	}
+
+	[Fact]
+	public void CountsNonCharactersAndPairsAsWritten()
+	{
+		Assert.Equal(7, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(Text(0xFFFE))));
+		Assert.Equal(15, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes("a" + Text(0xFFFF) + Text(0xFFFE))));
+		Assert.Equal(2, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(Text(0x1F600))));
+		Assert.Equal(20, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes("_x0041" + Text(0xFFFF) + "z")));
+	}
+
 	[Fact]
 	public void QuotesQuotesInAttributes()
 	{
@@ -74,8 +107,8 @@ public class XmlOutputTests
 	[Fact]
 	public void ReadsBackRandomTextAsWritten()
 	{
-		// Text made of what the escapes are about: underscores, x, hexadecimal digits, controls and the rest.
-		var pieces = new[] { "_", "x", "X", "0", "4", "1", "F", "f", "e", "G", "&", "<", ">", "\r", "\n", "\t", " ", Text(1), Text(0x1F), Text(0xFFFE), Text(0xFFFF), Text(0xE9), Text(0x1F600) };
+		// Text made of what the escapes are about: underscores, x, hexadecimal digits, the start of an escape, controls and the rest.
+		var pieces = new[] { "_", "x", "X", "0", "4", "1", "F", "f", "e", "G", "_x0041", "_x00e9", "&", "<", ">", "\r", "\n", "\t", " ", Text(1), Text(0x1F), Text(0xFFFE), Text(0xFFFF), Text(0xE9), Text(0x1F600) };
 		var random = new Random(4);
 		for (var n = 0; n < 20000; n++)
 		{

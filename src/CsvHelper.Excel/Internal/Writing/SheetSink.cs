@@ -818,15 +818,17 @@ internal sealed class SheetSink : CsvCellSink
 	/// Writes a formula cell from an <see cref="ExcelFormula"/>'s text, <c>=</c> and the formula: <c>f</c> alone, without a
 	/// cached value, which Excel and LibreOffice compute on open. The formula is escaped as text is: Excel decodes
 	/// <c>_xHHHH_</c> in it (checked on 2026-11-06), and its CRs, which <see cref="ExcelFormula"/> keeps in its strings only,
-	/// as <c>_x000D_</c>.
+	/// as <c>_x000D_</c>. A formula that starts or ends with white space has <c>xml:space="preserve"</c>, as text does, since
+	/// a reader trims it otherwise: Excel writes it on a formula that starts with a space, and keeps that space.
 	/// </summary>
 	/// <param name="text">The field's text, which isn't empty.</param>
 	/// <param name="at">The cell's column.</param>
 	private void WriteFormula(ReadOnlySpan<byte> text, int at)
 	{
+		var formula = text[0] == (byte)'=' ? text.Slice(1) : text;
 		StartCell(at);
-		output.Append("><f>"u8);
-		output.AppendText(text[0] == (byte)'=' ? text.Slice(1) : text);
+		output.Append(XmlOutput.NeedsPreserve(formula) ? "><f xml:space=\"preserve\">"u8 : "><f>"u8);
+		output.AppendText(formula);
 		output.Append("</f></c>"u8);
 	}
 

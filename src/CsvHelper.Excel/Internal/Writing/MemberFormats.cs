@@ -56,9 +56,9 @@ internal sealed class MemberFormats
 	/// <summary>The formats of each type read so far: none for a type whose members have none.</summary>
 	private static readonly ConcurrentDictionary<Type, MemberFormats> Cache = new();
 
-	/// <summary>Creates the formats of a type.</summary>
+	/// <summary>Creates the formats of a type, or of no type, for tests of formats no type has.</summary>
 	/// <param name="members">The members with a format or a culture.</param>
-	private MemberFormats(MemberFormat[] members) => Entries = members;
+	internal MemberFormats(MemberFormat[] members) => Entries = members;
 
 	/// <summary>The members with a format or a culture, in the order they were found.</summary>
 	public IReadOnlyList<MemberFormat> Entries { get; }

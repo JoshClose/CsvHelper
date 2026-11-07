@@ -282,6 +282,20 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Adds a sheet as <see cref="AddSheet{T}(string)"/> does, with members' formats given rather than read from a type, for
+	/// tests of formats no type has: random ones. The header record's names say which column each is for.
+	/// </summary>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="members">The members' formats.</param>
+	/// <returns>The sheet's writer.</returns>
+	internal CsvWriter AddSheet(string name, MemberFormats members)
+	{
+		var key = CheckNewSheet(name);
+
+		return Open(NewSheet(name, key, members, null));
+	}
+
+	/// <summary>
 	/// Completes an open sheet, writes the workbook's other parts and closes the package, and the file or stream unless it
 	/// was left open. Calling it again does nothing.
 	/// </summary>

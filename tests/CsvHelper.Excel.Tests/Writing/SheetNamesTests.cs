@@ -46,6 +46,12 @@ public class SheetNamesTests
 		yield return ["K", ((char)0x212A).ToString()];
 		yield return [((char)0xE9).ToString(), "e" + (char)0x301];
 		yield return [((char)0xFB01).ToString(), "fi"];
+
+		// Checked through COM on 2026-11-07: I and U+0307 compose to U+0130, and i and U+0307 are the same name in Excel.
+		yield return ["I" + (char)0x307, "i" + (char)0x307];
+		yield return [((char)0x130).ToString(), "i" + (char)0x307];
+		yield return [((char)0x130).ToString(), "I" + (char)0x307];
+		yield return ["aI" + (char)0x307 + "b", "Ai" + (char)0x307 + "B"];
 	}
 
 	/// <summary>Pairs of names Excel opens together, which the writer takes to be different.</summary>
@@ -148,6 +154,62 @@ public class SheetNamesTests
 
 		// Every copy's name is one Excel opens.
 		SheetNames.Check(SheetNames.CopyName(new string('a', 26) + Emoji + "bb", 2), "name");
+	}
+
+	[Fact]
+	public void ComparesNamesWithNonCharacters()
+	{
+		// The normalization refuses them (U+FFFE on .NET, every one on .NET Framework), and Excel opens them (checked on
+		// 2026-11-07): the runs between them are normalized, and they are kept as they are.
+		var fffe = ((char)0xFFFE).ToString();
+		var fdd0 = ((char)0xFDD0).ToString();
+		var plane = new string(new[] { (char)0xD83F, (char)0xDFFF });
+		foreach (var name in new[] { "a" + fffe, "a" + (char)0xFFFF, "a" + fdd0 + "b", "a" + plane })
+		{
+			SheetNames.Check(name, "name");
+		}
+
+		Assert.Equal("A" + fffe + "B", SheetNames.Key("a" + fffe + "b"));
+		Assert.Equal(SheetNames.Key((char)0xFB01 + fffe + (char)0xE9), SheetNames.Key("FI" + fffe + "e" + (char)0x301));
+		Assert.Equal(SheetNames.Key("i" + fdd0 + "I" + (char)0x307), SheetNames.Key("I" + fdd0 + (char)0x130));
+		Assert.Equal(SheetNames.Key((char)0xFB01 + plane), SheetNames.Key("fi" + plane));
+		Assert.NotEqual(SheetNames.Key("a" + fffe), SheetNames.Key("a" + (char)0xFFFF));
+	}
+
+	[Fact]
+	public void CountsNamesAsWritten()
+	{
+		// An _ that would start an escape is written _x005F_, and U+FFFE _xFFFE_: 7 code units each, which the schema
+		// counts. Excel counts the characters and opens these (checked on 2026-11-07), but the validator doesn't.
+		var escape = Assert.Throws<ArgumentException>(() => SheetNames.Check("_x0041_" + new string('a', 24), "name"));
+		var fffe = Assert.Throws<ArgumentException>(() => SheetNames.Check(new string('a', 30) + (char)0xFFFE, "name"));
+
+		Assert.StartsWith("A sheet name is at most 31 characters long as the workbook writes it, and \"_x0041_aaaaaaaaaaaaaaaaaaaaaaaa\" is 37: ", escape.Message);
+		Assert.StartsWith($"A sheet name is at most 31 characters long as the workbook writes it, and \"{new string('a', 30)}{(char)0xFFFE}\" is 37: ", fffe.Message);
+		Assert.Equal("name", escape.ParamName);
+		SheetNames.Check("_x0041_" + new string('a', 18), "name");
+		SheetNames.Check("_x0041" + new string('a', 25), "name");
+		SheetNames.Check("_X0041_" + new string('a', 24), "name");
+	}
+
+	[Fact]
+	public void CutsCopiesToFitAsWritten()
+	{
+		// The stem loses characters until the copy's name fits as written; one cut through an escape's form shortens it more.
+		var escaped = "_x0041_" + new string('a', 18);
+		var ending = new string('a', 18) + "_x0041_";
+
+		Assert.Equal("_x0041_" + new string('a', 14) + " (2)", SheetNames.CopyName(escaped, 2));
+		Assert.Equal(new string('a', 18) + "_x0041 (2)", SheetNames.CopyName(ending, 2));
+		Assert.Equal(new string('a', 20) + (char)0xFFFE + " (2)", SheetNames.CopyName(new string('a', 20) + (char)0xFFFE + "bbbbbb", 2));
+		Assert.Equal(new string('a', 23) + " (2)", SheetNames.CopyName(new string('a', 23) + (char)0xFFFE + "bbbbbb", 2));
+		SheetNames.Check(SheetNames.CopyName(escaped, 2), "name");
+		SheetNames.Check(SheetNames.CopyName(ending, 2), "name");
+
+		// A surrogate pair at the cut goes whole, though one code unit less would fit: 28 as written and " (2)" are 32.
+		var pair = "_x0041_" + new string('a', 13) + Emoji;
+		Assert.Equal("_x0041_" + new string('a', 13) + " (2)", SheetNames.CopyName(pair, 2));
+		SheetNames.Check(SheetNames.CopyName(pair, 2), "name");
 	}
 
 	[Fact]

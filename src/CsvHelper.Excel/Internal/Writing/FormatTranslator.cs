@@ -41,8 +41,8 @@ namespace CsvHelper.Excel;
 /// fraction digits (Excel refuses them), <c>y</c>, <c>yyy</c> and five or more, a 12-hour hour without <c>tt</c> or a
 /// 24-hour one with it, other designators, a month where Excel would read minutes (next to an hour or a second) and minutes
 /// where it would read a month, a date without a year (<c>dd MMMM</c> reads back in the current year), month names that
-/// .NET would write in the genitive (Excel shows the nominative), names in a culture without a locale id, and calendars
-/// other than the Gregorian.
+/// .NET would write in the genitive (Excel shows the nominative), names in a culture without a locale id, calendars
+/// other than the Gregorian, and formats .NET can't format (a quote left open, <c>%</c> before a quote).
 /// </para>
 /// </remarks>
 internal static class FormatTranslator
@@ -62,7 +62,7 @@ internal static class FormatTranslator
 		var culture = provider as CultureInfo;
 		var info = DateTimeFormatInfo.GetInstance(provider);
 		var pattern = Expand(format, kind, ref info, ref culture);
-		if (pattern is null || info.Calendar is not GregorianCalendar)
+		if (pattern is null || info.Calendar is not GregorianCalendar || !CanFormat(pattern, info))
 		{
 			return null;
 		}
@@ -75,6 +75,27 @@ internal static class FormatTranslator
 
 		// A pattern of one character would be a standard format.
 		return new DateFormat(code, pattern.Length == 1 ? "%" + pattern : pattern, info, hasDate);
+	}
+
+	/// <summary>
+	/// Whether .NET formats a date with a pattern: not one with a quote left open, or <c>%</c> before a quote, which make
+	/// no text for a cell to show, and whose translation would read differently.
+	/// </summary>
+	/// <param name="pattern">The custom pattern.</param>
+	/// <param name="info">The culture's formats.</param>
+	/// <returns>Whether it formats.</returns>
+	private static bool CanFormat(string pattern, DateTimeFormatInfo info)
+	{
+		try
+		{
+			_ = new DateTime(2024, 1, 15, 10, 30, 5, 123).ToString(pattern.Length == 1 ? "%" + pattern : pattern, info);
+
+			return true;
+		}
+		catch (FormatException)
+		{
+			return false;
+		}
 	}
 
 	/// <summary>The custom pattern of a format: a standard format's, for the kind of values, or the format itself.</summary>
