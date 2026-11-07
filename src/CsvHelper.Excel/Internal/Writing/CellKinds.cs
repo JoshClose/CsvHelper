@@ -55,6 +55,11 @@ internal static class CellKinds
 			return CellKind.TimeSpan;
 		}
 
+		if (type == typeof(ExcelFormula))
+		{
+			return CellKind.Formula;
+		}
+
 #if NET
 		if (type == typeof(System.DateOnly))
 		{

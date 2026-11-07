@@ -36,6 +36,14 @@ namespace CsvHelper.Excel;
 /// default width can't show gets a width that fits it (<see cref="ColumnWidths"/>). Text, and numbers in General, never
 /// show <c>########</c> and get none.
 /// </para>
+/// <para>
+/// A record past the sheet's last row follows <see cref="ExcelWriterOptions.RowLimit"/>. Its first field finds it, through
+/// the field limit that <see cref="EndRecord"/> lowers to 0 once the sheet is full, so that the test of the column limit
+/// is the only one per field. With <see cref="ExcelRowLimit.NewSheet"/>, the full sheet's end goes into the buffer, and the
+/// next sheet's rows after it, the header's first; the next flush, which <see cref="EndRecord"/> asks for, writes the full
+/// sheet, closes its entry and opens the next one's. So no I/O happens in <see cref="WriteField"/>, and the switch is sync
+/// or async as the caller is.
+/// </para>
 /// </remarks>
 internal sealed class SheetSink : CsvCellSink
 {
@@ -58,7 +66,6 @@ internal sealed class SheetSink : CsvCellSink
 
 	private readonly ExcelWorkbookWriter workbook;
 	private readonly PackageWriter package;
-	private readonly string partName;
 	private readonly SharedStringTable? strings;
 	private readonly StyleRegistry styles;
 	private readonly ExcelWriterOptions options;
@@ -66,6 +73,10 @@ internal sealed class SheetSink : CsvCellSink
 	private readonly NumberCulture? culture;
 	// The row of the first data record, whose cells set the columns' widths.
 	private readonly long firstDataRow;
+	// The rows a sheet holds: Excel's last row's number, or fewer in tests.
+	private readonly int maxRows;
+	// Whether each new sheet of RowLimit.NewSheet repeats the header, which the first record is.
+	private readonly bool repeatsHeader;
 	private readonly XmlOutput output = new(FlushSize + 4096);
 	// The XML of a shared string, before the table gives its index.
 	private readonly XmlOutput? item;
@@ -74,7 +85,21 @@ internal sealed class SheetSink : CsvCellSink
 	// Each column's last type, and the kind of cell it makes.
 	private Type?[] columnTypes = new Type?[16];
 	private CellKind[] columnKinds = new CellKind[16];
+	// The part of the sheet being written, and its entry once a flush opened it.
+	private string partName;
 	private Stream? entry;
+	// The fields a record has before WriteField looks at the limits: Excel's columns, or 0 once the sheet is full.
+	private int fieldLimit = CellReference.MaxColumns;
+	// The header's row as each new sheet repeats it (repeatsHeader): its XML, its references to shared strings, its last
+	// cell's column (-1 without one), and whether one of its text cells starts like a number.
+	private byte[]? headerRow;
+	private int headerReferences;
+	private int headerLastColumn = -1;
+	private bool headerNumberLikeText;
+	// Where a full sheet ends in the buffer, until the flush that closes its entry (NewSheet); -1 otherwise. And the part of
+	// the sheet after it.
+	private int sheetEnd = -1;
+	private string? nextPartName;
 	// The current record's row, and the column of its next field.
 	private long row = 1;
 	private int column;
@@ -105,7 +130,8 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="strings">The shared strings, or <see langword="null"/> to write each cell's string in the cell.</param>
 	/// <param name="styles">The workbook's cell formats.</param>
 	/// <param name="options">The workbook's options.</param>
-	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options)
+	/// <param name="maxRows">The rows a sheet holds before <see cref="ExcelWriterOptions.RowLimit"/> applies: at least 2.</param>
+	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows)
 	{
 		this.workbook = workbook;
 		this.package = package;
@@ -113,14 +139,16 @@ internal sealed class SheetSink : CsvCellSink
 		this.strings = strings;
 		this.styles = styles;
 		this.options = options;
+		this.maxRows = maxRows;
 		culture = NumberCulture.For(options.Csv.FormatProvider);
 		firstDataRow = options.Csv.HasHeader ? 2 : 1;
+		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
 	}
 
-	/// <summary>The sheet's name and how messages name its cells.</summary>
-	public SheetLocation Location { get; }
+	/// <summary>The name of the sheet being written (a new one's, after <see cref="ExcelRowLimit.NewSheet"/>), and how messages name its cells.</summary>
+	public SheetLocation Location { get; private set; }
 
 	/// <summary>Whether the cells being written are the first data record's, whose typed cells set their columns' widths.</summary>
 	private bool MeasuringWidths => !widthsKnown && row == firstDataRow;
@@ -129,17 +157,17 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="utf8">The field's text.</param>
 	/// <param name="type">The type it was formatted from.</param>
 	/// <exception cref="InvalidOperationException">
-	/// The field is past Excel's last column, its text is too long for a cell, or its value is one that the options say to
+	/// The field is past Excel's last column, or its record past the sheet's last row with
+	/// <see cref="ExcelRowLimit.Throw"/>; its text is too long for a cell; or its value is one that the options say to
 	/// throw for.
 	/// </exception>
 	public override void WriteField(ReadOnlySpan<byte> utf8, Type type)
 	{
 		// The column counts whether or not the field throws, as the writer's field count does.
 		var at = column++;
-		if (at >= CellReference.MaxColumns)
+		if (at >= fieldLimit)
 		{
-			throw new InvalidOperationException(
-				$"Record {row.ToString("N0", CultureInfo.InvariantCulture)} has a field in column {Letters(at)}, past XFD, Excel's last column.");
+			OnLimit(at);
 		}
 
 		if (utf8.IsEmpty)
@@ -181,6 +209,10 @@ internal sealed class SheetSink : CsvCellSink
 				WriteDuration(utf8, at);
 
 				break;
+			case CellKind.Formula:
+				WriteFormula(utf8, at);
+
+				break;
 			default:
 				WriteText(utf8, at);
 
@@ -188,16 +220,31 @@ internal sealed class SheetSink : CsvCellSink
 		}
 	}
 
-	/// <summary>Ends the current record: closes its row, if it has one.</summary>
-	/// <returns>Whether the buffer has passed <see cref="FlushSize"/> and can be written: not while records are held.</returns>
+	/// <summary>
+	/// Ends the current record: closes its row, if it has one, and keeps the header's row for the new sheets of
+	/// <see cref="ExcelRowLimit.NewSheet"/>. When the sheet is full, the next record's first field finds it.
+	/// </summary>
+	/// <returns>
+	/// Whether the buffer has passed <see cref="FlushSize"/>, or holds a full sheet's end, and can be written: not while
+	/// records are held.
+	/// </returns>
 	public override bool EndRecord()
 	{
+		var hasRow = rowOpen;
 		if (rowOpen)
 		{
 			output.Append("</row>"u8);
 			rowOpen = false;
 			lastRow = row;
 			lastColumn = Math.Max(lastColumn, recordLastColumn);
+		}
+
+		if (row == 1 && repeatsHeader)
+		{
+			headerRow = output.Written.Slice(recordStart).ToArray();
+			headerReferences = recordReferences;
+			headerLastColumn = hasRow ? recordLastColumn : -1;
+			headerNumberLikeText = recordNumberLikeText;
 		}
 
 		numberLikeText |= recordNumberLikeText;
@@ -214,10 +261,15 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		row++;
+		if (row > maxRows)
+		{
+			fieldLimit = 0;
+		}
+
 		column = 0;
 		recordStart = output.Length;
 
-		return widthsKnown && recordStart >= FlushSize;
+		return widthsKnown && (recordStart >= FlushSize || sheetEnd >= 0);
 	}
 
 	/// <summary>Drops the current record's cells, and the widths they set.</summary>
@@ -268,16 +320,7 @@ internal sealed class SheetSink : CsvCellSink
 		try
 		{
 			widthsKnown = true;
-			output.Append(End);
-			if (numberLikeText)
-			{
-				// Excel flags text that reads as a number with a warning triangle; over the used range, it doesn't.
-				output.Append("<ignoredErrors><ignoredError sqref=\"A1:"u8);
-				output.AppendReference(ColumnName(lastColumn), lastRow);
-				output.Append("\" numberStoredAsText=\"1\"/></ignoredErrors>"u8);
-			}
-
-			output.Append("</worksheet>"u8);
+			AppendEnd();
 			recordStart = output.Length;
 			await FlushAsync(async, CancellationToken.None).ConfigureAwait(false);
 			await PackageWriter.CloseAsync(entry!, async).ConfigureAwait(false);
@@ -333,6 +376,71 @@ internal sealed class SheetSink : CsvCellSink
 			(milliseconds / 1000 % 60).ToString("00", CultureInfo.InvariantCulture);
 
 		return milliseconds % 1000 == 0 ? text : text + "." + (milliseconds % 1000).ToString("000", CultureInfo.InvariantCulture);
+	}
+
+	/// <summary>
+	/// A field at the field limit: past Excel's last column, which throws, or the first of a record past the sheet's last
+	/// row, which throws or starts the next sheet, as <see cref="ExcelWriterOptions.RowLimit"/> says.
+	/// </summary>
+	/// <param name="at">The field's column.</param>
+	/// <exception cref="InvalidOperationException">The field is past the last column, or its record past the last row with <see cref="ExcelRowLimit.Throw"/>.</exception>
+	private void OnLimit(int at)
+	{
+		if (row > maxRows)
+		{
+			if (options.RowLimit == ExcelRowLimit.Throw)
+			{
+				throw new InvalidOperationException(
+					$"The sheet {Location.QuotedName} is full at row {maxRows.ToString("N0", CultureInfo.InvariantCulture)}, Excel's last. Set ExcelWriterOptions.RowLimit to NewSheet to go on in a new sheet.");
+			}
+
+			// The record's first field: the next sheet takes it.
+			StartNextSheet();
+
+			return;
+		}
+
+		throw new InvalidOperationException(
+			$"Record {row.ToString("N0", CultureInfo.InvariantCulture)} has a field in column {Letters(at)}, past XFD, Excel's last column.");
+	}
+
+	/// <summary>
+	/// Ends the full sheet in the buffer and starts the next one there (<see cref="ExcelRowLimit.NewSheet"/>), named as
+	/// Excel names a copy of it, with the header's row first. The next flush, which <see cref="EndRecord"/> asks for,
+	/// writes the full sheet, closes its entry and opens the next one's.
+	/// </summary>
+	private void StartNextSheet()
+	{
+		AppendEnd();
+		sheetEnd = output.Length;
+		var (name, part) = workbook.ContinueSheet(Location.Name);
+		Location = new SheetLocation(name);
+		nextPartName = part;
+		row = 1;
+		lastRow = 0;
+		lastColumn = -1;
+		numberLikeText = false;
+		if (headerRow is not null)
+		{
+			// Its cells are row 1's, as in every sheet, and its shared strings are referred to once more.
+			output.Append(headerRow);
+			if (headerLastColumn >= 0)
+			{
+				lastRow = 1;
+				lastColumn = headerLastColumn;
+			}
+
+			numberLikeText = headerNumberLikeText;
+			if (strings is not null)
+			{
+				strings.References += headerReferences;
+			}
+
+			row = 2;
+		}
+
+		recordStart = output.Length;
+		fieldLimit = CellReference.MaxColumns;
 	}
 
 	/// <summary>The kind of cell a field of a type makes in a column, from the column's last type when it is the same.</summary>
@@ -580,6 +688,22 @@ internal sealed class SheetSink : CsvCellSink
 		}
 	}
 
+	/// <summary>
+	/// Writes a formula cell from an <see cref="ExcelFormula"/>'s text, <c>=</c> and the formula: <c>f</c> alone, without a
+	/// cached value, which Excel and LibreOffice compute on open. The formula is escaped as text is: Excel decodes
+	/// <c>_xHHHH_</c> in it (checked on 2026-11-06), and its CRs, which <see cref="ExcelFormula"/> keeps in its strings only,
+	/// as <c>_x000D_</c>.
+	/// </summary>
+	/// <param name="text">The field's text, which isn't empty.</param>
+	/// <param name="at">The cell's column.</param>
+	private void WriteFormula(ReadOnlySpan<byte> text, int at)
+	{
+		StartCell(at);
+		output.Append("><f>"u8);
+		output.AppendText(text[0] == (byte)'=' ? text.Slice(1) : text);
+		output.Append("</f></c>"u8);
+	}
+
 	/// <summary>Writes a text cell: the string inline, or its index in the shared strings.</summary>
 	/// <param name="text">The text, which isn't empty.</param>
 	/// <param name="at">The cell's column.</param>
@@ -675,20 +799,61 @@ internal sealed class SheetSink : CsvCellSink
 	}
 
 	/// <summary>
+	/// Writes the XML after the sheet's rows into the buffer: the end of <c>sheetData</c>, the page margins,
+	/// <c>ignoredErrors</c> over the used range when a text cell starts like a number, and the worksheet's end.
+	/// </summary>
+	private void AppendEnd()
+	{
+		output.Append(End);
+		if (numberLikeText)
+		{
+			// Excel flags text that reads as a number with a warning triangle; over the used range, it doesn't.
+			output.Append("<ignoredErrors><ignoredError sqref=\"A1:"u8);
+			output.AppendReference(ColumnName(lastColumn), lastRow);
+			output.Append("\" numberStoredAsText=\"1\"/></ignoredErrors>"u8);
+		}
+
+		output.Append("</worksheet>"u8);
+	}
+
+	/// <summary>
 	/// Writes the whole records buffered to the entry, opening it and writing the XML before the rows first, once the
-	/// columns' widths are known; until then the records are held.
+	/// columns' widths are known; until then the records are held. A full sheet in the buffer (<see cref="ExcelRowLimit.NewSheet"/>)
+	/// is written first, and its entry closed, so that the next sheet's entry can be opened.
 	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when they are written.</returns>
 	private async ValueTask FlushAsync(bool async, CancellationToken cancellationToken)
 	{
-		var count = recordStart;
-		if (!widthsKnown || (count == 0 && startWritten))
+		if (!widthsKnown)
 		{
 			return;
 		}
 
+		if (sheetEnd >= 0)
+		{
+			await WriteBufferAsync(sheetEnd, async, cancellationToken).ConfigureAwait(false);
+			await PackageWriter.CloseAsync(entry!, async).ConfigureAwait(false);
+			entry = null;
+			startWritten = false;
+			partName = nextPartName!;
+			sheetEnd = -1;
+		}
+
+		if (recordStart > 0 || !startWritten)
+		{
+			await WriteBufferAsync(recordStart, async, cancellationToken).ConfigureAwait(false);
+		}
+	}
+
+	/// <summary>Writes the buffer's first bytes to the entry, opening it and writing the XML before the rows first.</summary>
+	/// <param name="count">The bytes: whole records, or a whole sheet's rows and end, at most <see cref="recordStart"/>.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
+	/// <returns>A task that completes when they are written.</returns>
+	private async ValueTask WriteBufferAsync(int count, bool async, CancellationToken cancellationToken)
+	{
 		entry ??= await package.OpenPartAsync(partName, async, cancellationToken).ConfigureAwait(false);
 		if (!startWritten)
 		{
@@ -700,6 +865,6 @@ internal sealed class SheetSink : CsvCellSink
 
 		await output.WriteToAsync(entry, count, async, cancellationToken).ConfigureAwait(false);
 		output.RemoveFirst(count);
-		recordStart = 0;
+		recordStart -= count;
 	}
 }

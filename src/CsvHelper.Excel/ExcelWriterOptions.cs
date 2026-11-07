@@ -5,14 +5,14 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// How a workbook is written: the options of its sheets' <see cref="CsvWriter"/>s, where text cells keep their strings,
-/// how the package is compressed, and what becomes of the values Excel can't hold as they are (long numbers, offsets,
-/// dates before 1900). Immutable: use <c>with</c> to change a copy.
+/// how the package is compressed, what a record past a sheet's last row does, and what becomes of the values Excel can't
+/// hold as they are (long numbers, offsets, dates before 1900). Immutable: use <c>with</c> to change a copy.
 /// </summary>
 public sealed record ExcelWriterOptions
 {
 	/// <summary>
-	/// The default options: <see cref="CsvWriterOptions.Default"/>, inline strings, the fastest compression, and text cells
-	/// for long numbers, offsets and dates before 1900.
+	/// The default options: <see cref="CsvWriterOptions.Default"/>, inline strings, the fastest compression, an exception
+	/// past a sheet's last row, and text cells for long numbers, offsets and dates before 1900.
 	/// </summary>
 	public static ExcelWriterOptions Default { get; } = new();
 
@@ -44,6 +44,12 @@ public sealed record ExcelWriterOptions
 	public CompressionLevel CompressionLevel { get; init; } = CompressionLevel.Fastest;
 
 	/// <summary>
+	/// What a record past a sheet's last row, 1,048,576, does: throw (<see cref="ExcelRowLimit.Throw"/>, the default),
+	/// since Excel opens no workbook with a row past its last, or go on in a new sheet with the header repeated.
+	/// </summary>
+	public ExcelRowLimit RowLimit { get; init; } = ExcelRowLimit.Throw;
+
+	/// <summary>
 	/// What an integer or a <see cref="decimal"/> of more than 15 significant digits becomes, which Excel would round to 15:
 	/// a text cell (<see cref="ExcelLongNumbers.Text"/>, the default), a number cell, or an exception.
 	/// </summary>
@@ -65,8 +71,9 @@ public sealed record ExcelWriterOptions
 	/// <param name="paramName">The name of the parameter the options came from.</param>
 	/// <exception cref="ArgumentException"><see cref="Csv"/> is <see langword="null"/>, or its options are not valid.</exception>
 	/// <exception cref="ArgumentOutOfRangeException">
-	/// <see cref="Strings"/>, <see cref="CompressionLevel"/>, <see cref="LongNumbers"/>, <see cref="DateTimeOffsets"/> or
-	/// <see cref="OutOfRangeDates"/> is not a value of its enum, or <see cref="Csv"/> has a value out of range.
+	/// <see cref="Strings"/>, <see cref="CompressionLevel"/>, <see cref="RowLimit"/>, <see cref="LongNumbers"/>,
+	/// <see cref="DateTimeOffsets"/> or <see cref="OutOfRangeDates"/> is not a value of its enum, or <see cref="Csv"/> has a
+	/// value out of range.
 	/// </exception>
 	internal void Validate(string paramName)
 	{
@@ -89,6 +96,11 @@ public sealed record ExcelWriterOptions
 		if (CompressionLevel is < CompressionLevel.Optimal or > Last)
 		{
 			throw new ArgumentOutOfRangeException(paramName, CompressionLevel, "ExcelWriterOptions.CompressionLevel is not a CompressionLevel value.");
+		}
+
+		if (RowLimit is not (ExcelRowLimit.Throw or ExcelRowLimit.NewSheet))
+		{
+			throw new ArgumentOutOfRangeException(paramName, RowLimit, "ExcelWriterOptions.RowLimit is not an ExcelRowLimit value.");
 		}
 
 		if (LongNumbers is not (ExcelLongNumbers.Text or ExcelLongNumbers.Number or ExcelLongNumbers.Throw))

@@ -101,6 +101,60 @@ internal static class SheetNames
 #endif
 	}
 
+	/// <summary>
+	/// The stem of the names of a sheet's copies, and the number of the first, as Excel names copies (checked through COM
+	/// on 2026-11-06): <c>Orders</c> gives <c>Orders (2)</c>, and <c>Orders (2)</c> gives <c>Orders (3)</c>, whose stem is
+	/// <c>Orders</c>.
+	/// </summary>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="number">The number of its first copy.</param>
+	/// <returns>The stem: the name before a space and a number in parentheses at its end, or the whole name.</returns>
+	public static string CopyStem(string name, out long number)
+	{
+		number = 2;
+		var open = name.LastIndexOf(" (", StringComparison.Ordinal);
+		var digits = name.Length - open - 3;
+		if (open < 0 || digits is < 1 or > 9 || name[name.Length - 1] != ')')
+		{
+			return name;
+		}
+
+		long value = 0;
+		for (var i = open + 2; i < name.Length - 1; i++)
+		{
+			if (name[i] is < '0' or > '9')
+			{
+				return name;
+			}
+
+			value = value * 10 + (name[i] - '0');
+		}
+
+		number = value + 1;
+
+		return name.Substring(0, open);
+	}
+
+	/// <summary>
+	/// The name of a sheet's copy, as Excel names it: the stem, then a space and the number in parentheses, with the stem
+	/// cut to fit 31 code units (<c>abcdefghijklmnopqrstuvwxyz1 (2)</c> for a name of 31 letters and digits), but not
+	/// between a surrogate pair's halves.
+	/// </summary>
+	/// <param name="stem">The stem (<see cref="CopyStem"/>).</param>
+	/// <param name="number">The copy's number.</param>
+	/// <returns>The name, which <see cref="Check"/> accepts when the sheet's name was accepted.</returns>
+	public static string CopyName(string stem, long number)
+	{
+		var suffix = " (" + number.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")";
+		var room = MaxLength - suffix.Length;
+		if (stem.Length > room)
+		{
+			stem = stem.Substring(0, char.IsHighSurrogate(stem[room - 1]) ? room - 1 : room);
+		}
+
+		return stem + suffix;
+	}
+
 	/// <summary>A name for a message, with its control characters as escapes, such as <c>a\tb</c>.</summary>
 	/// <param name="name">The name.</param>
 	/// <returns>The name shown.</returns>

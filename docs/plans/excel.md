@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) is next.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) is next.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -3888,7 +3888,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 4: writer foundation (L)
 
-Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; see "As built". Step 3 (formulas and limits) is next. It changes some of the scope as planned, each change noted there: a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case.
+Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) is next. It changes some of the scope as planned, each change noted there: a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case.
 
 Scope, as planned:
 
@@ -4622,6 +4622,142 @@ Filled in step by step; the code is the reference.
 - **Review** (2026-11-06), the recommendations:
   - The widths for 96 DPI, from the table, are accepted in place of the design's AutoFit widths.
   - Widths stay the first data record's, so a later value that needs more shows `########` until Phase 5's auto-fit, rather than every `DateTime` and `TimeOnly` column getting the width of milliseconds.
+
+**Step 3, formulas and limits** (built 2026-11-06, approved and committed 2026-11-07):
+
+- **New files:**
+  - Public:
+    - `ExcelFormula.cs`: the constructor, `Formula`, `Parse`, `TryParse`, equality and `ToString`. On .NET it is also `ISpanFormattable`, `IUtf8SpanFormattable` and `ISpanParsable<ExcelFormula>`, implemented explicitly, so the public API is the design's.
+    - `ExcelFormulaConverter.cs`, `ExcelWriterExtensions.cs` (`WriteFormula`) and `ExcelRowLimit.cs`.
+  - `Internal/Writing/FormulaCheck.cs`: the checks, and the line breaks outside a formula's strings.
+- **Changed:**
+  - `ExcelWriterOptions` gains `RowLimit` (`Throw` by default), checked by `Validate`.
+  - `CellKind.Formula`, which `CellKinds.Of` gives `ExcelFormula` and its nullable.
+  - `SheetSink` writes formula cells, applies the row limit and starts new sheets.
+  - `ExcelWorkbookWriter` gains `ContinueSheet` and an internal `MaxRows`, and its docs describe formulas and the limits.
+  - `SheetNames` gains `CopyStem` and `CopyName`.
+- **Checked through COM before building** (Excel 365, build 20527), with `f` elements written by hand. The probes, their scripts and the answers are in `Csv\_bench\results\phase4\step3` (`make_probes.py`, `make_probes2.py`, `make_probes3.py`, `answers*.txt`, `copy_names.*`):
+  - **Brackets:** Excel opens brackets of every kind inside strings and quoted sheet names (`LEN("(")`, `'a(b'!A1`, `INDEX({"a","}"},2)`). It refuses, as unopenable, a parenthesis, bracket or brace that isn't closed, one closed by another kind, and a closing one that closes nothing (`SUM(A1))`, `)A1(`, `SUM(A1]`, `SUM(1})`, `A1]`).
+  - **Strings and names:** it refuses a string or a quoted sheet name that isn't closed. String literals of 256 characters open: the formula bar's limit of 255 isn't the file's.
+  - **Operators at the end:** it refuses every binary operator there (`+ - * / ^ & = < > : ,` and `<>`), and `@` and `#` too (a spill reference is `_xlfn.ANCHORARRAY` in a file), also before white space (`A1+ `, `A1+` and LF, `A1+` and a tab). `A1%`, `SUM(1,)` and white space at the end open.
+  - **Operators at the start:** it refuses `* / ^ & < > : , %` there, also after a space or LF. `+A1`, `-A1`, `@A1` and `#N/A` open.
+  - **`=`:** `<f>=A1</f>` opens, as `A1`; `<f>==A1</f>` and `<f>=</f>` don't. `<f></f>` and `<f> </f>` open as empty cells.
+  - **Escapes:** Excel decodes `_xHHHH_` in a formula as in text, with hex digits of either case: `"a_x0041_b"` is `aAb`, and `_x005F_x0041_` is `_x0041_`. `_x000D_`, `_x0001_` and `_xFFFE_` in a string read back as CR, U+0001 and U+FFFE. A character reference to a control character makes a file Excel can't open, as in text.
+  - **White space between tokens:**
+    - Only spaces and LF are taken there. A literal CR reads as LF, as XML's line end.
+    - A CR from `_x000D_`, a tab (literal or `_x0009_`), U+0001 and a no-break space make a file Excel can't open. A tab or LF at the end is trimmed.
+    - Any character opens inside a string.
+  - **Length:** 8,192 UTF-16 code units open and 8,193 don't, with emoji counting two.
+  - **References:** structured references to a table the workbook doesn't have open as `#REF!` (Excel shows `SUM(#REF!)`). An external reference without its link part (`[1]Sheet1!A1`) makes a file Excel can't open.
+  - **Copies' names:** Excel copies `Orders` as `Orders (2)`, then `Orders (3)`, and copies `Orders (2)` as `Orders (3)` and `Orders (9)` as `Orders (10)`. A name of 31 or 30 characters is cut to 27 before ` (2)`.
+- **Decisions made while building:**
+  - **The design's four checks, plus the start.** `FormulaCheck` also refuses an operator other than `+`, `-` and `@` at the start, also after white space, which Excel refused for each. `=` is one: `==A1` is refused, as Excel refuses `<f>==A1</f>`, though it opens `<f>=A1</f>`. Operators elsewhere (`(*A1)`, `(A1*)`, both refused by Excel) need a tokenizer, which error literals like `#REF!+1` make easy to get wrong, so the docs list them with the other formulas Excel can't parse.
+  - **Line breaks outside strings become LF.**
+    - Excel refuses a CR between a formula's tokens, and the writer would have to write one as `_x000D_`, since a literal CR reads as LF.
+    - A multi-line formula in a C# file with CR LF line ends would make a workbook Excel can't open. So `ExcelFormula` keeps a CR outside its strings as LF (a CR LF as one LF), in the constructor and in `Parse`.
+    - So `Formula` can differ from the text given, and a formula written and read back is equal. Inside strings a CR is kept, and written as `_x000D_`.
+  - **No control characters outside strings but line breaks.** A tab is refused there too, although Excel opens one at the end. Inside strings anything goes.
+  - **An empty formula is refused** (also `=` and white space alone), although Excel opens `<f></f>` as an empty cell: "A formula can't be empty: a cell without one is a null or default(ExcelFormula) value."
+  - **Parsing:**
+    - Empty text is `default(ExcelFormula)`, so every text `ToString` gives reads back, and an empty cell reads as `default` for a member that isn't nullable.
+    - Text without its `=` throws `FormatException` ("A formula's text starts with =, and this one doesn't.").
+    - A formula the checks refuse throws `FormatException`, with the constructor's message.
+  - **No formats:** `ToString(format, provider)` ignores both, as a formula's text is the same in every culture.
+  - **The text is kept with its `=`,** so `ToString`, writing and `Parse` of a string that needs no change allocate nothing more, and `Formula` is a substring.
+  - **Brackets as structured references read them:** inside brackets only brackets count, and an apostrophe escapes the character after it (`Table1[a'[b]`, `Table1[it''s]`); quotes and parentheses there are a column's name (`Table1[Price (USD)]`). A doubled quote in a string or a quoted name closes it and opens another, which reads the same, so it needs no case of its own.
+  - **Messages** (`ArgumentException` from the constructor and `WriteFormula`, `FormatException` from `Parse`) quote the formula without its `=`, cut to 100 code units and `...` past that, and end with ", and Excel opens no workbook with it.":
+    - "The formula \"SUM(A1:A3\" has a parenthesis that isn't closed" (and "a bracket", "a brace");
+    - "has a ) that closes nothing", "closes a parenthesis with ]";
+    - "has a string that isn't closed", "has a quoted sheet name that isn't closed";
+    - "starts with the operator *", "ends with the operator +";
+    - "has a tab outside its strings", "has U+0001 outside its strings".
+    - The length's is the design's, without the formula: "A formula is at most 8,192 characters long, and this one has 9,000."
+  - **The formula cell** is `<f>` alone, escaped as text is (entities, `_xHHHH_`, `_x005F_`). It gets no width and never counts as text that looks like a number.
+  - **The row limit costs nothing per field.** `EndRecord` lowers the field limit, Excel's columns, to 0 once the sheet is full, so the next record's first field meets the one test that was already there, and finds the row limit.
+  - **`Throw`'s message** names the sheet as a formula does, without "The record is discarded", as in step 1: "The sheet Orders is full at row 1,048,576, Excel's last. Set ExcelWriterOptions.RowLimit to NewSheet to go on in a new sheet." (`'Q1 Orders'` for a name that needs quotes). Every field of a record past the limit throws.
+  - **`NewSheet`:**
+    - **Names:** new sheets are named as Excel names copies, of the full sheet's name. So a full `Orders (2)` goes on in `Orders (3)`, rather than `Orders (2) (2)`, and a name that Excel takes to be one in the workbook is skipped (`Data` goes on in `Data (4)` when `Data (2)` and `DATA (3)` are taken). The stem is cut to fit 31 code units, but not between a surrogate pair's halves.
+    - **No I/O in `WriteField`:** the full sheet's end goes into the buffer, with the next sheet's header row after it. The next flush, which `EndRecord` asks for, writes the full sheet, closes its entry and opens the next one's. So the switch is sync or async as the caller is.
+    - **What the new sheet repeats:** with `HasHeader`, the header row's XML is kept when it ends, and repeated in each new sheet as row 1. Its shared strings are counted again, and it counts in the sheet's used range and its `ignoredErrors`. So do the columns' widths.
+    - **A failed record:** when the record that starts a new sheet fails, the new sheet keeps its header and is in `SheetNames`.
+  - **`MaxRows`,** internal on `ExcelWorkbookWriter`, lets tests set a sheet's rows (at least 2) before adding a sheet.
+- **Checked through COM after building:** five workbooks written by the built library from pwsh 7 (`write_probes.ps1`; answers in `written-*.txt`). Excel opens all five:
+  - `s3-formulas`, with inline and with shared strings: every formula computed, as Excel shows each:
+    - `A2+B2` 5, `IF(A2>1,"big","small")` big, `"a_x0041_b"&"<&>"` `a_x0041_b<&>`;
+    - the multi-line formula with LF between its tokens and CR LF in its string;
+    - `a`, U+0001, `b`, U+FFFE from a string;
+    - `_xlfn.XLOOKUP` 3, `'Q1 Data'!A1&"!"` `quoted!`, `SUM({1,2;3,4})` 10;
+    - `NOSUCHFUNC(1)` `#NAME?`, `Nope!A1` `#REF!`, `A2%` 0.02, `SUM(1,)` 1.
+  - `s3-newsheet`, with inline and with shared strings:
+    - `Orders`, `Orders (2)`, `Orders (3)` and `Orders (4)`, each with the header in row 1 and the date column's width;
+    - `numberStoredAsText` ignored on `Orders (3)` only, which has `00123`;
+    - `abcdefghijklmnopqrstuvwxyz12345` going on in `abcdefghijklmnopqrstuvwxyz1 (2)`, whose `ROW()*10+3` is 23.
+  - `s3-lastrow`: 1,048,577 rows with `NewSheet`, `Rows` to row 1,048,576 and `Rows (2)` with the last in A1.
+- **LibreOffice 26.8** opens all five, and exports the same values, names, headers and rows, but:
+  - it doesn't decode `_xHHHH_` in formulas, as it does in text: `"a_x005F_x0041_b"`, a string's `_x000D_`, `_x0001_` and `_xFFFE_` show as written. Excel's reading wins, since a literal CR would read as LF in Excel and XML can't hold the control characters;
+  - it shows a missing sheet as `#NAME?`, and `A2%` as `2.00%`.
+- **The oracles:** ClosedXML reads each formula without its `=`, and computes it (`B2*C2` 6, `IF(...)` big, `SUM(D2:D3)` 8.5). ExcelDataReader reads the cells as empty, since they have no cached value.
+- **Tests** (163 new on net10.0 and net8.0, 161 on net48: 2,364 on net10.0 and net8.0 and 2,326 on net48, all passing), in `tests/CsvHelper.Excel.Tests/Writing`:
+  - **`FormulaCheckTests`:**
+    - every formula Excel opened and refused, with each message;
+    - control characters outside and inside strings, empty formulas, the length in UTF-16 code units (with emoji, at 8,192 and 8,193);
+    - long formulas shortened in messages, but not between a surrogate pair's halves;
+    - structured references' brackets and escapes, and line breaks kept as LF outside strings.
+  - **`ExcelFormulaTests`:**
+    - the text with and without its `=`, line breaks, `default`;
+    - the refusals and their parameter, equality and hash codes;
+    - `Parse` and `TryParse`, and every text `ToString` gives read back;
+    - formats and cultures ignored;
+    - on .NET, the span interfaces;
+    - CSV: `WriteFormula`, `WriteField(object)`, injection protection (`'=SUM(A1:A3)`), and the converter both ways.
+  - **`FormulaCellsTests`**, sync and async:
+    - formula cells through the record writer, `WriteFormula` and `WriteField(object)`, with their XML;
+    - read back with `FormulaText` (records equal) and `CachedValue` (empty);
+    - escapes in formulas read back, shared strings without formulas, the oracles, and `CellKinds`.
+  - **`RowLimitTests`**, sync and async, with inline and shared strings:
+    - `Throw` from `WriteSheet` and for every field written by hand;
+    - `NewSheet` with the header, widths and `ignoredErrors` per sheet, and the shared strings' counts;
+    - without a header, and a header wider than its rows in each used range;
+    - no sheet when the last row is the last record, a failed record at the switch and after its flush;
+    - copies' names with names taken, and flushes across sheets;
+    - the option's check;
+    - and one test that writes Excel's 1,048,576 rows, then throws for the next, with the message's number in full.
+  - **`SheetNamesTests`:** copies' stems and names as Excel gives them.
+  - Every workbook these tests write passes `OpenXmlValidator`.
+- **Mutation check** on net10.0: 78 bugs planted one at a time, each file restored and checked by SHA-256 (the driver, `mutate.py`, and its results are in `Csv\_bench\results\phase4\step3`). 76 were caught by the first run. The other two are caught after a test was changed or added for each:
+  - "the record start not moved" (`recordStart -= count` written as `= 0`): after the flush that wrote the full sheet, the new sheet's header and rows weren't counted as written records, so a record of that sheet that failed then dropped them. The test's failing record was past the limit itself, and started another sheet, which hid the loss. With three rows a sheet it fails on the same sheet.
+  - "no closing parenthesis needed" in `CopyStem`: no name had digits after ` (` and another last character, so `Orders (12` and `Orders (1x` were added.
+  - The checks:
+    - the length limit off by one 2, LF not white space 3, empty not refused 3;
+    - `=` allowed at the start 2, `%` there 1, `#` at the end 1, `@` there 1, the start's white space not skipped 2, the end's 2;
+    - an apostrophe in brackets escaping nothing 3, brackets in brackets not counted 1, never closed there 5;
+    - a quoted name never closing 6, an apostrophe opening none 2, a string ending a character early 27, its last character not copied 4;
+    - a closer at depth 0 not refused 4, mismatched closers accepted 3, the opener of `]` as `(` 1, a bracket named a parenthesis 2;
+    - CR LF kept as two LFs 5, CRs not counted 5, tabs allowed 4, control characters allowed 5;
+    - an unclosed quoted name accepted 1, one unclosed bracket accepted 6, 101 code units shown 1, a surrogate pair cut in a message 1, one CR not normalized 3.
+  - `ExcelFormula`:
+    - a lone `=` not taken off 2, text with its sign copied 2, the normalized text dropped 4, `Formula` keeping its `=` 3;
+    - equality ignoring case 1, a hash of nothing 1, `!=` as `==` 1;
+    - empty text not `default` 6, text without `=` parsed 4;
+    - UTF-8 bytes kept on failure 1, chars kept 1, the format given as the text 2.
+  - The converter reading by the constructor 1, `WriteFormula` writing text 4, formulas as text cells 11.
+  - The sink:
+    - `=` kept in `f` 10, the formula not escaped 4;
+    - the row limit taken for the column limit 33, one row past the limit 33, `Throw` taken for `NewSheet` 33, the field limit off by one 31, not restored 20, the message's number unformatted 1;
+    - data from row 1 after the header 12, the header not repeated 12, the first data row kept as the header 12, the header repeated without `HasHeader` 8;
+    - the header's shared strings not counted 2, new sheets always flagged 4, a number-like header not flagged 4, the header's last column dropped 4, its row not in the used range 4;
+    - the new sheet's part not taken 24, its start not written 24, no flush after a switch 16, the record start not moved 4 after the change;
+    - the full sheet's entry not closed 24, the switch never cleared 24, the full sheet's end not marked 24.
+  - The workbook writer: taken copy names used 4, the copy's part off by one 24, the test limit not passed 32.
+  - Names: a copy's copy keeping its number 6, ten digits taken as a number 1, no closing parenthesis needed 2 after the test, letters taken as digits 1, a copy's name cutting a surrogate pair 1, one of 32 code units 5.
+  - The options: `RowLimit` unchecked 1.
+- **Core:** no change. The solution builds with 0 warnings on every target.
+- **Review** (2026-11-07), the recommendations:
+  - The checks gain an operator at the start, and refuse control characters outside strings, tabs included.
+  - Line breaks outside strings become LF, and an empty formula is refused.
+  - `Parse("")` is `default(ExcelFormula)`.
+  - New sheets are named as Excel names copies.
+  - The row limit's message drops "The record is discarded", as step 1's do.
 
 ### Phase 5: presentation (M)
 

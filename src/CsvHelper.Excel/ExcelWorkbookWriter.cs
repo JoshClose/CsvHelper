@@ -20,9 +20,9 @@ namespace CsvHelper.Excel;
 /// <c>Sheet1</c>, since Excel opens no workbook without one.
 /// </para>
 /// <para>
-/// A record that fails (a converter's exception, a cell too long for Excel) is discarded by the record methods, as a CSV
-/// writer discards one: the sheet keeps the records before it, and the workbook can still be completed into a file Excel
-/// opens. An exception from the stream leaves the file incomplete.
+/// A record that fails (a converter's exception, a cell too long for Excel, a row past Excel's last) is discarded by the
+/// record methods, as a CSV writer discards one: the sheet keeps the records before it, and the workbook can still be
+/// completed into a file Excel opens. An exception from the stream leaves the file incomplete.
 /// </para>
 /// <para>
 /// Not thread-safe, as <see cref="CsvWriter"/> isn't. Before .NET 10, closing a sheet's entry and the package writes to
@@ -59,8 +59,17 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <summary>The options this writer was created with.</summary>
 	public ExcelWriterOptions Options { get; }
 
-	/// <summary>The names of the sheets added so far, in tab order, the one being written included.</summary>
+	/// <summary>
+	/// The names of the sheets added so far, in tab order, the one being written included, with those that
+	/// <see cref="ExcelRowLimit.NewSheet"/> added.
+	/// </summary>
 	public IReadOnlyList<string> SheetNames => sheetNames;
+
+	/// <summary>
+	/// The rows a sheet holds before <see cref="ExcelWriterOptions.RowLimit"/> applies: Excel's 1,048,576, and fewer in
+	/// tests, which set it before adding a sheet. At least 2.
+	/// </summary>
+	internal int MaxRows { get; set; } = CellReference.MaxRow;
 
 	/// <summary>
 	/// Creates (or overwrites) a workbook file, which other processes can read while it is written. Disposing the writer
@@ -213,6 +222,12 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <see cref="CsvWriter.WriteField(ReadOnlySpan{byte})"/> can pass) becomes U+FFFD. Text that starts like a number
 	/// (<c>00123</c>) gets no warning triangle in Excel. An empty field, or a null one, is no cell.
 	/// </para>
+	/// <para>
+	/// An <see cref="ExcelFormula"/> field, and one written with <see cref="ExcelWriterExtensions.WriteFormula"/>, is a
+	/// formula cell without a cached value, which Excel computes when it opens the workbook. A record past row 1,048,576,
+	/// Excel's last, follows <see cref="ExcelWriterOptions.RowLimit"/>: it throws, or the sheet goes on in a new one after
+	/// it, which <see cref="SheetNames"/> then has. A field past column <c>XFD</c>, Excel's last, throws.
+	/// </para>
 	/// </remarks>
 	/// <param name="name">The sheet's name.</param>
 	/// <returns>The sheet's writer, with <see cref="Options"/>' <see cref="ExcelWriterOptions.Csv"/>.</returns>
@@ -250,6 +265,32 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// </summary>
 	/// <returns>A task that completes when the package is closed.</returns>
 	public ValueTask DisposeAsync() => DisposeCoreAsync(true);
+
+	/// <summary>
+	/// Adds the sheet that a full one goes on in (<see cref="ExcelRowLimit.NewSheet"/>), after it, named as Excel names a
+	/// copy of it: <c>Orders (2)</c> for <c>Orders</c>, <c>Orders (3)</c> for <c>Orders (2)</c>, with the next number while
+	/// the workbook has a sheet Excel takes that name to be.
+	/// </summary>
+	/// <param name="name">The full sheet's name.</param>
+	/// <returns>The new sheet's name and part.</returns>
+	internal (string Name, string PartName) ContinueSheet(string name)
+	{
+		var stem = Excel.SheetNames.CopyStem(name, out var number);
+		while (true)
+		{
+			var copy = Excel.SheetNames.CopyName(stem, number++);
+			var key = Excel.SheetNames.Key(copy);
+			if (namesByKey.ContainsKey(key))
+			{
+				continue;
+			}
+
+			namesByKey.Add(key, copy);
+			sheetNames.Add(copy);
+
+			return (copy, PackageParts.SheetPart(sheetNames.Count));
+		}
+	}
 
 	/// <summary>Called by a sheet's sink when it completes: another sheet can then be added.</summary>
 	/// <param name="sink">The sink.</param>
@@ -307,7 +348,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 			throw new ArgumentException($"The workbook already has the sheet \"{existing}\", which Excel takes \"{name}\" to be.", paramName);
 		}
 
-		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options);
+		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows);
 		namesByKey.Add(key, name);
 		sheetNames.Add(name);
 

@@ -34,4 +34,7 @@ internal enum CellKind : byte
 
 	/// <summary>A cell from a <see cref="System.DateTimeOffset"/>'s <c>"O"</c> text, as <see cref="ExcelWriterOptions.DateTimeOffsets"/> says.</summary>
 	DateTimeOffset,
+
+	/// <summary>A formula cell from an <see cref="ExcelFormula"/>'s text: <c>=</c> and the formula.</summary>
+	Formula,
 }

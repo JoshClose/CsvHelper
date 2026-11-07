@@ -106,6 +106,50 @@ public class SheetNamesTests
 		Assert.NotEqual(SheetNames.Key(first), SheetNames.Key(second));
 	}
 
+	[Theory]
+	[InlineData("Orders", "Orders", 2)]
+	[InlineData("Orders (2)", "Orders", 3)]
+	[InlineData("Orders (9)", "Orders", 10)]
+	[InlineData("Orders (02)", "Orders", 3)]
+	[InlineData("a (2) (3)", "a (2)", 4)]
+	[InlineData(" (5)", "", 6)]
+	[InlineData("(5)", "(5)", 2)]
+	[InlineData("Orders(2)", "Orders(2)", 2)]
+	[InlineData("Orders ()", "Orders ()", 2)]
+	[InlineData("Orders (x)", "Orders (x)", 2)]
+	[InlineData("Orders (2", "Orders (2", 2)]
+	[InlineData("Orders (12", "Orders (12", 2)]
+	[InlineData("Orders (1x", "Orders (1x", 2)]
+	[InlineData("Orders (1234567890)", "Orders (1234567890)", 2)]
+	[InlineData("Orders (123456789)", "Orders", 123456790)]
+	public void FindsTheStemOfCopiesAsExcelDoes(string name, string stem, long number)
+	{
+		// Checked through COM: Excel copies Orders as Orders (2) and Orders (2) as Orders (3), and Orders (9) as Orders (10).
+		Assert.Equal(stem, SheetNames.CopyStem(name, out var first));
+		Assert.Equal(number, first);
+	}
+
+	[Fact]
+	public void NamesCopiesAsExcelDoes()
+	{
+		Assert.Equal("Orders (2)", SheetNames.CopyName("Orders", 2));
+		Assert.Equal("Orders (10)", SheetNames.CopyName("Orders", 10));
+
+		// Checked through COM: a name of 31 or 30 characters is cut to 27 before " (2)".
+		Assert.Equal("abcdefghijklmnopqrstuvwxyz1 (2)", SheetNames.CopyName("abcdefghijklmnopqrstuvwxyz12345", 2));
+		Assert.Equal("abcdefghijklmnopqrstuvwxyz1 (3)", SheetNames.CopyName("abcdefghijklmnopqrstuvwxyz1234", 3));
+		Assert.Equal("abcdefghijklmnopqrstuvwxyz (10)", SheetNames.CopyName("abcdefghijklmnopqrstuvwxyz12345", 10));
+		Assert.Equal(new string('x', 27) + " (2)", SheetNames.CopyName(new string('x', 27), 2));
+		Assert.Equal(new string('x', 9) + " (1234567890123456789)", SheetNames.CopyName(new string('x', 31), 1234567890123456789));
+
+		// Not between a surrogate pair's halves: the emoji at 26 and 27 goes whole.
+		Assert.Equal(new string('a', 26) + " (2)", SheetNames.CopyName(new string('a', 26) + Emoji + "bb", 2));
+		Assert.Equal(new string('a', 25) + Emoji + " (2)", SheetNames.CopyName(new string('a', 25) + Emoji + "bb", 2));
+
+		// Every copy's name is one Excel opens.
+		SheetNames.Check(SheetNames.CopyName(new string('a', 26) + Emoji + "bb", 2), "name");
+	}
+
 	[Fact]
 	public void TakesCompatibilityFormsToBeTheSame()
 	{
