@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
@@ -76,9 +77,11 @@ public partial class FuzzRecord
 /// <see cref="OverflowException"/>, and an error cell fail to read when error cells fail every read. What a seed reads
 /// comes from the workbook, so choosing it never fails: a table, a name or a sheet it has, and a header row it has.
 /// <c>CSVHELPER_EXCEL_FUZZ_INPUTS</c> sets the number of inputs, and <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the first seed, so
-/// that a failure can be replayed alone.
+/// that a failure can be replayed alone. The test runs alone (<see cref="TimedCollection"/>), so that its limit measures
+/// the input and not the tests beside it; an input out of time says how long it waited for a thread.
 /// </summary>
 /// <param name="output">Shows how the inputs ended.</param>
+[Collection(TimedCollection.Name)]
 public class FuzzTests(ITestOutputHelper output)
 {
 	/// <summary>The number of inputs a run reads, unless <c>CSVHELPER_EXCEL_FUZZ_INPUTS</c> says otherwise.</summary>
@@ -190,7 +193,8 @@ public class FuzzTests(ITestOutputHelper output)
 			var settings = Settings.Of(seed);
 			var input = Mutate(seed, settings.Area);
 			var events = new List<string>();
-			var run = Task.Run(() => ReadAsync(input.Zip, settings, events));
+			var timing = new Timing();
+			var run = Task.Run(() => timing.Run(() => ReadAsync(input.Zip, settings, events)));
 			using (var stop = new CancellationTokenSource())
 			{
 				var finished = await Task.WhenAny(run, Task.Delay(TimeLimit, stop.Token));
@@ -198,7 +202,7 @@ public class FuzzTests(ITestOutputHelper output)
 				if (finished != run)
 				{
 					// The input's thread goes on; the run stops here, since it may be using a core.
-					failures.Add($"{input.Describe(seed, settings)}: still running after {TimeLimit.TotalSeconds} s");
+					failures.Add($"{input.Describe(seed, settings)}: still running after {TimeLimit.TotalSeconds} s; {timing}");
 
 					break;
 				}
@@ -1204,6 +1208,42 @@ public class FuzzTests(ITestOutputHelper output)
 		/// <param name="settings">How it was read.</param>
 		/// <returns>The description.</returns>
 		public string Describe(int seed, Settings settings) => $"Seed {seed} ({settings}), {source}: {steps}";
+	}
+
+	/// <summary>
+	/// When an input's read started, and the full garbage collections since it was queued: for a read out of time, whether
+	/// it waited for a thread or ran slowly.
+	/// </summary>
+	private sealed class Timing
+	{
+		/// <summary>The time since the read was queued.</summary>
+		private readonly Stopwatch clock = Stopwatch.StartNew();
+
+		/// <summary>The full collections there had been when it was queued.</summary>
+		private readonly int collections = GC.CollectionCount(2);
+
+		/// <summary>When it started, in milliseconds after it was queued; -1 until it starts.</summary>
+		private long started = -1;
+
+		/// <summary>Runs the read, noting when it starts.</summary>
+		/// <param name="read">The read.</param>
+		/// <returns>The read's task.</returns>
+		public Task<string> Run(Func<Task<string>> read)
+		{
+			Volatile.Write(ref started, clock.ElapsedMilliseconds);
+
+			return read();
+		}
+
+		/// <summary>How long the read waited and ran, and the full collections there have been since it was queued.</summary>
+		/// <returns>The description.</returns>
+		public override string ToString()
+		{
+			var start = Volatile.Read(ref started);
+			var times = start < 0 ? "it was still waiting for a thread" : $"it waited {start} ms for a thread and ran {clock.ElapsedMilliseconds - start} ms";
+
+			return $"{times}, through {GC.CollectionCount(2) - collections} full garbage collections";
+		}
 	}
 
 	/// <summary>

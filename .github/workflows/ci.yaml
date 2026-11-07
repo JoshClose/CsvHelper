@@ -35,7 +35,16 @@ jobs:
           if ($install.ExitCode -ne 0) { throw "msiexec exited with $($install.ExitCode)." }
           "LibreOffice " + (Get-Item "C:\Program Files\LibreOffice\program\soffice.exe").VersionInfo.ProductVersion
       - name: Test
-        run: dotnet test --configuration Release --no-restore --no-build
+        # Each test's output goes in a TRX file, for the artifact below: the console shows only failing tests' output, and
+        # passing tests say things worth keeping, such as a written workbook's culture that isn't compared, or the fuzzers'
+        # tallies.
+        run: dotnet test --configuration Release --no-restore --no-build --logger trx --results-directory TestResults
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults
       - name: Check CsvHelper.Excel Package
         # CsvHelper.Excel uses CsvHelper's internals, so its package must depend on its exact CsvHelper version. The
         # PinCsvHelperVersion target of its project does that through NuGet's internal pack targets; this fails if they
