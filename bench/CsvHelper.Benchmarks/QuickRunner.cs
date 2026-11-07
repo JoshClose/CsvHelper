@@ -43,6 +43,7 @@ public static class QuickRunner
 				{
 					ReadBenchmarkBase r => r.DataBytes,
 					WriteBenchmarkBase w => w.DataBytes,
+					ExcelWriteBenchmarkBase e => e.DataBytes,
 					_ => 0,
 				};
 				Console.WriteLine($"== {name} ({bytes / 1e6:F1} MB) ==");
@@ -66,7 +67,7 @@ public static class QuickRunner
 
 	/// <summary>
 	/// Runs every benchmark once and prints its result, to check that all libraries agree: a category whose results differ
-	/// is flagged.
+	/// is flagged. An Excel write benchmark's result is what it wrote, read back as records, and its size.
 	/// </summary>
 	public static void Verify(string[] filters)
 	{
@@ -78,6 +79,11 @@ public static class QuickRunner
 		{
 			foreach (var (instance, name) in Instances(type))
 			{
+				if (instance is ExcelWriteBenchmarkBase excelWriter)
+				{
+					excelWriter.KeepWritten = true;
+				}
+
 				Console.WriteLine($"== {name} ==");
 				var methods = type.GetMethods().Where(m => m.GetCustomAttribute<BenchmarkAttribute>() is not null)
 					.GroupBy(m => m.GetCustomAttribute<BenchmarkCategoryAttribute>()?.Categories.FirstOrDefault() ?? "");
@@ -93,10 +99,14 @@ public static class QuickRunner
 							result = task.GetType().GetProperty("Result")?.GetValue(task);
 						}
 
-						var described = instance is WriteBenchmarkBase writer
-							? $"{result} bytes, content hash {Fnv(writer.Written):X16}"
-							: Describe(result);
-						Console.WriteLine($"  {group.Key,-14} {method.Name,-28} {described}");
+						var described = instance switch
+						{
+							WriteBenchmarkBase writer => $"{result} bytes, content hash {Fnv(writer.Written):X16}",
+							ExcelWriteBenchmarkBase excel => Describe(excel.ReadBack()),
+							_ => Describe(result),
+						};
+						var size = instance is ExcelWriteBenchmarkBase ? $" ({result} bytes)" : "";
+						Console.WriteLine($"  {group.Key,-14} {method.Name,-28} {described}{size}");
 						results.Add(described);
 					}
 

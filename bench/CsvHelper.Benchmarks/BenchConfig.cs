@@ -90,11 +90,112 @@ public static class DataSize
 			{
 				ReadBenchmarkBase r => r.DataBytes,
 				WriteBenchmarkBase w => w.DataBytes,
+				ExcelWriteBenchmarkBase e => e.DataBytes,
 				_ => 0,
 			};
 			Cache[type] = bytes;
 
 			return bytes;
+		}
+	}
+}
+
+/// <summary>Adds <see cref="WrittenSizeColumn"/> to a class of Excel write benchmarks.</summary>
+public sealed class WrittenSizeConfig : ManualConfig
+{
+	/// <summary>Initializes a new instance of the <see cref="WrittenSizeConfig"/> class, with the column.</summary>
+	public WrittenSizeConfig()
+	{
+		AddColumn(new WrittenSizeColumn());
+	}
+}
+
+/// <summary>
+/// Shows the size of what an Excel write benchmark writes: a workbook's, or the CSV's. To measure it, each benchmark runs
+/// once more in the host process, on an instance of its class set up once.
+/// </summary>
+public sealed class WrittenSizeColumn : IColumn
+{
+	/// <summary>The set-up instance of each class.</summary>
+	private static readonly Dictionary<Type, ExcelWriteBenchmarkBase> Instances = [];
+
+	/// <summary>Each benchmark's size, by class and method name.</summary>
+	private static readonly Dictionary<(Type Type, string Method), long> Sizes = [];
+
+	/// <inheritdoc/>
+	public string Id => nameof(WrittenSizeColumn);
+
+	/// <inheritdoc/>
+	public string ColumnName => "Written";
+
+	/// <inheritdoc/>
+	public bool AlwaysShow => true;
+
+	/// <inheritdoc/>
+	public ColumnCategory Category => ColumnCategory.Custom;
+
+	/// <inheritdoc/>
+	public int PriorityInCategory => 1;
+
+	/// <inheritdoc/>
+	public bool IsNumeric => false;
+
+	/// <inheritdoc/>
+	public UnitType UnitType => UnitType.Dimensionless;
+
+	/// <inheritdoc/>
+	public string Legend => "Megabytes the benchmark writes (a workbook's size, or the CSV's)";
+
+	/// <inheritdoc/>
+	public bool IsAvailable(Summary summary) => true;
+
+	/// <inheritdoc/>
+	public bool IsDefault(Summary summary, BenchmarkCase benchmarkCase) => false;
+
+	/// <inheritdoc/>
+	public string GetValue(Summary summary, BenchmarkCase benchmarkCase) => GetValue(summary, benchmarkCase, SummaryStyle.Default);
+
+	/// <inheritdoc/>
+	public string GetValue(Summary summary, BenchmarkCase benchmarkCase, SummaryStyle style)
+	{
+		var type = benchmarkCase.Descriptor.Type;
+		if (!typeof(ExcelWriteBenchmarkBase).IsAssignableFrom(type))
+		{
+			return "-";
+		}
+
+		return $"{Of(type, benchmarkCase.Descriptor.WorkloadMethod) / 1e6:F1} MB";
+	}
+
+	/// <summary>Runs a benchmark once in this process, the first time, and returns the bytes it wrote.</summary>
+	/// <param name="type">The benchmark's class.</param>
+	/// <param name="method">The benchmark, which returns the bytes it wrote.</param>
+	/// <returns>The bytes.</returns>
+	private static long Of(Type type, System.Reflection.MethodInfo method)
+	{
+		lock (Sizes)
+		{
+			if (Sizes.TryGetValue((type, method.Name), out var size))
+			{
+				return size;
+			}
+
+			if (!Instances.TryGetValue(type, out var instance))
+			{
+				instance = (ExcelWriteBenchmarkBase)Activator.CreateInstance(type)!;
+				foreach (var setup in type.GetMethods().Where(m => m.GetCustomAttributes(typeof(BenchmarkDotNet.Attributes.GlobalSetupAttribute), true).Length > 0))
+				{
+					setup.Invoke(instance, null);
+				}
+
+				Instances[type] = instance;
+			}
+
+			var result = method.Invoke(instance, null);
+			size = result is Task<long> task ? task.GetAwaiter().GetResult() : (long)result!;
+			Sizes[(type, method.Name)] = size;
+
+			return size;
 		}
 	}
 }

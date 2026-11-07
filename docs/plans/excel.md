@@ -3888,7 +3888,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 4: writer foundation (L)
 
-Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) was built, approved and committed 2026-11-07: it translates dates' and times' formats only, since `[CsvFormat]` doesn't apply to numbers in CsvHelper, and a number's `[CsvCulture]` is read instead; the user left numbers' formats out of Phase 4, as recommended (see step 4's "As built"). It changes some of the scope as planned, each change noted there: numbers' formats aren't translated; a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07: Excel's answers about the ten workbooks of the `written` set, each pinned by its parts' SHA-256 rather than its file's, the translation's oracle, and LibreOffice in CI; see its "As built". The branch was pushed that day. CI's first run failed Phase 3's reader fuzzer on its time limit, beside the suite's heaviest tests, not on an input; the fix (the fuzzer runs alone, and CI keeps the tests' results) was approved, built and committed that day; see step 5's "As built". Step 6 (security and fuzzing) was built, approved, with every recommendation, and committed 2026-11-07: the fuzzers found four bugs in CsvHelper.Excel, which are fixed (an escape's `_` closing text before it, names with U+FFFE, two names Excel takes to be one, formats .NET can't format); the two decisions made while building were approved as built (a name's 31 counted as written, formulas' white space preserved); and a .NET bug that corrupts core's CSV writes of some date formats is reported, and left open for a core decision; see its "As built".
+Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) was built, approved and committed 2026-11-07: it translates dates' and times' formats only, since `[CsvFormat]` doesn't apply to numbers in CsvHelper, and a number's `[CsvCulture]` is read instead; the user left numbers' formats out of Phase 4, as recommended (see step 4's "As built"). It changes some of the scope as planned, each change noted there: numbers' formats aren't translated; a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07: Excel's answers about the ten workbooks of the `written` set, each pinned by its parts' SHA-256 rather than its file's, the translation's oracle, and LibreOffice in CI; see its "As built". The branch was pushed that day. CI's first run failed Phase 3's reader fuzzer on its time limit, beside the suite's heaviest tests, not on an input; the fix (the fuzzer runs alone, and CI keeps the tests' results) was approved, built and committed that day, and CI's second run, with step 6, passed, comparing `cultures.xlsx` too; see step 5's "As built". Step 6 (security and fuzzing) was built, approved, with every recommendation, and committed 2026-11-07: the fuzzers found four bugs in CsvHelper.Excel, which are fixed (an escape's `_` closing text before it, names with U+FFFE, two names Excel takes to be one, formats .NET can't format); the two decisions made while building were approved as built (a name's 31 counted as written, formulas' white space preserved); and a .NET bug that corrupts core's CSV writes of some date formats is reported, and left open for a core decision; see its "As built". Step 7 (benchmarks) was built, run, approved and committed 2026-11-07: at its defaults CsvHelper.Excel writes a million rows in 2.05x (text) and 1.56x (orders) SpreadCheetah's time, deflate is about half of it, and the cells' `r` attributes nearly triple the text's file at `Fastest`; see its "As built".
 
 Scope, as planned:
 
@@ -4960,7 +4960,10 @@ Filled in step by step; the code is the reference.
   - Whether CI compares `cultures.xlsx` can't be told from the run: the console shows only failing tests' output, and both outcomes pass there (only the answers' system fails a fingerprint that differs).
   - **Why it failed:** the time limit measured the tests beside the fuzzer, not the input. Each of the two inputs reads in under 0.3 s alone. On this machine pinned to 4 logical CPUs, the whole suite as CI runs it failed the same way in both runs, on net48 (seeds 23 and 5, under 0.4 s alone). Timed, seed 5 waited 7.3 s for a thread of the pool, 8 busy at its minimum of 4 (.NET Framework's pool adds threads slowly while the CPU is busy), then ran 7.1 s through 29 full garbage collections of the tests beside it, the suite's heaviest readers.
   - **The fix** (approved and committed 2026-11-07): `FuzzTests` runs alone, in `TimedCollection` (`DisableParallelization`), after the tests that run in parallel, and an input out of time says how long it waited for a thread and ran, and the full collections since it was queued. CI's Test step writes TRX files, which an `Upload Test Results` step keeps even when tests fail (`if: always()`): about 2.6 MB zipped, with every test's output, such as the fuzzers' tallies and a workbook that isn't compared.
-  - **Checked:** pinned to 4 logical CPUs, the suite passed on every target, the fuzzer running last with no test beside it, in 3.1 s on net10.0, 3.9 s on net8.0 and 5.2 s on net48. In the two runs of the experiment before it, no input waited more than 1 ms for a thread, and the slowest read in 72 ms. The fix isn't pushed, so it hasn't run on CI yet.
+  - **Checked:** pinned to 4 logical CPUs, the suite passed on every target, the fuzzer running last with no test beside it, in 3.1 s on net10.0, 3.9 s on net8.0 and 5.2 s on net48. In the two runs of the experiment before it, no input waited more than 1 ms for a thread, and the slowest read in 72 ms.
+- **CI's second run** (run 42421201910, 2026-11-07): the fix and step 6, pushed together. Every step passed, the pack check too, in 10 minutes, LibreOffice's install in 1 m 14 s.
+  - CsvHelper.Excel.Tests passed 2,718, 2,718 and 2,670 tests, this machine's totals, with the LibreOffice tests (54, 54 and 52); CsvHelper.Tests and CsvHelper.Linq.Tests passed too. `FuzzTests`, alone, took 5.4 s on net10.0, 10.9 s on net8.0 and 13.4 s on net48 for its 3,000 inputs.
+  - **`cultures.xlsx` is compared on CI:** the TRX files have every test's output, and no test said a workbook isn't compared, so the runner's data of the workbook's cultures is the data Excel's answers were made with, and its four tests compared it on net10.0 and net8.0.
 
 **Step 6, security and fuzzing** (built, approved, with every recommendation, and committed 2026-11-07):
 
@@ -5027,6 +5030,63 @@ Filled in step by step; the code is the reference.
     - `ColumnFormat.cs`: a translation kept across kinds 1; a style kept across kinds 1. `DateFormat.cs`: a text that formats otherwise kept 2; times of day as dates 22.
 - **Core:** no change. The solution builds with 0 warnings on every target.
 
+**Step 7, benchmarks** (built, run, approved and committed 2026-11-07):
+
+- **New:** `bench/CsvHelper.Benchmarks/ExcelWriteBenchmarks.cs`: `ExcelPackageAssetsWrite` and `ExcelOrdersWrite`, their base `ExcelWriteBenchmarkBase`, `CountingStream` (it counts the bytes and drops them, and can't seek, as a response body can't, so that every writer streams its package; `verify` has it keep them), and `OrderRowsDataReader`, the orders for MiniExcel.
+- **Changed:**
+  - `BenchConfig.cs`: a Written column (`WrittenSizeColumn`, through `WrittenSizeConfig` on the two classes), the size of what each benchmark writes, from one more run of it in the host process; the MB/s column knows the new base.
+  - `QuickRunner`: `verify` reads each write benchmark's output back as records, a workbook through CsvHelper.Excel's reader and CSV through CsvHelper's, so that a class's writers must agree; `quick` shows their MB/s.
+  - The project references SpreadCheetah 1.28.0 and LargeXlsx 2.0.2, the corpus's versions; it had MiniExcel 1.46.0.
+  - The design's last item, the benchmarks' `ExcelStrings` giving way to the library's, was done at step 1.
+  - CsvHelper.Excel and core: no change.
+- **The writers,** each to a `CountingStream` of its own:
+  - CsvHelper.Excel with inline strings at `Fastest` (its defaults), with shared strings, and with inline strings at `Optimal`. The package assets go through `AddSheet`'s `CsvWriter`, field by field, as `PackageAssetsWrite` writes CSV; the orders through `WriteSheet<OrderRecord>`, with `DateTimeOffsets = Utc`, so that `ShippedAt` is a date, as the others write it.
+  - SpreadCheetah (the baseline), LargeXlsx and MiniExcel with their defaults: SpreadCheetah and LargeXlsx at their fastest level, MiniExcel at the one it has. SpreadCheetah fills one array of `DataCell`s per row, through its asynchronous methods, which are all it has; LargeXlsx writes cell by cell; MiniExcel takes a data reader, of strings or of the orders' typed values, since it fills properties and `OrderRecord`'s members are fields. In the orders, `CustomerId` is its string, `ShippedAt` its UTC date, and the dates are in `ExcelOrders.DateFormat` (MiniExcel's in its own).
+  - CsvHelper's CSV writer, the same data as CSV, as the reference; its size is the MB/s column's.
+- **Checked:** `verify` read every writer's output back the same: 1,000,000 records of hash `A46BD7E4C52574F1` from each package assets workbook and the CSV, and 1,000,000 orders of hash `199B37C22F244824` from each orders workbook and the CSV.
+- **The run:** BenchmarkDotNet 0.15.8, .NET 10.0.13, a Ryzen 9 9950X3D pinned to core 4, 4 warm-ups and 12 iterations. The paged pool was 2.5 GB, with 37 GB free; total CPU, logged every 4 s, was above 12% only while the host set up a class or measured the Written column, and in two lone samples. The reports, the runner, the CPU log and the probes below are in `Csv\_bench\results\phase4\step7`. Allocated counts 1 KB as 1,024 B, as BenchmarkDotNet does; Written counts 1 MB as 10⁶ B.
+  - `ExcelPackageAssetsWrite` (25 text columns; the CSV is 306.0 MB):
+
+    | Writer | Mean | Ratio | MB/s | Written | Allocated |
+    |---|---:|---:|---:|---:|---:|
+    | SpreadCheetah | 624.0 ms | baseline | 490 | 58.6 MB | 11.2 KB |
+    | CsvHelper.Excel | 1,276.5 ms | 2.05x slower | 240 | 139.2 MB | 7.3 KB |
+    | CsvHelper.Excel, shared | 1,376.7 ms | 2.21x slower | 222 | 100.6 MB | 387.7 KB |
+    | CsvHelper.Excel, `Optimal` | 4,392.2 ms | 7.04x slower | 70 | 79.0 MB | 7.3 KB |
+    | LargeXlsx | 1,438.8 ms | 2.31x slower | 213 | 195.4 MB | 103.3 KB |
+    | MiniExcel | 3,957.8 ms | 6.34x slower | 77 | 195.2 MB | 9.29 GB |
+    | CsvHelper, CSV | 136.3 ms | 4.58x faster | 2,246 | 306.0 MB | 440 B |
+
+  - `ExcelOrdersWrite` (numbers, dates, a boolean and text; the CSV is 191.0 MB):
+
+    | Writer | Mean | Ratio | MB/s | Written | Allocated |
+    |---|---:|---:|---:|---:|---:|
+    | SpreadCheetah | 960.5 ms | baseline | 199 | 132.1 MB | 91.6 MB |
+    | CsvHelper.Excel | 1,497.4 ms | 1.56x slower | 128 | 176.1 MB | 7.3 KB |
+    | CsvHelper.Excel, shared | 1,662.3 ms | 1.73x slower | 115 | 175.3 MB | 160.0 MB |
+    | CsvHelper.Excel, `Optimal` | 4,754.9 ms | 4.95x slower | 40 | 115.1 MB | 7.3 KB |
+    | LargeXlsx | 1,424.7 ms | 1.48x slower | 134 | 176.1 MB | 91.7 MB |
+    | MiniExcel | 2,461.2 ms | 2.56x slower | 78 | 189.2 MB | 4.08 GB |
+    | CsvHelper, CSV | 123.7 ms | 7.77x faster | 1,544 | 191.0 MB | 464 B |
+
+- **What it shows:**
+  - At its defaults, CsvHelper.Excel writes a million rows in 1.28 s (the package assets) and 1.50 s (the orders): 2.05x and 1.56x SpreadCheetah's time, about LargeXlsx's, and faster than MiniExcel's. It allocates 7.3 KB a workbook at either level; with shared strings, its table besides (388 KB for the package assets' distinct strings, 160 MB for a million distinct `CustomerId`s). SpreadCheetah's and LargeXlsx's 92 MB in the orders are `CustomerId`'s strings, one per row; MiniExcel boxes every value.
+  - `Optimal` costs CsvHelper.Excel 3.4x its time for 57% of the size (the package assets), and 3.2x for 65% (the orders), so `Fastest` stays the default (decision 22).
+  - **Deflate is half of the time.** Measured alone (each sheet's XML from its written workbook through `DeflateStream`, in one buffer, on core 4, the best of three; `probes\deflatetime`):
+
+    | Sheet XML | Size | `Fastest` | `Optimal` |
+    |---|---:|---:|---:|
+    | Package assets, CsvHelper.Excel's | 1,090.2 MB | 139.2 MB in 642 ms | 78.9 MB in 3,880 ms |
+    | The same without `r` | 887.6 MB | 47.7 MB in 299 ms | 27.3 MB in 972 ms |
+    | Package assets, SpreadCheetah's | 1,226.9 MB | 58.6 MB in 370 ms | 33.6 MB in 1,254 ms |
+    | Orders, CsvHelper.Excel's | 569.4 MB | 176.1 MB in 888 ms | 115.1 MB in 4,118 ms |
+    | The same without `r` | 421.0 MB | 128.1 MB in 682 ms | 78.5 MB in 2,811 ms |
+    | Orders, SpreadCheetah's | 448.6 MB | 132.1 MB in 704 ms | 81.5 MB in 2,859 ms |
+
+  - So the rest, making the XML (the CSV writer's text, the sink's cells, escaping and references), takes about 635 ms for the package assets and 610 ms for the orders, where SpreadCheetah's takes about 255 ms (its time less its deflate's).
+  - **The cell references cost the most** (decision 23). `r` on each cell and row (`<c r="Q123456">`) breaks deflate's matches: without them the package assets' sheet deflates to 47.7 MB instead of 139.2 MB at `Fastest`, a third, in 299 ms instead of 642 ms, and at `Optimal` to 27.3 MB in 972 ms instead of 79.0 MB in 3,880 ms. The orders, whose numbers and Guids compress less anyway, go from 176.1 to 128.1 MB. SpreadCheetah writes rows' numbers and no cells' references by default; its sheet is bigger (an empty text cell for each empty field) and deflates to 58.6 MB. LargeXlsx and MiniExcel write the references as CsvHelper.Excel does, and their files are as big. The figures as written match the writer's files to the byte, which checks the method (`probes\rattr` strips the attributes from a stream; `probes\sizes` saves each writer's workbook).
+- **Gate:** "the write benchmark's numbers are recorded" is met. Phase 4 sets no speed target; Phase 9 starts from these numbers (see its "Phase 4's write baseline").
+
 ### Phase 5: presentation (M)
 
 - **Attributes and options:** `[ExcelColumn]`, `[ExcelSheet]` and `ExcelSheetOptions.Columns` for formats, widths, wrap and hidden columns. `[ExcelColumn(Format)]` and `Columns`' `Format` give Excel's format codes directly, for display only, beside Phase 4's formats from `[CsvFormat]`, and Phase 4's `FormatCheck` checks them. They are how a number gets a format, since `[CsvFormat]` doesn't apply to numbers (Phase 4's step 4).
@@ -5083,6 +5143,7 @@ Filled in step by step; the code is the reference.
 - **Read pipeline:** an inflate thread, a scan thread and mapping workers. `ParallelEnumerate` already maps record-source batches on workers (Phase 0), but its batches are filled under the read lock, so inflating and scanning run serially there. Inflating one entry is inherently sequential and sets the ceiling.
 - **Where Phase 1's baseline points** (step 9's "As built"): on .NET 10, inflate is about 5% of a read of the benchmark's sheet, so the ceiling is far off and the time is in scanning cells and filling records, about 160 ns a cell. With shared strings, Sylvan.Data.Excel is 1.36–1.53x faster and returns its table's own strings, where CsvHelper.Excel makes a new string per field; with inline strings the two are level.
 - **Phase 2's typed baseline:** `ExcelOrdersRead` (a million `OrderRecord` rows of dates, numbers, booleans and text) joins `ExcelPackageAssetsRead` as a starting point.
+- **Phase 4's write baseline** (step 7's "As built"): `ExcelPackageAssetsWrite` and `ExcelOrdersWrite`. CsvHelper.Excel takes 2.05x and 1.56x SpreadCheetah 1.28.0's time, and deflate is about half of it. The cells' `r` attributes nearly triple the package assets' file at `Fastest` (139.2 MB against 47.7 MB without them), double its deflate's time, and quadruple it at `Optimal`, so dropping them (decision 23's alternative, and parallel writing's need below) comes first; making the XML takes about 2.4–2.5x SpreadCheetah's time besides.
 - **Parallel writing:**
   - Generate cell XML in parallel through `ParallelWriteRecords`. Until then, a writer with a cell sink throws `NotSupportedException` for the parallel methods.
   - The style registry must be thread-safe.

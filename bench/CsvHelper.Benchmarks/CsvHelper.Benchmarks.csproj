@@ -31,12 +31,15 @@
 		<PackageReference Include="Sylvan.Data.Csv" Version="1.4.4" />
 	</ItemGroup>
 
-	<!-- The Excel read benchmarks: CsvHelper.Excel, and the readers ExcelPackageAssetsRead compares it with. -->
+	<!-- The Excel benchmarks: CsvHelper.Excel, the readers ExcelPackageAssetsRead compares it with, and the writers
+	     ExcelPackageAssetsWrite does (MiniExcel both), at the versions the corpus uses. -->
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\CsvHelper.Excel\CsvHelper.Excel.csproj" />
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
 		<PackageReference Include="ExcelDataReader" Version="3.9.0" />
+		<PackageReference Include="LargeXlsx" Version="2.0.2" />
 		<PackageReference Include="MiniExcel" Version="1.46.0" />
+		<PackageReference Include="SpreadCheetah" Version="1.28.0" />
 		<PackageReference Include="Sylvan.Data.Excel" Version="0.5.8" />
 	</ItemGroup>
 
