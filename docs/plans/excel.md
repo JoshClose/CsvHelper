@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Next is core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -3888,7 +3888,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 4: writer foundation (L)
 
-Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) was built, approved and committed 2026-11-07: it translates dates' and times' formats only, since `[CsvFormat]` doesn't apply to numbers in CsvHelper, and a number's `[CsvCulture]` is read instead; the user left numbers' formats out of Phase 4, as recommended (see step 4's "As built"). It changes some of the scope as planned, each change noted there: numbers' formats aren't translated; a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07: Excel's answers about the ten workbooks of the `written` set, each pinned by its parts' SHA-256 rather than its file's, the translation's oracle, and LibreOffice in CI; see its "As built". The branch was pushed that day. CI's first run failed Phase 3's reader fuzzer on its time limit, beside the suite's heaviest tests, not on an input; the fix (the fuzzer runs alone, and CI keeps the tests' results) was approved, built and committed that day, and CI's second run, with step 6, passed, comparing `cultures.xlsx` too; see step 5's "As built". Step 6 (security and fuzzing) was built, approved, with every recommendation, and committed 2026-11-07: the fuzzers found four bugs in CsvHelper.Excel, which are fixed (an escape's `_` closing text before it, names with U+FFFE, two names Excel takes to be one, formats .NET can't format); the two decisions made while building were approved as built (a name's 31 counted as written, formulas' white space preserved); and a .NET bug that corrupts core's CSV writes of some date formats is reported, and left open for a core decision; see its "As built". Step 7 (benchmarks) was built, run, approved and committed 2026-11-07: at its defaults CsvHelper.Excel writes a million rows in 2.05x (text) and 1.56x (orders) SpreadCheetah's time, deflate is about half of it, and the cells' `r` attributes nearly triple the text's file at `Fastest`; see its "As built".
+Status: the detailed design below was written on 2026-11-06, after the Excel and LibreOffice checks under "Checked on 2026-11-06", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. Steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together, and step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; see "As built". Step 4 (formats) was built, approved and committed 2026-11-07: it translates dates' and times' formats only, since `[CsvFormat]` doesn't apply to numbers in CsvHelper, and a number's `[CsvCulture]` is read instead; the user left numbers' formats out of Phase 4, as recommended (see step 4's "As built"). It changes some of the scope as planned, each change noted there: numbers' formats aren't translated; a formatted value can be a typed cell, read back with its member's format; Excel settings as a source of formats, and links from `Uri`, move to Phase 5; a formula holds no cached value, keeps its line breaks outside its strings as LF, and is refused with an operator at its start as well as at its end; `History` is a valid sheet name; and Excel's sheet-name comparison is wider than case. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07: Excel's answers about the ten workbooks of the `written` set, each pinned by its parts' SHA-256 rather than its file's, the translation's oracle, and LibreOffice in CI; see its "As built". The branch was pushed that day. CI's first run failed Phase 3's reader fuzzer on its time limit, beside the suite's heaviest tests, not on an input; the fix (the fuzzer runs alone, and CI keeps the tests' results) was approved, built and committed that day, and CI's second run, with step 6, passed, comparing `cultures.xlsx` too; see step 5's "As built". Step 6 (security and fuzzing) was built, approved, with every recommendation, and committed 2026-11-07: the fuzzers found four bugs in CsvHelper.Excel, which are fixed (an escape's `_` closing text before it, names with U+FFFE, two names Excel takes to be one, formats .NET can't format); the two decisions made while building were approved as built (a name's 31 counted as written, formulas' white space preserved); and a .NET bug that corrupts core's CSV writes of some date formats is reported, and left open for a core decision; see its "As built". Step 7 (benchmarks) was built, run, approved and committed 2026-11-07: at its defaults CsvHelper.Excel writes a million rows in 2.05x (text) and 1.56x (orders) SpreadCheetah's time, deflate is about half of it, and the cells' `r` attributes nearly triple the text's file at `Fastest`; see its "As built". Step 8 ("As built") was written, approved and committed 2026-11-07, and Phase 4 is complete: every gate item is met, re-checked that day (the validator over every workbook the tests write, and CI's steps at step 7's commit), and the Zip64 test that "Risks" promised was added; see the summary that opens "As built".
 
 Scope, as planned:
 
@@ -4429,6 +4429,136 @@ Applied at approval, 2026-11-06:
 #### As built
 
 Filled in step by step; the code is the reference.
+
+**Summary (step 8, 2026-11-07).** Phase 4 is complete. This summary gathers what the steps below record one by one. Every gate item is met, each re-checked on 2026-11-07 (see "The gate").
+
+- **What it delivers:**
+  - **Writing workbooks through plain `CsvWriter`s.** `ExcelWorkbookWriter.ToFile` and `Create` start a workbook. `WriteSheet<T>` and the two `WriteSheetAsync<T>` write a sheet of records whole; `AddSheet` and `AddSheet<T>` give a sheet's `CsvWriter`, for records, fields by hand, dynamic records and formulas. Sheets are written one at a time, streamed into the package, to any stream that writes, one that can't seek too. `SheetNames` lists them in tab order, and `Dispose` writes the rest of the package; a workbook without sheets gets `Sheet1`.
+  - **Cells:**
+    - text, inline (the default) or shared, escaped as Excel writes it, up to 32,767 code units, invalid UTF-8 as U+FFFD, and an empty field as no cell;
+    - numbers from their invariant text or the writer's culture's, booleans, and dates, times and durations as serials in ISO-like formats by what they hold, with `LongNumbers`, `DateTimeOffsets` and `OutOfRangeDates`;
+    - formulas without cached values (`ExcelFormula`, `WriteFormula`), checked for what makes Excel refuse a workbook;
+    - dates and times in their members' `[CsvFormat]` and `[CsvCulture]`, translated to Excel's codes when Excel shows the same text and the text reads back, and text otherwise;
+    - widths for the first data record's dates and times (for 96 DPI, from Calibri 11's measured widths), and `ignoredErrors` for numbers stored as text.
+  - **Limits:** Excel's columns and rows. Past the last row, `RowLimit` throws, or goes on in a new sheet named as Excel names copies, with the header and widths repeated.
+  - **Public API:** `ExcelWorkbookWriter`; `ExcelWriterOptions` (`Csv`, `Strings`, `CompressionLevel`, `RowLimit`, `LongNumbers`, `DateTimeOffsets`, `OutOfRangeDates`); the enums `ExcelStrings`, `ExcelRowLimit`, `ExcelLongNumbers`, `ExcelDateTimeOffsets` and `ExcelOutOfRangeDates`; `ExcelFormula` and `ExcelFormulaConverter`; and `ExcelWriterExtensions.WriteFormula`. The reader decodes `_xHHHH_` in sheet names (decision 25).
+  - **Internals,** in `Internal/Writing/`:
+    - the package (`PackageWriter`, `PackageParts`), the sink (`SheetSink`), XML (`XmlOutput`) and shared strings (`SharedStringTable`);
+    - names (`SheetNames`, and `InvariantUpper` for .NET Framework's missing mappings);
+    - typed cells (`CellKind`, `CellKinds`, `DotNetText`, `NumberCulture`, `Serial`, `StyleRegistry`, `ColumnWidths`) and formulas (`FormulaCheck`);
+    - formats (`FormatTranslator`, `DateFormat`, `FormatCheck`, `MemberFormats`, `ColumnFormat`, `HeaderCapture`);
+    - and `Polyfills/TrimmingAttributes.cs` for the netstandard and .NET Framework builds.
+  - **Core:** no change.
+  - **Size:** CsvHelper.Excel has 19,397 lines of library code (12,855 at Phase 3's end), and 27,229 of tests (17,893), step 8's Zip64 test among them. The corpus tool's `written` set and command are 1,831 lines, and the write benchmarks 601.
+  - **Tests:**
+    - CsvHelper.Excel.Tests: 2,718 on net10.0 and net8.0, and 2,670 on net48 (1,791 and 1,763 at Phase 3's end), besides step 8's Zip64 theory, which is skipped unless asked for.
+    - CsvHelper.Tests (1,309, 1,304 and 844) and CsvHelper.Linq.Tests (112, 110 and 101) are unchanged.
+    - Mutation checks: 418 bugs planted over steps 1 to 6, one at a time. Every one is caught, after the tests each step added, but three that are equivalent (step 4's `Color0`, step 5's two).
+  - **Corpus:** the `written` set, ten workbooks CsvHelper.Excel writes (`Written.cs`, which the tests link), with Excel's answers about each (`Files/excel-written`), each pinned by its parts' SHA-256. The corpus tool's `written` command asks Excel.
+  - **CI:** LibreOffice 26.8.2.2 is installed for the LibreOffice tests (decision 27), the tests' TRX files are kept, and Phase 3's reader fuzzer runs alone.
+  - **Benchmarks:** `ExcelPackageAssetsWrite` and `ExcelOrdersWrite`.
+- **The gate**, item by item, re-checked on 2026-11-07:
+  - Every way of writing works on net10.0, net8.0 and net48, sync and async, with errors naming the right cell: met (steps 1 to 4).
+    - `WorkbookWriterTests`: `WriteSheet<T>`, and `WriteSheetAsync<T>` from an `IEnumerable<T>` and an `IAsyncEnumerable<T>`; `AddSheet`'s writer with `WriteRecords`, `WriteRecord` and fields by hand; dynamic records; and several sheets in tab order, each sync and async.
+    - `FormattedCellsTests`: `AddSheet<T>`'s writer with `WriteRecords`, and with fields by hand under the header's names. `TypedCellsTests`, `FormulaCellsTests` and `RowLimitTests` take the same paths with their cells.
+    - The messages name the cell ("Cell Notes!B3 has 32,768 characters…", "Cell Orders!D3 holds 1234567890123456789…", "Cell Data!B2 holds 31.12.1899…"), and the row limit's names its sheet.
+    - Not every combination is tested: `AddSheet<T>` with `WriteRecord` alone isn't, and it goes through the sink as `WriteRecords` does.
+  - Every file the tests write passes `OpenXmlValidator`: met, checked whole.
+    - Each writing test class validates its own workbooks (`Written.ValidationErrors`), and step 6's fuzzers validate each of theirs. The `written` set's tests don't validate its workbooks.
+    - So on 2026-11-07 a scratch build, its `PackageWriter` changed to keep a copy of each package, ran CsvHelper.Excel.Tests on net10.0 and saved every workbook the tests wrote: 1,507, the `written` set's among them. Two more went to files through `ToFile` and weren't kept.
+    - All 1,507 pass the validator, run as `Written.ValidationErrors` runs it, without an error. Under that build, `WriterSecurityTests`' two allocation tests fail, since the copy allocates; they pass in the suite. The patch, the validator and a README are in `Csv\_bench\results\phase4\step8`.
+  - Every workbook of the `written` set opens in Excel and LibreOffice without a repair prompt, and Excel's answers agree with what was written, each difference documented: met (step 5).
+    - Excel opened all ten as they are; `AnswersForEveryWorkbook` checks that none was refused or repaired.
+    - `ExcelReadsWhatWasWritten` compares every cell's value, type, shown text and format, and lists each difference with its reason.
+    - LibreOffice converts all ten, here and on CI, and `LibreOfficeShowsWhatExcelShows` lists its differences.
+  - Written files read back the same through CsvHelper.Excel's reader, ClosedXML and ExcelDataReader, each difference documented: met (steps 1 to 4). `Written.cs`'s helpers read with all three, and the tests list the differences. ClosedXML doesn't decode an inline string's escapes and reads its LF as CR LF. Neither decodes sheet names' escapes. ExcelDataReader reads formula cells as empty, since they have no cached value; ClosedXML computes them.
+  - The security and fuzz tests pass: met (step 6, and again in the run below and in CI's run 42421201910).
+  - Nothing in core changes: met. `git diff f382244b` (Phase 3's end) is empty over `src/CsvHelper`, `src/CsvHelper.Linq`, `src/CsvHelper.Generators`, `tests/CsvHelper.Tests` and `tests/CsvHelper.Linq.Tests`, and no commit since touches them. So no core gate was needed.
+  - The write benchmark's numbers are recorded: met (step 7).
+  - CI's pack check still passes, and so does its LibreOffice test: met.
+    - CI's run 42421201910, of step 6's commit, passed both.
+    - At step 7's commit (`ea46b409`, not pushed), the steps ran as CI runs them on 2026-11-07: restore; a full Release build (`--no-incremental`), with 0 warnings and 0 errors; every test, with TRX files, all passing in the counts above, the LibreOffice tests among them; and the pack check, into a scratch folder. CsvHelper is `[0.0.0-ci]` in all 5 targets, and net47 has System.IO.Compression. The script and its logs are in `Csv\_bench\results\phase4\step8`.
+- **The Zip64 test that "Risks" promised** (`Zip64Tests`, added at step 8): it wasn't built at step 1 or after, and step 8 found it missing.
+  - It writes a sheet of a million rows of four 1,100-character cells, 4,617,444,904 bytes of XML (4.30 GiB), through `ToFile` (a stream that seeks) and to a stream that can't seek, each sync and async. Then `ZipArchive` must open the file and inflate the sheet's entry to its stated length, past 4 GiB, and CsvHelper.Excel must read the million rows back, some compared whole.
+  - It runs on demand, with `CSVHELPER_EXCEL_ZIP64=1` (`Zip64TheoryAttribute`), and is skipped otherwise, so the suite and CI don't pay for it.
+  - Run 2026-11-07, all four cases passed on every target. The sheet deflates to 99.6 MB on .NET 10, 70.0 MB on .NET 8 and 72.2 MB on .NET Framework (the stream that can't seek adds 84 bytes of data descriptors). Writing took 3.6–3.8 s, 4.9–5.0 s and 25–28 s, and reading back 1.0–1.7 s, 1.1–1.7 s and 3.6–3.8 s. The log is `zip64.log` in `Csv\_bench\results\phase4\step8`.
+  - So the risk is answered for these targets: `ZipArchive` writes Zip64 sizes for a sheet past 4 GiB, to a stream that seeks or not, sync or async.
+- **What changed from the design, and why** (each step's "As built" has the details):
+  - **Numbers' formats aren't translated** (step 4, the user's decision). `[CsvFormat]` doesn't apply to numbers in CsvHelper, so no record writer writes a number in a format the sink could know. A number member's `[CsvCulture]` is read instead. Translating them would need a core change.
+  - **A formatted value can be a typed cell** (decision 15 as built, step 4): it is read back with its member's format, and kept only when it formats to the same text, so that Excel shows what .NET writes.
+  - **Widths for 96 DPI, from a measured table** (step 2), rather than the design's AutoFit widths, which were measured at this machine's 144 DPI and are 4.5% too narrow at 96. Widths that fit at 96 DPI fit at higher DPIs too.
+  - **Formulas** (steps 3 and 6):
+    - the checks also refuse an operator at the start, and control characters outside strings, tabs included;
+    - line breaks outside strings become LF, since Excel refuses a CR between tokens;
+    - an empty formula is refused, and `Parse("")` is `default`;
+    - white space at either end is kept, with `xml:space="preserve"` on `f`.
+  - **Sheet names** (steps 1, 3 and 6): Excel's comparison is wider than case (normalization, compatibility forms, and Unicode's caseless match, done twice); `History` is allowed; lone surrogates are refused; copies are named as Excel names them; and a name's 31 code units are counted as written too, so that every file passes the validator.
+  - **Messages drop "The record is discarded"** (step 1): core discards a record in the record methods, but not for a field written by hand.
+  - **Step 1 took the column limit** from step 3, and the benchmarks' `ExcelStrings` from step 7.
+  - **The corpus** (step 5):
+    - each workbook is pinned by its parts' SHA-256, since deflate's output differs between runtimes;
+    - `cultures.xlsx` carries a fingerprint of the culture data it reads, and is compared only where the data matches, as on CI;
+    - Excel's widths are checked at the answers' DPI.
+  - **CI** (step 5's first run): Phase 3's reader fuzzer runs alone, since its time limit measured the tests beside it on CI's four cores; the tests' TRX files are kept.
+  - **Four bugs the fuzzers found** (step 6):
+    - an escape's start before an escaped character, which Excel misread too;
+    - names with U+FFFE, which `string.Normalize` refuses;
+    - `I` U+0307 beside `i` U+0307, which Excel takes to be one name;
+    - formats .NET can't format.
+  - **The Zip64 test** that "Risks" promised was missing until step 8.
+  - **Smaller decisions**, each in its step:
+    - a null `Csv` throws `ArgumentException`;
+    - U+007F to U+009F are written as they are;
+    - .NET Framework's zip gets a stream that counts what it writes;
+    - `ToFile`'s stream has a 64 KiB buffer;
+    - built-in format ids where Excel saves them;
+    - English names tagged `[$-409]`, and `t` as `A/P`;
+    - genitive months, dates without a year and adjacent tokens aren't translated;
+    - widths over 84 sample dates.
+- **What Excel's COM checks taught** (each step's "Checked through COM" has every case):
+  - **Text:**
+    - Excel decodes `_xHHHH_` in text, names and formulas, with hex digits of either case.
+    - It misreads `_x0041` before an escaped character, as the writer wrote it until step 6.
+    - It reads U+007F to U+009F as they are.
+  - **Sheet names:**
+    - Excel counts a name decoded: it opens one of 31 characters decoded, 43 as written.
+    - Its comparison is wider than case.
+    - It opens `History`, and names with U+FFFE, U+FFFF and U+FDD0.
+    - It refuses a file with `I` U+0307 beside `i` U+0307, or `İ` beside `i` U+0307, and opens one with `i` beside `İ`.
+  - **Numbers and dates:**
+    - A subnormal double reads as 0, and the 1900 system has its 1900-02-29.
+    - A later value wider than its column's first shows `########`.
+    - Numbers in General at the default width show in scientific notation, never `########`.
+  - **Formulas:**
+    - Excel refuses unclosed brackets, strings and quoted names; operators at either end; a CR, a tab or a control character between tokens; and more than 8,192 code units.
+    - It opens `=A1` as `A1` and 256-character strings, and shows `#REF!` for a missing table.
+    - `LEN` counts an emoji as one character.
+  - **Formats:**
+    - The 83 codes Excel opens and the 32 it refuses became `FormatCheck`.
+    - It reads `m` as minutes after `h` across quoted text.
+    - It shows a tagged `A/P` as the whole designator, months in the nominative, ja-JP's `mmm` as a number, and de-DE's March as `Mrz`.
+  - **Widths:** `ColumnWidth` depends on the screen's DPI. Calibri 11's digit is 7 pixels at 96 DPI and 11 at 144.
+  - **LibreOffice** differs where listed:
+    - serials before 61 are a day earlier;
+    - CR LF reads as LF;
+    - formulas' escapes aren't decoded;
+    - `TimeSpan.MaxValue` shows as `#FMT`, and `A/P` in lower case.
+- **The numbers** (step 7):
+  - At its defaults CsvHelper.Excel writes a million rows of the package assets in 1.28 s, and of the orders in 1.50 s. That is 2.05x and 1.56x SpreadCheetah 1.28.0's time, about LargeXlsx's, and faster than MiniExcel's, allocating 7.3 KB a workbook.
+  - Deflate is about half of the time. The cells' `r` attributes nearly triple the package assets' file at `Fastest`: 139.2 MB, against 47.7 MB without them.
+  - `Optimal` costs 3.4x the time for 57% of the size.
+- **Left open:**
+  - **.NET's UTF-8 formatting of an escaped non-ASCII literal** (step 6): core's CSV writer writes `yyyy\年` as `2024t`. A workaround is a core change behind Phase 0's gate. Step 6's review left it open; on 2026-11-07 the user chose the recommendation: a core workaround after Phase 4, before Phase 5 (Phase 5's first item), without a report to dotnet/runtime.
+  - **Phase 5:**
+    - links from `Uri`;
+    - Excel settings and `[ExcelColumn(Format)]` as sources of formats, numbers' among them;
+    - auto-fit over the first N rows, which ends the `########` of a later value wider than its column's first;
+    - the bold header;
+    - `FormatCheck`'s `[DBNum3]` and backtick.
+  - **Phase 9** (its "Phase 4's write baseline"):
+    - dropping the `r` attributes (decision 23's alternative);
+    - the XML's own cost, about 2.4–2.5x SpreadCheetah's;
+    - our own zip writer, which removes the synchronous writes before .NET 10.
 
 **Step 1, package and text** (built and approved 2026-11-06, committed with step 2):
 
@@ -5005,7 +5135,7 @@ Filled in step by step; the code is the reference.
 - **Decisions made while building,** each recommended, and approved as built:
   - **A name's 31 counted as written too.** An `_` that would start an escape is written `_x005F_`, and U+FFFE and U+FFFF `_xFFFE_` and `_xFFFF_`, 7 code units each, and the schema limits the attribute to 31: the validator failed `_x0041_` and 24 letters. Excel counts the decoded name, and opens such names (31 decoded, 37 and 43 written). Recommended: refuse them, as the writer is stricter than Excel for control characters, and cut copies to fit (`SheetNames.CopyName`), so that every file passes the validator. Alternative: accept them, and let the validator's error stand for them.
   - **Formulas keep white space at either end,** with `xml:space="preserve"` on `f`, as text cells have it. Readers trim `f` otherwise, as Excel does (Phase 2): `= #N/A!` read back as `=#N/A!`, and `=A1` LF as `=A1`. Excel writes the attribute on a formula that starts with a space, and with the writer's it keeps the white space in front and drops what follows; every probe formula computed. The validator takes it, and the written set has no such formula, so its parts are unchanged. Alternative: no attribute, and the fuzzer expects formulas trimmed.
-- **Found, not fixed: .NET's UTF-8 formatting of an escaped non-ASCII literal.** On .NET 8 and 10, `DateTime`'s and `DateTimeOffset`'s `IUtf8SpanFormattable.TryFormat` writes a non-ASCII character escaped with a backslash (also inside quotes) as its low byte: `\é` as E9, which isn't UTF-8, and `\年` as `t`. With a surrogate pair it throws `ArgumentOutOfRangeException`. `ToString` writes them whole, and quoted or bare literals are fine. CsvHelper's CSV writer formats there: `WriteField(date, "yyyy\\年")` writes `2024t`, and CsvHelper.Excel gets the same bytes (as U+FFFD, after its UTF-8 check). A workaround (such a format through UTF-16) is core's, and needs Phase 0's gate, so it is the user's to decide; step 6's review left it open, with no recommendation made for it. The format fuzzer leaves such characters unescaped on .NET.
+- **Found, not fixed: .NET's UTF-8 formatting of an escaped non-ASCII literal.** On .NET 8 and 10, `DateTime`'s and `DateTimeOffset`'s `IUtf8SpanFormattable.TryFormat` writes a non-ASCII character escaped with a backslash (also inside quotes) as its low byte: `\é` as E9, which isn't UTF-8, and `\年` as `t`. With a surrogate pair it throws `ArgumentOutOfRangeException`. `ToString` writes them whole, and quoted or bare literals are fine. CsvHelper's CSV writer formats there: `WriteField(date, "yyyy\\年")` writes `2024t`, and CsvHelper.Excel gets the same bytes (as U+FFFD, after its UTF-8 check). A workaround (such a format through UTF-16) is core's, and needs Phase 0's gate, so it is the user's to decide; step 6's review left it open, with no recommendation made for it. Decided 2026-11-07, as recommended then: a core workaround after Phase 4, behind Phase 0's gate (see Phase 5's first item). The format fuzzer leaves such characters unescaped on .NET.
 - **Runs beyond the defaults** (net10.0, after the fixes): 6,000 text workbooks, 15,000 name workbooks, 90,000 formats with 4,500 workbooks: no failure.
 - **Tests:** 34 new on each target (2,718 on net10.0 and net8.0, 2,670 on net48), all passing, with the whole solution's. Beside the suite, the text fuzzer takes 12 to 21 s, the names' 7 to 18 s, the formulas' and the formats' end to end up to 14 s (on .NET Framework), the rest under 7 s; none has a time limit, so none needs `TimedCollection`.
 - **Mutation check** on net10.0, each bug planted alone, its file restored and checked by SHA-256 (the driver, `mutate.py`, and its results are in `Csv\_bench\results\phase4\step6`):
@@ -5088,6 +5218,12 @@ Filled in step by step; the code is the reference.
 - **Gate:** "the write benchmark's numbers are recorded" is met. Phase 4 sets no speed target; Phase 9 starts from these numbers (see its "Phase 4's write baseline").
 
 ### Phase 5: presentation (M)
+
+- **Before this phase: core's UTF-8 date literals** (found at Phase 4's step 6; the user's decision, 2026-11-07, as recommended):
+  - On .NET 8 and 10, `DateTime`'s and `DateTimeOffset`'s UTF-8 `TryFormat` writes a non-ASCII character escaped with a backslash in a custom format (also inside quotes) as its low byte, and throws `ArgumentOutOfRangeException` for a surrogate pair; `ToString` writes them whole. Core's `CsvWriter.WriteField<T>` with a format, which the record writers call for `[CsvFormat]`, formats there: `yyyy\年` writes `2024t`, and `yyyy\é` a lone byte E9. The probes are in `Csv\_bench\results\phase4\step6\probes`.
+  - The workaround: a format with a backslash before a non-ASCII character is formatted through UTF-16 and transcoded to UTF-8. The check is a scan of the format, made only when one is given, so that the default path and every other format are unchanged.
+  - First check which other types' UTF-8 formatting does the same (`DateOnly`, `TimeOnly`, `TimeSpan`, and the `WriteField(object)` and `TextWriter` paths), and that the netstandard and .NET Framework builds, which have no `IUtf8SpanFormattable`, aren't affected.
+  - It is a core change, so it passes Phase 0's gate, with care for `WriteField`'s sensitivity to added IL. Reporting the bug to dotnet/runtime wasn't chosen.
 
 - **Attributes and options:** `[ExcelColumn]`, `[ExcelSheet]` and `ExcelSheetOptions.Columns` for formats, widths, wrap and hidden columns. `[ExcelColumn(Format)]` and `Columns`' `Format` give Excel's format codes directly, for display only, beside Phase 4's formats from `[CsvFormat]`, and Phase 4's `FormatCheck` checks them. They are how a number gets a format, since `[CsvFormat]` doesn't apply to numbers (Phase 4's step 4).
 - **Auto-fit:** `<cols>` comes before the rows, so auto-fit buffers the first N rows to estimate widths, then writes them. It widens Phase 4's widths, which cover the first data record's typed cells, to every column over the first N rows. Without auto-fit, widths come from attributes, options and Phase 4's typed columns only.
