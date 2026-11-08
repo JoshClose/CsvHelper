@@ -1,5 +1,6 @@
 using System.Dynamic;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Numerics;
 using System.Text;
 using Microsoft.CSharp.RuntimeBinder;
@@ -150,6 +151,88 @@ public class DynamicRecordTests
 		Assert.Equal("A: 1, B: 2", record.ToString());
 		Assert.Equal(new Dictionary<string, string?> { ["A"] = "1", ["B"] = "2" }, record.ToDictionary());
 	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ColumnNamesKeepOrderAndExactDuplicates(bool dynamicNames)
+	{
+		using var reader = CsvReader.FromText("B,A,B,a,,\"見出し,名\"\n\"x\"\"y\",NULL,ignored,Zoë,,\"日本語\"\n", new CsvReaderOptions { NullValues = ["NULL"] });
+		var record = reader.GetRecords<CsvDynamicRecord>().Single();
+
+		Assert.Equal(["B", "A", "a", "", "見出し,名"], ColumnNames(record, dynamicNames));
+		Assert.Equal(["x\"y", null, "Zoë", "", "日本語"], ((IReadOnlyDictionary<string, string?>)record).Values);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ColumnNamesWithoutAHeaderFollowEachRecord(bool dynamicNames)
+	{
+		using var reader = CsvReader.FromText("a,b\nc,d,e\n", new CsvReaderOptions { HasHeader = false });
+		var records = reader.GetRecords<CsvDynamicRecord>().ToList();
+
+		Assert.Equal(["Field1", "Field2"], ColumnNames(records[0], dynamicNames));
+		Assert.Equal(["Field1", "Field2", "Field3"], ColumnNames(records[1], dynamicNames));
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ColumnNamesIncludeMissingFieldsByDefault(bool dynamicNames)
+	{
+		using var reader = CsvReader.FromText("A,A,B,C\n1\n");
+		var record = reader.GetRecords<CsvDynamicRecord>().Single();
+
+		Assert.Equal(["A", "B", "C"], ColumnNames(record, dynamicNames));
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ColumnNamesThrowAtTheFirstMissingUniqueColumn(bool dynamicNames)
+	{
+		using var reader = CsvReader.FromText("A,A,B,C\n1\n", new CsvReaderOptions { MissingField = CsvMissingFieldHandling.Throw });
+		var record = reader.GetRecords<CsvDynamicRecord>().Single();
+		var names = ColumnNames(record, dynamicNames);
+		using var iterator = names.GetEnumerator();
+
+		Assert.True(iterator.MoveNext());
+		Assert.Equal("A", iterator.Current);
+		var expected = Assert.Throws<IndexOutOfRangeException>(() => record[2]);
+		Assert.Equal(expected.Message, Assert.Throws<IndexOutOfRangeException>(() => iterator.MoveNext()).Message);
+		Assert.Equal("1", record[0]);
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ColumnNamesSkipMissingDuplicateColumns(bool dynamicNames)
+	{
+		using var reader = CsvReader.FromText("A,B,A\n1,2\n", new CsvReaderOptions { MissingField = CsvMissingFieldHandling.Throw });
+		var record = reader.GetRecords<CsvDynamicRecord>().Single();
+
+		Assert.Equal(["A", "B"], ColumnNames(record, dynamicNames));
+	}
+
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public void ColumnNamesCanBeEnumeratedAgainAfterTheReaderIsDisposed(bool dynamicNames)
+	{
+		IEnumerable<string> names;
+		using (var reader = CsvReader.FromText("A,B\n\"x\"\"y\",Zoë\n"))
+		{
+			names = ColumnNames(reader.GetRecords<CsvDynamicRecord>().Single(), dynamicNames);
+		}
+
+		Assert.Equal(["A", "B"], names);
+		Assert.Equal(["A", "B"], names);
+	}
+
+	private static IEnumerable<string> ColumnNames(CsvDynamicRecord record, bool dynamicNames) => dynamicNames
+		? ((IDynamicMetaObjectProvider)record).GetMetaObject(Expression.Constant(record)).GetDynamicMemberNames()
+		: ((IReadOnlyDictionary<string, string?>)record).Keys;
 
 	[Fact]
 	public void ParseParsesAsTheReaderDoes()

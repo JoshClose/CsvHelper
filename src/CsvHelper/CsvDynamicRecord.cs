@@ -102,16 +102,7 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	int IReadOnlyCollection<KeyValuePair<string, string?>>.Count => schema.HasHeader ? schema.KeyIndexes.Length : count;
 
 	/// <summary>The names of the columns, each once.</summary>
-	IEnumerable<string> IReadOnlyDictionary<string, string?>.Keys
-	{
-		get
-		{
-			foreach (var pair in this)
-			{
-				yield return pair.Key;
-			}
-		}
-	}
+	IEnumerable<string> IReadOnlyDictionary<string, string?>.Keys => GetColumnNames();
 
 	/// <summary>The values of the columns, in the order of <see cref="IReadOnlyDictionary{TKey, TValue}.Keys"/>.</summary>
 	IEnumerable<string?> IReadOnlyDictionary<string, string?>.Values
@@ -283,6 +274,29 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+	private IEnumerable<string> GetColumnNames()
+	{
+		if (!schema.HasHeader)
+		{
+			for (var i = 0; i < count; i++)
+			{
+				yield return schema.NameOf(i)!;
+			}
+
+			yield break;
+		}
+
+		foreach (var index in schema.KeyIndexes)
+		{
+			if (index >= count && schema.ThrowOnMissing)
+			{
+				_ = Missing(index);
+			}
+
+			yield return schema.Names[index];
+		}
+	}
+
 	/// <summary>Gives the dynamic binder the object that binds <c>record.Name</c> to its column.</summary>
 	/// <param name="parameter">The expression of the record in the binding.</param>
 	/// <returns>The meta-object of the record.</returns>
@@ -443,12 +457,6 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 			return new DynamicMetaObject(Expression.Call(self, GetValue, Expression.Constant(index)), restrictions);
 		}
 
-		public override IEnumerable<string> GetDynamicMemberNames()
-		{
-			foreach (var pair in (CsvDynamicRecord)Value!)
-			{
-				yield return pair.Key;
-			}
-		}
+		public override IEnumerable<string> GetDynamicMemberNames() => ((CsvDynamicRecord)Value!).GetColumnNames();
 	}
 }
