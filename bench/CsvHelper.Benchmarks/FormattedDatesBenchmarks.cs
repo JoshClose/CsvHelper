@@ -114,3 +114,117 @@ public class FormattedDatesRead : ReadBenchmarkBase
 		return sum;
 	}
 }
+
+/// <summary>
+/// Dates, times and durations written in exact formats, which the other write benchmarks don't write: Records = every
+/// member through the generated record writer's <c>[CsvFormat]</c>; Fields = the same values through
+/// <c>WriteField(value, format)</c>; Default = the same values without a format (dates in ISO 8601's "O"); Escaped = the
+/// dates in a format with characters past ASCII escaped by a backslash (<c>yyyy\年MM\月dd\日</c>), which .NET 8's and 10's
+/// UTF-8 formatting writes wrongly, so that the writer formats them through UTF-16.
+/// </summary>
+[MemoryDiagnoser]
+[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
+[CategoriesColumn]
+public class FormattedDatesWrite : WriteBenchmarkBase
+{
+	/// <summary>The records written.</summary>
+	private const int Rows = 200_000;
+
+	/// <summary>The format of <see cref="CsvHelper_Escaped"/>.</summary>
+	private const string EscapedFormat = @"yyyy\年MM\月dd\日";
+
+	/// <summary>The records, <see cref="FormattedDatesRead"/>'s.</summary>
+	private FormattedDate[] records = [];
+
+	/// <summary>Reads the records, and writes them once for the MB/s column.</summary>
+	[GlobalSetup]
+	public void Setup()
+	{
+		using var reader = CsvReader.FromText(FormattedDate.Generate(Rows));
+		records = reader.GetRecords<FormattedDate>().ToArray();
+		CsvHelper_Records();
+		DataBytes = Output.Length;
+	}
+
+	/// <summary>The records, through the generated record writer and their members' formats.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark(Baseline = true)]
+	[BenchmarkCategory("Records")]
+	public long CsvHelper_Records()
+	{
+		var stream = ResetOutput();
+		using (var writer = CsvWriter.Create(stream, leaveOpen: true))
+		{
+			writer.WriteRecords(records);
+		}
+
+		return stream.Length;
+	}
+
+	/// <summary>The records' values, each through <c>WriteField(value, format)</c> with its member's format.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark(Baseline = true)]
+	[BenchmarkCategory("Fields")]
+	public long CsvHelper_Fields()
+	{
+		var stream = ResetOutput();
+		using (var writer = CsvWriter.Create(stream, leaveOpen: true))
+		{
+			foreach (var record in records)
+			{
+				writer.WriteField(record.Day, "yyyyMMdd");
+				writer.WriteField(record.At, "yyyyMMddHHmmzzz");
+				writer.WriteField(record.Due, "dd.MM.yyyy");
+				writer.WriteField(record.Time, "HH.mm");
+				writer.WriteField(record.Took, @"hh\:mm\:ss");
+				writer.EndRecord();
+			}
+		}
+
+		return stream.Length;
+	}
+
+	/// <summary>The records' values without a format.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark(Baseline = true)]
+	[BenchmarkCategory("Default")]
+	public long CsvHelper_Default()
+	{
+		var stream = ResetOutput();
+		using (var writer = CsvWriter.Create(stream, leaveOpen: true))
+		{
+			foreach (var record in records)
+			{
+				writer.WriteField(record.Day);
+				writer.WriteField(record.At);
+				writer.WriteField(record.Due);
+				writer.WriteField(record.Time);
+				writer.WriteField(record.Took);
+				writer.EndRecord();
+			}
+		}
+
+		return stream.Length;
+	}
+
+	/// <summary>The dates in <see cref="EscapedFormat"/>.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark(Baseline = true)]
+	[BenchmarkCategory("Escaped")]
+	public long CsvHelper_Escaped()
+	{
+		var stream = ResetOutput();
+		using (var writer = CsvWriter.Create(stream, leaveOpen: true))
+		{
+			foreach (var record in records)
+			{
+				writer.WriteField(record.Day, EscapedFormat);
+				writer.WriteField(record.At, EscapedFormat);
+				writer.WriteField(record.Due, EscapedFormat);
+				writer.EndRecord();
+			}
+		}
+
+		return stream.Length;
+	}
+}

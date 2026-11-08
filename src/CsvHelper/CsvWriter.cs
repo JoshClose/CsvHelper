@@ -539,7 +539,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		else if (typeof(T) == typeof(float) && format.IsEmpty && invariant)
 			FloatFormatter.TryFormat(Unsafe.As<T, float>(ref value), buffer.AsSpan(start), out written);
 		else
-			while (!value.TryFormat(buffer.AsSpan(start), out written, format, provider)) Grow(buffer.Length);
+			while (!TryFormatField(value, buffer.AsSpan(start), out written, format, provider)) Grow(buffer.Length);
 		pos = start + written;
 		// Numbers in their default invariant format cannot contain a special character, unless the
 		// separator is one of the characters numbers use.
@@ -588,7 +588,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 
 		var start = pos;
 		int written;
-		while (!value.TryFormat(buffer.AsSpan(start), out written, format, provider))
+		while (!TryFormatField(value, buffer.AsSpan(start), out written, format, provider))
 		{
 			Grow(buffer.Length);
 		}
@@ -1526,6 +1526,141 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		|| DateOrTimeByName<T>.Value
 #endif
 		;
+
+#if NET
+	/// <summary>
+	/// Whether <typeparamref name="T"/> formats with .NET's date and time formatting: <see cref="DateTime"/>,
+	/// <see cref="DateTimeOffset"/>, <see cref="DateOnly"/>, <see cref="TimeOnly"/> and <see cref="TimeSpan"/>. Inlined,
+	/// so that it folds to a constant.
+	/// </summary>
+	/// <typeparam name="T">The type of the value.</typeparam>
+	/// <returns>Whether it is one of them.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool IsDateTimeOrDuration<T>() => IsDateOrTime<T>() || typeof(T) == typeof(TimeSpan);
+
+	/// <summary>
+	/// Formats a value as UTF-8 for <c>WriteField</c>, as its <c>TryFormat</c> does. .NET 8's and 10's
+	/// <c>IUtf8SpanFormattable.TryFormat</c> of a date, time or duration writes a character past ASCII that a backslash
+	/// escapes in a custom format as its low byte (<c>yyyy\年</c> as <c>2024t</c>, <c>yyyy\é</c> as the lone byte E9), and
+	/// throws for an escaped surrogate pair, where <c>ToString</c> writes them whole; so such a custom format, one
+	/// <see cref="NeedsUtf16"/> takes, is formatted through UTF-16 (<see cref="TryFormatThroughUtf16{T}"/>).
+	/// </summary>
+	/// <remarks>
+	/// Inlined, so that for every other type it folds to the value's <c>TryFormat</c>, and <c>WriteField</c>'s IL and the
+	/// loops it is inlined into keep their code; a date's standard format, of one character, costs only its length's test.
+	/// </remarks>
+	/// <typeparam name="T">The type of the value.</typeparam>
+	/// <param name="value">The value.</param>
+	/// <param name="destination">Where the UTF-8 goes.</param>
+	/// <param name="written">The bytes written.</param>
+	/// <param name="format">The format.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>Whether the text fit.</returns>
+	/// <exception cref="FormatException"><paramref name="format"/> is not valid for <typeparamref name="T"/>.</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool TryFormatField<T>(T value, Span<byte> destination, out int written, ReadOnlySpan<char> format, IFormatProvider? provider)
+		where T : IUtf8SpanFormattable
+	{
+		if (IsDateTimeOrDuration<T>() && format.Length > 1 && NeedsUtf16(format))
+		{
+			return TryFormatThroughUtf16(value, destination, out written, format, provider);
+		}
+
+		return value.TryFormat(destination, out written, format, provider);
+	}
+
+	/// <summary>
+	/// Whether a custom format has a character past ASCII and a backslash: a test wider than the bug
+	/// <see cref="TryFormatField{T}"/> works around, since <see cref="TryFormatThroughUtf16{T}"/> is right for every
+	/// format. Characters past ASCII are tested first, as the rarer: a duration's format has backslashes (<c>hh\:mm</c>).
+	/// </summary>
+	/// <param name="format">The format.</param>
+	/// <returns>Whether to format through UTF-16.</returns>
+	private static bool NeedsUtf16(ReadOnlySpan<char> format) => !Ascii.IsValid(format) && format.Contains('\\');
+
+	/// <summary>
+	/// Formats a date, time or duration through UTF-16, as <c>ToString</c> does, and transcodes it into
+	/// <paramref name="destination"/>, for a format <see cref="NeedsUtf16"/> takes. Not inlined, so that
+	/// the formats that don't come here keep their code.
+	/// </summary>
+	/// <typeparam name="T">A type <see cref="IsDateTimeOrDuration{T}"/> takes.</typeparam>
+	/// <param name="value">The value.</param>
+	/// <param name="destination">Where the UTF-8 goes.</param>
+	/// <param name="written">The bytes written, or 0 when they don't fit.</param>
+	/// <param name="format">The format.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>Whether the text fit.</returns>
+	/// <exception cref="FormatException"><paramref name="format"/> is not valid for <typeparamref name="T"/>.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static bool TryFormatThroughUtf16<T>(T value, Span<byte> destination, out int written, ReadOnlySpan<char> format, IFormatProvider? provider)
+	{
+		Span<char> chars = stackalloc char[256];
+		char[]? rented = null;
+		try
+		{
+			int length;
+			while (!TryFormatUtf16(value, chars, out length, format, provider))
+			{
+				var bigger = ArrayPool<char>.Shared.Rent(chars.Length * 2);
+				if (rented is not null)
+				{
+					ArrayPool<char>.Shared.Return(rented);
+				}
+
+				rented = bigger;
+				chars = rented;
+			}
+
+			return Encoding.UTF8.TryGetBytes(chars[..length], destination, out written);
+		}
+		finally
+		{
+			if (rented is not null)
+			{
+				ArrayPool<char>.Shared.Return(rented);
+			}
+		}
+	}
+
+	/// <summary>Formats a date, time or duration as UTF-16, without boxing it.</summary>
+	/// <typeparam name="T">A type <see cref="IsDateTimeOrDuration{T}"/> takes.</typeparam>
+	/// <param name="value">The value.</param>
+	/// <param name="destination">Where the text goes.</param>
+	/// <param name="written">The characters written.</param>
+	/// <param name="format">The format.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>Whether the text fit.</returns>
+	/// <exception cref="InvalidOperationException"><typeparamref name="T"/> isn't a date, time or duration.</exception>
+	private static bool TryFormatUtf16<T>(T value, Span<char> destination, out int written, ReadOnlySpan<char> format, IFormatProvider? provider)
+	{
+		if (typeof(T) == typeof(DateTime))
+		{
+			return Unsafe.As<T, DateTime>(ref value).TryFormat(destination, out written, format, provider);
+		}
+
+		if (typeof(T) == typeof(DateTimeOffset))
+		{
+			return Unsafe.As<T, DateTimeOffset>(ref value).TryFormat(destination, out written, format, provider);
+		}
+
+		if (typeof(T) == typeof(DateOnly))
+		{
+			return Unsafe.As<T, DateOnly>(ref value).TryFormat(destination, out written, format, provider);
+		}
+
+		if (typeof(T) == typeof(TimeOnly))
+		{
+			return Unsafe.As<T, TimeOnly>(ref value).TryFormat(destination, out written, format, provider);
+		}
+
+		if (typeof(T) == typeof(TimeSpan))
+		{
+			return Unsafe.As<T, TimeSpan>(ref value).TryFormat(destination, out written, format, provider);
+		}
+
+		throw new InvalidOperationException($"{typeof(T)} isn't a date, time or duration.");
+	}
+#endif
 
 #if !NET
 	/// <summary>

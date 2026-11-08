@@ -3,6 +3,27 @@ using System.Text;
 
 namespace CsvHelper.Tests;
 
+/// <summary>A record whose dates and duration have formats with characters past ASCII escaped by a backslash.</summary>
+[CsvRecord]
+public partial class EscapedLiterals
+{
+	/// <summary>A date, in a Japanese format.</summary>
+	[CsvFormat(@"yyyy\年MM\月dd\日")]
+	public DateTime When { get; set; }
+
+	/// <summary>A date and time, with the escaped literal in quotes.</summary>
+	[CsvFormat(@"yyyy'\年' HH:mm")]
+	public DateTimeOffset At { get; set; }
+
+	/// <summary>A duration.</summary>
+	[CsvFormat(@"hh\時mm\分")]
+	public TimeSpan Duration { get; set; }
+
+	/// <summary>A nullable date.</summary>
+	[CsvFormat(@"yyyy\é")]
+	public DateTime? Maybe { get; set; }
+}
+
 public class WriterTests
 {
 	private static string Write(Action<CsvWriter> write, CsvWriterOptions? options = null)
@@ -204,6 +225,147 @@ public class WriterTests
 		}));
 		Assert.Throws<FormatException>(() => Write(w => w.WriteField(at, "%")));
 	}
+
+	/// <summary>
+	/// Date, time and duration formats with a character past ASCII escaped by a backslash, which .NET 8's and 10's UTF-8
+	/// formatting writes wrongly (<c>yyyy\年</c> as <c>2024t</c>, an escaped surrogate pair throws): each is written as
+	/// <c>ToString</c> writes it, to a stream and to a <see cref="TextWriter"/>, with the writer's provider and another,
+	/// and as a nullable value. Formats without such an escape, and a text past the first char buffer and the byte
+	/// buffer, come out the same.
+	/// </summary>
+	[Fact]
+	public void WritesEscapedLiteralsPastAsciiAsToStringDoes()
+	{
+		var failures = new List<string>();
+		var long30k = "yyyy" + string.Concat(Enumerable.Repeat(@"\年", 30_000));
+		string[] dateFormats = [@"yyyy\年", @"yyyy'\年'", @"yyyy\é", @"yyyy\😀", @"yyyy\\年", "yyyy年", "yyyy'年'", @"yyyy\年MM\月dd\日 HH\時", "yyyy-MM-dd", "MMMM", long30k];
+		string[] timeFormats = [@"HH\時mm", @"HH'\時'mm", @"HH\😀", @"HH\\時", "HH:mm"];
+		string[] durationFormats = [@"hh\時mm", @"hh'\時'mm", @"hh\😀", @"hh\\\時", @"hh\:mm", "c"];
+		foreach (var format in dateFormats)
+		{
+			Check(new DateTime(2024, 1, 15, 10, 30, 0), format, failures);
+			Check(new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.FromHours(2)), format, failures);
+#if NET
+			Check(new DateOnly(2024, 1, 15), format, failures);
+#endif
+		}
+
+#if NET
+		foreach (var format in timeFormats)
+		{
+			Check(new TimeOnly(10, 30), format, failures);
+		}
+#endif
+
+		foreach (var format in durationFormats)
+		{
+			Check(TimeSpan.FromHours(10.5), format, failures);
+		}
+
+		Assert.Empty(failures);
+	}
+
+	/// <summary>Records with such formats in <see cref="CsvFormatAttribute"/> are written as <c>ToString</c> writes them.</summary>
+	[Fact]
+	public void WritesRecordsWithEscapedLiteralsPastAsciiAsToStringDoes()
+	{
+		var record = new EscapedLiterals
+		{
+			When = new DateTime(2024, 1, 15, 10, 30, 0),
+			At = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.FromHours(2)),
+			Duration = TimeSpan.FromMinutes(90),
+			Maybe = new DateTime(2025, 2, 3),
+		};
+		var invariant = CultureInfo.InvariantCulture;
+		var expected = "When,At,Duration,Maybe\r\n"
+			+ record.When.ToString(@"yyyy\年MM\月dd\日", invariant) + ","
+			+ record.At.ToString(@"yyyy'\年' HH:mm", invariant) + ","
+			+ record.Duration.ToString(@"hh\時mm\分", invariant) + ","
+			+ record.Maybe.Value.ToString(@"yyyy\é", invariant) + "\r\n";
+
+		Assert.Equal(expected, Write(w => w.WriteRecords([record])));
+	}
+
+	/// <summary>
+	/// Writes a value in a format every way <see cref="WritesEscapedLiteralsPastAsciiAsToStringDoes"/> checks, and notes
+	/// each way whose text isn't <c>ToString</c>'s (or that doesn't throw <see cref="FormatException"/> when it does).
+	/// </summary>
+	/// <typeparam name="T">The value's type.</typeparam>
+	/// <param name="value">The value.</param>
+	/// <param name="format">The format.</param>
+	/// <param name="failures">The failures so far.</param>
+	private static void Check<T>(T value, string format, List<string> failures)
+#if NET
+		where T : struct, IFormattable, IUtf8SpanFormattable
+#else
+		where T : struct, IFormattable
+#endif
+	{
+		var german = CultureInfo.GetCultureInfo("de-DE");
+		var ways = new (string Name, Func<IFormatProvider, string> Expected, Func<string> Actual)[]
+		{
+			("stream", p => Expected(value, format, p), () => Write(w => { w.WriteField(value, format.AsSpan()); w.EndRecord(); })),
+			("text", p => Expected(value, format, p), () => WriteText(w => { w.WriteField(value, format.AsSpan()); w.EndRecord(); })),
+			("nullable", p => Expected(value, format, p), () => Write(w => { w.WriteField((T?)value, format.AsSpan()); w.EndRecord(); })),
+			("de-DE", p => Expected(value, format, german), () => Write(w => { w.WriteField(value, format.AsSpan(), german); w.EndRecord(); })),
+		};
+		foreach (var (name, expected, actual) in ways)
+		{
+			var want = expected(CultureInfo.InvariantCulture);
+			string got;
+			try
+			{
+				got = actual();
+			}
+			catch (FormatException)
+			{
+				got = "FormatException";
+			}
+
+			if (got != want)
+			{
+				failures.Add($"{typeof(T).Name} {name} {format.Substring(0, Math.Min(format.Length, 20))}: {Shorten(got)}, ToString {Shorten(want)}");
+			}
+		}
+	}
+
+	/// <summary>A value's text in a format as <c>ToString</c> writes it, as a CSV record, or <c>FormatException</c>.</summary>
+	/// <typeparam name="T">The value's type.</typeparam>
+	/// <param name="value">The value.</param>
+	/// <param name="format">The format.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The record.</returns>
+	private static string Expected<T>(T value, string format, IFormatProvider provider)
+		where T : IFormattable
+	{
+		try
+		{
+			return value.ToString(format, provider) + "\r\n";
+		}
+		catch (FormatException)
+		{
+			return "FormatException";
+		}
+	}
+
+	/// <summary>Writes to a <see cref="TextWriter"/>.</summary>
+	/// <param name="write">Writes the records.</param>
+	/// <returns>The text written.</returns>
+	private static string WriteText(Action<CsvWriter> write)
+	{
+		var text = new StringWriter();
+		using (var writer = CsvWriter.Create(text, leaveOpen: true))
+		{
+			write(writer);
+		}
+
+		return text.ToString();
+	}
+
+	/// <summary>Cuts a text to its first 40 characters, for a failure's message.</summary>
+	/// <param name="text">The text.</param>
+	/// <returns>The text, cut.</returns>
+	private static string Shorten(string text) => text.Length <= 40 ? text : text.Substring(0, 40) + "...";
 
 	[Fact]
 	public void WritesToAFile()

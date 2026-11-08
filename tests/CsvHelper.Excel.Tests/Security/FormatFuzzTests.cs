@@ -275,7 +275,7 @@ public class FormatFuzzTests(ITestOutputHelper output)
 			Strings = random.Next(2) == 0 ? ExcelStrings.Inline : ExcelStrings.Shared,
 			Csv = new CsvWriterOptions { ValidateFieldCount = false },
 		};
-		var columns = Enumerable.Range(0, random.Next(1, 7)).Select(_ => new Column(WrittenFormat(random), random.Next(4) == 0 ? null : RandomCulture(random), Kinds[random.Next(Kinds.Length)])).ToList();
+		var columns = Enumerable.Range(0, random.Next(1, 7)).Select(_ => new Column(RandomFormat(random), random.Next(4) == 0 ? null : RandomCulture(random), Kinds[random.Next(Kinds.Length)])).ToList();
 		var rows = Enumerable.Range(0, random.Next(1, 6)).Select(_ => columns.Select(c => Field.Of(random, c, options)).ToList()).ToList();
 		var members = new MemberFormats(columns.Select((c, i) => new MemberFormat("c" + i, 0, -1, c.Format, c.Culture)).ToArray());
 		var describe = $"{options.DateTimeOffsets}, columns {string.Join(", ", columns)}";
@@ -545,42 +545,6 @@ public class FormatFuzzTests(ITestOutputHelper output)
 		return format.ToString();
 	}
 
-	/// <summary>
-	/// A random format for the writer: on .NET, with no non-ASCII character escaped with a backslash, which .NET 8's and
-	/// 10's UTF-8 formatting of dates writes as its low byte (U+00E9 as the byte E9, U+5E74 as <c>t</c>), and for which it
-	/// throws with a surrogate pair (checked on 2026-11-07), while <c>ToString</c> writes it whole. The CSV writer formats in UTF-8 too, so that is core's
-	/// to work around (see step 6's "As built"); the character is left unescaped instead, a literal all the same.
-	/// </summary>
-	/// <param name="random">The seed's random numbers.</param>
-	/// <returns>The format.</returns>
-	private static string WrittenFormat(Random random)
-	{
-		var format = RandomFormat(random);
-#if NET
-		var written = new StringBuilder(format.Length);
-		for (var i = 0; i < format.Length; i++)
-		{
-			if (format[i] == '\\' && i + 1 < format.Length)
-			{
-				if (format[i + 1] > (char)0x7F)
-				{
-					continue;
-				}
-
-				written.Append(format[i]);
-				i++;
-			}
-
-			written.Append(format[i]);
-		}
-
-		return written.ToString();
-#else
-
-		return format;
-#endif
-	}
-
 	/// <summary>A random culture of those this machine has.</summary>
 	/// <param name="random">The seed's random numbers.</param>
 	/// <returns>The culture.</returns>
@@ -671,7 +635,7 @@ public class FormatFuzzTests(ITestOutputHelper output)
 		{
 			var kind = random.Next(5) == 0 ? Kinds[random.Next(Kinds.Length)] : column.Kind;
 			var value = Value.Random(random, kind);
-			var format = random.Next(8) == 0 ? WrittenFormat(random) : column.Format;
+			var format = random.Next(8) == 0 ? RandomFormat(random) : column.Format;
 			var provider = column.Culture ?? (IFormatProvider)CultureInfo.InvariantCulture;
 			var text = value.Format(format, provider);
 			DateCell? expected = null;
