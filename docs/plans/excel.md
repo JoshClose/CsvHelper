@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Next is core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -49,7 +49,7 @@ foreach (var order in reader.GetRecords<Order>())
 using var output = ExcelWorkbookWriter.ToFile("report.xlsx");
 output.WriteSheet("Orders", orders);
 
-using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader = true }))	// a CsvWriter
+using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { AutoFilter = true }))	// a CsvWriter
 {
 	sheet.WriteRecords(rows);
 }
@@ -67,7 +67,7 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader =
   - `Text`: Raw (default) or Formatted (Phase 8).
   - `MaxUncompressedSize`, `MaxPartSize`: zip-bomb limits. Phase 1's "Public API" says what each bounds.
   - `Csv`: a composed `CsvReaderOptions` for `FormatProvider`, header matching, `OnRecordError`, null values, trimming and the rest. CSV-only settings (separator, quoting, comments) are ignored.
-- **`ExcelWorkbookWriter`**: `ToFile(path)` and `Create(stream)` (Phase 4's name for the sketch's `ToStream`). `WriteSheet(name, records)` writes a whole sheet. `AddSheet(name)` and `AddSheet<T>(name)` return a `CsvWriter` for manual or mixed writing, the second with `T`'s formats; `AddSheet(name, options)` comes with Phase 5's `ExcelSheetOptions`. Phase 4's "Public API" has the exact signatures.
+- **`ExcelWorkbookWriter`**: `ToFile(path)` and `Create(stream)` (Phase 4's name for the sketch's `ToStream`). `WriteSheet(name, records)` writes a whole sheet. `AddSheet(name)` and `AddSheet<T>(name)` return a `CsvWriter` for manual or mixed writing, the second with `T`'s formats. From Phase 5 each takes an optional `ExcelSheetOptions`, and a sheet's `CsvWriter` takes `MergeCells("A1:C3")`. Phase 4's and Phase 5's "Public API" have the exact signatures.
 - **`ExcelWriterOptions`**:
   - `Strings`: Inline (default) or Shared.
   - `CompressionLevel`: `Fastest` by default, as Excel's own files are deflated.
@@ -75,10 +75,12 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { FreezeHeader =
   - `LongNumbers`: Text (default), Number (lossy) or Throw.
   - `DateTimeOffsets`: Text (ISO 8601, default), Utc or ClockTime (the time at its own offset).
   - `OutOfRangeDates`: Text (default) or Throw, for dates before 1900 and negative durations.
+  - `Sheets` (Phase 5): the `ExcelSheetOptions` of a sheet given none, and whose type has no `[ExcelSheet]`.
+  - `Links` (Phase 5): Web (default; `Uri` fields with http, https or mailto are links, others text), All or None.
   - `Csv`: a composed `CsvWriterOptions`. CSV-only settings (separator, quoting, fixed width, comments) are ignored. Injection protection is unnecessary, because text cells are never evaluated.
 - **`ExcelFormula`**: a formula, written as a formula cell without a cached value (Excel and LibreOffice compute it on open), through a member of that type or `WriteFormula`.
-- **`ExcelSheetOptions`**: `FreezeHeader`, `BoldHeader`, `AutoFilter`, `Table` (name, style), `AutoFit` (rows to sample), `Columns` (per header name: `Width`, `Format`, `Wrap`, `Hidden`).
-- **Attributes**: `[ExcelColumn(Width, Format, Wrap, Hidden)]` on members, `[ExcelSheet(Name, FreezeHeader, AutoFilter, Table)]` on the class.
+- **`ExcelSheetOptions`** (Phase 5): `Title` (a row above the header, merged across it), `BoldHeader` and `FreezeHeader` (both on), `FreezeColumns`, `AutoFilter`, `Table` (an `ExcelTableOptions`: name, style, banded rows, filter buttons), `AutoFit` (rows to measure, 100; 0 for none) and `MaxAutoFitWidth` (60 characters), and `Columns` (per header name, an `ExcelColumnOptions`: `Width`, `Format`, `Wrap`, `Hidden`). A sheet's are the argument, else `T`'s `[ExcelSheet]`, else `ExcelWriterOptions.Sheets`, each taken whole.
+- **Attributes** (Phase 5): `[ExcelColumn(Width, Format, Wrap, Hidden)]` on members, and `[ExcelSheet]` on the class, with `ExcelSheetOptions`' settings but `Columns` (the table's as `Table`, `TableName` and `TableStyle`) and no `Name`, since a sheet's name is always given.
 
 ## Phases
 
@@ -5219,6 +5221,10 @@ Filled in step by step; the code is the reference.
 
 ### Phase 5: presentation (M)
 
+Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built".
+
+Scope, as planned:
+
 - **Before this phase: core's UTF-8 date literals** (found at Phase 4's step 6; the user's decision, 2026-11-07, as recommended):
   - On .NET 8 and 10, `DateTime`'s and `DateTimeOffset`'s UTF-8 `TryFormat` writes a non-ASCII character escaped with a backslash in a custom format (also inside quotes) as its low byte, and throws `ArgumentOutOfRangeException` for a surrogate pair; `ToString` writes them whole. Core's `CsvWriter.WriteField<T>` with a format, which the record writers call for `[CsvFormat]`, formats there: `yyyy\年` writes `2024t`, and `yyyy\é` a lone byte E9. The probes are in `Csv\_bench\results\phase4\step6\probes`.
   - The workaround: a format with a backslash before a non-ASCII character is formatted through UTF-16 and transcoded to UTF-8. The check is a scan of the format, made only when one is given, so that the default path and every other format are unchanged.
@@ -5248,6 +5254,250 @@ Filled in step by step; the code is the reference.
 - **Merged cells** on the sheet writer (e.g. a title row above the header), written after the rows.
 - **Excel Table output:** a table part with a style, row banding and filter buttons.
 - **Column default styles** (`<col style>`), so formats also apply to cells users add later.
+- **From Phase 4** (its "Left open"): `[ExcelColumn(Format)]` and `Columns` as sources of formats, numbers' among them; `FormatCheck`'s `[DBNum3]` and backtick. And from Phase 1: the NativeAOT publish check that the attribute reading brings.
+
+#### Public API
+
+Phase 5 adds a sheet's options, two attributes, a table's and a column's options, a link policy and a merge method. Phase 4's methods that add a sheet gain an optional `ExcelSheetOptions`.
+
+```csharp
+public sealed class ExcelWorkbookWriter
+{
+	// Phase 4's, each with the sheet's options: null for the record type's [ExcelSheet], else ExcelWriterOptions.Sheets.
+	public void WriteSheet<T>(string name, IEnumerable<T> records, ExcelSheetOptions? options = null);
+	public ValueTask WriteSheetAsync<T>(string name, IEnumerable<T> records, ExcelSheetOptions? options = null, CancellationToken cancellationToken = default);
+	public ValueTask WriteSheetAsync<T>(string name, IAsyncEnumerable<T> records, ExcelSheetOptions? options = null, CancellationToken cancellationToken = default);
+	public CsvWriter AddSheet(string name, ExcelSheetOptions? options = null);
+	public CsvWriter AddSheet<T>(string name, ExcelSheetOptions? options = null);
+}
+
+public sealed class ExcelWriterOptions
+{
+	// Phase 4's, and:
+	public ExcelSheetOptions Sheets { get; init; } = ExcelSheetOptions.Default;
+	public ExcelLinks Links { get; init; } = ExcelLinks.Web;
+}
+
+public enum ExcelLinks
+{
+	Web,	// http, https and mailto URIs are links, others text
+	All,	// every URI is a link: file:, other schemes and relative ones too
+	None,	// URIs are text, as in Phase 4
+}
+
+public sealed class ExcelSheetOptions
+{
+	public static ExcelSheetOptions Default { get; }
+	public string? Title { get; init; }
+	public bool BoldHeader { get; init; } = true;
+	public bool FreezeHeader { get; init; } = true;
+	public int FreezeColumns { get; init; }
+	public bool AutoFilter { get; init; }
+	public ExcelTableOptions? Table { get; init; }
+	public int AutoFit { get; init; } = 100;
+	public double MaxAutoFitWidth { get; init; } = 60;
+	public IReadOnlyDictionary<string, ExcelColumnOptions>? Columns { get; init; }
+}
+
+public sealed class ExcelTableOptions
+{
+	public string? Name { get; init; }
+	public string? Style { get; init; } = "TableStyleMedium2";
+	public bool BandedRows { get; init; } = true;
+	public bool FilterButtons { get; init; } = true;
+}
+
+public sealed class ExcelColumnOptions
+{
+	public double? Width { get; init; }
+	public string? Format { get; init; }
+	public bool Wrap { get; init; }
+	public bool Hidden { get; init; }
+}
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
+public sealed class ExcelColumnAttribute : Attribute
+{
+	public double Width { get; set; }	// 0 for none
+	public string? Format { get; set; }
+	public bool Wrap { get; set; }
+	public bool Hidden { get; set; }
+}
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public sealed class ExcelSheetAttribute : Attribute
+{
+	// ExcelSheetOptions' settings but Columns, which members' [ExcelColumn] give, and the table's as three.
+	public string? Title { get; set; }
+	public bool BoldHeader { get; set; } = true;
+	public bool FreezeHeader { get; set; } = true;
+	public int FreezeColumns { get; set; }
+	public bool AutoFilter { get; set; }
+	public bool Table { get; set; }
+	public string? TableName { get; set; }
+	public string? TableStyle { get; set; } = "TableStyleMedium2";
+	public int AutoFit { get; set; } = 100;
+	public double MaxAutoFitWidth { get; set; } = 60;
+}
+
+public static class ExcelWriterExtensions
+{
+	public static void WriteFormula(this CsvWriter writer, string formula);	// Phase 4's
+	public static void MergeCells(this CsvWriter writer, string range);
+}
+```
+
+**Where the settings come from** (decision 2): a sheet's are the `options` argument; else, for `AddSheet<T>` and `WriteSheet<T>`, `T`'s `[ExcelSheet]`; else `ExcelWriterOptions.Sheets`. Each is taken whole, not merged with the others. A column's are its entry in `Columns`, by its header name, else its member's `[ExcelColumn]`, also whole. They are checked when the sheet is added, and a bad one throws `ArgumentException`, as a bad sheet name does.
+
+**What a sheet gets** (decision 1 for the defaults):
+
+- **A title** (`Title`, none): row 1 holds it, in bold Calibri 14 (Excel sizes the row on open), merged across the header's columns once the header is known (no merge for a header of one column), and the header and the records follow from row 2. The sheet's `CsvWriter` doesn't see row 1: its first record is still the header, so `WriteRecords` writes it (decision 3). 1 to 32,767 characters.
+- **The header:** the writer's first record, with `HasHeader`. Without `HasHeader` there is none (decision 11): `BoldHeader` and `FreezeHeader` do nothing, `AutoFilter` and `Table` throw, and `Columns` match the names that `T`'s record writer writes in its header, as Phase 4's formats do.
+- **A bold header** (`BoldHeader`, on): the header's cells in bold Calibri 11; not in a table, whose style sets its header.
+- **A frozen header** (`FreezeHeader`, on): the rows through the header stay in view as the sheet scrolls, and the first `FreezeColumns` columns too (`sheetViews` with a frozen pane, before the columns).
+- **An autofilter** (`AutoFilter`, off): filter buttons on the header, over it and every row below (`autoFilter` after the rows, and Excel's hidden `_xlnm._FilterDatabase` name for it, as Excel writes it). With a table, the table's buttons are the filter (decision 9).
+- **A table** (`Table`, none): the header and the rows below it are an Excel table, named `Name` or after the sheet (decision 8), in `Style` (one of Excel's 60 built-in styles, `TableStyleLight1` to `21`, `TableStyleMedium1` to `28` and `TableStyleDark1` to `11`, in any case; another name throws, since Excel shows it unstyled; null for no style), with banded rows and filter buttons as asked. Excel refuses a workbook that breaks its rules (checked):
+  - A name is unique in the workbook ignoring case; it starts with a letter, `_` or `\`, then has letters, digits, `_`, `.`, `?` and `\`; at most 255 characters; and it isn't a cell reference (`A1`, `XFD1048576`, `R1C1`), `R` or `C` followed by a digit (`R2D2`), `R`, `C`, `RC`, `TRUE` or `FALSE`. A name given that breaks them throws.
+  - The header's cells are text equal to the table's column names, unique ignoring case, at most 255 characters. An empty one is named `Column` and its number, a number cell becomes its text, and a repeated one gets a number (`Name2`), as Excel does when it makes a table (decision 10); a longer one throws.
+  - A table has a row below its header: a sheet with only a header gets a table over it and one empty row. No merged cell may be in a table.
+  - With `RowLimit.NewSheet`, each sheet gets its own table, named with a number after the first (`Orders2`), and its own title.
+- **Auto-fit** (`AutoFit`, 100 rows; 0 turns it off): the header and the first 100 records are held, as Phase 4 holds through the first data record, and each column gets the width of its widest cell's text, at most `MaxAutoFitWidth` (60 characters; 1 to 255). The text's width is measured as Phase 4's dates are (Calibri 11's measured widths, for 96 DPI, and Excel's padding): the header in bold when it is, with its filter button when it has one; a text's widest line; a number in General as Excel shows it, in at most 11 characters besides its sign; dates and times in their formats; booleans as `TRUE` and `FALSE`; a number in a column's format as decision 5 says. Formulas, the title and merged cells count nothing. A column can come out narrower than the default, as with Excel's AutoFit (decision 4). Without auto-fit, Phase 4's widths of the first data record's dates stand.
+- **Columns** (by `Columns` or `[ExcelColumn]`):
+  - `Width`: Excel's `ColumnWidth`, in characters (0 to 255), which beats auto-fit.
+  - `Format`: Excel's format code, checked by Phase 4's `FormatCheck`, which now takes `[DBNum3]` and a backtick too (decision 13). The column's numbers, booleans and text are written in it, and its dates, times and durations in place of Phase 4's format by what each holds or of the member's translated `[CsvFormat]` (whose text is still what the cell's value is read from). A number in a format gets a width (decision 5).
+  - `Wrap`: text wraps at the column's width; Excel and LibreOffice size the rows on open.
+  - `Hidden`: the column is hidden.
+  - A column with a `Format` or `Wrap` gets it as its default style (`<col style>`) as well, so that cells users add later take it. Every cell written in such a column carries the style itself: Excel gives a column's style only to cells not in the file, and LibreOffice to written cells without one too (checked).
+  - A name in `Columns` that the header doesn't have throws when the header record ends, which discards it as any failed record (decision 12).
+- **Links** (`ExcelWriterOptions.Links`): a `Uri` field (Phase 0 passes its type) is a text cell of its `OriginalString`, as in Phase 4, with a link to it, in Excel's `Hyperlink` cell style (underlined, `#0563C1`), when the policy takes its scheme (decision 6). The link's target is an absolute URI's `AbsoluteUri` (escaped) or a relative one's text, with one relationship for each distinct target. A sheet holds at most 65,530 links, since Excel refuses a workbook with more; later URIs are text without one (decision 7).
+- **Merged cells** (`MergeCells("A1:C3")` on a sheet's writer): written after the rows, in the sheet being written. A range has two cells or more, within Excel's grid, written or not; one that overlaps another throws when added (Excel refuses it). So does one in a table's columns at or below its header, since the table reaches every row written below it: when added, or, for ranges added before the header, when the header record ends.
+
+#### Checked on 2026-11-08
+
+Excel 365 (16.0 build 20527) through COM, with probe workbooks written by hand and opened read-only, at 144 DPI; and LibreOffice 26.8, converting each to `.xlsx`, whose parts say what it kept. The probes, their scripts and the answers are in `Csv\_bench\results\phase5\design` (`make_probes.py` to `make_probes4.py`, `probe.ps1`, `measure.ps1`, `lo_report.py`; `answers.txt` to `answers4.txt`, `lo-answers.txt` and `measure.txt`).
+
+- **Views and the header:**
+  - A frozen header row (`pane` with `state="frozen"`), with and without its `selection`, two rows, and a row and a column, open in Excel without the workbook's `bookViews`. LibreOffice keeps them.
+  - A bold header is a second font and a cell format, which both keep.
+  - A title in bold Calibri 14, merged over the header, above a frozen header and a filter or a table: Excel sizes its row on open (18.5 points).
+- **The autofilter:** Excel opens `autoFilter` without the `_xlnm._FilterDatabase` name, and over the header alone. It refuses one written after `pageMargins`, so the worksheet's elements keep the schema's order. LibreOffice opens all of them, and writes the name.
+- **Links:**
+  - A link's relationship needs `TargetMode="External"`: Excel refuses one without. Two links may share a relationship.
+  - Excel opens `https`, `mailto`, `file:///C:/Temp/report.txt` (shown as `C:\Temp\report.txt`), `file://server/share/report.txt` (as `\\server\share\report.txt`), a relative path, `javascript:` and a target of 8,000 characters, kept whole. It splits `#frag` into the link's sub-address itself. Spaces and accented letters open escaped or not.
+  - A sheet of 65,530 links opens; with 65,531 Excel refuses the workbook. LibreOffice opens both.
+  - The `Hyperlink` cell style (built-in 8) shows in Excel as its own; LibreOffice keeps its font.
+- **Merged cells:** Excel refuses overlapping ranges and a range in a table. It opens a range of one cell (LibreOffice drops it) and one in a filter's range.
+- **Tables,** without a theme part (Excel draws them in its default theme's colours):
+  - Excel refuses header names that differ from their cells, that repeat (in any case), that are empty or a number cell, or that are longer than 255 characters; a table name used twice in a workbook (in any case); a table of a header alone (a header and an empty row opens); a table under the sheet's own autofilter; and the names that "A table" above rules out. It opens `XFE1`, `A0`, `ABCD1`, `XFD`, `SUM`, `_1`, `\Orders`, `Q1.Orders`, `a?b`, CJK, an emoji, `Print_Area`, and the sheet's own name.
+  - It opens header names with `[`, `#` and `'`, a line break (raw or as `_x000a_`), a table without a style, and one without its `autoFilter` (no buttons). It shows an unknown style's name as no style, and takes a built-in's in any case.
+  - LibreOffice opens every one of them, renaming repeated headers (`Name2`), and keeps the tables and their styles.
+- **Columns:**
+  - A column's `style` applies in Excel only to cells not in the file: a written cell without `s` is General. LibreOffice gives such a cell the column's style.
+  - Hidden columns open with a width of 0 or not. A width of 256 opens (as 255.36), and Excel's `ColumnWidth` takes at most 255.
+  - Wrapped text: Excel sizes the row on open (130.5 points for a long text) without `ht`. Text with a line break and no wrap stays one line high.
+  - `[DBNum3]0` and a backtick (`` 0` ``) open in Excel and LibreOffice.
+- **Widths,** measured in a workbook whose Normal style is Calibri 11 (`measure.ps1`):
+  - Bold Calibri 11 has regular's widths but for 20 of the 131 characters measured, each about 0.7 pixels wider at 96 DPI: `"`, `&`, `,`, `K`, `P`, `V`, `X`, `Z`, `` ` ``, `j`, `k`, `t`, `{`, `}`, `°`, `’`, Greek alpha, Cyrillic zhe, Thai ko kai and `年`. Regular's widths match Phase 4's table.
+  - Excel's AutoFit gives a header with a filter button 12.5 points more (17 pixels at 96 DPI).
+  - In General, AutoFit shows a number in at most 11 characters besides its sign: `0.000123457`, `3.141592654`, `-1234567.891`, `123456.1235`.
+
+#### Internal design
+
+**New files:**
+
+- Public: `ExcelSheetOptions.cs`, `ExcelTableOptions.cs`, `ExcelColumnOptions.cs`, `ExcelLinks.cs`, `ExcelColumnAttribute.cs` and `ExcelSheetAttribute.cs`.
+- `Internal/Writing/`:
+  - `SheetLayout.cs`: a sheet's settings, resolved and checked once when it is added, and its columns' (width, style, hidden), resolved by header name when the header record ends.
+  - `AutoFit.cs`: the held cells' widths (bold, filter buttons, lines, General's 11 characters), and the columns' widths from them.
+  - `NumberFormatWidth.cs`: a number's width in an Excel format code (decision 5).
+  - `SheetLinks.cs`: a sheet's links: each distinct target's relationship, the cells, the policy and the cap.
+  - `MergedRanges.cs`: a sheet's ranges, checked as they are added against an index sorted by row, so that many ranges cost `O(n log n)`.
+  - `TableWriter.cs`: a table's part, and `TableNames`: Excel's rules, and the workbook's names in Excel's comparison (`SheetNames.Key`'s). Phase 1's `Internal/Package/TablePart.cs` reads tables.
+- **Changed:**
+  - `SheetSink`: writes the title row and offsets rows below it; holds through the auto-fit rows; writes a column's style on its cells and links' cells; writes after the rows `autoFilter`, `mergeCells`, `hyperlinks`, `pageMargins`, `ignoredErrors` and `tableParts`, in the schema's order; and, once its entry is closed, the sheet's relationships part and its table's part. With `NewSheet`, each new sheet repeats the title, the header, the title's merge and the table.
+  - `StyleRegistry`: a cell format is a number format, a font (regular, bold, the title's or a link's) and wrap; the `Hyperlink` cell style's `cellStyleXfs` and `cellStyles` entries come with the first link.
+  - `PackageParts`: the fonts, the workbook's `definedNames` for filters, and content types for tables.
+  - `ColumnWidths`: bold widths, and a cap.
+  - `MemberFormats`: reads `[ExcelColumn]` beside `[CsvFormat]` and `[CsvCulture]`, and `[ExcelSheet]` per type, in the same pass and cache.
+  - `FormatCheck`: `[DBNum3]` and a backtick.
+  - `ExcelWorkbookWriter`: the options, table names across sheets, and each open sheet's sink by its writer, for `MergeCells` (a `ConditionalWeakTable`, so no core change).
+  - `ExcelWriterExtensions`: `MergeCells`.
+- **The per-cell path:** a column's style index sits beside its kind, in Phase 4's per-column arrays, and a cell writes `s` when it is set. A link is a cell of `CellKind.Uri`, which `CellKinds` gives `Uri`'s type, as it gives `ExcelFormula`'s. After the held rows, a sheet without column formats or links costs per cell what Phase 4's does, but that test.
+
+#### Testing
+
+- **Unit:** `SheetLayoutTests` (where settings come from, and their checks), `AutoFitTests` (text, bold, buttons, line breaks, General numbers, dates, the cap), `NumberFormatWidthTests` (against Excel's widths for the codes they model), `TableNamesTests` (each name the probes asked about, as Excel answered), `MergedRangesTests` (overlaps, the grid, many ranges), `SheetLinksTests` (each policy's schemes, targets, shared relationships, the cap), and `StyleRegistryTests` (fonts, wrap, the `Hyperlink` style).
+- **Through the public API,** sync and async: each setting alone and with the others; `[ExcelSheet]` and `[ExcelColumn]` against options; `RowLimit.NewSheet` with a title, a table and auto-fit; a failed record among the held rows; `MergeCells` on a CSV writer and on a closed sheet.
+- **Read back:** our reader, ClosedXML and ExcelDataReader read the same records as without presentation; ClosedXML reports the panes, filters, tables, merges, links, widths and styles written.
+- **`OpenXmlValidator`** on every workbook the tests write, as Phase 4's check does.
+- **Excel's answers:** the `written` set gains presentation workbooks (each setting, and all together), with Excel's answers committed as step 5's are: whether it opens, the panes, filter, tables, merged areas, links, widths, styles and each cell's `Text`, none `########` after auto-fit. LibreOffice opens them in CI.
+- **Fuzzing:** random settings and data (titles, header names under a table, URIs, merges, formats): every workbook passes the validator, and opens in Excel when it runs on demand; table names and header renames against `TableNames`' rules.
+- **AOT:** a NativeAOT publish, in CI, of a small app that writes a sheet of a type with `[ExcelSheet]` and `[ExcelColumn]`, with no warnings, and its workbook read back (decision 14).
+
+#### Benchmark
+
+- `ExcelPackageAssetsWrite` and `ExcelOrdersWrite` at the new defaults, and with Phase 4's look (no bold, no freeze, no auto-fit), against Phase 4's step 7 numbers.
+- New methods: `Presentation` (a title, a bold frozen header, a filter, auto-fit over 1,000 rows and the numbers in formats), `Table`, and `Links` (a column of generated `https` URIs).
+
+#### Core changes
+
+None. A `Uri` field already reaches the sink typed (Phase 0), the sink writes the title row before the writer's first record, and `MergeCells` finds its sheet through the workbook writer's table.
+
+#### Decisions
+
+1. **The defaults.** Recommended: a bold header, a frozen header and auto-fit over 100 rows on; a title, a filter and a table off; links for http, https and mailto. A sheet reads well when opened, for the cost of holding 101 records and measuring them. Alternative: everything off, Phase 4's look unless asked.
+2. **Where settings come from.** Recommended: the argument, else `[ExcelSheet]`, else `ExcelWriterOptions.Sheets`, each whole; a column's from `Columns`, else `[ExcelColumn]`, each whole. Alternative: nullable settings, merged one by one.
+3. **Rows above the header.** Recommended: `Title`, which the sink writes and merges, so that `WriteSheet` and `WriteRecords` still write the header. Alternative: a `HeaderRow` setting with rows written by hand above it, which then needs `WriteHeader<T>()` by hand, since `WriteRecords` writes a header only into an empty writer (`NeedsHeader`).
+4. **Auto-fit's widths.** Recommended: as Excel's AutoFit (narrower than the default when the text is), with the filter button, capped at 60 characters. Alternative: never narrower than the default.
+5. **Widths of formatted numbers.** Recommended: `NumberFormatWidth` estimates a number's text in the section of a code for its sign (digits, grouping, decimals, percent, exponent and literals), erring wide; codes it doesn't model (fractions, conditions, `[DBNum]`) take General's width and their literals'. It sizes the first data record without auto-fit and the held rows with it, so that a formatted number doesn't show `########`. Alternative: no width, until Phase 8 renders codes exactly.
+6. **Which URIs are links.** Recommended: `Web` (http, https, mailto), so that data can't plant links to `file:` shares (which can send Windows credentials when clicked) or to other schemes' handlers; `All` for internal reports. Alternative: `All` by default.
+7. **Past 65,530 links in a sheet.** Recommended: text, as the URIs before them, without a link. Alternative: throw.
+8. **A table's default name.** Recommended: the sheet's name made valid (`_` for each character Excel refuses, and `_` first when needed), with a number after it while the workbook has it. Alternative: Excel's `Table1`, `Table2`.
+9. **A table with `AutoFilter`.** Recommended: the table's buttons (`FilterButtons`) are the filter, and no sheet filter is written, which Excel refuses beside a table. Alternative: throw.
+10. **Header cells a table can't have.** Recommended: as Excel names them when it makes a table (an empty one `Column3`, a number its text, a repeat `Name2`), so that the workbook opens, changing the header's text in those cells. Alternative: throw.
+11. **Without `HasHeader`.** Recommended: `BoldHeader` and `FreezeHeader` do nothing, `AutoFilter` and `Table` throw, and `Columns` match `T`'s record writer's names. Alternative: the first row is styled, frozen and filtered as a header anyway.
+12. **A `Columns` name the header doesn't have.** Recommended: throw when the header record ends, so a typo shows at once. Alternative: ignore it.
+13. **`FormatCheck`'s `[DBNum3]` and backtick.** Recommended: accept them, as Excel and LibreOffice open them. Alternative: keep refusing.
+14. **AOT.** Recommended: the NativeAOT publish check in CI that Phase 1 promised for the attribute reading. Alternative: the trim and AOT analyzers alone, as now.
+15. **`[ExcelSheet(Name)]`.** Recommended: no `Name`, since a sheet's name is always given. Alternative: overloads without a name, taking it from the attribute or the type.
+16. **`MergeCells`.** Recommended: an extension on the sheet's `CsvWriter`, taking `A1:C3`. Alternative: a method of `ExcelWorkbookWriter` for the open sheet.
+
+#### Risks
+
+- **Holding 101 records** delays a sheet's first write and costs memory for wide rows (a hundred columns of long text is megabytes). `AutoFit` sets it, and 0 turns it off.
+- **Widths are estimates:** for fonts other than Calibri 11 (Excel's own default, Aptos Narrow 11, is within 0.1 for dates, Phase 4), other DPIs, and codes `NumberFormatWidth` doesn't model.
+- **Excel's table rules** were found by probing, not in a specification: one missed makes a workbook Excel refuses. The fuzzer, with Excel's answers, looks for them.
+- **The default path changes** (decision 1); the benchmarks measure what it costs.
+
+#### Order of work
+
+1. **Settings (S):** the public types, `SheetLayout`, `MemberFormats` reading `[ExcelColumn]` and `[ExcelSheet]`, and `FormatCheck`'s two forms.
+2. **Styles and the header (M):** `StyleRegistry`'s fonts and wrap; the bold header, frozen panes, the title row and its merge; columns' formats, wrap, widths, hidden and default styles.
+3. **Auto-fit (M):** held rows, `AutoFit`, bold widths and `NumberFormatWidth`.
+4. **Filters, merges and tables (M):** `autoFilter` and its name, `MergeCells`, `TableWriter` and `TableNames`, and `NewSheet`'s repeats.
+5. **Links (S):** `SheetLinks`, the relationships, the `Hyperlink` style, the policy and the cap.
+6. **Corpus and oracles (M):** the presentation workbooks in `written`, Excel's answers, LibreOffice and ClosedXML.
+7. **Security, fuzzing and AOT (S).**
+8. **Benchmarks (S).**
+9. **"As built" (S).**
+
+#### Gate
+
+- Every workbook the tests write passes `OpenXmlValidator`, and the `written` set's open in Excel and LibreOffice without a repair prompt, with Excel's answers matching what was written.
+- No typed cell shows `########` after auto-fit, in Excel's `Text`.
+- Records read back as without presentation, through our reader, ClosedXML and ExcelDataReader.
+- With Phase 4's look, the write benchmarks are within 1% of Phase 4's; the defaults' and each setting's costs are recorded.
+- The NativeAOT publish has no warnings.
+
+#### Changes elsewhere
+
+Applied at approval, 2026-11-08:
+
+- **Status** (top of the plan): Phase 5's design approved.
+- **API sketch:** `ExcelSheetOptions` as designed (with `Title`, `FreezeColumns`, `MaxAutoFitWidth`, a table's options in `ExcelTableOptions`, and a column's in `ExcelColumnOptions`); `[ExcelSheet]` without `Name`; `ExcelWriterOptions.Sheets` and `Links`; `MergeCells`.
+- **Defaults:** a bold, frozen header; auto-fit over 100 rows, at most 60 characters; links for http, https and mailto.
+- **Phase 8:** `NumberFormatWidth` models part of what displayed text renders.
+- **Phase 9:** auto-fit's held rows.
 
 ### Phase 6: conversion (S)
 
@@ -5285,6 +5535,7 @@ Filled in step by step; the code is the reference.
   - `Text = Formatted` reading.
   - Formatted output in `.xlsx` → CSV conversion.
 - **Test oracle:** where Excel is installed, COM automation exports `Range.Text` for a corpus of values and formats. This feature is where scope creeps most, and real Excel output keeps it honest.
+- **From Phase 5:** auto-fit's `NumberFormatWidth` estimates a formatted number's width, erring wide, from the digits, grouping, decimals, percent, exponent and literals of the section for its sign. That is part of what the renderer does exactly, and the renderer replaces it.
 
 ### Phase 9: performance (L)
 
@@ -5301,6 +5552,7 @@ Filled in step by step; the code is the reference.
   - Then a pigz-style experiment: deflate chunks in parallel and concatenate them after a sync flush.
   - Keep each piece only if it wins on the benchmark machine. The compress flattener showed that a faster stage doesn't always move the end-to-end numbers.
 - **Memory:** profile workbooks with huge shared-string tables.
+- **Auto-fit's held rows** (Phase 5): a sheet holds its header and first 100 records until their widths are measured, since `<cols>` comes before the rows. Measure what measuring costs, and what holding costs in memory and in time to the first write for wide sheets, and whether a smaller sample fits as well.
 - **Finding merged ranges** (Phase 3): a cheaper skip over `sheetData` for the read that finds `<mergeCells>`, such as a raw search for its end tag. Phase 3's step 8 measured that read at a third of a plain sheet's time: 1.18 s for 714 MB of sheet XML through the XML scanner's skip, at about 600 MB/s, where inflating alone runs at 5.3–5.6 GB/s.
 - **Measuring Phase 3's default path again** (Phase 3's "Left open", added 2026-11-06):
   - Phase 3's gate wanted every A/B method of the default path within 1%. Shared Rows had one clean pair, at +1.2%, inline Rows none, and five of the eight methods weren't measured after step 8's `FlushGaps` split. Phase 3 was called complete with that item as it stood.
@@ -5429,6 +5681,8 @@ Chosen during planning, and still open to change:
 - Strings are written inline.
 - Workbooks are written in Calibri 11, deflated at `CompressionLevel.Fastest` (Phase 4).
 - Dates are written in ISO-like formats by what each value holds: a date, seconds or milliseconds (Phase 4).
+- A sheet's header is bold and frozen, and its columns are auto-fitted over the header and first 100 records, at most 60 characters wide (Phase 5).
+- `Uri` fields with http, https or mailto are links; others are text (Phase 5).
 - Formulas are written without cached values (Phase 4).
 - Long numbers, dates before 1900 and negative durations are written as text (Phase 4).
 - `History` is allowed as a sheet name (Phase 4).
