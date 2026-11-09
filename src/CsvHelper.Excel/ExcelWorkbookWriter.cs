@@ -14,8 +14,8 @@ namespace CsvHelper.Excel;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Sheets are written in turn, in tab order: <see cref="WriteSheet{T}(string, IEnumerable{T})"/> writes one whole, and
-/// <see cref="AddSheet(string)"/> returns a writer for one, which disposing completes. A workbook is written one sheet at a
+/// Sheets are written in turn, in tab order: <see cref="WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> writes one whole, and
+/// <see cref="AddSheet(string, ExcelSheetOptions)"/> returns a writer for one, which disposing completes. A workbook is written one sheet at a
 /// time, so adding a sheet while another's writer is open throws. Disposing the workbook writer completes an open sheet,
 /// then writes the workbook's other parts and closes the package; a workbook with no sheet gets one empty sheet,
 /// <c>Sheet1</c>, since Excel opens no workbook without one.
@@ -72,6 +72,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// </summary>
 	internal int MaxRows { get; set; } = CellReference.MaxRow;
 
+	/// <summary>The sink of the sheet being written, or <see langword="null"/>, for tests of what a sheet was added with.</summary>
+	internal SheetSink? OpenSheet => openSheet;
+
 	/// <summary>
 	/// Creates (or overwrites) a workbook file, which other processes can read while it is written. Disposing the writer
 	/// closes the file.
@@ -127,65 +130,94 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <summary>
 	/// Writes a sheet whole, as <see cref="CsvWriter.WriteRecords{T}(IEnumerable{T})"/> writes records: the header of
 	/// <typeparamref name="T"/> when <see cref="CsvWriterOptions.HasHeader"/> is set, then each record; then the sheet is
-	/// complete. <typeparamref name="T"/>'s formats apply, as for <see cref="AddSheet{T}(string)"/>.
+	/// complete. <typeparamref name="T"/>'s formats and Excel attributes apply, as for
+	/// <see cref="AddSheet{T}(string, ExcelSheetOptions)"/>.
 	/// </summary>
 	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type, or a dynamic record's type.</typeparam>
-	/// <param name="name">The sheet's name (see <see cref="AddSheet(string)"/>).</param>
+	/// <param name="name">The sheet's name (see <see cref="AddSheet(string, ExcelSheetOptions)"/>).</param>
 	/// <param name="records">The records, enumerated once.</param>
+	/// <param name="options">
+	/// How the sheet looks, or <see langword="null"/> for <typeparamref name="T"/>'s <see cref="ExcelSheetAttribute"/>, else
+	/// <see cref="ExcelWriterOptions.Sheets"/>.
+	/// </param>
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="records"/> is <see langword="null"/>.</exception>
-	/// <exception cref="ArgumentException">The name is not one Excel opens, or the workbook has a sheet Excel takes to be the same.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid.
+	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Another sheet's writer is open, a record can't be written (it is discarded, and the sheet completed with the
-	/// records before it), or <typeparamref name="T"/> has no record writer.
+	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, a record can't be written
+	/// (it is discarded, and the sheet completed with the records before it), or <typeparamref name="T"/> has no record
+	/// writer.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
-	public void WriteSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IEnumerable<T> records)
+	public void WriteSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IEnumerable<T> records, ExcelSheetOptions? options = null)
 	{
 		ArgumentNullException.ThrowIfNull(records);
-		using var writer = AddSheet<T>(name);
+		using var writer = AddSheet<T>(name, options);
 		writer.WriteRecords(records);
 	}
 
 	/// <summary>
-	/// Writes a sheet whole, as <see cref="WriteSheet{T}(string, IEnumerable{T})"/> does, writing to the stream
-	/// asynchronously.
+	/// Writes a sheet whole, as <see cref="WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> does, writing to the
+	/// stream asynchronously.
 	/// </summary>
 	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type, or a dynamic record's type.</typeparam>
-	/// <param name="name">The sheet's name (see <see cref="AddSheet(string)"/>).</param>
+	/// <param name="name">The sheet's name (see <see cref="AddSheet(string, ExcelSheetOptions)"/>).</param>
 	/// <param name="records">The records, enumerated once.</param>
+	/// <param name="options">
+	/// How the sheet looks, or <see langword="null"/> for <typeparamref name="T"/>'s <see cref="ExcelSheetAttribute"/>, else
+	/// <see cref="ExcelWriterOptions.Sheets"/>.
+	/// </param>
 	/// <param name="cancellationToken">Cancels writing.</param>
 	/// <returns>A task that completes when the sheet is complete.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="records"/> is <see langword="null"/>.</exception>
-	/// <exception cref="ArgumentException">The name is not one Excel opens, or the workbook has a sheet Excel takes to be the same.</exception>
-	/// <exception cref="InvalidOperationException">Another sheet's writer is open, or a record can't be written.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid.
+	/// </exception>
+	/// <exception cref="InvalidOperationException">
+	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, or a record can't be
+	/// written.
+	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
 	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
-	public ValueTask WriteSheetAsync<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IEnumerable<T> records, CancellationToken cancellationToken = default)
+	public ValueTask WriteSheetAsync<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IEnumerable<T> records, ExcelSheetOptions? options = null, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(records);
-		var writer = AddSheet<T>(name);
+		var writer = AddSheet<T>(name, options);
 
 		return WriteAndCompleteAsync(writer, w => w.WriteRecordsAsync(records, cancellationToken));
 	}
 
 	/// <summary>
-	/// Writes a sheet whole from an asynchronous sequence, as <see cref="WriteSheet{T}(string, IEnumerable{T})"/> does,
-	/// writing to the stream asynchronously.
+	/// Writes a sheet whole from an asynchronous sequence, as
+	/// <see cref="WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> does, writing to the stream asynchronously.
 	/// </summary>
 	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type, or a dynamic record's type.</typeparam>
-	/// <param name="name">The sheet's name (see <see cref="AddSheet(string)"/>).</param>
+	/// <param name="name">The sheet's name (see <see cref="AddSheet(string, ExcelSheetOptions)"/>).</param>
 	/// <param name="records">The records, enumerated once.</param>
+	/// <param name="options">
+	/// How the sheet looks, or <see langword="null"/> for <typeparamref name="T"/>'s <see cref="ExcelSheetAttribute"/>, else
+	/// <see cref="ExcelWriterOptions.Sheets"/>.
+	/// </param>
 	/// <param name="cancellationToken">Cancels the enumeration and writing.</param>
 	/// <returns>A task that completes when the sheet is complete.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="records"/> is <see langword="null"/>.</exception>
-	/// <exception cref="ArgumentException">The name is not one Excel opens, or the workbook has a sheet Excel takes to be the same.</exception>
-	/// <exception cref="InvalidOperationException">Another sheet's writer is open, or a record can't be written.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid.
+	/// </exception>
+	/// <exception cref="InvalidOperationException">
+	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, or a record can't be
+	/// written.
+	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
 	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
-	public ValueTask WriteSheetAsync<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IAsyncEnumerable<T> records, CancellationToken cancellationToken = default)
+	public ValueTask WriteSheetAsync<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IAsyncEnumerable<T> records, ExcelSheetOptions? options = null, CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(records);
-		var writer = AddSheet<T>(name);
+		var writer = AddSheet<T>(name, options);
 
 		return WriteAndCompleteAsync(writer, w => w.WriteRecordsAsync(records, cancellationToken));
 	}
@@ -213,7 +245,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// rounded to the millisecond, in a format by what each value holds (<c>yyyy-mm-dd</c>, <c>yyyy-mm-dd hh:mm:ss</c>,
 	/// <c>hh:mm:ss</c>, <c>[h]:mm:ss</c>, with <c>.000</c> for milliseconds). A number in the writer's culture is read
 	/// with it; other text, such as a format's (<c>1,234.50</c>, <c>0042</c>), is a text cell, as are <c>NaN</c> and the
-	/// infinities, and every other type. (<see cref="AddSheet{T}(string)"/> reads the dates and numbers of its members'
+	/// infinities, and every other type. (<see cref="AddSheet{T}(string, ExcelSheetOptions)"/> reads the dates and numbers of its members'
 	/// formats and cultures back.) Integers and decimals of more than 15 significant digits,
 	/// <see cref="DateTimeOffset"/>, and dates before 1900 and negative durations follow <see cref="Options"/>' choices.
 	/// The first data record's dates and times widen their columns, so that Excel shows them.
@@ -230,23 +262,35 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// Excel's last, follows <see cref="ExcelWriterOptions.RowLimit"/>: it throws, or the sheet goes on in a new one after
 	/// it, which <see cref="SheetNames"/> then has. A field past column <c>XFD</c>, Excel's last, throws.
 	/// </para>
+	/// <para>
+	/// How the sheet looks is <paramref name="options"/>' (<see cref="ExcelSheetOptions"/>), or
+	/// <see cref="ExcelWriterOptions.Sheets"/>' without them: a title, a bold and frozen header, a filter or a table,
+	/// columns as wide as their text, and each column's width, format, wrap and visibility. They are checked when the sheet
+	/// is added.
+	/// </para>
 	/// </remarks>
 	/// <param name="name">The sheet's name.</param>
+	/// <param name="options">How the sheet looks, or <see langword="null"/> for <see cref="ExcelWriterOptions.Sheets"/>.</param>
 	/// <returns>The sheet's writer, with <see cref="Options"/>' <see cref="ExcelWriterOptions.Csv"/>.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="ArgumentException">The name is not one Excel opens, or the workbook has a sheet Excel takes to be the same.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid.
+	/// </exception>
 	/// <exception cref="InvalidOperationException">Another sheet's writer is open: a workbook is written one sheet at a time.</exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
-	public CsvWriter AddSheet(string name)
+	public CsvWriter AddSheet(string name, ExcelSheetOptions? options = null)
 	{
 		var key = CheckNewSheet(name);
+		var settings = SheetSettings.Resolve(options, null, null, Options);
 
-		return Open(NewSheet(name, key, null, null));
+		return Open(NewSheet(name, key, settings, null, null));
 	}
 
 	/// <summary>
-	/// Adds a sheet of <typeparamref name="T"/>'s records, as <see cref="AddSheet(string)"/> does, with the formats and
-	/// cultures of <typeparamref name="T"/>'s members, so that a value written with them is still a typed cell.
+	/// Adds a sheet of <typeparamref name="T"/>'s records, as <see cref="AddSheet(string, ExcelSheetOptions)"/> does, with the
+	/// formats and cultures of <typeparamref name="T"/>'s members, so that a value written with them is still a typed cell,
+	/// and with <typeparamref name="T"/>'s <see cref="ExcelSheetAttribute"/> and its members' <see cref="ExcelColumnAttribute"/>s.
 	/// </summary>
 	/// <remarks>
 	/// <para>
@@ -264,26 +308,48 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// year) make text cells, as do custom <see cref="TimeSpan"/> formats, and a <see cref="DateTimeOffset"/>'s format but
 	/// with <see cref="ExcelDateTimeOffsets.ClockTime"/>. A number with a culture of its own is read with that culture.
 	/// </para>
+	/// <para>
+	/// How the sheet looks is <paramref name="options"/>' (<see cref="ExcelSheetOptions"/>); without them,
+	/// <typeparamref name="T"/>'s <see cref="ExcelSheetAttribute"/>'s, from it or the nearest base type with one; else
+	/// <see cref="ExcelWriterOptions.Sheets"/>'. Each is taken whole. A member's <see cref="ExcelColumnAttribute"/> applies to
+	/// its column, as its format does, unless the sheet's <see cref="ExcelSheetOptions.Columns"/> has the column's name.
+	/// </para>
 	/// </remarks>
-	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type; for any other type, the sheet is <see cref="AddSheet(string)"/>'s.</typeparam>
-	/// <param name="name">The sheet's name (see <see cref="AddSheet(string)"/>).</param>
+	/// <typeparam name="T">
+	/// A <see cref="CsvRecordAttribute"/> type; for any other type, the sheet is <see cref="AddSheet(string, ExcelSheetOptions)"/>'s,
+	/// with the type's <see cref="ExcelSheetAttribute"/>.
+	/// </typeparam>
+	/// <param name="name">The sheet's name (see <see cref="AddSheet(string, ExcelSheetOptions)"/>).</param>
+	/// <param name="options">
+	/// How the sheet looks, or <see langword="null"/> for <typeparamref name="T"/>'s <see cref="ExcelSheetAttribute"/>, else
+	/// <see cref="ExcelWriterOptions.Sheets"/>.
+	/// </param>
 	/// <returns>The sheet's writer, with <see cref="Options"/>' <see cref="ExcelWriterOptions.Csv"/>.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
-	/// <exception cref="ArgumentException">The name is not one Excel opens, or the workbook has a sheet Excel takes to be the same.</exception>
-	/// <exception cref="InvalidOperationException">Another sheet's writer is open: a workbook is written one sheet at a time.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid.
+	/// </exception>
+	/// <exception cref="InvalidOperationException">
+	/// Another sheet's writer is open (a workbook is written one sheet at a time), or <typeparamref name="T"/>'s
+	/// <see cref="ExcelSheetAttribute"/> or <see cref="ExcelColumnAttribute"/>s are not valid.
+	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
-	public CsvWriter AddSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name)
+	public CsvWriter AddSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions? options = null)
 	{
 		var key = CheckNewSheet(name);
 		var members = MemberFormats.For<T>();
-		var headerNames = members is not null && !Options.Csv.HasHeader ? HeaderCapture.Of<T>() : null;
+		var settings = SheetSettings.Resolve(options, typeof(T), members, Options);
+		// The sink reads cells with the members' formats and cultures; their Excel options come through the settings.
+		var formats = members is { HasFormats: true } ? members : null;
+		var headerNames = formats is not null && !Options.Csv.HasHeader ? HeaderCapture.Of<T>() : null;
 
-		return Open(NewSheet(name, key, members, headerNames));
+		return Open(NewSheet(name, key, settings, formats, headerNames));
 	}
 
 	/// <summary>
-	/// Adds a sheet as <see cref="AddSheet{T}(string)"/> does, with members' formats given rather than read from a type, for
-	/// tests of formats no type has: random ones. The header record's names say which column each is for.
+	/// Adds a sheet as <see cref="AddSheet{T}(string, ExcelSheetOptions)"/> does, with members' formats given rather than read
+	/// from a type, for tests of formats no type has: random ones. The header record's names say which column each is for.
 	/// </summary>
 	/// <param name="name">The sheet's name.</param>
 	/// <param name="members">The members' formats.</param>
@@ -291,8 +357,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	internal CsvWriter AddSheet(string name, MemberFormats members)
 	{
 		var key = CheckNewSheet(name);
+		var settings = SheetSettings.Resolve(null, null, members, Options);
 
-		return Open(NewSheet(name, key, members, null));
+		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null));
 	}
 
 	/// <summary>
@@ -416,12 +483,13 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <summary>Adds a sheet whose name is checked, with its sink.</summary>
 	/// <param name="name">The name.</param>
 	/// <param name="key">The name's key.</param>
-	/// <param name="members">The formats of the record type's members, or <see langword="null"/>.</param>
+	/// <param name="settings">How the sheet looks.</param>
+	/// <param name="members">The formats of the record type's members, or <see langword="null"/> when none has one.</param>
 	/// <param name="headerNames">Without a header, the names the record writer writes in its header, or <see langword="null"/>.</param>
 	/// <returns>The sheet's sink.</returns>
-	private SheetSink NewSheet(string name, string key, MemberFormats? members, IReadOnlyList<string>? headerNames)
+	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames)
 	{
-		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, members, headerNames);
+		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, settings, members, headerNames);
 		namesByKey.Add(key, name);
 		sheetNames.Add(name);
 
@@ -467,7 +535,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 			if (sheetNames.Count == 0)
 			{
-				await NewSheet("Sheet1", CheckName("Sheet1", "name"), null, null).CompleteAsync(async).ConfigureAwait(false);
+				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null).CompleteAsync(async).ConfigureAwait(false);
 			}
 
 			await PackageParts.WriteAsync(package, sheetNames, strings, styles, async, CancellationToken.None).ConfigureAwait(false);

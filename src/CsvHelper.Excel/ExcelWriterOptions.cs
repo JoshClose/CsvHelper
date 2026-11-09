@@ -5,14 +5,16 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// How a workbook is written: the options of its sheets' <see cref="CsvWriter"/>s, where text cells keep their strings,
-/// how the package is compressed, what a record past a sheet's last row does, and what becomes of the values Excel can't
-/// hold as they are (long numbers, offsets, dates before 1900). Immutable: use <c>with</c> to change a copy.
+/// how the package is compressed, what a record past a sheet's last row does, what becomes of the values Excel can't
+/// hold as they are (long numbers, offsets, dates before 1900), how sheets look by default, and which URIs are links.
+/// Immutable: use <c>with</c> to change a copy.
 /// </summary>
 public sealed record ExcelWriterOptions
 {
 	/// <summary>
 	/// The default options: <see cref="CsvWriterOptions.Default"/>, inline strings, the fastest compression, an exception
-	/// past a sheet's last row, and text cells for long numbers, offsets and dates before 1900.
+	/// past a sheet's last row, text cells for long numbers, offsets and dates before 1900, sheets of
+	/// <see cref="ExcelSheetOptions.Default"/>, and links for <c>http</c>, <c>https</c> and <c>mailto</c> URIs.
 	/// </summary>
 	public static ExcelWriterOptions Default { get; } = new();
 
@@ -67,13 +69,29 @@ public sealed record ExcelWriterOptions
 	/// </summary>
 	public ExcelOutOfRangeDates OutOfRangeDates { get; init; } = ExcelOutOfRangeDates.Text;
 
+	/// <summary>
+	/// The options of a sheet added without options of its own, whose record type has no <see cref="ExcelSheetAttribute"/>:
+	/// <see cref="ExcelSheetOptions.Default"/> by default, a bold, frozen header and columns auto-fitted over the first 100
+	/// records. They are checked when the writer is created.
+	/// </summary>
+	public ExcelSheetOptions Sheets { get; init; } = ExcelSheetOptions.Default;
+
+	/// <summary>
+	/// Which <see cref="Uri"/> fields are links: those with <c>http</c>, <c>https</c> and <c>mailto</c>
+	/// (<see cref="ExcelLinks.Web"/>, the default), every one, or none. Every <see cref="Uri"/> field is a text cell of its
+	/// <see cref="Uri.OriginalString"/>.
+	/// </summary>
+	public ExcelLinks Links { get; init; } = ExcelLinks.Web;
+
 	/// <summary>Checks the options before a writer uses them.</summary>
 	/// <param name="paramName">The name of the parameter the options came from.</param>
-	/// <exception cref="ArgumentException"><see cref="Csv"/> is <see langword="null"/>, or its options are not valid.</exception>
+	/// <exception cref="ArgumentException">
+	/// <see cref="Csv"/> or <see cref="Sheets"/> is <see langword="null"/>, or its options are not valid.
+	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
 	/// <see cref="Strings"/>, <see cref="CompressionLevel"/>, <see cref="RowLimit"/>, <see cref="LongNumbers"/>,
-	/// <see cref="DateTimeOffsets"/> or <see cref="OutOfRangeDates"/> is not a value of its enum, or <see cref="Csv"/> has a
-	/// value out of range.
+	/// <see cref="DateTimeOffsets"/>, <see cref="OutOfRangeDates"/> or <see cref="Links"/> is not a value of its enum, or
+	/// <see cref="Csv"/> has a value out of range.
 	/// </exception>
 	internal void Validate(string paramName)
 	{
@@ -83,6 +101,21 @@ public sealed record ExcelWriterOptions
 		}
 
 		Csv.Validate();
+		if (Sheets is null)
+		{
+			throw new ArgumentException("ExcelWriterOptions.Sheets can't be null: use ExcelSheetOptions.Default.", paramName);
+		}
+
+		if ((Sheets.Problem(Sheets.Columns) ?? Sheets.HeaderProblem(Csv.HasHeader)) is { } problem)
+		{
+			throw new ArgumentException("ExcelWriterOptions.Sheets: " + problem, paramName);
+		}
+
+		if (Links is not (ExcelLinks.Web or ExcelLinks.All or ExcelLinks.None))
+		{
+			throw new ArgumentOutOfRangeException(paramName, Links, "ExcelWriterOptions.Links is not an ExcelLinks value.");
+		}
+
 		if (Strings is not (ExcelStrings.Inline or ExcelStrings.Shared))
 		{
 			throw new ArgumentOutOfRangeException(paramName, Strings, "ExcelWriterOptions.Strings is not an ExcelStrings value.");

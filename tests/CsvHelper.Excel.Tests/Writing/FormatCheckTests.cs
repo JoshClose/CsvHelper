@@ -139,8 +139,13 @@ public class FormatCheckTests
 		// Literal letters, and A/P in a number.
 		"aa",
 		"0 A/P",
-		// Brackets and characters not checked.
+	};
+
+	/// <summary>Codes Excel opened (and LibreOffice, on 2026-11-08) that the check refused before Phase 5.</summary>
+	public static TheoryData<string> OpenedInPhase5 => new()
+	{
 		"[DBNum3]0",
+		"0`",
 		"0 `",
 	};
 
@@ -155,6 +160,7 @@ public class FormatCheckTests
 
 	[Theory]
 	[MemberData(nameof(Opened))]
+	[MemberData(nameof(OpenedInPhase5))]
 	public void PassesCodesExcelOpens(string code) => Assert.Null(FormatCheck.Problem(code));
 
 	[Theory]

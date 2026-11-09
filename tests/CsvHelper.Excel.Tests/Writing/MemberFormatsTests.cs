@@ -322,6 +322,20 @@ public partial class MappedFormatsMap
 	public DateTime When { get; set; }
 }
 
+/// <summary>A format and Excel options on one member, and Excel options alone on another.</summary>
+[CsvRecord]
+public partial class FormatsAndExcelColumns
+{
+	/// <summary>Both.</summary>
+	[CsvFormat("dd.MM.yyyy")]
+	[ExcelColumn(Width = 14)]
+	public DateTime When { get; set; }
+
+	/// <summary>Excel options alone.</summary>
+	[ExcelColumn(Wrap = true)]
+	public string Note { get; set; } = "";
+}
+
 /// <summary>
 /// The members' formats as <see cref="MemberFormats"/> reads them by reflection, checked against the record writers
 /// themselves: each column given a format is one that its record writer writes in that format.
@@ -439,6 +453,26 @@ public class MemberFormatsTests
 		Assert.Equal(CultureInfo.GetCultureInfo("de-DE"), columns[3]!.Provider);
 		// A member's column past the header's, by its index, still gets one.
 		Assert.Equal(5, MemberFormats.For<IndexedFormats>()!.Columns(["Day"], CultureInfo.InvariantCulture).Length);
+	}
+
+	[Fact]
+	public void ReadsExcelColumnsBesideFormats()
+	{
+		var formats = MemberFormats.For<FormatsAndExcelColumns>()!;
+
+		var columns = formats.Columns(["When", "Note"], CultureInfo.InvariantCulture);
+		var excel = formats.ExcelColumns(["When", "Note"]);
+
+		// One entry for both of a member's; a member with Excel options alone gives its column no format.
+		Assert.Equal(["When", "Note"], formats.Entries.Select(e => e.Name));
+		Assert.True(formats.HasFormats);
+		Assert.Equal("dd.MM.yyyy", columns[0]!.Format);
+		Assert.Null(columns[1]);
+		Assert.Equal<IEnumerable<ExcelColumnOptions?>>([new ExcelColumnOptions { Width = 14 }, new ExcelColumnOptions { Wrap = true }], excel);
+		Assert.Null(formats.Sheet);
+		Assert.Null(formats.Problem);
+		// A type without Excel attributes has none, and the others' columns have no Excel options.
+		Assert.All(MemberFormats.For<NamedFormats>()!.ExcelColumns(["Plain", "Renamed"]), Assert.Null);
 	}
 
 	[Fact]

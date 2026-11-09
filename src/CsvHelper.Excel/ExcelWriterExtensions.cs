@@ -2,7 +2,7 @@ using System;
 
 namespace CsvHelper.Excel;
 
-/// <summary>Writes what only a workbook has into the <see cref="CsvWriter"/> of a sheet (<see cref="ExcelWorkbookWriter.AddSheet(string)"/>).</summary>
+/// <summary>Writes what only a workbook has into the <see cref="CsvWriter"/> of a sheet (<see cref="ExcelWorkbookWriter.AddSheet(string, ExcelSheetOptions)"/>).</summary>
 public static class ExcelWriterExtensions
 {
 	/// <summary>

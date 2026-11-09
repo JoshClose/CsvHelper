@@ -361,7 +361,7 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 /// </summary>
 /// <remarks>
 /// <para>
-/// CsvHelper.Excel writes them with <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T})"/>, through the
+/// CsvHelper.Excel writes them with <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/>, through the
 /// record writer generated for <see cref="OrderRecord"/>, with <see cref="ExcelDateTimeOffsets.Utc"/> so that
 /// <c>ShippedAt</c> is a date, as the others write it: with inline strings at <see cref="CompressionLevel.Fastest"/>, with
 /// shared strings, and with inline strings at <see cref="CompressionLevel.Optimal"/>.
@@ -437,7 +437,7 @@ public class ExcelOrdersWrite : ExcelWriteBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: the orders through <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T})"/>, with
+	/// CsvHelper.Excel: the orders through <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/>, with
 	/// inline strings at <see cref="CompressionLevel.Fastest"/>.
 	/// </summary>
 	/// <returns>The bytes written.</returns>

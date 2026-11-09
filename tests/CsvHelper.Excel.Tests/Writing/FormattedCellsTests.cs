@@ -435,7 +435,7 @@ public class FormattedCellsTests
 	}
 #endif
 
-	/// <summary>Writes records into a sheet named <c>Data</c> with <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T})"/> or its async form.</summary>
+	/// <summary>Writes records into a sheet named <c>Data</c> with <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> or its async form.</summary>
 	/// <typeparam name="T">The record type.</typeparam>
 	/// <param name="records">The records.</param>
 	/// <param name="async">Whether to write asynchronously.</param>

@@ -4,13 +4,14 @@ using System.Globalization;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// Whether Excel opens a number format code: those that <see cref="FormatTranslator"/> gives, and (in Phase 5) those a
-/// caller gives. Excel opens no workbook with a code it can't read, so a code is checked before it is written.
+/// Whether Excel opens a number format code: those that <see cref="FormatTranslator"/> gives, and those a caller gives
+/// (<see cref="ExcelColumnOptions.Format"/>). Excel opens no workbook with a code it can't read, so a code is checked
+/// before it is written.
 /// </summary>
 /// <remarks>
 /// <para>
-/// The rules are a grammar of the codes Excel 365 opened and refused through COM (checked on 2026-11-06 and 2026-11-07),
-/// and are stricter than Excel where a form wasn't checked:
+/// The rules are a grammar of the codes Excel 365 opened and refused through COM (checked on 2026-11-06, 2026-11-07 and
+/// 2026-11-08), and are stricter than Excel where a form wasn't checked:
 /// </para>
 /// <list type="bullet">
 /// <item><description>At most 255 characters, which Excel keeps, and at most 4 sections, split by <c>;</c>.</description></item>
@@ -20,7 +21,7 @@ namespace CsvHelper.Excel;
 /// <item><description>
 /// In brackets: the eight colors, <c>Color1</c> to <c>Color56</c>, a condition without spaces (<c>[&gt;=100]</c>), a
 /// currency or locale (<c>[$€-407]</c>, with at most 8 hex digits), elapsed time (<c>[h]</c>, <c>[mm]</c>), and
-/// <c>DBNum1</c> and <c>DBNum2</c>.
+/// <c>DBNum1</c> to <c>DBNum3</c>.
 /// </description></item>
 /// <item><description>
 /// Letters only as tokens: <c>General</c>, <c>E+</c> and <c>E-</c> after a digit placeholder and before another (Excel
@@ -38,7 +39,7 @@ namespace CsvHelper.Excel;
 /// placeholders.
 /// </description></item>
 /// <item><description>
-/// Other characters outside quotes: a space, <c>$ - + / ( ) ! ^ &amp; ' ~ { } &lt; &gt; = |</c>, the digits 1 to 9,
+/// Other characters outside quotes: a space, <c>$ - + / ( ) ! ^ &amp; ' ` ~ { } &lt; &gt; = |</c>, the digits 1 to 9,
 /// <c>. , %</c>, and characters past ASCII that aren't letters or control characters (<c>€</c>, <c>£</c>, <c>‰</c>,
 /// <c>°</c>, a no-break space).
 /// </description></item>
@@ -319,7 +320,7 @@ internal static class FormatCheck
 			return null;
 		}
 
-		if (IsColor(content) || IsCondition(content) || IsLocale(content) || content is "DBNum1" or "DBNum2")
+		if (IsColor(content) || IsCondition(content) || IsLocale(content) || content is "DBNum1" or "DBNum2" or "DBNum3")
 		{
 			return null;
 		}
@@ -464,7 +465,7 @@ internal static class FormatCheck
 	{
 		if (c < 0x80)
 		{
-			return c is ' ' or '$' or '-' or '+' or '/' or '(' or ')' or '!' or '^' or '&' or '\'' or '~' or '{' or '}' or '<' or '>' or '=' or '|' or ',' ||
+			return c is ' ' or '$' or '-' or '+' or '/' or '(' or ')' or '!' or '^' or '&' or '\'' or '`' or '~' or '{' or '}' or '<' or '>' or '=' or '|' or ',' ||
 				c is >= '1' and <= '9';
 		}
 

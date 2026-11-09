@@ -37,7 +37,7 @@ namespace CsvHelper.Excel;
 /// show <c>########</c> and get none.
 /// </para>
 /// <para>
-/// A sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string)"/> knows its columns' members' formats and cultures
+/// A sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/> knows its columns' members' formats and cultures
 /// (<see cref="MemberFormats"/>), by the header record's names, or, without a header, by the names that the record
 /// writer writes in its header. A number of a column whose member has a <see cref="CsvCultureAttribute"/> is read with
 /// that culture; a date or time with a <see cref="CsvFormatAttribute"/> is read back with its format
@@ -144,13 +144,14 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="styles">The workbook's cell formats.</param>
 	/// <param name="options">The workbook's options.</param>
 	/// <param name="maxRows">The rows a sheet holds before <see cref="ExcelWriterOptions.RowLimit"/> applies: at least 2.</param>
+	/// <param name="settings">How the sheet looks.</param>
 	/// <param name="members">The formats of the record type's members, or <see langword="null"/> for none.</param>
 	/// <param name="headerNames">
 	/// Without <see cref="CsvWriterOptions.HasHeader"/>, the names the record writer writes in its header, which say which
 	/// member each column is; or <see langword="null"/>. With a header, the header record's names say.
 	/// </param>
 	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows,
-		MemberFormats? members, IReadOnlyList<string>? headerNames)
+		SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames)
 	{
 		this.workbook = workbook;
 		this.package = package;
@@ -159,6 +160,7 @@ internal sealed class SheetSink : CsvCellSink
 		this.styles = styles;
 		this.options = options;
 		this.maxRows = maxRows;
+		Settings = settings;
 		culture = NumberCulture.For(options.Csv.FormatProvider);
 		firstDataRow = options.Csv.HasHeader ? 2 : 1;
 		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
@@ -180,6 +182,9 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>The name of the sheet being written (a new one's, after <see cref="ExcelRowLimit.NewSheet"/>), and how messages name its cells.</summary>
 	public SheetLocation Location { get; private set; }
+
+	/// <summary>How the sheet looks: its options, resolved and checked when it was added.</summary>
+	public SheetSettings Settings { get; }
 
 	/// <summary>Whether the cells being written are the first data record's, whose typed cells set their columns' widths.</summary>
 	private bool MeasuringWidths => !widthsKnown && row == firstDataRow;

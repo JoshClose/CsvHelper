@@ -10,28 +10,32 @@ using System.Reflection;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// A member's <see cref="CsvFormatAttribute"/> and <see cref="CsvCultureAttribute"/>, and the column they are for.
+/// A member's <see cref="CsvFormatAttribute"/>, <see cref="CsvCultureAttribute"/> and <see cref="ExcelColumnAttribute"/>,
+/// and the column they are for.
 /// </summary>
 /// <param name="Name">The column's header name, after the prefixes of the records it is nested in.</param>
 /// <param name="NameIndex">Which of the columns with that name it is (<see cref="CsvColumnAttribute.NameIndex"/>).</param>
 /// <param name="Index">The column's index (<see cref="CsvColumnAttribute.Index"/>), or -1 to find it by its name.</param>
 /// <param name="Format">The format the record writer writes (the attribute's first), or <see langword="null"/>.</param>
 /// <param name="Culture">The culture, or <see langword="null"/> for the writer's.</param>
-internal sealed record MemberFormat(string Name, int NameIndex, int Index, string? Format, CultureInfo? Culture);
+/// <param name="Excel">The column's options from its <see cref="ExcelColumnAttribute"/>, or <see langword="null"/>.</param>
+internal sealed record MemberFormat(string Name, int NameIndex, int Index, string? Format, CultureInfo? Culture, ExcelColumnOptions? Excel = null);
 
 /// <summary>
-/// The formats and cultures of a record type's members, read by reflection once per type, for the sheets that
-/// <see cref="ExcelWorkbookWriter.AddSheet{T}(string)"/> adds: a date written with its member's format, or a number with
-/// its member's culture, arrives as that text (Phase 0), which the sink reads back with them.
+/// The formats and cultures of a record type's members, their <see cref="ExcelColumnAttribute"/>s and the type's
+/// <see cref="ExcelSheetAttribute"/>, read by reflection once per type, for the sheets that
+/// <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/> adds: a date written with its member's format,
+/// or a number with its member's culture, arrives as that text (Phase 0), which the sink reads back with them.
 /// </summary>
 /// <remarks>
 /// <para>
 /// The members are found as CsvHelper's source generator finds them, for <see cref="CsvRecordAttribute"/> types only:
 /// the parameters of the constructor it uses (with the attributes of the properties they set), then the properties and
 /// fields it reads, the base types' included unless <see cref="CsvIgnoreBaseAttribute"/> says otherwise, and the members
-/// of nested records, after their prefixes. A member read by a <see cref="CsvConverterAttribute"/> has no format, and
-/// neither has any member of a type that a <see cref="CsvRecordMapAttribute"/> or a hand-written mapper maps, whose
-/// attributes are elsewhere.
+/// of nested records, after their prefixes. A member read by a <see cref="CsvConverterAttribute"/> has no format (but its
+/// column has its <see cref="ExcelColumnAttribute"/>), and neither has any member of a type that a
+/// <see cref="CsvRecordMapAttribute"/> or a hand-written mapper maps, whose attributes are elsewhere. The
+/// <see cref="ExcelSheetAttribute"/> is read from any type, and its base types.
 /// </para>
 /// <para>
 /// A member's column is found by its header name, its <see cref="CsvColumnAttribute"/> name or its own, ordinally, and
@@ -57,30 +61,64 @@ internal sealed class MemberFormats
 	private static readonly ConcurrentDictionary<Type, MemberFormats> Cache = new();
 
 	/// <summary>Creates the formats of a type, or of no type, for tests of formats no type has.</summary>
-	/// <param name="members">The members with a format or a culture.</param>
-	internal MemberFormats(MemberFormat[] members) => Entries = members;
+	/// <param name="members">The members with a format, a culture or an <see cref="ExcelColumnAttribute"/>.</param>
+	/// <param name="sheet">The options of the type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/>.</param>
+	/// <param name="problem">What is wrong with the type's Excel attributes, or <see langword="null"/>.</param>
+	internal MemberFormats(MemberFormat[] members, ExcelSheetOptions? sheet = null, string? problem = null)
+	{
+		Entries = members;
+		Sheet = sheet;
+		Problem = problem;
+		foreach (var member in members)
+		{
+			HasFormats |= member.Format is not null || member.Culture is not null;
+		}
+	}
 
-	/// <summary>The members with a format or a culture, in the order they were found.</summary>
+	/// <summary>The members with a format, a culture or an <see cref="ExcelColumnAttribute"/>, in the order they were found.</summary>
 	public IReadOnlyList<MemberFormat> Entries { get; }
+
+	/// <summary>Whether a member has a format or a culture, which the sink reads its cells with.</summary>
+	public bool HasFormats { get; }
+
+	/// <summary>The options of the type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/> without one.</summary>
+	public ExcelSheetOptions? Sheet { get; }
+
+	/// <summary>
+	/// What is wrong with the type's <see cref="ExcelSheetAttribute"/> or its members' <see cref="ExcelColumnAttribute"/>s,
+	/// the first found, or <see langword="null"/>: adding a sheet of the type throws it.
+	/// </summary>
+	public string? Problem { get; }
 
 	/// <summary>The formats of a record type's members.</summary>
 	/// <typeparam name="T">The record type.</typeparam>
-	/// <returns>The formats, or <see langword="null"/> when no member has one.</returns>
+	/// <returns>The formats, or <see langword="null"/> when no member has one and the type has no <see cref="ExcelSheetAttribute"/>.</returns>
 	public static MemberFormats? For<[DynamicallyAccessedMembers(Members)] T>() => For(typeof(T));
 
 	/// <summary>The formats of a record type's members.</summary>
 	/// <param name="type">The record type.</param>
-	/// <returns>The formats, or <see langword="null"/> when no member has one.</returns>
+	/// <returns>The formats, or <see langword="null"/> when no member has one and the type has no <see cref="ExcelSheetAttribute"/>.</returns>
 	public static MemberFormats? For([DynamicallyAccessedMembers(Members)] Type type)
 	{
 		if (!Cache.TryGetValue(type, out var formats))
 		{
-			var members = new List<MemberFormat>();
-			Add(type, "", members, 0);
-			formats = Cache.GetOrAdd(type, new MemberFormats([.. members]));
+			var found = new Found();
+			Add(type, "", found, 0);
+			ExcelSheetOptions? sheet = null;
+			if (type.GetCustomAttributes(typeof(ExcelSheetAttribute), true).FirstOrDefault() is ExcelSheetAttribute attribute)
+			{
+				sheet = attribute.ToOptions();
+				if ((attribute.Problem() ?? sheet.Problem(null)) is { } problem)
+				{
+					// The type's own problem comes before its members'.
+					found.Problem = $"The [ExcelSheet] of {type.Name}: {problem}";
+				}
+			}
+
+			formats = Cache.GetOrAdd(type, new MemberFormats([.. found.Members], sheet, found.Problem));
 		}
 
-		return formats.Entries.Count == 0 ? null : formats;
+		return formats.Entries.Count == 0 && formats.Sheet is null && formats.Problem is null ? null : formats;
 	}
 
 	/// <summary>Each column's format and culture, for the names of a sheet's header.</summary>
@@ -89,15 +127,14 @@ internal sealed class MemberFormats
 	/// <returns>Each column's format, or <see langword="null"/> for a column whose member has none.</returns>
 	public ColumnFormat?[] Columns(IReadOnlyList<string> names, IFormatProvider writerProvider)
 	{
-		var count = names.Count;
+		var columns = new ColumnFormat?[Count(names)];
 		foreach (var member in Entries)
 		{
-			count = Math.Max(count, member.Index + 1);
-		}
+			if (member.Format is null && member.Culture is null)
+			{
+				continue;
+			}
 
-		var columns = new ColumnFormat?[count];
-		foreach (var member in Entries)
-		{
 			var at = member.Index >= 0 ? member.Index : Find(names, member.Name, member.NameIndex);
 			if (at >= 0)
 			{
@@ -106,6 +143,43 @@ internal sealed class MemberFormats
 		}
 
 		return columns;
+	}
+
+	/// <summary>Each column's options from its member's <see cref="ExcelColumnAttribute"/>, for the names of a sheet's header.</summary>
+	/// <param name="names">The header's names, in column order.</param>
+	/// <returns>Each column's options, or <see langword="null"/> for a column whose member has none.</returns>
+	public ExcelColumnOptions?[] ExcelColumns(IReadOnlyList<string> names)
+	{
+		var columns = new ExcelColumnOptions?[Count(names)];
+		foreach (var member in Entries)
+		{
+			if (member.Excel is null)
+			{
+				continue;
+			}
+
+			var at = member.Index >= 0 ? member.Index : Find(names, member.Name, member.NameIndex);
+			if (at >= 0)
+			{
+				columns[at] ??= member.Excel;
+			}
+		}
+
+		return columns;
+	}
+
+	/// <summary>The columns of a header's names and of the members' indexes, which can be past them.</summary>
+	/// <param name="names">The header's names.</param>
+	/// <returns>The number of columns.</returns>
+	private int Count(IReadOnlyList<string> names)
+	{
+		var count = names.Count;
+		foreach (var member in Entries)
+		{
+			count = Math.Max(count, member.Index + 1);
+		}
+
+		return count;
 	}
 
 	/// <summary>The column of the <paramref name="nameIndex"/>th of the names that are <paramref name="name"/>, ordinally.</summary>
@@ -133,7 +207,7 @@ internal sealed class MemberFormats
 	/// <param name="depth">How deep it is nested.</param>
 	[UnconditionalSuppressMessage("Trimming", "IL2075", Justification =
 		"The members of a record type's base types that the generated record writer reads are kept by it, and only those are looked at.")]
-	private static void Add([DynamicallyAccessedMembers(Members)] Type type, string prefix, List<MemberFormat> members, int depth)
+	private static void Add([DynamicallyAccessedMembers(Members)] Type type, string prefix, Found members, int depth)
 	{
 		if (depth > MaxDepth || !type.IsDefined(typeof(CsvRecordAttribute), false))
 		{
@@ -148,7 +222,7 @@ internal sealed class MemberFormats
 			{
 				var name = parameter.Name ?? "";
 				parameters.Add(name);
-				AddMember(parameter.ParameterType, name, parameter, SetBy(type, name), prefix, members, depth);
+				AddMember(type, parameter.ParameterType, name, parameter, SetBy(type, name), prefix, members, depth);
 			}
 		}
 
@@ -163,7 +237,7 @@ internal sealed class MemberFormats
 					property.SetMethod is { } setter && IsAccessible(Accessibility(setter, null), type, t) &&
 					(IsVisible(Accessibility(setter, null)) || property.IsDefined(typeof(CsvColumnAttribute), false)))
 				{
-					AddMember(property.PropertyType, property.Name, property, null, prefix, members, depth);
+					AddMember(type, property.PropertyType, property.Name, property, null, prefix, members, depth);
 				}
 			}
 
@@ -171,7 +245,7 @@ internal sealed class MemberFormats
 			{
 				if (Reads(field, Accessibility(field), type, t, seen, parameters) && !field.IsInitOnly && !field.IsLiteral)
 				{
-					AddMember(field.FieldType, field.Name, field, null, prefix, members, depth);
+					AddMember(type, field.FieldType, field.Name, field, null, prefix, members, depth);
 				}
 			}
 
@@ -199,7 +273,8 @@ internal sealed class MemberFormats
 		(IsVisible(accessibility) || member.IsDefined(typeof(CsvColumnAttribute), false)) &&
 		!member.IsDefined(typeof(CsvIgnoreAttribute), false) && !parameters.Contains(member.Name);
 
-	/// <summary>Adds a member's format and culture, or the formats of the record it nests.</summary>
+	/// <summary>Adds a member's format, culture and Excel options, or the formats of the record it nests.</summary>
+	/// <param name="recordType">The record type the member is of, for messages.</param>
 	/// <param name="memberType">The member's type.</param>
 	/// <param name="name">Its name: the property's or field's, or the constructor parameter's.</param>
 	/// <param name="attributes">Where its attributes are.</param>
@@ -211,7 +286,7 @@ internal sealed class MemberFormats
 		"A nested record's members are kept by the generated record writer that reads them, which is what the sink reads the attributes of.")]
 	[UnconditionalSuppressMessage("Trimming", "IL2072", Justification =
 		"A nested record's members are kept by the generated record writer that reads them, which is what the sink reads the attributes of.")]
-	private static void AddMember(Type memberType, string name, ICustomAttributeProvider attributes, ICustomAttributeProvider? fallback, string prefix, List<MemberFormat> members, int depth)
+	private static void AddMember(Type recordType, Type memberType, string name, ICustomAttributeProvider attributes, ICustomAttributeProvider? fallback, string prefix, Found members, int depth)
 	{
 		T? Find<T>()
 			where T : Attribute =>
@@ -220,9 +295,21 @@ internal sealed class MemberFormats
 		var column = Find<CsvColumnAttribute>();
 		var format = Find<CsvFormatAttribute>();
 		var culture = Find<CsvCultureAttribute>();
-		// A converter writes the member itself, and a constant isn't a nested record.
+		var excel = Find<ExcelColumnAttribute>()?.ToOptions();
+		if (excel?.Problem() is { } problem)
+		{
+			members.Problem ??= $"The [ExcelColumn] of {recordType.Name}.{name} {problem}";
+		}
+
+		// A converter writes the member itself, in one column with the member's Excel options; and a constant isn't a
+		// nested record.
 		if (Find<CsvConverterAttribute>() is not null)
 		{
+			if (excel is not null)
+			{
+				members.Members.Add(new MemberFormat(prefix + (column?.Name ?? name), column?.NameIndex ?? 0, column?.Index ?? -1, null, null, excel));
+			}
+
 			return;
 		}
 
@@ -230,13 +317,18 @@ internal sealed class MemberFormats
 		if (Find<CsvConstantAttribute>() is null &&
 			(underlying.IsDefined(typeof(CsvRecordAttribute), false) || underlying.IsDefined(typeof(CsvConverterAttribute), false)))
 		{
+			if (excel is not null)
+			{
+				members.Problem ??= $"The [ExcelColumn] of {recordType.Name}.{name} is on a member that nests a record, whose members have their own columns: put it on those members.";
+			}
+
 			// A hand-written mapper's record writer is its own; a generated one's members have their own formats.
 			Add(underlying, prefix + (column?.Prefix ?? ""), members, depth + 1);
 
 			return;
 		}
 
-		if (format is null && culture is null)
+		if (format is null && culture is null && excel is null)
 		{
 			return;
 		}
@@ -262,14 +354,14 @@ internal sealed class MemberFormats
 			{
 				for (var i = column.Index; i <= column.EndIndex; i++)
 				{
-					members.Add(new MemberFormat(prefix + (column.Name ?? name), 0, i, format?.Format, info));
+					members.Members.Add(new MemberFormat(prefix + (column.Name ?? name), 0, i, format?.Format, info, excel));
 				}
 			}
 
 			return;
 		}
 
-		members.Add(new MemberFormat(prefix + (column?.Name ?? name), column?.NameIndex ?? 0, column?.Index ?? -1, format?.Format, info));
+		members.Members.Add(new MemberFormat(prefix + (column?.Name ?? name), column?.NameIndex ?? 0, column?.Index ?? -1, format?.Format, info, excel));
 	}
 
 	/// <summary>
@@ -370,6 +462,16 @@ internal sealed class MemberFormats
 	private static Access Accessibility(FieldInfo field) =>
 		field.IsPublic ? Access.Public : field.IsFamilyOrAssembly ? Access.ProtectedInternal : field.IsAssembly ? Access.Internal :
 		field.IsFamily ? Access.Protected : field.IsFamilyAndAssembly ? Access.PrivateProtected : Access.Private;
+
+	/// <summary>What reading a type's members finds: their formats, and the first problem of their Excel attributes.</summary>
+	private sealed class Found
+	{
+		/// <summary>The members with a format, a culture or Excel options.</summary>
+		public List<MemberFormat> Members { get; } = [];
+
+		/// <summary>What is wrong with the first <see cref="ExcelColumnAttribute"/> that is wrong, or <see langword="null"/>.</summary>
+		public string? Problem { get; set; }
+	}
 
 	/// <summary>A member's accessibility, from the narrowest.</summary>
 	private enum Access
