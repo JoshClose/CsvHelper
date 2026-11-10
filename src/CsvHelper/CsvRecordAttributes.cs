@@ -417,6 +417,11 @@ public sealed class CsvIgnoreBaseAttribute : Attribute
 /// mapper of the record type as they find those of <see cref="CsvRecordAttribute"/> types. A mapped type cannot be a
 /// nested record of another record type.
 /// </para>
+/// <para>
+/// A type can have one map class. With several, it has no mapper, record writer or options: <see cref="CsvReader.GetRecords{T}"/>,
+/// <see cref="CsvReaderOptions.For{T}"/> and the other methods that would use them throw, naming the maps, rather than
+/// use one of them.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class CsvRecordMapAttribute : Attribute

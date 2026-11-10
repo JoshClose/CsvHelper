@@ -328,7 +328,10 @@ public abstract class CsvRecordMapper<T>
 	private string Prefixed(string name) => ColumnPrefix.Length == 0 ? name : ColumnPrefix + name;
 }
 
-/// <summary>Finds the generated <see cref="CsvRecordMapper{T}"/> of a <see cref="CsvRecordAttribute"/> type.</summary>
+/// <summary>
+/// Finds the generated <see cref="CsvRecordMapper{T}"/> of a <see cref="CsvRecordAttribute"/> type, or of a type mapped
+/// by a <see cref="CsvRecordMapAttribute"/> class.
+/// </summary>
 public static class CsvRecordMapper
 {
 	// The key of the missing columns in the Data of the KeyNotFoundException that ThrowIfColumnsMissing throws.
@@ -336,7 +339,8 @@ public static class CsvRecordMapper
 
 	/// <summary>
 	/// Registers the mapper factory of <typeparamref name="T"/>, such as a hand-written <see cref="CsvRecordMapper{T}"/>.
-	/// A later registration for the same type replaces an earlier one.
+	/// A later registration for the same type replaces an earlier one, and a registration replaces the mapper of a
+	/// <see cref="CsvRecordMapAttribute"/> class as the type's default (<see cref="RegisterMap{T}"/>).
 	/// </summary>
 	/// <remarks>
 	/// The mapper cannot be used as a nested record with a <see cref="CsvColumnAttribute.Prefix"/>; register a factory
@@ -349,10 +353,10 @@ public static class CsvRecordMapper
 	public static void Register<T>(Func<CsvReader, CsvRecordMapper<T>> factory)
 	{
 		ArgumentNullException.ThrowIfNull(factory);
-		Factory<T>.Current = new Registration<T>((reader, prefix) => prefix.Length == 0
+		SetDefault(new Registration<T>((reader, prefix) => prefix.Length == 0
 			? factory(reader)
 			: throw new InvalidOperationException(
-				$"The mapper of {typeof(T)} does not support column prefixes, so it cannot read a nested record with the prefix '{prefix}'."), null, null, null);
+				$"The mapper of {typeof(T)} does not support column prefixes, so it cannot read a nested record with the prefix '{prefix}'."), null, null, null));
 	}
 
 	/// <summary>
@@ -373,7 +377,7 @@ public static class CsvRecordMapper
 	public static void Register<T>(Func<CsvReader, string, CsvRecordMapper<T>> factory, IReadOnlyList<int>? fieldWidths = null)
 	{
 		ArgumentNullException.ThrowIfNull(factory);
-		Factory<T>.Current = new Registration<T>(factory, Widths(fieldWidths), null, null);
+		SetDefault(new Registration<T>(factory, Widths(fieldWidths), null, null));
 	}
 
 	/// <summary>
@@ -411,7 +415,86 @@ public static class CsvRecordMapper
 		ArgumentNullException.ThrowIfNull(factory);
 		ArgumentNullException.ThrowIfNull(members);
 		ArgumentNullException.ThrowIfNull(projection);
-		Factory<T>.Current = new Registration<T>(factory, Widths(fieldWidths), members, projection);
+		SetDefault(new Registration<T>(factory, Widths(fieldWidths), members, projection));
+	}
+
+	/// <summary>
+	/// Registers what the source generator writes for a <see cref="CsvRecordMapAttribute"/> class: the mapper factory of
+	/// <typeparamref name="T"/>, its fixed-width layout and projections, its record writer factory and its options. Code
+	/// generated for map classes calls this when their assembly is loaded. A later registration of the same map class
+	/// replaces an earlier one.
+	/// </summary>
+	/// <remarks>
+	/// While one map class is registered for <typeparamref name="T"/>, its mapper, record writer and options are the type's
+	/// defaults, which <see cref="Create{T}(CsvReader)"/>, <see cref="CsvRecordWriter.Create{T}()"/>,
+	/// <see cref="CsvReaderOptions.For{T}()"/> and the record methods of <see cref="CsvReader"/> and <see cref="CsvWriter"/>
+	/// use. With several, the type has no default from a map, and those methods throw, naming the maps. A default registered
+	/// with <see cref="Register{T}(Func{CsvReader, string, CsvRecordMapper{T}}, IReadOnlyList{int})"/>,
+	/// <see cref="CsvRecordWriter.Register{T}"/> or <see cref="RegisterOptions{T}"/> is kept, whatever the maps.
+	/// </remarks>
+	/// <typeparam name="T">The type of the records.</typeparam>
+	/// <param name="map">The map class.</param>
+	/// <param name="factory">
+	/// Creates a mapper for the header of the given reader, which puts the given text in front of the header names it looks
+	/// up (<see cref="CsvRecordMapper{T}.ColumnPrefix"/>).
+	/// </param>
+	/// <param name="writerFactory">
+	/// Creates a record writer that puts the given text in front of its column names (<see cref="CsvRecordWriter{T}.ColumnPrefix"/>).
+	/// </param>
+	/// <param name="fieldWidths">
+	/// The widths of the columns, which <see cref="GetFieldWidths{T}"/> returns, or <see langword="null"/> when the map has
+	/// no fixed-width layout.
+	/// </param>
+	/// <param name="members">
+	/// Describes the members that the mappers read, as for <see cref="Register{T}(Func{CsvReader, string, CsvRecordMapper{T}}, IReadOnlyList{int}, Func{IReadOnlyList{CsvRecordMember}}, Func{CsvReader, string, bool[], CsvRecordMapper{T}})"/>;
+	/// <see langword="null"/> without projections.
+	/// </param>
+	/// <param name="projection">
+	/// Creates the mappers that read only some members; <see langword="null"/> without projections.
+	/// </param>
+	/// <param name="readerOptions">Creates the reader options of the map's <see cref="CsvOptionsAttribute"/>; <see langword="null"/> for none.</param>
+	/// <param name="writerOptions">Creates the writer options of the map's <see cref="CsvOptionsAttribute"/>; <see langword="null"/> for none.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="map"/>, <paramref name="factory"/> or <paramref name="writerFactory"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">
+	/// Only one of <paramref name="members"/> and <paramref name="projection"/>, or of <paramref name="readerOptions"/> and
+	/// <paramref name="writerOptions"/>, is given.
+	/// </exception>
+	public static void RegisterMap<T>(Type map, Func<CsvReader, string, CsvRecordMapper<T>> factory, Func<string, CsvRecordWriter<T>> writerFactory,
+		IReadOnlyList<int>? fieldWidths = null, Func<IReadOnlyList<CsvRecordMember>>? members = null,
+		Func<CsvReader, string, bool[], CsvRecordMapper<T>>? projection = null, Func<CsvReaderOptions>? readerOptions = null,
+		Func<CsvWriterOptions>? writerOptions = null)
+	{
+		ArgumentNullException.ThrowIfNull(map);
+		ArgumentNullException.ThrowIfNull(factory);
+		ArgumentNullException.ThrowIfNull(writerFactory);
+		if ((members is null) != (projection is null))
+		{
+			throw new ArgumentException("The members and the projection factory are given together, or not at all.", members is null ? nameof(members) : nameof(projection));
+		}
+
+		if ((readerOptions is null) != (writerOptions is null))
+		{
+			throw new ArgumentException("The reader and writer options are given together, or not at all.", readerOptions is null ? nameof(readerOptions) : nameof(writerOptions));
+		}
+
+		var registration = new Registration<T>(factory, Widths(fieldWidths), members, projection);
+		var options = readerOptions is null ? OptionsRegistration.None : new OptionsRegistration(readerOptions, writerOptions!);
+		lock (RecordMaps<T>.Gate)
+		{
+			// The defaults are the map's while it is the only one, unless they were registered explicitly.
+			var only = RecordMaps<T>.Add(map);
+			if (!Factory<T>.Explicit)
+			{
+				Factory<T>.Current = only ? registration : null;
+			}
+
+			if (!Options<T>.Explicit)
+			{
+				Options<T>.Current = only ? options : null;
+			}
+
+			CsvRecordWriter.SetMapDefault(only ? writerFactory : null);
+		}
 	}
 
 	/// <summary>
@@ -423,8 +506,8 @@ public static class CsvRecordMapper
 	/// <returns>A mapper that reads records of <paramref name="reader"/>, and of any reader with the same columns.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="reader"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">
-	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type, or its nested mappers lead back to their
-	/// own type without end (records nest at most 64 deep).
+	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type, or several <see cref="CsvRecordMapAttribute"/>
+	/// classes map it, or its nested mappers lead back to their own type without end (records nest at most 64 deep).
 	/// </exception>
 	/// <exception cref="KeyNotFoundException">
 	/// The header lacks a column that <typeparamref name="T"/> requires, or the input has no header and a required
@@ -443,9 +526,9 @@ public static class CsvRecordMapper
 	/// <returns>A mapper that reads records of <paramref name="reader"/>, and of any reader with the same columns.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="reader"/> or <paramref name="columnPrefix"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">
-	/// <typeparamref name="T"/> has no mapper, or its mapper does not support column prefixes and
-	/// <paramref name="columnPrefix"/> is not empty, or its nested mappers lead back to their own type without end
-	/// (records nest at most 64 deep).
+	/// <typeparamref name="T"/> has no mapper, or several <see cref="CsvRecordMapAttribute"/> classes map it, or its mapper
+	/// does not support column prefixes and <paramref name="columnPrefix"/> is not empty, or its nested mappers lead back to
+	/// their own type without end (records nest at most 64 deep).
 	/// </exception>
 	/// <exception cref="KeyNotFoundException">
 	/// The header lacks a column that <typeparamref name="T"/> requires, or the input has no header and a required
@@ -480,7 +563,7 @@ public static class CsvRecordMapper
 	/// <returns>
 	/// <see langword="true"/> when the members are known, so that <see cref="CreateProjection{T}(CsvReader, IEnumerable{string})"/>
 	/// can select them; <see langword="false"/> when <typeparamref name="T"/> has no mapper, a hand-written mapper, no
-	/// projections, or is a dynamic record type.
+	/// projections, several <see cref="CsvRecordMapAttribute"/> classes, or is a dynamic record type.
 	/// </returns>
 	public static bool TryGetMembers<T>(out IReadOnlyList<CsvRecordMember> members)
 	{
@@ -567,10 +650,13 @@ public static class CsvRecordMapper
 	/// </summary>
 	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type whose members have widths.</typeparam>
 	/// <returns>The widths of the columns, in characters.</returns>
-	/// <exception cref="InvalidOperationException"><typeparamref name="T"/> has no mapper, or its members have no widths.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// <typeparamref name="T"/> has no mapper, or several <see cref="CsvRecordMapAttribute"/> classes map it, or its members
+	/// have no widths.
+	/// </exception>
 	public static IReadOnlyList<int> GetFieldWidths<T>()
 	{
-		var registration = Factory<T>.Current ?? Load<T>();
+		var registration = Factory<T>.Current ?? Load<T>(layout: true);
 
 		return registration.FieldWidths ?? throw new InvalidOperationException(
 			$"{typeof(T)} has no fixed-width layout. Give its members a width and an index: [CsvColumn(Index = n, Width = w)].");
@@ -580,7 +666,7 @@ public static class CsvRecordMapper
 	/// Registers the options of the <see cref="CsvOptionsAttribute"/> of <typeparamref name="T"/>, which
 	/// <see cref="CsvReaderOptions.For{T}"/> and <see cref="CsvWriterOptions.For{T}"/> return. Code generated for the
 	/// attribute calls this when the type's assembly is loaded. A later registration for the same type replaces an earlier
-	/// one.
+	/// one, and a registration replaces the options of a <see cref="CsvRecordMapAttribute"/> class as the type's default.
 	/// </summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	/// <param name="readerOptions">Creates the reader options, on the first call of <see cref="CsvReaderOptions.For{T}"/>.</param>
@@ -590,7 +676,11 @@ public static class CsvRecordMapper
 	{
 		ArgumentNullException.ThrowIfNull(readerOptions);
 		ArgumentNullException.ThrowIfNull(writerOptions);
-		Options<T>.Current = new OptionsRegistration(readerOptions, writerOptions);
+		lock (RecordMaps<T>.Gate)
+		{
+			Options<T>.Current = new OptionsRegistration(readerOptions, writerOptions);
+			Options<T>.Explicit = true;
+		}
 	}
 
 	/// <summary>The reader options registered for <typeparamref name="T"/>, or the defaults.</summary>
@@ -604,15 +694,51 @@ public static class CsvRecordMapper
 	{
 		// As for mappers: the generated registration runs once code of the type's assembly runs.
 		RuntimeHelpers.RunModuleConstructor(typeof(T).Module.ModuleHandle);
+		lock (RecordMaps<T>.Gate)
+		{
+			if (Options<T>.Current is { } current)
+			{
+				return current;
+			}
 
-		// A type without [CsvOptions] registers nothing: it gets the defaults, without loading again.
-		return Options<T>.Current ??= OptionsRegistration.None;
+			if (RecordMaps<T>.Several)
+			{
+				throw RecordMaps<T>.Ambiguous("options", "CsvRecordMapper.RegisterOptions");
+			}
+
+			// A type without [CsvOptions] registers nothing: it gets the defaults, without loading again.
+			return Options<T>.Current = OptionsRegistration.None;
+		}
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	private static Registration<T> Load<T>() =>
-		Find<T>() ?? throw new InvalidOperationException(
+	private static Registration<T> Load<T>(bool layout = false) => Find<T>() ?? throw NoMapper<T>(layout);
+
+	/// <summary>The exception for a type without a default mapper: it has none, or several map classes.</summary>
+	/// <param name="layout">Whether its fixed-width layout was asked for, which the message names.</param>
+	private static InvalidOperationException NoMapper<T>(bool layout)
+	{
+		if (RecordMaps<T>.Several)
+		{
+			return RecordMaps<T>.Ambiguous(layout ? "fixed-width layout" : "mapper", "CsvRecordMapper.Register");
+		}
+
+		return new InvalidOperationException(
 			$"{typeof(T)} has no CSV mapper. Mark it [CsvRecord] and partial, and reference the CsvHelper source generator.");
+	}
+
+	/// <summary>
+	/// Registers <paramref name="registration"/> as the default of <typeparamref name="T"/>, which the maps of the type
+	/// do not replace.
+	/// </summary>
+	private static void SetDefault<T>(Registration<T> registration)
+	{
+		lock (RecordMaps<T>.Gate)
+		{
+			Factory<T>.Current = registration;
+			Factory<T>.Explicit = true;
+		}
+	}
 
 	/// <summary>The registration of <typeparamref name="T"/>, loading it first when needed; <see langword="null"/> when it has none.</summary>
 	private static Registration<T>? Find<T>()
@@ -680,20 +806,32 @@ public static class CsvRecordMapper
 		public override T Read(CsvReader reader) => Unsafe.As<T>(reader.ReadDynamicRecord(schema));
 	}
 
-	/// <summary>Holds the registration of <typeparamref name="T"/>: one static field per type, without a dictionary lookup.</summary>
+	/// <summary>Holds the default registration of <typeparamref name="T"/>: one static field per type, without a dictionary lookup.</summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	private static class Factory<T>
 	{
-		/// <summary>The registration made last, or <see langword="null"/> before the first.</summary>
+		/// <summary>
+		/// The registration made last, or that of the type's only map; <see langword="null"/> before the first, and while
+		/// several maps and no explicit registration leave the type without a default.
+		/// </summary>
 		public static Registration<T>? Current;
+
+		/// <summary>Whether <see cref="Current"/> was registered with <c>Register</c>, so that the type's maps leave it alone.</summary>
+		public static bool Explicit;
 	}
 
-	/// <summary>Holds the options registered for <typeparamref name="T"/>.</summary>
+	/// <summary>Holds the default options of <typeparamref name="T"/>.</summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	private static class Options<T>
 	{
-		/// <summary>The registration made last, or <see langword="null"/> before the type's assembly has been loaded.</summary>
+		/// <summary>
+		/// The registration made last, or that of the type's only map; <see langword="null"/> before the type's assembly
+		/// has been loaded, and while several maps leave the type without default options.
+		/// </summary>
 		public static OptionsRegistration? Current;
+
+		/// <summary>Whether <see cref="Current"/> was registered with <see cref="RegisterOptions{T}"/>, so that the type's maps leave it alone.</summary>
+		public static bool Explicit;
 	}
 
 	/// <summary>The factories of a type's options, and the options they created, which are created once.</summary>

@@ -84,6 +84,7 @@ public sealed record CsvWriterOptions
 	/// <exception cref="System.Globalization.CultureNotFoundException">
 	/// The attribute names a culture that does not exist (or the app runs in globalization invariant mode).
 	/// </exception>
+	/// <exception cref="System.InvalidOperationException">Several <see cref="CsvRecordMapAttribute"/> classes map <typeparamref name="T"/>.</exception>
 	public static CsvWriterOptions For<T>() => CsvRecordMapper.WriterOptions<T>();
 
 	/// <summary>

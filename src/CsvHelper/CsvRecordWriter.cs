@@ -103,13 +103,18 @@ public abstract class CsvRecordWriter<T>
 	}
 }
 
-/// <summary>Finds the generated <see cref="CsvRecordWriter{T}"/> of a <see cref="CsvRecordAttribute"/> type.</summary>
+/// <summary>
+/// Finds the generated <see cref="CsvRecordWriter{T}"/> of a <see cref="CsvRecordAttribute"/> type, or of a type mapped
+/// by a <see cref="CsvRecordMapAttribute"/> class.
+/// </summary>
 public static class CsvRecordWriter
 {
 	/// <summary>
 	/// Registers the record writer factory of <typeparamref name="T"/>, such as a hand-written
 	/// <see cref="CsvRecordWriter{T}"/>. Code generated for <see cref="CsvRecordAttribute"/> types calls this when their
-	/// assembly is loaded. A later registration for the same type replaces an earlier one.
+	/// assembly is loaded. A later registration for the same type replaces an earlier one, and a registration replaces the
+	/// record writer of a <see cref="CsvRecordMapAttribute"/> class as the type's default
+	/// (<see cref="CsvRecordMapper.RegisterMap{T}"/>).
 	/// </summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	/// <param name="factory">
@@ -119,7 +124,11 @@ public static class CsvRecordWriter
 	public static void Register<T>(Func<string, CsvRecordWriter<T>> factory)
 	{
 		ArgumentNullException.ThrowIfNull(factory);
-		Factory<T>.Current = factory;
+		lock (RecordMaps<T>.Gate)
+		{
+			Factory<T>.Current = factory;
+			Factory<T>.Explicit = true;
+		}
 	}
 
 	/// <summary>Creates the record writer of <typeparamref name="T"/>.</summary>
@@ -127,8 +136,8 @@ public static class CsvRecordWriter
 	/// <returns>A record writer, which can be used with any <see cref="CsvWriter"/>.</returns>
 	/// <exception cref="InvalidOperationException">
 	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type and has no registered record writer, or
-	/// its records cannot be written (the message says why), or its nested record writers lead back to their own type
-	/// without end (records nest at most 64 deep).
+	/// several <see cref="CsvRecordMapAttribute"/> classes map it, or its records cannot be written (the message says
+	/// why), or its nested record writers lead back to their own type without end (records nest at most 64 deep).
 	/// </exception>
 	public static CsvRecordWriter<T> Create<T>() => Create<T>("");
 
@@ -139,8 +148,8 @@ public static class CsvRecordWriter
 	/// <exception cref="ArgumentNullException"><paramref name="columnPrefix"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">
 	/// <typeparamref name="T"/> is not a <see cref="CsvRecordAttribute"/> type and has no registered record writer, or
-	/// its records cannot be written (the message says why), or its nested record writers lead back to their own type
-	/// without end (records nest at most 64 deep).
+	/// several <see cref="CsvRecordMapAttribute"/> classes map it, or its records cannot be written (the message says
+	/// why), or its nested record writers lead back to their own type without end (records nest at most 64 deep).
 	/// </exception>
 	public static CsvRecordWriter<T> Create<T>(string columnPrefix)
 	{
@@ -161,10 +170,11 @@ public static class CsvRecordWriter
 	/// <summary>
 	/// Whether <typeparamref name="T"/> has a record writer, generated or registered, so that <see cref="Create{T}()"/>
 	/// does not throw for want of one. (A generated writer may still throw when the type's records cannot be written,
-	/// with the reason.)
+	/// with the reason, and <see cref="Create{T}()"/> throws when several <see cref="CsvRecordMapAttribute"/> classes map
+	/// the type, naming them.)
 	/// </summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
-	/// <returns><see langword="true"/> when a factory is registered for the type.</returns>
+	/// <returns><see langword="true"/> when a factory or a map class is registered for the type.</returns>
 	public static bool IsRegistered<T>()
 	{
 		if (Factory<T>.Current is not null)
@@ -174,7 +184,21 @@ public static class CsvRecordWriter
 
 		RuntimeHelpers.RunModuleConstructor(typeof(T).Module.ModuleHandle);
 
-		return Factory<T>.Current is not null;
+		// With several maps, Create throws and names them, rather than the caller writing the records another way.
+		return Factory<T>.Current is not null || RecordMaps<T>.Any;
+	}
+
+	/// <summary>
+	/// Sets the record writer of the type's only map as its default, or none when it has several maps, unless a default was
+	/// registered with <see cref="Register{T}"/>. The caller holds <see cref="RecordMaps{T}.Gate"/>.
+	/// </summary>
+	/// <param name="factory">The factory of the only map, or <see langword="null"/>.</param>
+	internal static void SetMapDefault<T>(Func<string, CsvRecordWriter<T>>? factory)
+	{
+		if (!Factory<T>.Explicit)
+		{
+			Factory<T>.Current = factory;
+		}
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -182,17 +206,29 @@ public static class CsvRecordWriter
 	{
 		// As for mappers: the generated registration runs once code of the type's assembly runs.
 		RuntimeHelpers.RunModuleConstructor(typeof(T).Module.ModuleHandle);
+		if (Factory<T>.Current is { } factory)
+		{
+			return factory;
+		}
 
-		return Factory<T>.Current ?? throw new InvalidOperationException(
-			$"{typeof(T)} has no CSV record writer. Mark it [CsvRecord] and partial, and reference the CsvHelper source generator, " +
-			"or register one with CsvRecordWriter.Register.");
+		throw RecordMaps<T>.Several
+			? RecordMaps<T>.Ambiguous("record writer", "CsvRecordWriter.Register")
+			: new InvalidOperationException(
+				$"{typeof(T)} has no CSV record writer. Mark it [CsvRecord] and partial, and reference the CsvHelper source generator, " +
+				"or register one with CsvRecordWriter.Register.");
 	}
 
-	/// <summary>Holds the registered factory of <typeparamref name="T"/>: one static field per type, without a dictionary lookup.</summary>
+	/// <summary>Holds the default factory of <typeparamref name="T"/>: one static field per type, without a dictionary lookup.</summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	private static class Factory<T>
 	{
-		/// <summary>The factory registered last, or <see langword="null"/> before the first.</summary>
+		/// <summary>
+		/// The factory registered last, or that of the type's only map; <see langword="null"/> before the first, and while
+		/// several maps and no explicit registration leave the type without a default.
+		/// </summary>
 		public static Func<string, CsvRecordWriter<T>>? Current;
+
+		/// <summary>Whether <see cref="Current"/> was registered with <see cref="Register{T}"/>, so that the type's maps leave it alone.</summary>
+		public static bool Explicit;
 	}
 }

@@ -447,8 +447,12 @@ public class RecordGeneratorTests
 		Assert.Contains("new global::CsvHelper.CsvReaderOptions { Separator = ';', HasHeader = false, FormatProvider = global::System.Globalization.CultureInfo.GetCultureInfo(\"de-DE\"), NullValues = new string[] { \"NULL\", \"-\" } }", output);
 		Assert.Contains("NullValue = \"NULL\"", output);
 		Assert.Contains("NewLine = \"\\n\"", output);
-		Assert.Contains("Register<global::Sample.Foreign>(global::Sample.ForeignMap.CreateCsvMapper);", output);
-		Assert.Contains("RegisterOptions<global::Sample.Foreign>(global::Sample.ForeignMap.CreateCsvReaderOptions", output);
+		// A map registers its mapper, record writer and options in one call.
+		Assert.Contains("global::CsvHelper.CsvRecordMapper.RegisterMap<global::Sample.Foreign>(typeof(global::Sample.ForeignMap), " +
+						"global::Sample.ForeignMap.CreateCsvMapper, global::Sample.ForeignMap.CreateCsvWriter, " +
+						"readerOptions: global::Sample.ForeignMap.CreateCsvReaderOptions, writerOptions: global::Sample.ForeignMap.CreateCsvWriterOptions);", output);
+		Assert.DoesNotContain("Register<global::Sample.Foreign>(", output);
+		Assert.DoesNotContain("RegisterOptions<global::Sample.Foreign>", output);
 		Assert.Contains("Column(reader, \"Supplier Code\", -1, false, \"Foreign.Code\")", output);
 		Assert.DoesNotContain("Secret", output);
 		Assert.Contains("Total = converter0.Read(reader, column0),", output);
@@ -700,7 +704,74 @@ public class RecordGeneratorTests
 		var (generator, compilation, output) = Run(types + "[CsvRecordMap(typeof(G<int>))] partial class M { }");
 		Assert.Empty(generator);
 		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
-		Assert.Contains("Register<global::G<int>>(global::M.CreateCsvMapper);", output);
+		Assert.Contains("RegisterMap<global::G<int>>(typeof(global::M), global::M.CreateCsvMapper, global::M.CreateCsvWriter);", output);
+	}
+
+	[Fact]
+	public void SeveralMapsOfATypeAreRegisteredEach()
+	{
+		const string source = """
+			using System;
+			using CsvHelper;
+
+			[assembly: CsvRecordProjections]
+
+			namespace Sample
+			{
+			    public sealed class Vendor
+			    {
+			        public Vendor(string code) => Code = code;
+			        public string Code { get; }
+			        public DateTime Since { get; set; }
+			    }
+
+			    [CsvRecordMap(typeof(Vendor))]
+			    [CsvOptions(Separator = ';')]
+			    internal partial class VendorMap
+			    {
+			        [CsvColumn("Vendor Code")]
+			        public string Code { get; set; } = "";
+			    }
+
+			    [CsvRecordMap(typeof(Vendor))]
+			    public partial record LegacyVendorMap
+			    {
+			        [CsvColumn(Index = 0, Width = 6)]
+			        public string Code { get; set; } = "";
+			        [CsvColumn(Index = 1, Width = 6)]
+			        [CsvFormat("MMddyy")]
+			        public DateTime Since { get; set; }
+			    }
+
+			    [CsvRecordMap(typeof(Vendor))]
+			    [CsvOptions(Separator = '|')]
+			    internal static partial class PipeVendorMap
+			    {
+			    }
+			}
+			""";
+		var (generator, compilation, output) = Run(source, LanguageVersion.CSharp9);
+
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+		Assert.DoesNotContain("Register<global::Sample.Vendor>(", output);
+
+		// One registration per map, ordered by the map class whatever the order of the declarations.
+		var registrations = output.Replace("\r", "").Split('\n').Select(l => l.Trim()).Where(l => l.StartsWith("global::CsvHelper.CsvRecordMapper.RegisterMap<", StringComparison.Ordinal)).ToList();
+		Assert.Equal(
+		[
+			"global::CsvHelper.CsvRecordMapper.RegisterMap<global::Sample.Vendor>(typeof(global::Sample.LegacyVendorMap), " +
+			"global::Sample.LegacyVendorMap.CreateCsvMapper, global::Sample.LegacyVendorMap.CreateCsvWriter, fieldWidths: new int[] { 6, 6 }, " +
+			"members: global::Sample.LegacyVendorMap.GetCsvMembers, projection: global::Sample.LegacyVendorMap.CreateCsvProjection);",
+			"global::CsvHelper.CsvRecordMapper.RegisterMap<global::Sample.Vendor>(typeof(global::Sample.PipeVendorMap), " +
+			"global::Sample.PipeVendorMap.CreateCsvMapper, global::Sample.PipeVendorMap.CreateCsvWriter, " +
+			"members: global::Sample.PipeVendorMap.GetCsvMembers, projection: global::Sample.PipeVendorMap.CreateCsvProjection, " +
+			"readerOptions: global::Sample.PipeVendorMap.CreateCsvReaderOptions, writerOptions: global::Sample.PipeVendorMap.CreateCsvWriterOptions);",
+			"global::CsvHelper.CsvRecordMapper.RegisterMap<global::Sample.Vendor>(typeof(global::Sample.VendorMap), " +
+			"global::Sample.VendorMap.CreateCsvMapper, global::Sample.VendorMap.CreateCsvWriter, " +
+			"members: global::Sample.VendorMap.GetCsvMembers, projection: global::Sample.VendorMap.CreateCsvProjection, " +
+			"readerOptions: global::Sample.VendorMap.CreateCsvReaderOptions, writerOptions: global::Sample.VendorMap.CreateCsvWriterOptions);",
+		], registrations);
 	}
 
 	[Fact]

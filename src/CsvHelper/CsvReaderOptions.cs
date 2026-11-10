@@ -126,6 +126,7 @@ public sealed record CsvReaderOptions
 	/// <exception cref="CultureNotFoundException">
 	/// The attribute names a culture that does not exist (or the app runs in globalization invariant mode).
 	/// </exception>
+	/// <exception cref="InvalidOperationException">Several <see cref="CsvRecordMapAttribute"/> classes map <typeparamref name="T"/>.</exception>
 	public static CsvReaderOptions For<T>() => CsvRecordMapper.ReaderOptions<T>();
 
 	/// <summary>
