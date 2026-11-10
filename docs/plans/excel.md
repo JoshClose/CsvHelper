@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -5221,7 +5221,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 5: presentation (M)
 
-Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Its settings are resolved and checked but not yet shown: steps 2 to 5 show them.
+Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show; auto-fit, filters, tables, merges and links are steps 3 to 5.
 
 Scope, as planned:
 
@@ -5529,6 +5529,60 @@ Filled in step by step; the code is the reference.
   - **`Columns` names match ordinally,** as the members' formats do, and an empty `Format` throws (`null` is none).
   - **The XML docs describe the finished behavior:** the defaults they give (bold, frozen, auto-fit) take effect in steps 2 and 3.
 - **Tests:** `SheetSettingsTests` (where settings come from, each check at its limits and past them, the attributes, `Columns` against the header, the copy, the empty workbook, and sheets added sync and async through every method, the validator over the workbooks they write), `TableNamesTests` (each name the probes asked about, as Excel answered, and the stricter forms), `MemberFormatsTests.ReadsExcelColumnsBesideFormats`, and `FormatCheckTests`' `[DBNum3]` and backticks. Every CsvHelper.Excel suite passes, with 0 warnings: 2,834 tests on .NET 10 and on .NET 8, and 2,786 on .NET Framework, each with the 4 GiB Zip64 test skipped as opt-in.
+
+**Step 2, styles and the header** (built, approved, with every recommendation, and committed 2026-11-09):
+
+- **New file:** `Internal/Writing/ColumnStyle.cs`, a styled column's cell formats:
+  - Its default: the column's `Format` and `Wrap`, which its `<col>` carries.
+  - Each data cell's: the column's format, else the cell's own, with the column's wrap. The last one is cached, since a column's cells mostly share one.
+- **Changed:**
+  - `StyleRegistry`:
+    - A cell format is a `CellXf`: a number format's id, a font and wrap. The design's name for it clashed with the Open XML SDK's `CellFormat` in the tests.
+    - Fonts (regular; bold; and the title's, bold Calibri 14) are written in the order of first use. So a workbook without a bold cell or a title has Phase 4's one font.
+    - An `<xf>` sets `applyFont`, and `applyAlignment` with `<alignment wrapText="1"/>`, only when it uses them.
+    - `NumberFormatId` gives a code's id without adding a cell format.
+  - `PackageParts` writes the registry's fonts.
+  - `ColumnWidths`:
+    - `Default` is 9.140625, Excel's 8.43 characters at 96 DPI.
+    - `FromCharacters` converts a `Width` in characters as Excel does: characters × 7 + 5 pixels (× 12 below 1 character), truncated to 256ths of 7 pixels.
+  - `SheetSink`:
+    - Writes the title in row 1, merged over the header's columns, and the header and records from row 2.
+    - Makes the header bold.
+    - Writes `sheetViews` with a frozen pane over the rows through the header and the `FreezeColumns`.
+    - Resolves the columns' options when the header record ends, or when the sheet is added without a header. It writes their `<col>`s (width, default style, hidden) merged with the measured widths, and styles each data cell by its column.
+    - With `RowLimit.NewSheet`, each new sheet repeats the title, its merge, the header and the frozen pane.
+  - `MemberFormats.HasExcelColumns` and `SheetSettings.HasColumns`, so that a sheet holds its header's names only when a column has options.
+  - `ExcelWorkbookWriter`:
+    - Without a header, `AddSheet` and `AddSheet<T>` resolve the columns by `T`'s names when the sheet is added.
+    - The exception docs name `Columns`.
+- **Decisions made while building,** approved at review as built:
+  - **Header cells are bold in their own number format.** They take neither the column's `Format`, which could replace their text with a text section, nor its `Wrap`.
+  - **A title without a header** merges over the first record's columns. A title over one column, or over an empty sheet, isn't merged.
+  - **`NewSheet` repeats the title, its merge and the frozen pane from this step.** The design listed `NewSheet`'s repeats under step 4; the table and the filter follow there.
+  - **A styled column without a `Width` is written 9.140625 wide,** and a hidden column without one too, since Excel hides a `<col>` without a width (Phase 3's step 3). That is the default at 96 DPI. At this machine's 144 DPI, Excel shows such a column 8.55 characters wide against the default's 8.09.
+  - **Core doesn't discard a record when the sink's `EndRecord` throws.** `Dispose` then ended the record again, and that second error hid the first: `Columns` checked against an empty header. The sink takes an end with no fields as a record it already discarded, since core never ends a record without one. No core change.
+  - **A date in a column with a `Format` takes the column's format alone.** Its own isn't added to the styles. Its width is still Phase 4's measured width until step 3.
+  - **Phase 4's tests that pin exact XML, and the corpus's `written` workbooks, write in Phase 4's look:** `BoldHeader` and `FreezeHeader` off, and `AutoFit` 0. So their XML, Excel's answers and the parts' pinned hashes stand. Step 6 adds the new look's workbooks.
+- **Checked in Excel** (16.0 build 20527, through COM, on 2026-11-09):
+  - Every workbook opens without a repair, and the header is bold.
+  - The frozen panes hold. For a wide split, Excel's `SplitColumn` reports one less than written, but its first scrollable column is one past the frozen ones (`XFD` for 16,383), so the freeze is exact.
+  - The title is merged, and its row is 18.5 points on open.
+  - Wrapped rows are sized on open (43.5 points).
+  - Hidden columns are hidden, and a column's default style applies to cells added later.
+  - The workbooks, the scripts and Excel's answers are in `Csv\_bench\results\phase5\step2`.
+- **Tests:**
+  - `SheetLookTests`, sync and async, covers:
+    - the defaults, and Phase 4's look;
+    - the title, with a header and without, and its merge;
+    - the freeze, to 16,383 columns;
+    - the columns' options and attributes, and a member's date in its column's format;
+    - a `Columns` name the header lacks, and the record type's names without a header;
+    - `NewSheet`'s repeats.
+
+    Each workbook goes through the validator and ClosedXML. It is read back by CsvHelper.Excel, ClosedXML and ExcelDataReader as Phase 4's look reads.
+  - `StyleRegistryTests`' fonts and flags, and `ColumnWidthsTests`' `FromCharacters`.
+  - Every CsvHelper.Excel suite passes, with 0 warnings: 2,875 tests on .NET 10 and on .NET 8, and 2,827 on .NET Framework, each with the 4 GiB Zip64 test skipped as opt-in. The corpus's pinned hashes still match.
+- **The per-cell cost** (a flag test, and a check for a style) is measured at step 8.
 
 ### Phase 6: conversion (S)
 

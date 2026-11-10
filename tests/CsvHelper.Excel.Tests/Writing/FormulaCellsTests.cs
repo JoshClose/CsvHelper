@@ -102,7 +102,7 @@ public class FormulaCellsTests
 			writer.WriteField(new ExcelFormula("1+1"));
 			await Written.EndRecordAsync(writer, a);
 			await Written.DisposeAsync(writer, a);
-		}, async);
+		}, async, Written.Phase4());
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.Contains("<row r=\"1\"><c r=\"A1\"><v>2</v></c><c r=\"B1\"><v>3</v></c><c r=\"C1\"><f>A1+B1</f></c><c r=\"D1\"><f>A1*B1</f></c><c r=\"G1\"><f>1+1</f></c></row>", sheet);
@@ -138,7 +138,7 @@ public class FormulaCellsTests
 
 			await Written.EndRecordAsync(writer, a);
 			await Written.DisposeAsync(writer, a);
-		}, async);
+		}, async, Written.Phase4());
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.Contains("<c r=\"A1\"><f>\"a_x005F_x0041_b\"&amp;\"&lt;&amp;&gt;\"</f></c>", sheet);
@@ -216,7 +216,7 @@ public class FormulaCellsTests
 			{
 				book.WriteSheet("Orders", records);
 			}
-		}, async, options);
+		}, async, Written.Phase4(options));
 
 	/// <summary>Reads the first sheet's rows, each as its fields joined with <c>|</c>, the header too.</summary>
 	/// <param name="workbook">The workbook's bytes.</param>

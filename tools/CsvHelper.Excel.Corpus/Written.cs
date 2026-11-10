@@ -35,6 +35,15 @@ internal static class Written
 	/// <summary>The values of the formatted columns: a morning, an evening and a late night, with seconds and milliseconds.</summary>
 	private static readonly DateTime[] Samples = [new(2024, 1, 15, 10, 30, 5, 123), new(2024, 3, 9, 22, 5, 9, 7), new(2024, 9, 25, 23, 58, 58, 888)];
 
+	/// <summary>
+	/// Phase 4's look: no bold or frozen header and no auto-fit, as the Phase 4 workbooks were written and answered, so that
+	/// Phase 5's defaults leave them, and their pinned parts, as they were.
+	/// </summary>
+	private static readonly ExcelSheetOptions Phase4Look = new() { BoldHeader = false, FreezeHeader = false, AutoFit = 0 };
+
+	/// <summary>The default options with Phase 4's look.</summary>
+	private static readonly ExcelWriterOptions Phase4Options = new() { Sheets = Phase4Look };
+
 	/// <summary><see cref="ExcelWorkbookWriter"/>'s internal row limit, which a test sets to start new sheets after a few rows.</summary>
 	private static readonly PropertyInfo MaxRows = typeof(ExcelWorkbookWriter).GetProperty("MaxRows", BindingFlags.Instance | BindingFlags.NonPublic)
 		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal MaxRows.");
@@ -277,7 +286,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"types.xlsx",
 			"every type that .NET Framework has, at its edges, with the default options",
-			ExcelWriterOptions.Default,
+			Phase4Options,
 			[
 				WrittenSheet.Records("Numbers", numbers),
 				WrittenSheet.Records("Integers", integers),
@@ -304,7 +313,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"types-net.xlsx",
 			".NET's newer types (DateOnly, TimeOnly, Half, Int128, UInt128), and DateOnly's and TimeOnly's formats in the invariant culture",
-			ExcelWriterOptions.Default,
+			Phase4Options,
 			[
 				WrittenSheet.Records("Newer", newer),
 				WrittenSheet.Records("Formats", Samples.Select(s => new WrittenNewerFormats { Day = DateOnly.FromDateTime(s), Rfc = DateOnly.FromDateTime(s), Long = DateOnly.FromDateTime(s), Clock = TimeOnly.FromDateTime(s), Precise = TimeOnly.FromDateTime(s), Short = TimeOnly.FromDateTime(s), TimeRfc = TimeOnly.FromDateTime(s) }).ToArray()),
@@ -334,7 +343,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"options.xlsx",
 			"LongNumbers = Number and DateTimeOffsets = Utc",
-			new ExcelWriterOptions { LongNumbers = ExcelLongNumbers.Number, DateTimeOffsets = ExcelDateTimeOffsets.Utc },
+			new ExcelWriterOptions { Sheets = Phase4Look, LongNumbers = ExcelLongNumbers.Number, DateTimeOffsets = ExcelDateTimeOffsets.Utc },
 			[WrittenSheet.Records("Numbers", numbers), WrittenSheet.Records("Offsets", offsets)]);
 	}
 
@@ -383,7 +392,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			name,
 			$"texts that need escaping, numbers stored as text, and a cell of 32,767 code units, with {strings} strings",
-			new ExcelWriterOptions { Strings = strings },
+			new ExcelWriterOptions { Sheets = Phase4Look, Strings = strings },
 			[WrittenSheet.Fields("Text", rows)]);
 	}
 
@@ -424,7 +433,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"formulas.xlsx",
 			"formulas written by hand and by a record writer, each beside the text Excel shows for it",
-			ExcelWriterOptions.Default,
+			Phase4Options,
 			[WrittenSheet.Fields("Calc", calc), WrittenSheet.Fields("Q1 Data", [["quoted"]]), WrittenSheet.Records("Records", sums)]);
 	}
 
@@ -441,7 +450,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"names.xlsx",
 			"sheet names Excel opens: escapes, entities, quotes, spaces, references, a zero-width space, a full-width letter, 31 code units",
-			ExcelWriterOptions.Default,
+			Phase4Options,
 			[.. names.Select((n, i) => WrittenSheet.Fields(n, [[n], [i + 1]]))]);
 	}
 
@@ -462,7 +471,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"newsheet.xlsx",
 			"RowLimit = NewSheet, a sheet's rows limited to 3 (the header and two records), with shared strings",
-			new ExcelWriterOptions { Strings = ExcelStrings.Shared, RowLimit = ExcelRowLimit.NewSheet },
+			new ExcelWriterOptions { Sheets = Phase4Look, Strings = ExcelStrings.Shared, RowLimit = ExcelRowLimit.NewSheet },
 			[
 				WrittenSheet.Records("Orders", orders.ToArray(), ["Orders", "Orders (2)", "Orders (3)", "Orders (4)"]),
 				WrittenSheet.Fields(Long, totals, [Long, "abcdefghijklmnopqrstuvwxyz1 (2)"]),
@@ -480,7 +489,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"formats.xlsx",
 			"[CsvFormat] dates, times, offsets and durations in the invariant culture, standard and custom, with DateTimeOffsets = ClockTime",
-			new ExcelWriterOptions { DateTimeOffsets = ExcelDateTimeOffsets.ClockTime },
+			new ExcelWriterOptions { Sheets = Phase4Look, DateTimeOffsets = ExcelDateTimeOffsets.ClockTime },
 			[
 				WrittenSheet.Records("Standard", Samples.Select(s => Filled<WrittenStandardFormats>(s)).ToArray()),
 				WrittenSheet.Records("Custom", Samples.Select(s => Filled<WrittenCustomFormats>(s)).ToArray()),
@@ -514,7 +523,7 @@ internal static class Written
 		return new WrittenWorkbook(
 			"cultures.xlsx",
 			"[CsvFormat] and [CsvCulture] in en-US, de-DE, fr-FR, ja-JP and other cultures: standard and custom date formats, DateOnly, TimeOnly, offsets with DateTimeOffsets = ClockTime, and numbers",
-			new ExcelWriterOptions { DateTimeOffsets = ExcelDateTimeOffsets.ClockTime },
+			new ExcelWriterOptions { Sheets = Phase4Look, DateTimeOffsets = ExcelDateTimeOffsets.ClockTime },
 			[
 				WrittenSheet.Records("Standard", Samples.Select(s => Filled<WrittenCultureStandard>(s)).ToArray()),
 				WrittenSheet.Records("Custom", Samples.Select(s => Filled<WrittenCultureCustom>(s)).ToArray()),

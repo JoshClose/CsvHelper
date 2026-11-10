@@ -48,6 +48,12 @@ internal static class ColumnWidths
 		6.800, 6.800, 6.133, 4.733, 6.800, 4.733, 7.500, // x y z { | } ~
 	];
 
+	/// <summary>
+	/// The width of the default column, 8.43 characters of Calibri 11 and the padding (64 pixels at 96 DPI), as Excel
+	/// writes it: for a <c>col</c> with a style but no width of its own, since Excel hides a <c>col</c> without one.
+	/// </summary>
+	public const double Default = 9.140625;
+
 	/// <summary>The width of a date, <c>yyyy-mm-dd</c>.</summary>
 	public static readonly double Date = Of("2024-12-31");
 
@@ -84,6 +90,20 @@ internal static class ColumnWidths
 		}
 
 		return Math.Ceiling(pixels * 256.0 / DigitPixels) / 256;
+	}
+
+	/// <summary>
+	/// The width of a column of a number of characters (Excel's <c>ColumnWidth</c>), as Excel writes it at 96 DPI: the
+	/// characters' pixels and the padding, in whole 256ths of a digit. Below one character, the padding shrinks with the
+	/// width, as Excel's does.
+	/// </summary>
+	/// <param name="characters">The characters, 0 to 255.</param>
+	/// <returns>The width: 10.7109375 for 10 characters, 0 for 0.</returns>
+	public static double FromCharacters(double characters)
+	{
+		var pixels = characters < 1 ? characters * (DigitPixels + Padding) : (characters * DigitPixels) + Padding;
+
+		return Math.Truncate(pixels * 256 / DigitPixels) / 256;
 	}
 
 	/// <summary>

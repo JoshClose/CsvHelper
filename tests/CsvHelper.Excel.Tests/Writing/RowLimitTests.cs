@@ -98,7 +98,7 @@ public class RowLimitTests
 			}
 
 			names = [.. book.SheetNames];
-		}, async, new ExcelWriterOptions { Strings = strings, RowLimit = ExcelRowLimit.NewSheet });
+		}, async, Written.Phase4(new ExcelWriterOptions { Strings = strings, RowLimit = ExcelRowLimit.NewSheet }));
 
 		Assert.Equal(["Orders", "Orders (2)", "Orders (3)", "Orders (4)"], names);
 		Assert.Equal(

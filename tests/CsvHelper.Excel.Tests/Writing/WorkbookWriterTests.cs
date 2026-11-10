@@ -188,7 +188,7 @@ public class WorkbookWriterTests
 	[InlineData(true)]
 	public async Task EscapesAsExcelDoes(bool async)
 	{
-		var workbook = await Written.RowsAsync([[" a", "cr\r", "_x0041_", "a&b"]], async);
+		var workbook = await Written.RowsAsync([[" a", "cr\r", "_x0041_", "a&b"]], async, Written.Phase4());
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 

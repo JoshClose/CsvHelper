@@ -51,6 +51,12 @@ internal sealed class SheetSettings
 	/// <summary>Whether the sheet's first record is its header (<see cref="CsvWriterOptions.HasHeader"/>).</summary>
 	public bool HasHeader { get; }
 
+	/// <summary>
+	/// Whether columns can have options: <see cref="ExcelSheetOptions.Columns"/> has some, or a member of the record type
+	/// has an <see cref="ExcelColumnAttribute"/>. The header's names, or the record type's, then say which.
+	/// </summary>
+	public bool HasColumns => columns is not null || members is { HasExcelColumns: true };
+
 	/// <summary>The title above the header, or <see langword="null"/>.</summary>
 	public string? Title => Sheet.Title;
 
@@ -128,7 +134,7 @@ internal sealed class SheetSettings
 	/// <summary>
 	/// Each column's options, for the header's names: its entry in <see cref="ExcelSheetOptions.Columns"/> by its name,
 	/// else its member's <see cref="ExcelColumnAttribute"/>. Called when the header record ends, or, without a header, when
-	/// the first record does, with the names the record type's record writer writes in its header.
+	/// the sheet is added, with the names the record type's record writer writes in its header.
 	/// </summary>
 	/// <param name="names">The header's names, in column order, or <see langword="null"/> when the sheet has none.</param>
 	/// <returns>Each column's options, or <see langword="null"/> for a column without; <see langword="null"/> when no column has any.</returns>

@@ -116,8 +116,8 @@ internal static class PackageParts
 	}
 
 	/// <summary>
-	/// Writes the styles: the custom number formats, one font, the two fills and the border every style sheet has, and the
-	/// cell formats, the default one first.
+	/// Writes the styles: the custom number formats, the fonts the cell formats use (Calibri 11 first), the two fills and
+	/// the border every style sheet has, and the cell formats, the default one first.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	/// <param name="styles">The cell formats.</param>
@@ -125,7 +125,7 @@ internal static class PackageParts
 	{
 		xml.Append("<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"u8);
 		styles.WriteNumberFormats(xml);
-		xml.Append("<fonts count=\"1\"><font><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font></fonts>"u8);
+		styles.WriteFonts(xml);
 		xml.Append("<fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills>"u8);
 		xml.Append("<borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders>"u8);
 		xml.Append("<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"u8);

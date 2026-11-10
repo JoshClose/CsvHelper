@@ -655,7 +655,7 @@ public class TypedCellsTests
 			{
 				book.WriteSheet("Orders", records);
 			}
-		}, async);
+		}, async, Written.Phase4());
 
 	/// <summary>A width as the writer writes it.</summary>
 	/// <param name="width">The width.</param>

@@ -45,6 +45,16 @@ namespace CsvHelper.Excel;
 /// again, and a text cell otherwise. A duration with a format other than .NET's default is a text cell.
 /// </para>
 /// <para>
+/// How the sheet looks comes from its <see cref="SheetSettings"/>. A title is row 1, in bold Calibri 14, merged over the
+/// first record's columns, and the writer's records follow from row 2. The header's cells are bold, in their own number
+/// formats. The rows through the header, and the first columns asked for, are frozen (<c>sheetViews</c>). A column's
+/// options (<see cref="ExcelSheetOptions.Columns"/>, else its member's <see cref="ExcelColumnAttribute"/>) are resolved by
+/// the header's names when the header record ends, or, without a header, when the sheet is added: its width beats the one
+/// measured, it can be hidden, and its format and wrap style its cells below the header (<see cref="ColumnStyle"/>) and
+/// are its default style. A cell's style is its own number format but in the title and header rows and in a column with a
+/// style, so that a sheet without either tests one flag per cell.
+/// </para>
+/// <para>
 /// A record past the sheet's last row follows <see cref="ExcelWriterOptions.RowLimit"/>. Its first field finds it, through
 /// the field limit that <see cref="EndRecord"/> lowers to 0 once the sheet is full, so that the test of the column limit
 /// is the only one per field. With <see cref="ExcelRowLimit.NewSheet"/>, the full sheet's end goes into the buffer, and the
@@ -66,8 +76,8 @@ internal sealed class SheetSink : CsvCellSink
 		PackageParts.Declaration,
 		"<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">"u8);
 
-	/// <summary>The XML after the rows: Excel's default page margins, which it writes on every sheet.</summary>
-	private static readonly byte[] End = "</sheetData><pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"u8.ToArray();
+	/// <summary>Excel's default page margins, which it writes on every sheet, after the rows and the merged cells.</summary>
+	private static readonly byte[] PageMargins = "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"u8.ToArray();
 
 	/// <summary>The letters of each column, made as they are first needed.</summary>
 	private static readonly byte[]?[] ColumnLetters = new byte[CellReference.MaxColumns][];
@@ -81,7 +91,12 @@ internal sealed class SheetSink : CsvCellSink
 	private readonly NumberCulture? culture;
 	// The formats of the record type's members, until the header's names say which columns they are for.
 	private readonly MemberFormats? members;
-	// The row of the first data record, whose cells set the columns' widths.
+	// The title's text, or null without one.
+	private readonly byte[]? title;
+	// The row of the writer's first record: 2 below a title, else 1; the header's row, or 0 without a header; and the row
+	// of the first data record, whose cells set the columns' widths.
+	private readonly long firstRow;
+	private readonly long headerRowNumber;
 	private readonly long firstDataRow;
 	// The rows a sheet holds: Excel's last row's number, or fewer in tests.
 	private readonly int maxRows;
@@ -98,6 +113,15 @@ internal sealed class SheetSink : CsvCellSink
 	// Each column's member's format and culture, once known; and the header record's names while it is written, to know them.
 	private ColumnFormat?[]? columnFormats;
 	private List<string>? header;
+	// Each column's options and the style they give its cells, once known; null when no column has any.
+	private ExcelColumnOptions?[]? columnOptions;
+	private ColumnStyle?[]? columnStyles;
+	// The font of the current row's cells: the title's in its row, bold in the header's (BoldHeader), else regular. And
+	// whether a cell's style is more than its own number format: in those rows, and in a sheet whose columns have styles.
+	private CellFont rowFont;
+	private bool styling;
+	// The title's merge: the last column of the first record, which it spans; -1 until known, or without a title.
+	private int titleLastColumn = -1;
 	// The part of the sheet being written, and its entry once a flush opened it.
 	private string partName;
 	private Stream? entry;
@@ -150,8 +174,12 @@ internal sealed class SheetSink : CsvCellSink
 	/// Without <see cref="CsvWriterOptions.HasHeader"/>, the names the record writer writes in its header, which say which
 	/// member each column is; or <see langword="null"/>. With a header, the header record's names say.
 	/// </param>
+	/// <param name="columns">
+	/// Without <see cref="CsvWriterOptions.HasHeader"/>, each column's options (<see cref="SheetSettings.ColumnsFor"/>), or
+	/// <see langword="null"/> for none. With a header, they are resolved when the header record ends.
+	/// </param>
 	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows,
-		SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames)
+		SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns)
 	{
 		this.workbook = workbook;
 		this.package = package;
@@ -162,22 +190,33 @@ internal sealed class SheetSink : CsvCellSink
 		this.maxRows = maxRows;
 		Settings = settings;
 		culture = NumberCulture.For(options.Csv.FormatProvider);
-		firstDataRow = options.Csv.HasHeader ? 2 : 1;
+		title = settings.Title is { } text ? Encoding.UTF8.GetBytes(text) : null;
+		firstRow = title is null ? 1 : 2;
+		headerRowNumber = options.Csv.HasHeader ? firstRow : 0;
+		firstDataRow = options.Csv.HasHeader ? firstRow + 1 : firstRow;
 		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
-		if (members is not null)
+		if (options.Csv.HasHeader)
 		{
-			if (options.Csv.HasHeader)
+			if (members is not null || settings.HasColumns)
 			{
 				this.members = members;
 				header = [];
 			}
-			else if (headerNames is not null)
+		}
+		else
+		{
+			if (members is not null && headerNames is not null)
 			{
 				columnFormats = members.Columns(headerNames, options.Csv.FormatProvider);
 			}
+
+			SetColumns(columns);
 		}
+
+		WriteTitle();
+		SetRowFont(settings.BoldHeader ? CellFont.Bold : CellFont.Regular);
 	}
 
 	/// <summary>The name of the sheet being written (a new one's, after <see cref="ExcelRowLimit.NewSheet"/>), and how messages name its cells.</summary>
@@ -266,8 +305,24 @@ internal sealed class SheetSink : CsvCellSink
 	/// Whether the buffer has passed <see cref="FlushSize"/>, or holds a full sheet's end, and can be written: not while
 	/// records are held.
 	/// </returns>
+	/// <exception cref="InvalidOperationException">
+	/// The record is the header, and <see cref="ExcelSheetOptions.Columns"/> names a column it doesn't have; the record is
+	/// discarded.
+	/// </exception>
 	public override bool EndRecord()
 	{
+		if (column == 0)
+		{
+			// The writer ends records of one field or more, so this one was discarded here when it failed to end (the
+			// header's columns, below), and the writer, which doesn't discard it then, ends it again as it is disposed.
+			return false;
+		}
+
+		if (header is not null)
+		{
+			ResolveColumns(header);
+		}
+
 		var hasRow = rowOpen;
 		if (rowOpen)
 		{
@@ -277,7 +332,7 @@ internal sealed class SheetSink : CsvCellSink
 			lastColumn = Math.Max(lastColumn, recordLastColumn);
 		}
 
-		if (row == 1 && repeatsHeader)
+		if (row == headerRowNumber && repeatsHeader)
 		{
 			headerRow = output.Written.Slice(recordStart).ToArray();
 			headerReferences = recordReferences;
@@ -285,10 +340,9 @@ internal sealed class SheetSink : CsvCellSink
 			headerNumberLikeText = recordNumberLikeText;
 		}
 
-		if (header is not null)
+		if (row == firstRow && title is not null)
 		{
-			columnFormats = members!.Columns(header, options.Csv.FormatProvider);
-			header = null;
+			titleLastColumn = column - 1;
 		}
 
 		numberLikeText |= recordNumberLikeText;
@@ -308,6 +362,12 @@ internal sealed class SheetSink : CsvCellSink
 		if (row > maxRows)
 		{
 			fieldLimit = 0;
+		}
+
+		if (rowFont != CellFont.Regular)
+		{
+			// The header's row is over.
+			SetRowFont(CellFont.Regular);
 		}
 
 		column = 0;
@@ -451,8 +511,8 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// Ends the full sheet in the buffer and starts the next one there (<see cref="ExcelRowLimit.NewSheet"/>), named as
-	/// Excel names a copy of it, with the header's row first. The next flush, which <see cref="EndRecord"/> asks for,
-	/// writes the full sheet, closes its entry and opens the next one's.
+	/// Excel names a copy of it, with the title's row and the header's first. The next flush, which <see cref="EndRecord"/>
+	/// asks for, writes the full sheet, closes its entry and opens the next one's.
 	/// </summary>
 	private void StartNextSheet()
 	{
@@ -465,23 +525,25 @@ internal sealed class SheetSink : CsvCellSink
 		lastRow = 0;
 		lastColumn = -1;
 		numberLikeText = false;
+		recordStart = output.Length;
+		WriteTitle();
 		if (headerRow is not null)
 		{
-			// Its cells are row 1's, as in every sheet, and its shared strings are referred to once more.
+			// Its cells are in the same row as in every sheet, and its shared strings are referred to once more.
 			output.Append(headerRow);
 			if (headerLastColumn >= 0)
 			{
-				lastRow = 1;
-				lastColumn = headerLastColumn;
+				lastRow = headerRowNumber;
+				lastColumn = Math.Max(lastColumn, headerLastColumn);
 			}
 
-			numberLikeText = headerNumberLikeText;
+			numberLikeText |= headerNumberLikeText;
 			if (strings is not null)
 			{
 				strings.References += headerReferences;
 			}
 
-			row = 2;
+			row = headerRowNumber + 1;
 		}
 
 		recordStart = output.Length;
@@ -528,7 +590,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		StartCell(at);
+		StartCell(at, 0);
 		output.Append(" t=\"b\"><v>"u8);
 		output.Append(value);
 		output.Append("</v></c>"u8);
@@ -571,7 +633,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		StartCell(at);
+		StartCell(at, 0);
 		output.Append("><v>"u8);
 		output.Append(invariant.Slice(0, length));
 		output.Append("</v></c>"u8);
@@ -790,7 +852,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		WriteSerial(at, milliseconds, column.Style(styles), MeasuringWidths ? format.Width : 0);
+		WriteSerial(at, milliseconds, FormatsColumn(at) ? 0 : column.Style(styles), MeasuringWidths ? format.Width : 0);
 	}
 
 	/// <summary>Writes a number cell of a serial, in one of the writer's formats, and notes its column's width.</summary>
@@ -798,7 +860,17 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="milliseconds">The serial, in milliseconds.</param>
 	/// <param name="format">The cell's number format.</param>
 	/// <param name="width">The width its column needs, or 0 for none.</param>
-	private void WriteSerial(int at, long milliseconds, FixedFormat format, double width) => WriteSerial(at, milliseconds, styles.IndexOf(format), width);
+	private void WriteSerial(int at, long milliseconds, FixedFormat format, double width) =>
+		WriteSerial(at, milliseconds, FormatsColumn(at) ? 0 : styles.IndexOf(format), width);
+
+	/// <summary>
+	/// Whether a cell's column has a format of its own below the header, which takes the place of the cell's: then its own
+	/// isn't added to the workbook's cell formats, which no cell would use.
+	/// </summary>
+	/// <param name="at">The cell's column.</param>
+	/// <returns>Whether it has.</returns>
+	private bool FormatsColumn(int at) =>
+		styling && rowFont == CellFont.Regular && columnStyles is { } columns && at < columns.Length && columns[at] is { HasFormat: true };
 
 	/// <summary>Writes a number cell of a serial, in a cell format, and notes its column's width.</summary>
 	/// <param name="at">The cell's column.</param>
@@ -807,10 +879,8 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="width">The width its column needs, or 0 for none.</param>
 	private void WriteSerial(int at, long milliseconds, int style, double width)
 	{
-		StartCell(at);
-		output.Append(" s=\""u8);
-		output.AppendNumber(style);
-		output.Append("\"><v>"u8);
+		StartCell(at, style);
+		output.Append("><v>"u8);
 		output.AppendDouble(Serial.Days(milliseconds));
 		output.Append("</v></c>"u8);
 		if (width > 0 && MeasuringWidths)
@@ -831,7 +901,7 @@ internal sealed class SheetSink : CsvCellSink
 	private void WriteFormula(ReadOnlySpan<byte> text, int at)
 	{
 		var formula = text[0] == (byte)'=' ? text.Slice(1) : text;
-		StartCell(at);
+		StartCell(at, 0);
 		output.Append(XmlOutput.NeedsPreserve(formula) ? "><f xml:space=\"preserve\">"u8 : "><f>"u8);
 		output.AppendText(formula);
 		output.Append("</f></c>"u8);
@@ -857,7 +927,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		// Text that starts like a number (00123, 1.5, -1, .5) gets Excel's warning triangle unless the sheet ignores it.
 		recordNumberLikeText |= text[0] is >= (byte)'0' and <= (byte)'9' or (byte)'+' or (byte)'-' or (byte)'.';
-		StartCell(at);
+		StartCell(at, 0);
 		if (strings is null)
 		{
 			output.Append(" t=\"inlineStr\"><is>"u8);
@@ -886,9 +956,13 @@ internal sealed class SheetSink : CsvCellSink
 		target.Append("</t>"u8);
 	}
 
-	/// <summary>Writes the start of a cell, up to its attributes' end: its row first, when it is the record's first cell.</summary>
+	/// <summary>
+	/// Writes the start of a cell, up to its attributes' end, with its style: its row first, when it is the record's first
+	/// cell.
+	/// </summary>
 	/// <param name="at">The cell's column.</param>
-	private void StartCell(int at)
+	/// <param name="style">The cell format the cell has of its own: 0 (General) but for dates, times and durations.</param>
+	private void StartCell(int at, int style)
 	{
 		if (!rowOpen)
 		{
@@ -901,43 +975,260 @@ internal sealed class SheetSink : CsvCellSink
 		recordLastColumn = at;
 		output.Append("<c r=\""u8);
 		output.AppendReference(ColumnName(at), row);
+		if (styling)
+		{
+			style = StyleOf(at, style);
+		}
+
+		if (style != 0)
+		{
+			output.Append("\" s=\""u8);
+			output.AppendNumber(style);
+		}
+
 		output.Append((byte)'"');
 	}
 
+	/// <summary>A cell's style in the title's or the header's row, or in a column with a style.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="own">The cell format the cell has of its own.</param>
+	/// <returns>The cell format: its own in the row's font, or in its column's style.</returns>
+	private int StyleOf(int at, int own)
+	{
+		if (rowFont != CellFont.Regular)
+		{
+			return styles.WithFont(own, rowFont);
+		}
+
+		return columnStyles is { } columns && at < columns.Length && columns[at] is { } column ? column.Of(own) : own;
+	}
+
+	/// <summary>Sets the font of the current row's cells, and whether cells need more than their own style.</summary>
+	/// <param name="font">The font.</param>
+	private void SetRowFont(CellFont font)
+	{
+		rowFont = font;
+		styling = font != CellFont.Regular || columnStyles is not null;
+	}
+
+	/// <summary>Resolves the columns' options and formats by the header's names, when the header record ends.</summary>
+	/// <param name="names">The header's names.</param>
+	/// <exception cref="InvalidOperationException">
+	/// <see cref="ExcelSheetOptions.Columns"/> names a column the header doesn't have; the header record is discarded.
+	/// </exception>
+	private void ResolveColumns(List<string> names)
+	{
+		ExcelColumnOptions?[]? columns;
+		try
+		{
+			columns = Settings.ColumnsFor(names);
+		}
+		catch
+		{
+			DiscardRecord();
+
+			throw;
+		}
+
+		if (members is not null)
+		{
+			columnFormats = members.Columns(names, options.Csv.FormatProvider);
+		}
+
+		SetColumns(columns);
+		header = null;
+	}
+
+	/// <summary>Takes the columns' options, and makes the styles of those with a format or wrap.</summary>
+	/// <param name="columns">Each column's options, or <see langword="null"/> for none.</param>
+	private void SetColumns(ExcelColumnOptions?[]? columns)
+	{
+		columnOptions = columns;
+		if (columns is null)
+		{
+			return;
+		}
+
+		for (var i = 0; i < columns.Length; i++)
+		{
+			if (ColumnStyle.Styles(columns[i]))
+			{
+				columnStyles ??= new ColumnStyle?[columns.Length];
+				columnStyles[i] = new ColumnStyle(columns[i]!, styles);
+			}
+		}
+
+		SetRowFont(rowFont);
+	}
+
 	/// <summary>
-	/// Writes the XML before the rows into a buffer: the worksheet's start, the columns' widths, and <c>sheetData</c>'s start.
+	/// Writes the title's row, when the sheet has a title: its cell in bold Calibri 14, as a text cell, before the writer's
+	/// first record. The record's row then starts below it.
+	/// </summary>
+	private void WriteTitle()
+	{
+		if (title is null)
+		{
+			return;
+		}
+
+		SetRowFont(CellFont.Title);
+		WriteText(title, 0);
+		output.Append("</row>"u8);
+		rowOpen = false;
+		lastRow = row;
+		lastColumn = Math.Max(lastColumn, 0);
+		numberLikeText |= recordNumberLikeText;
+		recordNumberLikeText = false;
+		if (strings is not null)
+		{
+			strings.References += recordReferences;
+			recordReferences = 0;
+		}
+
+		row++;
+		recordStart = output.Length;
+		SetRowFont(CellFont.Regular);
+	}
+
+	/// <summary>
+	/// Writes the XML before the rows into a buffer: the worksheet's start, the frozen panes, the columns, and
+	/// <c>sheetData</c>'s start.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	private void AppendStart(XmlOutput xml)
 	{
 		xml.Append(Start);
-		if (widths.Count > 0)
-		{
-			xml.Append("<cols>"u8);
-			foreach (var (at, width) in widths)
-			{
-				xml.Append("<col min=\""u8);
-				xml.AppendNumber(at + 1);
-				xml.Append("\" max=\""u8);
-				xml.AppendNumber(at + 1);
-				xml.Append("\" width=\""u8);
-				xml.AppendDouble(width);
-				xml.Append("\" customWidth=\"1\"/>"u8);
-			}
-
-			xml.Append("</cols>"u8);
-		}
-
+		AppendViews(xml);
+		AppendColumns(xml);
 		xml.Append("<sheetData>"u8);
 	}
 
 	/// <summary>
-	/// Writes the XML after the sheet's rows into the buffer: the end of <c>sheetData</c>, the page margins,
-	/// <c>ignoredErrors</c> over the used range when a text cell starts like a number, and the worksheet's end.
+	/// Writes the sheet's view, when it has frozen panes, as Excel writes them: the rows through the header
+	/// (<see cref="SheetSettings.FreezeHeader"/>), the first columns (<see cref="SheetSettings.FreezeColumns"/>), or both,
+	/// with the active pane's selection.
+	/// </summary>
+	/// <param name="xml">The buffer.</param>
+	private void AppendViews(XmlOutput xml)
+	{
+		var rows = Settings.FreezeHeader ? headerRowNumber : 0;
+		var columns = Settings.FreezeColumns;
+		if (rows == 0 && columns == 0)
+		{
+			return;
+		}
+
+		var pane = rows == 0 ? "topRight"u8 : columns == 0 ? "bottomLeft"u8 : "bottomRight"u8;
+		xml.Append("<sheetViews><sheetView workbookViewId=\"0\"><pane"u8);
+		if (columns > 0)
+		{
+			xml.Append(" xSplit=\""u8);
+			xml.AppendNumber(columns);
+			xml.Append((byte)'"');
+		}
+
+		if (rows > 0)
+		{
+			xml.Append(" ySplit=\""u8);
+			xml.AppendNumber(rows);
+			xml.Append((byte)'"');
+		}
+
+		xml.Append(" topLeftCell=\""u8);
+		xml.AppendReference(ColumnName(columns), rows + 1);
+		xml.Append("\" activePane=\""u8);
+		xml.Append(pane);
+		xml.Append("\" state=\"frozen\"/><selection pane=\""u8);
+		xml.Append(pane);
+		xml.Append("\"/></sheetView></sheetViews>"u8);
+	}
+
+	/// <summary>
+	/// Writes the columns that have a width, a style or are hidden, in order, each as a <c>col</c> of its own: the width
+	/// its options give (<see cref="ExcelColumnOptions.Width"/>), else the one measured, else the default width, which a
+	/// <c>col</c> needs, since Excel hides one without.
+	/// </summary>
+	/// <param name="xml">The buffer.</param>
+	private void AppendColumns(XmlOutput xml)
+	{
+		var count = Math.Max(columnOptions?.Length ?? 0, widths.Count > 0 ? widths[widths.Count - 1].Column + 1 : 0);
+		var measured = 0;
+		var any = false;
+		for (var at = 0; at < count; at++)
+		{
+			var width = 0.0;
+			var custom = false;
+			if (measured < widths.Count && widths[measured].Column == at)
+			{
+				width = widths[measured++].Width;
+				custom = true;
+			}
+
+			var column = columnOptions is { } columns && at < columns.Length ? columns[at] : null;
+			if (column?.Width is { } characters)
+			{
+				width = ColumnWidths.FromCharacters(characters);
+				custom = true;
+			}
+
+			var style = columnStyles is { } styled && at < styled.Length ? styled[at]?.Default ?? 0 : 0;
+			var hidden = column?.Hidden == true;
+			if (!custom && style == 0 && !hidden)
+			{
+				continue;
+			}
+
+			if (!any)
+			{
+				xml.Append("<cols>"u8);
+				any = true;
+			}
+
+			xml.Append("<col min=\""u8);
+			xml.AppendNumber(at + 1);
+			xml.Append("\" max=\""u8);
+			xml.AppendNumber(at + 1);
+			xml.Append("\" width=\""u8);
+			xml.AppendDouble(custom ? width : ColumnWidths.Default);
+			xml.Append((byte)'"');
+			if (style != 0)
+			{
+				xml.Append(" style=\""u8);
+				xml.AppendNumber(style);
+				xml.Append((byte)'"');
+			}
+
+			if (hidden)
+			{
+				xml.Append(" hidden=\"1\""u8);
+			}
+
+			xml.Append(custom ? " customWidth=\"1\"/>"u8 : "/>"u8);
+		}
+
+		if (any)
+		{
+			xml.Append("</cols>"u8);
+		}
+	}
+
+	/// <summary>
+	/// Writes the XML after the sheet's rows into the buffer: the end of <c>sheetData</c>, the title's merge, the page
+	/// margins, <c>ignoredErrors</c> over the used range when a text cell starts like a number, and the worksheet's end, in
+	/// the schema's order, which Excel keeps to.
 	/// </summary>
 	private void AppendEnd()
 	{
-		output.Append(End);
+		output.Append("</sheetData>"u8);
+		if (titleLastColumn > 0)
+		{
+			output.Append("<mergeCells count=\"1\"><mergeCell ref=\"A1:"u8);
+			output.AppendReference(ColumnName(titleLastColumn), 1);
+			output.Append("\"/></mergeCells>"u8);
+		}
+
+		output.Append(PageMargins);
 		if (numberLikeText)
 		{
 			// Excel flags text that reads as a number with a warning triangle; over the used range, it doesn't.
@@ -990,7 +1281,7 @@ internal sealed class SheetSink : CsvCellSink
 		entry ??= await package.OpenPartAsync(partName, async, cancellationToken).ConfigureAwait(false);
 		if (!startWritten)
 		{
-			using var start = new XmlOutput(Start.Length + 64 + (widths.Count * 64));
+			using var start = new XmlOutput(Start.Length + 256 + ((widths.Count + (columnOptions?.Length ?? 0)) * 96));
 			AppendStart(start);
 			await start.WriteToAsync(entry, start.Length, async, cancellationToken).ConfigureAwait(false);
 			startWritten = true;

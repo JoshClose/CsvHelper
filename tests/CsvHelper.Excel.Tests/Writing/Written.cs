@@ -28,6 +28,17 @@ internal static class Written
 	/// <summary>The options of a reader that reads every row as a record, the header too, empty rows included.</summary>
 	public static readonly ExcelReaderOptions AllRows = new() { Csv = new CsvReaderOptions { HasHeader = false, SkipEmptyLines = false } };
 
+	/// <summary>
+	/// Phase 4's look: no bold or frozen header and no auto-fit, for the tests of cells, whose XML they compare, so that
+	/// Phase 5's defaults leave it as it was.
+	/// </summary>
+	public static readonly ExcelSheetOptions Phase4Look = new() { BoldHeader = false, FreezeHeader = false, AutoFit = 0 };
+
+	/// <summary>Options with Phase 4's look (<see cref="Phase4Look"/>).</summary>
+	/// <param name="options">The options, or <see langword="null"/> for the default ones.</param>
+	/// <returns>The options with <see cref="ExcelWriterOptions.Sheets"/> set to Phase 4's look.</returns>
+	public static ExcelWriterOptions Phase4(ExcelWriterOptions? options = null) => (options ?? ExcelWriterOptions.Default) with { Sheets = Phase4Look };
+
 	/// <summary>Options whose sheets' records may have different numbers of fields, with strings as given.</summary>
 	/// <param name="strings">Where text cells keep their strings.</param>
 	/// <returns>The options.</returns>

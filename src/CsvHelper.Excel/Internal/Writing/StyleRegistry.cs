@@ -29,11 +29,31 @@ internal enum FixedFormat
 	DurationMilliseconds,
 }
 
+/// <summary>The fonts of the writer's cell formats: Calibri, which every Excel since 2007 has.</summary>
+internal enum CellFont
+{
+	/// <summary>Calibri 11, the workbook's default.</summary>
+	Regular,
+
+	/// <summary>Bold Calibri 11: a header's.</summary>
+	Bold,
+
+	/// <summary>Bold Calibri 14: a title's.</summary>
+	Title,
+}
+
+/// <summary>A cell format: a number format, a font and whether text wraps.</summary>
+/// <param name="NumberFormatId">The number format's id: 0 for General, a built-in format's, or a custom one's from 164.</param>
+/// <param name="Font">The font.</param>
+/// <param name="Wrap">Whether text wraps at the column's width.</param>
+internal readonly record struct CellXf(int NumberFormatId, CellFont Font, bool Wrap);
+
 /// <summary>
-/// The workbook's cell formats: an index (a cell's <c>s</c>) for each number format code, handed out in the order codes
-/// are first used, after the default cell format 0 (General). Codes that are one of Excel's built-in formats get its id,
-/// as Excel saves them; the others get ids from 164 on, in <c>numFmts</c>. Formats that a discarded record added stay:
-/// Excel opens a workbook with cell formats no cell uses.
+/// The workbook's cell formats: an index (a cell's <c>s</c>) for each <see cref="CellXf"/>, handed out in the order
+/// they are first used, after the default cell format 0 (General, in Calibri 11). Number format codes that are one of
+/// Excel's built-in formats get its id, as Excel saves them; the others get ids from 164 on, in <c>numFmts</c>. Fonts get
+/// ids in the order they are first used, after Calibri 11, so that a workbook has only the fonts its cells use. Formats
+/// that a discarded record added stay: Excel opens a workbook with cell formats no cell uses.
 /// </summary>
 internal sealed class StyleRegistry
 {
@@ -49,16 +69,26 @@ internal sealed class StyleRegistry
 		"[h]:mm:ss.000",
 	];
 
-	private readonly Dictionary<string, int> indexes = new(StringComparer.Ordinal);
-	// The number format id of each cell format after the default one.
-	private readonly List<int> formatIds = [];
+	// The id of each number format code used, by its code.
+	private readonly Dictionary<string, int> numberFormatIds = new(StringComparer.Ordinal);
 	// The custom formats' codes: the first has id 164.
 	private readonly List<string> customCodes = [];
+	// The cell formats, the default one first, and each one's index.
+	private readonly List<CellXf> formats = [default];
+	private readonly Dictionary<CellXf, int> indexes = new() { [default] = 0 };
 	// The cell format of each fixed format, 0 until it is first used.
 	private readonly int[] fixedIndexes = new int[FixedCodes.Length];
+	// The fonts, in the order of their ids; and each font's id, by CellFont, -1 until it is first used.
+	private readonly List<CellFont> fonts = [CellFont.Regular];
+	private readonly int[] fontIds = [0, -1, -1];
 
 	/// <summary>The number of cell formats, the default one included.</summary>
-	public int Count => formatIds.Count + 1;
+	public int Count => formats.Count;
+
+	/// <summary>A cell format, by its index.</summary>
+	/// <param name="index">The index.</param>
+	/// <returns>The cell format.</returns>
+	public CellXf this[int index] => formats[index];
 
 	/// <summary>The cell format of one of the writer's own number formats.</summary>
 	/// <param name="format">The format.</param>
@@ -74,33 +104,65 @@ internal sealed class StyleRegistry
 		return index;
 	}
 
-	/// <summary>The cell format of a number format code, added when it is first used.</summary>
+	/// <summary>The cell format of a number format code, in Calibri 11 without wrap, added when it is first used.</summary>
 	/// <param name="code">The code, which Excel opens (see Phase 4's <c>FormatCheck</c>).</param>
 	/// <returns>Its index: 0 for General (in any case) or an empty code.</returns>
-	public int IndexOf(string code)
+	public int IndexOf(string code) => IndexOf(new CellXf(NumberFormatId(code), CellFont.Regular, false));
+
+	/// <summary>The index of a cell format, added when it is first used.</summary>
+	/// <param name="format">The cell format.</param>
+	/// <returns>Its index.</returns>
+	public int IndexOf(CellXf format)
+	{
+		if (indexes.TryGetValue(format, out var index))
+		{
+			return index;
+		}
+
+		if (fontIds[(int)format.Font] < 0)
+		{
+			fontIds[(int)format.Font] = fonts.Count;
+			fonts.Add(format.Font);
+		}
+
+		index = formats.Count;
+		formats.Add(format);
+		indexes.Add(format, index);
+
+		return index;
+	}
+
+	/// <summary>The index of a cell format with another font: a header's or a title's cell, in its own number format.</summary>
+	/// <param name="index">The cell format's index.</param>
+	/// <param name="font">The font.</param>
+	/// <returns>The index of the cell format with that font.</returns>
+	public int WithFont(int index, CellFont font) => IndexOf(formats[index] with { Font = font });
+
+	/// <summary>The id of a number format code, a custom one added when it is first used.</summary>
+	/// <param name="code">The code, which Excel opens.</param>
+	/// <returns>Its id: 0 for General (in any case) or an empty code, a built-in format's, or a custom one's from 164.</returns>
+	public int NumberFormatId(string code)
 	{
 		if (code.Length == 0 || string.Equals(code, "General", StringComparison.OrdinalIgnoreCase))
 		{
 			return 0;
 		}
 
-		if (indexes.TryGetValue(code, out var index))
+		if (numberFormatIds.TryGetValue(code, out var id))
 		{
-			return index;
+			return id;
 		}
 
-		var id = BuiltInId(code);
+		id = BuiltInId(code);
 		if (id < 0)
 		{
 			id = 164 + customCodes.Count;
 			customCodes.Add(code);
 		}
 
-		formatIds.Add(id);
-		index = formatIds.Count;
-		indexes.Add(code, index);
+		numberFormatIds.Add(code, id);
 
-		return index;
+		return id;
 	}
 
 	/// <summary>Writes the custom number formats' <c>numFmts</c>, if there are any, which come first in the styles part.</summary>
@@ -127,18 +189,55 @@ internal sealed class StyleRegistry
 		xml.Append("</numFmts>"u8);
 	}
 
-	/// <summary>Writes the cell formats' <c>cellXfs</c>: the default one, then one for each number format, in Calibri 11.</summary>
+	/// <summary>Writes the <c>fonts</c>: Calibri 11, then the others the cell formats use, in the order of their ids.</summary>
+	/// <param name="xml">The buffer.</param>
+	public void WriteFonts(XmlOutput xml)
+	{
+		xml.Append("<fonts count=\""u8);
+		xml.AppendNumber(fonts.Count);
+		xml.Append("\">"u8);
+		foreach (var font in fonts)
+		{
+			xml.Append(font switch
+			{
+				CellFont.Bold => "<font><b/><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
+				CellFont.Title => "<font><b/><sz val=\"14\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
+				_ => "<font><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
+			});
+		}
+
+		xml.Append("</fonts>"u8);
+	}
+
+	/// <summary>
+	/// Writes the cell formats' <c>cellXfs</c>: the default one, then the others in the order of their indexes, each with
+	/// the <c>apply</c> flags of what it sets, as Excel writes them.
+	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	public void WriteCellFormats(XmlOutput xml)
 	{
 		xml.Append("<cellXfs count=\""u8);
 		xml.AppendNumber(Count);
 		xml.Append("\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/>"u8);
-		foreach (var id in formatIds)
+		for (var i = 1; i < formats.Count; i++)
 		{
+			var format = formats[i];
 			xml.Append("<xf numFmtId=\""u8);
-			xml.AppendNumber(id);
-			xml.Append("\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyNumberFormat=\"1\"/>"u8);
+			xml.AppendNumber(format.NumberFormatId);
+			xml.Append("\" fontId=\""u8);
+			xml.AppendNumber(fontIds[(int)format.Font]);
+			xml.Append("\" fillId=\"0\" borderId=\"0\" xfId=\"0\""u8);
+			if (format.NumberFormatId != 0)
+			{
+				xml.Append(" applyNumberFormat=\"1\""u8);
+			}
+
+			if (format.Font != CellFont.Regular)
+			{
+				xml.Append(" applyFont=\"1\""u8);
+			}
+
+			xml.Append(format.Wrap ? " applyAlignment=\"1\"><alignment wrapText=\"1\"/></xf>"u8 : "/>"u8);
 		}
 
 		xml.Append("</cellXfs>"u8);

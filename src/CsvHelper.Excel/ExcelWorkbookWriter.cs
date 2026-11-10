@@ -147,8 +147,8 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
 	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, a record can't be written
-	/// (it is discarded, and the sheet completed with the records before it), or <typeparamref name="T"/> has no record
-	/// writer.
+	/// (it is discarded, and the sheet completed with the records before it), <see cref="ExcelSheetOptions.Columns"/> names
+	/// a column the header doesn't have (the header is discarded so), or <typeparamref name="T"/> has no record writer.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
 	public void WriteSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, IEnumerable<T> records, ExcelSheetOptions? options = null)
@@ -277,14 +277,19 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
 	/// are not valid.
 	/// </exception>
-	/// <exception cref="InvalidOperationException">Another sheet's writer is open: a workbook is written one sheet at a time.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// Another sheet's writer is open (a workbook is written one sheet at a time), or the sheet has no header
+	/// (<see cref="CsvWriterOptions.HasHeader"/> is off) and <see cref="ExcelSheetOptions.Columns"/> names columns, which
+	/// only a header's names find.
+	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
 	public CsvWriter AddSheet(string name, ExcelSheetOptions? options = null)
 	{
 		var key = CheckNewSheet(name);
 		var settings = SheetSettings.Resolve(options, null, null, Options);
+		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(null);
 
-		return Open(NewSheet(name, key, settings, null, null));
+		return Open(NewSheet(name, key, settings, null, null, columns));
 	}
 
 	/// <summary>
@@ -331,8 +336,10 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// are not valid.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
-	/// Another sheet's writer is open (a workbook is written one sheet at a time), or <typeparamref name="T"/>'s
-	/// <see cref="ExcelSheetAttribute"/> or <see cref="ExcelColumnAttribute"/>s are not valid.
+	/// Another sheet's writer is open (a workbook is written one sheet at a time); <typeparamref name="T"/>'s
+	/// <see cref="ExcelSheetAttribute"/> or <see cref="ExcelColumnAttribute"/>s are not valid; or the sheet has no header
+	/// (<see cref="CsvWriterOptions.HasHeader"/> is off) and <see cref="ExcelSheetOptions.Columns"/> names a column that
+	/// <typeparamref name="T"/>'s record writer doesn't write in its header.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
 	public CsvWriter AddSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions? options = null)
@@ -342,9 +349,11 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var settings = SheetSettings.Resolve(options, typeof(T), members, Options);
 		// The sink reads cells with the members' formats and cultures; their Excel options come through the settings.
 		var formats = members is { HasFormats: true } ? members : null;
-		var headerNames = formats is not null && !Options.Csv.HasHeader ? HeaderCapture.Of<T>() : null;
+		// Without a header, the names T's record writer writes say which column each member's and each option's is.
+		var headerNames = !Options.Csv.HasHeader && (formats is not null || settings.HasColumns) ? HeaderCapture.Of<T>() : null;
+		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(headerNames);
 
-		return Open(NewSheet(name, key, settings, formats, headerNames));
+		return Open(NewSheet(name, key, settings, formats, headerNames, columns));
 	}
 
 	/// <summary>
@@ -358,8 +367,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	{
 		var key = CheckNewSheet(name);
 		var settings = SheetSettings.Resolve(null, null, members, Options);
+		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(null);
 
-		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null));
+		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null, columns));
 	}
 
 	/// <summary>
@@ -486,10 +496,11 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <param name="settings">How the sheet looks.</param>
 	/// <param name="members">The formats of the record type's members, or <see langword="null"/> when none has one.</param>
 	/// <param name="headerNames">Without a header, the names the record writer writes in its header, or <see langword="null"/>.</param>
+	/// <param name="columns">Without a header, each column's options, or <see langword="null"/> for none.</param>
 	/// <returns>The sheet's sink.</returns>
-	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames)
+	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns)
 	{
-		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, settings, members, headerNames);
+		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, settings, members, headerNames, columns);
 		namesByKey.Add(key, name);
 		sheetNames.Add(name);
 
@@ -535,7 +546,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 			if (sheetNames.Count == 0)
 			{
-				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null).CompleteAsync(async).ConfigureAwait(false);
+				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null).CompleteAsync(async).ConfigureAwait(false);
 			}
 
 			await PackageParts.WriteAsync(package, sheetNames, strings, styles, async, CancellationToken.None).ConfigureAwait(false);

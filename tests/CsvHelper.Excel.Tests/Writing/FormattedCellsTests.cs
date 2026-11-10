@@ -231,7 +231,7 @@ public class FormattedCellsTests
 			writer.WriteField(When, "dd.MM.yyyy");
 			await Written.EndRecordAsync(writer, a);
 			await Written.DisposeAsync(writer, a);
-		}, async);
+		}, async, Written.Phase4());
 
 		// Amount and Day are members, under their names exactly; Other and day aren't, and their texts stay text.
 		Assert.Contains(
@@ -297,7 +297,7 @@ public class FormattedCellsTests
 	[Fact]
 	public async Task WritesTheFormatsOfAnAsynchronousSequence()
 	{
-		var workbook = await Written.WorkbookAsync((book, _) => book.WriteSheetAsync("Data", Sequence()).AsTask(), async: true);
+		var workbook = await Written.WorkbookAsync((book, _) => book.WriteSheetAsync("Data", Sequence()).AsTask(), async: true, Written.Phase4());
 
 		Assert.Contains(Row2, Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 
@@ -326,7 +326,7 @@ public class FormattedCellsTests
 			}
 
 			await Written.DisposeAsync(writer, a);
-		}, async);
+		}, async, Written.Phase4());
 
 		// AddSheet without T knows no member's format: only the duration in .NET's default format is typed.
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
@@ -405,7 +405,7 @@ public class FormattedCellsTests
 			{
 				book.WriteSheet("Data", records);
 			}
-		}, async, new ExcelWriterOptions { RowLimit = ExcelRowLimit.NewSheet });
+		}, async, Written.Phase4(new ExcelWriterOptions { RowLimit = ExcelRowLimit.NewSheet }));
 
 		Assert.Contains("<c r=\"B3\" s=\"1\"><v>45307</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Contains("<c r=\"B2\" s=\"1\"><v>45308</v></c>", Written.Entry(workbook, "xl/worksheets/sheet2.xml"));
@@ -442,7 +442,7 @@ public class FormattedCellsTests
 	/// <param name="options">The options, or <see langword="null"/>.</param>
 	/// <returns>The workbook's bytes.</returns>
 	private static Task<byte[]> Write<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(MemberFormats.Members)] T>(IEnumerable<T> records, bool async, ExcelWriterOptions? options = null) =>
-		Written.WorkbookAsync((book, a) => a ? book.WriteSheetAsync("Data", records).AsTask() : Sync(() => book.WriteSheet("Data", records)), async, options);
+		Written.WorkbookAsync((book, a) => a ? book.WriteSheetAsync("Data", records).AsTask() : Sync(() => book.WriteSheet("Data", records)), async, Written.Phase4(options));
 
 	/// <summary>Runs an action, as a completed task.</summary>
 	/// <param name="action">The action.</param>

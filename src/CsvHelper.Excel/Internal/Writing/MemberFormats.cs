@@ -72,6 +72,7 @@ internal sealed class MemberFormats
 		foreach (var member in members)
 		{
 			HasFormats |= member.Format is not null || member.Culture is not null;
+			HasExcelColumns |= member.Excel is not null;
 		}
 	}
 
@@ -80,6 +81,9 @@ internal sealed class MemberFormats
 
 	/// <summary>Whether a member has a format or a culture, which the sink reads its cells with.</summary>
 	public bool HasFormats { get; }
+
+	/// <summary>Whether a member has an <see cref="ExcelColumnAttribute"/>, which gives its column options.</summary>
+	public bool HasExcelColumns { get; }
 
 	/// <summary>The options of the type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/> without one.</summary>
 	public ExcelSheetOptions? Sheet { get; }

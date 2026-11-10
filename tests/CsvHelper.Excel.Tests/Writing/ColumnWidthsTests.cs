@@ -79,4 +79,17 @@ public class ColumnWidthsTests
 		Assert.Equal(0, ColumnWidths.Time);
 		Assert.Equal(ColumnWidths.Of("00:00:00.000".AsSpan()), ColumnWidths.TimeMilliseconds);
 	}
+
+	[Theory]
+	[InlineData(0, 0)]
+	[InlineData(0.5, 0.85546875)]
+	[InlineData(1, 1.7109375)]
+	[InlineData(8.43, 9.140625)]
+	[InlineData(10, 10.7109375)]
+	[InlineData(12.5, 13.2109375)]
+	[InlineData(255, 255.7109375)]
+	public void WritesCharactersAsExcelWritesThem(double characters, double width) => Assert.Equal(width, ColumnWidths.FromCharacters(characters));
+
+	[Fact]
+	public void HasExcelsDefaultWidth() => Assert.Equal(ColumnWidths.Default, ColumnWidths.FromCharacters(8.43));
 }
