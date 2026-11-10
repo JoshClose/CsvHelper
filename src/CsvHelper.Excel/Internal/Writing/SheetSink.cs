@@ -31,10 +31,16 @@ namespace CsvHelper.Excel;
 /// records, and the entry is opened then, sync or async as the caller is.
 /// </para>
 /// <para>
-/// The records up to the first data record (the one after the header, with <see cref="CsvWriterOptions.HasHeader"/>) are
-/// held, since the columns' widths, which come before the rows, are that record's: a date or a time that its column's
-/// default width can't show gets a width that fits it (<see cref="ColumnWidths"/>). Text, and numbers in General, never
-/// show <c>########</c> and get none.
+/// The first records are held, since the columns' widths come before the rows (<see cref="AutoFit"/>). With auto-fit
+/// (<see cref="ExcelSheetOptions.AutoFit"/>), they are the header and the records auto-fit measures, and each column is as
+/// wide as its widest cell among them: the header's in bold when it is, with its filter button when it has one; text on
+/// one line, or its widest line when it wraps; numbers in General (<see cref="NumberFormatWidth.General"/>) or in their
+/// column's format; booleans as <c>TRUE</c> and <c>FALSE</c>; dates, times and durations in their formats; and formulas,
+/// whose values aren't known, as the default column. The title counts nothing. Without auto-fit, they are the records up
+/// to the first data record (the one after the header, with <see cref="CsvWriterOptions.HasHeader"/>), and a typed cell
+/// of it in a format that its column's default width can't show (a date, a time, a duration, or a cell in its column's
+/// format) gets a width that fits it (<see cref="ColumnWidths"/>). A column's widths are the first sheet's in the new
+/// sheets of <see cref="ExcelRowLimit.NewSheet"/> too.
 /// </para>
 /// <para>
 /// A sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/> knows its columns' members' formats and cultures
@@ -93,11 +99,18 @@ internal sealed class SheetSink : CsvCellSink
 	private readonly MemberFormats? members;
 	// The title's text, or null without one.
 	private readonly byte[]? title;
-	// The row of the writer's first record: 2 below a title, else 1; the header's row, or 0 without a header; and the row
-	// of the first data record, whose cells set the columns' widths.
+	// The row of the writer's first record: 2 below a title, else 1; the header's row, or 0 without a header; the row of
+	// the first data record; and the last row held while its cells are measured: the first data record's, or, with
+	// auto-fit, the last record's that it measures.
 	private readonly long firstRow;
 	private readonly long headerRowNumber;
 	private readonly long firstDataRow;
+	private readonly long lastHeldRow;
+	// Whether auto-fit measures every held cell, rather than the first data record's typed cells in a format; and whether
+	// the header's cells measure in bold, and with a filter button.
+	private readonly bool fits;
+	private readonly bool boldHeaderWidths;
+	private readonly bool filterButtons;
 	// The rows a sheet holds: Excel's last row's number, or fewer in tests.
 	private readonly int maxRows;
 	// Whether each new sheet of RowLimit.NewSheet repeats the header, which the first record is.
@@ -105,8 +118,9 @@ internal sealed class SheetSink : CsvCellSink
 	private readonly XmlOutput output = new(FlushSize + 4096);
 	// The XML of a shared string, before the table gives its index.
 	private readonly XmlOutput? item;
-	// The columns that get a width, in order: the first data record's while it is written, then the sheet's.
-	private readonly List<(int Column, double Width)> widths = [];
+	// The held cells' widths; and the columns' widths once known, by column (0 for none), or null for none.
+	private readonly AutoFit measured = new();
+	private double[]? columnWidths;
 	// Each column's last type, and the kind of cell it makes.
 	private Type?[] columnTypes = new Type?[16];
 	private CellKind[] columnKinds = new CellKind[16];
@@ -154,8 +168,10 @@ internal sealed class SheetSink : CsvCellSink
 	private long lastRow;
 	private int lastColumn = -1;
 	private bool numberLikeText;
-	// Whether the columns' widths are known, so that the held records can be written; and whether the XML before the rows is.
+	// Whether the columns' widths are known, so that the held records can be written; whether the current record's cells
+	// are measured; and whether the XML before the rows is written.
 	private bool widthsKnown;
+	private bool measuring;
 	private bool startWritten;
 	private bool completed;
 
@@ -194,6 +210,10 @@ internal sealed class SheetSink : CsvCellSink
 		firstRow = title is null ? 1 : 2;
 		headerRowNumber = options.Csv.HasHeader ? firstRow : 0;
 		firstDataRow = options.Csv.HasHeader ? firstRow + 1 : firstRow;
+		fits = settings.AutoFit > 0;
+		lastHeldRow = fits ? firstDataRow + settings.AutoFit - 1 : firstDataRow;
+		boldHeaderWidths = settings.BoldHeader || (settings.HasHeader && settings.Table?.Style is not null);
+		filterButtons = settings.HasHeader && (settings.AutoFilter || settings.Table is { FilterButtons: true });
 		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
@@ -217,6 +237,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		WriteTitle();
 		SetRowFont(settings.BoldHeader ? CellFont.Bold : CellFont.Regular);
+		UpdateMeasuring();
 	}
 
 	/// <summary>The name of the sheet being written (a new one's, after <see cref="ExcelRowLimit.NewSheet"/>), and how messages name its cells.</summary>
@@ -225,8 +246,8 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>How the sheet looks: its options, resolved and checked when it was added.</summary>
 	public SheetSettings Settings { get; }
 
-	/// <summary>Whether the cells being written are the first data record's, whose typed cells set their columns' widths.</summary>
-	private bool MeasuringWidths => !widthsKnown && row == firstDataRow;
+	/// <summary>Whether the cell being measured is the header's, in bold.</summary>
+	private bool MeasuresBold => boldHeaderWidths && row == headerRowNumber;
 
 	/// <summary>Writes a field's cell into the current record.</summary>
 	/// <param name="utf8">The field's text.</param>
@@ -353,15 +374,30 @@ internal sealed class SheetSink : CsvCellSink
 			recordReferences = 0;
 		}
 
-		if (row == firstDataRow)
+		if (measuring)
 		{
-			widthsKnown = true;
+			if (filterButtons && row == headerRowNumber)
+			{
+				measured.AddFilterButtons(column);
+			}
+
+			measured.EndRecord();
 		}
 
 		row++;
 		if (row > maxRows)
 		{
 			fieldLimit = 0;
+		}
+
+		if (!widthsKnown && (row > lastHeldRow || row > maxRows))
+		{
+			// The last record held, or the sheet is full: the next sheets of NewSheet take its widths.
+			KnowWidths();
+		}
+		else
+		{
+			UpdateMeasuring();
 		}
 
 		if (rowFont != CellFont.Regular)
@@ -385,9 +421,9 @@ internal sealed class SheetSink : CsvCellSink
 		recordReferences = 0;
 		recordNumberLikeText = false;
 		header?.Clear();
-		if (MeasuringWidths)
+		if (measuring)
 		{
-			widths.Clear();
+			measured.DiscardRecord();
 		}
 	}
 
@@ -424,7 +460,11 @@ internal sealed class SheetSink : CsvCellSink
 		completed = true;
 		try
 		{
-			widthsKnown = true;
+			if (!widthsKnown)
+			{
+				KnowWidths();
+			}
+
 			AppendEnd();
 			recordStart = output.Length;
 			await FlushAsync(async, CancellationToken.None).ConfigureAwait(false);
@@ -594,6 +634,10 @@ internal sealed class SheetSink : CsvCellSink
 		output.Append(" t=\"b\"><v>"u8);
 		output.Append(value);
 		output.Append("</v></c>"u8);
+		if (measuring)
+		{
+			MeasureBool(at, value == (byte)'1');
+		}
 	}
 
 	/// <summary>
@@ -637,6 +681,10 @@ internal sealed class SheetSink : CsvCellSink
 		output.Append("><v>"u8);
 		output.Append(invariant.Slice(0, length));
 		output.Append("</v></c>"u8);
+		if (measuring)
+		{
+			MeasureNumber(at, invariant.Slice(0, length));
+		}
 	}
 
 	/// <summary>
@@ -716,7 +764,7 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		var format = milliseconds % Serial.MillisecondsPerDay == 0 ? FixedFormat.Date : milliseconds % 1000 == 0 ? FixedFormat.DateTime : FixedFormat.DateTimeMilliseconds;
-		WriteSerial(at, milliseconds, format, format == FixedFormat.DateTimeMilliseconds ? ColumnWidths.DateTimeMilliseconds : ColumnWidths.DateTime);
+		WriteSerial(at, milliseconds, format, format == FixedFormat.DateTimeMilliseconds ? ColumnWidths.DateTimeMillisecondsPixels : ColumnWidths.DateTimePixels);
 	}
 
 	/// <summary>Writes a date cell from a <c>DateOnly</c>'s <c>"O"</c> text, in <c>yyyy-mm-dd</c>, or from its member's format's text.</summary>
@@ -746,7 +794,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		WriteSerial(at, milliseconds, FixedFormat.Date, ColumnWidths.Date);
+		WriteSerial(at, milliseconds, FixedFormat.Date, ColumnWidths.DatePixels);
 	}
 
 	/// <summary>
@@ -773,7 +821,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		var milliseconds = Serial.TimeMilliseconds(ticks);
 		var whole = milliseconds % 1000 == 0;
-		WriteSerial(at, milliseconds, whole ? FixedFormat.Time : FixedFormat.TimeMilliseconds, whole ? ColumnWidths.Time : ColumnWidths.TimeMilliseconds);
+		WriteSerial(at, milliseconds, whole ? FixedFormat.Time : FixedFormat.TimeMilliseconds, whole ? ColumnWidths.TimePixels : ColumnWidths.TimeMillisecondsPixels);
 	}
 
 	/// <summary>
@@ -801,7 +849,7 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		var format = milliseconds % 1000 == 0 ? FixedFormat.Duration : FixedFormat.DurationMilliseconds;
-		WriteSerial(at, milliseconds, format, MeasuringWidths ? ColumnWidths.Of(DurationText(milliseconds).AsSpan()) : 0);
+		WriteSerial(at, milliseconds, format, measuring ? ColumnWidths.TextPixels(DurationText(milliseconds).AsSpan()) : 0);
 	}
 
 	/// <summary>
@@ -852,16 +900,16 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		WriteSerial(at, milliseconds, FormatsColumn(at) ? 0 : column.Style(styles), MeasuringWidths ? format.Width : 0);
+		WriteSerial(at, milliseconds, FormatsColumn(at) ? 0 : column.Style(styles), measuring ? format.Pixels : 0);
 	}
 
-	/// <summary>Writes a number cell of a serial, in one of the writer's formats, and notes its column's width.</summary>
+	/// <summary>Writes a number cell of a serial, in one of the writer's formats, and measures it.</summary>
 	/// <param name="at">The cell's column.</param>
 	/// <param name="milliseconds">The serial, in milliseconds.</param>
 	/// <param name="format">The cell's number format.</param>
-	/// <param name="width">The width its column needs, or 0 for none.</param>
-	private void WriteSerial(int at, long milliseconds, FixedFormat format, double width) =>
-		WriteSerial(at, milliseconds, FormatsColumn(at) ? 0 : styles.IndexOf(format), width);
+	/// <param name="pixels">The pixels of its widest text in its format, or 0 when it isn't measured.</param>
+	private void WriteSerial(int at, long milliseconds, FixedFormat format, double pixels) =>
+		WriteSerial(at, milliseconds, FormatsColumn(at) ? 0 : styles.IndexOf(format), pixels);
 
 	/// <summary>
 	/// Whether a cell's column has a format of its own below the header, which takes the place of the cell's: then its own
@@ -872,20 +920,115 @@ internal sealed class SheetSink : CsvCellSink
 	private bool FormatsColumn(int at) =>
 		styling && rowFont == CellFont.Regular && columnStyles is { } columns && at < columns.Length && columns[at] is { HasFormat: true };
 
-	/// <summary>Writes a number cell of a serial, in a cell format, and notes its column's width.</summary>
+	/// <summary>The style a cell takes from its column: below the header, in a column with a format or wrap.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <returns>The style, or <see langword="null"/>.</returns>
+	private ColumnStyle? ColumnStyleOf(int at) =>
+		styling && rowFont == CellFont.Regular && columnStyles is { } columns && at < columns.Length ? columns[at] : null;
+
+	/// <summary>The widths of the format a cell takes from its column, if it takes one.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <returns>The format's widths, or <see langword="null"/>.</returns>
+	private NumberFormatWidth? FormatWidthOf(int at) => ColumnStyleOf(at)?.FormatWidth;
+
+	/// <summary>
+	/// Measures a number cell: in its column's format, or, with auto-fit, in General. Without auto-fit, a number in General
+	/// needs no width, since Excel shows it in fewer digits rather than as <c>########</c>.
+	/// </summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="invariant">The number's invariant text.</param>
+	private void MeasureNumber(int at, ReadOnlySpan<byte> invariant)
+	{
+		var format = FormatWidthOf(at);
+		if (format is null && !fits)
+		{
+			return;
+		}
+
+		var value = double.Parse(Encoding.ASCII.GetString(invariant.ToArray()), NumberStyles.Float, CultureInfo.InvariantCulture);
+		var pixels = format?.NumberPixels(value) ?? NumberFormatWidth.GeneralPixels(value);
+		measured.Add(at, pixels, typed: true);
+	}
+
+	/// <summary>Measures a boolean cell: <c>TRUE</c> or <c>FALSE</c>, in its column format's text section if it has one.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="value">The boolean.</param>
+	private void MeasureBool(int at, bool value)
+	{
+		var format = FormatWidthOf(at);
+		if (format is null && !fits)
+		{
+			return;
+		}
+
+		var pixels = ColumnWidths.TextPixels((value ? "TRUE" : "FALSE").AsSpan(), MeasuresBold);
+		measured.Add(at, format?.TextPixels(pixels) ?? pixels, typed: true);
+	}
+
+	/// <summary>Measures a date, time or duration cell: in its column's format, else in its own.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="milliseconds">The serial, in milliseconds.</param>
+	/// <param name="pixels">The pixels of its widest text in its own format.</param>
+	private void MeasureSerial(int at, long milliseconds, double pixels)
+	{
+		if (FormatWidthOf(at) is { } format)
+		{
+			pixels = format.NumberPixels(Serial.Days(milliseconds));
+		}
+
+		if (pixels > 0)
+		{
+			measured.Add(at, pixels, typed: true);
+		}
+	}
+
+	/// <summary>
+	/// Measures a text cell, with auto-fit: in bold in a bold header; its widest line when its column wraps, else all of it
+	/// on one line; in its column format's text section if it has one.
+	/// </summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="text">The text, valid UTF-8.</param>
+	private void MeasureText(int at, ReadOnlySpan<byte> text)
+	{
+		var style = ColumnStyleOf(at);
+		var pixels = AutoFit.TextPixels(text, MeasuresBold, style?.Wrap == true);
+		if (style?.FormatWidth is { } format)
+		{
+			pixels = format.TextPixels(pixels);
+		}
+
+		measured.Add(at, pixels, typed: false);
+	}
+
+	/// <summary>
+	/// Sets whether the current record's cells are measured: with auto-fit, the header's and those of the records it
+	/// measures; without, the first data record's.
+	/// </summary>
+	private void UpdateMeasuring() =>
+		measuring = !widthsKnown && (fits ? row >= firstRow && row <= lastHeldRow : row == firstDataRow);
+
+	/// <summary>Works out the columns' widths from the cells measured, once the held records are: they can be written now.</summary>
+	private void KnowWidths()
+	{
+		widthsKnown = true;
+		measuring = false;
+		columnWidths = measured.Widths(fits, ColumnWidths.FromCharacters(Settings.MaxAutoFitWidth));
+	}
+
+	/// <summary>Writes a number cell of a serial, in a cell format, and measures it.</summary>
 	/// <param name="at">The cell's column.</param>
 	/// <param name="milliseconds">The serial, in milliseconds.</param>
 	/// <param name="style">The cell format's index.</param>
-	/// <param name="width">The width its column needs, or 0 for none.</param>
-	private void WriteSerial(int at, long milliseconds, int style, double width)
+	/// <param name="pixels">The pixels of its widest text in its own format, or 0 when it isn't measured.</param>
+	private void WriteSerial(int at, long milliseconds, int style, double pixels)
 	{
 		StartCell(at, style);
 		output.Append("><v>"u8);
 		output.AppendDouble(Serial.Days(milliseconds));
 		output.Append("</v></c>"u8);
-		if (width > 0 && MeasuringWidths)
+		if (measuring)
 		{
-			widths.Add((at, width));
+			MeasureSerial(at, milliseconds, pixels);
 		}
 	}
 
@@ -905,6 +1048,10 @@ internal sealed class SheetSink : CsvCellSink
 		output.Append(XmlOutput.NeedsPreserve(formula) ? "><f xml:space=\"preserve\">"u8 : "><f>"u8);
 		output.AppendText(formula);
 		output.Append("</f></c>"u8);
+		if (measuring && fits)
+		{
+			measured.AddFormula(at);
+		}
 	}
 
 	/// <summary>Writes a text cell: the string inline, or its index in the shared strings.</summary>
@@ -927,6 +1074,11 @@ internal sealed class SheetSink : CsvCellSink
 
 		// Text that starts like a number (00123, 1.5, -1, .5) gets Excel's warning triangle unless the sheet ignores it.
 		recordNumberLikeText |= text[0] is >= (byte)'0' and <= (byte)'9' or (byte)'+' or (byte)'-' or (byte)'.';
+		if (measuring && fits)
+		{
+			MeasureText(at, text);
+		}
+
 		StartCell(at, 0);
 		if (strings is null)
 		{
@@ -1147,22 +1299,24 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>
 	/// Writes the columns that have a width, a style or are hidden, in order, each as a <c>col</c> of its own: the width
 	/// its options give (<see cref="ExcelColumnOptions.Width"/>), else the one measured, else the default width, which a
-	/// <c>col</c> needs, since Excel hides one without.
+	/// <c>col</c> needs, since Excel hides one without. A width auto-fit gives is marked <c>bestFit</c>, as Excel marks its
+	/// AutoFit's, which widens such a column as numbers are typed into it.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	private void AppendColumns(XmlOutput xml)
 	{
-		var count = Math.Max(columnOptions?.Length ?? 0, widths.Count > 0 ? widths[widths.Count - 1].Column + 1 : 0);
-		var measured = 0;
+		var count = Math.Max(columnOptions?.Length ?? 0, columnWidths?.Length ?? 0);
 		var any = false;
 		for (var at = 0; at < count; at++)
 		{
 			var width = 0.0;
 			var custom = false;
-			if (measured < widths.Count && widths[measured].Column == at)
+			var bestFit = false;
+			if (columnWidths is { } fitted && at < fitted.Length && fitted[at] > 0)
 			{
-				width = widths[measured++].Width;
+				width = fitted[at];
 				custom = true;
+				bestFit = fits;
 			}
 
 			var column = columnOptions is { } columns && at < columns.Length ? columns[at] : null;
@@ -1170,6 +1324,7 @@ internal sealed class SheetSink : CsvCellSink
 			{
 				width = ColumnWidths.FromCharacters(characters);
 				custom = true;
+				bestFit = false;
 			}
 
 			var style = columnStyles is { } styled && at < styled.Length ? styled[at]?.Default ?? 0 : 0;
@@ -1204,7 +1359,7 @@ internal sealed class SheetSink : CsvCellSink
 				xml.Append(" hidden=\"1\""u8);
 			}
 
-			xml.Append(custom ? " customWidth=\"1\"/>"u8 : "/>"u8);
+			xml.Append(bestFit ? " bestFit=\"1\" customWidth=\"1\"/>"u8 : custom ? " customWidth=\"1\"/>"u8 : "/>"u8);
 		}
 
 		if (any)
@@ -1281,7 +1436,7 @@ internal sealed class SheetSink : CsvCellSink
 		entry ??= await package.OpenPartAsync(partName, async, cancellationToken).ConfigureAwait(false);
 		if (!startWritten)
 		{
-			using var start = new XmlOutput(Start.Length + 256 + ((widths.Count + (columnOptions?.Length ?? 0)) * 96));
+			using var start = new XmlOutput(Start.Length + 256 + (((columnWidths?.Length ?? 0) + (columnOptions?.Length ?? 0)) * 96));
 			AppendStart(start);
 			await start.WriteToAsync(entry, start.Length, async, cancellationToken).ConfigureAwait(false);
 			startWritten = true;

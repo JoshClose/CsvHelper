@@ -92,4 +92,62 @@ public class ColumnWidthsTests
 
 	[Fact]
 	public void HasExcelsDefaultWidth() => Assert.Equal(ColumnWidths.Default, ColumnWidths.FromCharacters(8.43));
+
+	[Theory]
+	// Bold Calibri 11's widths that differ from regular's (measured on 2026-11-08: 0.525 points more at 144 DPI, 0.7
+	// pixels at 96), the Thai ko kai's 1.37 more, and East Asian characters as the bold year sign measured.
+	[InlineData('"', 6.133, 6.800)]
+	[InlineData('&', 10.233, 10.900)]
+	[InlineData(',', 3.367, 4.067)]
+	[InlineData('K', 7.500, 8.200)]
+	[InlineData('P', 7.500, 8.200)]
+	[InlineData('V', 8.200, 8.867)]
+	[InlineData('X', 7.500, 8.200)]
+	[InlineData('Z', 6.800, 7.500)]
+	[InlineData('`', 4.067, 4.733)]
+	[InlineData('j', 3.367, 4.067)]
+	[InlineData('k', 6.800, 7.500)]
+	[InlineData('t', 4.733, 5.433)]
+	[InlineData('{', 4.733, 5.433)]
+	[InlineData('}', 4.733, 5.433)]
+	[InlineData((char)0x00B0, 4.733, 5.433)]
+	[InlineData((char)0x2019, 3.367, 4.067)]
+	[InlineData((char)0x03B1, 8.200, 8.867)]
+	[InlineData((char)0x0436, 10.233, 10.900)]
+	[InlineData((char)0x0E01, 8.867, 10.233)]
+	[InlineData((char)0x5E74, 15.000, 15.667)]
+	// The others are regular's.
+	[InlineData('a', 7.500, 7.500)]
+	[InlineData('W', 13.633, 13.633)]
+	[InlineData('0', 7.500, 7.500)]
+	[InlineData((char)0x00E9, 7.500, 7.500)]
+	public void MeasuresBoldCalibri(char c, double regular, double bold)
+	{
+		Assert.Equal(regular, ColumnWidths.CharPixels(c, bold: false));
+		Assert.Equal(bold, ColumnWidths.CharPixels(c, bold: true));
+		Assert.Equal(bold * 3, ColumnWidths.TextPixels(new string(c, 3).AsSpan(), bold: true), 9);
+	}
+
+	[Fact]
+	public void MeasuresLineFeedsAndTabs()
+	{
+		// Measured on 2026-11-09 in cells that don't wrap: a line feed 6 points at 144 DPI, a tab 5.5, a CR nothing.
+		Assert.Equal(8.0, ColumnWidths.CharPixels('\n', bold: false));
+		Assert.Equal(7.333, ColumnWidths.CharPixels('\t', bold: false));
+		Assert.Equal(0, ColumnWidths.CharPixels('\r', bold: true));
+	}
+
+	[Theory]
+	// A text's pixels, rounded up, and the padding, in 256ths of a digit, narrower than the default column too; Phase 4's
+	// width only past 56 pixels, which the default column fits with room to spare (61 of its 64).
+	[InlineData(7.5, 476)]
+	[InlineData(19.067, 915)]
+	[InlineData(56, 2231)]
+	[InlineData(56.1, 2268)]
+	[InlineData(0, 183)]
+	public void FitsTextAsExcelsAutoFit(double pixels, int in256ths)
+	{
+		Assert.Equal(in256ths / 256.0, ColumnWidths.Fit(pixels));
+		Assert.Equal(pixels > 56 ? ColumnWidths.Fit(pixels) : 0, ColumnWidths.OfPixels(pixels));
+	}
 }

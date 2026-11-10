@@ -58,6 +58,9 @@ public partial class FormattedLookOrder
 /// </summary>
 public class SheetLookTests
 {
+	/// <summary>The attributes of a width auto-fit gives.</summary>
+	private const string Fitted = " bestFit=\"1\" customWidth=\"1\"";
+
 	/// <summary>The XML of Calibri 11, bold Calibri 11 and bold Calibri 14.</summary>
 	private const string Regular = "<font><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font>";
 	private const string Bold = "<font><b/><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font>";
@@ -213,7 +216,7 @@ public class SheetLookTests
 		}
 		else
 		{
-			Assert.Contains("<sheetViews><sheetView workbookViewId=\"0\">" + pane + "</sheetView></sheetViews><sheetData>", sheet);
+			Assert.Contains("<sheetViews><sheetView workbookViewId=\"0\">" + pane + "</sheetView></sheetViews><cols>", sheet);
 			using var book = new XLWorkbook(new MemoryStream(workbook));
 			var view = book.Worksheet(1).SheetView;
 			Assert.Equal((hasHeader && freezeHeader ? 1 : 0, freezeColumns), (view.SplitRow, view.SplitColumn));
@@ -244,11 +247,14 @@ public class SheetLookTests
 		Assert.Contains("<c r=\"B1\" s=\"1\" t=\"inlineStr\">", sheet);
 		Assert.Contains("<c r=\"A2\" t=\"inlineStr\"><is><t>apple</t></is></c><c r=\"B2\" s=\"2\"><v>1234.5</v></c><c r=\"C2\" s=\"3\"><v>45306.4375</v></c><c r=\"D2\" s=\"4\" t=\"inlineStr\">", sheet);
 		Assert.Contains("<c r=\"E2\" t=\"inlineStr\"><is><t>A1</t></is></c>", sheet);
+
+		// Auto-fit's widths, the numbers and dates in their columns' formats; Note's own width; Code's, hidden.
 		Assert.Contains(
-			"<cols><col min=\"2\" max=\"2\" width=\"9.140625\" style=\"2\"/>" +
-			$"<col min=\"3\" max=\"3\" width=\"{W(ColumnWidths.DateTime)}\" style=\"3\" customWidth=\"1\"/>" +
+			$"<cols><col min=\"1\" max=\"1\" width=\"{W(Fit(Px("Name", bold: true), Px("apple"), Px("pear")))}\"{Fitted}/>" +
+			$"<col min=\"2\" max=\"2\" width=\"{W(Fit(Px("Amount", bold: true), Px("1.234.50"), Px("0.25")))}\" style=\"2\"{Fitted}/>" +
+			$"<col min=\"3\" max=\"3\" width=\"{W(Fit(Px("When", bold: true), Px("15/01/2024 10:30")))}\" style=\"3\"{Fitted}/>" +
 			"<col min=\"4\" max=\"4\" width=\"30.7109375\" style=\"4\" customWidth=\"1\"/>" +
-			"<col min=\"5\" max=\"5\" width=\"9.140625\" hidden=\"1\"/></cols>", sheet);
+			$"<col min=\"5\" max=\"5\" width=\"{W(Fit(Px("Code", bold: true), Px("A1"), Px("P2")))}\" hidden=\"1\"{Fitted}/></cols>", sheet);
 
 		// The date's own format isn't added: the column's takes its place.
 		var styles = Written.Entry(workbook, "xl/styles.xml");
@@ -283,7 +289,10 @@ public class SheetLookTests
 
 		var sheet = Written.Entry(attributes, "xl/worksheets/sheet1.xml");
 		Assert.Contains("<c r=\"B2\" s=\"2\"><v>0.125</v></c>", sheet);
-		Assert.Contains("<cols><col min=\"2\" max=\"2\" width=\"9.140625\" style=\"2\"/><col min=\"3\" max=\"3\" width=\"12.7109375\" hidden=\"1\" customWidth=\"1\"/></cols>", sheet);
+		Assert.Contains(
+			$"<cols><col min=\"1\" max=\"1\" width=\"{W(Fit(Px("Name", bold: true), Px("a")))}\"{Fitted}/>" +
+			$"<col min=\"2\" max=\"2\" width=\"{W(Fit(Px("Rate", bold: true), Px("12.5%")))}\" style=\"2\"{Fitted}/>" +
+			"<col min=\"3\" max=\"3\" width=\"12.7109375\" hidden=\"1\" customWidth=\"1\"/></cols>", sheet);
 		Assert.Contains("formatCode=\"0.0%\"", Written.Entry(attributes, "xl/styles.xml"));
 
 		// Columns' entry is taken whole, in place of the attribute: Rate wraps, in General; Code keeps its attribute.
@@ -472,4 +481,15 @@ public class SheetLookTests
 	/// <param name="width">The width.</param>
 	/// <returns>Its shortest text.</returns>
 	private static string W(double width) => width.ToString("R", CultureInfo.InvariantCulture);
+
+	/// <summary>The width auto-fit gives the widest of some texts' pixels.</summary>
+	/// <param name="pixels">The texts' pixels.</param>
+	/// <returns>The width.</returns>
+	private static double Fit(params double[] pixels) => ColumnWidths.Fit(pixels.Max());
+
+	/// <summary>A text's pixels.</summary>
+	/// <param name="text">The text: a number's or a date's in its widest form.</param>
+	/// <param name="bold">Whether it is bold.</param>
+	/// <returns>The pixels.</returns>
+	private static double Px(string text, bool bold = false) => ColumnWidths.TextPixels(text.AsSpan(), bold);
 }

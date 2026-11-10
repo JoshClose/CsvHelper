@@ -472,7 +472,8 @@ public class TypedCellsTests
 	[Fact]
 	public void WidensColumnsOfEachKind()
 	{
-		var options = new ExcelWriterOptions { Csv = new CsvWriterOptions { HasHeader = false, ValidateFieldCount = false } };
+		// Phase 4's widths, of the first data record's dates, times and durations: without auto-fit.
+		var options = Written.Phase4(new ExcelWriterOptions { Csv = new CsvWriterOptions { HasHeader = false, ValidateFieldCount = false } });
 		var stream = new MemoryStream();
 		using (var workbook = ExcelWorkbookWriter.Create(stream, options, leaveOpen: true))
 		{
@@ -500,9 +501,10 @@ public class TypedCellsTests
 	[Fact]
 	public void TakesWidthsFromTheRecordAfterTheHeader()
 	{
-		// The header's cells set nothing; a discarded first data record's widths go with it; the next record's are kept.
+		// Without auto-fit, the header's cells set nothing; a discarded first data record's widths go with it; the next
+		// record's are kept.
 		var stream = new MemoryStream();
-		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Ragged(), leaveOpen: true))
+		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Phase4(Written.Ragged()), leaveOpen: true))
 		{
 			using var writer = workbook.AddSheet("Header");
 			writer.WriteField(new DateTime(2024, 1, 15, 1, 2, 3, 4));
@@ -519,9 +521,9 @@ public class TypedCellsTests
 	[Fact]
 	public void GivesTheHeadersCellsNoWidths()
 	{
-		// A header written by hand with a typed cell: only the first data record's cells set widths.
+		// A header written by hand with a typed cell: without auto-fit, only the first data record's cells set widths.
 		var stream = new MemoryStream();
-		using (var workbook = ExcelWorkbookWriter.Create(stream, leaveOpen: true))
+		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Phase4(), leaveOpen: true))
 		{
 			using var writer = workbook.AddSheet("Header");
 			writer.WriteField(new DateTime(2024, 1, 15, 1, 2, 3, 4));
@@ -540,9 +542,10 @@ public class TypedCellsTests
 	[Fact]
 	public void HoldsRecordsUntilTheWidthsAreKnown()
 	{
-		// A header bigger than the flush size, and a flush asked for, write nothing until the first data record ends.
+		// Without auto-fit, a header bigger than the flush size, and a flush asked for, write nothing until the first data
+		// record ends.
 		var stream = new MemoryStream();
-		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Ragged(), leaveOpen: true))
+		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Phase4(Written.Ragged()), leaveOpen: true))
 		{
 			using var writer = workbook.AddSheet("Held");
 			for (var i = 0; i < 20; i++)

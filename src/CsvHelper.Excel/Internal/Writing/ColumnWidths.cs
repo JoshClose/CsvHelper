@@ -3,15 +3,17 @@ using System;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// The width a column needs for a number cell's text in Calibri 11, so that Excel doesn't show it as <c>########</c>:
-/// the text's pixels at 96 DPI from a table of Calibri 11's characters, and Excel's padding, in the units of a
-/// <c>col</c>'s <c>width</c> (the width of a digit, 7 pixels at 96 DPI).
+/// The width a column needs for a cell's text in Calibri 11, so that Excel doesn't show a typed cell as <c>########</c>,
+/// and auto-fit's widths: the text's pixels at 96 DPI from a table of Calibri 11's characters (regular and bold), and
+/// Excel's padding, in the units of a <c>col</c>'s <c>width</c> (the width of a digit, 7 pixels at 96 DPI).
 /// </summary>
 /// <remarks>
 /// <para>
 /// The table was measured through Excel's COM on 2026-11-06 (Excel 365, at 144 DPI): the auto-fit width of text cells of
 /// 10 and of 30 copies of each character, whose difference is 20 copies' width without the padding. Excel lays out text
-/// at fractional widths, so a width at 96 DPI is two thirds of one at 144 DPI; a digit, for one, is 7.5 pixels.
+/// at fractional widths, so a width at 96 DPI is two thirds of one at 144 DPI; a digit, for one, is 7.5 pixels. Bold
+/// Calibri 11 was measured the same way on 2026-11-08: it has regular's widths but for 20 characters. A line feed, which
+/// Excel shows on the same line in a cell that doesn't wrap, and a tab were measured on 2026-11-09.
 /// </para>
 /// <para>
 /// The widths are for 96 DPI, where they need the most room: a column's unit is the width of a digit rounded to whole
@@ -30,6 +32,18 @@ internal static class ColumnWidths
 
 	/// <summary>The pixels of the default column, 8 digits and the padding, at 96 DPI.</summary>
 	private const int DefaultPixels = (8 * DigitPixels) + Padding;
+
+	/// <summary>The pixels of a line feed in a cell that doesn't wrap, at 96 DPI: 6 points at 144 DPI.</summary>
+	private const double LineFeedPixels = 8.0;
+
+	/// <summary>The pixels of a tab, at 96 DPI: 5.5 points at 144 DPI.</summary>
+	private const double TabPixels = 7.333;
+
+	/// <summary>
+	/// The pixels a header's filter button adds to its column, at 96 DPI: Excel's AutoFit gives a header with one 12.5
+	/// points more at 144 DPI (measured on 2026-11-08).
+	/// </summary>
+	public const double FilterButtonPixels = 17;
 
 	/// <summary>The pixels of the characters from space to <c>~</c>, at 96 DPI.</summary>
 	private static readonly double[] Ascii =
@@ -54,6 +68,24 @@ internal static class ColumnWidths
 	/// </summary>
 	public const double Default = 9.140625;
 
+	/// <summary>The width of the widest column, 255 characters, the most Excel's <c>ColumnWidth</c> takes.</summary>
+	public static readonly double Widest = FromCharacters(ExcelColumnOptions.MaxWidth);
+
+	/// <summary>The pixels of a date, <c>yyyy-mm-dd</c>.</summary>
+	public static readonly double DatePixels = TextPixels("2024-12-31".AsSpan());
+
+	/// <summary>The pixels of a date and time in seconds, <c>yyyy-mm-dd hh:mm:ss</c>.</summary>
+	public static readonly double DateTimePixels = TextPixels("2024-12-31 23:59:59".AsSpan());
+
+	/// <summary>The pixels of a date and time with milliseconds, <c>yyyy-mm-dd hh:mm:ss.000</c>.</summary>
+	public static readonly double DateTimeMillisecondsPixels = TextPixels("2024-12-31 23:59:59.999".AsSpan());
+
+	/// <summary>The pixels of a time of day in seconds, <c>hh:mm:ss</c>.</summary>
+	public static readonly double TimePixels = TextPixels("23:59:59".AsSpan());
+
+	/// <summary>The pixels of a time of day with milliseconds, <c>hh:mm:ss.000</c>.</summary>
+	public static readonly double TimeMillisecondsPixels = TextPixels("23:59:59.999".AsSpan());
+
 	/// <summary>The width of a date, <c>yyyy-mm-dd</c>.</summary>
 	public static readonly double Date = Of("2024-12-31");
 
@@ -69,21 +101,20 @@ internal static class ColumnWidths
 	/// <summary>The width of a time of day with milliseconds, <c>hh:mm:ss.000</c>.</summary>
 	public static readonly double TimeMilliseconds = Of("23:59:59.999");
 
-	/// <summary>The width a column needs for a number cell's text, when that is wider than the default column.</summary>
+	/// <summary>The width a column needs for a typed cell's text, when that is wider than the default column.</summary>
 	/// <param name="text">The text as Excel shows it.</param>
 	/// <returns>
 	/// The width, in whole 256ths of a digit, as Excel stores widths; or 0 when the text fits the default column, which
 	/// then needs none.
 	/// </returns>
-	public static double Of(ReadOnlySpan<char> text)
-	{
-		var sum = 0.0;
-		foreach (var c in text)
-		{
-			sum += Pixels(c);
-		}
+	public static double Of(ReadOnlySpan<char> text) => OfPixels(TextPixels(text));
 
-		var pixels = (int)Math.Ceiling(sum) + Padding;
+	/// <summary>The width a column needs for a typed cell's text of some pixels, when that is wider than the default column.</summary>
+	/// <param name="textPixels">The text's pixels at 96 DPI (<see cref="TextPixels"/>), without the padding.</param>
+	/// <returns>The width, in whole 256ths of a digit; or 0 when the text fits the default column.</returns>
+	public static double OfPixels(double textPixels)
+	{
+		var pixels = (int)Math.Ceiling(textPixels) + Padding;
 		if (pixels <= DefaultPixels)
 		{
 			return 0;
@@ -91,6 +122,53 @@ internal static class ColumnWidths
 
 		return Math.Ceiling(pixels * 256.0 / DigitPixels) / 256;
 	}
+
+	/// <summary>
+	/// The width auto-fit gives a column for its widest text, as Excel's AutoFit does: the text's pixels and the padding,
+	/// in whole 256ths of a digit, narrower than the default column when the text is.
+	/// </summary>
+	/// <param name="textPixels">The text's pixels at 96 DPI, without the padding.</param>
+	/// <returns>The width.</returns>
+	public static double Fit(double textPixels)
+	{
+		var pixels = (int)Math.Ceiling(textPixels) + Padding;
+
+		return Math.Ceiling(pixels * 256.0 / DigitPixels) / 256;
+	}
+
+	/// <summary>
+	/// The pixels of a text on one line at 96 DPI, without the padding: a line feed takes the room Excel gives it in a cell
+	/// that doesn't wrap, and a carriage return none.
+	/// </summary>
+	/// <param name="text">The text.</param>
+	/// <param name="bold">Whether it is in bold Calibri 11, rather than regular.</param>
+	/// <returns>The pixels.</returns>
+	public static double TextPixels(ReadOnlySpan<char> text, bool bold = false)
+	{
+		var sum = 0.0;
+		if (bold)
+		{
+			foreach (var c in text)
+			{
+				sum += BoldPixels(c);
+			}
+		}
+		else
+		{
+			foreach (var c in text)
+			{
+				sum += Pixels(c);
+			}
+		}
+
+		return sum;
+	}
+
+	/// <summary>A character's pixels at 96 DPI, in regular or bold Calibri 11.</summary>
+	/// <param name="c">The character.</param>
+	/// <param name="bold">Whether it is bold.</param>
+	/// <returns>Its pixels.</returns>
+	public static double CharPixels(char c, bool bold) => bold ? BoldPixels(c) : Pixels(c);
 
 	/// <summary>
 	/// The width of a column of a number of characters (Excel's <c>ColumnWidth</c>), as Excel writes it at 96 DPI: the
@@ -107,9 +185,9 @@ internal static class ColumnWidths
 	}
 
 	/// <summary>
-	/// A character's pixels in Calibri 11 at 96 DPI: measured for ASCII and the characters of numbers and dates in the
-	/// common cultures; for the others, the width of East Asian characters (which Excel shows in another font), or of
-	/// <c>W</c>, the widest letter.
+	/// A character's pixels in Calibri 11 at 96 DPI: measured for ASCII, the characters of numbers and dates in the common
+	/// cultures, line feeds and tabs; for the others, the width of East Asian characters (which Excel shows in another
+	/// font), or of <c>W</c>, the widest letter.
 	/// </summary>
 	/// <param name="c">The character.</param>
 	/// <returns>Its pixels.</returns>
@@ -122,6 +200,9 @@ internal static class ColumnWidths
 
 		return c switch
 		{
+			'\n' => LineFeedPixels,
+			'\t' => TabPixels,
+			'\r' => 0,
 			// Thin space, alef.
 			(char)0x2009 or (char)0x0627 => 2.667,
 			// No-break space, narrow no-break space (fr-FR's group separator), right single quotation mark.
@@ -151,6 +232,35 @@ internal static class ColumnWidths
 			_ => 13.633,
 		};
 	}
+
+	/// <summary>
+	/// A character's pixels in bold Calibri 11 at 96 DPI: regular's, but for the 20 characters measured wider (each by about
+	/// 0.7 pixels, the Thai ko kai by 1.4), and East Asian characters, which are taken to be as wide as the bold year sign
+	/// (U+5E74) measured.
+	/// </summary>
+	/// <param name="c">The character.</param>
+	/// <returns>Its pixels.</returns>
+	private static double BoldPixels(char c) => c switch
+	{
+		'"' => 6.800,
+		// Comma, j, right single quotation mark.
+		',' or 'j' or (char)0x2019 => 4.067,
+		'&' => 10.900,
+		'K' or 'P' or 'X' => 8.200,
+		'V' => 8.867,
+		'Z' or 'k' => 7.500,
+		'`' => 4.733,
+		// t, braces, degree sign.
+		't' or '{' or '}' or (char)0x00B0 => 5.433,
+		// Greek alpha.
+		(char)0x03B1 => 8.867,
+		// Thai ko kai.
+		(char)0x0E01 => 10.233,
+		// Cyrillic zhe.
+		(char)0x0436 => 10.900,
+		_ when IsWide(c) => 15.667,
+		_ => Pixels(c),
+	};
 
 	/// <summary>
 	/// Whether a character is East Asian and full width, as the year, month and day of Japanese, Chinese and Korean dates

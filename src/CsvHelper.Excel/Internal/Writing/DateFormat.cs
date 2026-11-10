@@ -22,8 +22,8 @@ internal sealed class DateFormat
 	// The .NET pattern and its provider, to read a field's text back.
 	private readonly string pattern;
 	private readonly IFormatProvider provider;
-	// The width its column needs, once measured; -1 before.
-	private double width = -1;
+	// The pixels of its widest text, once measured; -1 before.
+	private double pixels = -1;
 
 	/// <summary>Creates a translated format.</summary>
 	/// <param name="code">The Excel code, which <see cref="FormatCheck"/> passes.</param>
@@ -45,20 +45,26 @@ internal sealed class DateFormat
 	public bool HasDate { get; }
 
 	/// <summary>
-	/// The width a column needs for the format's widest text (<see cref="ColumnWidths.Of"/>), or 0 when the default column
-	/// fits it: of sample values on every month and every day of the week, with two-digit days and hours, in the morning
-	/// (<c>AM</c> is wider than <c>PM</c> in Calibri, and the formats Excel can show have no other designators).
+	/// The width a column needs for the format's widest text (<see cref="ColumnWidths.OfPixels"/> of <see cref="Pixels"/>),
+	/// or 0 when the default column fits it.
 	/// </summary>
-	public double Width
+	public double Width => ColumnWidths.OfPixels(Pixels);
+
+	/// <summary>
+	/// The pixels of the format's widest text (<see cref="ColumnWidths.TextPixels"/>): of sample values on every month and
+	/// every day of the week, with two-digit days and hours, in the morning (<c>AM</c> is wider than <c>PM</c> in Calibri,
+	/// and the formats Excel can show have no other designators).
+	/// </summary>
+	public double Pixels
 	{
 		get
 		{
-			if (width < 0)
+			if (pixels < 0)
 			{
-				width = Measure();
+				pixels = Measure();
 			}
 
-			return width;
+			return pixels;
 		}
 	}
 
@@ -87,7 +93,7 @@ internal sealed class DateFormat
 	}
 
 	/// <summary>Measures the widest text of the format over its sample values.</summary>
-	/// <returns>The width, or 0.</returns>
+	/// <returns>Its pixels.</returns>
 	private double Measure()
 	{
 		var widest = 0.0;
@@ -97,7 +103,7 @@ internal sealed class DateFormat
 			for (var day = 22; day <= 28; day++)
 			{
 				var text = new DateTime(2024, month, day, 11, 58, 58, 888).ToString(pattern, provider);
-				widest = Math.Max(widest, ColumnWidths.Of(text.AsSpan()));
+				widest = Math.Max(widest, ColumnWidths.TextPixels(text.AsSpan()));
 			}
 		}
 

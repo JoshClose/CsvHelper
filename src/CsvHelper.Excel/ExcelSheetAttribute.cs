@@ -52,7 +52,7 @@ public sealed class ExcelSheetAttribute : Attribute
 	/// <summary>How many records after the header auto-fit measures (<see cref="ExcelSheetOptions.AutoFit"/>): 100 by default; 0 for none.</summary>
 	public int AutoFit { get; set; } = 100;
 
-	/// <summary>The widest auto-fit makes a column, in characters (<see cref="ExcelSheetOptions.MaxAutoFitWidth"/>): 60 by default.</summary>
+	/// <summary>The widest auto-fit makes a column for its text, in characters (<see cref="ExcelSheetOptions.MaxAutoFitWidth"/>): 60 by default.</summary>
 	public double MaxAutoFitWidth { get; set; } = 60;
 
 	/// <summary>The attribute's options.</summary>

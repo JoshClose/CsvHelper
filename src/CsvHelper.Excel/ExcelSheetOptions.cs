@@ -77,13 +77,21 @@ public sealed record ExcelSheetOptions
 
 	/// <summary>
 	/// How many records after the header auto-fit measures: the header and these records are held until their widths are
-	/// known, and each column is as wide as its widest cell's text, up to <see cref="MaxAutoFitWidth"/>. A column can come
-	/// out narrower than Excel's default, as with Excel's own AutoFit. 100 by default; 0 for none, when only dates' and
-	/// times' formats and the columns' own widths set widths.
+	/// known, and each column is as wide as its widest cell's text among them, as Excel shows it in Calibri 11: the header
+	/// in bold, with its filter button when it has one; text on one line, or by its widest line when its column wraps;
+	/// numbers in General or in their column's format, dates and times in their formats. A formula's column is at least
+	/// Excel's default, since its value isn't known; the title counts nothing. A column can come out narrower than Excel's
+	/// default, as with Excel's own AutoFit, and a later record's wider cell isn't measured. 100 by default; 0 for none,
+	/// when only the first data record's dates, times and cells in a column's format, and the columns' own widths, set
+	/// widths. The sheets that <see cref="ExcelRowLimit.NewSheet"/> starts take the first sheet's widths.
 	/// </summary>
 	public int AutoFit { get; init; } = 100;
 
-	/// <summary>The widest auto-fit makes a column, in characters: 1 to 255; 60 by default.</summary>
+	/// <summary>
+	/// The widest auto-fit makes a column for its text, in characters: 1 to 255; 60 by default. Longer text is cut at the
+	/// column's edge, or spills into the next cell. Numbers, booleans, dates and times get the width they need, up to 255,
+	/// since Excel shows one too narrow as <c>########</c>.
+	/// </summary>
 	public double MaxAutoFitWidth { get; init; } = 60;
 
 	/// <summary>

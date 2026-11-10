@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -5221,7 +5221,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 5: presentation (M)
 
-Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show; auto-fit, filters, tables, merges and links are steps 3 to 5.
+Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show. Step 3 (auto-fit) was built, approved, with every recommendation, and committed 2026-11-09: columns are as wide as their held cells, as Excel's AutoFit makes them, and no typed cell shows `########` in Excel. Filters, tables, merges and links are steps 4 and 5.
 
 Scope, as planned:
 
@@ -5583,6 +5583,86 @@ Filled in step by step; the code is the reference.
   - `StyleRegistryTests`' fonts and flags, and `ColumnWidthsTests`' `FromCharacters`.
   - Every CsvHelper.Excel suite passes, with 0 warnings: 2,875 tests on .NET 10 and on .NET 8, and 2,827 on .NET Framework, each with the 4 GiB Zip64 test skipped as opt-in. The corpus's pinned hashes still match.
 - **The per-cell cost** (a flag test, and a check for a style) is measured at step 8.
+
+**Step 3, auto-fit** (built, approved, with every recommendation, and committed 2026-11-09):
+
+- **New files:**
+  - `Internal/Writing/AutoFit.cs`: each held cell's width, as text, as a typed cell, or a formula's; the header's filter buttons; a discarded record's cells dropped; and the columns' widths from them. General's 11 characters, which the design put here, are in `NumberFormatWidth`.
+  - `Internal/Writing/NumberFormatWidth.cs`: General's text (`General`) and its width as Excel's AutoFit measures it (`GeneralPixels`). And a format code's text of a number, a date, a time, a duration, a boolean or a text: as Excel shows it in en-US, or in its widest form, which sizes a column (decision 5). Its rules are the probes' (below), in its remarks.
+- **Changed:**
+  - `ColumnWidths`:
+    - bold Calibri 11's widths (`CharPixels`, and `TextPixels` with `bold`), a line feed (8 pixels at 96 DPI), a tab (7.333) and a CR (0);
+    - `Fit`: auto-fit's width of a text's pixels, narrower than the default column too;
+    - `OfPixels`: Phase 4's width, none when the default column fits;
+    - the fixed formats' pixels, the filter button's 17 pixels, and `Widest`, 255 characters.
+  - `DateFormat.Pixels`: its widest text's pixels. `Width` comes from them, so Phase 4's widths are unchanged.
+  - `ColumnStyle`: its wrap, and its format's `NumberFormatWidth`.
+  - `SheetSink`:
+    - Holds the header and the records auto-fit measures, or, without auto-fit, through the first data record, as Phase 4 did.
+    - Measures their cells as they are written.
+    - Knows the widths when the last held record ends, when the first sheet fills (the next sheets of `NewSheet` take them), or when the sheet completes.
+    - Writes `bestFit="1"` on the columns auto-fit sizes.
+  - `ExcelSheetOptions`' and `[ExcelSheet]`'s docs of `AutoFit` and `MaxAutoFitWidth`.
+- **What a cell measures,** with auto-fit:
+  - The header: in bold when it is bold or in a styled table, whose built-in styles make it bold. With `AutoFilter`, or a table's `FilterButtons`, each of its fields has a filter button, an empty one too.
+  - Text: on one line, as Excel shows text that doesn't wrap, a line feed 8 pixels and a CR none; or, in a column that wraps, its widest line.
+  - Numbers: in General as Excel's AutoFit counts them, every character but a leading minus as a digit (`0.5` as `123`); or in their column's format.
+  - Booleans: `TRUE` and `FALSE`, in their column format's text section if it has one.
+  - Dates, times and durations: their format's widest text, Phase 4's or their column's format's.
+  - A formula: its column is the default width at least. The title: nothing.
+  - Text is at most `MaxAutoFitWidth`; typed cells are as wide as they need, to 255 characters.
+  - Without auto-fit (decision 5): the first data record's typed cells in their column's format are measured beside Phase 4's dates, times and durations, and give a width only where the default column is too narrow.
+- **Decisions made while building,** approved at review as built (every recommendation):
+  - **Text that doesn't wrap is measured on one line,** not by its widest line, as the design had it: Excel shows it on one line and fits all of it (checked). A column that wraps takes its text's widest line.
+  - **`MaxAutoFitWidth` caps text only.** Numbers, booleans, dates and times get the width they need, to 255 characters, since Excel shows one too narrow as `########`, and text is cut or spills.
+  - **A formula's column is at least the default width.** The design had formulas count nothing, which would narrow a column of formulas to its header, while their values, unknown, could be dates.
+  - **Auto-fitted columns are marked `bestFit="1"`,** as Excel marks its AutoFit's (checked); a column's own `Width` and Phase 4's widths aren't.
+  - **A `DateTime` column keeps Phase 4's width of a date and time** when every held value is at midnight, since a later one with a time would show `########`: 18.09 characters, where Excel's AutoFit gives a column of dates 9.45 (at 144 DPI).
+  - **General numbers are measured as Excel's AutoFit counts them,** every character but a leading minus as a digit.
+  - **`NumberFormatWidth` covers dates and times,** not only numbers: a column's `Format` replaces a date's own format. Month and day names are English, or a locale's (`[$-407]`) as .NET has them, at their widest.
+  - **Codes it doesn't model are estimated wider than the design's General width,** which the probes showed narrower than Excel's text for fractions with `?` and for big integers in `[DBNum]`:
+    - conditions take their widest section;
+    - fractions take a digit for each placeholder besides their whole number's digits;
+    - `[DBNum]` takes two East Asian characters a digit, a numeral and a unit, as an East Asian locale shows it. Excel shows digits elsewhere, so a `[DBNum1]0` column of 1E+20 is 90.82 characters wide where Excel's AutoFit gives 22.09;
+    - an era's name (`g`) takes one or two East Asian characters.
+  - **Booleans and text take a column format's text section,** as Excel shows them (`Paid: TRUE`).
+  - **The filter button's room is counted from this step.** The filter and the table come at step 4, so until then a sheet with `AutoFilter` has the room but not the buttons.
+  - **With `NewSheet`,** a first sheet that fills before the held records end knows its widths then, and every new sheet takes the first sheet's.
+  - **Excel's answers about `NumberFormatWidth` are in its tests,** inline, and Phase 4's `excel-formats.json` is a second oracle. The design's alternative, a corpus tool command writing them under `Files`, wasn't needed.
+  - **Phase 4's width tests write in Phase 4's look:** `TypedCellsTests`' four. The streaming security tests run with `AutoFit` 0, since the default holds 101 records (the design's risk); a variant with auto-fit over 8 records bounds the lag by the held rows.
+- **What Excel showed** (Excel 365, 16.0 build 20527, through COM, at 144 DPI, on 2026-11-09; the probes, the workbooks' writer, the scripts and the answers are in `Csv\_bench\results\phase5\step3`):
+  - **General,** in a column auto-fitted (`general.ps1`, 97 numbers):
+    - at most 11 characters besides the sign;
+    - decimals while they show as many significant digits as scientific notation would (`0.000012345`, but `1.23456E-05`), and scientific notation otherwise, with as many decimals as fit (`1.23457E+11`, `1.2346E+100`);
+    - integers of up to 11 digits whole;
+    - every character but a leading minus measured as a digit.
+  - **Format codes** (`formats.ps1`: 49 codes over 15 values, 29 date codes over 14 dates, 6 elapsed codes):
+    - Rounding is on 15 significant digits, half away from zero (`999.995` shows `1000.00`).
+    - With one section, a minus sign shows first, unless the number rounds to zero; the other sections show none of their own.
+    - `%` multiplies; commas after the last placeholder divide by 1,000.
+    - An exponent is a multiple of the integer placeholders (`##0.0E+0` shows `123.5E+12`), and its zeros are its fewest digits.
+    - `?` and `_x` leave a character's width; a fill counts nothing in AutoFit, while its Text repeats it across the column.
+    - Booleans and text take the text section.
+    - Whole seconds round, and fractions of a second and minutes are cut.
+    - Phase 4's answers showed three more rules, which the code follows:
+      - the days of the week before 1900-03-01 are a day earlier, as Excel counts them;
+      - `p` is wider than `a` in lower case;
+      - `[h]` beside a date part is the hour of the day.
+  - **Text** (`lines.ps1`): text that doesn't wrap shows on one line, and AutoFit fits all of it, a line feed 6 points wide at 144 DPI and a CR none. Wrapped text's AutoFit shrinks the column to its lines as wrapped.
+  - **Widths:** across those probes, ours are never more than half a point below Excel's AutoFit, a pixel of rounding at 144 DPI.
+  - **The step's seven workbooks** (`write-workbooks.cs`, `check.ps1`, `answers.txt`):
+    - Every one opens without a repair, and no typed cell shows `########` at the widths written. Each shows as many characters as at Excel's own AutoFit, or more.
+    - The widths are about 5% wider than Excel's AutoFit at 144 DPI, as Phase 4's are. The exceptions are the text cap, a column's own width, and a formula whose text is wider than the default.
+    - Excel's own AutoFit is too narrow for `-1.00E-03` in `0.00E-00`, which shows `#######` there.
+    - The title's row is 18.5 points, and wrapped rows grow on open.
+- **Tests:**
+  - `NumberFormatWidthTests`: Excel's text and AutoFit width of each probe, inline; Phase 4's codes; the widest forms; signs, rounding and placeholders; codes it doesn't model.
+  - `AutoFitTests`: lines, bold, ASCII and other text, the cap, typed cells, formulas, filter buttons, a discarded record.
+  - `ColumnWidthsTests`: bold Calibri, line feeds and tabs, `Fit`.
+  - `SheetAutoFitTests`, sync and async: the defaults, the records held and measured, a failed record, the cap, wrap and line breaks, formulas, filter buttons, a styled table's header, a column's own width, the title, `NewSheet`, cells in their column's format, and without auto-fit. Each workbook goes through the validator and reads back as written.
+  - `SheetLookTests` pins the auto-fitted `cols`.
+  - Every CsvHelper.Excel suite passes, with 0 warnings: 3,159 tests on .NET 10 and on .NET 8, and 3,111 on .NET Framework, each with the 4 GiB Zip64 test skipped as opt-in. The corpus's pinned hashes still match.
+- **The per-cell cost** (a test of whether cells are measured, on the number, boolean, text and formula paths) is measured at step 8.
 
 ### Phase 6: conversion (S)
 

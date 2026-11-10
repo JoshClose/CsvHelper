@@ -8,7 +8,8 @@ namespace CsvHelper.Excel.Tests.Security;
 /// <summary>
 /// The writer's memory, as Phase 4's "Security and fuzzing" describes. With <see cref="ExcelStrings.Inline"/> strings, a
 /// sheet of 32,767-character cells streams: what has been written but hasn't reached the stream stays within a flush, a
-/// record and the zip's own buffers, however many rows go before, and on .NET writing more rows allocates nothing. A
+/// record, the records auto-fit holds (Phase 5) and the zip's own buffers, however many rows go before, and on .NET
+/// writing more rows allocates nothing. A
 /// million distinct <see cref="ExcelStrings.Shared"/> strings take the table's arena and its integers, at most twice the
 /// strings' bytes and 32 bytes a string, and growing to it allocates at most twice that, in the table and through a whole
 /// workbook.
@@ -26,9 +27,12 @@ public class WriterSecurityTests(ITestOutputHelper output)
 	private const int Strings = 1_000_000;
 
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task StreamsSheetsOfLongInlineCellsInABoundedBuffer(bool async)
+	// Without auto-fit, which holds no more than the first data record, and with auto-fit over 8 records.
+	[InlineData(false, 0)]
+	[InlineData(true, 0)]
+	[InlineData(false, 8)]
+	[InlineData(true, 8)]
+	public async Task StreamsSheetsOfLongInlineCellsInABoundedBuffer(bool async, int autoFit)
 	{
 		// Four cells of 32,767 characters a row, of one and three bytes, of seven as written (CR as _x000D_) and of five
 		// (& as &amp;): 512 KiB of XML a row, 32 MiB in all.
@@ -38,12 +42,13 @@ public class WriterSecurityTests(ITestOutputHelper output)
 		var stream = new CountingStream();
 		var lag = 0L;
 		long allocated = 0;
-		var options = new ExcelWriterOptions { Strings = ExcelStrings.Inline, CompressionLevel = CompressionLevel.NoCompression };
+		var options = new ExcelWriterOptions { Strings = ExcelStrings.Inline, CompressionLevel = CompressionLevel.NoCompression, Sheets = new ExcelSheetOptions { AutoFit = autoFit } };
 		var workbook = ExcelWorkbookWriter.Create(stream, options);
 		var writer = workbook.AddSheet("Long");
 		for (var r = 0; r < rows; r++)
 		{
-			if (r == rows / 8)
+			// Past the rows held: the header and the records auto-fit measures, and the one after.
+			if (r == Math.Max(rows / 8, autoFit + 2))
 			{
 				allocated = AllocatedBytes();
 			}
@@ -71,8 +76,9 @@ public class WriterSecurityTests(ITestOutputHelper output)
 		output.WriteLine($"{rows} rows of {rowBytes:N0} bytes of text: at most {lag:N0} bytes behind the stream; {allocated:N0} bytes allocated over the last {rows - (rows / 8)} rows; {stream.Count:N0} bytes in all.");
 		Assert.True(stream.Count >= rows * rowBytes, $"{stream.Count:N0} bytes reached the stream, of {rows * rowBytes:N0}");
 
-		// A flush (64 KiB), a record, and the zip's buffers, far from the 32 MiB that holding the rows would take.
-		Assert.True(lag <= SheetSink.FlushSize + (2 * rowBytes) + MiB, $"{lag:N0} bytes behind");
+		// A flush (64 KiB), a record, the records held for their widths, and the zip's buffers, far from the 32 MiB that
+		// holding the rows would take.
+		Assert.True(lag <= SheetSink.FlushSize + ((2 + autoFit) * rowBytes) + MiB, $"{lag:N0} bytes behind");
 #if NET
 		if (!async)
 		{
@@ -130,7 +136,9 @@ public class WriterSecurityTests(ITestOutputHelper output)
 
 		var stream = new CountingStream();
 		var allocated = AllocatedBytes();
-		using (var workbook = ExcelWorkbookWriter.Create(stream, new ExcelWriterOptions { Strings = ExcelStrings.Shared, Csv = new CsvWriterOptions { HasHeader = false } }))
+		// Without auto-fit, whose 100 held records of 1,000 cells would add their own buffers.
+		var options = new ExcelWriterOptions { Strings = ExcelStrings.Shared, Csv = new CsvWriterOptions { HasHeader = false }, Sheets = new ExcelSheetOptions { AutoFit = 0 } };
+		using (var workbook = ExcelWorkbookWriter.Create(stream, options))
 		{
 			using var writer = workbook.AddSheet("Strings");
 			var text = new byte[16];

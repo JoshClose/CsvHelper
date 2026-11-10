@@ -12,12 +12,14 @@ namespace CsvHelper.Excel;
 internal sealed class ColumnStyle
 {
 	private readonly StyleRegistry styles;
-	// The format's number format id, or -1 to keep each cell's own.
+	// The format's code and number format id, or null and -1 to keep each cell's own.
+	private readonly string? code;
 	private readonly int numberFormatId;
-	private readonly bool wrap;
 	// The last cell format a cell had of its own, and the one it got: a column's cells mostly have one.
 	private int lastOwn = -1;
 	private int lastStyle;
+	// The format's widths, once a cell is measured.
+	private NumberFormatWidth? formatWidth;
 
 	/// <summary>Creates a column's style, adding its cell formats to the workbook's.</summary>
 	/// <param name="options">The column's options, which have a format or wrap.</param>
@@ -25,9 +27,10 @@ internal sealed class ColumnStyle
 	public ColumnStyle(ExcelColumnOptions options, StyleRegistry styles)
 	{
 		this.styles = styles;
-		numberFormatId = options.Format is { } format ? styles.NumberFormatId(format) : -1;
-		wrap = options.Wrap;
-		Default = styles.IndexOf(new CellXf(Math.Max(numberFormatId, 0), CellFont.Regular, wrap));
+		code = options.Format;
+		numberFormatId = code is not null ? styles.NumberFormatId(code) : -1;
+		Wrap = options.Wrap;
+		Default = styles.IndexOf(new CellXf(Math.Max(numberFormatId, 0), CellFont.Regular, Wrap));
 	}
 
 	/// <summary>The column's default style: its format, or General, and its wrap.</summary>
@@ -35,6 +38,12 @@ internal sealed class ColumnStyle
 
 	/// <summary>Whether the column has a format, which takes the place of its cells' own.</summary>
 	public bool HasFormat => numberFormatId >= 0;
+
+	/// <summary>Whether the column's text wraps.</summary>
+	public bool Wrap { get; }
+
+	/// <summary>The widths of the column's format, read when a cell is first measured; <see langword="null"/> without a format.</summary>
+	public NumberFormatWidth? FormatWidth => code is null ? null : formatWidth ??= new NumberFormatWidth(code);
 
 	/// <summary>Whether a column's options style its cells: they have a format or wrap.</summary>
 	/// <param name="options">The options, or <see langword="null"/>.</param>
@@ -49,7 +58,7 @@ internal sealed class ColumnStyle
 		if (own != lastOwn)
 		{
 			var format = styles[own];
-			lastStyle = styles.IndexOf(new CellXf(numberFormatId >= 0 ? numberFormatId : format.NumberFormatId, format.Font, wrap));
+			lastStyle = styles.IndexOf(new CellXf(numberFormatId >= 0 ? numberFormatId : format.NumberFormatId, format.Font, Wrap));
 			lastOwn = own;
 		}
 
