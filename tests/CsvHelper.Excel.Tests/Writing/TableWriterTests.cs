@@ -120,10 +120,10 @@ public class TableWriterTests
 	{
 		using var xml = new XmlOutput(256);
 
-		TableWriter.WriteSheetRelationships(xml, 12);
+		TableWriter.AppendRelationship(xml, 12);
 
-		Assert.EndsWith(
-			"<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/table\" Target=\"../tables/table12.xml\"/></Relationships>",
+		Assert.Equal(
+			"<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/table\" Target=\"../tables/table12.xml\"/>",
 			Encoding.UTF8.GetString(xml.Written.ToArray()));
 		Assert.Equal("xl/tables/table12.xml", TableWriter.PartName(12));
 	}

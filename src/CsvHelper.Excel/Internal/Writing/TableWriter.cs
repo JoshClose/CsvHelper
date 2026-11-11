@@ -161,16 +161,16 @@ internal static class TableWriter
 	}
 
 	/// <summary>
-	/// Writes a sheet's relationships part when its only relationship is its table's: <c>rId1</c>, to the table's part.
+	/// Writes the relationship of a sheet to its table, in the sheet's relationships part: <c>rId1</c>, to the table's
+	/// part. The sheet's links' come after it.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	/// <param name="id">The table's id in the workbook.</param>
-	public static void WriteSheetRelationships(XmlOutput xml, int id)
+	public static void AppendRelationship(XmlOutput xml, int id)
 	{
-		xml.Append(PackageParts.Declaration);
-		xml.Append("<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"><Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/table\" Target=\"../tables/table"u8);
+		xml.Append("<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/table\" Target=\"../tables/table"u8);
 		xml.AppendNumber(id);
-		xml.Append(".xml\"/></Relationships>"u8);
+		xml.Append(".xml\"/>"u8);
 	}
 
 	/// <summary>A name with a number after it, the name cut, between characters, so that both have at most 253 characters.</summary>

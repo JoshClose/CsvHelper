@@ -121,7 +121,8 @@ internal static class PackageParts
 
 	/// <summary>
 	/// Writes the styles: the custom number formats, the fonts the cell formats use (Calibri 11 first), the two fills and
-	/// the border every style sheet has, and the cell formats, the default one first.
+	/// the border every style sheet has, the cell styles' formats, the cell formats, the default one first, and the cell
+	/// styles: Normal, and <c>Hyperlink</c> with the first link.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	/// <param name="styles">The cell formats.</param>
@@ -132,9 +133,9 @@ internal static class PackageParts
 		styles.WriteFonts(xml);
 		xml.Append("<fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills>"u8);
 		xml.Append("<borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders>"u8);
-		xml.Append("<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"u8);
+		styles.WriteCellStyleFormats(xml);
 		styles.WriteCellFormats(xml);
-		xml.Append("<cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles>"u8);
+		styles.WriteCellStyles(xml);
 		xml.Append("</styleSheet>"u8);
 	}
 

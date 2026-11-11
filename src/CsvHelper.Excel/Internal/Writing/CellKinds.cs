@@ -60,6 +60,11 @@ internal static class CellKinds
 			return CellKind.Formula;
 		}
 
+		if (type == typeof(System.Uri))
+		{
+			return CellKind.Uri;
+		}
+
 #if NET
 		if (type == typeof(System.DateOnly))
 		{

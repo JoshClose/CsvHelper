@@ -40,6 +40,12 @@ internal enum CellFont
 
 	/// <summary>Bold Calibri 14: a title's.</summary>
 	Title,
+
+	/// <summary>
+	/// Calibri 11, underlined, in Excel's link blue (<c>#0563C1</c>): a link's, as Excel's built-in <c>Hyperlink</c> cell
+	/// style has it, which its cell formats are in.
+	/// </summary>
+	Link,
 }
 
 /// <summary>A cell format: a number format, a font and whether text wraps.</summary>
@@ -53,7 +59,9 @@ internal readonly record struct CellXf(int NumberFormatId, CellFont Font, bool W
 /// they are first used, after the default cell format 0 (General, in Calibri 11). Number format codes that are one of
 /// Excel's built-in formats get its id, as Excel saves them; the others get ids from 164 on, in <c>numFmts</c>. Fonts get
 /// ids in the order they are first used, after Calibri 11, so that a workbook has only the fonts its cells use. Formats
-/// that a discarded record added stay: Excel opens a workbook with cell formats no cell uses.
+/// that a discarded record added stay: Excel opens a workbook with cell formats no cell uses. A link's cell formats are
+/// in Excel's built-in <c>Hyperlink</c> cell style, whose entries come with the first: Excel shows such a cell's style as
+/// <c>Hyperlink</c> (checked on 2026-11-08).
 /// </summary>
 internal sealed class StyleRegistry
 {
@@ -80,7 +88,7 @@ internal sealed class StyleRegistry
 	private readonly int[] fixedIndexes = new int[FixedCodes.Length];
 	// The fonts, in the order of their ids; and each font's id, by CellFont, -1 until it is first used.
 	private readonly List<CellFont> fonts = [CellFont.Regular];
-	private readonly int[] fontIds = [0, -1, -1];
+	private readonly int[] fontIds = [0, -1, -1, -1];
 
 	/// <summary>The number of cell formats, the default one included.</summary>
 	public int Count => formats.Count;
@@ -202,6 +210,7 @@ internal sealed class StyleRegistry
 			{
 				CellFont.Bold => "<font><b/><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
 				CellFont.Title => "<font><b/><sz val=\"14\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
+				CellFont.Link => "<font><u/><sz val=\"11\"/><color rgb=\"FF0563C1\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
 				_ => "<font><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font>"u8,
 			});
 		}
@@ -210,8 +219,34 @@ internal sealed class StyleRegistry
 	}
 
 	/// <summary>
+	/// Writes the cell styles' formats, <c>cellStyleXfs</c>: Normal's, and, once a link's cell format is used,
+	/// <c>Hyperlink</c>'s, in the link's font, as Excel writes it.
+	/// </summary>
+	/// <param name="xml">The buffer.</param>
+	public void WriteCellStyleFormats(XmlOutput xml)
+	{
+		var link = fontIds[(int)CellFont.Link];
+		if (link < 0)
+		{
+			xml.Append("<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"u8);
+
+			return;
+		}
+
+		xml.Append("<cellStyleXfs count=\"2\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/><xf numFmtId=\"0\" fontId=\""u8);
+		xml.AppendNumber(link);
+		xml.Append("\" fillId=\"0\" borderId=\"0\" applyNumberFormat=\"0\" applyFill=\"0\" applyBorder=\"0\" applyAlignment=\"0\" applyProtection=\"0\"/></cellStyleXfs>"u8);
+	}
+
+	/// <summary>Writes the cell styles, <c>cellStyles</c>: Normal, and <c>Hyperlink</c> (built-in 8) once a link's cell format is used.</summary>
+	/// <param name="xml">The buffer.</param>
+	public void WriteCellStyles(XmlOutput xml) => xml.Append(fontIds[(int)CellFont.Link] < 0
+		? "<cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles>"u8
+		: "<cellStyles count=\"2\"><cellStyle name=\"Hyperlink\" xfId=\"1\" builtinId=\"8\"/><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles>"u8);
+
+	/// <summary>
 	/// Writes the cell formats' <c>cellXfs</c>: the default one, then the others in the order of their indexes, each with
-	/// the <c>apply</c> flags of what it sets, as Excel writes them.
+	/// the <c>apply</c> flags of what it sets, as Excel writes them. A link's is in the <c>Hyperlink</c> cell style.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	public void WriteCellFormats(XmlOutput xml)
@@ -226,7 +261,7 @@ internal sealed class StyleRegistry
 			xml.AppendNumber(format.NumberFormatId);
 			xml.Append("\" fontId=\""u8);
 			xml.AppendNumber(fontIds[(int)format.Font]);
-			xml.Append("\" fillId=\"0\" borderId=\"0\" xfId=\"0\""u8);
+			xml.Append(format.Font == CellFont.Link ? "\" fillId=\"0\" borderId=\"0\" xfId=\"1\""u8 : "\" fillId=\"0\" borderId=\"0\" xfId=\"0\""u8);
 			if (format.NumberFormatId != 0)
 			{
 				xml.Append(" applyNumberFormat=\"1\""u8);

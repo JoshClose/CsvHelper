@@ -5,7 +5,7 @@ namespace CsvHelper.Excel;
 /// <summary>What kind of cell a written field becomes, by the type it was formatted from (<see cref="CellKinds.Of"/>).</summary>
 internal enum CellKind : byte
 {
-	/// <summary>A text cell: strings, and every type not below (<see cref="Guid"/>, enums, <see cref="Uri"/>, ...).</summary>
+	/// <summary>A text cell: strings, and every type not below (<see cref="Guid"/>, enums, ...).</summary>
 	Text,
 
 	/// <summary>A boolean cell, <c>t="b"</c>, from <see cref="bool.TrueString"/> or <see cref="bool.FalseString"/>.</summary>
@@ -37,4 +37,10 @@ internal enum CellKind : byte
 
 	/// <summary>A formula cell from an <see cref="ExcelFormula"/>'s text: <c>=</c> and the formula.</summary>
 	Formula,
+
+	/// <summary>
+	/// A text cell from a <see cref="System.Uri"/>'s text, with a link to it when <see cref="ExcelWriterOptions.Links"/>
+	/// takes it (<see cref="SheetLinks"/>).
+	/// </summary>
+	Uri,
 }

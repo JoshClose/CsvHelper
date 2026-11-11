@@ -415,8 +415,9 @@ public class TypedCellsTests
 	[Fact]
 	public void WritesTextOfOtherFormatsAndTypesAsText()
 	{
-		// A format's text, and types that aren't typed, are text; the boolean's text options don't apply to a sheet.
-		var options = new ExcelWriterOptions { Csv = new CsvWriterOptions { HasHeader = false, TrueValue = "yes", FalseValue = "no" } };
+		// A format's text, and types that aren't typed, are text, a URI too without links; the boolean's text options don't
+		// apply to a sheet.
+		var options = new ExcelWriterOptions { Links = ExcelLinks.None, Csv = new CsvWriterOptions { HasHeader = false, TrueValue = "yes", FalseValue = "no" } };
 		var stream = new MemoryStream();
 		using (var workbook = ExcelWorkbookWriter.Create(stream, options, leaveOpen: true))
 		{
@@ -626,7 +627,7 @@ public class TypedCellsTests
 	[InlineData(typeof(TimeSpan), "TimeSpan")]
 	[InlineData(typeof(Guid), "Text")]
 	[InlineData(typeof(DayOfWeek), "Text")]
-	[InlineData(typeof(Uri), "Text")]
+	[InlineData(typeof(Uri), "Uri")]
 	[InlineData(typeof(char), "Text")]
 	[InlineData(typeof(object), "Text")]
 	[InlineData(typeof(System.Numerics.BigInteger), "Text")]

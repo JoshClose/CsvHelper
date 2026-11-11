@@ -146,6 +146,38 @@ public class StyleRegistryTests
 	}
 
 	[Fact]
+	public void PutsALinksCellFormatsInTheHyperlinkCellStyle()
+	{
+		// Without a link, Normal alone, as Phase 4 wrote it.
+		var styles = new StyleRegistry();
+		styles.IndexOf(new CellXf(0, CellFont.Bold, false));
+		Assert.Equal(
+			("<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>",
+			"<cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles>"),
+			CellStyles(styles));
+
+		// A link's font, after the bold one, and the Hyperlink cell style in it, which a link's cell formats are in, as
+		// Excel writes them.
+		Assert.Equal(2, styles.IndexOf(new CellXf(0, CellFont.Link, false)));
+		Assert.Equal(3, styles.IndexOf(new CellXf(49, CellFont.Link, true)));
+		using var fonts = new XmlOutput(64);
+		styles.WriteFonts(fonts);
+		Assert.EndsWith(
+			"<font><b/><sz val=\"11\"/><name val=\"Calibri\"/><family val=\"2\"/></font><font><u/><sz val=\"11\"/><color rgb=\"FF0563C1\"/><name val=\"Calibri\"/><family val=\"2\"/></font></fonts>",
+			Encoding.UTF8.GetString(fonts.Written.ToArray()));
+		Assert.Equal(
+			("<cellStyleXfs count=\"2\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/>" +
+			"<xf numFmtId=\"0\" fontId=\"2\" fillId=\"0\" borderId=\"0\" applyNumberFormat=\"0\" applyFill=\"0\" applyBorder=\"0\" applyAlignment=\"0\" applyProtection=\"0\"/></cellStyleXfs>",
+			"<cellStyles count=\"2\"><cellStyle name=\"Hyperlink\" xfId=\"1\" builtinId=\"8\"/><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles>"),
+			CellStyles(styles));
+		Assert.EndsWith(
+			"<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/>" +
+			"<xf numFmtId=\"0\" fontId=\"2\" fillId=\"0\" borderId=\"0\" xfId=\"1\" applyFont=\"1\"/>" +
+			"<xf numFmtId=\"49\" fontId=\"2\" fillId=\"0\" borderId=\"0\" xfId=\"1\" applyNumberFormat=\"1\" applyFont=\"1\" applyAlignment=\"1\"><alignment wrapText=\"1\"/></xf></cellXfs>",
+			Xml(styles).CellFormats);
+	}
+
+	[Fact]
 	public void GivesNumberFormatsIdsWithoutCellFormats()
 	{
 		var styles = new StyleRegistry();
@@ -170,5 +202,18 @@ public class StyleRegistryTests
 		styles.WriteCellFormats(cellFormats);
 
 		return (Encoding.UTF8.GetString(numberFormats.Written.ToArray()), Encoding.UTF8.GetString(cellFormats.Written.ToArray()));
+	}
+
+	/// <summary>The cell styles' XML that the registry writes.</summary>
+	/// <param name="styles">The registry.</param>
+	/// <returns>Its cell styles' formats and its cell styles.</returns>
+	private static (string Formats, string Styles) CellStyles(StyleRegistry styles)
+	{
+		using var formats = new XmlOutput(64);
+		styles.WriteCellStyleFormats(formats);
+		using var cellStyles = new XmlOutput(64);
+		styles.WriteCellStyles(cellStyles);
+
+		return (Encoding.UTF8.GetString(formats.Written.ToArray()), Encoding.UTF8.GetString(cellStyles.Written.ToArray()));
 	}
 }

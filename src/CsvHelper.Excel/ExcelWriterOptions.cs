@@ -79,8 +79,14 @@ public sealed record ExcelWriterOptions
 	/// <summary>
 	/// Which <see cref="Uri"/> fields are links: those with <c>http</c>, <c>https</c> and <c>mailto</c>
 	/// (<see cref="ExcelLinks.Web"/>, the default), every one, or none. Every <see cref="Uri"/> field is a text cell of its
-	/// <see cref="Uri.OriginalString"/>.
+	/// <see cref="Uri.OriginalString"/>, as CSV writes it.
 	/// </summary>
+	/// <remarks>
+	/// A link's cell is in Excel's <c>Hyperlink</c> cell style (underlined, blue), and opens an absolute URI's
+	/// <see cref="Uri.AbsoluteUri"/>, with the letters past ASCII as themselves, or a relative URI's text. These are text
+	/// without a link: the header's cells, which name its columns; a URI whose link Excel wouldn't open, longer than 8,192
+	/// characters; and a URI past a sheet's 65,530 links, which is as many as Excel opens.
+	/// </remarks>
 	public ExcelLinks Links { get; init; } = ExcelLinks.Web;
 
 	/// <summary>Checks the options before a writer uses them.</summary>

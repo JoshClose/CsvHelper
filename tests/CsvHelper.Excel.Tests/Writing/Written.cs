@@ -34,10 +34,11 @@ internal static class Written
 	/// </summary>
 	public static readonly ExcelSheetOptions Phase4Look = new() { BoldHeader = false, FreezeHeader = false, AutoFit = 0 };
 
-	/// <summary>Options with Phase 4's look (<see cref="Phase4Look"/>).</summary>
+	/// <summary>Options with Phase 4's look (<see cref="Phase4Look"/>), and no links, so that a URI is the text it was.</summary>
 	/// <param name="options">The options, or <see langword="null"/> for the default ones.</param>
-	/// <returns>The options with <see cref="ExcelWriterOptions.Sheets"/> set to Phase 4's look.</returns>
-	public static ExcelWriterOptions Phase4(ExcelWriterOptions? options = null) => (options ?? ExcelWriterOptions.Default) with { Sheets = Phase4Look };
+	/// <returns>The options with <see cref="ExcelWriterOptions.Sheets"/> set to Phase 4's look, and <see cref="ExcelWriterOptions.Links"/> to none.</returns>
+	public static ExcelWriterOptions Phase4(ExcelWriterOptions? options = null) =>
+		(options ?? ExcelWriterOptions.Default) with { Sheets = Phase4Look, Links = ExcelLinks.None };
 
 	/// <summary>Options whose sheets' records may have different numbers of fields, with strings as given.</summary>
 	/// <param name="strings">Where text cells keep their strings.</param>

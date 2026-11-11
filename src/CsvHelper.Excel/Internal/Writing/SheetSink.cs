@@ -70,13 +70,20 @@ namespace CsvHelper.Excel;
 /// rows, after the title's.
 /// </para>
 /// <para>
+/// A <see cref="Uri"/> field below the header is a text cell of its text, as for CSV, with a link to it in the
+/// <c>Hyperlink</c> cell style when <see cref="ExcelWriterOptions.Links"/> takes it, up to Excel's 65,530 links a sheet
+/// (<see cref="SheetLinks"/>). The links are written after the merged ranges, and their relationships after the table's,
+/// in the sheet's relationships part.
+/// </para>
+/// <para>
 /// A record past the sheet's last row follows <see cref="ExcelWriterOptions.RowLimit"/>. Its first field finds it, through
 /// the field limit that <see cref="EndRecord"/> lowers to 0 once the sheet is full, so that the test of the column limit
 /// is the only one per field. With <see cref="ExcelRowLimit.NewSheet"/>, the full sheet's end goes into the buffer, and the
 /// next sheet's rows after it, the title's and the header's first; the next flush, which <see cref="EndRecord"/> asks
-/// for, writes the full sheet, closes its entry, writes its table's parts and opens the next one's. Each new sheet has
-/// its own filter, and its own table, named with a number after the first's, and no merged ranges but the title's. So no
-/// I/O happens in <see cref="WriteField"/>, and the switch is sync or async as the caller is.
+/// for, writes the full sheet, closes its entry, writes its relationships and table parts and opens the next one's. Each
+/// new sheet has its own filter, its own table, named with a number after the first's, its own links, and no merged
+/// ranges but the title's. So no I/O happens in <see cref="WriteField"/>, and the switch is sync or async as the caller
+/// is.
 /// </para>
 /// </remarks>
 internal sealed class SheetSink : CsvCellSink
@@ -155,8 +162,12 @@ internal sealed class SheetSink : CsvCellSink
 	private int headerColumns;
 	// The ranges merged in the sheet being written (MergeCells), or null for none.
 	private MergedRanges? merges;
-	// The parts to write once the sheet's entry is closed: its relationships and its table's; null for none.
-	private List<(string Part, byte[] Xml)>? partsAfter;
+	// The links of the sheet being written, or null for none; and the cell format of a link's cell, 0 until first used.
+	private SheetLinks? links;
+	private int linkStyle;
+	// The parts to write once a sheet's entry is closed: its relationships and its table's; null for none. A full sheet's
+	// (NewSheet) and the next one's can both wait, when the next one completes before a flush.
+	private List<PartsAfter>? partsAfter;
 	// The part of the sheet being written, and its entry once a flush opened it.
 	private string partName;
 	private Stream? entry;
@@ -339,6 +350,10 @@ internal sealed class SheetSink : CsvCellSink
 				WriteFormula(utf8, at);
 
 				break;
+			case CellKind.Uri:
+				WriteUri(utf8, at);
+
+				break;
 			default:
 				WriteText(utf8, at);
 
@@ -417,6 +432,7 @@ internal sealed class SheetSink : CsvCellSink
 			measured.EndRecord();
 		}
 
+		links?.EndRecord();
 		row++;
 		if (row > maxRows)
 		{
@@ -454,6 +470,7 @@ internal sealed class SheetSink : CsvCellSink
 		recordReferences = 0;
 		recordNumberLikeText = false;
 		header?.Clear();
+		links?.DiscardRecord();
 		if (measuring)
 		{
 			measured.DiscardRecord();
@@ -542,7 +559,7 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>The letters of a column of the sheet, as UTF-8.</summary>
 	/// <param name="column">The 0-based column, below <see cref="CellReference.MaxColumns"/>.</param>
 	/// <returns>The letters.</returns>
-	private static byte[] ColumnName(int column) =>
+	internal static byte[] ColumnName(int column) =>
 		ColumnLetters[column] ??= Encoding.ASCII.GetBytes(CellReference.ColumnName(column));
 
 	/// <summary>A duration as <c>[h]:mm:ss</c> shows it, with <c>.000</c> when it has milliseconds, for its width.</summary>
@@ -1095,11 +1112,39 @@ internal sealed class SheetSink : CsvCellSink
 		}
 	}
 
+	/// <summary>
+	/// Writes a URI's cell: a text cell of its text, as written, with a link to it in the <c>Hyperlink</c> cell style when
+	/// <see cref="ExcelWriterOptions.Links"/> takes it (<see cref="SheetLinks.Target"/>), below the header and while the
+	/// sheet has fewer than <see cref="SheetLinks.MaxLinks"/> links. The header's cells name its columns, and are text.
+	/// </summary>
+	/// <param name="text">The URI's text, which isn't empty.</param>
+	/// <param name="at">The cell's column.</param>
+	/// <exception cref="InvalidOperationException">The text has more than <see cref="XmlOutput.MaxCellLength"/> UTF-16 code units.</exception>
+	private void WriteUri(ReadOnlySpan<byte> text, int at)
+	{
+		if (options.Links == ExcelLinks.None || row == headerRowNumber || links is { IsFull: true } ||
+			SheetLinks.Target(Encoding.UTF8.GetString(text.ToArray()), options.Links) is not { } target)
+		{
+			WriteText(text, at);
+
+			return;
+		}
+
+		if (linkStyle == 0)
+		{
+			linkStyle = styles.IndexOf(new CellXf(0, CellFont.Link, false));
+		}
+
+		WriteText(text, at, linkStyle);
+		(links ??= new SheetLinks()).Add(row, at, target);
+	}
+
 	/// <summary>Writes a text cell: the string inline, or its index in the shared strings.</summary>
 	/// <param name="text">The text, which isn't empty.</param>
 	/// <param name="at">The cell's column.</param>
+	/// <param name="style">The cell format the cell has of its own: 0 (General), or a link's.</param>
 	/// <exception cref="InvalidOperationException">The text has more than <see cref="XmlOutput.MaxCellLength"/> UTF-16 code units.</exception>
-	private void WriteText(ReadOnlySpan<byte> text, int at)
+	private void WriteText(ReadOnlySpan<byte> text, int at, int style = 0)
 	{
 		if (!XmlOutput.IsValidUtf8(text))
 		{
@@ -1120,7 +1165,7 @@ internal sealed class SheetSink : CsvCellSink
 			MeasureText(at, text);
 		}
 
-		StartCell(at, 0);
+		StartCell(at, style);
 		if (strings is null)
 		{
 			output.Append(" t=\"inlineStr\"><is>"u8);
@@ -1154,7 +1199,7 @@ internal sealed class SheetSink : CsvCellSink
 	/// cell.
 	/// </summary>
 	/// <param name="at">The cell's column.</param>
-	/// <param name="style">The cell format the cell has of its own: 0 (General) but for dates, times and durations.</param>
+	/// <param name="style">The cell format the cell has of its own: 0 (General) but for dates, times, durations and links.</param>
 	private void StartCell(int at, int style)
 	{
 		if (!rowOpen)
@@ -1515,9 +1560,10 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>
 	/// Writes the XML after the sheet's rows into the buffer, in the schema's order, which Excel keeps to: the end of
 	/// <c>sheetData</c>; the filter over the header's columns, from the header down to the last row (and the workbook's
-	/// hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the page margins;
-	/// <c>ignoredErrors</c> over the used range when a text cell starts like a number; the table's part; and the
-	/// worksheet's end. The sheet's relationships and its table's part are kept to write once its entry is closed.
+	/// hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the links; the page
+	/// margins; <c>ignoredErrors</c> over the used range when a text cell starts like a number; the table's part; and the
+	/// worksheet's end. The sheet's relationships (its table's, <c>rId1</c>, then its links') and its table's part are
+	/// kept to write once its entry is closed.
 	/// </summary>
 	private void AppendEnd()
 	{
@@ -1557,6 +1603,9 @@ internal sealed class SheetSink : CsvCellSink
 			output.Append("</mergeCells>"u8);
 		}
 
+		var sheetLinks = links is { Count: > 0 } ? links : null;
+		links = null;
+		sheetLinks?.WriteHyperlinks(output, tableColumns is null ? 1 : 2);
 		output.Append(PageMargins);
 		if (numberLikeText)
 		{
@@ -1566,32 +1615,30 @@ internal sealed class SheetSink : CsvCellSink
 			output.Append("\" numberStoredAsText=\"1\"/></ignoredErrors>"u8);
 		}
 
+		var tableId = 0;
+		byte[]? table = null;
 		if (tableColumns is not null)
 		{
 			// The header and the rows below it, one row at least, as Excel opens no table of a header alone.
 			output.Append("<tableParts count=\"1\"><tablePart r:id=\"rId1\"/></tableParts>"u8);
-			AddTableParts(new ExcelRange((int)headerRowNumber, 1, (int)Math.Max(lastRow, headerRowNumber + 1), tableColumns.Length));
+			tableId = workbook.AddTable();
+			using var xml = new XmlOutput(1024);
+			TableWriter.Write(xml, tableId, tableName!, new ExcelRange((int)headerRowNumber, 1, (int)Math.Max(lastRow, headerRowNumber + 1), tableColumns.Length), tableColumns, Settings.Table!);
+			table = xml.Written.ToArray();
 		}
 
 		output.Append("</worksheet>"u8);
+		if (tableId > 0 || sheetLinks is not null)
+		{
+			var relationships = "xl/worksheets/_rels/" + partName.Substring("xl/worksheets/".Length) + ".rels";
+			(partsAfter ??= []).Add(new PartsAfter(relationships, tableId, table, sheetLinks));
+		}
 	}
 
-	/// <summary>Keeps the sheet's relationships and its table's part, to write once its entry is closed.</summary>
-	/// <param name="range">The table's cells.</param>
-	private void AddTableParts(ExcelRange range)
-	{
-		var id = workbook.AddTable();
-		using var xml = new XmlOutput(1024);
-		TableWriter.WriteSheetRelationships(xml, id);
-		var number = partName.Substring("xl/worksheets/".Length);
-		partsAfter ??= [];
-		partsAfter.Add(("xl/worksheets/_rels/" + number + ".rels", xml.Written.ToArray()));
-		xml.Truncate(0);
-		TableWriter.Write(xml, id, tableName!, range, tableColumns!, Settings.Table!);
-		partsAfter.Add((TableWriter.PartName(id), xml.Written.ToArray()));
-	}
-
-	/// <summary>Writes the parts kept to write once the sheet's entry is closed, each in an entry of its own.</summary>
+	/// <summary>
+	/// Writes the parts kept to write once a sheet's entry is closed, each in an entry of its own: its relationships, its
+	/// table's first and its links' after, streamed, since a sheet's links can have many targets; and its table's part.
+	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when they are written.</returns>
@@ -1602,23 +1649,59 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		foreach (var (part, xml) in partsAfter)
+		using var xml = new XmlOutput(FlushSize + 4096);
+		foreach (var parts in partsAfter)
 		{
-			var entry = await package.OpenPartAsync(part, async, cancellationToken).ConfigureAwait(false);
+			var entry = await package.OpenPartAsync(parts.Relationships, async, cancellationToken).ConfigureAwait(false);
 			try
 			{
-				if (async)
+				xml.Truncate(0);
+				xml.Append(PackageParts.Declaration);
+				xml.Append("<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"u8);
+				if (parts.TableId > 0)
 				{
-					await entry.WriteAsync(xml, 0, xml.Length, cancellationToken).ConfigureAwait(false);
+					TableWriter.AppendRelationship(xml, parts.TableId);
 				}
-				else
+
+				if (parts.Links is { } sheetLinks)
 				{
-					entry.Write(xml, 0, xml.Length);
+					for (var i = 0; i < sheetLinks.Relationships; i++)
+					{
+						sheetLinks.AppendRelationship(xml, i);
+						if (xml.Length >= FlushSize)
+						{
+							await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
+							xml.Truncate(0);
+						}
+					}
 				}
+
+				xml.Append("</Relationships>"u8);
+				await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
 			}
 			finally
 			{
 				await PackageWriter.CloseAsync(entry, async).ConfigureAwait(false);
+			}
+
+			if (parts.Table is { } table)
+			{
+				entry = await package.OpenPartAsync(TableWriter.PartName(parts.TableId), async, cancellationToken).ConfigureAwait(false);
+				try
+				{
+					if (async)
+					{
+						await entry.WriteAsync(table, 0, table.Length, cancellationToken).ConfigureAwait(false);
+					}
+					else
+					{
+						entry.Write(table, 0, table.Length);
+					}
+				}
+				finally
+				{
+					await PackageWriter.CloseAsync(entry, async).ConfigureAwait(false);
+				}
 			}
 		}
 
@@ -1677,4 +1760,11 @@ internal sealed class SheetSink : CsvCellSink
 		output.RemoveFirst(count);
 		recordStart -= count;
 	}
+
+	/// <summary>A sheet's parts to write once its entry is closed.</summary>
+	/// <param name="Relationships">The name of the sheet's relationships part.</param>
+	/// <param name="TableId">The sheet's table's id in the workbook, or 0 without a table.</param>
+	/// <param name="Table">The table's part, or <see langword="null"/> without a table.</param>
+	/// <param name="Links">The sheet's links, written into its XML, or <see langword="null"/> without any.</param>
+	private sealed record PartsAfter(string Relationships, int TableId, byte[]? Table, SheetLinks? Links);
 }
